@@ -41,19 +41,19 @@
         <template>
             <tg-criterion-example-supplements binding-entity="{{entity}}" validation-callback="{{validationCallback}}"
                 process-response="{{processResponse}}" process-error="{{processError}}" or-null="{{orNull}}"
-                not="{{not}}" exclusive="{{exclusive}}" exclusive2="{{exclusive2}}" date-prefix="{{datePrefix}}"
+                not="{{not}}" or-group="{{orGroup}}" exclusive="{{exclusive}}" exclusive2="{{exclusive2}}" date-prefix="{{datePrefix}}"
                 date-mnemonic="{{dateMnemonic}}" and-before="{{andBefore}}">
             </tg-criterion-example-supplements>
 
             <tg-flex-layout debug when-desktop="[[_whenDesktop]]" when-tablet="[[_whenTablet]]" when-mobile="[[_whenMobile]]">
-                <tg-multi-criterion mnemonics-visible or-null="{{orNull}}" not="{{not}}" validation-callback="[[validationCallback]]">
+                <tg-multi-criterion mnemonics-visible or-null="{{orNull}}" not="{{not}}" or-group="{{orGroup}}" validation-callback="[[validationCallback]]">
                     <tg-integer-editor entity="[[entity]]" slot="criterion-editors" class="criterion-editors flex"
                         property-name="integerProp" current-state="EDIT" prop-title="Integer property title"
                         prop-desc="Integer property desc" action="null" validation-callback="[[validationCallback]]">
                     </tg-integer-editor>
                 </tg-multi-criterion>
 
-                <tg-boolean-criterion mnemonics-visible or-null="{{orNull}}" not="{{not}}" validation-callback="[[validationCallback]]">
+                <tg-boolean-criterion mnemonics-visible or-null="{{orNull}}" not="{{not}}" or-group="{{orGroup}}" validation-callback="[[validationCallback]]">
                     <tg-integer-editor entity="[[entity]]" slot="range-criterion-editor-1" class="criterion-editors flex"
                         property-name="integerProp" current-state="EDIT" prop-title="Bool IS title" prop-desc="Bool IS desc"
                         action="null" validation-callback="[[validationCallback]]">
@@ -64,7 +64,7 @@
                     </tg-integer-editor>
                 </tg-boolean-criterion>
 
-                <tg-range-criterion mnemonics-visible exclusive="{{exclusive}}" exclusive2="{{exclusive2}}" or-null="{{orNull}}" not="{{not}}"
+                <tg-range-criterion mnemonics-visible exclusive="{{exclusive}}" exclusive2="{{exclusive2}}" or-null="{{orNull}}" not="{{not}}" or-group="{{orGroup}}" 
                     validation-callback="[[validationCallback]]">
                     <tg-integer-editor entity="[[entity]]" slot="range-criterion-editor-1" class="criterion-editors flex"
                         property-name="integerProp" current-state="EDIT" prop-title="Integer from"
@@ -78,7 +78,7 @@
 
                 <tg-date-range-criterion mnemonics-visible date-prefix="{{datePrefix}}" date-mnemonic="{{dateMnemonic}}"
                     and-before="{{andBefore}}" exclusive="{{exclusive}}" exclusive2="{{exclusive2}}" or-null="{{orNull}}"
-                    not="{{not}}" validation-callback="[[validationCallback]]">
+                    not="{{not}}" or-group="{{orGroup}}" validation-callback="[[validationCallback]]">
                     <tg-datetime-picker entity="[[entity]]" slot="range-criterion-editor-1" class="criterion-editors flex"
                         property-name="dateProp" current-state="EDIT" prop-title="Date FROM" prop-desc="Date FROM desc"
                         action="null" validation-callback="[[validationCallback]]">

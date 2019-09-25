@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.domaintree.centre.impl;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteriaWithModelHandler.areDifferent;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
@@ -118,6 +119,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 
         private final EnhancementPropertiesMap<Boolean> propertiesOrNulls;
         private final EnhancementPropertiesMap<Boolean> propertiesNots;
+        private final EnhancementPropertiesMap<Integer> propertiesOrGroups;
 
         private Integer columnsNumber;
 
@@ -130,7 +132,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
          * fields.
          */
         public AddToCriteriaTickManager(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-            this(AbstractDomainTree.<List<String>> createRootsMap(), serialiser, AbstractDomainTree.<Object> createPropertiesMap(), AbstractDomainTree.<Object> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<DateRangePrefixEnum> createPropertiesMap(), AbstractDomainTree.<MnemonicEnum> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), null, new LocatorManager(serialiser, rootTypes), AbstractDomainTree.<Set<MetaValueType>> createPropertiesMap());
+            this(AbstractDomainTree.<List<String>> createRootsMap(), serialiser, AbstractDomainTree.<Object> createPropertiesMap(), AbstractDomainTree.<Object> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<DateRangePrefixEnum> createPropertiesMap(), AbstractDomainTree.<MnemonicEnum> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Integer> createPropertiesMap(), null, new LocatorManager(serialiser, rootTypes), AbstractDomainTree.<Set<MetaValueType>> createPropertiesMap());
         }
 
         /**
@@ -138,7 +140,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
          *
          * @param serialiser
          */
-        public AddToCriteriaTickManager(final Map<Class<?>, List<String>> checkedProperties, final ISerialiser serialiser, final Map<Pair<Class<?>, String>, Object> propertiesValues1, final Map<Pair<Class<?>, String>, Object> propertiesValues2, final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive1, final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive2, final Map<Pair<Class<?>, String>, DateRangePrefixEnum> propertiesDatePrefixes, final Map<Pair<Class<?>, String>, MnemonicEnum> propertiesDateMnemonics, final Map<Pair<Class<?>, String>, Boolean> propertiesAndBefore, final Map<Pair<Class<?>, String>, Boolean> propertiesOrNulls, final Map<Pair<Class<?>, String>, Boolean> propertiesNots, final Integer columnsNumber, final LocatorManager locatorManager, final Map<Pair<Class<?>, String>, Set<MetaValueType>> propertiesMetaValuePresences) {
+        public AddToCriteriaTickManager(final Map<Class<?>, List<String>> checkedProperties, final ISerialiser serialiser, final Map<Pair<Class<?>, String>, Object> propertiesValues1, final Map<Pair<Class<?>, String>, Object> propertiesValues2, final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive1, final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive2, final Map<Pair<Class<?>, String>, DateRangePrefixEnum> propertiesDatePrefixes, final Map<Pair<Class<?>, String>, MnemonicEnum> propertiesDateMnemonics, final Map<Pair<Class<?>, String>, Boolean> propertiesAndBefore, final Map<Pair<Class<?>, String>, Boolean> propertiesOrNulls, final Map<Pair<Class<?>, String>, Boolean> propertiesNots, final Map<Pair<Class<?>, String>, Integer> propertiesOrGroups, final Integer columnsNumber, final LocatorManager locatorManager, final Map<Pair<Class<?>, String>, Set<MetaValueType>> propertiesMetaValuePresences) {
             super(checkedProperties);
             this.serialiser = serialiser;
 
@@ -160,6 +162,8 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
             this.propertiesOrNulls.putAll(propertiesOrNulls);
             this.propertiesNots = createPropertiesMap();
             this.propertiesNots.putAll(propertiesNots);
+            this.propertiesOrGroups = createPropertiesMap();
+            this.propertiesOrGroups.putAll(propertiesOrGroups);
 
             this.columnsNumber = columnsNumber;
 
@@ -520,7 +524,24 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
             }
             return this;
         }
-
+        
+        @Override
+        public Integer getOrGroup(final Class<?> root, final String property) {
+            illegalUncheckedProperties(this, root, property, format("Could not get an 'or group' for 'unchecked' property [%s] in type [%s].", property, root.getSimpleName()));
+            return (propertiesOrGroups.containsKey(key(root, property))) ? propertiesOrGroups.get(key(root, property)) : null;
+        }
+        
+        @Override
+        public IAddToCriteriaTickManager setOrGroup(final Class<?> root, final String property, final Integer orGroup) {
+            illegalUncheckedProperties(this, root, property, format("Could not set an 'or group' for 'unchecked' property [%s] in type [%s].", property, root.getSimpleName()));
+            if (orGroup == null) {
+                propertiesOrGroups.remove(key(root, property));
+            } else {
+                propertiesOrGroups.put(key(root, property), orGroup);
+            }
+            return this;
+        }
+        
         /////////////////// Checked properties with placeholders ///////////////////
         @Override
         public IAddToCriteriaTickManager swap(final Class<?> root, final String property1, final String property2) {
@@ -662,10 +683,11 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
                 final EnhancementPropertiesMap<Boolean> propertiesAndBefore = readValue(buffer, EnhancementPropertiesMap.class);
                 final EnhancementPropertiesMap<Boolean> propertiesOrNulls = readValue(buffer, EnhancementPropertiesMap.class);
                 final EnhancementPropertiesMap<Boolean> propertiesNots = readValue(buffer, EnhancementPropertiesMap.class);
+                final EnhancementPropertiesMap<Integer> propertiesOrGroups = readValue(buffer, EnhancementPropertiesMap.class);
                 final Integer columnsNumber = readValue(buffer, Integer.class);
                 final LocatorManager locatorManager = readValue(buffer, LocatorManager.class);
                 final EnhancementPropertiesMap<Set<MetaValueType>> propertiesMetaValuePresences = readValue(buffer, EnhancementPropertiesMap.class);
-                return new AddToCriteriaTickManager(checkedProperties, serialiser(), propertiesValues1, propertiesValues2, propertiesExclusive1, propertiesExclusive2, propertiesDatePrefixes, propertiesDateMnemonics, propertiesAndBefore, propertiesOrNulls, propertiesNots, columnsNumber, locatorManager, propertiesMetaValuePresences);
+                return new AddToCriteriaTickManager(checkedProperties, serialiser(), propertiesValues1, propertiesValues2, propertiesExclusive1, propertiesExclusive2, propertiesDatePrefixes, propertiesDateMnemonics, propertiesAndBefore, propertiesOrNulls, propertiesNots, propertiesOrGroups, columnsNumber, locatorManager, propertiesMetaValuePresences);
             }
 
             @Override
@@ -680,6 +702,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
                 writeValue(buffer, manager.propertiesAndBefore);
                 writeValue(buffer, manager.propertiesOrNulls);
                 writeValue(buffer, manager.propertiesNots);
+                writeValue(buffer, manager.propertiesOrGroups);
                 writeValue(buffer, manager.columnsNumber);
                 writeValue(buffer, manager.locatorManager);
                 writeValue(buffer, manager.propertiesMetaValuePresences);
@@ -692,16 +715,17 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
             int result = super.hashCode();
             result = prime * result + ((columnsNumber == null) ? 0 : columnsNumber.hashCode());
             result = prime * result + ((locatorManager == null) ? 0 : locatorManager.hashCode());
-            result = prime * result + ((propertiesAndBefore == null) ? 0 : propertiesAndBefore.hashCode());
-            result = prime * result + ((propertiesDateMnemonics == null) ? 0 : propertiesDateMnemonics.hashCode());
-            result = prime * result + ((propertiesDatePrefixes == null) ? 0 : propertiesDatePrefixes.hashCode());
-            result = prime * result + ((propertiesExclusive1 == null) ? 0 : propertiesExclusive1.hashCode());
-            result = prime * result + ((propertiesExclusive2 == null) ? 0 : propertiesExclusive2.hashCode());
-            result = prime * result + ((propertiesMetaValuePresences == null) ? 0 : propertiesMetaValuePresences.hashCode());
-            result = prime * result + ((propertiesNots == null) ? 0 : propertiesNots.hashCode());
-            result = prime * result + ((propertiesOrNulls == null) ? 0 : propertiesOrNulls.hashCode());
-            result = prime * result + ((propertiesValues1 == null) ? 0 : propertiesValues1.hashCode());
-            result = prime * result + ((propertiesValues2 == null) ? 0 : propertiesValues2.hashCode());
+            result = prime * result + propertiesAndBefore.hashCode();
+            result = prime * result + propertiesDateMnemonics.hashCode();
+            result = prime * result + propertiesDatePrefixes.hashCode();
+            result = prime * result + propertiesExclusive1.hashCode();
+            result = prime * result + propertiesExclusive2.hashCode();
+            result = prime * result + propertiesMetaValuePresences.hashCode();
+            result = prime * result + propertiesOrGroups.hashCode();
+            result = prime * result + propertiesNots.hashCode();
+            result = prime * result + propertiesOrNulls.hashCode();
+            result = prime * result + propertiesValues1.hashCode();
+            result = prime * result + propertiesValues2.hashCode();
             return result;
         }
 
@@ -731,74 +755,37 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
             } else if (!locatorManager.equals(other.locatorManager)) {
                 return false;
             }
-            if (propertiesAndBefore == null) {
-                if (other.propertiesAndBefore != null) {
-                    return false;
-                }
-            } else if (!propertiesAndBefore.equals(other.propertiesAndBefore)) {
+            if (!propertiesAndBefore.equals(other.propertiesAndBefore)) {
                 return false;
             }
-            if (propertiesDateMnemonics == null) {
-                if (other.propertiesDateMnemonics != null) {
-                    return false;
-                }
-            } else if (!propertiesDateMnemonics.equals(other.propertiesDateMnemonics)) {
+            if (!propertiesDateMnemonics.equals(other.propertiesDateMnemonics)) {
                 return false;
             }
-            if (propertiesDatePrefixes == null) {
-                if (other.propertiesDatePrefixes != null) {
-                    return false;
-                }
-            } else if (!propertiesDatePrefixes.equals(other.propertiesDatePrefixes)) {
+            if (!propertiesDatePrefixes.equals(other.propertiesDatePrefixes)) {
                 return false;
             }
-            if (propertiesExclusive1 == null) {
-                if (other.propertiesExclusive1 != null) {
-                    return false;
-                }
-            } else if (!propertiesExclusive1.equals(other.propertiesExclusive1)) {
+            if (!propertiesExclusive1.equals(other.propertiesExclusive1)) {
                 return false;
             }
-            if (propertiesExclusive2 == null) {
-                if (other.propertiesExclusive2 != null) {
-                    return false;
-                }
-            } else if (!propertiesExclusive2.equals(other.propertiesExclusive2)) {
+            if (!propertiesExclusive2.equals(other.propertiesExclusive2)) {
                 return false;
             }
-            if (propertiesMetaValuePresences == null) {
-                if (other.propertiesMetaValuePresences != null) {
-                    return false;
-                }
-            } else if (!propertiesMetaValuePresences.equals(other.propertiesMetaValuePresences)) {
+            if (!propertiesMetaValuePresences.equals(other.propertiesMetaValuePresences)) {
                 return false;
             }
-            if (propertiesNots == null) {
-                if (other.propertiesNots != null) {
-                    return false;
-                }
-            } else if (!propertiesNots.equals(other.propertiesNots)) {
+            if (!propertiesOrGroups.equals(other.propertiesOrGroups)) {
                 return false;
             }
-            if (propertiesOrNulls == null) {
-                if (other.propertiesOrNulls != null) {
-                    return false;
-                }
-            } else if (!propertiesOrNulls.equals(other.propertiesOrNulls)) {
+            if (!propertiesNots.equals(other.propertiesNots)) {
                 return false;
             }
-            if (propertiesValues1 == null) {
-                if (other.propertiesValues1 != null) {
-                    return false;
-                }
-            } else if (propertyValuesDifferent(propertiesValues1, other.propertiesValues1)) {
+            if (!propertiesOrNulls.equals(other.propertiesOrNulls)) {
                 return false;
             }
-            if (propertiesValues2 == null) {
-                if (other.propertiesValues2 != null) {
-                    return false;
-                }
-            } else if (!propertiesValues2.equals(other.propertiesValues2)) {
+            if (propertyValuesDifferent(propertiesValues1, other.propertiesValues1)) {
+                return false;
+            }
+            if (!propertiesValues2.equals(other.propertiesValues2)) {
                 return false;
             }
             return true;
@@ -861,8 +848,8 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
             if (rootsListsOfOrderings.containsKey(root)) {
                 return rootsListsOfOrderings.get(root);
             } else {
-                final List<Pair<String, Ordering>> orderedPropertiesByDefault = new ArrayList<Pair<String, Ordering>>(tr().orderedPropertiesByDefault(root));
-                final List<Pair<String, Ordering>> orderedPropertiesByDefaultWithoutUnchecked = new ArrayList<Pair<String, Ordering>>(orderedPropertiesByDefault);
+                final List<Pair<String, Ordering>> orderedPropertiesByDefault = new ArrayList<>(tr().orderedPropertiesByDefault(root));
+                final List<Pair<String, Ordering>> orderedPropertiesByDefaultWithoutUnchecked = new ArrayList<>(orderedPropertiesByDefault);
                 for (final Pair<String, Ordering> propAndOrdering : orderedPropertiesByDefault) {
                     if (!isChecked(root, propAndOrdering.getKey())) {
                         orderedPropertiesByDefaultWithoutUnchecked.remove(propAndOrdering);
@@ -877,9 +864,9 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
             illegalUncheckedProperties(this, root, property, "Could not toggle 'ordering' for 'unchecked' property [" + property + "] in type ["
                     + root.getSimpleName() + "].");
             if (!rootsListsOfOrderings.containsKey(root)) {
-                rootsListsOfOrderings.put(root, new ArrayList<Pair<String, Ordering>>(orderedProperties(root)));
+                rootsListsOfOrderings.put(root, new ArrayList<>(orderedProperties(root)));
             }
-            final List<Pair<String, Ordering>> list = new ArrayList<Pair<String, Ordering>>(rootsListsOfOrderings.get(root));
+            final List<Pair<String, Ordering>> list = new ArrayList<>(rootsListsOfOrderings.get(root));
             for (final Pair<String, Ordering> pair : list) {
                 if (pair.getKey().equals(property)) {
                     final int index = rootsListsOfOrderings.get(root).indexOf(pair);
@@ -891,7 +878,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
                     return this;
                 }
             } // if the property does not have an Ordering assigned -- put a ASC ordering to it (into the end of the list)
-            rootsListsOfOrderings.get(root).add(new Pair<String, Ordering>(property, Ordering.ASCENDING));
+            rootsListsOfOrderings.get(root).add(new Pair<>(property, Ordering.ASCENDING));
             return this;
         }
 
@@ -900,7 +887,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
             super.removeCheckedProperty(root, property);
 
             if (rootsListsOfOrderings.containsKey(root)) {
-                final List<Pair<String, Ordering>> list = new ArrayList<Pair<String, Ordering>>(rootsListsOfOrderings.get(root));
+                final List<Pair<String, Ordering>> list = new ArrayList<>(rootsListsOfOrderings.get(root));
                 for (final Pair<String, Ordering> pair : list) {
                     if (pair.getKey().equals(property)) {
                         final int index = rootsListsOfOrderings.get(root).indexOf(pair);

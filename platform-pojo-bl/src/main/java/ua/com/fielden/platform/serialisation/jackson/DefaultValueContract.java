@@ -416,6 +416,15 @@ public class DefaultValueContract {
     public static boolean isNotDefault(final Boolean not) {
         return not == null || FALSE.equals(not);
     }
+    
+    /**
+     * Returns <code>true</code> if the criterion value of <code>orGroup</code> is default, <code>false</code> otherwise.
+     *
+     * @return
+     */
+    public static boolean isOrGroupDefault(final Integer orGroup) {
+        return orGroup == null;
+    }
 
     /**
      * Returns <code>true</code> if the criterion value of <code>datePrefix</code> is default, <code>false</code> otherwise.

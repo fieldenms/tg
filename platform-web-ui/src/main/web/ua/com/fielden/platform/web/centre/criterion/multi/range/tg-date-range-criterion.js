@@ -55,7 +55,7 @@ Polymer({
     is: 'tg-date-range-criterion',
 
     observers: [
-        '_updateIconButtonStyle(orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore)'
+        '_updateIconButtonStyle(orNull, not, orGroup, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore)'
     ],
 
     behaviors: [ TgAbstractRangeCriterionBehavior ],
@@ -194,8 +194,8 @@ Polymer({
     /**
      * Returns 'true' if criterion has no meta values assigned, 'false' otherwise.
      */
-    _hasNoMetaValues: function (orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) {
-        return TgAbstractRangeCriterionBehavior[1]._hasNoMetaValues.call(this, orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) &&
+    _hasNoMetaValues: function (orNull, not, orGroup, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) {
+        return TgAbstractRangeCriterionBehavior[1]._hasNoMetaValues.call(this, orNull, not, orGroup, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) &&
             datePrefix === null && dateMnemonic === null && andBefore === null;
     }
 });
