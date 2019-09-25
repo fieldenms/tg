@@ -17,6 +17,7 @@ import '/resources/actions/tg-ui-action.js';
 import '/resources/egi/tg-secondary-action-button.js';
 import '/resources/egi/tg-secondary-action-dropdown.js';
 import '/resources/egi/tg-egi-cell.js';
+import '/resources/egi/tg-responsive-toolbar.js';
 
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
@@ -47,15 +48,13 @@ const template = html`
         .grid-container[fit-to-height] {
             @apply --layout-flex;
         }
-        .grid-toolbar {
-            z-index: 1;
-            position: relative;
+        tg-responsive-toolbar {
             flex-grow: 0;
             flex-shrink: 0;
-            @apply --layout-horizontal;
-            @apply --layout-wrap;
+            z-index: 1;
+            position: relative;
         }
-        .grid-toolbar[show-top-shadow]:after {
+        tg-responsive-toolbar[show-top-shadow]:after {
             content: "";
             position: absolute;
             bottom: -4px;
@@ -78,16 +77,6 @@ const template = html`
         }
         paper-progress.processing {
             --paper-progress-active-color: var(--paper-orange-500);
-        }
-        .grid-toolbar-content {
-            @apply --layout-horizontal;
-            @apply --layout-center;
-        }
-        .grid-toolbar-content ::slotted(*) {
-            margin-top: 8px;
-        }
-        .grid-toolbar-content ::slotted(.group) {
-            margin-left: 30px;
         }
         #scrollableContainer {
             z-index: 0;
@@ -283,6 +272,7 @@ const template = html`
         }
         .lock-layer[lock] {
             display: initial;
+            pointer-events: none;
         }
         .grid-layout-container {
             background-color: white;
@@ -355,15 +345,11 @@ const template = html`
     <!--EGI template-->
     <div id="paperMaterial" class="grid-container" elevation="1" style$="[[_calcMaterialStyle(showMarginAround)]]" fit-to-height$="[[fitToHeight]]">
         <!--Table toolbar-->
-        <div class="grid-toolbar" show-top-shadow$="[[_toolbarShadowVisible(_showTopShadow, headerFixed)]]" style$="[[_calcToolbarStyle(canDragFrom)]]">
+        <tg-responsive-toolbar show-top-shadow$="[[_toolbarShadowVisible(_showTopShadow, headerFixed)]]" style$="[[_calcToolbarStyle(canDragFrom)]]">
             <paper-progress id="progressBar" hidden$="[[!_showProgress]]"></paper-progress>
-            <div class="grid-toolbar-content">
-                <slot id="top_action_selctor" name="entity-specific-action"></slot>
-            </div>
-            <div class="grid-toolbar-content" style="margin-left:auto">
-                <slot name="standart-action"></slot>
-            </div>
-        </div>
+            <slot id="top_action_selctor" slot="entity-specific-action" name="entity-specific-action"></slot>
+            <slot slot="standart-action" name="standart-action"></slot>
+        </tg-responsive-toolbar>
         <div id="scrollableContainer" on-scroll="_handleScrollEvent">
             <div id="baseContainer">
                 <div id="top_left_egi" show-top-shadow$="[[_topShadowVisible(_showTopShadow, headerFixed)]]" show-left-shadow$="[[_leftShadowVisible(_showLeftShadow, dragAnchorFixed)]]" class="grid-layout-container sticky-container z-index-2" style$="[[_calcTopLeftContainerStyle(headerFixed, dragAnchorFixed)]]">
