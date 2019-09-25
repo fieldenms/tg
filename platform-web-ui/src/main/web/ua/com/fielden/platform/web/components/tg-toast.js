@@ -306,5 +306,6 @@ Polymer({
     _closeToast: function () {
         this.$.toast.close();
         this.$.toast._autoCloseCallBack = null;
+        this.$.toast.error = false;
     }
 });
