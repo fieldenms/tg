@@ -24,6 +24,7 @@ import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
+import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -54,6 +55,7 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
     private final Pair<AbstractWidget, AbstractWidget> editors;
     private final boolean mnemonicsVisible;
     private final boolean excludeMissing;
+    private final boolean excludeOrGroup;
 
     /**
      * Creates {@link AbstractCriterionWidget} from <code>entityType</code> type and <code>propertyName</code> and the name&path of widget.
@@ -70,6 +72,7 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
         final Optional<CritOnly> optionalCritOnlyAnnotation = isEmpty(propertyName) ? empty(): getPropertyAnnotationInHierarchy(CritOnly.class, root, propertyName);
         this.mnemonicsVisible = optionalCritOnlyAnnotation.map(val -> critOnlyWithMnemonics(val)).orElse(true);
         this.excludeMissing = optionalCritOnlyAnnotation.map(val -> val.excludeMissing()).orElse(false);
+        this.excludeOrGroup = optionalCritOnlyAnnotation.isPresent() || shouldExcludeOrGroup(root, propertyName); // short-circuit crit-only properties exclusion, or if not crit-only then apply rules defined by QueryProperty / DynamicQueryBuilder
         this.editors = new Pair<>(editors[0], null);
         if (editors.length > 1) {
             this.editors.setValue(editors[1]);
@@ -89,6 +92,25 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
             editorsDOM[editorIndex] = editorElement;
         }
         return editorsDOM;
+    }
+
+    /**
+     * Returns <code>true</code> if or-group mnemonic should be excluded for this criterion, <code>false</code> otherwise.
+     * 
+     * @param root
+     * @param propertyName
+     * @return
+     */
+    private static boolean shouldExcludeOrGroup(final Class<? extends AbstractEntity<?>> root, final String propertyName) {
+        try {
+            final QueryProperty queryProperty = new QueryProperty(root, propertyName);
+            return queryProperty.isCritOnly() // crit only property itself represents criteria values that are glued together inside custom query (AND, OR) and this can not be customised - will be excluded
+                    || queryProperty.isAECritOnlyChild() // children of crit-only properties can be added to selection crit, but they will be treated as crit-only as well; so they should be excluded too
+                    || queryProperty.isInUnionHierarchy() // union properties to be excluded
+                    || queryProperty.isWithinCollectionalHierarchyOrOutsideCollectionWithANYorALL(); // collectional properties to be excluded; in future ANY/ALL aggregation expressions can be considered for inclusion, however they are not even possible in current Centre DSL
+        } catch (final Exception ex) {
+            return true; // in case where property is unsupported for dynamic query building or malformed -- exclude 'orGroup' mnemonic
+        }
     }
 
     protected String getCriterionClass(final int editorIndex) {
@@ -127,6 +149,9 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
         }
         if (excludeMissing) {
             attrs.put("exclude-missing", null);
+        }
+        if (excludeOrGroup) {
+            attrs.put("exclude-or-group", null);
         }
         return attrs;
     }

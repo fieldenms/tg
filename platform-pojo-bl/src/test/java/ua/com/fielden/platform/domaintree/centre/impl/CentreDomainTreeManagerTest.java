@@ -66,7 +66,7 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
     }
 
     protected static Set<Class<?>> createRootTypes_for_CentreDomainTreeManagerTest() {
-        final Set<Class<?>> rootTypes = new HashSet<Class<?>>(createRootTypes_for_AbstractDomainTreeManagerTest());
+        final Set<Class<?>> rootTypes = new HashSet<>(createRootTypes_for_AbstractDomainTreeManagerTest());
         rootTypes.add(MasterEntityForCentreDomainTree.class);
         rootTypes.add(EntityWithCompositeKey.class);
         rootTypes.add(EntityWithKeyTitleAndWithAEKeyType.class);
@@ -246,7 +246,7 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
                     fail(message);
                 } catch (final DomainTreeException e) {
                 }
-                // orNull / Not
+                // orNull / Not / orGroup
                 try {
                     dtm().getFirstTick().getOrNull(MasterEntity.class, name);
                     fail(message);
@@ -264,6 +264,16 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
                 }
                 try {
                     dtm().getFirstTick().setNot(MasterEntity.class, name, false);
+                    fail(message);
+                } catch (final DomainTreeException e) {
+                }
+                try {
+                    dtm().getFirstTick().getOrGroup(MasterEntity.class, name);
+                    fail(message);
+                } catch (final DomainTreeException e) {
+                }
+                try {
+                    dtm().getFirstTick().setOrGroup(MasterEntity.class, name, 1);
                     fail(message);
                 } catch (final DomainTreeException e) {
                 }
@@ -575,18 +585,21 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
     }
 
     @Test
-    public void test_that_OrNull_and_Not_for_first_tick_are_default_for_the_first_time_and_can_be_altered() {
+    public void test_that_OrNull_Not_and_OrGroup_for_first_tick_are_default_for_the_first_time_and_can_be_altered() {
         // THE FIRST TIME -- returns DEFAULT VALUES //
         // default value should be NULL
         checkOrSetMethodValues(null, "dateProp", dtm().getFirstTick(), "getOrNull");
         checkOrSetMethodValues(null, "dateProp", dtm().getFirstTick(), "getNot");
+        checkOrSetMethodValues(null, "dateProp", dtm().getFirstTick(), "getOrGroup");
 
         // Alter and check //
         checkOrSetMethodValues(true, "dateProp", dtm().getFirstTick(), "setOrNull", Boolean.class);
         checkOrSetMethodValues(false, "dateProp", dtm().getFirstTick(), "setNot", Boolean.class);
+        checkOrSetMethodValues(1, "dateProp", dtm().getFirstTick(), "setOrGroup", Integer.class);
 
         checkOrSetMethodValues(true, "dateProp", dtm().getFirstTick(), "getOrNull");
         checkOrSetMethodValues(false, "dateProp", dtm().getFirstTick(), "getNot");
+        checkOrSetMethodValues(1, "dateProp", dtm().getFirstTick(), "getOrGroup");
     }
 
     @Test
@@ -601,38 +614,38 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
         // THE FIRST TIME -- returns DEFAULT VALUES -- for ALL APPROPRIATELY CHECKED PROPERTIES //
         assertTrue("At first the property should be checked.", dtm().getSecondTick().isChecked(root, keyProp));
         // entities with simple key should have ASC ordering on that key
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>(keyProp, Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(root));
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>(keyProp, Ordering.ASCENDING)), dtm().getRepresentation().getSecondTick().orderedPropertiesByDefault(root));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>(keyProp, Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(root));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>(keyProp, Ordering.ASCENDING)), dtm().getRepresentation().getSecondTick().orderedPropertiesByDefault(root));
 
         // THE FIRST TIME -- returns DEFAULT VALUES -- for SOME NOT CHECKED PROPERTIES //
         dtm().getSecondTick().check(root, keyProp, false);
         assertFalse("The property should be not checked.", dtm().getSecondTick().isChecked(root, keyProp));
         // entities with simple key should have ASC ordering on that key, but only if the key is checked
         assertEquals("Value is incorrect.", Arrays.asList(), dtm().getSecondTick().orderedProperties(root));
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>(keyProp, Ordering.ASCENDING)), dtm().getRepresentation().getSecondTick().orderedPropertiesByDefault(root));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>(keyProp, Ordering.ASCENDING)), dtm().getRepresentation().getSecondTick().orderedPropertiesByDefault(root));
 
         // THE FIRST TIME -- returns DEFAULT VALUES -- for ALL APPROPRIATELY CHECKED PROPERTIES //
         dtm().getSecondTick().check(root, keyProp, true);
         assertTrue("The property should be checked.", dtm().getSecondTick().isChecked(root, keyProp));
         // entities with simple key should have ASC ordering on that key
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>(keyProp, Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(root));
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>(keyProp, Ordering.ASCENDING)), dtm().getRepresentation().getSecondTick().orderedPropertiesByDefault(root));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>(keyProp, Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(root));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>(keyProp, Ordering.ASCENDING)), dtm().getRepresentation().getSecondTick().orderedPropertiesByDefault(root));
 
         // Alter and check //
         dtm().getSecondTick().toggleOrdering(root, keyProp);
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>(keyProp, Ordering.DESCENDING)), dtm().getSecondTick().orderedProperties(root));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>(keyProp, Ordering.DESCENDING)), dtm().getSecondTick().orderedProperties(root));
         dtm().getSecondTick().toggleOrdering(root, keyProp);
         assertEquals("Value is incorrect.", Arrays.asList(), dtm().getSecondTick().orderedProperties(root));
         dtm().getSecondTick().toggleOrdering(root, prop2);
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>(prop2, Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(root));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>(prop2, Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(root));
         dtm().getSecondTick().toggleOrdering(root, prop3);
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>(prop2, Ordering.ASCENDING), new Pair<String, Ordering>(prop3, Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(root));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>(prop2, Ordering.ASCENDING), new Pair<>(prop3, Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(root));
         dtm().getSecondTick().toggleOrdering(root, prop3);
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>(prop2, Ordering.ASCENDING), new Pair<String, Ordering>(prop3, Ordering.DESCENDING)), dtm().getSecondTick().orderedProperties(root));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>(prop2, Ordering.ASCENDING), new Pair<>(prop3, Ordering.DESCENDING)), dtm().getSecondTick().orderedProperties(root));
         dtm().getSecondTick().toggleOrdering(root, prop2);
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>(prop2, Ordering.DESCENDING), new Pair<String, Ordering>(prop3, Ordering.DESCENDING)), dtm().getSecondTick().orderedProperties(root));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>(prop2, Ordering.DESCENDING), new Pair<>(prop3, Ordering.DESCENDING)), dtm().getSecondTick().orderedProperties(root));
         dtm().getSecondTick().toggleOrdering(root, prop2);
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>(prop3, Ordering.DESCENDING)), dtm().getSecondTick().orderedProperties(root));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>(prop3, Ordering.DESCENDING)), dtm().getSecondTick().orderedProperties(root));
         dtm().getSecondTick().toggleOrdering(root, prop3);
         assertEquals("Value is incorrect.", Arrays.asList(), dtm().getSecondTick().orderedProperties(root));
     }
@@ -646,7 +659,7 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
         assertTrue("The property should be checked.", dtm().getSecondTick().isChecked(root, prop2));
         assertTrue("The property should be checked.", dtm().getSecondTick().isChecked(root, prop3));
 
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>(keyProp, Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(root));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>(keyProp, Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(root));
         dtm().getSecondTick().check(root, keyProp, false);
         assertEquals("Value is incorrect.", Arrays.asList(), dtm().getSecondTick().orderedProperties(root));
         dtm().getSecondTick().check(root, keyProp, true);
@@ -654,15 +667,15 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
         dtm().getSecondTick().toggleOrdering(root, prop2);
         dtm().getSecondTick().toggleOrdering(root, prop2);
         dtm().getSecondTick().toggleOrdering(root, prop3);
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>(keyProp, Ordering.ASCENDING), new Pair<String, Ordering>(prop2, Ordering.DESCENDING), new Pair<String, Ordering>(prop3, Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(root));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>(keyProp, Ordering.ASCENDING), new Pair<>(prop2, Ordering.DESCENDING), new Pair<>(prop3, Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(root));
 
         // un-check middle property
         dtm().getSecondTick().check(root, prop2, false);
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>(keyProp, Ordering.ASCENDING), new Pair<String, Ordering>(prop3, Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(root));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>(keyProp, Ordering.ASCENDING), new Pair<>(prop3, Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(root));
 
         // un-check right property
         dtm().getSecondTick().check(root, prop3, false);
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>(keyProp, Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(root));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>(keyProp, Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(root));
 
         // un-check last property
         dtm().getSecondTick().check(root, keyProp, false);

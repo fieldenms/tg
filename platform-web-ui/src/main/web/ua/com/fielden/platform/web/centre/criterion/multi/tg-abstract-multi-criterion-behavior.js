@@ -29,6 +29,16 @@ const TgAbstractMultiCriterionBehaviorImpl = {
             observer: '_notChanged'
         },
 
+        /**
+         * Number of the group of conditions [glued together through logical OR] that this criterion belongs to.
+         * 'null' if this criterion does not belong to any group.
+         */
+        orGroup: {
+            type: Number,
+            notify: true,
+            observer: '_orGroupChanged'
+        },
+
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
         //////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -42,23 +52,29 @@ const TgAbstractMultiCriterionBehaviorImpl = {
         },
         _not: {
             type: Boolean
+        },
+        _orGroup: {
+            type: Number
         }
     },
 
     ready: function () {
         this._orNull = false;
         this._not = false;
+        this._orGroup = null;
     },
 
     _acceptMetaValues: function (validate) {
         this.orNull = this._orNull;
         this.not = this._not;
+        this.orGroup = this._orGroup;
 
         TgAbstractCriterionBehavior[1]._acceptMetaValues.call(this, validate);
     },
     _cancelMetaValues: function () {
         this._orNull = this.orNull;
         this._not = this.not;
+        this._orGroup = this.orGroup;
 
         TgAbstractCriterionBehavior[1]._cancelMetaValues.call(this);
     },
@@ -69,22 +85,25 @@ const TgAbstractMultiCriterionBehaviorImpl = {
     _createMetaValueEditors: function () {
         console.log("tg-abstract-multi-criterion-behavior: _createMetaValueEditors");
         return TgAbstractCriterionBehavior[1]._createMetaValueEditors.call(this) +
-            '<tg-multi-criterion-config class="layout vertical" _exclude-missing="[[_excludeMissingBind]]" _or-null="{{_orNullBind}}" _not="{{_notBind}}"></tg-multi-criterion-config>';
+            '<tg-multi-criterion-config class="layout vertical" _exclude-missing="[[_excludeMissingBind]]" _or-null="{{_orNullBind}}" _not="{{_notBind}}" _exclude-or-group="[[_excludeOrGroupBind]]" _or-group="{{_orGroupBind}}"></tg-multi-criterion-config>';
     },
 
-    _orNullChanged: function (newValue, oldValue) {
+    _orNullChanged: function (newValue) {
         this._orNull = newValue;
     },
-    _notChanged: function (newValue, oldValue) {
+    _notChanged: function (newValue) {
         this._not = newValue;
+    },
+    _orGroupChanged: function (newValue) {
+        this._orGroup = newValue;
     },
 
     /**
      * Returns 'true' if criterion has no meta values assigned, 'false' otherwise.
      */
-    _hasNoMetaValues: function (orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) {
-        return TgAbstractCriterionBehavior[1]._hasNoMetaValues.call(this, orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) &&
-            orNull === false && not === false;
+    _hasNoMetaValues: function (orNull, not, orGroup, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) {
+        return TgAbstractCriterionBehavior[1]._hasNoMetaValues.call(this, orNull, not, orGroup, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) &&
+            orNull === false && not === false && orGroup === null;
     }
 };
 
