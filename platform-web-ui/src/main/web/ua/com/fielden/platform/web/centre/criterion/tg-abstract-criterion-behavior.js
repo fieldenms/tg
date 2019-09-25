@@ -165,12 +165,39 @@ const TgAbstractCriterionBehaviorImpl = {
 
         domBind._openedBind = function (e) {
             document.addEventListener('keydown', this._onCaptureKeyDown, true);
+            // inspired by iron-fit-behavior.constrain, but does not change top / left positions of the dialog
+            this.$.metaValueEditor.resizeToConstraints = function () {
+                if (this.__shouldPosition) {
+                  return;
+                }
+            
+                this._discoverInfo();
+            
+                const info = this._fitInfo; // position at (0px, 0px) if not already positioned, so we can measure the
+                // natural size.
+            
+                this.sizingTarget.style.boxSizing = 'border-box'; // constrain the width and height if not already set
+            
+                const rect = this.getBoundingClientRect();
+            
+                if (!info.sizedBy.height) {
+                  this.__sizeDimension(rect, info.positionedBy.vertically, 'top', 'bottom', 'Height');
+                }
+            
+                if (!info.sizedBy.width) {
+                  this.__sizeDimension(rect, info.positionedBy.horizontally, 'left', 'right', 'Width');
+                }
+            }.bind(this.$.metaValueEditor);
+            
+            this.$.metaValueContainer.addEventListener('iron-resize', this.$.metaValueEditor.resizeToConstraints); // resize dialog without re-centering to make possible to use bottom buttons after accordion toggling
             this.$.scrollableComponent.addEventListener('iron-resize', this._onIronResize); // prevent 'paper-dialog' re-centering by preventing propagation of 'iron-resize' event further to scrollableComponent's parent
         }.bind(domBind);
 
         domBind._closedBind = function (e) {
             // Remove registered listeners on document and scrollable component.
             this.$.scrollableComponent.removeEventListener('iron-resize', this._onIronResize);
+            this.$.metaValueContainer.removeEventListener('iron-resize', this.$.metaValueEditor.resizeToConstraints);
+            delete this.$.metaValueEditor.resizeToConstraints;
             document.removeEventListener('keydown', this._onCaptureKeyDown, true);
 
             const dialog = this.$.metaValueEditor;
@@ -237,7 +264,7 @@ const TgAbstractCriterionBehaviorImpl = {
                     on-iron-overlay-closed="_closedBind"
                     on-iron-overlay-opened="_openedBind">
                     <tg-scrollable-component id="scrollableComponent" class="relative">
-                        <div class="metavalue-editor layout vertical">`
+                        <div id="metaValueContainer" class="metavalue-editor layout vertical">`
                             + self._createMetaValueEditors() +
                         `</div>
                     </tg-scrollable-component>

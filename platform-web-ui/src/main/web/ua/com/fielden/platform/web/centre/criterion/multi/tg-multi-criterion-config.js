@@ -4,6 +4,7 @@
  */
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
+import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 
 import '/resources/polymer/@polymer/paper-checkbox/paper-checkbox.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
@@ -24,7 +25,7 @@ const template = html`
         }
     </style>
     <tg-accordion id="orGroupAccordion" heading="OR grouping" hidden$="[[_excludeOrGroup]]" selected="[[_calcSelected(_orGroup)]]" on-accordion-transitioning-completed="_orGroupAccordionToggled">
-        <tg-flex-layout when-desktop="[[_whenDesktop]]" when-tablet="[[_whenDesktop]]" when-mobile="[[_whenMobile]]">
+        <tg-flex-layout when-desktop="[[_threeColumnLayout]]" when-mobile="[[_twoColumnLayout]]">
             <template is="dom-repeat" items="[[_groups]]" as="group">
                 <paper-radio-button toggles on-change="_multiMetaValueChanged" checked="[[_checked(_orGroup, group)]]">[[_radioTitle(group)]]</paper-radio-button>
             </template>
@@ -63,14 +64,16 @@ Polymer({
         _excludeOrGroup: {
             type: Boolean
         },
-        _whenDesktop: Array,
-        _whenMobile: Array,
+        _threeColumnLayout: Array,
+        _twoColumnLayout: Array,
     },
+
+    behaviors: [IronResizableBehavior],
 
     ready: function () {
         this._groups = [1, 2, 3, 4, 5, 6, 7, 8, 9]; // one-based
-        this._whenDesktop = [["justified", [],[],[]], ["justified", [],[],[]], ["justified", [],[],[]]];
-        this._whenMobile = [["justified", [],[]], ["justified", [],[]], ["justified", [],[]], ["justified", [],[]], ["justified", [],["skip"]]];
+        this._threeColumnLayout = [[["flex"],["flex"],["flex"]], [["flex"],["flex"],["flex"]], [["flex"],["flex"],["flex"]]];
+        this._twoColumnLayout = [[["flex"],["flex"]], [["flex"],["flex"]], [["flex"],["flex"]], [["flex"],["flex"]], [["flex"],["skip", "flex"]]];
     },
 
     attached: function () {
