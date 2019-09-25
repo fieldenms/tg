@@ -163,8 +163,10 @@ Polymer({
     },
 
     _showMoreIfPossible: function (e) {
-        if (this._hasMore) {
+        if (this._hasMore) { // show dialog with 'more' information and close toast
             this._showMessageDlg(e);
+        } else if (!this._showProgress && this._isCritical !== true) { // close toast on tap; however, do not close if it represents progress indication or if it is critical, but does not have MORE button (rare cases)
+            this._closeToast();
         }
     },
 
@@ -304,5 +306,6 @@ Polymer({
     _closeToast: function () {
         this.$.toast.close();
         this.$.toast._autoCloseCallBack = null;
+        this.$.toast.error = false;
     }
 });
