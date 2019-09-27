@@ -49,6 +49,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder4aWidth
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder7SecondaryAction;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder9RenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilderAlsoDynamicProps;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilderEditable;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.centre.api.resultset.layout.ICollapsedCardLayoutConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.layout.IExpandedCardLayoutConfig;
@@ -68,7 +69,7 @@ import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
  *
  * @param <T>
  */
-class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilderAlsoDynamicProps<T>, IResultSetBuilder0Checkbox<T>, IResultSetBuilder3Ordering<T>, IResultSetBuilder4OrderingDirection<T>, IResultSetBuilder7SecondaryAction<T>, IExpandedCardLayoutConfig<T>, ISummaryCardLayout<T> {
+class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilderAlsoDynamicProps<T>, IResultSetBuilder0Checkbox<T>, IResultSetBuilderEditable<T>, IResultSetBuilder4OrderingDirection<T>, IResultSetBuilder7SecondaryAction<T>, IExpandedCardLayoutConfig<T>, ISummaryCardLayout<T> {
 
     private final EntityCentreBuilder<T> builder;
     private final ResultSetSecondaryActionsBuilder secondaryActionBuilder = new ResultSetSecondaryActionsBuilder();
@@ -80,13 +81,14 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     private Integer orderSeq;
     private int width = 80;
     private boolean isFlexible = true;
+    private boolean isEditable = false;
 
     public ResultSetBuilder(final EntityCentreBuilder<T> builder) {
         this.builder = builder;
     }
 
     @Override
-    public IResultSetBuilder3Ordering<T> addProp(final String propName) {
+    public IResultSetBuilderEditable<T> addProp(final String propName) {
         if (StringUtils.isEmpty(propName)) {
             throw new IllegalArgumentException("Property name should not be null.");
         }
@@ -100,6 +102,12 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         this.propDef = Optional.empty();
         this.orderSeq = null;
         this.entityActionConfig = Optional::empty;
+        return this;
+    }
+
+    @Override
+    public IResultSetBuilder3Ordering<T> editable() {
+        this.isEditable = true;
         return this;
     }
 
@@ -334,10 +342,10 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     private void completePropIfNeeded() {
         // construct and add property to the builder
         if (propName.isPresent()) {
-            final ResultSetProp prop = ResultSetProp.propByName(propName.get(), width, isFlexible, (tooltipProp.isPresent() ? tooltipProp.get() : null), entityActionConfig);
+            final ResultSetProp<T> prop = ResultSetProp.propByName(propName.get(), width, isFlexible, isEditable, (tooltipProp.isPresent() ? tooltipProp.get() : null), entityActionConfig);
             this.builder.resultSetProperties.add(prop);
         } else if (propDef.isPresent()) {
-            final ResultSetProp prop = ResultSetProp.propByDef(propDef.get(), width, isFlexible, (tooltipProp.isPresent() ? tooltipProp.get() : null), entityActionConfig);
+            final ResultSetProp<T> prop = ResultSetProp.propByDef(propDef.get(), width, isFlexible, (tooltipProp.isPresent() ? tooltipProp.get() : null), entityActionConfig);
             this.builder.resultSetProperties.add(prop);
         }
 

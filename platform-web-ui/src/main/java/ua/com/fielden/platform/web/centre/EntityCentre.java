@@ -80,6 +80,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
@@ -143,6 +144,8 @@ import ua.com.fielden.platform.web.layout.FlexLayout;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
+import ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.EntityAutocompletionWidget;
+import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
 import ua.com.fielden.snappy.DateRangeConditionEnum;
 
 /**
@@ -907,6 +910,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
         final List<PropertyColumnElement> propertyColumns = new ArrayList<>();
         final Optional<List<ResultSetProp<T>>> resultProps = dslDefaultConfig.getResultSetProperties();
+        final List<AbstractWidget> widgets = new ArrayList<>();
         final ListMultimap<String, SummaryPropDef> summaryProps = dslDefaultConfig.getSummaryExpressions();
         final Class<?> managedType = centre.getEnhancer().getManagedType(root);
         if (resultProps.isPresent()) {
@@ -943,6 +947,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                     summaries.forEach(summary -> el.addSummary(summary.alias, PropertyTypeDeterminator.determinePropertyType(managedType, summary.alias), new Pair<>(summary.title, summary.desc)));
                 }
                 propertyColumns.add(el);
+                if (resultProp.isEditable) {
+                    widgets.add(createWidget(centre, resultProp));
+                }
             }
         }
 
@@ -1171,6 +1178,23 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         };
         logger.debug("Done.");
         return representation;
+    }
+
+    @SuppressWarnings("unchecked")
+    private AbstractWidget createWidget(final ICentreDomainTreeManagerAndEnhancer centre, final ResultSetProp<T> resultProp) {
+        final Class<? extends AbstractEntity<?>> root = this.entityType;
+        final Class<?> managedType = centre.getEnhancer().getManagedType(root);
+        final String resultPropName = getPropName(resultProp);
+        final boolean isEntityItself = "".equals(resultPropName); // empty property means "entity itself"
+        Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, resultPropName);
+        if (AbstractEntity.class.isAssignableFrom(propertyType)) {
+            propertyType = DynamicEntityClassLoader.getOriginalType(propertyType);
+        }
+        final String widgetPropName = "".equals(resultPropName) ? AbstractEntity.KEY : resultPropName;
+        if (AbstractEntity.class.isAssignableFrom(propertyType)) {
+            return new EntityAutocompletionWidget(TitlesDescsGetter.getTitleAndDesc(widgetPropName, propertyType), widgetPropName, (Class<AbstractEntity<?>>)propertyType);
+        }
+        return null;
     }
 
     /**
