@@ -21,9 +21,9 @@ import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1dFitBe
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1eRowHeight;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2Properties;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2aDraggable;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder3Ordering;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder4aWidth;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilderAlsoDynamicProps;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilderEditable;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.centre.api.resultset.scrolling.IScrollConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
@@ -143,7 +143,7 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> implements ICentreTopL
     }
 
     @Override
-    public IResultSetBuilderEditable<T> addProp(final String propName) {
+    public IResultSetBuilder3Ordering<T> addProp(final String propName) {
         return new ResultSetBuilder<>(builder).addProp(propName);
     }
 
@@ -165,6 +165,12 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> implements ICentreTopL
     @Override
     public <M extends AbstractEntity<?>> IResultSetBuilderAlsoDynamicProps<T> addProps(final String propName, final Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, final BiConsumer<M, Optional<CentreContext<T,?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
         return new ResultSetBuilder<>(builder).addProps(propName, dynColBuilderType, entityPreProcessor, contextConfig);
+    }
+
+    @Override
+    public IResultSetBuilder3Ordering<T> addEditableProp(final String propName) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

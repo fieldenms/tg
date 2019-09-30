@@ -12,6 +12,7 @@ import java.util.function.Supplier;
 
 import org.apache.commons.lang.StringUtils;
 
+import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
@@ -34,6 +35,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.IAlsoSecondaryAction;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
 import ua.com.fielden.platform.web.centre.api.resultset.IDynamicColumnBuilder;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetAutocompleterConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder0Checkbox;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1Toolbar;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aScroll;
@@ -49,7 +51,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder4aWidth
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder7SecondaryAction;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder9RenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilderAlsoDynamicProps;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilderEditable;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilderWidgetSelector;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.centre.api.resultset.layout.ICollapsedCardLayoutConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.layout.IExpandedCardLayoutConfig;
@@ -61,6 +63,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.tooltip.IWithTooltip;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
+import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
 
 /**
  * A package private helper class to decompose the task of implementing the Entity Centre DSL. It has direct access to protected fields in {@link EntityCentreBuilder}.
@@ -69,7 +72,7 @@ import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
  *
  * @param <T>
  */
-class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilderAlsoDynamicProps<T>, IResultSetBuilder0Checkbox<T>, IResultSetBuilderEditable<T>, IResultSetBuilder4OrderingDirection<T>, IResultSetBuilder7SecondaryAction<T>, IExpandedCardLayoutConfig<T>, ISummaryCardLayout<T> {
+class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilderAlsoDynamicProps<T>, IResultSetBuilderWidgetSelector<T>, IResultSetAutocompleterConfig<T>, IResultSetBuilder3Ordering<T>, IResultSetBuilder0Checkbox<T>, IResultSetBuilder4OrderingDirection<T>, IResultSetBuilder7SecondaryAction<T>, IExpandedCardLayoutConfig<T>, ISummaryCardLayout<T> {
 
     private final EntityCentreBuilder<T> builder;
     private final ResultSetSecondaryActionsBuilder secondaryActionBuilder = new ResultSetSecondaryActionsBuilder();
@@ -77,18 +80,18 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     protected Optional<String> propName = Optional.empty();
     protected Optional<String> tooltipProp = Optional.empty();
     protected Optional<PropDef<?>> propDef = Optional.empty();
+    protected Optional<AbstractWidget> widget;
     private Supplier<Optional<EntityActionConfig>> entityActionConfig;
     private Integer orderSeq;
     private int width = 80;
     private boolean isFlexible = true;
-    private boolean isEditable = false;
 
     public ResultSetBuilder(final EntityCentreBuilder<T> builder) {
         this.builder = builder;
     }
 
     @Override
-    public IResultSetBuilderEditable<T> addProp(final String propName) {
+    public IResultSetBuilder3Ordering<T> addProp(final String propName) {
         if (StringUtils.isEmpty(propName)) {
             throw new IllegalArgumentException("Property name should not be null.");
         }
@@ -106,7 +109,8 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IResultSetBuilder3Ordering<T> editable() {
+    public IResultSetBuilderWidgetSelector<T> addEditableProp(final String propName) {
+        this.addProp(propName);
         this.isEditable = true;
         return this;
     }
@@ -511,5 +515,29 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     public IResultSetBuilder2Properties<T> also() {
         completePropIfNeeded();
         return this;
+    }
+
+    @Override
+    public IResultSetAutocompleterConfig<T> asAutocompleter() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public IResultSetBuilder3Ordering<T> asSinglelineText() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public IResultSetBuilder3Ordering<T> asMultilineText() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public IResultSetBuilder3Ordering<T> withMatcher(final Class<? extends IValueMatcherWithContext<T, ?>> matcherType) {
+        // TODO Auto-generated method stub
+        return null;
     }
 }
