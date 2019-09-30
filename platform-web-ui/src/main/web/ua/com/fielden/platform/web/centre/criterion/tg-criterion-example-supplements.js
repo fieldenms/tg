@@ -45,6 +45,12 @@ Polymer({
             observer: '_notChanged'
         },
 
+        orGroup: {
+            type: Number,
+            notify: true,
+            observer: '_orGroupChanged'
+        },
+
         exclusive: {
             type: Boolean,
             notify: true,
@@ -98,6 +104,7 @@ Polymer({
 
         this.orNull = true;
         this.not = false;
+        this.orGroup = 1;
 
         this.exclusive = true;
         this.exclusive2 = false;
@@ -147,6 +154,10 @@ Polymer({
 
     _notChanged: function (newValue, oldValue) {
         console.log("_notChanged:", newValue, oldValue);
+    },
+
+    _orGroupChanged: function (newValue, oldValue) {
+        console.log("_orGroupChanged:", newValue, oldValue);
     },
 
     _exclusiveChanged: function (newValue, oldValue) {

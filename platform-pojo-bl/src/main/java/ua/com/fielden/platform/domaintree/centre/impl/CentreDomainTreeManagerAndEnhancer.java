@@ -476,7 +476,7 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
 
     @Override
     public List<String> analysisKeys() {
-        return new ArrayList<String>(currentAnalyses.keySet());
+        return new ArrayList<>(currentAnalyses.keySet());
     }
 
     @Override
@@ -767,6 +767,19 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
         public IAddToCriteriaTickManager setNot(final Class<?> root, final String property, final Boolean not) {
             // inject an enhanced type into method implementation
             base().setNot(enhancer().getManagedType(root), property, not);
+            return this;
+        }
+        
+        @Override
+        public Integer getOrGroup(final Class<?> root, final String property) {
+            // inject an enhanced type into method implementation
+            return base().getOrGroup(enhancer().getManagedType(root), property);
+        }
+
+        @Override
+        public IAddToCriteriaTickManager setOrGroup(final Class<?> root, final String property, final Integer orGroup) {
+            // inject an enhanced type into method implementation
+            base().setOrGroup(enhancer().getManagedType(root), property, orGroup);
             return this;
         }
 

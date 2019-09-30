@@ -64,6 +64,7 @@
                     const oldValue = editor._editingValue;
                     const oldOrNull = criterion._orNull;
                     const oldNot = criterion._not;
+                    const oldOrGroup = criterion._orGroup;
                     //setting query params
                     centre.queryPart = "compositeProp={DEFAULT_KEY 10}";
                     centre._setQueryParams();
@@ -71,11 +72,13 @@
                     assert.strictEqual(editor._commValue, "DEFAULT_KEY 10", "The composite prop value should be: DEMO00,DEMO01");
                     assert.strictEqual(criterion.orNull, true, "The orNull mnemonic for composite prop should be: true");
                     assert.strictEqual(criterion.not, false, "The not mnemonic for composite prop should be: false");
+                    assert.strictEqual(criterion.orGroup, null, "The orGroup mnemonic for composite prop should be: null");
                     //Restoring
                     editor._editingValue = oldValue;
                     editor.commit();
                     criterion._orNull = oldOrNull;
                     criterion._not = oldNot;
+                    criterion._orGroup = oldOrGroup;
                     criterion._acceptMetaValues(true);
                 
                     done();
@@ -94,6 +97,7 @@
                     const old2Value = editor2._editingValue;
                     const oldOrNull = criterion._orNull;
                     const oldNot = criterion._not;
+                    const oldOrGroup = criterion._orGroup;
                     const old1Exclusion = criterion._exclusive;
                     const old2Exclusion = criterion._exclusive2;
                     //Setting query params
@@ -104,6 +108,7 @@
                     assert.strictEqual(editor2._commValue, "24", "The intger prop second value should be: 24");
                     assert.strictEqual(criterion.orNull, false, "The orNull mnemonic for integer prop should be: false");
                     assert.strictEqual(criterion.not, false, "The not mnemonic for integer prop should be: false");
+                    assert.strictEqual(criterion.orGroup, null, "The orGroup mnemonic for integer prop should be: null");
                     assert.strictEqual(criterion.exclusive, false, "The exclusive mnemonic for integer prop should be: false");
                     assert.strictEqual(criterion.exclusive2, false, "The exclusive2 mnemonic for integer prop should be: false");
                     // set eclusion for two parameters.
@@ -113,6 +118,7 @@
                     assert.strictEqual(editor2._commValue, "24", "The intger prop second value should be: 24");
                     assert.strictEqual(criterion.orNull, false, "The orNull mnemonic for integer prop should be: false");
                     assert.strictEqual(criterion.not, false, "The not mnemonic for integer prop should be: false");
+                    assert.strictEqual(criterion.orGroup, null, "The orGroup mnemonic for integer prop should be: null");
                     assert.strictEqual(criterion.exclusive, true, "The exclusive mnemonic for integer prop should be: true");
                     assert.strictEqual(criterion.exclusive2, true, "The exclusive2 mnemonic for integer prop should be: true");
                     // set eclusion for first parameter.
@@ -122,6 +128,7 @@
                     assert.strictEqual(editor2._commValue, "24", "The intger prop second value should be: 24");
                     assert.strictEqual(criterion.orNull, false, "The orNull mnemonic for integer prop should be: false");
                     assert.strictEqual(criterion.not, false, "The not mnemonic for integer prop should be: false");
+                    assert.strictEqual(criterion.orGroup, null, "The orGroup mnemonic for integer prop should be: null");
                     assert.strictEqual(criterion.exclusive, true, "The exclusive mnemonic for integer prop should be: true");
                     assert.strictEqual(criterion.exclusive2, false, "The exclusive2 mnemonic for integer prop should be: false");
                     // set eclusion for second parameter.
@@ -131,6 +138,7 @@
                     assert.strictEqual(editor2._commValue, "24", "The intger prop second value should be: 24");
                     assert.strictEqual(criterion.orNull, false, "The orNull mnemonic for integer prop should be: false");
                     assert.strictEqual(criterion.not, false, "The not mnemonic for integer prop should be: false");
+                    assert.strictEqual(criterion.orGroup, null, "The orGroup mnemonic for integer prop should be: null");
                     assert.strictEqual(criterion.exclusive, false, "The exclusive mnemonic for integer prop should be: false");
                     assert.strictEqual(criterion.exclusive2, true, "The exclusive2 mnemonic for integer prop should be: true");
                     //Restoring
@@ -140,6 +148,7 @@
                     editor2.commit();
                     criterion._orNull = oldOrNull;
                     criterion._not = oldNot;
+                    criterion._orGroup = oldOrGroup;
                     criterion._exclusive = old1Exclusion;
                     criterion._exclusive2 = old2Exclusion;
                     criterion._acceptMetaValues(true);
@@ -159,6 +168,7 @@
                     const old2Value = editor2._editingValue;
                     const oldOrNull = criterion._orNull;
                     const oldNot = criterion._not;
+                    const oldOrGroup = criterion._orGroup;
                     const old1Exclusion = criterion._exclusive;
                     const old2Exclusion = criterion._exclusive2;
                     //setting query params
@@ -169,6 +179,7 @@
                     assert.strictEqual(editor2._commValue, "false", "The boolean prop second value should be: false");
                     assert.strictEqual(criterion.orNull, false, "The orNull mnemonic for integer prop should be: false");
                     assert.strictEqual(criterion.not, false, "The not mnemonic for integer prop should be: false");
+                    assert.strictEqual(criterion.orGroup, null, "The orGroup mnemonic for integer prop should be: null");
                     assert.strictEqual(criterion.exclusive, undefined, "The exclusive mnemonic for integer prop should be: undefined");
                     assert.strictEqual(criterion.exclusive2, undefined, "The exclusive2 mnemonic for integer prop should be: undefined");
                     //Setting square brackets for boolean values
@@ -178,6 +189,7 @@
                     assert.strictEqual(editor2._commValue, "false", "The boolean prop second value should be: false");
                     assert.strictEqual(criterion.orNull, false, "The orNull mnemonic for integer prop should be: false");
                     assert.strictEqual(criterion.not, false, "The not mnemonic for integer prop should be: false");
+                    assert.strictEqual(criterion.orGroup, null, "The orGroup mnemonic for integer prop should be: null");
                     assert.strictEqual(criterion.exclusive, undefined, "The exclusive mnemonic for integer prop should be: undefined");
                     assert.strictEqual(criterion.exclusive2, undefined, "The exclusive2 mnemonic for integer prop should be: undefined");
                     //Restoring
@@ -187,6 +199,7 @@
                     editor2.commit();
                     criterion._orNull = oldOrNull;
                     criterion._not = oldNot;
+                    criterion._orGroup = oldOrGroup;
                     criterion._exclusive = old1Exclusion;
                     criterion._exclusive2 = old2Exclusion;
                     criterion._acceptMetaValues(true);
@@ -204,6 +217,7 @@
                     const oldValue = editor._editingValue;
                     const oldNot = criterion._not;
                     const oldOrNull = criterion._orNull;
+                    const oldOrGroup = criterion._orGroup;
                     
                     const intEditor1 = centre.$.selection_criteria.$.editor_4_tgPersistentEntityWithProperties_integerProp_from;
                     const intEditor2 = centre.$.selection_criteria.$.editor_4_tgPersistentEntityWithProperties_integerProp_to;
@@ -212,6 +226,7 @@
                     const oldInt2Value = intEditor2._editingValue;
                     const oldIntOrNull = intCriterion._orNull;
                     const oldIntNot = intCriterion._not;
+                    const oldIntOrGroup = intCriterion._orGroup;
                     const oldInt1Exclusion = intCriterion._exclusive;
                     const oldInt2Exclusion = intCriterion._exclusive2;
                     
@@ -222,10 +237,12 @@
                     assert.strictEqual(editor._commValue, "DEMO00,DEMO01", "The THIS prop value should be: DEMO00,DEMO01");
                     assert.strictEqual(criterion.not, true, "The not mnemonic for THIS prop should be: true");
                     assert.strictEqual(criterion.orNull, true, "The orNull mnemonic for THIS prop should be: true");
+                    assert.strictEqual(criterion.orGroup, null, "The orGroup mnemonic for THIS prop should be: null");
                     assert.strictEqual(intEditor1._commValue, "18", "The intger prop first value should be: 18");
                     assert.strictEqual(intEditor2._commValue, "24", "The intger prop second value should be: 24");
                     assert.strictEqual(intCriterion.orNull, false, "The orNull mnemonic for integer prop should be: false");
                     assert.strictEqual(intCriterion.not, false, "The not mnemonic for integer prop should be: false");
+                    assert.strictEqual(intCriterion.orGroup, null, "The orGroup mnemonic for integer prop should be: null");
                     assert.strictEqual(intCriterion.exclusive, true, "The exclusive mnemonic for integer prop should be: true");
                     assert.strictEqual(intCriterion.exclusive2, false, "The exclusive2 mnemonic for integer prop should be: false");
                     
@@ -234,6 +251,7 @@
                     editor.commit();
                     criterion._not = oldNot;
                     criterion._orNull = oldOrNull;
+                    criterion._orGroup = oldOrGroup;
                     criterion._acceptMetaValues(true);
                     intEditor1._editingValue = oldInt1Value;
                     intEditor1.commit();
@@ -241,6 +259,7 @@
                     intEditor2.commit();
                     intCriterion._orNull = oldIntOrNull;
                     intCriterion._not = oldIntNot;
+                    intCriterion._orGroup = oldIntOrGroup;
                     intCriterion._exclusive = oldInt1Exclusion;
                     intCriterion._exclusive2 = oldInt2Exclusion;
                     intCriterion._acceptMetaValues(true);
@@ -257,6 +276,7 @@
                     const oldValue = editor._editingValue;
                     const oldNot = criterion._not;
                     const oldOrNull = criterion._orNull;
+                    const oldOrGroup = criterion._orGroup;
                     //setting query params
                     centre.queryPart = "critOnlyBooleanProp!={true}";
                     centre._setQueryParams();
@@ -264,11 +284,13 @@
                     assert.strictEqual(editor._commValue, "true", "The critonly boolean prop value should be: true");
                     assert.strictEqual(criterion.not, undefined, "The not mnemonic for critonly boolean prop should be: undefined");
                     assert.strictEqual(criterion.orNull, undefined, "The orNull mnemonic for critonly boolean prop should be: undefined");
+                    assert.strictEqual(criterion.orGroup, undefined, "The orGroup mnemonic for critonly boolean prop should be: undefined");
                     //Restoring
                     editor._editingValue = oldValue;
                     editor.commit();
                     criterion._not = oldNot;
                     criterion._orNull = oldOrNull;
+                    criterion._orGroup = oldOrGroup;
                     criterion._acceptMetaValues(true);
                 
                     done();

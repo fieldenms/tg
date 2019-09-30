@@ -32,6 +32,7 @@ import ua.com.fielden.platform.utils.Pair;
  * @author TG Team
  *
  */
+@Deprecated
 public class DomainTreeVersionMaintainer extends AbstractDomainTree {
     private final static Logger logger = Logger.getLogger(DomainTreeVersionMaintainer.class);
 
@@ -92,7 +93,7 @@ public class DomainTreeVersionMaintainer extends AbstractDomainTree {
             logger.debug("\tA centre instance for [" + eccKey + "] is of CURRENT (1) version and has been succesfully deserialised.");
             // all is okay -- the version is current
             logger.debug("Ended maintaining the version of centre instance for [" + eccKey + "].");
-            return new Pair<CentreDomainTreeManagerAndEnhancer, Boolean>(cdtmae, false);
+            return new Pair<>(cdtmae, false);
         } catch (final Exception e) {
             logger.debug("Ended maintaining the version of centre instance for [" + eccKey + "] -- the exception has occured.");
             throw e;

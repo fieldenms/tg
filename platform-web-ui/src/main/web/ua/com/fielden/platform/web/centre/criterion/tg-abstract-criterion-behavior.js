@@ -2,6 +2,8 @@ import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js'
 import '/resources/polymer/@polymer/paper-styles/paper-styles.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import '/resources/components/tg-scrollable-component.js';
+import '/resources/images/tg-icons.js';
+import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
 
 const criterionBehaviorStyle = html`
     <custom-style>
@@ -67,7 +69,13 @@ const TgAbstractCriterionBehaviorImpl = {
             value: false
         },
 
-
+        /**
+         * Indicates whether to exclude or-group mnemonic.
+         */
+        excludeOrGroup: {
+            type: Boolean,
+            value: false
+        },
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
         //////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
@@ -92,7 +100,7 @@ const TgAbstractCriterionBehaviorImpl = {
     },
 
     observers: [
-        '_updateIconButtonStyle(orNull, not)'
+        '_updateIconButtonStyle(orNull, not, orGroup)'
     ],
 
     ready: function () {
@@ -119,6 +127,7 @@ const TgAbstractCriterionBehaviorImpl = {
         this._exclusive2 = false;
         this._orNull = false;
         this._not = false;
+        this._orGroup = null;
         this._acceptMetaValues(false);
     },
 
@@ -134,6 +143,8 @@ const TgAbstractCriterionBehaviorImpl = {
         domBind._orNullBind = self._orNull;
         domBind._excludeMissingBind = self.excludeMissing;
         domBind._notBind = self._not;
+        domBind._excludeOrGroupBind = self.excludeOrGroup;
+        domBind._orGroupBind = self._orGroup;
         domBind._exclusiveBind = self._exclusive;
         domBind._exclusive2Bind = self._exclusive2;
         domBind._datePrefixBind = self._datePrefix;
@@ -148,15 +159,48 @@ const TgAbstractCriterionBehaviorImpl = {
             }
         }.bind(domBind);
 
+        domBind._onIronResize = function (event) {
+            tearDownEvent(event);
+        };
+
         domBind._openedBind = function (e) {
             document.addEventListener('keydown', this._onCaptureKeyDown, true);
+            // inspired by iron-fit-behavior.constrain, but does not change top / left positions of the dialog
+            this.$.metaValueEditor.resizeToConstraints = function () {
+                if (this.__shouldPosition) {
+                  return;
+                }
+            
+                this._discoverInfo();
+            
+                const info = this._fitInfo; // position at (0px, 0px) if not already positioned, so we can measure the
+                // natural size.
+            
+                this.sizingTarget.style.boxSizing = 'border-box'; // constrain the width and height if not already set
+            
+                const rect = this.getBoundingClientRect();
+            
+                if (!info.sizedBy.height) {
+                  this.__sizeDimension(rect, info.positionedBy.vertically, 'top', 'bottom', 'Height');
+                }
+            
+                if (!info.sizedBy.width) {
+                  this.__sizeDimension(rect, info.positionedBy.horizontally, 'left', 'right', 'Width');
+                }
+            }.bind(this.$.metaValueEditor);
+            
+            this.$.metaValueContainer.addEventListener('iron-resize', this.$.metaValueEditor.resizeToConstraints); // resize dialog without re-centering to make possible to use bottom buttons after accordion toggling
+            this.$.scrollableComponent.addEventListener('iron-resize', this._onIronResize); // prevent 'paper-dialog' re-centering by preventing propagation of 'iron-resize' event further to scrollableComponent's parent
         }.bind(domBind);
 
         domBind._closedBind = function (e) {
-            const dialog = this.$.metaValueEditor;
-            //Remove registered listeners on document.
+            // Remove registered listeners on document and scrollable component.
+            this.$.scrollableComponent.removeEventListener('iron-resize', this._onIronResize);
+            this.$.metaValueContainer.removeEventListener('iron-resize', this.$.metaValueEditor.resizeToConstraints);
+            delete this.$.metaValueEditor.resizeToConstraints;
             document.removeEventListener('keydown', this._onCaptureKeyDown, true);
 
+            const dialog = this.$.metaValueEditor;
             document.body.removeChild(dialog);
             document.body.removeChild(this);
             //Restoring focus and icon button state.
@@ -167,6 +211,7 @@ const TgAbstractCriterionBehaviorImpl = {
         domBind._clearMetaValues = function () {
             domBind._orNullBind = false;
             domBind._notBind = false;
+            domBind._orGroupBind = null;
             domBind._exclusiveBind = false;
             domBind._exclusive2Bind = false;
             domBind._datePrefixBind = null;
@@ -178,6 +223,7 @@ const TgAbstractCriterionBehaviorImpl = {
             self._cancelMetaValues();
             domBind._orNullBind = self._orNull;
             domBind._notBind = self._not;
+            domBind._orGroupBind = self._orGroup;
             domBind._exclusiveBind = self._exclusive;
             domBind._exclusive2Bind = self._exclusive2;
             domBind._datePrefixBind = self._datePrefix;
@@ -193,6 +239,7 @@ const TgAbstractCriterionBehaviorImpl = {
             self._exclusive2 = domBind._exclusive2Bind;
             self._orNull = domBind._orNullBind;
             self._not = domBind._notBind;
+            self._orGroup = domBind._orGroupBind;
             self._acceptMetaValues(true);
         };
 
@@ -216,8 +263,8 @@ const TgAbstractCriterionBehaviorImpl = {
                     entry-animation="scale-up-animation" exit-animation="fade-out-animation"
                     on-iron-overlay-closed="_closedBind"
                     on-iron-overlay-opened="_openedBind">
-                    <tg-scrollable-component class="relative">
-                        <div class="metavalue-editor layout vertical">`
+                    <tg-scrollable-component id="scrollableComponent" class="relative">
+                        <div id="metaValueContainer" class="metavalue-editor layout vertical">`
                             + self._createMetaValueEditors() +
                         `</div>
                     </tg-scrollable-component>
@@ -258,16 +305,22 @@ const TgAbstractCriterionBehaviorImpl = {
     /**
      * Returns 'true' if criterion has no meta values assigned, 'false' otherwise. Should be overridden to provide functionality in specific descendants.
      */
-    _hasNoMetaValues: function (orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) {
+    _hasNoMetaValues: function (orNull, not, orGroup, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) {
         return true;
     },
 
-    _updateIconButtonStyle: function (orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) {
-        this._dom().$.iconButton.setAttribute('style', this._computeIconButtonStyle(this.orNull, this.not, this.exclusive, this.exclusive2, this.datePrefix, this.dateMnemonic, this.andBefore));
+    _updateIconButtonStyle: function (orNull, not, orGroup, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) {
+        this._dom().$.iconButton.setAttribute('style', this._computeIconButtonStyle(this.orNull, this.not, this.orGroup, this.exclusive, this.exclusive2, this.datePrefix, this.dateMnemonic, this.andBefore));
+        this._dom().$.iconButton.icon = this.orGroup !== null ? 'tg-icons:number' + this.orGroup : 'more-horiz';
     },
 
-    _computeIconButtonStyle: function (orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) {
-        return 'visibility:' + (!this._iconButtonVisible() ? 'hidden' : 'inherit') + '; color:' + (this._hasNoMetaValues(orNull, not, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) ? '#757575' : '#0288D1') + ';';
+    _computeIconButtonStyle: function (orNull, not, orGroup, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) {
+        const hasNoMetaValues = this._hasNoMetaValues(orNull, not, orGroup, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore);
+        const foregroundColor = hasNoMetaValues ? '#757575;' : '#0288D1;';
+        return 'visibility:' + (!this._iconButtonVisible() ? 'hidden;' : 'inherit;') +
+            'color:' + foregroundColor + // '--paper-light-blue-700' for existing mnemonics
+            '--paper-icon-button-ink-color: ' + foregroundColor + // '--paper-light-blue-700' for existing mnemonics in paper-ripple (#ink)
+            (orGroup !== null ? 'border-radius: 50%; background-color: #e1f5fe; box-shadow: 0 0 2px #0288D1;' : ''); // '--paper-light-blue-700' for border and number of group, --paper-light-blue-50 for background; also make paper-icon-button look like circle
     },
 
     /**

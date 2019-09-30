@@ -404,6 +404,9 @@ const TgSelectionCriteriaBehaviorImpl = {
         if (propertyMetaValues["not"] !== false) {
             modifiedMetaValues["not"] = propertyMetaValues["not"];
         }
+        if (propertyMetaValues["orGroup"] !== null) {
+            modifiedMetaValues["orGroup"] = propertyMetaValues["orGroup"];
+        }
         if (propertyMetaValues["exclusive"] !== false) {
             modifiedMetaValues["exclusive"] = propertyMetaValues["exclusive"];
         }
@@ -607,6 +610,7 @@ const TgSelectionCriteriaBehaviorImpl = {
                 const prop = this.propertyModel[propertyName];
                 this.notifyPath('propertyModel.' + propertyName + '.orNull', prop.orNull);
                 this.notifyPath('propertyModel.' + propertyName + '.not', prop.not);
+                this.notifyPath('propertyModel.' + propertyName + '.orGroup', prop.orGroup);
                 this.notifyPath('propertyModel.' + propertyName + '.exclusive', prop.exclusive);
                 this.notifyPath('propertyModel.' + propertyName + '.exclusive2', prop.exclusive2);
                 this.notifyPath('propertyModel.' + propertyName + '.datePrefix', prop.datePrefix);
@@ -629,6 +633,7 @@ const TgSelectionCriteriaBehaviorImpl = {
                 const model = {};
                 model["orNull"] = typeof meta["orNull"] === 'undefined' ? false : meta["orNull"];
                 model["not"] = typeof meta["not"] === 'undefined' ? false : meta["not"];
+                model["orGroup"] = typeof meta["orGroup"] === 'undefined' ? null : meta["orGroup"];
                 model["exclusive"] = typeof meta["exclusive"] === 'undefined' ? false : meta["exclusive"];
                 model["exclusive2"] = typeof meta["exclusive2"] === 'undefined' ? false : meta["exclusive2"];
                 model["datePrefix"] = typeof meta["datePrefix"] === 'undefined' ? null : meta["datePrefix"];

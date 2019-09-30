@@ -104,7 +104,7 @@ public class LocatorDomainTreeManager extends CentreDomainTreeManager implements
          * fields.
          */
         public AddToCriteriaTickManagerForLocator(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-            this(AbstractDomainTree.<List<String>> createRootsMap(), serialiser, AbstractDomainTree.<Object> createPropertiesMap(), AbstractDomainTree.<Object> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<DateRangePrefixEnum> createPropertiesMap(), AbstractDomainTree.<MnemonicEnum> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), null, new LocatorManager(serialiser, rootTypes), AbstractDomainTree.<Set<MetaValueType>> createPropertiesMap());
+            this(AbstractDomainTree.<List<String>> createRootsMap(), serialiser, AbstractDomainTree.<Object> createPropertiesMap(), AbstractDomainTree.<Object> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<DateRangePrefixEnum> createPropertiesMap(), AbstractDomainTree.<MnemonicEnum> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Integer> createPropertiesMap(), null, new LocatorManager(serialiser, rootTypes), AbstractDomainTree.<Set<MetaValueType>> createPropertiesMap());
         }
 
         /**
@@ -112,14 +112,15 @@ public class LocatorDomainTreeManager extends CentreDomainTreeManager implements
          *
          * @param serialiser
          */
-        public AddToCriteriaTickManagerForLocator(final Map<Class<?>, List<String>> checkedProperties, final ISerialiser serialiser, final Map<Pair<Class<?>, String>, Object> propertiesValues1, final Map<Pair<Class<?>, String>, Object> propertiesValues2, final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive1, final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive2, final Map<Pair<Class<?>, String>, DateRangePrefixEnum> propertiesDatePrefixes, final Map<Pair<Class<?>, String>, MnemonicEnum> propertiesDateMnemonics, final Map<Pair<Class<?>, String>, Boolean> propertiesAndBefore, final Map<Pair<Class<?>, String>, Boolean> propertiesOrNulls, final Map<Pair<Class<?>, String>, Boolean> propertiesNots, final Integer columnsNumber, final LocatorManager locatorManager, final Map<Pair<Class<?>, String>, Set<MetaValueType>> propertiesMetaValuePresences) {
-            super(checkedProperties, serialiser, propertiesValues1, propertiesValues2, propertiesExclusive1, propertiesExclusive2, propertiesDatePrefixes, propertiesDateMnemonics, propertiesAndBefore, propertiesOrNulls, propertiesNots, columnsNumber, locatorManager, propertiesMetaValuePresences);
+        public AddToCriteriaTickManagerForLocator(final Map<Class<?>, List<String>> checkedProperties, final ISerialiser serialiser, final Map<Pair<Class<?>, String>, Object> propertiesValues1, final Map<Pair<Class<?>, String>, Object> propertiesValues2, final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive1, final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive2, final Map<Pair<Class<?>, String>, DateRangePrefixEnum> propertiesDatePrefixes, final Map<Pair<Class<?>, String>, MnemonicEnum> propertiesDateMnemonics, final Map<Pair<Class<?>, String>, Boolean> propertiesAndBefore, final Map<Pair<Class<?>, String>, Boolean> propertiesOrNulls, final Map<Pair<Class<?>, String>, Boolean> propertiesNots, final Map<Pair<Class<?>, String>, Integer> propertiesOrGroups, final Integer columnsNumber, final LocatorManager locatorManager, final Map<Pair<Class<?>, String>, Set<MetaValueType>> propertiesMetaValuePresences) {
+            super(checkedProperties, serialiser, propertiesValues1, propertiesValues2, propertiesExclusive1, propertiesExclusive2, propertiesDatePrefixes, propertiesDateMnemonics, propertiesAndBefore, propertiesOrNulls, propertiesNots, propertiesOrGroups, columnsNumber, locatorManager, propertiesMetaValuePresences);
         }
 
         @Override
         public int getColumnsNumber() {
             return columnsNumber() == null ? 1 : columnsNumber();
         }
+                final EnhancementPropertiesMap<Integer> propertiesOrGroups = readValue(buffer, EnhancementPropertiesMap.class);
     }
 
     @Override
