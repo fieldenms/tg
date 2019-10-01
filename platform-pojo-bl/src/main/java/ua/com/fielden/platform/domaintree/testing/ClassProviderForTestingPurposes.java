@@ -5,14 +5,12 @@ import static ua.com.fielden.platform.reflection.ClassesRetriever.findClass;
 import java.util.ArrayList;
 import java.util.List;
 
-import ua.com.fielden.platform.serialisation.api.impl.DefaultSerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.impl.ProvidedSerialisationClassProvider;
 
 public class ClassProviderForTestingPurposes extends ProvidedSerialisationClassProvider {
 
     private static final List<Class<?>> testTypes = new ArrayList<>();
     static {
-        testTypes.addAll(DefaultSerialisationClassProvider.utilityGeneratedClasses());
         testTypes.add(findClass("ua.com.fielden.platform.domaintree.testing.MiMasterEntityForGlobalDomainTree"));
         testTypes.add(findClass("ua.com.fielden.platform.domaintree.testing.EnhancingEvenSlaverEntity"));
         testTypes.add(findClass("ua.com.fielden.platform.domaintree.testing.EnhancingMasterEntity"));
