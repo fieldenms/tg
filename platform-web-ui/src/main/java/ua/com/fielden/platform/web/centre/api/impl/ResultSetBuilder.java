@@ -1,11 +1,14 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
 import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp.dynamicProps;
 import static ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.mkInsertionPoint;
 import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig.configInsertionPoint;
 import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig.configInsertionPointWithPagination;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
@@ -16,6 +19,8 @@ import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.CentreContext;
@@ -52,6 +57,8 @@ import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder7Second
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder9RenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilderAlsoDynamicProps;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilderWidgetSelector;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetEditorConfig;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetPropertyActionConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.centre.api.resultset.layout.ICollapsedCardLayoutConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.layout.IExpandedCardLayoutConfig;
@@ -63,7 +70,10 @@ import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.tooltip.IWithTooltip;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
+import ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.EntityAutocompletionWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
+import ua.com.fielden.platform.web.view.master.api.widgets.multilinetext.impl.MultilineTextWidget;
+import ua.com.fielden.platform.web.view.master.api.widgets.singlelinetext.impl.SinglelineTextWidget;
 
 /**
  * A package private helper class to decompose the task of implementing the Entity Centre DSL. It has direct access to protected fields in {@link EntityCentreBuilder}.
@@ -72,15 +82,17 @@ import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
  *
  * @param <T>
  */
-class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilderAlsoDynamicProps<T>, IResultSetBuilderWidgetSelector<T>, IResultSetAutocompleterConfig<T>, IResultSetBuilder3Ordering<T>, IResultSetBuilder0Checkbox<T>, IResultSetBuilder4OrderingDirection<T>, IResultSetBuilder7SecondaryAction<T>, IExpandedCardLayoutConfig<T>, ISummaryCardLayout<T> {
+class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilderAlsoDynamicProps<T>, IResultSetBuilderWidgetSelector<T>, IResultSetBuilder3Ordering<T>, IResultSetBuilder0Checkbox<T>, IResultSetBuilder4OrderingDirection<T>, IResultSetBuilder7SecondaryAction<T>, IExpandedCardLayoutConfig<T>, ISummaryCardLayout<T> {
 
     private final EntityCentreBuilder<T> builder;
     private final ResultSetSecondaryActionsBuilder secondaryActionBuilder = new ResultSetSecondaryActionsBuilder();
 
+    private final Map<String, Class<? extends IValueMatcherWithContext<T, ?>>> valueMatcherForProps = new HashMap<>();
+
     protected Optional<String> propName = Optional.empty();
     protected Optional<String> tooltipProp = Optional.empty();
     protected Optional<PropDef<?>> propDef = Optional.empty();
-    protected Optional<AbstractWidget> widget;
+    protected Optional<AbstractWidget> widget = Optional.empty();
     private Supplier<Optional<EntityActionConfig>> entityActionConfig;
     private Integer orderSeq;
     private int width = 80;
@@ -517,26 +529,42 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         return this;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public IResultSetAutocompleterConfig<T> asAutocompleter() {
+        final Class<? extends AbstractEntity<?>> propType = StringUtils.isEmpty(treeName(this.propName.get())) ? this.builder.getEntityType()
+                : (Class<? extends AbstractEntity<?>>) PropertyTypeDeterminator.determinePropertyType(this.builder.getEntityType(), this.propName.get());
+        final EntityAutocompletionWidget editor = new EntityAutocompletionWidget(TitlesDescsGetter.getTitleAndDesc(this.propName.get(), this.builder.getEntityType()), this.propName.get(), propType);
+        this.widget = Optional.of(editor);
+        return new ResultSetAutocompleterConfig<>(this, editor);
+    }
+
+    @Override
+    public IResultSetEditorConfig<T> asSinglelineText() {
+        final SinglelineTextWidget editor = new SinglelineTextWidget(TitlesDescsGetter.getTitleAndDesc(this.propName.get(), this.builder.getEntityType()), this.propName.get());
+        this.widget = Optional.of(editor);
+        return new ResultSetEditorConfig<>(this, editor);
+    }
+
+    @Override
+    public IResultSetEditorConfig<T> asMultilineText() {
+        final MultilineTextWidget editor = new MultilineTextWidget(TitlesDescsGetter.getTitleAndDesc(this.propName.get(), this.builder.getEntityType()), this.builder.getEntityType(), this.propName.get());
+        this.widget = Optional.of(editor);
+        return new ResultSetEditorConfig<>(this, editor);
+    }
+
+    public void assignMatcher(final String propName, final Class<? extends IValueMatcherWithContext<T, ?>> matcher) {
+        valueMatcherForProps.put(propName, matcher);
+    }
+
+    @Override
+    public IResultSetPropertyActionConfig<T> skipValidation() {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public IResultSetBuilder3Ordering<T> asSinglelineText() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public IResultSetBuilder3Ordering<T> asMultilineText() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public IResultSetBuilder3Ordering<T> withMatcher(final Class<? extends IValueMatcherWithContext<T, ?>> matcherType) {
+    public IResultSetBuilder3Ordering<T> withEditorAction(final EntityActionConfig actionConfig) {
         // TODO Auto-generated method stub
         return null;
     }
