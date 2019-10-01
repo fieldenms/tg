@@ -9,7 +9,7 @@ import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeMan
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeRepresentation.AnalysisAddToAggregationTickRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeRepresentation.AnalysisAddToDistributionTickRepresentation;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 
 /**
  * A domain tree manager for analyses.
@@ -23,23 +23,23 @@ public class AnalysisDomainTreeManager extends AbstractAnalysisDomainTreeManager
     /**
      * A <i>manager</i> constructor for the first time instantiation.
      *
-     * @param serialiser
+     * @param entityFactory
      * @param rootTypes
      */
-    public AnalysisDomainTreeManager(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-        this(serialiser, new AnalysisDomainTreeRepresentation(serialiser, rootTypes), null, new AnalysisAddToDistributionTickManager(), new AnalysisAddToAggregationTickManager(), null);
+    public AnalysisDomainTreeManager(final EntityFactory entityFactory, final Set<Class<?>> rootTypes) {
+        this(entityFactory, new AnalysisDomainTreeRepresentation(entityFactory, rootTypes), null, new AnalysisAddToDistributionTickManager(), new AnalysisAddToAggregationTickManager(), null);
     }
 
     /**
      * A <i>manager</i> constructor.
      *
-     * @param serialiser
+     * @param entityFactory
      * @param dtr
      * @param firstTick
      * @param secondTick
      */
-    protected AnalysisDomainTreeManager(final ISerialiser serialiser, final AnalysisDomainTreeRepresentation dtr, final Boolean visible, final AnalysisAddToDistributionTickManager firstTick, final AnalysisAddToAggregationTickManager secondTick, final Integer visibleDistributedValuesNumber) {
-        super(serialiser, dtr, visible, firstTick, secondTick);
+    protected AnalysisDomainTreeManager(final EntityFactory entityFactory, final AnalysisDomainTreeRepresentation dtr, final Boolean visible, final AnalysisAddToDistributionTickManager firstTick, final AnalysisAddToAggregationTickManager secondTick, final Integer visibleDistributedValuesNumber) {
+        super(entityFactory, dtr, visible, firstTick, secondTick);
 
         this.visibleDistributedValuesNumber = visibleDistributedValuesNumber;
     }

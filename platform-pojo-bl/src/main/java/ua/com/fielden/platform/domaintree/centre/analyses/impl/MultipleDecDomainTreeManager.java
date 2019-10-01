@@ -8,7 +8,7 @@ import ua.com.fielden.platform.domaintree.centre.analyses.IMultipleDecDomainTree
 import ua.com.fielden.platform.domaintree.centre.analyses.IMultipleDecDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeManager.AnalysisAddToAggregationTickManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeManager.AnalysisAddToDistributionTickManager;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 
 /**
  * A domain tree manager for multiple dec analyis.
@@ -21,23 +21,23 @@ public class MultipleDecDomainTreeManager extends AbstractAnalysisDomainTreeMana
     /**
      * A <i>manager</i> constructor for the first time instantiation.
      * 
-     * @param serialiser
+     * @param entityFactory
      * @param rootTypes
      */
-    public MultipleDecDomainTreeManager(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-        this(serialiser, new MultipleDecDomainTreeRepresentation(serialiser, rootTypes), null, new AnalysisAddToDistributionTickManager(), new AnalysisAddToAggregationTickManager());
+    public MultipleDecDomainTreeManager(final EntityFactory entityFactory, final Set<Class<?>> rootTypes) {
+        this(entityFactory, new MultipleDecDomainTreeRepresentation(entityFactory, rootTypes), null, new AnalysisAddToDistributionTickManager(), new AnalysisAddToAggregationTickManager());
     }
 
     /**
      * A <i>manager</i> constructor for 'restoring from the cloud' process.
      * 
-     * @param serialiser
+     * @param entityFactory
      * @param dtr
      * @param firstTick
      * @param secondTick
      */
-    protected MultipleDecDomainTreeManager(final ISerialiser serialiser, final MultipleDecDomainTreeRepresentation dtr, final Boolean visible, final AnalysisAddToDistributionTickManager firstTick, final AnalysisAddToAggregationTickManager secondTick) {
-        super(serialiser, dtr, visible, firstTick, secondTick);
+    protected MultipleDecDomainTreeManager(final EntityFactory entityFactory, final MultipleDecDomainTreeRepresentation dtr, final Boolean visible, final AnalysisAddToDistributionTickManager firstTick, final AnalysisAddToAggregationTickManager secondTick) {
+        super(entityFactory, dtr, visible, firstTick, secondTick);
     }
 
     @Override

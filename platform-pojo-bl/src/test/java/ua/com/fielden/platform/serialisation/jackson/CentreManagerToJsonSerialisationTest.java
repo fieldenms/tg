@@ -37,7 +37,7 @@ public class CentreManagerToJsonSerialisationTest {
     private final ISerialiser serialiser = new Serialiser(entityFactory, provider, DomainTreeEnhancerCache.CACHE);
 
     @SuppressWarnings("serial")
-    private final CentreDomainTreeManagerAndEnhancer cdtm = new CentreDomainTreeManagerAndEnhancer(serialiser, new HashSet<Class<?>>() {
+    private final CentreDomainTreeManagerAndEnhancer cdtm = new CentreDomainTreeManagerAndEnhancer(entityFactory, new HashSet<Class<?>>() {
         {
             add(TopLevelEntity.class);
         }

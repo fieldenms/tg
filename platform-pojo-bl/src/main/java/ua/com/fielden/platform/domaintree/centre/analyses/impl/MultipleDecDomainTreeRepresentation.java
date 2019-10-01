@@ -7,7 +7,7 @@ import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeRep
 import ua.com.fielden.platform.domaintree.centre.analyses.IMultipleDecDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeRepresentation.AnalysisAddToAggregationTickRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeRepresentation.AnalysisAddToDistributionTickRepresentation;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -21,18 +21,18 @@ public class MultipleDecDomainTreeRepresentation extends AbstractAnalysisDomainT
     /**
      * A <i>representation</i> constructor for the first time instantiation.
      * 
-     * @param serialiser
+     * @param entityFactory
      * @param rootTypes
      */
-    public MultipleDecDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-        this(serialiser, rootTypes, createSet(), new AnalysisAddToDistributionTickRepresentation(), new AnalysisAddToAggregationTickRepresentation());
+    public MultipleDecDomainTreeRepresentation(final EntityFactory entityFactory, final Set<Class<?>> rootTypes) {
+        this(entityFactory, rootTypes, createSet(), new AnalysisAddToDistributionTickRepresentation(), new AnalysisAddToAggregationTickRepresentation());
     }
 
     /**
      * A <i>representation</i> constructor. Needed for 'restoring from the cloud' process. Initialises also children references on itself.
      */
-    protected MultipleDecDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final AnalysisAddToDistributionTickRepresentation firstTick, final AnalysisAddToAggregationTickRepresentation secondTick) {
-        super(serialiser, rootTypes, excludedProperties, firstTick, secondTick);
+    protected MultipleDecDomainTreeRepresentation(final EntityFactory entityFactory, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final AnalysisAddToDistributionTickRepresentation firstTick, final AnalysisAddToAggregationTickRepresentation secondTick) {
+        super(entityFactory, rootTypes, excludedProperties, firstTick, secondTick);
     }
 
     @Override

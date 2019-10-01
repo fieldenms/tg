@@ -14,7 +14,7 @@ import ua.com.fielden.platform.domaintree.centre.analyses.impl.PivotDomainTreeRe
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
 import ua.com.fielden.platform.domaintree.impl.EnhancementRootsMap;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 
 /**
  * A domain tree manager for pivot analyses.
@@ -26,23 +26,23 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
     /**
      * A <i>manager</i> constructor for the first time instantiation.
      *
-     * @param serialiser
+     * @param entityFactory
      * @param rootTypes
      */
-    public PivotDomainTreeManager(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-        this(serialiser, new PivotDomainTreeRepresentation(serialiser, rootTypes), null, new PivotAddToDistributionTickManager(), new PivotAddToAggregationTickManager());
+    public PivotDomainTreeManager(final EntityFactory entityFactory, final Set<Class<?>> rootTypes) {
+        this(entityFactory, new PivotDomainTreeRepresentation(entityFactory, rootTypes), null, new PivotAddToDistributionTickManager(), new PivotAddToAggregationTickManager());
     }
 
     /**
      * A <i>manager</i> constructor.
      *
-     * @param serialiser
+     * @param entityFactory
      * @param dtr
      * @param firstTick
      * @param secondTick
      */
-    protected PivotDomainTreeManager(final ISerialiser serialiser, final PivotDomainTreeRepresentation dtr, final Boolean visible, final PivotAddToDistributionTickManager firstTick, final PivotAddToAggregationTickManager secondTick) {
-        super(serialiser, dtr, visible, firstTick, secondTick);
+    protected PivotDomainTreeManager(final EntityFactory entityFactory, final PivotDomainTreeRepresentation dtr, final Boolean visible, final PivotAddToDistributionTickManager firstTick, final PivotAddToAggregationTickManager secondTick) {
+        super(entityFactory, dtr, visible, firstTick, secondTick);
     }
 
     @Override
@@ -186,7 +186,7 @@ public class PivotDomainTreeManager extends AbstractAnalysisDomainTreeManager im
                 final Class<?> managedType = managedType(root);
 
                 final List<String> checkedProperties = checkedProperties(managedType);
-                final List<String> usedProperties = new ArrayList<String>();
+                final List<String> usedProperties = new ArrayList<>();
                 for (final String property : checkedProperties) {
                     if (isUsed(managedType, property)) {
                         usedProperties.add(property);

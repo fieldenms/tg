@@ -31,6 +31,7 @@ import ua.com.fielden.platform.entity.annotation.Invisible;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -65,8 +66,8 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     /**
      * A <i>representation</i> constructor. Initialises also children references on itself.
      */
-    protected AbstractDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final AbstractTickRepresentation firstTick, final AbstractTickRepresentation secondTick) {
-        super(serialiser);
+    protected AbstractDomainTreeRepresentation(final EntityFactory entityFactory, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final AbstractTickRepresentation firstTick, final AbstractTickRepresentation secondTick) {
+        super(entityFactory);
         this.rootTypes = new EnhancementLinkedRootsSet();
         this.rootTypes.addAll(rootTypes);
         this.manuallyExcludedProperties = createSet();
@@ -181,7 +182,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
         final Class<? extends AbstractEntity> concreteUnionClass = (Class<? extends AbstractEntity>) unionProperties.get(0).getType();
         final List<String> commonNames = AbstractUnionEntity.commonProperties(unionClass);
         final List<Field> commonProperties = constructKeysAndProperties(concreteUnionClass, commonNames);
-        return new Pair<List<Field>, List<Field>>(commonProperties, unionProperties);
+        return new Pair<>(commonProperties, unionProperties);
     }
 
     /**
@@ -204,7 +205,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
         properties.removeAll(keys); // remove composite key members if any
 
         // now let's ensure that that key related properties and desc are first in the list of properties
-        final List<Field> fieldsAndKeys = new ArrayList<Field>();
+        final List<Field> fieldsAndKeys = new ArrayList<>();
         fieldsAndKeys.addAll(keys);
         fieldsAndKeys.add(Finder.getFieldByName(type, AbstractEntity.DESC));
         fieldsAndKeys.addAll(properties);
@@ -222,7 +223,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      */
     private static List<Field> constructKeysAndProperties(final Class<?> type, final List<String> names) {
         final List<Field> allProperties = constructKeysAndProperties(type);
-        final List<Field> properties = new ArrayList<Field>();
+        final List<Field> properties = new ArrayList<>();
         for (final Field f : allProperties) {
             if (names.contains(f.getName())) {
                 properties.add(f);
@@ -750,7 +751,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 
         if (!isEntityItself
                 && isCalculatedAndOfTypes(root, property, CalculatedPropertyCategory.AGGREGATED_EXPRESSION, CalculatedPropertyCategory.ATTRIBUTED_COLLECTIONAL_EXPRESSION)) {
-            final Set<Function> functions = new HashSet<Function>();
+            final Set<Function> functions = new HashSet<>();
             if (availableFunctions.contains(Function.SELF)) {
                 functions.add(Function.SELF);
             }

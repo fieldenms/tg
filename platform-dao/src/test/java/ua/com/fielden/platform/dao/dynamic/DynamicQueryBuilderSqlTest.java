@@ -31,8 +31,6 @@ import ua.com.fielden.platform.dao.HibernateMappingsGenerator;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
-import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancerCache;
-import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurposes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -49,8 +47,6 @@ import ua.com.fielden.platform.persistence.types.DateTimeType;
 import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.sample.domain.TgBogie;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.api.impl.Serialiser;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
@@ -67,16 +63,12 @@ import ua.com.fielden.snappy.MnemonicEnum;
  */
 @SuppressWarnings({ "serial", "unchecked" })
 public class DynamicQueryBuilderSqlTest {
-    private final static ISerialiser serialiser = createSerialiser(createFactory());
+    private final static EntityFactory entityFactory = createFactory();
 
     private static EntityFactory createFactory() {
         final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
         final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
         return injector.getInstance(EntityFactory.class);
-    }
-
-    private static ISerialiser createSerialiser(final EntityFactory factory) {
-        return new Serialiser(factory, new ClassProviderForTestingPurposes(), DomainTreeEnhancerCache.CACHE);
     }
 
     private final String alias;
@@ -87,7 +79,7 @@ public class DynamicQueryBuilderSqlTest {
     {
         alias = "alias_for_main_criteria_type";
         // enhance domain with ALL / ANY calc properties
-        final IDomainTreeEnhancer dte = new DomainTreeEnhancer(serialiser, new HashSet<Class<?>>() {
+        final IDomainTreeEnhancer dte = new DomainTreeEnhancer(entityFactory, new HashSet<Class<?>>() {
             {
                 add(MasterEntity.class);
             }

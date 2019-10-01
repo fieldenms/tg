@@ -4,7 +4,7 @@ import java.util.Set;
 
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AbstractAnalysisDomainTreeRepresentation;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -17,18 +17,18 @@ public class AbstractAnalysisDomainTreeRepresentation1 extends AbstractAnalysisD
     /**
      * A <i>representation</i> constructor for the first time instantiation.
      * 
-     * @param serialiser
+     * @param entityFactory
      * @param rootTypes
      */
-    public AbstractAnalysisDomainTreeRepresentation1(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-        this(serialiser, rootTypes, createSet(), new AbstractAnalysisAddToDistributionTickRepresentation1(), new AbstractAnalysisAddToAggregationTickRepresentation1());
+    public AbstractAnalysisDomainTreeRepresentation1(final EntityFactory entityFactory, final Set<Class<?>> rootTypes) {
+        this(entityFactory, rootTypes, createSet(), new AbstractAnalysisAddToDistributionTickRepresentation1(), new AbstractAnalysisAddToAggregationTickRepresentation1());
     }
 
     /**
      * A <i>representation</i> constructor. Initialises also children references on itself.
      */
-    protected AbstractAnalysisDomainTreeRepresentation1(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final AbstractAnalysisAddToDistributionTickRepresentation firstTick, final AbstractAnalysisAddToAggregationTickRepresentation secondTick) {
-        super(serialiser, rootTypes, excludedProperties, firstTick, secondTick);
+    protected AbstractAnalysisDomainTreeRepresentation1(final EntityFactory entityFactory, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final AbstractAnalysisAddToDistributionTickRepresentation firstTick, final AbstractAnalysisAddToAggregationTickRepresentation secondTick) {
+        super(entityFactory, rootTypes, excludedProperties, firstTick, secondTick);
     }
 
     @Override

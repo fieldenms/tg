@@ -31,13 +31,10 @@ import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerA
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.ITickManager;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.ITickRepresentation;
-import ua.com.fielden.platform.domaintree.ILocatorManager;
-import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.SearchBy;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.ListenedArrayList;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.ByteArray;
-import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
 import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurposes;
 import ua.com.fielden.platform.domaintree.testing.EntityWithNormalNature;
 import ua.com.fielden.platform.domaintree.testing.EntityWithStringKeyType;
@@ -78,7 +75,6 @@ public abstract class AbstractDomainTreeTest {
     private static final List<Class<?>> DOMAIN_TREE_TYPES = new ArrayList<Class<?>>() {
         {
             add(AbstractEntity.class); //
-            add(SearchBy.class);
             add(ListenedArrayList.class);
             add(LinkedHashMap.class); //
             add(EnhancementSet.class); //
@@ -91,7 +87,6 @@ public abstract class AbstractDomainTreeTest {
             add(CalculatedPropertyCategory.class); //
             add(CalculatedPropertyAttribute.class); //
             add(ICalculatedProperty.class); //
-            add(IMasterDomainTreeManager.class); //
             add(IDomainTreeEnhancer.class); //
             add(IDomainTreeRepresentation.class); //
             add(IDomainTreeManager.class); //
@@ -216,7 +211,7 @@ public abstract class AbstractDomainTreeTest {
      * @return
      */
     protected static Set<Class<?>> createRootTypes_for_AbstractDomainTreeTest() {
-        final Set<Class<?>> rootTypes = new HashSet<Class<?>>();
+        final Set<Class<?>> rootTypes = new HashSet<>();
         rootTypes.add(MasterEntity.class);
         rootTypes.add(EvenSlaverEntity.class);
         rootTypes.add(EntityWithNormalNature.class);
@@ -266,7 +261,7 @@ public abstract class AbstractDomainTreeTest {
 
     private static List<Field> getDomainTreeFields(final Class<?> type) {
         // A base types to be checked for its non-emptiness and non-emptiness of their children.
-        final List<Class<?>> types = new ArrayList<Class<?>>(DOMAIN_TREE_TYPES);
+        final List<Class<?>> types = new ArrayList<>(DOMAIN_TREE_TYPES);
         // A base types to be checked for its non-emptiness.
         // covered by EnhancementSetAndMaps? types.add(Set.class);
         // covered by EnhancementSetAndMaps? types.add(Map.class);
@@ -611,55 +606,4 @@ public abstract class AbstractDomainTreeTest {
         return "".equals(path) ? name : path + "." + name;
     }
 
-    protected static void illegalAllLocatorActions(final ILocatorManager lm, final String message, final String name) {
-        // locators
-        try {
-            lm.refreshLocatorManager(MasterEntity.class, name);
-            fail(message);
-        } catch (final DomainTreeException e) {
-        }
-        try {
-            lm.resetLocatorManagerToDefault(MasterEntity.class, name);
-            fail(message);
-        } catch (final DomainTreeException e) {
-        }
-
-        try {
-            lm.acceptLocatorManager(MasterEntity.class, name);
-            fail(message);
-        } catch (final DomainTreeException e) {
-        }
-        try {
-            lm.discardLocatorManager(MasterEntity.class, name);
-            fail(message);
-        } catch (final DomainTreeException e) {
-        }
-
-        try {
-            lm.saveLocatorManagerGlobally(MasterEntity.class, name);
-            fail(message);
-        } catch (final DomainTreeException e) {
-        }
-        try {
-            lm.freezeLocatorManager(MasterEntity.class, name);
-            fail(message);
-        } catch (final DomainTreeException e) {
-        }
-
-        try {
-            lm.getLocatorManager(MasterEntity.class, name);
-            fail(message);
-        } catch (final DomainTreeException e) {
-        }
-        try {
-            lm.phaseAndTypeOfLocatorManager(MasterEntity.class, name);
-            fail(message);
-        } catch (final DomainTreeException e) {
-        }
-        try {
-            lm.isChangedLocatorManager(MasterEntity.class, name);
-            fail(message);
-        } catch (final DomainTreeException e) {
-        }
-    }
 }

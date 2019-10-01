@@ -5,7 +5,7 @@ import java.util.List;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
-import ua.com.fielden.platform.domaintree.ILocatorManager;
+import ua.com.fielden.platform.domaintree.IRootTyped;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
@@ -280,7 +280,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
      * @author TG Team
      *
      */
-    public interface IAddToCriteriaTickManager extends ITickManager, ILocatorManager {
+    public interface IAddToCriteriaTickManager extends ITickManager, IRootTyped {
         /**
          * A type of meta values.
          *

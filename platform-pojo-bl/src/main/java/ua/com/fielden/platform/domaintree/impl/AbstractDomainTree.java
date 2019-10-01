@@ -29,7 +29,7 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public abstract class AbstractDomainTree {
-    private final ISerialiser serialiser;
+    private final EntityFactory entityFactory;
     private static final Logger logger = Logger.getLogger(AbstractDomainTree.class);
     private static final String COMMON_SUFFIX = ".common-properties", DUMMY_SUFFIX = ".dummy-property";
     protected static final String PLACEHOLDER = "-placeholder-origin-";
@@ -43,22 +43,12 @@ public abstract class AbstractDomainTree {
     }
 
     /**
-     * Constructs base domain tree with a <code>serialiser</code> and <code>factory</code> instances.
+     * Constructs base domain tree with <code>entityFactory</code> instance.
      *
-     * @param serialiser
-     * @param factory
+     * @param entityFactory
      */
-    protected AbstractDomainTree(final ISerialiser serialiser) {
-        this.serialiser = serialiser;
-    }
-
-    /**
-     * Returns an instance of serialiser for persistence and copying.
-     *
-     * @return
-     */
-    protected ISerialiser getSerialiser() {
-        return serialiser;
+    protected AbstractDomainTree(final EntityFactory entityFactory) {
+        this.entityFactory = entityFactory;
     }
 
     /**
@@ -67,7 +57,7 @@ public abstract class AbstractDomainTree {
      * @return
      */
     protected EntityFactory getFactory() {
-        return serialiser.factory();
+        return entityFactory;
     }
 
     /**
