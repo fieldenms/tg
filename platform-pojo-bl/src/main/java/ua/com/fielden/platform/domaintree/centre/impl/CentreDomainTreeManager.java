@@ -113,14 +113,12 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 
         private final EnhancementLinkedRootsSet rootTypes;
 
-        private final EnhancementPropertiesMap<Set<MetaValueType>> propertiesMetaValuePresences;
-
         /**
          * Used for the first time instantiation. IMPORTANT : To use this tick it should be passed into manager constructor, which will initialise "dtr", "tr" and "serialiser"
          * fields.
          */
         public AddToCriteriaTickManager(final EntityFactory entityFactory, final Set<Class<?>> rootTypes) {
-            this(AbstractDomainTree.<List<String>> createRootsMap(), entityFactory, AbstractDomainTree.<Object> createPropertiesMap(), AbstractDomainTree.<Object> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<DateRangePrefixEnum> createPropertiesMap(), AbstractDomainTree.<MnemonicEnum> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Integer> createPropertiesMap(), null, rootTypes, AbstractDomainTree.<Set<MetaValueType>> createPropertiesMap());
+            this(AbstractDomainTree.<List<String>> createRootsMap(), entityFactory, AbstractDomainTree.<Object> createPropertiesMap(), AbstractDomainTree.<Object> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<DateRangePrefixEnum> createPropertiesMap(), AbstractDomainTree.<MnemonicEnum> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Integer> createPropertiesMap(), null, rootTypes);
         }
 
         /**
@@ -128,7 +126,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
          *
          * @param serialiser
          */
-        public AddToCriteriaTickManager(final Map<Class<?>, List<String>> checkedProperties, final EntityFactory entityFactory, final Map<Pair<Class<?>, String>, Object> propertiesValues1, final Map<Pair<Class<?>, String>, Object> propertiesValues2, final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive1, final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive2, final Map<Pair<Class<?>, String>, DateRangePrefixEnum> propertiesDatePrefixes, final Map<Pair<Class<?>, String>, MnemonicEnum> propertiesDateMnemonics, final Map<Pair<Class<?>, String>, Boolean> propertiesAndBefore, final Map<Pair<Class<?>, String>, Boolean> propertiesOrNulls, final Map<Pair<Class<?>, String>, Boolean> propertiesNots, final Map<Pair<Class<?>, String>, Integer> propertiesOrGroups, final Integer columnsNumber, final Set<Class<?>> rootTypes, final Map<Pair<Class<?>, String>, Set<MetaValueType>> propertiesMetaValuePresences) {
+        public AddToCriteriaTickManager(final Map<Class<?>, List<String>> checkedProperties, final EntityFactory entityFactory, final Map<Pair<Class<?>, String>, Object> propertiesValues1, final Map<Pair<Class<?>, String>, Object> propertiesValues2, final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive1, final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive2, final Map<Pair<Class<?>, String>, DateRangePrefixEnum> propertiesDatePrefixes, final Map<Pair<Class<?>, String>, MnemonicEnum> propertiesDateMnemonics, final Map<Pair<Class<?>, String>, Boolean> propertiesAndBefore, final Map<Pair<Class<?>, String>, Boolean> propertiesOrNulls, final Map<Pair<Class<?>, String>, Boolean> propertiesNots, final Map<Pair<Class<?>, String>, Integer> propertiesOrGroups, final Integer columnsNumber, final Set<Class<?>> rootTypes) {
             super(checkedProperties);
             this.entityFactory = entityFactory;
 
@@ -157,9 +155,6 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 
             this.rootTypes = new EnhancementLinkedRootsSet();
             this.rootTypes.addAll(rootTypes);
-
-            this.propertiesMetaValuePresences = createPropertiesMap();
-            this.propertiesMetaValuePresences.putAll(propertiesMetaValuePresences);
         }
 
         @Override
@@ -175,20 +170,6 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
         @Override
         public Set<Class<?>> rootTypes() {
             return rootTypes;
-        }
-
-        @Override
-        public boolean isMetaValuePresent(final MetaValueType metaValueType, final Class<?> root, final String property) {
-            return (propertiesMetaValuePresences.containsKey(key(root, property))) && propertiesMetaValuePresences.get(key(root, property)).contains(metaValueType);
-        }
-
-        @Override
-        public IAddToCriteriaTickManager markMetaValuePresent(final MetaValueType metaValueType, final Class<?> root, final String property) {
-            if (!propertiesMetaValuePresences.containsKey(key(root, property))) {
-                propertiesMetaValuePresences.put(key(root, property), new LinkedHashSet<>());
-            }
-            propertiesMetaValuePresences.get(key(root, property)).add(metaValueType);
-            return this;
         }
 
         @Override
@@ -579,7 +560,6 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
             result = prime * result + propertiesDatePrefixes.hashCode();
             result = prime * result + propertiesExclusive1.hashCode();
             result = prime * result + propertiesExclusive2.hashCode();
-            result = prime * result + propertiesMetaValuePresences.hashCode();
             result = prime * result + propertiesOrGroups.hashCode();
             result = prime * result + propertiesNots.hashCode();
             result = prime * result + propertiesOrNulls.hashCode();
@@ -627,9 +607,6 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
                 return false;
             }
             if (!propertiesExclusive2.equals(other.propertiesExclusive2)) {
-                return false;
-            }
-            if (!propertiesMetaValuePresences.equals(other.propertiesMetaValuePresences)) {
                 return false;
             }
             if (!propertiesOrGroups.equals(other.propertiesOrGroups)) {

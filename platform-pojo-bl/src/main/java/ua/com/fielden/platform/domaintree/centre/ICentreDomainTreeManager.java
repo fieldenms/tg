@@ -282,36 +282,6 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
      */
     public interface IAddToCriteriaTickManager extends ITickManager, IRootTyped {
         /**
-         * A type of meta values.
-         *
-         * @author TG Team
-         *
-         */
-        public enum MetaValueType {
-            VALUE, VALUE2, EXCLUSIVE, EXCLUSIVE2, OR_NULL, NOT, OR_GROUP, DATE_PREFIX, DATE_MNEMONIC, AND_BEFORE, ALL_ORDERING, WIDTH, GROW_FACTOR
-        }
-
-        /**
-         * Returns <code>true</code> whether the meta value is present (when it was explicitly marked as 'present'), <code>false</code> otherwise.
-         *
-         * @param metaValueType
-         * @param root
-         * @param property
-         * @return
-         */
-        boolean isMetaValuePresent(final MetaValueType metaValueType, final Class<?> root, final String property);
-
-        /**
-         * Marks the meta value as 'present'.
-         *
-         * @param metaValueType
-         * @param root
-         * @param property
-         * @return
-         */
-        IAddToCriteriaTickManager markMetaValuePresent(final MetaValueType metaValueType, final Class<?> root, final String property);
-
-        /**
          * Gets a <i>columnsNumber</i> for criteria editors. <br>
          * <br>
          *
