@@ -61,6 +61,8 @@ const entityCentreTemplate = html`
             <!-- EGI COLUMNS DOM (GENERATED) -->
             <!--@egi_columns-->
 
+            <!--@egi_editors-->
+
             <!--@toolbar-->
 
             <!--@primary_action-->

@@ -1,12 +1,19 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
+import static ua.com.fielden.platform.utils.EntityUtils.isCollectional;
+import static ua.com.fielden.platform.utils.EntityUtils.isDate;
+import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isInteger;
+import static ua.com.fielden.platform.utils.EntityUtils.isString;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
 import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp.dynamicProps;
 import static ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.mkInsertionPoint;
 import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig.configInsertionPoint;
 import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig.configInsertionPointWithPagination;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -21,6 +28,10 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
+import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
+import ua.com.fielden.platform.types.Colour;
+import ua.com.fielden.platform.types.Hyperlink;
+import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.CentreContext;
@@ -71,9 +82,17 @@ import ua.com.fielden.platform.web.centre.api.resultset.tooltip.IWithTooltip;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
 import ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.EntityAutocompletionWidget;
+import ua.com.fielden.platform.web.view.master.api.widgets.checkbox.impl.CheckboxWidget;
+import ua.com.fielden.platform.web.view.master.api.widgets.collectional.impl.CollectionalRepresentorWidget;
+import ua.com.fielden.platform.web.view.master.api.widgets.colour.impl.ColourWidget;
+import ua.com.fielden.platform.web.view.master.api.widgets.datetimepicker.impl.DateTimePickerWidget;
+import ua.com.fielden.platform.web.view.master.api.widgets.decimal.impl.DecimalWidget;
+import ua.com.fielden.platform.web.view.master.api.widgets.hyperlink.impl.HyperlinkWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
+import ua.com.fielden.platform.web.view.master.api.widgets.money.impl.MoneyWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.multilinetext.impl.MultilineTextWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.singlelinetext.impl.SinglelineTextWidget;
+import ua.com.fielden.platform.web.view.master.api.widgets.spinner.impl.SpinnerWidget;
 
 /**
  * A package private helper class to decompose the task of implementing the Entity Centre DSL. It has direct access to protected fields in {@link EntityCentreBuilder}.
@@ -123,8 +142,41 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     @Override
     public IResultSetBuilderWidgetSelector<T> addEditableProp(final String propName) {
         this.addProp(propName);
-        this.isEditable = true;
+        final AbstractWidget editor = createWidget(propName);
+        this.widget = Optional.ofNullable(editor);
         return this;
+    }
+
+    private AbstractWidget createWidget(final String propName) {
+        final Class<? extends AbstractEntity<?>> root = this.builder.getEntityType();
+        final String resultPropName = treeName(propName);
+        final boolean isEntityItself = "".equals(resultPropName); // empty property means "entity itself"
+        final Class<?> propertyType = isEntityItself ? root : PropertyTypeDeterminator.determinePropertyType(root, resultPropName);
+        final String widgetPropName = "".equals(resultPropName) ? AbstractEntity.KEY : resultPropName;
+        if (isEntityType(propertyType)) {
+            return new EntityAutocompletionWidget(TitlesDescsGetter.getTitleAndDesc(widgetPropName, propertyType), widgetPropName, (Class<AbstractEntity<?>>)propertyType);
+        } else if (isString(propertyType)) {
+            return new SinglelineTextWidget(TitlesDescsGetter.getTitleAndDesc(propName, root), propName);
+        } else if (isInteger(propertyType)) {
+            return new SpinnerWidget(TitlesDescsGetter.getTitleAndDesc(propName, root), propName);
+        } else if (Money.class.isAssignableFrom(propertyType)) {
+            return new MoneyWidget(TitlesDescsGetter.getTitleAndDesc(propName, root), propName);
+        } else if (BigDecimal.class.isAssignableFrom(propertyType)) {
+            return new DecimalWidget(TitlesDescsGetter.getTitleAndDesc(propName, root), propName);
+        } else if (Hyperlink.class.isAssignableFrom(propertyType)){
+            return new HyperlinkWidget(TitlesDescsGetter.getTitleAndDesc(propName, root), propName);
+        } else if (Colour.class.isAssignableFrom(propertyType)) {
+            return new ColourWidget(TitlesDescsGetter.getTitleAndDesc(propName, root), propName);
+        } else if (isBoolean(propertyType)) {
+            return new CheckboxWidget(TitlesDescsGetter.getTitleAndDesc(propName, root), propName);
+        } else if (isDate(propertyType)) {
+            return new DateTimePickerWidget(TitlesDescsGetter.getTitleAndDesc(propName, root), propName, false,
+                    DefaultValueContract.getTimeZone(root, propName),
+                    DefaultValueContract.getTimePortionToDisplay(root, propName));
+        } else if (isCollectional(propertyType)) {
+            return new CollectionalRepresentorWidget(TitlesDescsGetter.getTitleAndDesc(propName, root),propName);
+        }
+        return null;
     }
 
     @Override
@@ -358,7 +410,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     private void completePropIfNeeded() {
         // construct and add property to the builder
         if (propName.isPresent()) {
-            final ResultSetProp<T> prop = ResultSetProp.propByName(propName.get(), width, isFlexible, isEditable, (tooltipProp.isPresent() ? tooltipProp.get() : null), entityActionConfig);
+            final ResultSetProp<T> prop = ResultSetProp.propByName(propName.get(), width, isFlexible, widget, (tooltipProp.isPresent() ? tooltipProp.get() : null), entityActionConfig);
             this.builder.resultSetProperties.add(prop);
         } else if (propDef.isPresent()) {
             final ResultSetProp<T> prop = ResultSetProp.propByDef(propDef.get(), width, isFlexible, (tooltipProp.isPresent() ? tooltipProp.get() : null), entityActionConfig);
@@ -371,6 +423,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         this.propDef = Optional.empty();
         this.orderSeq = null;
         this.entityActionConfig = Optional::empty;
+        this.widget = Optional.empty();
     }
 
     @Override
@@ -559,13 +612,13 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
 
     @Override
     public IResultSetPropertyActionConfig<T> skipValidation() {
-        // TODO Auto-generated method stub
-        return null;
+        this.widget.ifPresent(widget -> widget.skipValidation());
+        return this;
     }
 
     @Override
     public IResultSetBuilder3Ordering<T> withEditorAction(final EntityActionConfig actionConfig) {
-        // TODO Auto-generated method stub
-        return null;
+        this.widget.ifPresent(widget -> widget.withAction(actionConfig));
+        return this;
     }
 }

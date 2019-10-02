@@ -1726,7 +1726,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
         IResultSetBuilder2Properties<TgPersistentEntityWithProperties> beforeAddProp = afterSummary.
                 withAction(EDIT_ACTION.mkAction(TgPersistentEntityWithProperties.class))
                 .also()
-                .addProp("desc").
+                .addEditableProp("desc").
+                        asSinglelineText().
                         order(1).asc().
                         minWidth(200).
                         withAction(action(TgFunctionalEntityWithCentreContext.class).
@@ -1780,13 +1781,13 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         build())
                         .also();
                 }
-                final IWithSummary<TgPersistentEntityWithProperties> beforeSummaryConf = beforeAddProp.addProp("integerProp")
+                final IWithSummary<TgPersistentEntityWithProperties> beforeSummaryConf = beforeAddProp.addEditableProp("integerProp")
                     .minWidth(42)
                     .withTooltip("desc");
 
                     final IWithTooltip<TgPersistentEntityWithProperties> beforeSummaryConfForBigDecimalProp = (withCalculatedAndCustomProperties ? beforeSummaryConf.withSummary("sum_of_int", "SUM(integerProp)", "Sum of int. prop:Sum of integer property") : beforeSummaryConf)
                 .also()
-                .addProp("bigDecimalProp")
+                .addEditableProp("bigDecimalProp")
                     .minWidth(68);
 
         final IAlsoSecondaryAction<TgPersistentEntityWithProperties> beforeRenderingCustomiserConfiguration = (withCalculatedAndCustomProperties ?
@@ -1796,18 +1797,18 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 .withSummary("sum_of_dec", "sum(bigDecimalProp)", "Sum of decimal:Sum of big decimal property") :
                                 beforeSummaryConfForBigDecimalProp)
                 .also()
-                .addProp("entityProp").minWidth(40)
+                .addEditableProp("entityProp").minWidth(40)
                 .also()
-                .addProp("booleanProp").minWidth(49)
+                .addEditableProp("booleanProp").minWidth(49)
                 .also()
-                .addProp("dateProp").minWidth(130)
+                .addEditableProp("dateProp").minWidth(130)
                 .also()
                 .addProp("compositeProp").minWidth(110)
                 .also()
                 .addProp("stringProp").minWidth(50).also()
-                .addProp("colourProp").width(40).also()
-                .addProp("numberOfAttachments").width(100).also()
-                .addProp("hyperlinkProp").minWidth(500)
+                .addEditableProp("colourProp").width(40).also()
+                .addEditableProp("numberOfAttachments").width(100).also()
+                .addEditableProp("hyperlinkProp").minWidth(500)
                 //                .setCollapsedCardLayoutFor(Device.DESKTOP, Optional.empty(),
                 //                        "["
                 //                                + "[['flex', 'select:property=this'],       ['flex', 'select:property=desc'],        ['flex', 'select:property=integerProp'], ['flex', 'select:property=bigDecimalProp']],"

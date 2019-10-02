@@ -186,6 +186,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private static final String EGI_SECONDARY_ACTIONS = "//generatedSecondaryActions";
     private static final String EGI_PROPERTY_ACTIONS = "//generatedPropActions";
     private static final String EGI_DOM = "<!--@egi_columns-->";
+    private static final String EGI_EDITORS = "<!--@egi_editors-->";
     private static final String EGI_FUNCTIONAL_ACTION_DOM = "<!--@functional_actions-->";
     private static final String EGI_PRIMARY_ACTION_DOM = "<!--@primary_action-->";
     private static final String EGI_SECONDARY_ACTIONS_DOM = "<!--@secondary_actions-->";
@@ -910,7 +911,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
         final List<PropertyColumnElement> propertyColumns = new ArrayList<>();
         final Optional<List<ResultSetProp<T>>> resultProps = dslDefaultConfig.getResultSetProperties();
-        final List<AbstractWidget> widgets = new ArrayList<>();
+        final List<DomElement> widgets = new ArrayList<>();
         final ListMultimap<String, SummaryPropDef> summaryProps = dslDefaultConfig.getSummaryExpressions();
         final Class<?> managedType = centre.getEnhancer().getManagedType(root);
         if (resultProps.isPresent()) {
@@ -931,6 +932,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 }
 
                 final PropertyColumnElement el = new PropertyColumnElement(resultPropName,
+                        resultProp.widget,
                         resultProp.dynamicColBuilderType.isPresent(),
                         resultProp.width,
                         centre.getSecondTick().getGrowFactor(root, resultPropName),
@@ -947,18 +949,17 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                     summaries.forEach(summary -> el.addSummary(summary.alias, PropertyTypeDeterminator.determinePropertyType(managedType, summary.alias), new Pair<>(summary.title, summary.desc)));
                 }
                 propertyColumns.add(el);
-                if (resultProp.isEditable) {
-                    widgets.add(createWidget(centre, resultProp));
-                }
             }
         }
 
         logger.debug("Initiating prop actions...");
 
         final DomContainer egiColumns = new DomContainer();
+        final DomContainer egiEditors = new DomContainer();
         final StringBuilder propActionsObject = new StringBuilder();
         propertyColumns.forEach(column -> {
             importPaths.add(column.importPath());
+            column.widgetImportPath().ifPresent(path -> importPaths.add(path));
             if (column.hasSummary()) {
                 importPaths.add(column.getSummary(0).importPath());
             }
@@ -967,6 +968,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 propActionsObject.append(prefix + createActionObject(column.getAction().get()));
             }
             egiColumns.add(column.render());
+            column.renderWidget().ifPresent(widget -> egiEditors.add(widget));
         });
 
         logger.debug("Initiating top-level actions...");
@@ -1147,6 +1149,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace(QUERY_ENHANCER_CONFIG, queryEnhancerContextConfigString()).
                 replace(CRITERIA_DOM, editorContainer.toString()).
                 replace(EGI_DOM, egiColumns.toString()).
+                replace(EGI_EDITORS, egiEditors.toString()).
                 replace(FRONT_ACTIONS_DOM, frontActionsDom.toString()).
                 replace(FRONT_ACTIONS, frontActionString.length() > prefixLength ? frontActionString.substring(prefixLength): frontActionString).
                 replace(EGI_ACTIONS, funcActionString.length() > prefixLength ? funcActionString.substring(prefixLength) : funcActionString).

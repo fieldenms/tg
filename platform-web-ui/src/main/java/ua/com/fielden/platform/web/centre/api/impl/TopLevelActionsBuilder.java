@@ -24,6 +24,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2aDragg
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder3Ordering;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder4aWidth;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilderAlsoDynamicProps;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilderWidgetSelector;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.centre.api.resultset.scrolling.IScrollConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
@@ -168,9 +169,7 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> implements ICentreTopL
     }
 
     @Override
-    public IResultSetBuilder3Ordering<T> addEditableProp(final String propName) {
-        // TODO Auto-generated method stub
-        return null;
+    public IResultSetBuilderWidgetSelector<T> addEditableProp(final String propName) {
+        return new ResultSetBuilder<>(builder).addEditableProp(propName);
     }
-
 }
