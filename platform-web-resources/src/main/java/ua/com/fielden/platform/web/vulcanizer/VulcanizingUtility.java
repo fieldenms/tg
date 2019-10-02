@@ -50,16 +50,16 @@ import ua.com.fielden.platform.web.vulcanizer.exceptions.VulcanisationException;
  */
 public class VulcanizingUtility {
     private static final Logger LOGGER = Logger.getLogger(VulcanizingUtility.class);
-
+    
     public static String[] unixCommands(final String action) {
         return new String[] {"/bin/bash", action + "-script.bat"};
     }
-
+    
     public static String[] windowsCommands(final String action) {
         // JVM arguments (brackets should be removed): [src/main/resources/application.properties "C:/Program Files/nodejs;C:/Users/Yuriy/AppData/Roaming/npm"]
         return new String[] {"CMD", "/c", action + "-script.bat"};
     }
-
+    
     protected static T3<Properties, String[], String[]> processVmArguments(final String[] args) throws IOException {
         if (args.length < 1) {
             throw new VulcanisationException(
@@ -71,8 +71,8 @@ public class VulcanizingUtility {
         final String propertyFile = args[0];
         final String paths = args.length == 1 ? "" : args[1];
         final String[] envVars = new String[args.length - 2];
-        arraycopy(args, 2, envVars, 0, args.length - 2);
-
+        arraycopy(args, 2, envVars, 0, args.length - 2); 
+        
         try {
             final Properties props = retrieveApplicationPropertiesAndConfigureLogging(propertyFile);
             final String[] additionalPaths = paths.split(pathSeparator);
@@ -82,7 +82,7 @@ public class VulcanizingUtility {
             throw ex;
         }
     }
-
+        
     /**
      * Retrieves application properties from the specified file.
      *
@@ -101,7 +101,7 @@ public class VulcanizingUtility {
         configure(props.getProperty("log4j"));
         return props;
     }
-
+    
     /**
      * Vulcanizes '*-startup-resources-origin.js' file into '*-startup-resources-vulcanized.js'.
      */
@@ -119,7 +119,7 @@ public class VulcanizingUtility {
         if (LOGGER == null) {
             throw new VulcanisationException("Logger is a required argumet.");
         }
-
+        
         try {
             LOGGER.info("Vulcanizing...");
             final IWebResourceLoader webResourceLoader = injector.getInstance(IWebResourceLoader.class);
@@ -144,7 +144,7 @@ public class VulcanizingUtility {
             adjustRootResources(webResourceLoader, prefix);
             vulcanizeStartupResourcesFor(prefix, mobileAndDesktopAppSpecificPath, commandMaker.apply("build"), commandMaker.apply("minify"), additionalPaths, envVarPairs, dir);
             LOGGER.info(format("\tVulcanized [%s] resources...", prefix));
-
+            
             LOGGER.info(format("\tGenerating checksums..."));
             final Map<String, String> checksums = generateChecksums(
                 "/app/tg-app-index.html",
@@ -171,17 +171,17 @@ public class VulcanizingUtility {
                 LOGGER.error(msg, ex);
                 throw new VulcanisationException(msg, ex);
             }
-
+            
             LOGGER.info(format("\tGenerated checksums... [%s]", checksums));
         } finally {
             clearObsoleteResources();
         }
         LOGGER.info("Vulcanized.");
     }
-
+    
     /**
      * Generates SHA1 checksums for specified <code>paths</code>.
-     *
+     * 
      * @param paths
      * @return
      */
@@ -203,7 +203,7 @@ public class VulcanizingUtility {
 
     /**
      * Copies template for 'rollup.config.js' and adjusts it according to <code>profile</code>.
-     *
+     * 
      * @param webResourceLoader
      * @param logger
      * @param profile
@@ -221,10 +221,10 @@ public class VulcanizingUtility {
             throw new VulcanisationException(msg, ex);
         }
     }
-
+    
     /**
      * Replaces '@profile' with concrete <code>profile</code> inside file.
-     *
+     * 
      * @param fileName
      * @param profile
      */
@@ -237,7 +237,7 @@ public class VulcanizingUtility {
             LOGGER.error(msg, ex);
             throw new VulcanisationException(msg, ex);
         }
-
+        
         try (final PrintStream ps = new PrintStream(fileName)) {
             ps.print(contents.replace("@profile-", profile));
         } catch (final Exception ex) {
@@ -246,13 +246,12 @@ public class VulcanizingUtility {
             throw new VulcanisationException(msg, ex);
         }
     }
-
+    
     /**
      * Removes all intermediate files after vulcanisation.
      */
     private static void clearObsoleteResources() {
         LOGGER.info("\tClear obsolete files...");
-        System.gc(); // otherwise files below cannot be deleted, at least under Microsoft
         try {
             deleteDirectory(new File("vulcan"));
             deleteDirectory(new File("build"));
@@ -272,10 +271,10 @@ public class VulcanizingUtility {
         }
         LOGGER.info("\tCleared obsolete files.");
     }
-
+    
     /**
      * Downloads generated resources.
-     *
+     * 
      * @param webUiConfig
      * @param webResourceLoader
      */
@@ -300,10 +299,10 @@ public class VulcanizingUtility {
         downloadSource("app", "application-startup-resources.js", webResourceLoader);
         LOGGER.info("\tDownloaded generated resources.");
     }
-
+    
     /**
      * Executes vulcanisation process.
-     *
+     * 
      * @param prefix
      * @param targetAppSpecificPath
      * @param vulcanizeCommands
@@ -379,7 +378,7 @@ public class VulcanizingUtility {
             throw new VulcanisationException(msg, ex);
         }
     }
-
+    
     /**
      * Copies static resources from the places that should be relative to the application module, in which concrete Vulcanize utility reside.
      *
@@ -409,10 +408,10 @@ public class VulcanizingUtility {
         }
         LOGGER.info("\tCopied static resources.");
     }
-
+    
     /**
      * Downloads source into 'vulcan' directory based on concrete <code>deviceProfile</code>.
-     *
+     * 
      * @param dir
      * @param name
      * @param webResourceLoader
@@ -432,5 +431,5 @@ public class VulcanizingUtility {
             throw new VulcanisationException(msg, ex);
         }
     }
-
+    
 }
