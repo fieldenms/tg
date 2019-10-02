@@ -16,7 +16,7 @@ import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.serialisation.exceptions.SerialisationException;
 
 /**
- * The default implementation for {@link ISerialiser} with two engines: KRYO (default) and JACKSON.
+ * The default implementation for {@link ISerialiser} with JACKSON engine.
  *
  * @author TG Team
  *

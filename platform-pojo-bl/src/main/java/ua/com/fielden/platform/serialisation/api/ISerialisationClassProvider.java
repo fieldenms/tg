@@ -3,7 +3,7 @@ package ua.com.fielden.platform.serialisation.api;
 import java.util.List;
 
 /**
- * A contract that should be implemented in order to provide Kryo-based serialiser with classes to be registered for serialisation.
+ * A contract that should be implemented in order to provide serialiser implementations with classes to be registered for serialisation.
  * 
  * @author TG Team
  * 
