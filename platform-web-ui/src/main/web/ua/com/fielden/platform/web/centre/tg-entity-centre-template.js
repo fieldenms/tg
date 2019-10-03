@@ -16,6 +16,7 @@ import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 
 import '/resources/egi/tg-entity-grid-inspector.js';
+import '/resources/egi/tg-egi-master.js';
 import '/resources/centre/tg-selection-criteria.js';
 import { TgSelectionCriteriaTemplateBehavior } from '/resources/centre/tg-selection-criteria-template-behavior.js';
 import '/resources/centre/tg-entity-centre.js';
@@ -61,7 +62,9 @@ const entityCentreTemplate = html`
             <!-- EGI COLUMNS DOM (GENERATED) -->
             <!--@egi_columns-->
 
-            <!--@egi_editors-->
+            <tg-egi-master slot="egi-master">
+                <!--@egi_editors-->
+            </tg-egi-master>
 
             <!--@toolbar-->
 

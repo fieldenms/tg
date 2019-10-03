@@ -19,7 +19,7 @@ const template = html`
         _process-saver-response="[[_processSaverResponse]]"
         _process-saver-error="[[_processSaverError]]"
         _saver-loading="{{_saverLoading}}">
-            <slot name="property-editors"></slot>
+            <slot id="egiEditors" name="egi-editor"></slot>
     </tg-entity-master>`;
 
 export class TgEgiMaster extends mixinBehaviors([TgEntityMasterBehavior], PolymerElement) {
@@ -30,7 +30,7 @@ export class TgEgiMaster extends mixinBehaviors([TgEntityMasterBehavior], Polyme
 
     static get properties () {
         return {
-            
+            editors: Array
         };
     }
 
@@ -41,6 +41,7 @@ export class TgEgiMaster extends mixinBehaviors([TgEntityMasterBehavior], Polyme
 
     ready () {
         super.ready();
+        this.editors = this.$.egiEditors.assignedNodes();
     }
 
     _masterDom () {

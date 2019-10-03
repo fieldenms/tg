@@ -342,6 +342,7 @@ const template = html`
     <!--configuring slotted elements-->
     <slot id="column_selector" name="property-column" hidden></slot>
     <slot id="primary_action_selector" name="primary-action" hidden></slot>
+    <slot id="egi_master" name="egi-master" hidden></slot>
     <!--EGI template-->
     <div id="paperMaterial" class="grid-container" elevation="1" style$="[[_calcMaterialStyle(showMarginAround)]]" fit-to-height$="[[fitToHeight]]">
         <!--Table toolbar-->
@@ -570,6 +571,7 @@ Polymer({
         columns: {
             type: Array
         },
+        master: Object,
         allColumns: Array,
         fixedColumns: Array,
         /**
@@ -776,6 +778,9 @@ Polymer({
         this._openDropDown = function (currentEntity, currentAction) {
             this.$.secondaryActionDropDown.open(currentEntity, currentAction);
         }.bind(this);
+
+        //Initiate entity master for inline editing
+        this.master = this.$.egi_master.assignedNodes()[0];
     },
 
     attached: function () {
