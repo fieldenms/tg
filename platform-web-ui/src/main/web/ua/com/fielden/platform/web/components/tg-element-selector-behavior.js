@@ -22,7 +22,7 @@ function processSelectedElements (selectedElements, selector, lightTillParent) {
             extendedSelectedElements.push(element);
         }
         if (element.tagName === 'SLOT') {
-            extendedSelectedElements.push(...element.assignedNodes().flatMap(assignedNode => processSelectedElements([assignedNode], selector, assignedNode)))
+            extendedSelectedElements.push(...element.assignedNodes().filter(element => element.nodeType !== Node.TEXT_NODE).flatMap(assignedNode => processSelectedElements([assignedNode], selector, assignedNode)))
         } else if (element.hasAttribute('selectable-elements-container')) {
             extendedSelectedElements.push(...queryElements(element, selector, lightTillParent));
         } 

@@ -60,12 +60,13 @@ const entityCentreTemplate = html`
         
         <tg-entity-grid-inspector id="egi" slot="custom-egi" class="entity-grid-inspector" centre-selection="[[centreSelection]]" column-properties-mapper="{{columnPropertiesMapper}}" custom-shortcuts="@customShortcuts" visible-row-count="@visibleRowCount" constant-height="@egiHeight" row-height="@egiRowHeight" @fitToHeight @canDragFrom @toolbarVisible @checkboxVisible @dragAnchorFixed @checkboxesFixed @checkboxesWithPrimaryActionsFixed num-of-fixed-cols="@numOfFixedCols" @secondaryActionsFixed @headerFixed @summaryFixed @gridLayout>
             <!-- EGI COLUMNS DOM (GENERATED) -->
+            
             <!--@egi_columns-->
-
+            
             <tg-egi-master slot="egi-master">
                 <!--@egi_editors-->
             </tg-egi-master>
-
+            
             <!--@toolbar-->
 
             <!--@primary_action-->

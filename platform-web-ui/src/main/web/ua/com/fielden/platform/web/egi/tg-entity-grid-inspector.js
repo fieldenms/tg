@@ -174,6 +174,22 @@ const template = html`
             flex-shrink: 0;
             @apply --layout-horizontal;
         }
+        .egi-master {
+            height: 7.5rem;
+            z-index: 0;
+            font-size: 1rem;
+            font-weight: 400;
+            color: #212121;
+            border-bottom: thin solid #e3e3e3;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
+            min-width: -webkit-fit-content;
+            min-width: -moz-fit-content;
+            min-width: fit-content;
+            flex-grow: 0;
+            flex-shrink: 0;
+            @apply --layout-horizontal;
+        }
         .footer {
             background-color: white;
             min-width: -webkit-fit-content;
@@ -386,7 +402,7 @@ const template = html`
                         </template>
                     </div>
                 </div>
-                <div id="top_right_egi" show-top-shadow$="[[_topShadowVisible(_showTopShadow, headerFixed)]]" show-right-shadow$="[[_rightShadowVisible(_showRightShadow, secondaryActionsFixed)]]" class="grid-layout-container sticky-container z-index-2" style$="[[_calcTopRightContainerStyle(headerFixed, secondaryActionsFixed)]]">
+                <div id="top_right_egi" show-top-shadow$="[[_topShadowVisible(_showTopShadow, headerFixed)]]" show-right-shadow$="[[_rightShadowVisible(_showRightShadow, secondaryActionsFixed, _isSecondaryActionPresent)]]" class="grid-layout-container sticky-container z-index-2" style$="[[_calcTopRightContainerStyle(headerFixed, secondaryActionsFixed)]]">
                     <div class="table-header-row" hidden$="[[secondaryActionPresent]]">    
                         <div class="action-cell cell" hidden$="[[!_isSecondaryActionPresent]]">
                                 <!--Secondary actions header goes here-->
@@ -410,6 +426,20 @@ const template = html`
                             </template>
                         </div>
                     </template>
+                    <div class="egi-master">
+                        <div class="drag-anchor" hidden$="[[!canDragFrom]]"></div>
+                        <div class="table-cell" hidden$="[[!_checkboxFixedAndVisible(checkboxVisible, checkboxesFixed)]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]">
+                            <!--Checkbox stub for master goes here-->
+                        </div>
+                        <div class="action-cell cell" hidden$="[[!_primaryActionFixedAndVisible(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
+                            <!--Primary action stub for master goes here-->
+                        </div>
+                        <template is="dom-repeat" items="[[fixedColumns]]" as="column">
+                            <div class="table-cell" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'false')]]">
+                                <slot name$="[[_getSlotNameFor(column.property)]]"></slot>
+                            </div>
+                        </template>
+                    </div>
                 </div>
                 <div class="grid-layout-container z-index-0">
                     <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
@@ -425,8 +455,21 @@ const template = html`
                             </template>
                         </div>
                     </template>
+                    <div class="egi-master">
+                        <div class="table-cell" hidden$="[[!_checkboxNotFixedAndVisible(checkboxVisible, checkboxesFixed)]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]">
+                            <!--Checkbox stub for master goes here-->
+                        </div>
+                        <div class="action-cell cell" hidden$="[[!_primaryActionNotFixedAndVisible(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
+                            <!--Primary action stub for master goes here-->
+                        </div>
+                        <template is="dom-repeat" items="[[columns]]" as="column">
+                            <div class="table-cell" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'false')]]">
+                                <slot name$="[[column.property]]"></slot>
+                            </div>
+                        </template>
+                    </div>
                 </div>
-                <div class="grid-layout-container sticky-container z-index-1" show-right-shadow$="[[_rightShadowVisible(_showRightShadow, secondaryActionsFixed)]]" style$="[[_calcRightContainerStyle(secondaryActionsFixed)]]">
+                <div class="grid-layout-container sticky-container z-index-1" show-right-shadow$="[[_rightShadowVisible(_showRightShadow, secondaryActionsFixed, _isSecondaryActionPresent)]]" style$="[[_calcRightContainerStyle(secondaryActionsFixed)]]">
                     <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
                         <div class="table-data-row" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
                             <div class="action-cell" hidden$="[[!_isSecondaryActionPresent]]">
@@ -434,13 +477,18 @@ const template = html`
                             </div>
                         </div>
                     </template>
+                    <div class="egi-master" hidden$="[[secondaryActionPresent]]">    
+                        <div class="action-cell cell" hidden$="[[!_isSecondaryActionPresent]]">
+                                <!--Secondary actions stub for master goes here-->
+                        </div>
+                    </div>
                 </div>
                 <div class="grid-layout-container sticky-container z-index-2" show-bottom-shadow$="[[_bottomShadowVisible(_showBottomShadow, summaryFixed)]]" show-left-shadow$="[[_leftShadowVisible(_showLeftShadow, dragAnchorFixed)]]" style$="[[_calcBottomLeftContainerStyle(summaryFixed, dragAnchorFixed)]]">
                     <div class="footer">
                         <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
                             <div class="table-footer-row">
                                 <div class="drag-anchor" hidden$="[[!canDragFrom]]"></div>
-                                <div class="table-cell" hidden$="[[!_checkboxFixedAndVisible(checkboxVisible, checkboxesFixed)]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
+                                <div class="table-cell" hidden$="[[!_checkboxFixedAndVisible(checkboxVisible, checkboxesFixed)]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]">
                                     <!--Footer's select checkbox stub goes here-->
                                 </div>
                                 <div class="action-cell" hidden$="[[!_primaryActionFixedAndVisible(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
@@ -471,7 +519,7 @@ const template = html`
                         </template>
                     </div>  
                 </div>
-                <div class="grid-layout-container sticky-container z-index-2" show-bottom-shadow$="[[_bottomShadowVisible(_showBottomShadow, summaryFixed)]]" show-right-shadow$="[[_rightShadowVisible(_showRightShadow, secondaryActionsFixed)]]" style$="[[_calcBottomRightContainerStyle(summaryFixed, secondaryActionsFixed)]]">
+                <div class="grid-layout-container sticky-container z-index-2" show-bottom-shadow$="[[_bottomShadowVisible(_showBottomShadow, summaryFixed)]]" show-right-shadow$="[[_rightShadowVisible(_showRightShadow, secondaryActionsFixed, _isSecondaryActionPresent)]]" style$="[[_calcBottomRightContainerStyle(summaryFixed, secondaryActionsFixed)]]">
                     <div class="footer">
                         <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
                             <div class="table-footer-row">
@@ -804,6 +852,7 @@ Polymer({
         }).bind(this);
         this.async(function () {
             this.keyEventTarget = this._getKeyEventTarget();
+            this._initMasterEditors();
         }, 1);
     },
 
@@ -887,7 +936,7 @@ Polymer({
     },
 
     hasAction: function (entity, column) {
-        return column.customAction || this.isHyperlinkProp(entity, column) === true || this.getAttachmentIfPossible(entity, column);
+        return entity && (column.customAction || this.isHyperlinkProp(entity, column) === true || this.getAttachmentIfPossible(entity, column));
     },
 
     isVisible: function (entity) {
@@ -1478,8 +1527,8 @@ Polymer({
         return _showLeftShadow && dragAnchorFixed;
     },
 
-    _rightShadowVisible: function (_showRightShadow, secondaryActionsFixed) {
-        return _showRightShadow && secondaryActionsFixed;
+    _rightShadowVisible: function (_showRightShadow, secondaryActionsFixed, _isSecondaryActionPresent) {
+        return _showRightShadow && secondaryActionsFixed && _isSecondaryActionPresent;
     },
 
     _isDraggable: function (entitySelected) {
@@ -1857,5 +1906,20 @@ Polymer({
             return data;
         }
         return {};
+    },
+
+    /************ EG MASTER RELATED FUNCTIONS ***************/
+    _initMasterEditors: function () {
+        if (this.master) {
+            this.master.editors.forEach(editor => {
+                editor.setAttribute("slot", this._getSlotNameFor(editor.propertyName));
+                editor.style.flexGrow = '1';
+                this.appendChild(editor);
+            });
+        }
+    },
+
+    _getSlotNameFor: function (propertyName) {
+        return propertyName || "this";
     },
 });

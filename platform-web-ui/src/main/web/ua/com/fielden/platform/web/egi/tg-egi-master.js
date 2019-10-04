@@ -35,6 +35,7 @@ export class TgEgiMaster extends mixinBehaviors([TgEntityMasterBehavior], Polyme
     }
 
     constructor () {
+        super();
         this.noUI = false;
         this.saveOnActivation = false;
     }
