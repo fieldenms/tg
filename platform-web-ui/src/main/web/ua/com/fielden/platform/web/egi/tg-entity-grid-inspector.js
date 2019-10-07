@@ -1099,6 +1099,8 @@ Polymer({
             _insertMaster(this.$.left_egi, this.$.left_egi_master, entityIndex);
             _insertMaster(this.$.centre_egi, this.$.centre_egi_master, entityIndex);
             _insertMaster(this.$.right_egi, this.$.right_egi_master, entityIndex);
+            this.master.entityId = entity.get("id");
+            this.master.retrieve();
             console.log("You tap twice");
         } else {
             this._tapOnce = true;

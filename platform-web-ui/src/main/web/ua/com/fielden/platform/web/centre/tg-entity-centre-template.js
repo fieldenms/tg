@@ -16,7 +16,7 @@ import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 
 import '/resources/egi/tg-entity-grid-inspector.js';
-import '/resources/egi/tg-egi-master.js';
+import {TgEgiMasterBehavior} from '/resources/egi/tg-egi-master-behavior.js';
 import '/resources/centre/tg-selection-criteria.js';
 import { TgSelectionCriteriaTemplateBehavior } from '/resources/centre/tg-selection-criteria-template-behavior.js';
 import '/resources/centre/tg-entity-centre.js';
@@ -62,10 +62,8 @@ const entityCentreTemplate = html`
             <!-- EGI COLUMNS DOM (GENERATED) -->
             
             <!--@egi_columns-->
-            
-            <tg-egi-master slot="egi-master" entity-type="@full_entity_type">
-                <!--@egi_editors-->
-            </tg-egi-master>
+
+            <tg-egi-@mi_type-master slot="egi-master"></tg-egi-@mi_type-master>
             
             <!--@toolbar-->
 
@@ -156,4 +154,33 @@ Polymer({
 
         }, 1);
     },
+});
+
+const egiMasterTemplate = html`
+    <tg-entity-master
+        id="masterDom"
+        entity-type="[[entityType]]"
+        entity-id="[[entityId]]"
+        _post-validated-default="[[_postValidatedDefault]]"
+        _post-validated-default-error="[[_postValidatedDefaultError]]"
+        _process-response="[[_processResponse]]"
+        _process-error="[[_processError]]"
+        _process-retriever-response="[[_processRetrieverResponse]]"
+        _process-retriever-error="[[_processRetrieverError]]"
+        _process-saver-response="[[_processSaverResponse]]"
+        _process-saver-error="[[_processSaverError]]"
+        _saver-loading="{{_saverLoading}}">
+            <!--@egi_editors-->
+    </tg-entity-master>`;
+
+Polymer({
+    _template: egiMasterTemplate,
+
+    is: 'tg-egi-@mi_type-master',
+
+    behaviors: [ TgEgiMasterBehavior ],
+
+    hostAttributes: {
+        'entity-type': '@full_entity_type'
+    }
 });

@@ -1807,7 +1807,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .also()
                 .addProp("stringProp").minWidth(50).also()
                 .addEditableProp("colourProp").width(40).also()
-                .addEditableProp("numberOfAttachments").width(100).also()
+                .addProp("numberOfAttachments").width(100).also()
                 .addEditableProp("hyperlinkProp").minWidth(500)
                 //                .setCollapsedCardLayoutFor(Device.DESKTOP, Optional.empty(),
                 //                        "["
