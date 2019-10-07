@@ -63,7 +63,7 @@ const entityCentreTemplate = html`
             
             <!--@egi_columns-->
             
-            <tg-egi-master slot="egi-master">
+            <tg-egi-master slot="egi-master" entity-type="@full_entity_type">
                 <!--@egi_editors-->
             </tg-egi-master>
             

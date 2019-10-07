@@ -426,7 +426,7 @@ const template = html`
                             </template>
                         </div>
                     </template>
-                    <div class="egi-master">
+                    <div id="left_egi_master" style="display:none;" class="egi-master">
                         <div class="drag-anchor" hidden$="[[!canDragFrom]]"></div>
                         <div class="table-cell" hidden$="[[!_checkboxFixedAndVisible(checkboxVisible, checkboxesFixed)]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]">
                             <!--Checkbox stub for master goes here-->
@@ -441,7 +441,7 @@ const template = html`
                         </template>
                     </div>
                 </div>
-                <div class="grid-layout-container z-index-0">
+                <div id="centre_egi" class="grid-layout-container z-index-0">
                     <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
                         <div class="table-data-row" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
                             <div class="table-cell" hidden$="[[!_checkboxNotFixedAndVisible(checkboxVisible, checkboxesFixed)]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]" tooltip-text$="[[_selectTooltip(egiEntity.selected)]]">
@@ -455,7 +455,7 @@ const template = html`
                             </template>
                         </div>
                     </template>
-                    <div class="egi-master">
+                    <div id="centre_egi_master" style="display:none;" class="egi-master">
                         <div class="table-cell" hidden$="[[!_checkboxNotFixedAndVisible(checkboxVisible, checkboxesFixed)]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]">
                             <!--Checkbox stub for master goes here-->
                         </div>
@@ -469,7 +469,7 @@ const template = html`
                         </template>
                     </div>
                 </div>
-                <div class="grid-layout-container sticky-container z-index-1" show-right-shadow$="[[_rightShadowVisible(_showRightShadow, secondaryActionsFixed, _isSecondaryActionPresent)]]" style$="[[_calcRightContainerStyle(secondaryActionsFixed)]]">
+                <div id="right_egi" class="grid-layout-container sticky-container z-index-1" show-right-shadow$="[[_rightShadowVisible(_showRightShadow, secondaryActionsFixed, _isSecondaryActionPresent)]]" style$="[[_calcRightContainerStyle(secondaryActionsFixed)]]">
                     <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
                         <div class="table-data-row" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
                             <div class="action-cell" hidden$="[[!_isSecondaryActionPresent]]">
@@ -477,7 +477,7 @@ const template = html`
                             </div>
                         </div>
                     </template>
-                    <div class="egi-master" hidden$="[[secondaryActionPresent]]">    
+                    <div id="right_egi_master" style="display:none;" class="egi-master" hidden$="[[secondaryActionPresent]]">    
                         <div class="action-cell cell" hidden$="[[!_isSecondaryActionPresent]]">
                                 <!--Secondary actions stub for master goes here-->
                         </div>
@@ -582,6 +582,12 @@ function updateSelectAll (egi, egiModel) {
         egi.semiSelectedAll = false;
     }
 };
+
+function _insertMaster (container, egiMaster, entityIndex) {
+    const row = container.querySelectorAll(".table-data-row")[entityIndex];
+    container.insertBefore(egiMaster, row.nextSibling);
+    egiMaster.style.display = null;
+}
 
 Polymer({
 
@@ -769,7 +775,11 @@ Polymer({
         //the list of secondary actions
         _secondaryActions: Array,
         //The callback to open drop down for secondary action.
-        _openDropDown: Function
+        _openDropDown: Function,
+
+        //Double tap related
+        _tapOnce: Boolean,
+        _tapColumnIndex: Number
     },
 
     behaviors: [TgEgiDataRetrievalBehavior, IronResizableBehavior, IronA11yKeysBehavior, TgShortcutProcessingBehavior, TgDragFromBehavior, TgElementSelectorBehavior],
@@ -1082,20 +1092,35 @@ Polymer({
         this._updateColumns(resultantColumns);
     },
 
-    tap: function (entity, index, column) {
-        if (column.runAction(entity) === false) {
-            // if the clicked property is a hyperlink and there was no custom action associted with it
-            // then let's open the linked resources
-            if (this.isHyperlinkProp(entity, column) === true) {
-                const url = this.getBindedValue(entity, column);
-                const win = window.open(url, '_blank');
-                win.focus();
-            } else {
-                const attachment = this.getAttachmentIfPossible(entity, column);
-                if (attachment && this.downloadAttachment) {
-                    this.downloadAttachment(attachment);
+    tap: function (entityIndex, entity, index, column) {
+        if (this._tapOnce) {
+            delete this._tapOnce;
+            delete this._tapColumnIndex;
+            _insertMaster(this.$.left_egi, this.$.left_egi_master, entityIndex);
+            _insertMaster(this.$.centre_egi, this.$.centre_egi_master, entityIndex);
+            _insertMaster(this.$.right_egi, this.$.right_egi_master, entityIndex);
+            console.log("You tap twice");
+        } else {
+            this._tapOnce = true;
+            this._tapColumnIndex = column;
+            this.async(() => {
+                if (this._tapOnce && column.runAction(entity) === false) {
+                    // if the clicked property is a hyperlink and there was no custom action associted with it
+                    // then let's open the linked resources
+                    if (this.isHyperlinkProp(entity, column) === true) {
+                        const url = this.getBindedValue(entity, column);
+                        const win = window.open(url, '_blank');
+                        win.focus();
+                    } else {
+                        const attachment = this.getAttachmentIfPossible(entity, column);
+                        if (attachment && this.downloadAttachment) {
+                            this.downloadAttachment(attachment);
+                        }
+                    }
                 }
-            }
+                delete this._tapOnce;
+                delete this._tapColumnIndex;
+            }, 400);
         }
     },
 
@@ -1206,11 +1231,11 @@ Polymer({
     },
 
     _tapFixedAction: function (e, detail) {
-        this.tap(this.filteredEntities[e.model.parentModel.entityIndex], e.model.index, this.fixedColumns[e.model.index]);
+        this.tap(e.model.parentModel.entityIndex, this.filteredEntities[e.model.parentModel.entityIndex], e.model.index, this.fixedColumns[e.model.index]);
     },
 
     _tapAction: function (e, detail) {
-        this.tap(this.filteredEntities[e.model.parentModel.entityIndex], this.fixedColumns.length + e.model.index, this.columns[e.model.index]);
+        this.tap(e.model.parentModel.entityIndex, this.filteredEntities[e.model.parentModel.entityIndex], this.fixedColumns.length + e.model.index, this.columns[e.model.index]);
     },
 
     _columnDomChanged: function (addedColumns, removedColumns) {
