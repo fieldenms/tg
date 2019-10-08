@@ -30,7 +30,8 @@ import { TgElementSelectorBehavior } from '/resources/components/tg-element-sele
 import { TgDragFromBehavior } from '/resources/components/tg-drag-from-behavior.js';
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
-import { tearDownEvent, getRelativePos, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
+import { queryElements } from '/resources/components/tg-element-selector-behavior.js';
+import { tearDownEvent, getRelativePos, isMobileApp, isInHierarchy, deepestActiveElement, FOCUSABLE_ELEMENTS_SELECTOR } from '/resources/reflection/tg-polymer-utils.js';
 
 const template = html`
     <style>
@@ -839,6 +840,10 @@ Polymer({
 
         //Initiate entity master for inline editing
         this.master = this.$.egi_master.assignedNodes()[0];
+        this.master._editNextRow = this._makeNextRowEditable.bind(this);
+        this.master._editPreviousRow = this._makePreviousRowEditable.bind(this);
+        this.master._fixedMasterContainer = this.$.left_egi_master;
+        this.master._scrollableMasterContainer = this.$.centre_egi_master;
     },
 
     attached: function () {
@@ -1096,12 +1101,7 @@ Polymer({
         if (this._tapOnce) {
             delete this._tapOnce;
             delete this._tapColumnIndex;
-            _insertMaster(this.$.left_egi, this.$.left_egi_master, entityIndex);
-            _insertMaster(this.$.centre_egi, this.$.centre_egi_master, entityIndex);
-            _insertMaster(this.$.right_egi, this.$.right_egi_master, entityIndex);
-            this.master.entityId = entity.get("id");
-            this.master.retrieve();
-            console.log("You tap twice");
+            this._makeRowEditable(entityIndex, false);
         } else {
             this._tapOnce = true;
             this._tapColumnIndex = column;
@@ -1935,7 +1935,31 @@ Polymer({
         return {};
     },
 
-    /************ EG MASTER RELATED FUNCTIONS ***************/
+    /************ EGI MASTER RELATED FUNCTIONS ***************/
+    _makeNextRowEditable: function () {
+        if (this.filteredEntities.length > this.master.editableRow + 1) {
+            //TODO need to accept changes to the current editable row
+            this._makeRowEditable(this.master.editableRow + 1, false);
+        }
+    },
+
+    _makePreviousRowEditable: function () {
+        if (this.master.editableRow - 1 >= 0) {
+            //TODO need to accept changes to the current editable row
+            this._makeRowEditable(this.master.editableRow - 1, true);
+        }
+    },
+
+    _makeRowEditable: function (entityIndex, focusLastOnRetrieve) {
+        _insertMaster(this.$.left_egi, this.$.left_egi_master, entityIndex);
+        _insertMaster(this.$.centre_egi, this.$.centre_egi_master, entityIndex);
+        _insertMaster(this.$.right_egi, this.$.right_egi_master, entityIndex);
+        this.master.focusLastOnRetrieve = focusLastOnRetrieve;
+        this.master.editableRow = entityIndex;
+        this.master.entityId = this.filteredEntities[entityIndex].get("id");
+        this.master.retrieve();
+    },
+
     _initMasterEditors: function () {
         if (this.master) {
             this.master.editors.forEach(editor => {

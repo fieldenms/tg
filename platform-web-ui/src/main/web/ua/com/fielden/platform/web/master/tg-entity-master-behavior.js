@@ -760,7 +760,7 @@ const TgEntityMasterBehaviorImpl = {
      * Looks for the first input that is not hidden and not disabled to focus it.
      */
     _focusFirstInput: function () {
-        const editors = this.shadowRoot.querySelectorAll('[tg-editor]');
+        const editors = this.getEditors();
         let editorIndex, firstInput, selectedElement;
         for (editorIndex = 0; editorIndex < editors.length; editorIndex++) {
             if (editors[editorIndex].offsetParent !== null) {
@@ -780,6 +780,10 @@ const TgEntityMasterBehaviorImpl = {
         } else if (this.offsetParent !== null) {
             this.focusNextView();
         }
+    },
+
+    getEditors: function () {
+        return this.shadowRoot.querySelectorAll('[tg-editor]');
     },
 
     /**
