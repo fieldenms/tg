@@ -507,6 +507,14 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     }
 
     @Test
+    public void test_query_with_union_entity_desc_property() {
+        final String workshopDesc = "Workshop 1";
+        final EntityResultQueryModel<TgBogie> qry = select(TgBogie.class).where().prop("location.desc").eq().val(workshopDesc).model();
+        final EntityResultQueryModel<TgBogie> expQry = select(TgBogie.class).where().prop("location.workshop.desc").eq().val(workshopDesc).model();
+        assertEquals(bogieDao.getEntity(from(expQry).model()), bogieDao.getEntity(from(qry).model()));
+    }
+
+    @Test
     public void test_query_with_union_entity_property_fetching_keys() {
         final String workshopKey = "WSHOP1";
         final EntityResultQueryModel<TgBogie> qry = select(TgBogie.class).where().prop("location.key").eq().val(workshopKey).model();
