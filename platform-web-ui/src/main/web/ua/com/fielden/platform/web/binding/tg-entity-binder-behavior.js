@@ -932,9 +932,6 @@ export const TgEntityBinderBehavior = {
         var oldCurrBindingEntity = self._currBindingEntity;
         self._previousModifiedPropertiesHolder = previousModifiedPropertiesHolder;
         self._currBindingEntity = self._extractBindingView(self._currEntity, previousModifiedPropertiesHolder, self._currBindingEntity);
-        if (self._currBindingEntity != null && oldCurrBindingEntity == null) {
-            self.fire('binding-entity-appeared', self._currBindingEntity);
-        }
         self._originalBindingEntity = self._extractOriginalBindingView(self._currEntity, isEntityStale ? self._originalBindingEntity : null);
 
         self._bindingEntityModified = self._hasModified(self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity));
@@ -943,7 +940,9 @@ export const TgEntityBinderBehavior = {
             !self._currBindingEntity.isPersisted() ||
             self._bindingEntityModified;
         // console.debug('_bindingEntityNotPersistentOrNotPersistedOrModified = ', self._bindingEntityNotPersistentOrNotPersistedOrModified, ' type = ', self._currBindingEntity.type()._simpleClassName());
-
+        if (self._currBindingEntity != null && oldCurrBindingEntity == null) {
+            self.fire('binding-entity-appeared', self._currBindingEntity);
+        }
         console.log("       _postEntityReceived: _currBindingEntity + _originalBindingEntity", self._currBindingEntity, self._originalBindingEntity);
         return self._currBindingEntity;
     },

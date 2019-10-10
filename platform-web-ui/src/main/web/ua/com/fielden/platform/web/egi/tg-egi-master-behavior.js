@@ -1,7 +1,7 @@
 import { TgEntityMasterBehavior } from '/resources/master/tg-entity-master-behavior.js';
 import { queryElements } from '/resources/components/tg-element-selector-behavior.js';
 import { IronA11yKeysBehavior } from '/resources/polymer/@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
-import { tearDownEvent, deepestActiveElement, FOCUSABLE_ELEMENTS_SELECTOR } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, deepestActiveElement, getActiveParentAnd, FOCUSABLE_ELEMENTS_SELECTOR } from '/resources/reflection/tg-polymer-utils.js';
 
 const TgEgiMasterBehaviorImpl = {
 
@@ -20,7 +20,10 @@ const TgEgiMasterBehaviorImpl = {
             observer: "_scrollableMasterContainerChanged"
         },
         _editNextRow: Function,
-        _editPreviousRow: Function
+        _editPreviousRow: Function,
+        _acceptValues: Function,
+        _cancelValues: Function,
+        _lastFocusedEditor: Object
     },
 
     created: function() {
@@ -30,20 +33,37 @@ const TgEgiMasterBehaviorImpl = {
 
     ready: function () {
         this.editors = [...this._masterDom().children];
-        
+        this.addEventListener('data-loaded-and-focused', this._selectLastFocusedEditor.bind(this));
     },
 
     getEditors: function () {
-        return this.editors;
-    },
-
-    _getCurrentFocusableElements: function () {
-        const focusableElemnts = [...queryElements(this._fixedMasterContainer, FOCUSABLE_ELEMENTS_SELECTOR, this.parentElement).filter(element => !element.disabled && element.offsetParent !== null),
-                                  ...queryElements(this._scrollableMasterContainer, FOCUSABLE_ELEMENTS_SELECTOR, this.parentElement).filter(element => !element.disabled && element.offsetParent !== null)];
+        const focusableElemnts = this._lastFocusedEditor ? [this._lastFocusedEditor] : 
+                                [...this._fixedMasterContainer.querySelectorAll("slot"), ...this._scrollableMasterContainer.querySelectorAll("slot")]
+                                .filter(slot => slot.assignedNodes().length > 0)
+                                .map(slot => slot.assignedNodes()[0]);
         if (this.focusLastOnRetrieve) {
             return focusableElemnts.reverse();
         }
         return focusableElemnts;
+    },
+
+    doNotValidate: function () {
+        if (this.postValidated) {
+            this.postValidated();
+        }
+    },
+
+    _postValidatedDefaultError: function (error) {
+        if (this.postValidated) {
+            this.postValidated();
+        }
+    },
+
+    _selectLastFocusedEditor: function (e) {
+        if (this._lastFocusedEditor) {
+            this._lastFocusedEditor.decoratedInput().select();
+        }
+        this._lastFocusedEditor = null;
     },
 
     //Event listeners
@@ -72,7 +92,25 @@ const TgEgiMasterBehaviorImpl = {
             } else {
                 this._onTabDown(event);
             }
+        } else if (IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'esc')) {
+            this._cancelValues();
+        } else if (IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'enter')) {
+            this._lastFocusedEditor = getActiveParentAnd(element => element.hasAttribute('tg-editor'));
+            if (this._lastFocusedEditor) {
+                if (!this._lastFocusedEditor.reflector().equalsEx(this._lastFocusedEditor._editingValue, this._lastFocusedEditor._commValue)) {
+                    this.postValidated = this._postAcceptValidate.bind(this);
+                    this._lastFocusedEditor.commit();
+                } else {
+                    this._postAcceptValidate();
+                }
+            }
         }
+    },
+
+    _postAcceptValidate: function () {
+        this._acceptValues();
+        this._editNextRow();
+        this.postValidated = null;
     },
 
     _onTabDown: function (event) {
