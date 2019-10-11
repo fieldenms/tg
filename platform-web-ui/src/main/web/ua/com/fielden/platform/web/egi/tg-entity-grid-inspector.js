@@ -263,9 +263,9 @@ const template = html`
             cursor: pointer;
         }
         .action-master-cell, .action-cell {
-            @apply --layout-horizontal;
             width: var(--egi-action-cell-width, 20px);
             padding: 0 var(--egi-action-cell-padding, 0.3rem);
+            @apply --layout-horizontal;
         }
         .action-cell {
             @apply --layout-center;
@@ -436,7 +436,7 @@ const template = html`
                         <div class="table-master-cell" hidden$="[[!_checkboxFixedAndVisible(checkboxVisible, checkboxesFixed)]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]">
                             <!--Checkbox stub for master goes here-->
                         </div>
-                        <div class="master-action-cell cell" hidden$="[[!_primaryActionFixedAndVisible(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
+                        <div class="action-master-cell cell" hidden$="[[!_primaryActionFixedAndVisible(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
                             <!--Primary action stub for master goes here-->
                         </div>
                         <template is="dom-repeat" items="[[fixedColumns]]" as="column">
@@ -1158,7 +1158,8 @@ Polymer({
                 over: this._areEqual(this.editingEntity, newEntity),
                 selected: isSelected,
                 entity: newEntity,
-                renderingHints: newRendHints
+                renderingHints: newRendHints,
+                entityModification: {}
             };
             tempEgiModel.push(egiEntity);
         });
@@ -1950,9 +1951,15 @@ Polymer({
 
     _acceptValuesFromMaster: function () {
         const entity = this.master._currBindingEntity["@@origin"];
-        const entityToUpdate = this.egiModel[this.master.editableRow].entity;
+        const egiEntityToUpdate = this.egiModel[this.master.editableRow];
+        const entityToUpdate = egiEntityToUpdate.entity;
         this.master.editors.forEach(editor => {
             entityToUpdate.set(editor.propertyName, entity.get(editor.propertyName));
+            if (this.master._previousModifiedPropertiesHolder && typeof this.master._previousModifiedPropertiesHolder[editor.propertyName].val !== 'undefined') {
+                egiEntityToUpdate.entityModification[editor.propertyName] = true;
+            } else {
+                egiEntityToUpdate.entityModification[editor.propertyName] = false;
+            }
             this.updateEntity(entityToUpdate, editor.propertyName);
         });
     },

@@ -61,7 +61,7 @@ const TgEgiMasterBehaviorImpl = {
     },
 
     _selectLastFocusedEditor: function (e) {
-        if (this._lastFocusedEditor) {
+        if (this._lastFocusedEditor && this._lastFocusedEditor.decoratedInput() && typeof this._lastFocusedEditor.decoratedInput().select === 'function') {
             this._lastFocusedEditor.decoratedInput().select();
         }
         this._lastFocusedEditor = null;
