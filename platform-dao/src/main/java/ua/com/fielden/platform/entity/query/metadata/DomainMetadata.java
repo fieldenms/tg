@@ -8,6 +8,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.commonProperties;
+import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.entity.query.metadata.CompositeKeyEqlExpressionGenerator.generateCompositeKeyEqlExpression;
@@ -246,8 +247,10 @@ public class DomainMetadata {
         
         final Class<? extends AbstractUnionEntity> entityType = (Class<? extends AbstractUnionEntity>) parentInfo.entityType;
         final List<String> commonProps = commonProperties(entityType);
+        final Class<?> unionEntityPropType = unionProperties(entityType).get(0).getType();
         for (String propName : commonProps) {
-            safeMapAdd(propsMetadata, new PropertyMetadata.Builder(propName, String.class, false, parentInfo).hibType(H_STRING).expression(generateUnionEntityPropertyExpression(entityType, propName)).category(EXPRESSION).build());
+            final Class<?> javaType = determinePropertyType(unionEntityPropType, propName);
+            safeMapAdd(propsMetadata, new PropertyMetadata.Builder(propName, javaType, false, parentInfo).expression(generateUnionEntityPropertyExpression(entityType, propName)).category(EXPRESSION).build());
         }
 
         return new ModelledEntityMetadata(parentInfo.unionEntityModels, parentInfo.entityType, propsMetadata);
