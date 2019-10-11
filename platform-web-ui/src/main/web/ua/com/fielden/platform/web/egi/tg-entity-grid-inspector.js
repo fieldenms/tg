@@ -176,7 +176,7 @@ const template = html`
             @apply --layout-horizontal;
         }
         .egi-master {
-            height: 7.5rem;
+            height: 4.1rem;
             z-index: 0;
             font-size: 1rem;
             font-weight: 400;
@@ -246,11 +246,13 @@ const template = html`
             --paper-checkbox-unchecked-color: var(--paper-grey-900);
             --paper-checkbox-unchecked-ink-color: var(--paper-grey-900);
         }
-        .table-cell {
+        .table-master-cell, .table-cell {
             @apply --layout-horizontal;
-            @apply --layout-center;
             @apply --layout-relative;
             padding: 0 var(--egi-cell-padding, 0.6rem);
+        }
+        .table-cell {
+            @apply --layout-center;
         }
         .truncate {
             white-space: nowrap;
@@ -260,11 +262,13 @@ const template = html`
         tg-egi-cell.with-action {
             cursor: pointer;
         }
-        .action-cell {
+        .action-master-cell, .action-cell {
             @apply --layout-horizontal;
-            @apply --layout-center;
             width: var(--egi-action-cell-width, 20px);
             padding: 0 var(--egi-action-cell-padding, 0.3rem);
+        }
+        .action-cell {
+            @apply --layout-center;
         }
         .action, tg-secondary-action-dropdown ::slotted(.secondary-action) {
             --tg-ui-action-icon-button-height: 1.6rem;
@@ -429,14 +433,14 @@ const template = html`
                     </template>
                     <div id="left_egi_master" style="display:none;" class="egi-master">
                         <div class="drag-anchor" hidden$="[[!canDragFrom]]"></div>
-                        <div class="table-cell" hidden$="[[!_checkboxFixedAndVisible(checkboxVisible, checkboxesFixed)]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]">
+                        <div class="table-master-cell" hidden$="[[!_checkboxFixedAndVisible(checkboxVisible, checkboxesFixed)]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]">
                             <!--Checkbox stub for master goes here-->
                         </div>
-                        <div class="action-cell cell" hidden$="[[!_primaryActionFixedAndVisible(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
+                        <div class="master-action-cell cell" hidden$="[[!_primaryActionFixedAndVisible(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
                             <!--Primary action stub for master goes here-->
                         </div>
                         <template is="dom-repeat" items="[[fixedColumns]]" as="column">
-                            <div class="table-cell" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'false')]]">
+                            <div class="table-master-cell" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'false')]]">
                                 <slot name$="[[_getSlotNameFor(column.property)]]"></slot>
                             </div>
                         </template>
@@ -457,14 +461,14 @@ const template = html`
                         </div>
                     </template>
                     <div id="centre_egi_master" style="display:none;" class="egi-master">
-                        <div class="table-cell" hidden$="[[!_checkboxNotFixedAndVisible(checkboxVisible, checkboxesFixed)]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]">
+                        <div class="table-master-cell" hidden$="[[!_checkboxNotFixedAndVisible(checkboxVisible, checkboxesFixed)]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]">
                             <!--Checkbox stub for master goes here-->
                         </div>
-                        <div class="action-cell cell" hidden$="[[!_primaryActionNotFixedAndVisible(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
+                        <div class="action-master-cell cell" hidden$="[[!_primaryActionNotFixedAndVisible(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
                             <!--Primary action stub for master goes here-->
                         </div>
                         <template is="dom-repeat" items="[[columns]]" as="column">
-                            <div class="table-cell" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'false')]]">
+                            <div class="table-master-cell" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'false')]]">
                                 <slot name$="[[column.property]]"></slot>
                             </div>
                         </template>
@@ -479,7 +483,7 @@ const template = html`
                         </div>
                     </template>
                     <div id="right_egi_master" style="display:none;" class="egi-master" hidden$="[[secondaryActionPresent]]">    
-                        <div class="action-cell cell" hidden$="[[!_isSecondaryActionPresent]]">
+                        <div class="action-master-cell cell" hidden$="[[!_isSecondaryActionPresent]]">
                                 <!--Secondary actions stub for master goes here-->
                         </div>
                     </div>
@@ -845,7 +849,7 @@ Polymer({
         this.master._fixedMasterContainer = this.$.left_egi_master;
         this.master._scrollableMasterContainer = this.$.centre_egi_master;
         this.master._acceptValues = this._acceptValuesFromMaster.bind(this);
-        this.master._cancelValues = this._cancelMaster.bind(this);
+        this.master._cancelValues = this._cancelAndCloseMaster.bind(this);
         this.master.addEventListener("binding-entity-appeared", this._updateModelWithMasterEntity.bind(this));
     },
 
@@ -1962,17 +1966,21 @@ Polymer({
     },
 
     _makeNextRowEditable: function () {
+        this._acceptValuesFromMaster();
         if (this.filteredEntities.length > this.master.editableRow + 1) {
-            this._acceptValuesFromMaster();
             this._makeRowEditable(this.master.editableRow + 1, false);
+        } else {
+            this._closeMaster();
         }
     },
 
     _makePreviousRowEditable: function () {
+        this._acceptValuesFromMaster();
         if (this.master.editableRow - 1 >= 0) {
-            this._acceptValuesFromMaster();
             this._makeRowEditable(this.master.editableRow - 1, true);
-        }
+        } else {
+            this._closeMaster();
+        } 
     },
 
     _makeRowEditable: function (entityIndex, focusLastOnRetrieve) {
@@ -1985,11 +1993,15 @@ Polymer({
         this.master.retrieve();
     },
 
-    _cancelMaster: function () {
-        this._cancelMasterValues();
+    _closeMaster: function () {
         this.$.left_egi_master.style.display = 'none';
         this.$.centre_egi_master.style.display = 'none';
         this.$.right_egi_master.style.display = 'none';
+    },
+
+    _cancelAndCloseMaster: function () {
+        this._cancelMasterValues();
+        this._closeMaster();
     },
 
     _initMasterEditors: function () {

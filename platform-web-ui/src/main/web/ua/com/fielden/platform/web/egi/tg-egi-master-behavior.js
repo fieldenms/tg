@@ -33,6 +33,7 @@ const TgEgiMasterBehaviorImpl = {
 
     ready: function () {
         this.editors = [...this._masterDom().children];
+        this.editors.forEach(editor => editor.decorator().noLabelFloat = true);
         this.addEventListener('data-loaded-and-focused', this._selectLastFocusedEditor.bind(this));
     },
 

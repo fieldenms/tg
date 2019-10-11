@@ -154,27 +154,27 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         final Class<?> propertyType = isEntityItself ? root : PropertyTypeDeterminator.determinePropertyType(root, resultPropName);
         final String widgetPropName = "".equals(resultPropName) ? AbstractEntity.KEY : resultPropName;
         if (isEntityType(propertyType)) {
-            return new EntityAutocompletionWidget(TitlesDescsGetter.getTitleAndDesc(widgetPropName, propertyType), widgetPropName, (Class<AbstractEntity<?>>)propertyType);
+            return new EntityAutocompletionWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(widgetPropName, root).getValue()), widgetPropName, (Class<AbstractEntity<?>>)propertyType);
         } else if (isString(propertyType)) {
-            return new SinglelineTextWidget(TitlesDescsGetter.getTitleAndDesc(propName, root), propName);
+            return new SinglelineTextWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName);
         } else if (isInteger(propertyType)) {
-            return new SpinnerWidget(TitlesDescsGetter.getTitleAndDesc(propName, root), propName);
+            return new SpinnerWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName);
         } else if (Money.class.isAssignableFrom(propertyType)) {
-            return new MoneyWidget(TitlesDescsGetter.getTitleAndDesc(propName, root), propName);
+            return new MoneyWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName);
         } else if (BigDecimal.class.isAssignableFrom(propertyType)) {
-            return new DecimalWidget(TitlesDescsGetter.getTitleAndDesc(propName, root), propName);
+            return new DecimalWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName);
         } else if (Hyperlink.class.isAssignableFrom(propertyType)){
-            return new HyperlinkWidget(TitlesDescsGetter.getTitleAndDesc(propName, root), propName);
+            return new HyperlinkWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName);
         } else if (Colour.class.isAssignableFrom(propertyType)) {
-            return new ColourWidget(TitlesDescsGetter.getTitleAndDesc(propName, root), propName);
+            return new ColourWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName);
         } else if (isBoolean(propertyType)) {
-            return new CheckboxWidget(TitlesDescsGetter.getTitleAndDesc(propName, root), propName);
+            return new CheckboxWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName);
         } else if (isDate(propertyType)) {
-            return new DateTimePickerWidget(TitlesDescsGetter.getTitleAndDesc(propName, root), propName, false,
+            return new DateTimePickerWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName, false,
                     DefaultValueContract.getTimeZone(root, propName),
                     DefaultValueContract.getTimePortionToDisplay(root, propName));
         } else if (isCollectional(propertyType)) {
-            return new CollectionalRepresentorWidget(TitlesDescsGetter.getTitleAndDesc(propName, root),propName);
+            return new CollectionalRepresentorWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()),propName);
         }
         return null;
     }
@@ -585,23 +585,26 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     @SuppressWarnings("unchecked")
     @Override
     public IResultSetAutocompleterConfig<T> asAutocompleter() {
-        final Class<? extends AbstractEntity<?>> propType = StringUtils.isEmpty(treeName(this.propName.get())) ? this.builder.getEntityType()
-                : (Class<? extends AbstractEntity<?>>) PropertyTypeDeterminator.determinePropertyType(this.builder.getEntityType(), this.propName.get());
-        final EntityAutocompletionWidget editor = new EntityAutocompletionWidget(TitlesDescsGetter.getTitleAndDesc(this.propName.get(), this.builder.getEntityType()), this.propName.get(), propType);
+        final Class<? extends AbstractEntity<?>> root = this.builder.getEntityType();
+        final String resultPropName = treeName(this.propName.get());
+        final boolean isEntityItself = "".equals(resultPropName); // empty property means "entity itself"
+        final Class<?> propertyType = isEntityItself ? root : PropertyTypeDeterminator.determinePropertyType(root, resultPropName);
+        final String widgetPropName = "".equals(resultPropName) ? AbstractEntity.KEY : resultPropName;
+        final EntityAutocompletionWidget editor = new EntityAutocompletionWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(widgetPropName, root).getValue()), widgetPropName, (Class<AbstractEntity<?>>)propertyType);
         this.widget = Optional.of(editor);
         return new ResultSetAutocompleterConfig<>(this, editor);
     }
 
     @Override
     public IResultSetEditorConfig<T> asSinglelineText() {
-        final SinglelineTextWidget editor = new SinglelineTextWidget(TitlesDescsGetter.getTitleAndDesc(this.propName.get(), this.builder.getEntityType()), this.propName.get());
+        final SinglelineTextWidget editor = new SinglelineTextWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(this.propName.get(), this.builder.getEntityType()).getValue()), this.propName.get());
         this.widget = Optional.of(editor);
         return new ResultSetEditorConfig<>(this, editor);
     }
 
     @Override
     public IResultSetEditorConfig<T> asMultilineText() {
-        final MultilineTextWidget editor = new MultilineTextWidget(TitlesDescsGetter.getTitleAndDesc(this.propName.get(), this.builder.getEntityType()), this.builder.getEntityType(), this.propName.get());
+        final MultilineTextWidget editor = new MultilineTextWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(this.propName.get(), this.builder.getEntityType()).getValue()), this.builder.getEntityType(), this.propName.get());
         this.widget = Optional.of(editor);
         return new ResultSetEditorConfig<>(this, editor);
     }
