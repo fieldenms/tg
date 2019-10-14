@@ -7,7 +7,7 @@ import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
 
 import '/resources/polymer/@polymer/paper-checkbox/paper-checkbox.js';
 import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
-import "/resources/polymer/@polymer/paper-styles/shadow.js";
+import '/resources/polymer/@polymer/paper-styles/shadow.js';
 import '/resources/polymer/@polymer/paper-progress/paper-progress.js';
 import '/resources/polymer/@polymer/paper-styles/color.js';
 
@@ -30,7 +30,6 @@ import { TgElementSelectorBehavior } from '/resources/components/tg-element-sele
 import { TgDragFromBehavior } from '/resources/components/tg-drag-from-behavior.js';
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
-import { queryElements } from '/resources/components/tg-element-selector-behavior.js';
 import { tearDownEvent, getRelativePos, isMobileApp} from '/resources/reflection/tg-polymer-utils.js';
 
 const template = html`
@@ -176,6 +175,7 @@ const template = html`
             @apply --layout-horizontal;
         }
         .egi-master {
+            position: relative;
             height: 4.1rem;
             z-index: 0;
             font-size: 1rem;
@@ -190,6 +190,18 @@ const template = html`
             flex-grow: 0;
             flex-shrink: 0;
             @apply --layout-horizontal;
+        }
+        .master-actions {
+            position: absolute;
+            top: -20px;
+            left: 16px;
+            @apply --layout-horizontal;
+        }
+        .master-actions ::slotted(.master-save-action) {
+            --paper-fab-background: var(--paper-green-600);
+        }
+        .master-actions ::slotted(.master-cancel-action) {
+            --paper-fab-background: var(--paper-red-600);
         }
         .footer {
             background-color: white;
@@ -444,6 +456,10 @@ const template = html`
                                 <slot name$="[[_getSlotNameFor(column.property)]]"></slot>
                             </div>
                         </template>
+                        <div class="master-actions">
+                            <slot name="save-button"></slot>
+                            <slot name="cancel-button"></slot>
+                        </div>
                     </div>
                 </div>
                 <div id="centre_egi" class="grid-layout-container z-index-0">
@@ -875,6 +891,8 @@ Polymer({
         this.async(function () {
             this.keyEventTarget = this._getKeyEventTarget();
             this._initMasterEditors();
+            this.appendChild(this.master.saveButton);
+            this.appendChild(this.master.cancelButton);
         }, 1);
     },
 
@@ -1997,6 +2015,7 @@ Polymer({
         this.master.focusLastOnRetrieve = focusLastOnRetrieve;
         this.master.editableRow = entityIndex;
         this.master.entityId = this.filteredEntities[entityIndex].get("id");
+        this.master.entityType = this.filteredEntities[entityIndex].type().notEnhancedFullClassName()
         this.master.retrieve();
     },
 

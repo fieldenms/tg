@@ -16,6 +16,7 @@ import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 
 import '/resources/egi/tg-entity-grid-inspector.js';
+import '/resources/components/tg-fab.js'
 import {TgEgiMasterBehavior} from '/resources/egi/tg-egi-master-behavior.js';
 import '/resources/centre/tg-selection-criteria.js';
 import { TgSelectionCriteriaTemplateBehavior } from '/resources/centre/tg-selection-criteria-template-behavior.js';
@@ -171,6 +172,8 @@ const egiMasterTemplate = html`
         _process-saver-error="[[_processSaverError]]"
         _saver-loading="{{_saverLoading}}">
             <!--@egi_editors-->
+            <tg-fab slot="save-button" class="master-save-action" on-tap="save" icon="check" title="save"></tg-fab>
+            <tg-fab slot="cancel-button" class="master-cancel-action" on-tap="retrieve" icon="clear" title="cancel"></tg-fab>
     </tg-entity-master>`;
 
 Polymer({
@@ -178,9 +181,5 @@ Polymer({
 
     is: 'tg-egi-@mi_type-master',
 
-    behaviors: [ TgEgiMasterBehavior ],
-
-    hostAttributes: {
-        'entity-type': '@full_entity_type'
-    }
+    behaviors: [ TgEgiMasterBehavior ]
 });

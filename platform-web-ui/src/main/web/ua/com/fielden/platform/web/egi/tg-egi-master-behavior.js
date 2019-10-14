@@ -7,6 +7,8 @@ const TgEgiMasterBehaviorImpl = {
 
     properties :{
         editors: Array,
+        saveButton: Object,
+        cancelButton: Object,
         focusLastOnRetrieve: {
             type: Boolean,
             value: false
@@ -32,7 +34,10 @@ const TgEgiMasterBehaviorImpl = {
     },
 
     ready: function () {
-        this.editors = [...this._masterDom().children];
+        this.editors = [...this._masterDom().querySelectorAll('[tg-editor]')];
+        this.saveButton = this._masterDom().querySelector('.master-save-action');
+        this.cancelButton = this._masterDom().querySelector('.master-cancel-action');
+
         this.editors.forEach(editor => editor.decorator().noLabelFloat = true);
         this.addEventListener('data-loaded-and-focused', this._selectLastFocusedEditor.bind(this));
     },
