@@ -16,7 +16,7 @@ import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 
 import '/resources/egi/tg-entity-grid-inspector.js';
-import '/resources/components/tg-fab.js'
+import '/resources/master/actions/tg-action.js';
 import {TgEgiMasterBehavior} from '/resources/egi/tg-egi-master-behavior.js';
 import '/resources/centre/tg-selection-criteria.js';
 import { TgSelectionCriteriaTemplateBehavior } from '/resources/centre/tg-selection-criteria-template-behavior.js';
@@ -172,8 +172,8 @@ const egiMasterTemplate = html`
         _process-saver-error="[[_processSaverError]]"
         _saver-loading="{{_saverLoading}}">
             <!--@egi_editors-->
-            <tg-fab slot="save-button" class="master-save-action" on-tap="save" icon="check" title="save"></tg-fab>
-            <tg-fab slot="cancel-button" class="master-cancel-action" on-tap="retrieve" icon="clear" title="cancel"></tg-fab>
+            <tg-action slot="save-button" class="master-save-action" is-icon icon="check" enabled-states='[[_actions.SAVE.enabledStates]]' short-desc='[[_actions.SAVE.shortDesc]]' long-desc='[[_actions.SAVE.longDesc]]' current-state='[[currentState]]' id='_saveAction' focusing-callback='[[focusViewBound]]' action='[[_actions.SAVE.action]]' post-action='{{_postSavedDefault}}' post-action-error='{{_postSavedDefaultError}}'></tg-action>
+            <tg-action slot="cancel-button" class="master-cancel-action" icon="clear" is-icon enabled-states='[[_actions.REFRESH.enabledStates]]' short-desc='[[_actions.REFRESH.shortDesc]]' long-desc='[[_actions.REFRESH.longDesc]]' current-state='[[currentState]]' action='[[_actions.REFRESH.action]]' post-action='{{_postRetrievedDefault}}' post-action-error='{{_postRetrievedDefaultError}}'></tg-action>
     </tg-entity-master>`;
 
 Polymer({

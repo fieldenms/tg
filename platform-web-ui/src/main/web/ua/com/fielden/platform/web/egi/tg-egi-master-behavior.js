@@ -24,8 +24,14 @@ const TgEgiMasterBehaviorImpl = {
         _editNextRow: Function,
         _editPreviousRow: Function,
         _acceptValues: Function,
-        _cancelValues: Function,
-        _lastFocusedEditor: Object
+        //_cancelValues: Function,
+        _closeMaster: Function,
+        _lastFocusedEditor: Object,
+        _shouldEditNextRow: {
+            type: Boolean,
+            value :false
+        }
+        
     },
 
     created: function() {
@@ -40,13 +46,23 @@ const TgEgiMasterBehaviorImpl = {
 
         this.editors.forEach(editor => editor.decorator().noLabelFloat = true);
         this.addEventListener('data-loaded-and-focused', this._selectLastFocusedEditor.bind(this));
+
+        this.postSaved = function () {
+            this._acceptValues();
+            if (this._shouldEditNextRow) {
+                this._shouldEditNextRow = false;
+                this._editNextRow();
+            } else {
+                this._closeMaster();
+            }
+        }
     },
 
     getEditors: function () {
         const focusableElemnts = this._lastFocusedEditor ? [this._lastFocusedEditor] : 
-                                [...this._fixedMasterContainer.querySelectorAll("slot"), ...this._scrollableMasterContainer.querySelectorAll("slot")]
+                                [...this._fixedMasterContainer.querySelectorAll("[slot]"), ...this._scrollableMasterContainer.querySelectorAll("slot")]
                                 .filter(slot => slot.assignedNodes().length > 0)
-                                .map(slot => slot.assignedNodes()[0]);
+                                .map(slot => slot.assignedNodes()[0]).filter(element => element.hasAttribute("tg-editor"));
         if (this.focusLastOnRetrieve) {
             return focusableElemnts.reverse();
         }
@@ -99,24 +115,14 @@ const TgEgiMasterBehaviorImpl = {
                 this._onTabDown(event);
             }
         } else if (IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'esc')) {
-            this._cancelValues();
+            this._closeMaster();
         } else if (IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'enter')) {
             this._lastFocusedEditor = getActiveParentAnd(element => element.hasAttribute('tg-editor'));
-            if (this._lastFocusedEditor) {
-                if (!this._lastFocusedEditor.reflector().equalsEx(this._lastFocusedEditor._editingValue, this._lastFocusedEditor._commValue)) {
-                    this.postValidated = this._postAcceptValidate.bind(this);
-                    this._lastFocusedEditor.commit();
-                } else {
-                    this._postAcceptValidate();
-                }
+            if (!this.saveButton._disabled) {
+                this._shouldEditNextRow = true;
+                this.save();
             }
         }
-    },
-
-    _postAcceptValidate: function () {
-        this._acceptValues();
-        this._editNextRow();
-        this.postValidated = null;
     },
 
     _onTabDown: function (event) {

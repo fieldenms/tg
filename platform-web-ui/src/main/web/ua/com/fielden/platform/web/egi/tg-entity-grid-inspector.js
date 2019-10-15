@@ -865,8 +865,8 @@ Polymer({
         this.master._fixedMasterContainer = this.$.left_egi_master;
         this.master._scrollableMasterContainer = this.$.centre_egi_master;
         this.master._acceptValues = this._acceptValuesFromMaster.bind(this);
-        this.master._cancelValues = this._cancelAndCloseMaster.bind(this);
-        this.master.addEventListener("binding-entity-appeared", this._updateModelWithMasterEntity.bind(this));
+        this.master._closeMaster = this._closeMaster.bind(this);
+        //this.master._cancelValues = this._cancelAndCloseMaster.bind(this);
     },
 
     attached: function () {
@@ -1963,10 +1963,6 @@ Polymer({
     },
 
     /************ EGI MASTER RELATED FUNCTIONS ***************/
-    _updateModelWithMasterEntity: function (e) {
-        this._cancelMasterValues();
-    },
-
     _acceptValuesFromMaster: function () {
         const entity = this.master._currBindingEntity["@@origin"];
         const egiEntityToUpdate = this.egiModel[this.master.editableRow];
@@ -1982,13 +1978,13 @@ Polymer({
         });
     },
 
-    _cancelMasterValues: function () {
-        const egiEntity = this.egiModel[this.master.editableRow].entity;
-        this.master.editors.forEach(editor => {
-            editor.assignConcreteValue(egiEntity.get(editor.propertyName), editor.reflector().convert.bind(editor.reflector()));
-            editor.commit();
-        });
-    },
+    // _cancelMasterValues: function () {
+    //     const egiEntity = this.egiModel[this.master.editableRow].entity;
+    //     this.master.editors.forEach(editor => {
+    //         editor.assignConcreteValue(egiEntity.get(editor.propertyName), editor.reflector().convert.bind(editor.reflector()));
+    //         editor.commit();
+    //     });
+    // },
 
     _makeNextRowEditable: function () {
         this._acceptValuesFromMaster();
@@ -2025,10 +2021,10 @@ Polymer({
         this.$.right_egi_master.style.display = 'none';
     },
 
-    _cancelAndCloseMaster: function () {
-        this._cancelMasterValues();
-        this._closeMaster();
-    },
+    // _cancelAndCloseMaster: function () {
+    //     this._cancelMasterValues();
+    //     this._closeMaster();
+    // },
 
     _initMasterEditors: function () {
         if (this.master) {
