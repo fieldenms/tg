@@ -491,7 +491,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void test_query_with_union_entity_id_property() {
+    public void can_query_union_entity_common_subprop_id() {
         final Long workshopId = workshopDao.findByKey("WSHOP1").getId();
         final EntityResultQueryModel<TgBogie> qry = select(TgBogie.class).where().prop("location.id").eq().val(workshopId).model();
         final EntityResultQueryModel<TgBogie> expQry = select(TgBogie.class).where().prop("location.workshop.id").eq().val(workshopId).model();
@@ -499,7 +499,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void test_query_with_union_entity_key_property() {
+    public void can_query_union_entity_common_subprop_key() {
         final String workshopKey = "WSHOP1";
         final EntityResultQueryModel<TgBogie> qry = select(TgBogie.class).where().prop("location.key").eq().val(workshopKey).model();
         final EntityResultQueryModel<TgBogie> expQry = select(TgBogie.class).where().prop("location.workshop.key").eq().val(workshopKey).model();
@@ -507,7 +507,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void test_query_with_union_entity_desc_property() {
+    public void can_query_union_entity_common_subprop_desc() {
         final String workshopDesc = "Workshop 1";
         final EntityResultQueryModel<TgBogie> qry = select(TgBogie.class).where().prop("location.desc").eq().val(workshopDesc).model();
         final EntityResultQueryModel<TgBogie> expQry = select(TgBogie.class).where().prop("location.workshop.desc").eq().val(workshopDesc).model();

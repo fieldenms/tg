@@ -248,7 +248,7 @@ public class DomainMetadata {
         final Class<? extends AbstractUnionEntity> entityType = (Class<? extends AbstractUnionEntity>) parentInfo.entityType;
         final List<String> commonProps = commonProperties(entityType);
         final Class<?> unionEntityPropType = unionProperties(entityType).get(0).getType();
-        for (String propName : commonProps) {
+        for (final String propName : commonProps) {
             final Class<?> javaType = determinePropertyType(unionEntityPropType, propName);
             safeMapAdd(propsMetadata, new PropertyMetadata.Builder(propName, javaType, false, parentInfo).expression(generateUnionEntityPropertyExpression(entityType, propName)).category(EXPRESSION).build());
         }
@@ -365,7 +365,7 @@ public class DomainMetadata {
                 }
             }
         }
-        
+
         return result;
     }
 
