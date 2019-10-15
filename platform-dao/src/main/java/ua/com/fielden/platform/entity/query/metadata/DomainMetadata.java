@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity.query.metadata;
 
 import static java.lang.String.format;
 import static java.util.Collections.unmodifiableCollection;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
@@ -81,6 +82,7 @@ import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
+import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.dbschema.ColumnDefinitionExtractor;
 import ua.com.fielden.platform.eql.dbschema.TableDdl;
@@ -247,8 +249,13 @@ public class DomainMetadata {
         
         final Class<? extends AbstractUnionEntity> entityType = (Class<? extends AbstractUnionEntity>) parentInfo.entityType;
         final List<String> commonProps = commonProperties(entityType);
-        final Class<?> unionEntityPropType = unionProperties(entityType).get(0).getType();
+        final List<Field> unionProps = unionProperties(entityType);
+        final List<String> unionPropsNames = unionProps.stream().map(up -> up.getName()).collect(toList());
+        final Class<?> unionEntityPropType = unionProps.get(0).getType();
         for (final String propName : commonProps) {
+            if (unionPropsNames.contains(propName)) {
+                throw new EqlException(format("Common prop [%s] collides with union prop [%s].", propName, propName));
+            }
             final Class<?> javaType = determinePropertyType(unionEntityPropType, propName);
             safeMapAdd(propsMetadata, new PropertyMetadata.Builder(propName, javaType, false, parentInfo).expression(generateUnionEntityPropertyExpression(entityType, propName)).category(EXPRESSION).build());
         }

@@ -44,6 +44,20 @@ public class TgWagonSlot extends AbstractEntity<DynamicEntityKey> {
     @Title("Bogie")
     private TgBogie bogie;
 
+    @IsProperty
+    @MapTo
+    private TgFuelType fuelType;
+
+    @Observable
+    public TgWagonSlot setFuelType(final TgFuelType fuelType) {
+        this.fuelType = fuelType;
+        return this;
+    }
+
+    public TgFuelType getFuelType() {
+        return fuelType;
+    }
+
     public TgBogie getBogie() {
         return bogie;
     }
