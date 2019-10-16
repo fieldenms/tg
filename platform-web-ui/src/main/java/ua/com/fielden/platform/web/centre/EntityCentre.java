@@ -1402,9 +1402,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      */
     public static <V extends AbstractEntity<?>> fetch<V> createFetchModelForAutocompleterFrom(final Class<V> propType, final Set<String> additionalProperties) {
         final IFetchProvider<V> fetchProvider = fetchNone(propType).with(additionalProperties);
-        fetchProvider.addKeysTo(""); // adding deep keys for entity itself
+        fetchProvider.addKeysTo("", false); // adding deep keys for entity itself (no 'desc' property is required, it should be explicitly added by withProps() API or otherwise it will be in default additional properties)
         for (final String additionalProperty: additionalProperties) {
-            fetchProvider.addKeysTo(additionalProperty); // adding deep keys for additional property (possibly, dot-notated)
+            fetchProvider.addKeysTo(additionalProperty, true); // adding deep keys [and first-level 'desc' property, if exists] for additional [dot-notated] property
         }
         return fetchProvider.fetchModel();
     }

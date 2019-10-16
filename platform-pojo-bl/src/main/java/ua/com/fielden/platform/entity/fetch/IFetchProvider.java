@@ -131,8 +131,9 @@ public interface IFetchProvider<T extends AbstractEntity<?>> {
      * This method is based on a premise that property already has its provider (with NONE fetch category) if it is entity-typed.
      * 
      * @param dotNotationProperty
+     * @param withDesc -- specifies whether {@link AbstractEntity#DESC} property needs to be added, iff <code>dotNotationProperty</code> is entity-typed and has {@link AbstractEntity#DESC} property
      * @return
      */
-    FetchProvider<T> addKeysTo(final String dotNotationProperty);
+    FetchProvider<T> addKeysTo(final String dotNotationProperty, final boolean withDesc);
     
 }
