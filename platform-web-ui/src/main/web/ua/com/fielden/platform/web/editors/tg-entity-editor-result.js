@@ -446,11 +446,11 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
 
         // add prop value
         const propValueAsString = this._propValueByName(v, propName);
+        html = html + '<div style="white-space: nowrap;">';
         if (highlight === false) {
             html = html + propValueAsString;
         } else {
             // matched parts should be in a separate div
-            html = html + '<div style="white-space: nowrap;">';
             let parts = matchedParts(propValueAsString, searchQuery);
             for (let index = 0; index < parts.length; index++) {
                 let part = parts[index];
@@ -462,8 +462,35 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                     html = html + part.part;
                 }
             }
-            html = html + '</div>';
         }
+
+        if (typeof v.get(propName)['desc'] !== 'undefined') {
+            let propValueAsString = this._propValueByName(v, propName + '.desc');
+            if (propValueAsString && propValueAsString !== 'null' && propValueAsString !== '') {
+                html = html + '<span style="color:#737373"> &ndash; <i>';
+                if (highlight === false) {
+                    html = html + propValueAsString;
+                } else {
+                    let parts = matchedParts(propValueAsString, searchQuery);
+                    if (parts.length === 0) {
+                        html = html + propValueAsString;
+                    } else {
+                        for (let index = 0; index < parts.length; index++) {
+                            const part = parts[index];
+                            if (part.matched) {
+                                // addition style-scope and this.is (element name) styles is required to enformse custom style processing
+                                html = html + '<span class="key-value-highlighted">' + part.part + '</span>';
+                            } else {
+                                html = html + part.part;
+                            }
+                        }
+                    }
+                }
+
+                html = html + '</i></span>';
+            }
+        }
+        html = html + '</div>';
 
         return html + '</div>';
     }
