@@ -43,6 +43,10 @@ const TgEgiMasterBehaviorImpl = {
         this.editors = [...this._masterDom().querySelectorAll('[tg-editor]')];
         this.saveButton = this._masterDom().querySelector('.master-save-action');
         this.cancelButton = this._masterDom().querySelector('.master-cancel-action');
+        this.saveButton.removeAttribute("selectable-elements-container");
+        this.cancelButton.removeAttribute("selectable-elements-container");
+
+        this.closeMaster = this.closeMaster.bind(this);
 
         this.editors.forEach(editor => editor.decorator().noLabelFloat = true);
         this.addEventListener('data-loaded-and-focused', this._selectLastFocusedEditor.bind(this));
@@ -58,6 +62,11 @@ const TgEgiMasterBehaviorImpl = {
         }
     },
 
+    closeMaster: function () {
+        this._closeMaster();
+        this._postClose();
+    },
+
     getEditors: function () {
         const focusableElemnts = this._lastFocusedEditor ? [this._lastFocusedEditor] : 
                                 [...this._fixedMasterContainer.querySelectorAll("[slot]"), ...this._scrollableMasterContainer.querySelectorAll("slot")]
@@ -69,17 +78,21 @@ const TgEgiMasterBehaviorImpl = {
         return focusableElemnts;
     },
 
-    doNotValidate: function () {
-        if (this.postValidated) {
-            this.postValidated();
-        }
+    _postClose: function () {
+
     },
 
-    _postValidatedDefaultError: function (error) {
-        if (this.postValidated) {
-            this.postValidated();
-        }
-    },
+    // doNotValidate: function () {
+    //     if (this.postValidated) {
+    //         this.postValidated();
+    //     }
+    // },
+
+    // _postValidatedDefaultError: function (error) {
+    //     if (this.postValidated) {
+    //         this.postValidated();
+    //     }
+    // },
 
     _selectLastFocusedEditor: function (e) {
         if (this._lastFocusedEditor && this._lastFocusedEditor.decoratedInput() && typeof this._lastFocusedEditor.decoratedInput().select === 'function') {
@@ -121,6 +134,8 @@ const TgEgiMasterBehaviorImpl = {
             if (!this.saveButton._disabled) {
                 this._shouldEditNextRow = true;
                 this.save();
+            } else {
+                this._editNextRow();
             }
         }
     },

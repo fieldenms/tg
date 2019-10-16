@@ -444,6 +444,10 @@ const template = html`
                         </div>
                     </template>
                     <div id="left_egi_master" style="display:none;" class="egi-master">
+                        <div class="master-actions">
+                            <slot name="save-button"></slot>
+                            <slot name="cancel-button"></slot>
+                        </div>
                         <div class="drag-anchor" hidden$="[[!canDragFrom]]"></div>
                         <div class="table-master-cell" hidden$="[[!_checkboxFixedAndVisible(checkboxVisible, checkboxesFixed)]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]">
                             <!--Checkbox stub for master goes here-->
@@ -456,10 +460,6 @@ const template = html`
                                 <slot name$="[[_getSlotNameFor(column.property)]]"></slot>
                             </div>
                         </template>
-                        <div class="master-actions">
-                            <slot name="save-button"></slot>
-                            <slot name="cancel-button"></slot>
-                        </div>
                     </div>
                 </div>
                 <div id="centre_egi" class="grid-layout-container z-index-0">
@@ -1967,9 +1967,10 @@ Polymer({
         const entity = this.master._currBindingEntity["@@origin"];
         const egiEntityToUpdate = this.egiModel[this.master.editableRow];
         const entityToUpdate = egiEntityToUpdate.entity;
+        const modifPropHolder = this.master._extractModifiedPropertiesHolder(this.master._currBindingEntity, this.master._originalBindingEntity);
         this.master.editors.forEach(editor => {
             entityToUpdate.set(editor.propertyName, entity.get(editor.propertyName));
-            if (this.master._previousModifiedPropertiesHolder && typeof this.master._previousModifiedPropertiesHolder[editor.propertyName].val !== 'undefined') {
+            if (typeof modifPropHolder[editor.propertyName].val !== 'undefined') {
                 egiEntityToUpdate.entityModification[editor.propertyName] = true;
             } else {
                 egiEntityToUpdate.entityModification[editor.propertyName] = false;

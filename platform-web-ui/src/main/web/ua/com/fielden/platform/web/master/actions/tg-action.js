@@ -16,6 +16,9 @@ import { allDefined } from '/resources/reflection/tg-polymer-utils.js';
 
 const template = html`
     <style>
+        :host {
+           position: relative; 
+        }
         #spinner {
             position: absolute;
             top: 50%;/*position Y halfway in*/
