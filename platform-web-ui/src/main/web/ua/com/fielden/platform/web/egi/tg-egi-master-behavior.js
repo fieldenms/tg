@@ -30,6 +30,10 @@ const TgEgiMasterBehaviorImpl = {
         _shouldEditNextRow: {
             type: Boolean,
             value :false
+        },
+        _shouldEditPreviousRow: {
+            type: Boolean,
+            value: false
         }
         
     },
@@ -56,6 +60,9 @@ const TgEgiMasterBehaviorImpl = {
             if (this._shouldEditNextRow) {
                 this._shouldEditNextRow = false;
                 this._editNextRow();
+            } else if (this._shouldEditPreviousRow) {
+                this._shouldEditPreviousRow = false;
+                this._editPreviousRow();
             } else {
                 this._closeMaster();
             }
@@ -69,7 +76,7 @@ const TgEgiMasterBehaviorImpl = {
 
     getEditors: function () {
         const focusableElemnts = this._lastFocusedEditor ? [this._lastFocusedEditor] : 
-                                [...this._fixedMasterContainer.querySelectorAll("[slot]"), ...this._scrollableMasterContainer.querySelectorAll("slot")]
+                                [...this._fixedMasterContainer.querySelectorAll("slot"), ...this._scrollableMasterContainer.querySelectorAll("slot")]
                                 .filter(slot => slot.assignedNodes().length > 0)
                                 .map(slot => slot.assignedNodes()[0]).filter(element => element.hasAttribute("tg-editor"));
         if (this.focusLastOnRetrieve) {
@@ -131,12 +138,29 @@ const TgEgiMasterBehaviorImpl = {
             this._closeMaster();
         } else if (IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'enter')) {
             this._lastFocusedEditor = getActiveParentAnd(element => element.hasAttribute('tg-editor'));
-            if (!this.saveButton._disabled) {
-                this._shouldEditNextRow = true;
-                this.save();
-            } else {
-                this._editNextRow();
-            }
+            this._saveAndEditNextRow();
+        }
+    },
+
+    _saveAndEditNextRow: function () {
+        if (!this.saveButton._disabled) {
+            this._shouldEditNextRow = true;
+            const editorToCommit = getActiveParentAnd(element => element.hasAttribute('tg-editor'));
+            editorToCommit.commit();
+            this.save();
+        } else {
+            this._editNextRow();
+        }
+    },
+
+    _saveAndEditPreviousRow: function () {
+        if (!this.saveButton._disabled) {
+            this._shouldEditPreviousRow = true;
+            const editorToCommit = getActiveParentAnd(element => element.hasAttribute('tg-editor'));
+            editorToCommit.commit();
+            this.save();
+        } else {
+            this._editPreviousRow();
         }
     },
 
@@ -152,8 +176,8 @@ const TgEgiMasterBehaviorImpl = {
             }
         //If the last editor in scrollable area is focused then make next row editable   
         } else if (scrollableEditors.length > 0 && activeElement === scrollableEditors[scrollableEditors.length - 1]) {
-            this._editNextRow();
             tearDownEvent(event);
+            this._saveAndEditNextRow();
         }
     },
 
@@ -169,8 +193,8 @@ const TgEgiMasterBehaviorImpl = {
             }
         //If the first editor in fixed area is focused then make previous row editable   
         } else if (fixedEditors.length > 0 && activeElement === fixedEditors[0]) {
-            this._editPreviousRow();
             tearDownEvent(event);
+            this._saveAndEditPreviousRow();
         }
     },
 
