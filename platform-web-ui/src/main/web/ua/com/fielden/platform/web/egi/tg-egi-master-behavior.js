@@ -79,6 +79,7 @@ const TgEgiMasterBehaviorImpl = {
                                 [...this._fixedMasterContainer.querySelectorAll("slot"), ...this._scrollableMasterContainer.querySelectorAll("slot")]
                                 .filter(slot => slot.assignedNodes().length > 0)
                                 .map(slot => slot.assignedNodes()[0]).filter(element => element.hasAttribute("tg-editor"));
+        this._lastFocusedEditor = null;
         if (this.focusLastOnRetrieve) {
             return focusableElemnts.reverse();
         }
@@ -102,10 +103,10 @@ const TgEgiMasterBehaviorImpl = {
     // },
 
     _selectLastFocusedEditor: function (e) {
-        if (this._lastFocusedEditor && this._lastFocusedEditor.decoratedInput() && typeof this._lastFocusedEditor.decoratedInput().select === 'function') {
-            this._lastFocusedEditor.decoratedInput().select();
+        const focusedElement = deepestActiveElement();
+        if (focusedElement && typeof focusedElement.select === "function") {
+            focusedElement.select();
         }
-        this._lastFocusedEditor = null;
     },
 
     //Event listeners
@@ -172,6 +173,9 @@ const TgEgiMasterBehaviorImpl = {
         if (fixedEditors.length > 0 && activeElement === fixedEditors[fixedEditors.length - 1]) {
             if (scrollableEditors.length > 0) {
                 scrollableEditors[0].focus();
+                if (typeof scrollableEditors[0].select === 'function') {
+                    scrollableEditors[0].select();
+                }
                 tearDownEvent(event);
             }
         //If the last editor in scrollable area is focused then make next row editable   
@@ -189,6 +193,9 @@ const TgEgiMasterBehaviorImpl = {
         if (scrollableEditors.length > 0 && activeElement === scrollableEditors[0]) {
             if (fixedEditors.length > 0) {
                 fixedEditors[fixedEditors.length - 1].focus();
+                if (typeof fixedEditors[fixedEditors.length - 1].select === 'function') {
+                    fixedEditors[fixedEditors.length - 1].select();
+                }
                 tearDownEvent(event);
             }
         //If the first editor in fixed area is focused then make previous row editable   

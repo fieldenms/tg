@@ -27,6 +27,7 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
             .custom-input-wrapper, .custom-input {
                 @apply --paper-input-container-shared-input-style;
                 font-weight: 500;
+                text-align: left;
             }
 
             .input-layer {

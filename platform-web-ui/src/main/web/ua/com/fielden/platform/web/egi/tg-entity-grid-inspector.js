@@ -799,8 +799,7 @@ Polymer({
         _openDropDown: Function,
 
         //Double tap related
-        _tapOnce: Boolean,
-        _tapColumnIndex: Number
+        _tapOnce: Boolean
     },
 
     behaviors: [TgEgiDataRetrievalBehavior, IronResizableBehavior, IronA11yKeysBehavior, TgShortcutProcessingBehavior, TgDragFromBehavior, TgElementSelectorBehavior],
@@ -1123,32 +1122,37 @@ Polymer({
     },
 
     tap: function (entityIndex, entity, index, column) {
-        if (this._tapOnce) {
+        if (this.master.editors.length > 0 && this._tapOnce) {
             delete this._tapOnce;
-            delete this._tapColumnIndex;
             this.master._lastFocusedEditor = this.master.editors.find(editor => editor.propertyName === column.property);
             this._makeRowEditable(entityIndex, false);
-        } else {
+        } else if (this.master.editors.length > 0) {
             this._tapOnce = true;
-            this._tapColumnIndex = column;
             this.async(() => {
-                if (this._tapOnce && column.runAction(entity) === false) {
-                    // if the clicked property is a hyperlink and there was no custom action associted with it
-                    // then let's open the linked resources
-                    if (this.isHyperlinkProp(entity, column) === true) {
-                        const url = this.getBindedValue(entity, column);
-                        const win = window.open(url, '_blank');
-                        win.focus();
-                    } else {
-                        const attachment = this.getAttachmentIfPossible(entity, column);
-                        if (attachment && this.downloadAttachment) {
-                            this.downloadAttachment(attachment);
-                        }
-                    }
+                if (this._tapOnce) {
+                    this._tapColumn(entity, column);
                 }
                 delete this._tapOnce;
-                delete this._tapColumnIndex;
             }, 400);
+        } else {
+            this._tapColumn(entity, column);
+        }
+    },
+
+    _tapColumn: function (entity, column) {
+        if (column.runAction(entity) === false) {
+            // if the clicked property is a hyperlink and there was no custom action associted with it
+            // then let's open the linked resources
+            if (this.isHyperlinkProp(entity, column) === true) {
+                const url = this.getBindedValue(entity, column);
+                const win = window.open(url, '_blank');
+                win.focus();
+            } else {
+                const attachment = this.getAttachmentIfPossible(entity, column);
+                if (attachment && this.downloadAttachment) {
+                    this.downloadAttachment(attachment);
+                }
+            }
         }
     },
 
@@ -2006,17 +2010,20 @@ Polymer({
     },
 
     _makeRowEditable: function (entityIndex, focusLastOnRetrieve) {
-        _insertMaster(this.$.left_egi, this.$.left_egi_master, entityIndex);
-        _insertMaster(this.$.centre_egi, this.$.centre_egi_master, entityIndex);
-        _insertMaster(this.$.right_egi, this.$.right_egi_master, entityIndex);
-        this.master.focusLastOnRetrieve = focusLastOnRetrieve;
-        this.master.editableRow = entityIndex;
-        this.master.entityId = this.filteredEntities[entityIndex].get("id");
-        this.master.entityType = this.filteredEntities[entityIndex].type().notEnhancedFullClassName()
-        this.master.retrieve();
+        if (this.master.editableRow !== entityIndex) {
+            _insertMaster(this.$.left_egi, this.$.left_egi_master, entityIndex);
+            _insertMaster(this.$.centre_egi, this.$.centre_egi_master, entityIndex);
+            _insertMaster(this.$.right_egi, this.$.right_egi_master, entityIndex);
+            this.master.focusLastOnRetrieve = focusLastOnRetrieve;
+            this.master.editableRow = entityIndex;
+            this.master.entityId = this.filteredEntities[entityIndex].get("id");
+            this.master.entityType = this.filteredEntities[entityIndex].type().notEnhancedFullClassName()
+            this.master.retrieve();
+        }
     },
 
     _closeMaster: function () {
+        this.master.editableRow = null;
         this.$.left_egi_master.style.display = 'none';
         this.$.centre_egi_master.style.display = 'none';
         this.$.right_egi_master.style.display = 'none';
