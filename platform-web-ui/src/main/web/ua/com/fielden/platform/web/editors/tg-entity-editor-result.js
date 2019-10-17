@@ -439,14 +439,14 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
     }
 
     _addHighlightedPropByName (v, propName, highlight, searchQuery) {
-        var html = '<div class="additional-prop">';
+        var html = '<div class="additional-prop" style="white-space: nowrap;">';
         // add prop title
         html = html + '<span class="prop-name"><span>' + this._propTitleByName(v, propName) + '</span>:</span>';
 
 
         // add prop value
         const propValueAsString = this._propValueByName(v, propName);
-        html = html + '<div style="white-space: nowrap;">';
+        html = html + '<div>';
         if (highlight === false) {
             html = html + propValueAsString;
         } else {
@@ -464,7 +464,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
             }
         }
 
-        if (typeof v.get(propName)['desc'] !== 'undefined') {
+        if (this.reflector.isEntity(v.get(propName)) && typeof v.get(propName)['desc'] !== 'undefined') {
             let propValueAsString = this._propValueByName(v, propName + '.desc');
             if (propValueAsString && propValueAsString !== 'null' && propValueAsString !== '') {
                 html = html + '<span style="color:#737373"> &ndash; <i>';
