@@ -395,18 +395,17 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
     _addHighlightedKeyProp (v, withDesc, searchQuery) {
         let html = '<div style="white-space: nowrap">';
 
-        // let's first handle the key
-        let parts = matchedParts(v.key, searchQuery);
+        const propValueAsString = v.key;
+        let parts = matchedParts(propValueAsString, searchQuery);
         if (parts.length === 0) {
-            html = html + v.key;
+            html = html + propValueAsString;
         } else {
             for (let index = 0; index < parts.length; index++) {
                 const part = parts[index];
                 if (part.matched === true) {
                     // addition style-scope and this.is (element name) styles is required to enformse custom style processing
                     html = html +
-                        '<span class="key-value key-value-highlighted">' +
-                        part.part + '</span>';
+                        '<span class="key-value key-value-highlighted">' + part.part + '</span>';
                 } else {
                     html = html + part.part;
                 }
@@ -417,7 +416,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
             let propValueAsString = this._propValueByName(v, 'desc');
             if (propValueAsString && propValueAsString !== 'null' && propValueAsString !== '') {
                 html = html + '<span style="color:#737373"> &ndash; <i>';
-                parts = matchedParts(propValueAsString, searchQuery);
+                const parts = matchedParts(propValueAsString, searchQuery);
                 if (parts.length === 0) {
                     html = html + propValueAsString;
                 } else {
@@ -439,27 +438,29 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
     }
 
     _addHighlightedPropByName (v, propName, highlight, searchQuery) {
-        var html = '<div class="additional-prop" style="white-space: nowrap;">';
+        let html = '<div class="additional-prop" style="white-space: nowrap;">';
         // add prop title
         html = html + '<span class="prop-name"><span>' + this._propTitleByName(v, propName) + '</span>:</span>';
-
-
-        // add prop value
-        const propValueAsString = this._propValueByName(v, propName);
         html = html + '<div>';
+
+
+        const propValueAsString = this._propValueByName(v, propName);
         if (highlight === false) {
             html = html + propValueAsString;
         } else {
-            // matched parts should be in a separate div
             let parts = matchedParts(propValueAsString, searchQuery);
-            for (let index = 0; index < parts.length; index++) {
-                let part = parts[index];
-                if (part.matched) {
-                    // addition style-scope and this.is (element name) styles is required to enformse custom style processing
-                    html = html +
-                        '<span class="key-value-highlighted">' + part.part + '</span>';
-                } else {
-                    html = html + part.part;
+            if (parts.length === 0) {
+                html = html + propValueAsString;
+            } else {
+                for (let index = 0; index < parts.length; index++) {
+                    const part = parts[index];
+                    if (part.matched === true) {
+                        // addition style-scope and this.is (element name) styles is required to enformse custom style processing
+                        html = html +
+                            '<span class="key-value-highlighted">' + part.part + '</span>';
+                    } else {
+                        html = html + part.part;
+                    }
                 }
             }
         }
@@ -471,7 +472,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                 if (highlight === false) {
                     html = html + propValueAsString;
                 } else {
-                    let parts = matchedParts(propValueAsString, searchQuery);
+                    const parts = matchedParts(propValueAsString, searchQuery);
                     if (parts.length === 0) {
                         html = html + propValueAsString;
                     } else {
