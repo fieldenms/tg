@@ -34,8 +34,11 @@ const TgEgiMasterBehaviorImpl = {
         _shouldEditPreviousRow: {
             type: Boolean,
             value: false
+        },
+        _shouldScrollAfterFocused: {
+            type: Boolean,
+            value: false
         }
-        
     },
 
     created: function() {
@@ -54,17 +57,20 @@ const TgEgiMasterBehaviorImpl = {
 
         this.editors.forEach(editor => editor.decorator().noLabelFloat = true);
         this.addEventListener('data-loaded-and-focused', this._selectLastFocusedEditor.bind(this));
+        this.addEventListener('focusin', this._editorFocused.bind(this));
 
-        this.postSaved = function () {
-            this._acceptValues();
-            if (this._shouldEditNextRow) {
-                this._shouldEditNextRow = false;
-                this._editNextRow();
-            } else if (this._shouldEditPreviousRow) {
-                this._shouldEditPreviousRow = false;
-                this._editPreviousRow();
-            } else {
-                this._closeMaster();
+        this.postSaved = function (potentiallySavedOrNewEntity) {
+            if (potentiallySavedOrNewEntity.isValid()) {
+                this._acceptValues();
+                if (this._shouldEditNextRow) {
+                    this._shouldEditNextRow = false;
+                    this._editNextRow();
+                } else if (this._shouldEditPreviousRow) {
+                    this._shouldEditPreviousRow = false;
+                    this._editPreviousRow();
+                } else {
+                    this._closeMaster();
+                }
             }
         }
     },
@@ -107,6 +113,14 @@ const TgEgiMasterBehaviorImpl = {
         if (focusedElement && typeof focusedElement.select === "function") {
             focusedElement.select();
         }
+        if (this._shouldScrollAfterFocused) {
+            this._shouldScrollAfterFocused = false;
+            //focusedElement.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+        }
+    },
+
+    _editorFocused: function (e) {
+        console.log("Editor focused", e.target);
     },
 
     //Event listeners
@@ -139,6 +153,7 @@ const TgEgiMasterBehaviorImpl = {
             this._closeMaster();
         } else if (IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'enter')) {
             this._lastFocusedEditor = getActiveParentAnd(element => element.hasAttribute('tg-editor'));
+            this._shouldScrollAfterFocused = true;
             this._saveAndEditNextRow();
         }
     },
@@ -148,7 +163,7 @@ const TgEgiMasterBehaviorImpl = {
             this._shouldEditNextRow = true;
             const editorToCommit = getActiveParentAnd(element => element.hasAttribute('tg-editor'));
             editorToCommit.commit();
-            this.save();
+            this.saveButton._asyncRun();
         } else {
             this._editNextRow();
         }
@@ -159,7 +174,7 @@ const TgEgiMasterBehaviorImpl = {
             this._shouldEditPreviousRow = true;
             const editorToCommit = getActiveParentAnd(element => element.hasAttribute('tg-editor'));
             editorToCommit.commit();
-            this.save();
+            this.saveButton._asyncRun();
         } else {
             this._editPreviousRow();
         }
@@ -181,6 +196,7 @@ const TgEgiMasterBehaviorImpl = {
         //If the last editor in scrollable area is focused then make next row editable   
         } else if (scrollableEditors.length > 0 && activeElement === scrollableEditors[scrollableEditors.length - 1]) {
             tearDownEvent(event);
+            this._shouldScrollAfterFocused = true;
             this._saveAndEditNextRow();
         }
     },
@@ -201,6 +217,7 @@ const TgEgiMasterBehaviorImpl = {
         //If the first editor in fixed area is focused then make previous row editable   
         } else if (fixedEditors.length > 0 && activeElement === fixedEditors[0]) {
             tearDownEvent(event);
+            this._shouldScrollAfterFocused = true;
             this._saveAndEditPreviousRow();
         }
     },
