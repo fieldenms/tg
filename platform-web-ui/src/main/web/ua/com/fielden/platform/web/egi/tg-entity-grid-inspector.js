@@ -195,16 +195,30 @@ const template = html`
         }
         .master-actions {
             position: absolute;
-            top: -40px;
+            top: -55px;
             left: 16px;
+            border-radius: 45%;
+            background-color: #e3e3e3;
             @apply --layout-horizontal;
+            @apply --shadow-elevation-4dp;
         }
+        .master-actions ::slotted(tg-action) {
+            --paper-fab-background: white;
+            --paper-fab-keyboard-focus-background: var(--paper-grey-500);
+        } 
         .master-actions ::slotted(.master-save-action) {
-            margin-right: 8px;
-            --paper-fab-background: var(--paper-green-600);
+            margin-right:2px;
+            --paper-fab: { 
+                border-radius: 50% 0 0 50%;
+                color: black;
+                
+            };
         }
         .master-actions ::slotted(.master-cancel-action) {
-            --paper-fab-background: var(--paper-red-600);
+            --paper-fab: { 
+                border-radius: 0 50% 50% 0;
+                color: black;
+            };
         }
         .footer {
             background-color: white;
@@ -362,54 +376,6 @@ const template = html`
             background: -webkit-linear-gradient(left, rgba(0,0,0,0.4) 0%,rgba(0,0,0,0) 100%); 
             background: linear-gradient(to left, rgba(0,0,0,0.4) 0%,rgba(0,0,0,0) 100%); 
         }
-        #left_egi_master:after {
-            content: "";
-            position: absolute;
-            bottom: -6px;
-            left: 0;
-            right: 0;
-            height:6px;
-            background: transparent;
-            background: -moz-linear-gradient(bottom, rgba(33,150,243,0.8) 0%, rgba(33,150,243,0) 100%); 
-            background: -webkit-linear-gradient(bottom, rgba(33,150,243,0.8) 0%,rgba(33,150,243,0) 100%); 
-            background: linear-gradient(to bottom, rgba(33,150,243,0.8) 0%,rgba(33,150,243,0) 100%); 
-        }
-        #centre_egi_master:after {
-            content: "";
-            position: absolute;
-            bottom: -6px;
-            left: 0;
-            right: 0;
-            height:6px;
-            background: transparent;
-            background: -moz-linear-gradient(bottom, rgba(33,150,243,0.8) 0%, rgba(33,150,243,0) 100%); 
-            background: -webkit-linear-gradient(bottom, rgba(33,150,243,0.8) 0%,rgba(33,150,243,0) 100%); 
-            background: linear-gradient(to bottom, rgba(33,150,243,0.8) 0%,rgba(33,150,243,0) 100%);
-        }
-        #right_egi_master:after {
-            content: "";
-            position: absolute;
-            bottom: -6px;
-            left: 0;
-            right: 0;
-            height:6px;
-            background: transparent;
-            background: -moz-linear-gradient(bottom, rgba(33,150,243,0.8) 0%, rgba(33,150,243,0) 100%); 
-            background: -webkit-linear-gradient(bottom, rgba(33,150,243,0.8) 0%,rgba(33,150,243,0) 100%); 
-            background: linear-gradient(to bottom, rgba(33,150,243,0.8) 0%,rgba(33,150,243,0) 100%);
-        }
-        .table-data-row[is-editing]:after {
-            content: "";
-            position: absolute;
-            top: -6px;
-            left: 0;
-            right: 0;
-            height:6px;
-            background: transparent;
-            background: -moz-linear-gradient(top, rgba(33,150,243,0.8) 0%, rgba(33,150,243,0) 100%); 
-            background: -webkit-linear-gradient(top, rgba(33,150,243,0.8) 0%,rgba(33,150,243,0) 100%); 
-            background: linear-gradient(to top, rgba(33,150,243,0.8) 0%,rgba(33,150,243,0) 100%);
-        }
         .sticky-container {
             position: sticky;
             position: -webkit-sticky;
@@ -430,7 +396,7 @@ const template = html`
     <slot id="primary_action_selector" name="primary-action" hidden></slot>
     <slot id="egi_master" name="egi-master" hidden></slot>
     <!--EGI template-->
-    <div id="paperMaterial" class="grid-container" elevation="1" style$="[[_calcMaterialStyle(showMarginAround)]]" fit-to-height$="[[fitToHeight]]">
+    <div id="paperMaterial" class="grid-container" style$="[[_calcMaterialStyle(showMarginAround)]]" fit-to-height$="[[fitToHeight]]">
         <!--Table toolbar-->
         <tg-responsive-toolbar show-top-shadow$="[[_toolbarShadowVisible(_showTopShadow, headerFixed)]]" style$="[[_calcToolbarStyle(canDragFrom)]]">
             <paper-progress id="progressBar" hidden$="[[!_showProgress]]"></paper-progress>
@@ -2040,14 +2006,30 @@ Polymer({
 
     /************ EGI MASTER RELATED FUNCTIONS ***************/
     _scrollToVisibleLeftMaster: function (e) {
-        if (isBehindOtherElement(e.target, this)) {
+        const topEgiBox = this.$.top_egi.getBoundingClientRect();
+        const bottomEgiBox = this.$.bottom_egi.getBoundingClientRect();
+        const targetBox = e.target.getBoundingClientRect();
+        if (targetBox.top <= topEgiBox.bottom || targetBox.bottom >= bottomEgiBox.top) {
             e.target.scrollIntoView({block: 'center'});
         }
     },
 
     _scrollToVisibleCentreMaster: function (e) {
-        if (isBehindOtherElement(e.target, this)) {
-            e.target.scrollIntoView({block: 'center', inline: 'center'});
+        const leftEgiBox = this.$.left_egi.getBoundingClientRect();
+        const rightEgiBox = this.$.right_egi.getBoundingClientRect();
+        const targetBox = e.target.getBoundingClientRect();
+        let scrollHorizontally = false;
+        if (leftEgiBox.right >= targetBox.left || rightEgiBox.left <= targetBox.right) {
+            scrollHorizontally = true;
+        }
+        const topEgiBox = this.$.top_egi.getBoundingClientRect();
+        const bottomEgiBox = this.$.bottom_egi.getBoundingClientRect();
+        let scrollVertically = false;
+        if (targetBox.top <= topEgiBox.bottom || targetBox.bottom >= bottomEgiBox.top) {
+            scrollVertically = true;
+        }
+        if (scrollHorizontally || scrollVertically) {
+            e.target.scrollIntoView({block: scrollVertically ? 'center' : 'nearest', inline: 'center'});
         }
     },
 

@@ -1,3 +1,5 @@
+import '/resources/components/postal-lib.js';
+
 import { TgEntityMasterBehavior } from '/resources/master/tg-entity-master-behavior.js';
 import { queryElements } from '/resources/components/tg-element-selector-behavior.js';
 import { IronA11yKeysBehavior } from '/resources/polymer/@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
@@ -38,6 +40,10 @@ const TgEgiMasterBehaviorImpl = {
         _shouldScrollAfterFocused: {
             type: Boolean,
             value: false
+        },
+        _shouldRefreshAfterSave: {
+            type: Boolean,
+            value: false
         }
     },
 
@@ -70,6 +76,18 @@ const TgEgiMasterBehaviorImpl = {
                     this._editPreviousRow();
                 } else {
                     this._closeMaster();
+                }
+                if (this._shouldRefreshAfterSave) {
+                    postal.publish({
+                        channel: "centre_" + this.centreUuid,
+                        topic: "detail.saved",
+                        data: {
+                            shouldRefreshParentCentreAfterSave: this._shouldRefreshAfterSave,
+                            entity: potentiallySavedOrNewEntity,
+                            // send selectedEntitiesInContext further to be able to update only them on EGI
+                            selectedEntitiesInContext: selectedEntitiesSupplier()
+                        }
+                    });
                 }
             }
         }

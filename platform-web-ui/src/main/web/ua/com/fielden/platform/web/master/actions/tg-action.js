@@ -41,7 +41,7 @@ const template = html`
     <paper-button id="actionButton" hidden$="[[isIcon]]" raised roll="button" on-tap="_asyncRun" style="width:100%" disabled$="[[_disabled]]" tooltip-text$="[[longDesc]]">
         <span>[[shortDesc]]</span>
     </paper-button>
-    <paper-fab mini icon="[[icon]]" on-tap="_asyncRun" hidden$="[[!isIcon]]" disabled$="[[_disabled]]" tooltip-text$="[[longDesc]]"></paper-fab>
+    <paper-fab id="fabButton" mini icon="[[icon]]" on-tap="_asyncRun" hidden$="[[!isIcon]]" disabled$="[[_disabled]]" tooltip-text$="[[longDesc]]"></paper-fab>
     <paper-spinner id="spinner" active="[[_working]]" class="blue" style="display: none;" alt="in progress"></paper-spinner>
 `;
 
@@ -53,6 +53,13 @@ Polymer({
     behaviors: [ TgFocusRestorationBehavior, TgElementSelectorBehavior ],
 
     properties: {
+        /**
+         * The elevation value forfab button
+         */
+        elevation: {
+            type: Number,
+            value: 0
+        },
         /**
          * A list of the states in which the action can be enabled.
          */
@@ -211,6 +218,12 @@ Polymer({
             value: null
         }
     },
+
+    ready: function () {
+        this.$.fabButton._calculateElevation = function () {
+            return this.elevation;
+        };
+    },    
 
     created: function () {
         this.run = this._createRun();

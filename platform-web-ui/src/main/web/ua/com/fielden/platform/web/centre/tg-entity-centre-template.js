@@ -64,7 +64,7 @@ const entityCentreTemplate = html`
             
             <!--@egi_columns-->
 
-            <tg-egi-@mi_type-master slot="egi-master"></tg-egi-@mi_type-master>
+            <tg-egi-@mi_type-master slot="egi-master" centre-uuid="[[uuid]]"></tg-egi-@mi_type-master>
             
             <!--@toolbar-->
 
