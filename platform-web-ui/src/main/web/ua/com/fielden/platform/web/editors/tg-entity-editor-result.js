@@ -363,7 +363,15 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                 // add key value with highlighting of matching parts
                 const descProp = 'desc';
                 const withDesc = this.additionalProperties.hasOwnProperty(descProp);
-                html = html + this._addHighlightedKeyProp(v, withDesc, searchQuery);
+                html = html + this._addHighlightedPropByName(
+                    true,
+                    searchQuery,
+                    '',
+                    '',
+                    v.key,
+                    function () { return this._propValueByName(v, 'desc'); }.bind(this),
+                    withDesc === true
+                );
 
                 // add values for additional properties with highlighting of matching parts if required
                 for (let propName in this.additionalProperties) {
@@ -371,7 +379,15 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                     if (propName !== descProp && this.additionalProperties.hasOwnProperty(propName)) {
                         // should highlight?
                         const highlight = this.additionalProperties[propName];
-                        html = html + this._addHighlightedPropByName(v, propName, highlight, searchQuery);
+                        html = html + this._addHighlightedPropByName(
+                            highlight,
+                            searchQuery,
+                            'class="additional-prop" ',
+                            '<span class="prop-name"><span>' + this._propTitleByName(v, propName) + '</span>:</span>',
+                            this._propValueByName(v, propName),
+                            function () { return this._propValueByName(v, propName + '.desc'); }.bind(this),
+                            this.reflector.isEntity(v.get(propName)) && typeof v.get(propName)['desc'] !== 'undefined'
+                        );
                     }
                 }
 
@@ -385,58 +401,22 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
         }.bind(this));
     }
 
-    _addHighlightedKeyProp (v, withDesc, searchQuery) {
-        let html = '<div style="white-space: nowrap;">';
+    /**
+     * Adds highlighted representation of property.
+     * 
+     * @param highlight - indicates whether the property should have highlighted its parts according to search query
+     * @param searchQuery -- string representing the pattern to search values in autocompleter
+     * @param wrappingDivAttrs -- string to define additional attributes for whole representation of property
+     * @param prependingDom -- string to define additional DOM prepending to 'key - desc' part
+     * @param mainStringValue -- value of key in 'key - desc' part of representation
+     * @param secondaryStringValue -- function to compute value of desc in 'key - desc' part of representation
+     * @param secondaryStringValueRequired -- parameter indicating whether desc in 'key - desc' part of representation is required
+     */
+    _addHighlightedPropByName (highlight, searchQuery, wrappingDivAttrs, prependingDom, mainStringValue, secondaryStringValue, secondaryStringValueRequired) {
+        let html = '<div ' + wrappingDivAttrs + 'style="white-space: nowrap;">';
+        html = html + prependingDom;
 
-        const propValueAsString = v.key;
-        let parts = matchedParts(propValueAsString, searchQuery);
-        if (parts.length === 0) {
-            html = html + propValueAsString;
-        } else {
-            for (let index = 0; index < parts.length; index++) {
-                const part = parts[index];
-                if (part.matched === true) {
-                    // addition style-scope and this.is (element name) styles is required to enformse custom style processing
-                    html = html +
-                        '<span class="key-value-highlighted">' + part.part + '</span>';
-                } else {
-                    html = html + part.part;
-                }
-            }
-        }
-
-        if (withDesc === true) {
-            let propValueAsString = this._propValueByName(v, 'desc');
-            if (propValueAsString && propValueAsString !== 'null' && propValueAsString !== '') {
-                html = html + '<span style="color:#737373"> &ndash; <i>';
-                const parts = matchedParts(propValueAsString, searchQuery);
-                if (parts.length === 0) {
-                    html = html + propValueAsString;
-                } else {
-                    for (let index = 0; index < parts.length; index++) {
-                        const part = parts[index];
-                        if (part.matched) {
-                            // addition style-scope and this.is (element name) styles is required to enformse custom style processing
-                            html = html + '<span class="key-value-highlighted">' + part.part + '</span>';
-                        } else {
-                            html = html + part.part;
-                        }
-                    }
-                }
-
-                html = html + '</i></span>';
-            }
-        }
-        return html + '</div>';
-    }
-
-    _addHighlightedPropByName (v, propName, highlight, searchQuery) {
-        let html = '<div class="additional-prop" style="white-space: nowrap;">';
-        // add prop title
-        html = html + '<span class="prop-name"><span>' + this._propTitleByName(v, propName) + '</span>:</span>';
-
-
-        const propValueAsString = this._propValueByName(v, propName);
+        const propValueAsString = mainStringValue;
         if (highlight === false) {
             html = html + propValueAsString;
         } else {
@@ -457,8 +437,8 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
             }
         }
 
-        if (this.reflector.isEntity(v.get(propName)) && typeof v.get(propName)['desc'] !== 'undefined') {
-            let propValueAsString = this._propValueByName(v, propName + '.desc');
+        if (secondaryStringValueRequired) {
+            let propValueAsString = secondaryStringValue();
             if (propValueAsString && propValueAsString !== 'null' && propValueAsString !== '') {
                 html = html + '<span style="color:#737373"> &ndash; <i>';
                 if (highlight === false) {
