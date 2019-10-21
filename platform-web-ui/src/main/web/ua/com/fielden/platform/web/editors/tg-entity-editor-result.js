@@ -415,58 +415,32 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
     _addHighlightedPropByName (highlight, searchQuery, wrappingDivAttrs, prependingDom, mainStringValue, secondaryStringValue, secondaryStringValueRequired) {
         let html = '<div ' + wrappingDivAttrs + 'style="white-space: nowrap;">';
         html = html + prependingDom;
-
-        const propValueAsString = mainStringValue;
-        if (highlight === false) {
-            html = html + propValueAsString;
-        } else {
-            const parts = matchedParts(propValueAsString, searchQuery);
-            if (parts.length === 0) {
-                html = html + propValueAsString;
-            } else {
-                for (let index = 0; index < parts.length; index++) {
-                    const part = parts[index];
-                    if (part.matched === true) {
-                        // addition style-scope and this.is (element name) styles is required to enformse custom style processing
-                        html = html +
-                            '<span class="key-value-highlighted">' + part.part + '</span>';
-                    } else {
-                        html = html + part.part;
-                    }
-                }
-            }
-        }
-
+        html = html + this._highlightedValue(highlight, mainStringValue, searchQuery);
         if (secondaryStringValueRequired) {
-            const propValueAsString = secondaryStringValue();
-            if (propValueAsString && propValueAsString !== 'null' && propValueAsString !== '') {
+            const propDesc = secondaryStringValue();
+            if (propDesc && propDesc !== 'null' && propDesc !== '') {
                 html = html + '<span style="color:#737373"> &ndash; <i>';
-                if (highlight === false) {
-                    html = html + propValueAsString;
-                } else {
-                    const parts = matchedParts(propValueAsString, searchQuery);
-                    if (parts.length === 0) {
-                        html = html + propValueAsString;
-                    } else {
-                        for (let index = 0; index < parts.length; index++) {
-                            const part = parts[index];
-                            if (part.matched === true) {
-                                // addition style-scope and this.is (element name) styles is required to enformse custom style processing
-                                html = html + '<span class="key-value-highlighted">' + part.part + '</span>';
-                            } else {
-                                html = html + part.part;
-                            }
-                        }
-                    }
-                }
-
+                html = html + this._highlightedValue(highlight, propDesc, searchQuery);
                 html = html + '</i></span>';
             }
         }
-
         return html + '</div>';
     }
 
+    _highlightedValue (highlight, propValueAsString, searchQuery) {
+        if (highlight === false) {
+            return propValueAsString;
+        } else {
+            const parts = matchedParts(propValueAsString, searchQuery);
+            if (parts.length === 0) {
+                return propValueAsString;
+            } else {
+                return parts.reduce(function (html, part) {
+                    return html + (part.matched === true ? '<span class="key-value-highlighted">' + part.part + '</span>' : part.part);
+                }, '');
+            }
+        }
+    }
 
     /*********************************************************
      ****************** SELECTION HANDLERS *******************
