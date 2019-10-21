@@ -57,11 +57,6 @@ const template = html`
             color: var(--paper-blue-50);
         }
 
-        .key-value {
-            font-size: small;
-            min-width: 100px;
-        }
-
         paper-item:not(.iron-selected) span.key-value-highlighted {
             background-color: #ffff46;
         }
@@ -80,10 +75,8 @@ const template = html`
         }
 
         .additional-prop {
-            @apply --layout-horizontal;
             font-size: x-small;
             min-width: 150px;
-            white-space: normal;
             padding-left: 1em;
             padding-top: 0.5em;
             line-height: 15px;
@@ -393,7 +386,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
     }
 
     _addHighlightedKeyProp (v, withDesc, searchQuery) {
-        let html = '<div style="white-space: nowrap">';
+        let html = '<div style="white-space: nowrap;">';
 
         const propValueAsString = v.key;
         let parts = matchedParts(propValueAsString, searchQuery);
@@ -405,7 +398,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                 if (part.matched === true) {
                     // addition style-scope and this.is (element name) styles is required to enformse custom style processing
                     html = html +
-                        '<span class="key-value key-value-highlighted">' + part.part + '</span>';
+                        '<span class="key-value-highlighted">' + part.part + '</span>';
                 } else {
                     html = html + part.part;
                 }
@@ -441,7 +434,6 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
         let html = '<div class="additional-prop" style="white-space: nowrap;">';
         // add prop title
         html = html + '<span class="prop-name"><span>' + this._propTitleByName(v, propName) + '</span>:</span>';
-        html = html + '<div>';
 
 
         const propValueAsString = this._propValueByName(v, propName);
@@ -491,7 +483,6 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                 html = html + '</i></span>';
             }
         }
-        html = html + '</div>';
 
         return html + '</div>';
     }
