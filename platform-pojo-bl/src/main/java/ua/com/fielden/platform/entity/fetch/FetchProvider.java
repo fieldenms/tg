@@ -603,7 +603,7 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
             final List<String> keyMemberNames = getKeyMembers(entityType).stream().map(Field::getName).collect(toList());
             for (final String keyMemberName: keyMemberNames) {
                 enhanceWith(keyMemberName);
-                addKeysTo0(keyMemberName, false); // there is no need to fetch descriptions of key members -- 'desc' may only be relevant to the top-level property
+                addKeysTo0(keyMemberName, false); // there is no need to fetch descriptions of key members -- 'desc' is only relevant to the top-level property
             }
             
             extendWithIdAndVersion(this);

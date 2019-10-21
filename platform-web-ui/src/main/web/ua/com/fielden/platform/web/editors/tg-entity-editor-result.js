@@ -402,9 +402,9 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
     }
 
     /**
-     * Adds highlighted representation of property.
+     * Adds highlighted representation of property in form of '[prepender]key - desc'.
      * 
-     * @param highlight - indicates whether the property should have highlighted its parts according to search query
+     * @param highlight - indicates whether the property should highlight its parts according to search query
      * @param searchQuery -- string representing the pattern to search values in autocompleter
      * @param wrappingDivAttrs -- string to define additional attributes for whole representation of property
      * @param prependingDom -- string to define additional DOM prepending to 'key - desc' part
@@ -420,7 +420,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
         if (highlight === false) {
             html = html + propValueAsString;
         } else {
-            let parts = matchedParts(propValueAsString, searchQuery);
+            const parts = matchedParts(propValueAsString, searchQuery);
             if (parts.length === 0) {
                 html = html + propValueAsString;
             } else {
@@ -438,7 +438,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
         }
 
         if (secondaryStringValueRequired) {
-            let propValueAsString = secondaryStringValue();
+            const propValueAsString = secondaryStringValue();
             if (propValueAsString && propValueAsString !== 'null' && propValueAsString !== '') {
                 html = html + '<span style="color:#737373"> &ndash; <i>';
                 if (highlight === false) {
@@ -450,7 +450,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                     } else {
                         for (let index = 0; index < parts.length; index++) {
                             const part = parts[index];
-                            if (part.matched) {
+                            if (part.matched === true) {
                                 // addition style-scope and this.is (element name) styles is required to enformse custom style processing
                                 html = html + '<span class="key-value-highlighted">' + part.part + '</span>';
                             } else {
