@@ -36,14 +36,6 @@ const TgEgiMasterBehaviorImpl = {
         _shouldEditPreviousRow: {
             type: Boolean,
             value: false
-        },
-        _shouldScrollAfterFocused: {
-            type: Boolean,
-            value: false
-        },
-        _shouldRefreshAfterSave: {
-            type: Boolean,
-            value: false
         }
     },
 
@@ -77,18 +69,16 @@ const TgEgiMasterBehaviorImpl = {
                 } else {
                     this._closeMaster();
                 }
-                if (this._shouldRefreshAfterSave) {
-                    postal.publish({
-                        channel: "centre_" + this.centreUuid,
-                        topic: "detail.saved",
-                        data: {
-                            shouldRefreshParentCentreAfterSave: this._shouldRefreshAfterSave,
-                            entity: potentiallySavedOrNewEntity,
-                            // send selectedEntitiesInContext further to be able to update only them on EGI
-                            selectedEntitiesInContext: selectedEntitiesSupplier()
-                        }
-                    });
-                }
+                postal.publish({
+                    channel: "centre_" + this.centreUuid,
+                    topic: "detail.saved",
+                    data: {
+                        shouldRefreshParentCentreAfterSave: true,
+                        entity: potentiallySavedOrNewEntity,
+                        // send selectedEntitiesInContext further to be able to update only them on EGI
+                        selectedEntitiesInContext: [potentiallySavedOrNewEntity]
+                    }
+                });
             }
         }
     },
@@ -131,10 +121,6 @@ const TgEgiMasterBehaviorImpl = {
         if (focusedElement && typeof focusedElement.select === "function") {
             focusedElement.select();
         }
-        if (this._shouldScrollAfterFocused) {
-            this._shouldScrollAfterFocused = false;
-            //focusedElement.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
-        }
     },
 
     _editorFocused: function (e) {
@@ -171,7 +157,12 @@ const TgEgiMasterBehaviorImpl = {
             this._closeMaster();
         } else if (IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'enter')) {
             this._lastFocusedEditor = getActiveParentAnd(element => element.hasAttribute('tg-editor'));
-            this._shouldScrollAfterFocused = true;
+            this._saveAndEditNextRow();
+        } else if (IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'alt+up')) {
+            this._lastFocusedEditor = getActiveParentAnd(element => element.hasAttribute('tg-editor'));
+            this._saveAndEditPreviousRow();
+        } else if (IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'alt+down')) {
+            this._lastFocusedEditor = getActiveParentAnd(element => element.hasAttribute('tg-editor'));
             this._saveAndEditNextRow();
         }
     },
@@ -214,7 +205,6 @@ const TgEgiMasterBehaviorImpl = {
         //If the last editor in scrollable area is focused then make next row editable   
         } else if (scrollableEditors.length > 0 && activeElement === scrollableEditors[scrollableEditors.length - 1]) {
             tearDownEvent(event);
-            this._shouldScrollAfterFocused = true;
             this._saveAndEditNextRow();
         }
     },
@@ -235,7 +225,6 @@ const TgEgiMasterBehaviorImpl = {
         //If the first editor in fixed area is focused then make previous row editable   
         } else if (fixedEditors.length > 0 && activeElement === fixedEditors[0]) {
             tearDownEvent(event);
-            this._shouldScrollAfterFocused = true;
             this._saveAndEditPreviousRow();
         }
     },

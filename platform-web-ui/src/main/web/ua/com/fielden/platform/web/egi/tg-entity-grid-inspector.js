@@ -1162,7 +1162,6 @@ Polymer({
         if (this.master.editors.length > 0 && this._tapOnce) {
             delete this._tapOnce;
             this.master._lastFocusedEditor = this.master.editors.find(editor => editor.propertyName === column.property);
-            this.master._shouldScrollAfterFocused = true;
             this._makeRowEditable(entityIndex, false);
         } else if (this.master.editors.length > 0) {
             this._tapOnce = true;
@@ -2005,6 +2004,10 @@ Polymer({
     },
 
     /************ EGI MASTER RELATED FUNCTIONS ***************/
+    isEditing: function () {
+        return this.$.centre_egi_master.offsetParent !== null;
+    },
+
     _scrollToVisibleLeftMaster: function (e) {
         const topEgiBox = this.$.top_egi.getBoundingClientRect();
         const bottomEgiBox = this.$.bottom_egi.getBoundingClientRect();

@@ -668,9 +668,17 @@ const TgEntityCentreBehaviorImpl = {
         self._showDialog = (function (action) {
             const closeEventChannel = self.uuid;
             const closeEventTopics = ['save.post.success', 'refresh.post.success'];
-            this.async(function () {
-                this.actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
-            }.bind(self), 1);
+            if (!self.$.egi.isEditing()) {
+                this.async(function () {
+                    this.actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
+                }.bind(self), 1);
+            } else {
+                const msg = "Please save or cancel changes";
+                this.$.selection_criteria._openToastWithoutEntity(msg, false, msg, false);
+                if (action) {
+                    action.restoreActionState();
+                }
+            }
         }).bind(self);
 
         self._showInsertionPoint = (function (action) {
@@ -884,9 +892,14 @@ const TgEntityCentreBehaviorImpl = {
      */
     _activateSelectionCriteriaView: function () {
         const self = this;
-        self.async(function () {
-            self._selectedView = 0;
-        }, 100);
+        if (!this.$.egi.isEditing()) { 
+           self.async(function () {
+                self._selectedView = 0;
+            }, 100);
+        } else {
+            const msg = "Please save or cancel changes";
+            this.$.selection_criteria._openToastWithoutEntity(msg, false, msg, false);
+        }
     },
 
     /**
@@ -905,13 +918,18 @@ const TgEntityCentreBehaviorImpl = {
      */
     currentPage: function () {
         const self = this;
-        self.persistActiveElement();
-        return this.$.selection_criteria.currentPage()
-            .then(function () {
-                console.log("current page invocation");
-                self.runInsertionPointActions();
-                self.restoreActiveElement();
-            });
+        if (!this.$.egi.isEditing()) {
+            self.persistActiveElement();
+            return this.$.selection_criteria.currentPage()
+                .then(function () {
+                    console.log("current page invocation");
+                    self.runInsertionPointActions();
+                    self.restoreActiveElement();
+                });
+        }
+        const msg = "Please save or cancel changes";
+        this.$.selection_criteria._openToastWithoutEntity(msg, false, msg, false);
+        return Promise.reject("Egi is editing right now, please save or cancel changes to continue");
     },
 
     /**
@@ -919,10 +937,15 @@ const TgEntityCentreBehaviorImpl = {
      */
     firstPage: function () {
         const self = this;
-        self.persistActiveElement();
-        return this.$.selection_criteria.firstPage().then(function () {
-            self.restoreActiveElement();
-        });
+        if (!this.$.egi.isEditing()) {
+            self.persistActiveElement();
+            return this.$.selection_criteria.firstPage().then(function () {
+                self.restoreActiveElement();
+            });
+        }
+        const msg = "Please save or cancel changes";
+        this.$.selection_criteria._openToastWithoutEntity(msg, false, msg, false);
+        return Promise.reject("Egi is editing right now, please save or cancel changes to continue");
     },
 
     /**
@@ -930,10 +953,15 @@ const TgEntityCentreBehaviorImpl = {
      */
     lastPage: function () {
         const self = this;
-        self.persistActiveElement();
-        return this.$.selection_criteria.lastPage().then(function () {
-            self.restoreActiveElement();
-        });
+        if (!this.$.egi.isEditing()) {
+            self.persistActiveElement();
+            return this.$.selection_criteria.lastPage().then(function () {
+                self.restoreActiveElement();
+            });
+        }
+        const msg = "Please save or cancel changes";
+        this.$.selection_criteria._openToastWithoutEntity(msg, false, msg, false);
+        return Promise.reject("Egi is editing right now, please save or cancel changes to continue");
     },
 
     /**
@@ -941,10 +969,15 @@ const TgEntityCentreBehaviorImpl = {
      */
     nextPage: function () {
         const self = this;
-        self.persistActiveElement();
-        return this.$.selection_criteria.nextPage().then(function () {
-            self.restoreActiveElement();
-        });
+        if (!this.$.egi.isEditing()) {
+            self.persistActiveElement();
+            return this.$.selection_criteria.nextPage().then(function () {
+                self.restoreActiveElement();
+            });
+        }
+        const msg = "Please save or cancel changes";
+        this.$.selection_criteria._openToastWithoutEntity(msg, false, msg, false);
+        return Promise.reject("Egi is editing right now, please save or cancel changes to continue");
     },
 
     /**
@@ -952,10 +985,15 @@ const TgEntityCentreBehaviorImpl = {
      */
     prevPage: function () {
         const self = this;
-        self.persistActiveElement();
-        return this.$.selection_criteria.prevPage().then(function () {
-            self.restoreActiveElement();
-        });
+        if (!this.$.egi.isEditing()) {
+            self.persistActiveElement();
+            return this.$.selection_criteria.prevPage().then(function () {
+                self.restoreActiveElement();
+            });
+        }
+        const msg = "Please save or cancel changes";
+        this.$.selection_criteria._openToastWithoutEntity(msg, false, msg, false);
+        return Promise.reject("Egi is editing right now, please save or cancel changes to continue");
     },
 
     /**
