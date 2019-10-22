@@ -58,7 +58,7 @@ const TgEgiMasterBehaviorImpl = {
         this.addEventListener('focusin', this._editorFocused.bind(this));
 
         this.postSaved = function (potentiallySavedOrNewEntity) {
-            if (potentiallySavedOrNewEntity.isValid()) {
+            if (potentiallySavedOrNewEntity.isValid() && potentiallySavedOrNewEntity.exceptionOccured() === null) {
                 this._acceptValues();
                 if (this._shouldEditNextRow) {
                     this._shouldEditNextRow = false;
@@ -79,6 +79,11 @@ const TgEgiMasterBehaviorImpl = {
                         selectedEntitiesInContext: [potentiallySavedOrNewEntity]
                     }
                 });
+            } else {
+                this._lastFocusedEditor = null;
+                this.focusLastOnRetrieve = false;
+                this._shouldEditNextRow = false;
+                this._shouldEditPreviousRow = false;
             }
         }
     },
