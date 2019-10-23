@@ -98,7 +98,6 @@ const TgEgiMasterBehaviorImpl = {
                                 [...this._fixedMasterContainer.querySelectorAll("slot"), ...this._scrollableMasterContainer.querySelectorAll("slot")]
                                 .filter(slot => slot.assignedNodes().length > 0)
                                 .map(slot => slot.assignedNodes()[0]).filter(element => element.hasAttribute("tg-editor"));
-        this._lastFocusedEditor = null;
         if (this.focusLastOnRetrieve) {
             return focusableElemnts.reverse();
         }
@@ -126,6 +125,7 @@ const TgEgiMasterBehaviorImpl = {
         if (focusedElement && typeof focusedElement.select === "function") {
             focusedElement.select();
         }
+        this._lastFocusedEditor = null;
     },
 
     _editorFocused: function (e) {
