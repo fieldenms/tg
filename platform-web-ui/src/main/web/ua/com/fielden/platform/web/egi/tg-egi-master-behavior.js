@@ -11,23 +11,10 @@ const TgEgiMasterBehaviorImpl = {
         editors: Array,
         saveButton: Object,
         cancelButton: Object,
-        focusLastOnRetrieve: {
-            type: Boolean,
-            value: false
-        },
-        _fixedMasterContainer: {
+        egi: {
             type: Object,
-            observer: "_fixedMasterContainerChanged"
+            observer:"_egiChanged"
         },
-        _scrollableMasterContainer: {
-            type: Object,
-            observer: "_scrollableMasterContainerChanged"
-        },
-        _editNextRow: Function,
-        _editPreviousRow: Function,
-        _acceptValues: Function,
-        //_cancelValues: Function,
-        _closeMaster: Function,
         _lastFocusedEditor: Object,
         _shouldEditNextRow: {
             type: Boolean,
@@ -59,15 +46,13 @@ const TgEgiMasterBehaviorImpl = {
 
         this.postSaved = function (potentiallySavedOrNewEntity) {
             if (potentiallySavedOrNewEntity.isValid() && potentiallySavedOrNewEntity.exceptionOccured() === null) {
-                this._acceptValues();
+                this.egi._acceptValuesFromMaster();
                 if (this._shouldEditNextRow) {
-                    this._shouldEditNextRow = false;
-                    this._editNextRow();
+                    this.egi._makeNextRowEditable();
                 } else if (this._shouldEditPreviousRow) {
-                    this._shouldEditPreviousRow = false;
-                    this._editPreviousRow();
+                    this.egi._makePreviousRowEditable();
                 } else {
-                    this._closeMaster();
+                    this.egi._closeMaster();
                 }
                 postal.publish({
                     channel: "centre_" + this.centreUuid,
@@ -81,7 +66,6 @@ const TgEgiMasterBehaviorImpl = {
                 });
             } else {
                 this._lastFocusedEditor = null;
-                this.focusLastOnRetrieve = false;
                 this._shouldEditNextRow = false;
                 this._shouldEditPreviousRow = false;
             }
@@ -89,7 +73,7 @@ const TgEgiMasterBehaviorImpl = {
     },
 
     closeMaster: function () {
-        this._closeMaster();
+        this.egi._closeMaster();
         this._postClose();
     },
 
@@ -98,7 +82,7 @@ const TgEgiMasterBehaviorImpl = {
                                 [...this._fixedMasterContainer.querySelectorAll("slot"), ...this._scrollableMasterContainer.querySelectorAll("slot")]
                                 .filter(slot => slot.assignedNodes().length > 0)
                                 .map(slot => slot.assignedNodes()[0]).filter(element => element.hasAttribute("tg-editor"));
-        if (this.focusLastOnRetrieve) {
+        if (this._shouldEditPreviousRow) {
             return focusableElemnts.reverse();
         }
         return focusableElemnts;
@@ -108,24 +92,14 @@ const TgEgiMasterBehaviorImpl = {
 
     },
 
-    // doNotValidate: function () {
-    //     if (this.postValidated) {
-    //         this.postValidated();
-    //     }
-    // },
-
-    // _postValidatedDefaultError: function (error) {
-    //     if (this.postValidated) {
-    //         this.postValidated();
-    //     }
-    // },
-
     _selectLastFocusedEditor: function (e) {
         const focusedElement = deepestActiveElement();
         if (focusedElement && typeof focusedElement.select === "function") {
             focusedElement.select();
         }
         this._lastFocusedEditor = null;
+        this._shouldEditNextRow = false;
+        this._shouldEditPreviousRow = false;
     },
 
     _editorFocused: function (e) {
@@ -133,12 +107,9 @@ const TgEgiMasterBehaviorImpl = {
     },
 
     //Event listeners
-    _fixedMasterContainerChanged: function (newContainer, oldContainer) {
-        this._masterContainerChanged(newContainer, oldContainer);
-    },
-
-    _scrollableMasterContainerChanged: function (newContainer, oldContainer) {
-        this._masterContainerChanged(newContainer, oldContainer);
+    _egiChanged: function (newEgi, oldEgi) {
+        this._masterContainerChanged(newEgi && newEgi.$.left_egi_master, oldEgi && oldEgi.$.left_egi_master);
+        this._masterContainerChanged(newEgi && newEgi.$.centre_egi_master, oldEgi && oldEgi.$.centre_egi_master);
     },
 
     _masterContainerChanged: function (newContainer, oldContainer) {
@@ -159,7 +130,7 @@ const TgEgiMasterBehaviorImpl = {
                 this._onTabDown(event);
             }
         } else if (IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'esc')) {
-            this._closeMaster();
+            this.egi._closeMaster();
         } else if (IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'enter')) {
             this._lastFocusedEditor = getActiveParentAnd(element => element.hasAttribute('tg-editor'));
             this._saveAndEditNextRow();
@@ -179,7 +150,7 @@ const TgEgiMasterBehaviorImpl = {
             editorToCommit.commit();
             this.saveButton._asyncRun();
         } else {
-            this._editNextRow();
+            this.egi._makeNextRowEditable();
         }
     },
 
@@ -190,7 +161,7 @@ const TgEgiMasterBehaviorImpl = {
             editorToCommit.commit();
             this.saveButton._asyncRun();
         } else {
-            this._editPreviousRow();
+            this.egi._makePreviousRowEditable();
         }
     },
 

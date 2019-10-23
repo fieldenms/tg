@@ -898,12 +898,10 @@ Polymer({
 
         //Initiate entity master for inline editing
         this.master = this.$.egi_master.assignedNodes()[0];
-        this.master._editNextRow = this._makeNextRowEditable.bind(this);
-        this.master._editPreviousRow = this._makePreviousRowEditable.bind(this);
-        this.master._fixedMasterContainer = this.$.left_egi_master;
-        this.master._scrollableMasterContainer = this.$.centre_egi_master;
-        this.master._acceptValues = this._acceptValuesFromMaster.bind(this);
-        this.master._closeMaster = this._closeMaster.bind(this);
+        this._makeNextRowEditable = this._makeNextRowEditable.bind(this);
+        this._makePreviousRowEditable = this._makePreviousRowEditable.bind(this);
+        this._acceptValuesFromMaster = this._acceptValuesFromMaster.bind(this);
+        this._closeMaster = this._closeMaster.bind(this);
         this.$.left_egi_master.addEventListener('focusin', this._scrollToVisibleLeftMaster.bind(this));
         this.$.centre_egi_master.addEventListener('focusin', this._scrollToVisibleCentreMaster.bind(this));
         //this.master._cancelValues = this._cancelAndCloseMaster.bind(this);
@@ -2060,18 +2058,10 @@ Polymer({
         });
     },
 
-    // _cancelMasterValues: function () {
-    //     const egiEntity = this.egiModel[this.master.editableRow].entity;
-    //     this.master.editors.forEach(editor => {
-    //         editor.assignConcreteValue(egiEntity.get(editor.propertyName), editor.reflector().convert.bind(editor.reflector()));
-    //         editor.commit();
-    //     });
-    // },
-
     _makeNextRowEditable: function () {
         this._acceptValuesFromMaster();
         if (this.filteredEntities.length > this.master.editableRow + 1) {
-            this._makeRowEditable(this.master.editableRow + 1, false);
+            this._makeRowEditable(this.master.editableRow + 1);
         } else {
             this._closeMaster();
         }
@@ -2080,13 +2070,13 @@ Polymer({
     _makePreviousRowEditable: function () {
         this._acceptValuesFromMaster();
         if (this.master.editableRow - 1 >= 0) {
-            this._makeRowEditable(this.master.editableRow - 1, true);
+            this._makeRowEditable(this.master.editableRow - 1);
         } else {
             this._closeMaster();
         } 
     },
 
-    _makeRowEditable: function (entityIndex, focusLastOnRetrieve) {
+    _makeRowEditable: function (entityIndex) {
         if (this.master.editableRow !== entityIndex) {
             if (typeof this.master.editableRow !== 'undefined') {
                 this.set("egiModel." + this.master.editableRow + ".editing", false);
@@ -2099,7 +2089,6 @@ Polymer({
             const topEgiOffset = this.$.top_egi.offsetTop;
             this.$.master_actions.style.top = (rowOffset + topEgiOffset - this.$.scrollableContainer.scrollTop - 35/*The desired offset of master actions above the row*/) + "px";
             this.$.master_actions.style.display = 'flex';
-            this.master.focusLastOnRetrieve = focusLastOnRetrieve;
             this.master.editableRow = entityIndex;
             this.master.entityId = this.filteredEntities[entityIndex].get("id");
             this.master.entityType = this.filteredEntities[entityIndex].type().notEnhancedFullClassName()
