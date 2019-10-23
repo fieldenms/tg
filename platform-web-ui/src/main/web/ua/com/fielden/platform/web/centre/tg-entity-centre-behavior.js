@@ -762,6 +762,12 @@ const TgEntityCentreBehaviorImpl = {
             document.body.appendChild(this.actionDialog);
         }
 
+        /* Provide predicate for egi that determines whether inline master can be opened or not.
+         * It can not be opened if another master in dialog is opened. */
+        this.$.egi.canOpenMaster = function () {
+            return !this.actionDialog.opened;
+        }.bind(this);
+
         ///////////////////////// Detail postSaved listener //////////////////////////////////////
         this.masterSavedListener = postal.subscribe({
             channel: "centre_" + self.$.selection_criteria.uuid,

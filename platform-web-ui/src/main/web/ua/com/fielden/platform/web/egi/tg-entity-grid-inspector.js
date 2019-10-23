@@ -195,12 +195,13 @@ const template = html`
         }
         .master-actions {
             position: absolute;
-            top: -55px;
             left: 16px;
+            z-index: 2;
             border-radius: 45%;
             background-color: #e3e3e3;
             @apply --layout-horizontal;
             @apply --shadow-elevation-4dp;
+            display: none;
         }
         .master-actions ::slotted(tg-action) {
             --paper-fab-background: white;
@@ -389,6 +390,9 @@ const template = html`
         .z-index-2 {
             z-index: 2;
         }
+        .z-index-3 {
+            z-index: 3;
+        }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <!--configuring slotted elements-->
@@ -445,6 +449,10 @@ const template = html`
                         </div>
                     </div>
                 </div>
+                <div id="master_actions" class="master-actions">
+                    <slot name="save-button"></slot>
+                    <slot name="cancel-button"></slot>
+                </div>
                 <div id="left_egi" show-left-shadow$="[[_leftShadowVisible(_showLeftShadow, dragAnchorFixed)]]" class="grid-layout-container sticky-container z-index-1" style$="[[_calcLeftContainerStyle(dragAnchorFixed)]]">
                     <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex" on-dom-change="_scrollContainerEntitiesStamped">
                         <div class="table-data-row" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" is-editing$="[[egiEntity.editing]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
@@ -463,10 +471,6 @@ const template = html`
                         </div>
                     </template>
                     <div id="left_egi_master" style="display:none;" class="egi-master">
-                        <div id="master_actions" class="master-actions">
-                            <slot name="save-button"></slot>
-                            <slot name="cancel-button"></slot>
-                        </div>
                         <div class="drag-anchor" hidden$="[[!canDragFrom]]"></div>
                         <div class="table-master-cell" hidden$="[[!_checkboxFixedAndVisible(checkboxVisible, checkboxesFixed)]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]">
                             <!--Checkbox stub for master goes here-->
@@ -523,7 +527,7 @@ const template = html`
                         </div>
                     </div>
                 </div>
-                <div id="bottom_left_egi" class="grid-layout-container sticky-container z-index-2" show-bottom-shadow$="[[_bottomShadowVisible(_showBottomShadow, summaryFixed)]]" show-left-shadow$="[[_leftShadowVisible(_showLeftShadow, dragAnchorFixed)]]" style$="[[_calcBottomLeftContainerStyle(summaryFixed, dragAnchorFixed)]]">
+                <div id="bottom_left_egi" class="grid-layout-container sticky-container z-index-3" show-bottom-shadow$="[[_bottomShadowVisible(_showBottomShadow, summaryFixed)]]" show-left-shadow$="[[_leftShadowVisible(_showLeftShadow, dragAnchorFixed)]]" style$="[[_calcBottomLeftContainerStyle(summaryFixed, dragAnchorFixed)]]">
                     <div class="footer">
                         <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
                             <div class="table-footer-row">
@@ -541,7 +545,7 @@ const template = html`
                         </template>
                     </div>
                 </div>
-                <div id="bottom_egi" class="grid-layout-container sticky-container z-index-1" show-bottom-shadow$="[[_bottomShadowVisible(_showBottomShadow, summaryFixed)]]" style$="[[_calcBottomContainerStyle(summaryFixed)]]">
+                <div id="bottom_egi" class="grid-layout-container sticky-container z-index-2" show-bottom-shadow$="[[_bottomShadowVisible(_showBottomShadow, summaryFixed)]]" style$="[[_calcBottomContainerStyle(summaryFixed)]]">
                     <!-- Table footer -->
                     <div class="footer">
                         <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
@@ -559,7 +563,7 @@ const template = html`
                         </template>
                     </div>  
                 </div>
-                <div id="bottom_right_egi" class="grid-layout-container sticky-container z-index-2" show-bottom-shadow$="[[_bottomShadowVisible(_showBottomShadow, summaryFixed)]]" show-right-shadow$="[[_rightShadowVisible(_showRightShadow, secondaryActionsFixed, _isSecondaryActionPresent)]]" style$="[[_calcBottomRightContainerStyle(summaryFixed, secondaryActionsFixed)]]">
+                <div id="bottom_right_egi" class="grid-layout-container sticky-container z-index-3" show-bottom-shadow$="[[_bottomShadowVisible(_showBottomShadow, summaryFixed)]]" show-right-shadow$="[[_rightShadowVisible(_showRightShadow, secondaryActionsFixed, _isSecondaryActionPresent)]]" style$="[[_calcBottomRightContainerStyle(summaryFixed, secondaryActionsFixed)]]">
                     <div class="footer">
                         <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
                             <div class="table-footer-row">
@@ -1159,11 +1163,11 @@ Polymer({
     },
 
     tap: function (entityIndex, entity, index, column) {
-        if (this.master.editors.length > 0 && this._tapOnce) {
+        if (this.master.editors.length > 0 && this._tapOnce && this.canOpenMaster()) {
             delete this._tapOnce;
             this.master._lastFocusedEditor = this.master.editors.find(editor => editor.propertyName === column.property);
             this._makeRowEditable(entityIndex, false);
-        } else if (this.master.editors.length > 0) {
+        } else if (this.master.editors.length > 0 && this.canOpenMaster()) {
             this._tapOnce = true;
             this.async(() => {
                 if (this._tapOnce) {
@@ -2008,6 +2012,10 @@ Polymer({
         return this.$.centre_egi_master.offsetParent !== null;
     },
 
+    canOpenMaster: function () {
+        return true;
+    },
+
     _scrollToVisibleLeftMaster: function (e) {
         const topEgiBox = this.$.top_egi.getBoundingClientRect();
         const bottomEgiBox = this.$.bottom_egi.getBoundingClientRect();
@@ -2087,6 +2095,10 @@ Polymer({
             _insertMaster(this.$.left_egi, this.$.left_egi_master, entityIndex);
             _insertMaster(this.$.centre_egi, this.$.centre_egi_master, entityIndex);
             _insertMaster(this.$.right_egi, this.$.right_egi_master, entityIndex);
+            const rowOffset = this.$.centre_egi.querySelectorAll(".table-data-row")[entityIndex].offsetTop;
+            const topEgiOffset = this.$.top_egi.offsetTop;
+            this.$.master_actions.style.top = (rowOffset + topEgiOffset - this.$.scrollableContainer.scrollTop - 35/*The desired offset of master actions above the row*/) + "px";
+            this.$.master_actions.style.display = 'flex';
             this.master.focusLastOnRetrieve = focusLastOnRetrieve;
             this.master.editableRow = entityIndex;
             this.master.entityId = this.filteredEntities[entityIndex].get("id");
@@ -2098,6 +2110,7 @@ Polymer({
     _closeMaster: function () {
         this.set("egiModel." + this.master.editableRow + ".editing", false);
         this.master.editableRow = null;
+        this.$.master_actions.style.display = 'none';
         this.$.left_egi_master.style.display = 'none';
         this.$.centre_egi_master.style.display = 'none';
         this.$.right_egi_master.style.display = 'none';
