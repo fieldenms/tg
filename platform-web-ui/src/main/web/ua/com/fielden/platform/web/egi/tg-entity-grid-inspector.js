@@ -195,7 +195,6 @@ const template = html`
         }
         .master-actions {
             position: absolute;
-            left: 16px;
             z-index: 2;
             border-radius: 45%;
             background-color: #e3e3e3;
@@ -898,6 +897,7 @@ Polymer({
 
         //Initiate entity master for inline editing
         this.master = this.$.egi_master.assignedNodes()[0];
+        this.master.egi = this;
         this._makeNextRowEditable = this._makeNextRowEditable.bind(this);
         this._makePreviousRowEditable = this._makePreviousRowEditable.bind(this);
         this._acceptValuesFromMaster = this._acceptValuesFromMaster.bind(this);
@@ -1256,6 +1256,9 @@ Polymer({
         this._showRightShadow = Math.ceil(this.$.scrollableContainer.clientWidth + this.$.scrollableContainer.scrollLeft) < this.$.scrollableContainer.scrollWidth;
         this._showTopShadow = this.$.scrollableContainer.scrollTop > 0;
         this._showBottomShadow = Math.ceil(this.$.scrollableContainer.clientHeight + this.$.scrollableContainer.scrollTop) < this.$.scrollableContainer.scrollHeight;
+        if (this.isEditing()) {
+            this.$.master_actions.style.left = this.$.scrollableContainer.scrollLeft + 16/* The desired distance of master actions from the left border */ + "px";
+        }
     },
 
     _handleTouchMove: function (e) {
@@ -2088,6 +2091,7 @@ Polymer({
             const rowOffset = this.$.centre_egi.querySelectorAll(".table-data-row")[entityIndex].offsetTop;
             const topEgiOffset = this.$.top_egi.offsetTop;
             this.$.master_actions.style.top = (rowOffset + topEgiOffset - this.$.scrollableContainer.scrollTop - 35/*The desired offset of master actions above the row*/) + "px";
+            this.$.master_actions.style.left = this.$.scrollableContainer.scrollLeft + 16/*Desired distance from left border of egi */ + "px";
             this.$.master_actions.style.display = 'flex';
             this.master.editableRow = entityIndex;
             this.master.entityId = this.filteredEntities[entityIndex].get("id");
