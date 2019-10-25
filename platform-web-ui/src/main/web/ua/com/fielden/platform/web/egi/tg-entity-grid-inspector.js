@@ -898,8 +898,7 @@ Polymer({
         //Initiate entity master for inline editing
         this.master = this.$.egi_master.assignedNodes()[0];
         this.master.egi = this;
-        this._makeNextRowEditable = this._makeNextRowEditable.bind(this);
-        this._makePreviousRowEditable = this._makePreviousRowEditable.bind(this);
+        this._makeRowEditable = this._makeRowEditable.bind(this);
         this._acceptValuesFromMaster = this._acceptValuesFromMaster.bind(this);
         this._closeMaster = this._closeMaster.bind(this);
         this.$.left_egi_master.addEventListener('focusin', this._scrollToVisibleLeftMaster.bind(this));
@@ -1164,7 +1163,7 @@ Polymer({
         if (this.master.editors.length > 0 && this._tapOnce && this.canOpenMaster()) {
             delete this._tapOnce;
             this.master._lastFocusedEditor = this.master.editors.find(editor => editor.propertyName === column.property);
-            this._makeRowEditable(entityIndex, false);
+            this._makeRowEditable(entityIndex);
         } else if (this.master.editors.length > 0 && this.canOpenMaster()) {
             this._tapOnce = true;
             this.async(() => {
@@ -2061,48 +2060,36 @@ Polymer({
         });
     },
 
-    _makeNextRowEditable: function () {
-        this._acceptValuesFromMaster();
-        if (this.filteredEntities.length > this.master.editableRow + 1) {
-            this._makeRowEditable(this.master.editableRow + 1);
-        } else {
-            this._closeMaster();
-        }
-    },
-
-    _makePreviousRowEditable: function () {
-        this._acceptValuesFromMaster();
-        if (this.master.editableRow - 1 >= 0) {
-            this._makeRowEditable(this.master.editableRow - 1);
-        } else {
-            this._closeMaster();
-        } 
-    },
-
     _makeRowEditable: function (entityIndex) {
-        if (this.master.editableRow !== entityIndex) {
+        if (this.master.editableRow !== entityIndex ) {
             if (typeof this.master.editableRow !== 'undefined') {
                 this.set("egiModel." + this.master.editableRow + ".editing", false);
             }
-            this.set("egiModel." + entityIndex + ".editing", true);
-            _insertMaster(this.$.left_egi, this.$.left_egi_master, entityIndex);
-            _insertMaster(this.$.centre_egi, this.$.centre_egi_master, entityIndex);
-            _insertMaster(this.$.right_egi, this.$.right_egi_master, entityIndex);
-            const rowOffset = this.$.centre_egi.querySelectorAll(".table-data-row")[entityIndex].offsetTop;
-            const topEgiOffset = this.$.top_egi.offsetTop;
-            this.$.master_actions.style.top = (rowOffset + topEgiOffset - this.$.scrollableContainer.scrollTop - 35/*The desired offset of master actions above the row*/) + "px";
-            this.$.master_actions.style.left = this.$.scrollableContainer.scrollLeft + 16/*Desired distance from left border of egi */ + "px";
-            this.$.master_actions.style.display = 'flex';
-            this.master.editableRow = entityIndex;
-            this.master.entityId = this.filteredEntities[entityIndex].get("id");
-            this.master.entityType = this.filteredEntities[entityIndex].type().notEnhancedFullClassName()
-            this.master.retrieve();
+            if (entityIndex >= 0 && entityIndex < this.filteredEntities.length) {
+                this.set("egiModel." + entityIndex + ".editing", true);
+                _insertMaster(this.$.left_egi, this.$.left_egi_master, entityIndex);
+                _insertMaster(this.$.centre_egi, this.$.centre_egi_master, entityIndex);
+                _insertMaster(this.$.right_egi, this.$.right_egi_master, entityIndex);
+                const rowOffset = this.$.centre_egi.querySelectorAll(".table-data-row")[entityIndex].offsetTop;
+                const topEgiOffset = this.$.top_egi.offsetTop;
+                this.$.master_actions.style.top = (rowOffset + topEgiOffset - this.$.scrollableContainer.scrollTop - 35/*The desired offset of master actions above the row*/) + "px";
+                this.$.master_actions.style.left = this.$.scrollableContainer.scrollLeft + 16/*Desired distance from left border of egi */ + "px";
+                this.$.master_actions.style.display = 'flex';
+                this.master.editableRow = entityIndex;
+                this.master.entityId = this.filteredEntities[entityIndex].get("id");
+                this.master.entityType = this.filteredEntities[entityIndex].type().notEnhancedFullClassName()
+                this.master.retrieve();
+            } else {
+                this._closeMaster();
+            }
         }
     },
 
     _closeMaster: function () {
-        this.set("egiModel." + this.master.editableRow + ".editing", false);
-        this.master.editableRow = null;
+        if (typeof this.master.editableRow !== 'undefined') {
+            this.set("egiModel." + this.master.editableRow + ".editing", false);
+            delete this.master.editableRow;
+        }
         this.$.master_actions.style.display = 'none';
         this.$.left_egi_master.style.display = 'none';
         this.$.centre_egi_master.style.display = 'none';

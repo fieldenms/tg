@@ -480,14 +480,14 @@ Polymer({
         var clickEvent = ('ontouchstart' in window) ? 'touchstart' : 'mousedown';
         this.addEventListener(clickEvent, this._onCaptureClick, true);
         this.addEventListener('focus', this._onCaptureFocus, true);
-        this.addEventListener('keydown', this._onCaptureKeyDown, true);
+        this.addEventListener('keydown', this._onCaptureKeyDown);
     },
 
     detached: function() {
         var clickEvent = ('ontouchstart' in window) ? 'touchstart' : 'mousedown';
         this.removeEventListener(clickEvent, this._onCaptureClick, true);
         this.removeEventListener('focus', this._onCaptureFocus, true);
-        this.removeEventListener('keydown', this._onCaptureKeyDown, true);
+        this.removeEventListener('keydown', this._onCaptureKeyDown);
     },
     
     _getCurrentFocusableElements: function() {

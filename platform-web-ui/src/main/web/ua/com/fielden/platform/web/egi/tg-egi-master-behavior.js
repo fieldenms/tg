@@ -43,7 +43,6 @@ const TgEgiMasterBehaviorImpl = {
 
         this.editors.forEach(editor => editor.decorator().noLabelFloat = true);
         this.addEventListener('data-loaded-and-focused', this._selectLastFocusedEditor.bind(this));
-        this.addEventListener('focusin', this._editorFocused.bind(this));
 
         this.postSaved = function (potentiallySavedOrNewEntity) {
             if (potentiallySavedOrNewEntity.isValid() && potentiallySavedOrNewEntity.exceptionOccured() === null) {
@@ -88,13 +87,14 @@ const TgEgiMasterBehaviorImpl = {
     },
 
     _egiRefreshed: function () {
-        this.editableRow = this._previousEditRow;
-        delete this._previousEditRow;
-        if (this._shouldEditNextRow && this.editableRow) {
-            this.egi._makeNextRowEditable();
-        } else if (this._shouldEditPreviousRow && this.editableRow) {
-            this.egi._makePreviousRowEditable();
+        if (this._shouldEditNextRow && typeof this._previousEditRow !== 'undefined') {
+            this.editableRow = this._previousEditRow;
+            this.egi._makeRowEditable(this.editableRow + 1);
+        } else if (this._shouldEditPreviousRow && typeof this._previousEditRow !== 'undefined') {
+            this.editableRow = this._previousEditRow;
+            this.egi._makeRowEditable(this.editableRow - 1);
         }
+        delete this._previousEditRow;
         this.egi.removeEventListener("tg-egi-entities-loaded", this._egiRefreshed);
     },
 
@@ -113,23 +113,37 @@ const TgEgiMasterBehaviorImpl = {
         this._focusLastOnRetrieve = false;
     },
 
-    _editorFocused: function (e) {
-        console.log("Editor focused", e.target);
-    },
-
     //Event listeners
     _egiChanged: function (newEgi, oldEgi) {
+        this._onCaptureKeyDown = this._onCaptureKeyDown.bind(this);
+        this._onAlternateSwitching = this._onAlternateSwitching.bind(this);
         this._masterContainerChanged(newEgi && newEgi.$.left_egi_master, oldEgi && oldEgi.$.left_egi_master);
         this._masterContainerChanged(newEgi && newEgi.$.centre_egi_master, oldEgi && oldEgi.$.centre_egi_master);
     },
 
     _masterContainerChanged: function (newContainer, oldContainer) {
-        this._onCaptureKeyDown = this._onCaptureKeyDown.bind(this);
         if (oldContainer) {
-            oldContainer.removeEventListener('keydown', this._onCaptureKeyDown, true);
+            oldContainer.removeEventListener('keydown', this._onCaptureKeyDown);
+            oldContainer.removeEventListener('keydown', this._onAlternateSwitching,true);
         }
         if (newContainer) {
-            newContainer.addEventListener('keydown', this._onCaptureKeyDown, true);
+            newContainer.addEventListener('keydown', this._onCaptureKeyDown);
+            newContainer.addEventListener('keydown', this._onAlternateSwitching, true);
+        }
+    },
+
+    _onAlternateSwitching: function (event) {
+        if (IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'alt+up')) {
+            this._lastFocusedEditor = getActiveParentAnd(element => element.hasAttribute('tg-editor'));
+            this._saveAndEditPreviousRow();
+        } else if (IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'alt+down')) {
+            this._lastFocusedEditor = getActiveParentAnd(element => element.hasAttribute('tg-editor'));
+            this._saveAndEditNextRow();
+        } else if (IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'esc')) {
+            this.egi._closeMaster();
+        } else if (IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'enter')) {
+            this._lastFocusedEditor = getActiveParentAnd(element => element.hasAttribute('tg-editor'));
+            this._saveAndEditNextRow();
         }
     },
 
@@ -140,17 +154,6 @@ const TgEgiMasterBehaviorImpl = {
             } else {
                 this._onTabDown(event);
             }
-        } else if (IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'esc')) {
-            this.egi._closeMaster();
-        } else if (IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'enter')) {
-            this._lastFocusedEditor = getActiveParentAnd(element => element.hasAttribute('tg-editor'));
-            this._saveAndEditNextRow();
-        } else if (IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'alt+up')) {
-            this._lastFocusedEditor = getActiveParentAnd(element => element.hasAttribute('tg-editor'));
-            this._saveAndEditPreviousRow();
-        } else if (IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'alt+down')) {
-            this._lastFocusedEditor = getActiveParentAnd(element => element.hasAttribute('tg-editor'));
-            this._saveAndEditNextRow();
         }
     },
 
@@ -161,7 +164,8 @@ const TgEgiMasterBehaviorImpl = {
             editorToCommit.commit();
             this.saveButton._asyncRun();
         } else {
-            this.egi._makeNextRowEditable();
+            this.egi._acceptValuesFromMaster();
+            this.egi._makeRowEditable(this.editableRow + 1);
         }
     },
 
@@ -172,7 +176,8 @@ const TgEgiMasterBehaviorImpl = {
             editorToCommit.commit();
             this.saveButton._asyncRun();
         } else {
-            this.egi._makePreviousRowEditable();
+            this.egi._acceptValuesFromMaster();
+            this.egi._makeRowEditable(this.editableRow - 1);
         }
     },
 
@@ -181,17 +186,18 @@ const TgEgiMasterBehaviorImpl = {
         //Check whether active element is in hierarchy of the last fixed editor if it is then focus first editor in scrollable area.
         const fixedEditors = this._getFixedEditors();
         const scrollableEditors = this._getScrollableEditors();
-        if (fixedEditors.length > 0 && activeElement === fixedEditors[fixedEditors.length - 1]) {
-            if (scrollableEditors.length > 0) {
-                scrollableEditors[0].focus();
-                if (typeof scrollableEditors[0].select === 'function') {
-                    scrollableEditors[0].select();
-                }
-                tearDownEvent(event);
+        if (fixedEditors.length > 0 && activeElement === fixedEditors[fixedEditors.length - 1] && scrollableEditors.length > 0) {
+            scrollableEditors[0].focus();
+            if (typeof scrollableEditors[0].select === 'function') {
+                scrollableEditors[0].select();
             }
-        //If the last editor in scrollable area is focused then make next row editable   
-        } else if (scrollableEditors.length > 0 && activeElement === scrollableEditors[scrollableEditors.length - 1]) {
             tearDownEvent(event);
+        //If the last editor in scrollable area is focused then make next row editable   
+        } else if (scrollableEditors.length === 0 || (scrollableEditors.length > 0 && activeElement === scrollableEditors[scrollableEditors.length - 1])) {
+            tearDownEvent(event);
+            if (this.egi.filteredEntities.length <= this.editableRow + 1) {
+                this._focusNextEgiElementTo(event, true, activeElement);
+            }
             this._saveAndEditNextRow();
         }
     },
@@ -201,21 +207,40 @@ const TgEgiMasterBehaviorImpl = {
         //Check whether active element is in hierarchy of the first scrollable editor if it is then focus last editor in fixed area.
         const fixedEditors = this._getFixedEditors();
         const scrollableEditors = this._getScrollableEditors();
-        if (scrollableEditors.length > 0 && activeElement === scrollableEditors[0]) {
-            if (fixedEditors.length > 0) {
-                fixedEditors[fixedEditors.length - 1].focus();
-                if (typeof fixedEditors[fixedEditors.length - 1].select === 'function') {
-                    fixedEditors[fixedEditors.length - 1].select();
-                }
-                tearDownEvent(event);
+        if (scrollableEditors.length > 0 && activeElement === scrollableEditors[0] && fixedEditors.length > 0) {
+            fixedEditors[fixedEditors.length - 1].focus();
+            if (typeof fixedEditors[fixedEditors.length - 1].select === 'function') {
+                fixedEditors[fixedEditors.length - 1].select();
             }
-        //If the first editor in fixed area is focused then make previous row editable   
-        } else if (fixedEditors.length > 0 && activeElement === fixedEditors[0]) {
             tearDownEvent(event);
+        //If the first editor in fixed area is focused then make previous row editable   
+        } else if ( fixedEditors.length === 0 || (fixedEditors.length > 0 && activeElement === fixedEditors[0])) {
+            tearDownEvent(event);
+            if (this.editableRow - 1 < 0) {
+                this._focusNextEgiElementTo(event, false, activeElement);
+            }
             this._focusLastOnRetrieve = true;
             this._saveAndEditPreviousRow();
         }
     },
+
+    _focusNextEgiElementTo: function (e, forward, activeElement) {
+        const focusableElements = this._getEgiCurrentFocusableElements();
+        const indexOfActiveElement = focusableElements.indexOf(activeElement);
+        if (indexOfActiveElement >= 0) {
+            if (forward && indexOfActiveElement === focusableElements.length - 1) {
+                this.fire("tg-last-item-focused", { forward: true, event: e });
+            } else if (!forward && indexOfActiveElement === 0) {
+                this.fire("tg-last-item-focused", { forward: false, event: e });
+            } else if (forward){
+                focusableElements[indexOfActiveElement + 1].focus();
+            } else {
+                focusableElements[indexOfActiveElement - 1].focus();
+            }
+        } else {
+            this.fire("tg-last-item-focused", { forward: forward, event: e });
+        }
+    }, 
 
     _getFixedEditors: function () {
         return queryElements(this.egi.$.left_egi_master, FOCUSABLE_ELEMENTS_SELECTOR).filter(element => !element.disabled && element.offsetParent !== null); 
@@ -224,6 +249,10 @@ const TgEgiMasterBehaviorImpl = {
 
     _getScrollableEditors: function () {
         return queryElements(this.egi.$.centre_egi_master, FOCUSABLE_ELEMENTS_SELECTOR).filter(element => !element.disabled && element.offsetParent !== null); 
+    },
+
+    _getEgiCurrentFocusableElements: function () {
+        return queryElements(this.egi, FOCUSABLE_ELEMENTS_SELECTOR).filter(element => !element.disabled && element.offsetParent !== null);
     },
 
     _masterDom: function () {

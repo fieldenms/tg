@@ -1071,6 +1071,13 @@ const TgEntityCentreBehaviorImpl = {
      * for which tab-off wasn't actioned).
      */
     canLeave: function () {
+        //First of all check whether egi is edit mode. If it's true then don't levae this centre otherwise keep check whether
+        //insertion points can be left.
+        if (this.$.egi.isEditing()) {
+            return {
+                msg: "Please save or cancel changes."
+            };
+        }
         // Check whether all insertion points can be left.
         const insertionPoints = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point');
         for (let insPoIndex = 0; insPoIndex < insertionPoints.length; insPoIndex++) {

@@ -968,7 +968,7 @@ const TgEntityMasterBehaviorImpl = {
      */
     canLeave: function () {
         // check all the child nodes with canLeave contract if they can be left...
-        const nodesWithCanLeave = this.querySelectorAll('.canLeave');
+        const nodesWithCanLeave = queryElements(this, '.canLeave');
         if (nodesWithCanLeave.length > 0) {
             for (let index = 0; index < nodesWithCanLeave.length; index++) {
                 const reason = nodesWithCanLeave[index].canLeave();
