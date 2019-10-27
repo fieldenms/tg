@@ -31,6 +31,7 @@ public abstract class AbstractRetrieverBatchStmtGenerator {
         insertFields = Collections.unmodifiableList(getInsertFields(fields));
         insertStmt = generateInsertStmt(insertFields, emd.getTable());
         containers = produceContainers(fields);
+        System.out.println("Processing retriever " + retriever);
     }
 
     protected abstract List<PropertyMetadata> getInsertFields(final List<PropertyMetadata> fields);
