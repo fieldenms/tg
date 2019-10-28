@@ -6,9 +6,8 @@ import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 const SELECTOR_EXTENDER = ', slot, [selectable-elements-container]';
 
 export function queryElements (container, selector, lightTillParent) {
-    const selectedElements  = Array.isArray(container) ? [...container]  : 
-                            (container.shadowRoot ? [...container.shadowRoot.querySelectorAll(selector + SELECTOR_EXTENDER)] 
-                                                    : [...container.querySelectorAll(selector + SELECTOR_EXTENDER)]);
+    const selectedElements  = container.shadowRoot ? [...container.shadowRoot.querySelectorAll(selector + SELECTOR_EXTENDER)] 
+                                                    : [...container.querySelectorAll(selector + SELECTOR_EXTENDER)];
     return processSelectedElements(selectedElements.filter(element => !isInLightDom(element, lightTillParent)), selector, lightTillParent);
 };
 

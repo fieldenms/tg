@@ -105,7 +105,7 @@ const template = html`
     }
   </style>
 
-  <iron-icon id="icon" hidden\$="{{!_computeIsIconFab(icon, src)}}" src="F[][src]]" icon="[[icon]]"></iron-icon>
+  <iron-icon id="icon" hidden\$="{{!_computeIsIconFab(icon, src)}}" src="[[src]]" icon="[[icon]]"></iron-icon>
   <span hidden\$="{{_computeIsIconFab(icon, src)}}">{{label}}</span>
 `;
 template.setAttribute('strip-whitespace', '');

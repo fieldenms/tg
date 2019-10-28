@@ -673,8 +673,7 @@ const TgEntityCentreBehaviorImpl = {
                     this.actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
                 }.bind(self), 1);
             } else {
-                const msg = "Please save or cancel changes";
-                this.$.selection_criteria._openToastWithoutEntity(msg, false, msg, false);
+                this._showSaveOrCancelToast();
                 if (action) {
                     action.restoreActionState();
                 }
@@ -820,6 +819,16 @@ const TgEntityCentreBehaviorImpl = {
         this._focusView(e, false);
     },
 
+    _showSaveOrCancelToast: function () {
+        const msg = "Please save or cancel changes";
+        this.$.selection_criteria._openToastWithoutEntity(msg, false, msg, false);
+    },
+
+    _saveOrCancelPromise: function () {
+        this._showSaveOrCancelToast();
+        return Promise.reject("Egi is editing right now, please save or cancel changes to continue");
+    },
+
     _focusView: function (e, forward) {
         const focusables = this._getCurrentFocusableElements();
         const frirstIndex = forward ? 0 : focusables.length - 1;
@@ -903,8 +912,7 @@ const TgEntityCentreBehaviorImpl = {
                 self._selectedView = 0;
             }, 100);
         } else {
-            const msg = "Please save or cancel changes";
-            this.$.selection_criteria._openToastWithoutEntity(msg, false, msg, false);
+            this._showSaveOrCancelToast();
         }
     },
 
@@ -933,9 +941,7 @@ const TgEntityCentreBehaviorImpl = {
                     self.restoreActiveElement();
                 });
         }
-        const msg = "Please save or cancel changes";
-        this.$.selection_criteria._openToastWithoutEntity(msg, false, msg, false);
-        return Promise.reject("Egi is editing right now, please save or cancel changes to continue");
+        return this._saveOrCancelPromise();
     },
 
     /**
@@ -949,9 +955,7 @@ const TgEntityCentreBehaviorImpl = {
                 self.restoreActiveElement();
             });
         }
-        const msg = "Please save or cancel changes";
-        this.$.selection_criteria._openToastWithoutEntity(msg, false, msg, false);
-        return Promise.reject("Egi is editing right now, please save or cancel changes to continue");
+        return this._saveOrCancelPromise();
     },
 
     /**
@@ -965,9 +969,7 @@ const TgEntityCentreBehaviorImpl = {
                 self.restoreActiveElement();
             });
         }
-        const msg = "Please save or cancel changes";
-        this.$.selection_criteria._openToastWithoutEntity(msg, false, msg, false);
-        return Promise.reject("Egi is editing right now, please save or cancel changes to continue");
+        return this._saveOrCancelPromise();
     },
 
     /**
@@ -981,9 +983,7 @@ const TgEntityCentreBehaviorImpl = {
                 self.restoreActiveElement();
             });
         }
-        const msg = "Please save or cancel changes";
-        this.$.selection_criteria._openToastWithoutEntity(msg, false, msg, false);
-        return Promise.reject("Egi is editing right now, please save or cancel changes to continue");
+        return this._saveOrCancelPromise();
     },
 
     /**
@@ -997,9 +997,7 @@ const TgEntityCentreBehaviorImpl = {
                 self.restoreActiveElement();
             });
         }
-        const msg = "Please save or cancel changes";
-        this.$.selection_criteria._openToastWithoutEntity(msg, false, msg, false);
-        return Promise.reject("Egi is editing right now, please save or cancel changes to continue");
+        return this._saveOrCancelPromise();
     },
 
     /**
