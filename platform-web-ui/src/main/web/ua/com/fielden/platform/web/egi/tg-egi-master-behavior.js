@@ -186,19 +186,22 @@ const TgEgiMasterBehaviorImpl = {
         //Check whether active element is in hierarchy of the last fixed editor if it is then focus first editor in scrollable area.
         const fixedEditors = this._getFixedEditors();
         const scrollableEditors = this._getScrollableEditors();
-        if (fixedEditors.length > 0 && activeElement === fixedEditors[fixedEditors.length - 1] && scrollableEditors.length > 0) {
-            scrollableEditors[0].focus();
-            if (typeof scrollableEditors[0].select === 'function') {
-                scrollableEditors[0].select();
-            }
+        const indexOfFixedEditor = fixedEditors.indexOf(activeElement);
+        const indexOfScrollableEditor = scrollableEditors.indexOf(activeElement);
+        if (indexOfFixedEditor >= 0 && indexOfFixedEditor === fixedEditors.length - 1 && scrollableEditors.length > 0) {
+                scrollableEditors[0].focus();
+                if (typeof scrollableEditors[0].select === 'function') {
+                    scrollableEditors[0].select();
+                }
+                tearDownEvent(event);
+        } else if ((indexOfScrollableEditor >= 0 && indexOfScrollableEditor === scrollableEditors.length - 1) 
+                    || (indexOfFixedEditor >= 0 && indexOfFixedEditor === fixedEditors.length - 1 && scrollableEditors.length === 0)) {
             tearDownEvent(event);
-        //If the last editor in scrollable area is focused then make next row editable   
-        } else if (scrollableEditors.length === 0 || (scrollableEditors.length > 0 && activeElement === scrollableEditors[scrollableEditors.length - 1])) {
-            tearDownEvent(event);
+            this._saveAndEditNextRow();
             if (this.egi.filteredEntities.length <= this.editableRow + 1) {
                 this._focusNextEgiElementTo(event, true, activeElement);
             }
-            this._saveAndEditNextRow();
+
         }
     },
 
@@ -207,20 +210,22 @@ const TgEgiMasterBehaviorImpl = {
         //Check whether active element is in hierarchy of the first scrollable editor if it is then focus last editor in fixed area.
         const fixedEditors = this._getFixedEditors();
         const scrollableEditors = this._getScrollableEditors();
-        if (scrollableEditors.length > 0 && activeElement === scrollableEditors[0] && fixedEditors.length > 0) {
+        const indexOfFixedEditor = fixedEditors.indexOf(activeElement);
+        const indexOfScrollableEditor = scrollableEditors.indexOf(activeElement);
+        if (indexOfScrollableEditor === 0 && fixedEditors.length > 0) {
             fixedEditors[fixedEditors.length - 1].focus();
             if (typeof fixedEditors[fixedEditors.length - 1].select === 'function') {
                 fixedEditors[fixedEditors.length - 1].select();
             }
             tearDownEvent(event);
         //If the first editor in fixed area is focused then make previous row editable   
-        } else if ( fixedEditors.length === 0 || (fixedEditors.length > 0 && activeElement === fixedEditors[0])) {
+        } else if ((indexOfScrollableEditor === 0 && fixedEditors.length === 0) || indexOfFixedEditor === 0) {
             tearDownEvent(event);
+            this._focusLastOnRetrieve = true;
+            this._saveAndEditPreviousRow();
             if (this.editableRow - 1 < 0) {
                 this._focusNextEgiElementTo(event, false, activeElement);
             }
-            this._focusLastOnRetrieve = true;
-            this._saveAndEditPreviousRow();
         }
     },
 
