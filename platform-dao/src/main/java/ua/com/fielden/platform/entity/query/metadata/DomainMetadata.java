@@ -233,18 +233,15 @@ public class DomainMetadata {
         return ddl;
     }
 
-    public <ET extends AbstractEntity<?>> PersistedEntityMetadata<ET> generatePersistedEntityMetadata(final EntityTypeInfo <ET> parentInfo)
-            throws Exception {
-        return new PersistedEntityMetadata(parentInfo.tableName, parentInfo.entityType, generatePropertyMetadatasForEntity(parentInfo));
+    public <ET extends AbstractEntity<?>> PersistedEntityMetadata<ET> generatePersistedEntityMetadata(final EntityTypeInfo <ET> parentInfo) throws Exception {
+        return new PersistedEntityMetadata<ET>(parentInfo.tableName, parentInfo.entityType, generatePropertyMetadatasForEntity(parentInfo));
     }
 
-    public <ET extends AbstractEntity<?>> ModelledEntityMetadata<ET> generateModelledEntityMetadata(final EntityTypeInfo <ET> parentInfo)
-            throws Exception {
-        return new ModelledEntityMetadata(parentInfo.entityModels, parentInfo.entityType, generatePropertyMetadatasForEntity(parentInfo));
+    public <ET extends AbstractEntity<?>> ModelledEntityMetadata<ET> generateModelledEntityMetadata(final EntityTypeInfo <ET> parentInfo) throws Exception {
+        return new ModelledEntityMetadata<ET>(parentInfo.entityModels, parentInfo.entityType, generatePropertyMetadatasForEntity(parentInfo));
     }
 
-    public <ET extends AbstractEntity<?>> ModelledEntityMetadata<ET> generateUnionedEntityMetadata(final EntityTypeInfo <ET> parentInfo)
-            throws Exception {
+    public <ET extends AbstractEntity<?>> ModelledEntityMetadata<ET> generateUnionedEntityMetadata(final EntityTypeInfo<ET> parentInfo) throws Exception {
         final SortedMap<String, PropertyMetadata> propsMetadata = generatePropertyMetadatasForEntity(parentInfo);
         
         final Class<? extends AbstractUnionEntity> entityType = (Class<? extends AbstractUnionEntity>) parentInfo.entityType;
@@ -254,13 +251,13 @@ public class DomainMetadata {
         final Class<?> unionEntityPropType = unionProps.get(0).getType();
         for (final String propName : commonProps) {
             if (unionPropsNames.contains(propName)) {
-                throw new EqlException(format("Common prop [%s] collides with union prop [%s].", propName, propName));
+                throw new EqlException(format("The name of common prop [%s] conflicts with union prop [%s] in union entity [%s].", propName, propName, entityType.getSimpleName()));
             }
             final Class<?> javaType = determinePropertyType(unionEntityPropType, propName);
             safeMapAdd(propsMetadata, new PropertyMetadata.Builder(propName, javaType, false, parentInfo).expression(generateUnionEntityPropertyExpression(entityType, propName)).category(EXPRESSION).build());
         }
 
-        return new ModelledEntityMetadata(parentInfo.unionEntityModels, parentInfo.entityType, propsMetadata);
+        return new ModelledEntityMetadata<ET>(parentInfo.unionEntityModels, parentInfo.entityType, propsMetadata);
     }
 
     public <ET extends AbstractEntity<?>> PureEntityMetadata<ET> generatePureEntityMetadata(final EntityTypeInfo <ET> parentInfo) {
@@ -347,8 +344,7 @@ public class DomainMetadata {
      * @return
      * @throws Exception
      */
-    private SortedMap<String, PropertyMetadata> generatePropertyMetadatasForEntity(final EntityTypeInfo <? extends AbstractEntity<?>> parentInfo)
-            throws Exception {
+    private SortedMap<String, PropertyMetadata> generatePropertyMetadatasForEntity(final EntityTypeInfo <? extends AbstractEntity<?>> parentInfo) throws Exception {
         final SortedMap<String, PropertyMetadata> result = new TreeMap<>();
 
         safeMapAdd(result, generateIdPropertyMetadata(parentInfo));
