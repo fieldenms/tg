@@ -48,18 +48,18 @@ public class LifecycleDomainTreeManagerTest extends AbstractAnalysisDomainTreeMa
     }
 
     public static Object createDtm_for_LifecycleDomainTreeManagerTest() {
-        return new LifecycleDomainTreeManager(serialiser(), createRootTypes_for_LifecycleDomainTreeManagerTest());
+        return new LifecycleDomainTreeManager(factory(), createRootTypes_for_LifecycleDomainTreeManagerTest());
     }
 
     public static Object createIrrelevantDtm_for_LifecycleDomainTreeManagerTest() {
-        final CentreDomainTreeManagerAndEnhancer dtm = new CentreDomainTreeManagerAndEnhancer(serialiser(), createRootTypes_for_LifecycleDomainTreeManagerTest());
+        final CentreDomainTreeManagerAndEnhancer dtm = new CentreDomainTreeManagerAndEnhancer(factory(), createRootTypes_for_LifecycleDomainTreeManagerTest());
         dtm.provideLifecycleAnalysesDatePeriodProperties(createRootTypes_for_LifecycleDomainTreeManagerTest());
         enhanceManagerWithBasicCalculatedProperties(dtm);
         return dtm;
     }
 
     protected static Set<Class<?>> createRootTypes_for_LifecycleDomainTreeManagerTest() {
-        final Set<Class<?>> rootTypes = new HashSet<Class<?>>(createRootTypes_for_AbstractAnalysisDomainTreeManagerTest());
+        final Set<Class<?>> rootTypes = new HashSet<>(createRootTypes_for_AbstractAnalysisDomainTreeManagerTest());
         rootTypes.remove(EvenSlaverEntity.class); // this entity has been excluded manually in parent tests
         return rootTypes;
     }
@@ -188,7 +188,7 @@ public class LifecycleDomainTreeManagerTest extends AbstractAnalysisDomainTreeMa
 
     private List<String> lastN(final ILifecycleDomainTreeManager dtm, final int n) {
         final List<String> all = dtm.getRepresentation().includedProperties(MasterEntity.class);
-        final List<String> some = new ArrayList<String>(all.subList(all.size() - n, all.size()));
+        final List<String> some = new ArrayList<>(all.subList(all.size() - n, all.size()));
         System.out.println("sublist == " + some);
         return some;
     }
@@ -198,7 +198,7 @@ public class LifecycleDomainTreeManagerTest extends AbstractAnalysisDomainTreeMa
     /////////////////////////////////////////////////////////////////////////////////
     @Test
     public void test_that_changing_lifecycle_property_leads_to_tree_expanding_by_category_markers_for_second_tick() throws InstantiationException, IllegalAccessException {
-        final CentreDomainTreeManagerAndEnhancer centre = new CentreDomainTreeManagerAndEnhancer(serialiser(), createRootTypes_for_LifecycleDomainTreeManagerTest());
+        final CentreDomainTreeManagerAndEnhancer centre = new CentreDomainTreeManagerAndEnhancer(factory(), createRootTypes_for_LifecycleDomainTreeManagerTest());
         // enhanceManagerWithBasicCalculatedProperties(centre);
         centre.initAnalysisManagerByDefault("Lifecycle report", AnalysisType.LIFECYCLE);
         final ILifecycleDomainTreeManager dtm = (ILifecycleDomainTreeManager) centre.getAnalysisManager("Lifecycle report");

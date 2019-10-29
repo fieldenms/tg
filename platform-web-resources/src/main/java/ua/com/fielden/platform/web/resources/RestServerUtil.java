@@ -327,7 +327,7 @@ public class RestServerUtil {
     }
 
     /**
-     * Composes KRYO representation of an entity.
+     * Composes serialised representation of the <code>entity</code>.
      *
      * @return
      */
