@@ -46,7 +46,7 @@ public class GraphQLQueryResource extends ServerResource {
      */
     @Post
     public Representation query(final Representation envelope) {
-        final Map<String, Object> input = (Map<String, Object>) restUtil.restoreJSONMap(envelope);
+        final Map<String, Object> input = (Map<String, Object>) restUtil.restoreJsonMap(envelope);
         logger.error("envelope = " + input);
         
         final Object operationNameObj = input.get("operationName");

@@ -9,16 +9,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
 import ua.com.fielden.platform.continuation.NeedMoreData;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.Required;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarnings;
 import ua.com.fielden.platform.error.Result;
@@ -28,6 +29,7 @@ import ua.com.fielden.platform.web.utils.EntityRestorationUtils;
 
 public class EntityResourceContinuationsHelper {
     public static final String ERR_NO_CHANGES_TO_SAVE = "There are no changes to save.";
+    private static final Logger logger = Logger.getLogger(EntityResourceContinuationsHelper.class);
     
     /**
      * Saves the <code>entity</code> with its <code>continuations</code>.
@@ -229,7 +231,7 @@ public class EntityResourceContinuationsHelper {
         if (AbstractFunctionalEntityForCompoundMenuItem.class.isAssignableFrom(entityType)) {
             return new DefaultEntityProducerForCompoundMenuItem(factory, entityType, coFinder);
         }
-        return new DefaultEntityProducerWithContext<T>(factory, entityType, coFinder);
+        return new DefaultEntityProducerWithContext<>(factory, entityType, coFinder);
     }
     
 }

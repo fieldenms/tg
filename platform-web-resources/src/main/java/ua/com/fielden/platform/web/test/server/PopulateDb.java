@@ -360,7 +360,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
             throw new IllegalStateException(ex);
         }
         
-        logger.info("\tPopulating GraphQL data...");
+        LOGGER.info("\tPopulating GraphQL data...");
         populateGraphQlData();
 
         try {
