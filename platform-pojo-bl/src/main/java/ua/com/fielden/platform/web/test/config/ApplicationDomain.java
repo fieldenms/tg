@@ -69,6 +69,7 @@ import ua.com.fielden.platform.sample.domain.TgStop;
 import ua.com.fielden.platform.sample.domain.TgStopMap;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
+import ua.com.fielden.platform.sample.domain.TgVehicleFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgWagon;
@@ -156,6 +157,7 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgVehicleFinDetails.class);
         add(TgVehicleModel.class);
         add(TgVehicleMake.class);
+        add(TgVehicleFuelUsage.class);
         add(TgOrgUnit1.class);
         add(TgOrgUnit2.class);
         add(TgOrgUnit3.class);
