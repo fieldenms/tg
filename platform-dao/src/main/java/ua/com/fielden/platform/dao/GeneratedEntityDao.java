@@ -2,6 +2,7 @@ package ua.com.fielden.platform.dao;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import com.google.inject.Inject;
@@ -36,9 +37,9 @@ public class GeneratedEntityDao<T extends AbstractEntity<?>> implements IGenerat
     }
 
     @Override
-    public Integer progress() {
+    public Optional<Integer> progress() {
         // TODO Auto-generated method stub
-        return null;
+        return Optional.empty();
     }
 
     @Override

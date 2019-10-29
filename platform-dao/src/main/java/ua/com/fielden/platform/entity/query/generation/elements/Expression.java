@@ -2,34 +2,26 @@ package ua.com.fielden.platform.entity.query.generation.elements;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Expression implements ISingleOperand {
 
     private final ISingleOperand first;
     private final List<CompoundSingleOperand> items;
 
-    @Override
-    public String sql() {
-        final StringBuffer sb = new StringBuffer();
-        sb.append(items.size() > 0 ? "(" : "");
-        sb.append(first.sql());
-        for (final CompoundSingleOperand compoundOperand : items) {
-            sb.append(compoundOperand.sql());
-        }
-        sb.append(items.size() > 0 ? ")" : "");
-
-        return sb.toString();
-    }
-
     public Expression(final ISingleOperand first, final List<CompoundSingleOperand> items) {
-        super();
         this.first = first;
         this.items = items;
     }
 
     @Override
+    public String sql() {
+        return items.isEmpty() ? first.sql() : "(" + first.sql() + items.stream().map(co -> co.sql()).collect(Collectors.joining()) +")";
+    }
+
+    @Override
     public List<EntProp> getLocalProps() {
-        final List<EntProp> result = new ArrayList<EntProp>();
+        final List<EntProp> result = new ArrayList<>();
         result.addAll(first.getLocalProps());
         for (final CompoundSingleOperand compSingleOperand : items) {
             result.addAll(compSingleOperand.getOperand().getLocalProps());
@@ -44,7 +36,7 @@ public class Expression implements ISingleOperand {
 
     @Override
     public List<EntQuery> getLocalSubQueries() {
-        final List<EntQuery> result = new ArrayList<EntQuery>();
+        final List<EntQuery> result = new ArrayList<>();
         result.addAll(first.getLocalSubQueries());
         for (final CompoundSingleOperand compSingleOperand : items) {
             result.addAll(compSingleOperand.getOperand().getLocalSubQueries());
@@ -54,7 +46,7 @@ public class Expression implements ISingleOperand {
 
     @Override
     public List<EntValue> getAllValues() {
-        final List<EntValue> result = new ArrayList<EntValue>();
+        final List<EntValue> result = new ArrayList<>();
         result.addAll(first.getAllValues());
         for (final CompoundSingleOperand compSingleOperand : items) {
             result.addAll(compSingleOperand.getOperand().getAllValues());
@@ -63,8 +55,8 @@ public class Expression implements ISingleOperand {
     }
 
     @Override
-    public Class type() {
-        return null;
+    public Class<?> type() {
+        return items.isEmpty() ? first.type() : null;
     }
 
     @Override

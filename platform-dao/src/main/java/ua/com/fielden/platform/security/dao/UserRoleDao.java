@@ -21,8 +21,8 @@ import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.security.Authorise;
-import ua.com.fielden.platform.security.tokens.user.UserRoleDeleteToken;
-import ua.com.fielden.platform.security.tokens.user.UserRoleSaveToken;
+import ua.com.fielden.platform.security.tokens.user.UserRole_CanDelete_Token;
+import ua.com.fielden.platform.security.tokens.user.UserRole_CanSave_Token;
 import ua.com.fielden.platform.security.user.UserRole;
 
 /**
@@ -60,14 +60,14 @@ public class UserRoleDao extends CommonEntityDao<UserRole> implements IUserRole 
     
     @Override
     @SessionRequired
-    @Authorise(UserRoleSaveToken.class)
+    @Authorise(UserRole_CanSave_Token.class)
     public UserRole save(final UserRole entity) {
         return super.save(entity);
     }
     
     @Override
     @SessionRequired
-    @Authorise(UserRoleDeleteToken.class)
+    @Authorise(UserRole_CanDelete_Token.class)
     public int batchDelete(Collection<Long> entitiesIds) {
         return defaultBatchDelete(entitiesIds);
     }

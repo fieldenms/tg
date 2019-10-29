@@ -1,6 +1,15 @@
 package ua.com.fielden.platform.menu;
 
-public interface IMenuRetriever {
+import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 
-    Menu getMenuEntity();
+public interface IMenuRetriever {
+    
+    /**
+     * Returns a {@link Menu} entity for concrete {@link DeviceProfile}.
+     * 
+     * @param deviceProfile
+     * @return
+     */
+    Menu getMenuEntity(final DeviceProfile deviceProfile);
+    
 }

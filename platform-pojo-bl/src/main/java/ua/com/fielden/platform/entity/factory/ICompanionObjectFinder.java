@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity.factory;
 
+import java.util.Optional;
+
 import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
@@ -27,9 +29,20 @@ public interface ICompanionObjectFinder {
     <T extends IEntityDao<E>, E extends AbstractEntity<?>> T find(final Class<E> type, final boolean uninstrumented);
     
     /**
+     * This is an optional alternative for {@link ICompanionObjectFinder#find(Class, boolean)}. 
+     *
+     * @param type
+     * @param uninstrumented
+     * @return
+     */
+    default <T extends IEntityDao<E>, E extends AbstractEntity<?>> Optional<T> findOptionally(final Class<E> type, final boolean uninstrumented) {
+        return Optional.ofNullable(find(type, uninstrumented));
+    }
+    
+    /**
      * Returns a new instance of a fully fledged companion object as defined for the provided entity type.
      * <p>
-     * Should not, buy may return <code>null</code>.
+     * Should not, but may return <code>null</code>.
      * 
      * @param type An entity type whose companion object is requested.
      * @return

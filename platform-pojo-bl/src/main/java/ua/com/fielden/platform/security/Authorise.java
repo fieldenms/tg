@@ -10,7 +10,7 @@ import java.lang.annotation.Target;
  * <p>
  * During instantiation, methods annotated with this annotation are provided with a method interceptor, which would validate a call permission.
  * 
- * @author 01es
+ * @author TG Team
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.METHOD })

@@ -5,10 +5,11 @@ import java.util.List;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
-import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.IPropertyStateListener;
 import ua.com.fielden.platform.domaintree.ILocatorManager;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
+import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
 import ua.com.fielden.snappy.MnemonicEnum;
 
@@ -48,38 +49,6 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
         public enum AnalysisType {
             SIMPLE, PIVOT, LIFECYCLE, SENTINEL, MULTIPLEDEC
         }
-
-        /**
-         * A post-successful listener for analysis adding / removal.
-         *
-         * @author TG Team
-         *
-         */
-        public interface IAnalysisListener extends IPropertyStateListener<Boolean> {
-            /**
-             * @param hasBeenInitialised
-             *            -- <code>true</code> to indicate that analysis with <i>name</i> was successfully initialised, <code>false</code> to indicate that it has been ceased to
-             *            exist successfully.
-             */
-            @Override
-            void propertyStateChanged(final Class<?> nothing, final String name, final Boolean hasBeenInitialised, final Boolean oldState);
-        }
-
-        /**
-         * Adds a {@link IAnalysisListener} listener.
-         *
-         * @param listener
-         * @return
-         */
-        boolean addAnalysisListener(final IAnalysisListener listener);
-
-        /**
-         * Removes a {@link IAnalysisListener} listener.
-         *
-         * @param listener
-         * @return
-         */
-        boolean removeAnalysisListener(final IAnalysisListener listener);
 
         /**
          * Initialises a brand new <b>analysis manager</b> with specified <code>name</code> and <code>analysisType</code>. The initialisation uses raw instance creation. <br>
@@ -319,7 +288,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          *
          */
         public enum MetaValueType {
-            VALUE, VALUE2, EXCLUSIVE, EXCLUSIVE2, OR_NULL, NOT, DATE_PREFIX, DATE_MNEMONIC, AND_BEFORE, ALL_ORDERING, WIDTH, GROW_FACTOR
+            VALUE, VALUE2, EXCLUSIVE, EXCLUSIVE2, OR_NULL, NOT, OR_GROUP, DATE_PREFIX, DATE_MNEMONIC, AND_BEFORE, ALL_ORDERING, WIDTH, GROW_FACTOR
         }
 
         /**
@@ -403,67 +372,6 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * @return -- a criteria tick manager
          */
         IAddToCriteriaTickManager setValue(final Class<?> root, final String property, final Object value);
-
-        /**
-         * A post-successful listener for property Value changes.
-         *
-         * @author TG Team
-         *
-         */
-        public interface IPropertyValueListener extends IPropertyStateListener<Object> {
-            /**
-             * @param newValue
-             *            -- a new Value of the property that was successfully changed.
-             */
-            @Override
-            void propertyStateChanged(final Class<?> root, final String property, final Object newValue, final Object oldState);
-        }
-
-        /**
-         * Adds a {@link IPropertyValueListener} listener for main "Value".
-         *
-         * @param listener
-         * @return
-         */
-        void addPropertyValueListener(final IPropertyValueListener listener);
-
-        /**
-         * Adds a weak {@link IPropertyValueListener} listener for main "Value"
-         *
-         * @param listener
-         */
-        void addWeakPropertyValueListener(final IPropertyValueListener listener);
-
-        /**
-         * Removes a {@link IPropertyValueListener} listener for main "value".
-         *
-         * @param listener
-         * @return
-         */
-        void removePropertyValueListener(final IPropertyValueListener listener);
-
-        /**
-         * Adds a {@link IPropertyValueListener} listener for secondary "Value".
-         *
-         * @param listener
-         * @return
-         */
-        void addPropertyValue2Listener(final IPropertyValueListener listener);
-
-        /**
-         * Adds a weak {@link IPropertyValueListener} listener for secondary "Value"
-         *
-         * @param listener
-         */
-        void addWeakPropertyValue2Listener(final IPropertyValueListener listener);
-
-        /**
-         * Removes a {@link IPropertyValueListener} listener for secondary "value".
-         *
-         * @param listener
-         * @return
-         */
-        void removePropertyValue2Listener(final IPropertyValueListener listener);
 
         /**
          * Returns value that indicates whether <i>secondary</i> value of a criteria property is empty or not. <br>
@@ -732,6 +640,29 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          */
         IAddToCriteriaTickManager setNot(final Class<?> root, final String property, final Boolean not);
 
+        /**
+         * Gets an "or group" number of a criteria property.
+         * <p>
+         * Throws {@link DomainTreeException} when the property is not checked (see {@link #isChecked(Class, String)} method).
+         *
+         * @param root -- a root type that contains property.
+         * @param property -- a dot-notation expression that defines a property.
+         * @return
+         */
+        Integer getOrGroup(final Class<?> root, final String property);
+
+        /**
+         * Sets an "or group" number of a criteria property.
+         * <p>
+         * Throws {@link DomainTreeException} when the property is not checked (see {@link #isChecked(Class, String)} method).
+         *
+         * @param root -- a root type that contains property.
+         * @param property -- a dot-notation expression that defines a property.
+         * @param orGroup
+         * @return -- a criteria tick manager
+         */
+        IAddToCriteriaTickManager setOrGroup(final Class<?> root, final String property, final Integer orGroup);
+
         // Boolean getAll(final Class<?> root, final String property);
         // ICriteriaTickManager setAll(final Class<?> root, final String property, final Boolean all);
 
@@ -860,5 +791,19 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * @return -- a result tick representation
          */
         IAddToResultTickManager setGrowFactor(final Class<?> root, final String property, final int growFactor);
+        
+        /**
+         * Returns column widths and grow factors to facilitate exact copy through {@link #setWidthsAndGrowFactors(T2)} method.
+         * 
+         * @return
+         */
+        T2<EnhancementPropertiesMap<Integer>, EnhancementPropertiesMap<Integer>> getWidthsAndGrowFactors();
+        
+        /**
+         * Sets column widths and grow factors to facilitate full overriding of that information; need to get information using {@link #getWidthsAndGrowFactors()} method.
+         * 
+         * @param widthsAndGrowFactors
+         */
+        void setWidthsAndGrowFactors(final T2<EnhancementPropertiesMap<Integer>, EnhancementPropertiesMap<Integer>> widthsAndGrowFactors);
     }
 }

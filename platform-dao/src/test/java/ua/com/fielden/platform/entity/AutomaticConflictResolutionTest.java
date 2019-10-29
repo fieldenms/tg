@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.entity;
 
+import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.companion.PersistentEntitySaver.ERR_COULD_NOT_RESOLVE_CONFLICTING_CHANGES;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 
 import org.junit.Test;
@@ -47,18 +49,19 @@ public class AutomaticConflictResolutionTest extends AbstractDaoTestCase {
             save(cat1_v2.setDesc("other desc"));
             fail("Saving should have failed");
         } catch (final EntityCompanionException ex) {
-            assertEquals("Could not resolve conflicting changes. Tg Category [Cat1] could not be saved.", ex.getMessage());
+            assertEquals(format("%s Tg Category [Cat1] could not be saved.", ERR_COULD_NOT_RESOLVE_CONFLICTING_CHANGES), ex.getMessage());
         }
 
     }
 
     @Test
     public void concurrent_setting_of_activatable_property_should_not_lead_to_conflict_resolution_errors() {
-        final TgCategory cat1 = co$(TgCategory.class).findByKey("Cat1");
+        final TgCategory cat1 = co(TgCategory.class).findByKey("Cat1");
+        assertEquals(Integer.valueOf(1), cat1.getRefCount());
 
         save(new_(TgSystem.class, "Sys2").setActive(true).setCategory(cat1));
         save(new_(TgSystem.class, "Sys3").setActive(true).setCategory(cat1));
-        assertEquals(Integer.valueOf(3), co$(TgCategory.class).findByKey("Cat1").getRefCount());
+        assertEquals(Integer.valueOf(3), co(TgCategory.class).findByKey("Cat1").getRefCount());
     }
 
 

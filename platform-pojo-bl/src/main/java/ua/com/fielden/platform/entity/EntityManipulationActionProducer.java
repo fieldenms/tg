@@ -41,9 +41,7 @@ public class EntityManipulationActionProducer<T extends AbstractEntityManipulati
             if (entityType == null) {
                 throw new IllegalStateException("Please add selection criteria or current entity to the context of the functional entity with type: " + entity.getType().getName());
             } else {
-                entity.setEntityType(entityType.getName());
-                entity.setImportUri("/master_ui/" + entityType.getName());
-                entity.setElementName("tg-" + entityType.getSimpleName() + "-master");
+                entity.setEntityTypeForEntityMaster(entityType);
             }
         }
         return entity;

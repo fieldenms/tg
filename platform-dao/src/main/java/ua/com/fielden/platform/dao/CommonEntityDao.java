@@ -1,10 +1,9 @@
 package ua.com.fielden.platform.dao;
 
 import static java.lang.String.format;
-import static java.util.stream.Collectors.toList;
+import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrDeclared;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -12,11 +11,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.hibernate.Session;
+import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -24,6 +23,7 @@ import com.google.inject.Injector;
 import ua.com.fielden.platform.companion.AbstractEntityReader;
 import ua.com.fielden.platform.companion.DeleteOperations;
 import ua.com.fielden.platform.companion.ICanReadUninstrumented;
+import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.companion.PersistentEntitySaver;
 import ua.com.fielden.platform.dao.annotations.AfterSave;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
@@ -37,10 +37,13 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.EntityBatchDeleteByIdsOperation;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.query.QueryExecutionContext;
+import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
+import ua.com.fielden.platform.entity.query.metadata.PersistedEntityMetadata;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.file_reports.WorkbookExporter;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -79,7 +82,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     private ICompanionObjectFinder coFinder;
     @Inject
     private Injector injector;
-
+    
     private final IFilter filter;
     private final DeleteOperations<T> deleteOps;
 
@@ -93,7 +96,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     
     /** A guard against an accidental use of quick save to prevent its use for companions with overridden method <code>save</code>.
      *  Refer issue <a href='https://github.com/fieldenms/tg/issues/421'>#421</a> for more details. */
-    private final boolean hasSaveOverridden;
+    private Boolean hasSaveOverridden;
 
     private boolean $instrumented$ = true;
 
@@ -119,29 +122,29 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         this.keyType = AnnotationReflector.getKeyType(entityType);
         
         this.filter = filter;
-        this.hasSaveOverridden = isSaveOverridden();
         this.deleteOps = new DeleteOperations<>(
                 this,
-                () -> getSession(),
+                this::getSession,
                 entityType,
-                () -> newQueryExecutionContext(),
+                this::newQueryExecutionContext,
                 () -> new EntityBatchDeleteByIdsOperation<T>(getSession(), (PersistedEntityMetadata<T>) getDomainMetadata().getPersistedEntityMetadataMap().get(entityType)));
         
         entitySaver = new PersistentEntitySaver<>(
-                () -> getSession(),
-                () -> getTransactionGuid(),
+                this::getSession,
+                this::getTransactionGuid,
+                this::getDbVersion,
                 entityType,
                 keyType,
-                () -> getUser(),
+                this::getUser,
                 () -> getUniversalConstants().now(),
                 () -> skipRefetching,
-                () -> isFilterable(),
-                () -> getCoFinder(),
-                () -> newQueryExecutionContext(),
-                (ent, dProps) -> processAfterSaveEvent(ent, dProps),
-                (p) -> assignBeforeSave(p),
-                (id, fetch) -> findById(id, fetch),
-                (qm) -> count(qm),
+                this::isFilterable,
+                this::getCoFinder,
+                this::newQueryExecutionContext,
+                this::processAfterSaveEvent,
+                this::assignBeforeSave,
+                this::findById,
+                this::exists,
                 logger);
                 
     }
@@ -168,20 +171,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return false;
     }
     
-    private boolean isSaveOverridden() {
-        // let's check if method save was overridden
-        try {
-            final Method methodSave = getClass().getMethod("save", getEntityType());
-            if (methodSave != null && methodSave.getDeclaringClass() != CommonEntityDao.class) {
-                return true;
-            }
-        } catch (NoSuchMethodException | SecurityException e) {
-            logger.debug(e);
-        }
-        
-        return false;
-    }
-
     /**
      * A separate setter is used in order to avoid enforcement of providing mapping generator as one of constructor parameter in descendant classes.
      *
@@ -192,6 +181,10 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         this.domainMetadata = domainMetadata;
     }
 
+    @Override
+    public DbVersion getDbVersion() {
+        return domainMetadata.getDbVersion();
+    }
 
     @Inject
     protected void setIdOnlyProxiedEntityTypeCache(final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
@@ -218,8 +211,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * By default all DAO computations are considered indefinite. Thus returning <code>null</code> as the result.
      */
     @Override
-    public Integer progress() {
-        return null;
+    public Optional<Integer> progress() {
+        return Optional.empty();
     }
 
     @Override
@@ -230,22 +223,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     @Override
     @SessionRequired
-    @Deprecated
     public List<T> getAllEntities(final QueryExecutionModel<T, ?> query) {
-        final QueryExecutionModel<T, ?> qem = !instrumented() ? query.lightweight() : query;
-        try (final Stream<T> stream = stream(qem)) {
-            return stream.collect(toList());
-        }
-    }
-
-    @Override
-    @SessionRequired
-    @Deprecated
-    public List<T> getFirstEntities(final QueryExecutionModel<T, ?> query, final int numberOfEntities) {
-        final QueryExecutionModel<T, ?> qem = !instrumented() ? query.lightweight() : query;
-        try (final Stream<T> stream = stream(qem, numberOfEntities)) {
-            return stream.limit(numberOfEntities).collect(toList());
-        }
+        return getEntitiesOnPage(query, null, null);
     }
 
     /**
@@ -254,6 +233,9 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Override
     @SessionRequired
     public final long quickSave(final T entity) {
+        if (hasSaveOverridden == null) {
+            hasSaveOverridden = isMethodOverriddenOrDeclared(CommonEntityDao.class, getClass(), "save", getEntityType());
+        }
         if (hasSaveOverridden) {
             throw new EntityCompanionException(
                     format("Quick save is not supported for entity [%s] due to an overridden method save (refer companion [%s]).", 
@@ -353,6 +335,14 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return universalConstants;
     }
     
+    /**
+     * Just a convenience method for obtaining the current date/time as a single call {@code now()} instead of chaining {@code getUniversalConstants().now()}.
+     * @return
+     */
+    public DateTime now() {
+        return getUniversalConstants().now();
+    }
+
     private final Map<Class<? extends AbstractEntity<?>>, IEntityDao<?>> co$Cache = new HashMap<>();
     private final Map<Class<? extends AbstractEntity<?>>, IEntityDao<?>> coCache = new HashMap<>();    
     
@@ -364,7 +354,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     @SuppressWarnings("unchecked")
     public <C extends IEntityDao<E>, E extends AbstractEntity<?>> C co$(final Class<E> type) {
-        if (getEntityType().equals(type)) {
+        if (instrumented() && getEntityType().equals(type)) {
             return (C) this;
         }
         
@@ -383,7 +373,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * @return
      */
     @SuppressWarnings("unchecked")
-    public <C extends IEntityDao<E>, E extends AbstractEntity<?>> C co(final Class<E> type) {
+    public <C extends IEntityReader<E>, E extends AbstractEntity<?>> C co(final Class<E> type) {
         if (!instrumented() && getEntityType().equals(type)) {
             return (C) this;
         }
@@ -607,6 +597,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return keyType;
     }
 
+    @Override
     public final IFetchProvider<T> getFetchProvider() {
         if (fetchProvider == null) {
             fetchProvider = createFetchProvider();

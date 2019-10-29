@@ -11,7 +11,6 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 @KeyTitle(value = "Key title", desc = "Key desc")
 @KeyType(String.class)
 public class EntityWithDateTimeProp extends AbstractEntity<String> {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty
     private DateTime dateTimeProp;

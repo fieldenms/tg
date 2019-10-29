@@ -6,14 +6,10 @@
 	<title>entity-master layout binding tests</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 	
-	<script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
-	<script src="/resources/polymer/web-component-tester/browser.js"></script>
-	<script src="/resources/polymer/test-fixture/test-fixture-mocha.js"></script>
-	<script src="/resources/polymer/iron-test-helpers/mock-interactions.js"></script>
-	
-	<link rel="import" href="/resources/polymer/test-fixture/test-fixture.html">
-  
-    <link rel="import" href="/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties"> <!-- Test_TgPersistentEntityWithProperties -->
+	<script src="/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
+    <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
+    <script src="/resources/filesaver/FileSaver.min.js"></script>
+    <script src="/resources/polymer/wct-browser-legacy/browser.js"></script>
 </head>
 
 <body>
@@ -28,7 +24,10 @@
     	</template>
 	</test-fixture>
 
-	<script>
+	<script type="module">
+
+		import '/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties';
+
 		suite('layout html string binding', function() {
 		    let master;
 		
@@ -40,7 +39,7 @@
 		        const edProperty = master.$.editor_4_stringProp;
                 
 	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
-                    const bindedLabel = master.querySelector("#stringProp_bind");
+                    const bindedLabel = master.$.masterDom.children[0].shadowRoot.querySelector("#stringProp_bind");
 	                assert.strictEqual(validatedEntity.get("stringProp"), "BINDING WORKS", "Property value should be: 'BINDING WORKS'");
                     assert.strictEqual(bindedLabel.innerHTML, "BINDING WORKS", "Value binded to label should be: 'BINDING WORKS'");
 	                done();
@@ -58,7 +57,7 @@
 		        const edProperty = master.$.editor_4_status;
                 
 	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
-                    const bindedLabel = master.querySelector("#status_Desc_bind");
+                    const bindedLabel = master.$.masterDom.children[0].shadowRoot.querySelector("#status_Desc_bind");
 	                assert.strictEqual(validatedEntity.get("status.desc"), "Defect Smash Repair", "Property value should be: 'Defect Smash Repair'");
                     assert.strictEqual(bindedLabel.innerHTML, "Defect Smash Repair", "Value binded to label should be: 'Defect Smash Repair'");
 	                done();

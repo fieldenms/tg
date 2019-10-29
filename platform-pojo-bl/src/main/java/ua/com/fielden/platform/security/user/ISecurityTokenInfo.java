@@ -5,7 +5,7 @@ import ua.com.fielden.platform.dao.IEntityDao;
 /** 
  * Companion object for entity {@link SecurityTokenInfo}.
  * 
- * @author Developers
+ * @author TG Team
  *
  */
 public interface ISecurityTokenInfo extends IEntityDao<SecurityTokenInfo> {

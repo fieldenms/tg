@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.security;
 
+import static java.lang.ThreadLocal.withInitial;
+
 import java.lang.reflect.Method;
 
 import org.aopalliance.intercept.MethodInterceptor;
@@ -25,12 +27,7 @@ public class AuthorisationInterceptor implements MethodInterceptor {
     private ThreadLocal<IAuthorisationModel> authModel;
 
     public void setInjector(final Injector injector) {
-        authModel = new ThreadLocal<IAuthorisationModel>() {
-            @Override
-            public IAuthorisationModel initialValue() {
-                return injector.getInstance(IAuthorisationModel.class);
-            }
-        };
+        authModel = withInitial(() -> injector.getInstance(IAuthorisationModel.class));
     }
 
     public IAuthorisationModel getModel() {

@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.nextTypeName;
+
 import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -37,12 +39,9 @@ public class AdvancedModifyPropertyAdapter extends ClassVisitor implements Opcod
     private String owner;
     private String enhancedName;
 
-    private final DynamicTypeNamingService namingService;
-
-    public AdvancedModifyPropertyAdapter(final ClassVisitor cv, final DynamicTypeNamingService namingService, final Map<String, NewProperty> propertiesToAdapt) {
+    public AdvancedModifyPropertyAdapter(final ClassVisitor cv, final Map<String, NewProperty> propertiesToAdapt) {
         super(Opcodes.ASM5, cv);
         this.propertiesToAdapt = propertiesToAdapt;
-        this.namingService = namingService;
     }
 
     /**
@@ -51,9 +50,9 @@ public class AdvancedModifyPropertyAdapter extends ClassVisitor implements Opcod
      * Additionally, modifies and records the name of the currently being traversed class.
      */
     @Override
-    public synchronized void visit(final int version, final int access, final String name, final String signature, final String superName, final String[] interfaces) {
+    public void visit(final int version, final int access, final String name, final String signature, final String superName, final String[] interfaces) {
         owner = name;
-        enhancedName = namingService.nextTypeName(name);
+        enhancedName = nextTypeName(name);
         super.visit(version, access, enhancedName, signature, superName, interfaces);
     }
 
@@ -61,7 +60,7 @@ public class AdvancedModifyPropertyAdapter extends ClassVisitor implements Opcod
      * Visits fields declaration with either description of the replacing type (if propertiesToAdapt contains such an entry) or the supplied one.
      */
     @Override
-    public synchronized FieldVisitor visitField(final int access, final String fieldName, final String desc, final String signature, final Object value) {
+    public FieldVisitor visitField(final int access, final String fieldName, final String desc, final String signature, final Object value) {
         // the value of signature represents generic type parameter information
         // in case the property needs to be modified and it is collectional (i.e. Collection, Set etc.) then may need to replace its signature
         // the same goes for the corresponding setter and getter

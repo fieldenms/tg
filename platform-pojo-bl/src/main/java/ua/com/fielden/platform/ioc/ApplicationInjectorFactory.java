@@ -19,7 +19,7 @@ public final class ApplicationInjectorFactory {
 
     private Injector injector;
 
-    private final Set<Module> modules = new HashSet<Module>();
+    private final Set<Module> modules = new HashSet<>();
 
     public ApplicationInjectorFactory add(final Module... otherModules) {
         if (injector != null) {

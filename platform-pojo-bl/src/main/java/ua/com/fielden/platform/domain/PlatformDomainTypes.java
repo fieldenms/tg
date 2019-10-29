@@ -4,12 +4,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.fielden.platform.attachment.Attachment;
-import ua.com.fielden.platform.attachment.EntityAttachmentAssociation;
+import ua.com.fielden.platform.attachment.AttachmentPreviewEntityAction;
+import ua.com.fielden.platform.attachment.AttachmentUploader;
+import ua.com.fielden.platform.attachment.AttachmentsUploadAction;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.EntityDeleteAction;
 import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityExportAction;
+import ua.com.fielden.platform.entity.EntityNavigationAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
+import ua.com.fielden.platform.entity.SecurityMatrixInsertionPoint;
+import ua.com.fielden.platform.entity.SecurityMatrixSaveAction;
+import ua.com.fielden.platform.entity.SecurityTokenTreeNodeEntity;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarnings;
@@ -35,15 +41,23 @@ import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.security.user.UserRoleTokensUpdater;
 import ua.com.fielden.platform.security.user.UserRolesUpdater;
+import ua.com.fielden.platform.security.user.UserSecret;
 import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityLocatorConfig;
 import ua.com.fielden.platform.ui.config.EntityMasterConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater;
+import ua.com.fielden.platform.web.centre.CentreConfigDeleteAction;
+import ua.com.fielden.platform.web.centre.CentreConfigDuplicateAction;
+import ua.com.fielden.platform.web.centre.CentreConfigEditAction;
+import ua.com.fielden.platform.web.centre.CentreConfigLoadAction;
+import ua.com.fielden.platform.web.centre.CentreConfigNewAction;
+import ua.com.fielden.platform.web.centre.CentreConfigSaveAction;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
-import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDefaultAction;
 import ua.com.fielden.platform.web.centre.CustomisableColumn;
+import ua.com.fielden.platform.web.centre.LoadableCentreConfig;
+import ua.com.fielden.platform.web.centre.OverrideCentreConfig;
 
 public class PlatformDomainTypes {
     public static final List<Class<? extends AbstractEntity<?>>> types = new ArrayList<Class<? extends AbstractEntity<?>>>();
@@ -51,15 +65,25 @@ public class PlatformDomainTypes {
     static {
         types.add(MainMenuItem.class);
         types.add(User.class);
+        types.add(UserSecret.class);
         types.add(UserRolesUpdater.class);
         types.add(UserSession.class);
         types.add(UserRole.class);
         types.add(UserRoleTokensUpdater.class);
         types.add(SecurityTokenInfo.class);
         types.add(CentreConfigUpdater.class);
-        types.add(CentreConfigUpdaterDefaultAction.class);
         types.add(CustomisableColumn.class);
         types.add(CentreColumnWidthConfigUpdater.class);
+
+        types.add(CentreConfigNewAction.class);
+        types.add(CentreConfigDuplicateAction.class);
+        types.add(CentreConfigLoadAction.class);
+        types.add(CentreConfigEditAction.class);
+        types.add(CentreConfigDeleteAction.class);
+        types.add(CentreConfigSaveAction.class);
+        types.add(LoadableCentreConfig.class);
+        types.add(OverrideCentreConfig.class);
+
         types.add(UserAndRoleAssociation.class);
         types.add(SecurityRoleAssociation.class);
         types.add(EntityCentreConfig.class);
@@ -67,7 +91,8 @@ public class PlatformDomainTypes {
         types.add(EntityMasterConfig.class);
         types.add(EntityLocatorConfig.class);
         types.add(Attachment.class);
-        types.add(EntityAttachmentAssociation.class);
+        types.add(AttachmentUploader.class);
+        types.add(AttachmentsUploadAction.class);
         types.add(KeyNumber.class);
         types.add(MigrationRun.class);
         types.add(MigrationHistory.class);
@@ -89,5 +114,11 @@ public class PlatformDomainTypes {
         types.add(EntityMasterView.class);
         types.add(MenuSaveAction.class);
         types.add(WebMenuItemInvisibility.class);
+        types.add(SecurityMatrixInsertionPoint.class);
+        types.add(SecurityTokenTreeNodeEntity.class);
+        types.add(SecurityMatrixSaveAction.class);
+        types.add(EntityNavigationAction.class);
+        types.add(AttachmentPreviewEntityAction.class);
+
     }
 }

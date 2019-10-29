@@ -66,12 +66,12 @@ public class Menu extends AbstractEntity<String> implements IMenuManager {
     }
 
     @Observable
-    public Menu setMincellHeight(final String minCellHeight) {
+    public Menu setMinCellHeight(final String minCellHeight) {
         this.minCellHeight = minCellHeight;
         return this;
     }
 
-    public String getMincellHeight() {
+    public String getMinCellHeight() {
         return minCellHeight;
     }
 

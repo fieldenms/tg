@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.centre.api.crit.impl;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.view.master.api.widgets.singlelinetext.impl.SinglelineTextWidget;
 
 /**
@@ -16,7 +17,7 @@ public class StringCriterionWidget extends AbstractMultiCriterionWidget {
      * @param criteriaType
      * @param propertyName
      */
-    public StringCriterionWidget(final Class<?> root, final Class<?> managedType, final String propertyName) {
+    public StringCriterionWidget(final Class<? extends AbstractEntity<?>> root, final Class<?> managedType, final String propertyName) {
         super(root, "centre/criterion/multi/tg-multi-criterion", propertyName,
                 new SinglelineTextWidget(
                         AbstractCriterionWidget.generateSingleTitleDesc(root, managedType, propertyName),

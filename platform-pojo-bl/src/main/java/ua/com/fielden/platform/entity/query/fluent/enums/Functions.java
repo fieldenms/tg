@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.query.fluent.enums;
 
 public enum Functions {
+    ADD_DATE_INTERVAL,
     COUNT_DATE_INTERVAL,
     CONCAT,
     CASE_WHEN,
@@ -15,6 +16,7 @@ public enum Functions {
     DAY,
     MONTH,
     YEAR,
+    DAY_OF_WEEK,
     DATE,
     ABS,
     SUM,

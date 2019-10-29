@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
+import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.LJ;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,14 +13,13 @@ public class Sources implements IPropertyCollector {
     private final List<CompoundSource> compounds;
 
     public Sources(final ISource main, final List<CompoundSource> compounds) {
-        super();
         this.main = main;
         this.compounds = compounds;
     }
 
     @Override
     public List<EntValue> getAllValues() {
-        final List<EntValue> result = new ArrayList<EntValue>();
+        final List<EntValue> result = new ArrayList<>();
         result.addAll(main.getValues());
         for (final CompoundSource compSource : compounds) {
             result.addAll(compSource.getAllValues());
@@ -28,7 +29,7 @@ public class Sources implements IPropertyCollector {
 
     @Override
     public List<EntQuery> getLocalSubQueries() {
-        final List<EntQuery> result = new ArrayList<EntQuery>();
+        final List<EntQuery> result = new ArrayList<>();
         for (final CompoundSource compSource : compounds) {
             result.addAll(compSource.getJoinConditions().getLocalSubQueries());
         }
@@ -37,7 +38,7 @@ public class Sources implements IPropertyCollector {
 
     @Override
     public List<EntProp> getLocalProps() {
-        final List<EntProp> result = new ArrayList<EntProp>();
+        final List<EntProp> result = new ArrayList<>();
         for (final CompoundSource compSource : compounds) {
             result.addAll(compSource.getJoinConditions().getLocalProps());
         }
@@ -53,44 +54,6 @@ public class Sources implements IPropertyCollector {
         }
 
         return sb.toString();
-    }
-
-    public void reorderSources() {
-        boolean needOneMoreIteration = true;
-
-        while (needOneMoreIteration) {
-            final List<ISource> availableSources = new ArrayList<>();
-            availableSources.add(main);
-
-            int index = 0;
-            needOneMoreIteration = false;
-            for (final CompoundSource compoundSource : compounds) {
-
-                boolean allSourcesAvailable = true;
-                for (final ISource involvedSource : compoundSource.getJoinConditions().getInvolvedSources()) {
-                    if (!(compoundSource.getSource() == involvedSource || availableSources.contains(involvedSource))) {
-                        allSourcesAvailable = false;
-                        break;
-                    }
-                }
-
-                if (allSourcesAvailable) {
-                    availableSources.add(compoundSource.getSource());
-                    index = index + 1;
-                } else {
-                    // swap
-                    if (compounds.size() > index + 1) {
-                        final CompoundSource curr = compounds.get(index);
-                        final CompoundSource next = compounds.get(index + 1);
-                        compounds.set(index, next);
-                        compounds.set(index + 1, curr);
-                        needOneMoreIteration = true;
-                    }
-
-                    break;
-                }
-            }
-        }
     }
 
     @Override
@@ -112,7 +75,7 @@ public class Sources implements IPropertyCollector {
     }
 
     public List<ISource> getAllSources() {
-        final List<ISource> result = new ArrayList<ISource>();
+        final List<ISource> result = new ArrayList<>();
         result.add(main);
         for (final CompoundSource compound : compounds) {
             result.add(compound.getSource());
@@ -121,10 +84,10 @@ public class Sources implements IPropertyCollector {
     }
 
     public List<Pair<ISource, Boolean>> getAllSourcesAndTheirJoinType() {
-        final List<Pair<ISource, Boolean>> result = new ArrayList<Pair<ISource, Boolean>>();
+        final List<Pair<ISource, Boolean>> result = new ArrayList<>();
         result.add(new Pair<ISource, Boolean>(main, false));
         for (final CompoundSource compound : compounds) {
-            result.add(new Pair<ISource, Boolean>(compound.getSource(), compound.getJoinType() == JoinType.LJ));
+            result.add(new Pair<ISource, Boolean>(compound.getSource(), compound.getJoinType() == LJ));
         }
         return result;
     }

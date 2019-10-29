@@ -14,8 +14,6 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @CompanionObject(ITgBogieLocation.class)
 public class TgBogieLocation extends AbstractUnionEntity {
 
-    private static final long serialVersionUID = 7362243737334921917L;
-
     @IsProperty(linkProperty = "bogie")
     @MapTo
     @Title(value = "Wagon slot", desc = "Wagon slot")

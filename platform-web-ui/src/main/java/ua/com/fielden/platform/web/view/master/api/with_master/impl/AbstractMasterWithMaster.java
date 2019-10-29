@@ -1,6 +1,14 @@
 package ua.com.fielden.platform.web.view.master.api.with_master.impl;
 
+import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+
+import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.dom.DomElement;
@@ -17,9 +25,9 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
     private final IRenderable renderable;
 
     public AbstractMasterWithMaster(final Class<T> entityType, final Class<? extends AbstractEntity<?>> embededMasterType, final boolean shouldRefreshParentCentreAfterSave) {
-        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
-                .replace("<!--@imports-->", "<link rel='import' href='/app/tg-element-loader.html'>\n")
-                .replace("@entity_type", entityType.getSimpleName())
+        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
+                .replace(IMPORTS, "import '/resources/element_loader/tg-element-loader.js';\n" + StringUtils.join(getAdditionalImports(), "\n"))
+                .replace(ENTITY_TYPE, flattenedNameOf(entityType))
                 .replace("<!--@tg-entity-master-content-->",
                           "<tg-element-loader id='loader' context='[[_createContextHolderForEmbeddedViews]]' context-property='getMasterEntity' "
                         + "    import=" + getImportUri(embededMasterType)
@@ -27,8 +35,32 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
                         + "    attrs='[[_calcAttrs(_currBindingEntity)]]'"
                         + "    >"
                         + "</tg-element-loader>")
-                .replace("//@ready-callback", 
+                .replace("//@ready-callback",
                         "this.masterWithMaster = true;\n" +
+                        "this._focusEmbededView = function () {\n" +
+                        "    if (this.$.loader.loadedElement && this.$.loader.loadedElement.focusView) {\n" +
+                        "        this.$.loader.loadedElement.focusView();\n" +
+                        "    }\n" +
+                        "}.bind(this);\n" +
+                        "this._hasEmbededView = function () {\n" +
+                        "    return true;\n" +
+                        "}.bind(this);\n" +
+                        "self.wasLoaded = function () {\n" +
+                        "    if (this.$.loader.loadedElement && this.$.loader.loadedElement.wasLoaded) {\n" +
+                        "        return this.$.loader.loadedElement.wasLoaded();\n" +
+                        "    }\n" +
+                        "    return false;\n" +
+                        "}.bind(self);\n" +
+                        "this._focusNextEmbededView = function (e) {\n" +
+                        "    if (this.$.loader.loadedElement && this.$.loader.loadedElement.focusNextView) {\n" +
+                        "        this.$.loader.loadedElement.focusNextView(e);\n" +
+                        "    }\n" +
+                        "}.bind(this);\n" +
+                        "this._focusPreviousEmbededView = function (e) {\n" +
+                        "    if (this.$.loader.loadedElement && this.$.loader.loadedElement.focusPreviousView) {\n" +
+                        "        this.$.loader.loadedElement.focusPreviousView(e);\n" +
+                        "    }\n" +
+                        "}.bind(this);\n" +
                         "this._calcAttrs = (function(_currBindingEntity){\n" +
                         "   if (_currBindingEntity !== null) {\n" +
                         "       return " + getAttributes(embededMasterType, "_currBindingEntity", shouldRefreshParentCentreAfterSave) +
@@ -36,14 +68,13 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
                         "}).bind(this);\n")
                 .replace("//@attached-callback",
                           "this.canLeave = function () {"
-                        + "    var embeddedMaster = this.$.loader.loadedElement;\n"
+                        + "    const embeddedMaster = this.$.loader.loadedElement;\n"
                         + "    if (embeddedMaster && embeddedMaster.classList.contains('canLeave')) {\n"
                         + "        return embeddedMaster.canLeave();\n"
-                        + "    } else {\n"
-                        + "        return undefined;\n"
                         + "    }\n"
+                        + "    return undefined;\n"
                         + "}.bind(this);\n"
-                        + "this.addEventListener('after-load', this._assignPostSavedHandlersForEmbeddedMaster.bind(this));\n")
+                        + "this.addEventListener('after-load', " + getAfterLoadListener() + ");\n")
                 .replace("@prefDim", "null")
                 .replace("@noUiValue", "false")
                 .replace("@saveOnActivationValue", "true");
@@ -54,6 +85,19 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
                 return new InnerTextElement(entityMasterStr);
             }
         };
+    }
+
+    protected List<String> getAdditionalImports() {
+        return new ArrayList<>();
+    };
+
+    /**
+     * Returns the implementation for the after load listener of embedded master.
+     *
+     * @return
+     */
+    protected String getAfterLoadListener() {
+        return "this._assignPostSavedHandlersForEmbeddedMaster.bind(this)";
     }
 
     protected abstract String getAttributes(final Class<? extends AbstractEntity<?>> entityType, String bindingEntityName, final boolean shouldRefreshParentCentreAfterSave);
@@ -71,7 +115,7 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
     public IRenderable render() {
         return renderable;
     }
-    
+
     @Override
     public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
         throw new UnsupportedOperationException("Getting of action configuration is not supported.");

@@ -3,6 +3,7 @@ package ua.com.fielden.platform.ui.config;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
+import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -40,6 +41,7 @@ import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 @KeyTitle("Configuration key")
 @CompanionObject(IEntityCentreConfig.class)
 @MapEntityTo("ENTITY_CENTRE_CONFIG")
+@DescTitle("Description")
 public class EntityCentreConfig extends AbstractConfiguration<DynamicEntityKey> {
 
     @IsProperty
@@ -64,6 +66,21 @@ public class EntityCentreConfig extends AbstractConfiguration<DynamicEntityKey> 
     @Title(value = "Is principal?", desc = "Indicates whether this configuration is the principal one and thus corresponds to a main menu item")
     @MapTo("IS_PRINCIPAL")
     private boolean principal = false;
+
+    @IsProperty
+    @Title(value = "Is preferred?", desc = "Indicates whether this configuration is preferred over the others on the same menu item")
+    @MapTo
+    private boolean preferred = false;
+
+    public boolean isPreferred() {
+        return preferred;
+    }
+
+    @Observable
+    public EntityCentreConfig setPreferred(final boolean value) {
+        preferred = value;
+        return this;
+    }
 
     public MainMenuItem getMenuItem() {
         return menuItem;

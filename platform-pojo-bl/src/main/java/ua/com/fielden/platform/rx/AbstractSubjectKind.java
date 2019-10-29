@@ -27,7 +27,7 @@ import rx.subjects.Subject;
  * @param <T>
  */
 public abstract class AbstractSubjectKind<T> implements IObservableKind<T> {
-    private transient final Logger logger = Logger.getLogger(this.getClass());
+    private final Logger logger = Logger.getLogger(this.getClass());
     private final Subject<T, T> observable = new SerializedSubject<>(PublishSubject.create());
 
     @Override

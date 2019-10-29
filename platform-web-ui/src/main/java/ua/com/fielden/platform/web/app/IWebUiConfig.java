@@ -2,9 +2,9 @@ package ua.com.fielden.platform.web.app;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import ua.com.fielden.platform.basic.config.Workflows;
-import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.menu.IMenuRetriever;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
@@ -66,32 +66,18 @@ public interface IWebUiConfig extends IMenuRetriever {
     IMainMenuBuilder configMobileMainMenu();
 
     /**
-     * Generates the main html file of desktop web application.
+     * Generates the main html file of web application.
      *
      * @return
      */
-    String genDesktopAppIndex();
-
-    /**
-     * Generates the main html file of mobile web application.
-     *
-     * @return
-     */
-    String genMobileAppIndex();
-
-    /**
-     * Generates the main menu component for mobile application.
-     *
-     * @return
-     */
-    String genMobileMainWebUIComponent();
+    String genAppIndex();
 
     /**
      * Generates the main menu component for desktop application.
      *
      * @return
      */
-    String genDesktopMainWebUIComponent();
+    String genMainWebUIComponent();
 
     /**
      * Generates the global configuration component.
@@ -127,9 +113,9 @@ public interface IWebUiConfig extends IMenuRetriever {
     void initConfiguration();
 
     /**
-     * Clears all centre, master and menu configurations that were initialised before. After that, clears all centre configurations for the application user represented by <code>gdtm</code> instance.
+     * Clears all centre, master and menu configurations that were initialised before.
      */
-    void clearConfiguration(final IGlobalDomainTreeManager gdtm);
+    void clearConfiguration();
 
     /**
      * The paths for any kind of file resources those are needed for browser client. These are mapped to the '/resources/' router path. Also these resource paths might be augmented
@@ -143,4 +129,17 @@ public interface IWebUiConfig extends IMenuRetriever {
      * @return
      */
     Workflows workflow();
+    
+    /**
+     * Loads checksum for resource if available. Otherwise, returns empty {@link Optional}.
+     * <p>
+     * Checksums are available for static resources in deployment mode. 'startup-resources-vulcanized.js' file is primary in this category.
+     * Client-side Service Worker script intercepts requests to get checksum first to compare whether resource has changed.
+     * If that is true then full resource will be re-downloaded and re-cached on the client side.
+     * Otherwise the cached resource will be used straight away.
+     * 
+     * @param resourceURI
+     * @return
+     */
+    Optional<String> checksum(final String resourceURI);
 }

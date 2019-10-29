@@ -20,7 +20,6 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @Ignore
 @CompanionObject(ITgBogie.class)
 public class TgBogie extends AbstractEntity<String> {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty
     @MapTo

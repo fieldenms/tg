@@ -19,10 +19,21 @@ public class TgEntityWithPropertyDependencyProducer extends DefaultEntityProduce
     public TgEntityWithPropertyDependencyProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder) {
         super(factory, TgEntityWithPropertyDependency.class, companionFinder);
     }
-
+    
+    @Override
+    protected TgEntityWithPropertyDependency provideDefaultValues(final TgEntityWithPropertyDependency entity) {
+        return provideInitialValues(entity); // to be used in web unit tests
+    }
+    
     @Override
     protected TgEntityWithPropertyDependency provideDefaultValuesForStandardNew(final TgEntityWithPropertyDependency entity, final EntityNewAction masterEntity) {
         entity.setKey("DUMMY");
+        return provideInitialValues(entity);
+    }
+    
+    private TgEntityWithPropertyDependency provideInitialValues(final TgEntityWithPropertyDependency entity) {
+        entity.setProp1("val0"); // initial value to be able to change property back, reproducing the edge-cases for property value application (#960)
+        entity.setProp2(null); // remove 'value0' that was populated through prop1 definer
         return entity;
     }
 }

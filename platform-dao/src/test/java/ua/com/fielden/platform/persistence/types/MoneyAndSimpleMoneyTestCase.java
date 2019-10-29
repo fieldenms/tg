@@ -2,13 +2,10 @@ package ua.com.fielden.platform.persistence.types;
 
 import static org.junit.Assert.assertEquals;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.Locale;
 
-import org.junit.Before;
 import org.junit.Test;
 
 import ua.com.fielden.platform.dao.EntityWithSimpleMoneyDao;
@@ -25,12 +22,6 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
  * @author TG Team
  */
 public class MoneyAndSimpleMoneyTestCase extends AbstractDaoTestCase {
-    private boolean changeIndicator = false;
-
-    @Before
-    public void setUp() {
-        changeIndicator = false;
-    }
 
     @Test
     public void can_save_and_retrieve_entity_with_money() {
@@ -48,15 +39,7 @@ public class MoneyAndSimpleMoneyTestCase extends AbstractDaoTestCase {
     public void retrieved_entity_with_money_is_observable() {
         final IEntityWithMoney coEntityWithMoney = co$(EntityWithMoney.class);
         final EntityWithMoney instance =  coEntityWithMoney.findByKey("aname1");
-        instance.addPropertyChangeListener("money", new PropertyChangeListener() {
-            @Override
-            public void propertyChange(final PropertyChangeEvent evt) {
-                changeIndicator = true;
-            }
-        });
         instance.setMoney(new Money(new BigDecimal(100d), Currency.getInstance("USD")));
-
-        assertEquals("Change was not observed.", true, changeIndicator);
     }
 
     @Test

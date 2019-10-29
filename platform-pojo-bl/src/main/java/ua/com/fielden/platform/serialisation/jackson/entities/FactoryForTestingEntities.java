@@ -4,6 +4,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.error.Result.warning;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.nextTypeName;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -53,8 +54,7 @@ public class FactoryForTestingEntities {
     }
 
     public EmptyEntity createNullEmptyEntity() {
-        final EmptyEntity entity = null;
-        return entity;
+        return null;
     }
 
     /**
@@ -301,8 +301,8 @@ public class FactoryForTestingEntities {
         final Class<AbstractEntity<?>> entityTypeGenerated;
         try {
             entityTypeGenerated = (Class<AbstractEntity<?>>) 
-                    cl.startModification(entityType.getName())
-                    .modifyTypeName(new DynamicTypeNamingService().nextTypeName(entityType.getName()))
+                    cl.startModification(entityType)
+                    .modifyTypeName(nextTypeName(entityType.getName()))
                     .addClassAnnotations(new MiTypeAnnotation().newInstance(miType))
                 .endModification();
         } catch (final ClassNotFoundException e) {
@@ -316,8 +316,8 @@ public class FactoryForTestingEntities {
         final Class<AbstractEntity<?>> entityTypeGenerated;
         try {
             entityTypeGenerated = (Class<AbstractEntity<?>>) 
-                    cl.startModification(entityType.getName())
-                    .modifyTypeName(new DynamicTypeNamingService().nextTypeName(entityType.getName()))
+                    cl.startModification(entityType)
+                    .modifyTypeName(nextTypeName(entityType.getName()))
                     .addClassAnnotations(new MiTypeAnnotation().newInstance(miType))
                 .endModification();
         } catch (final ClassNotFoundException e) {

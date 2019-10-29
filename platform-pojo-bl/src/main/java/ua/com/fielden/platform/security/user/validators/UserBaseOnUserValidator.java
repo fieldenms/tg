@@ -3,6 +3,7 @@ package ua.com.fielden.platform.security.user.validators;
 import static java.lang.String.format;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
+import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
 
 import java.lang.annotation.Annotation;
 import java.util.Set;
@@ -27,9 +28,9 @@ public class UserBaseOnUserValidator extends AbstractBeforeChangeEventHandler<Us
     
     @Override
     public Result handle(final MetaProperty<User> property, final User basedOnUser, final Set<Annotation> mutatorAnnotations) {
-        final User user = (User) property.getEntity();
+        final User user = property.getEntity();
         
-        if (basedOnUser == user) {
+        if (basedOnUser != null && areEqual(basedOnUser, user)) {
             return failure(SELF_REFERENCE_IS_NOT_PERMITTED);
         }
 

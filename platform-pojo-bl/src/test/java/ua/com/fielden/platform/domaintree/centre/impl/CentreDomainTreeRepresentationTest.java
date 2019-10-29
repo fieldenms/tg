@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation;
@@ -242,6 +243,7 @@ public class CentreDomainTreeRepresentationTest extends AbstractDomainTreeRepres
     }
 
     ////////////////////// 6. Specific entity-centre logic //////////////////////
+    @Ignore
     @Test
     public void test_that_excluded_properties_actions_for_both_ticks_cause_exceptions_for_all_specific_logic() {
         final String message = "Excluded property should cause IllegalArgument exception.";

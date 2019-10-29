@@ -1,10 +1,11 @@
 package ua.com.fielden.platform.entity;
 
-import static java.util.stream.Collectors.toSet;
+import static java.util.stream.Collectors.toCollection;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -65,8 +66,9 @@ public interface IContextDecomposer {
             }
             
             @Override
-            public void setContext(final CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> context) {
+            public IContextDecomposer setContext(final CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> context) {
                 this.context = context;
+                return this;
             }
         };
         contextDecomposer.setContext((CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>>) context);
@@ -95,7 +97,7 @@ public interface IContextDecomposer {
     }
     
     CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> getContext();
-    void setContext(final CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> context);
+    IContextDecomposer setContext(final CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> context);
     
     // MASTER ENTITY:
     /**
@@ -366,7 +368,7 @@ public interface IContextDecomposer {
      * @return
      */
     default Set<Long> selectedEntityIds() {
-        return selectedEntities().stream().map(ent -> ent.getId()).collect(toSet());
+        return selectedEntities().stream().map(AbstractEntity::getId).collect(toCollection(LinkedHashSet::new));
     }
     
     /**
@@ -525,6 +527,14 @@ public interface IContextDecomposer {
             return decompose(context()).chosenProperty();
         }
         
+        public boolean chosenPropertyEmpty() {
+            return chosenProperty() == null;
+        }
+
+        public boolean chosenPropertyNotEmpty() {
+            return !chosenPropertyEmpty();
+        }
+
         // CURRENT ENTITY:
         /**
          * Returns <code>true</code> if the masterEntity's current entity is not present, <code>false</code> otherwise.

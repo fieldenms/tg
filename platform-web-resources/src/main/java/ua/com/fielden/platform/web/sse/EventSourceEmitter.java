@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.sse;
 
+import static java.lang.String.format;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
@@ -12,6 +14,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.servlet.AsyncContext;
 import javax.servlet.ServletOutputStream;
+
+import org.apache.log4j.Logger;
+
+import ua.com.fielden.platform.web.application.RequestInfo;
 
 /**
  * This EventSource emitter is taken from Jetty source in the attempt to make it working with Restlet.
@@ -29,6 +35,7 @@ public final class EventSourceEmitter implements IEmitter, Runnable {
     private static final byte[] DATA_FIELD = "data: ".getBytes(StandardCharsets.UTF_8);
     private static final byte[] COMMENT_FIELD = ": ".getBytes(StandardCharsets.UTF_8);
 
+    private final Logger logger = Logger.getLogger(getClass());
     private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private int heartBeatPeriod = 5;
 
@@ -38,6 +45,7 @@ public final class EventSourceEmitter implements IEmitter, Runnable {
     private Future<?> heartBeat;
     private boolean closed;
     private final AtomicBoolean shouldResourceThreadBeBlocked;
+    private final RequestInfo info;
 
     /**
      * The use of <code>stopResourceThread</code> is a workaround at this stage to prevent restlet from closing the connection with the client by means of blocking its thread by
@@ -48,11 +56,13 @@ public final class EventSourceEmitter implements IEmitter, Runnable {
      * @param async
      * @throws IOException
      */
-    public EventSourceEmitter(final AtomicBoolean shouldResourceThreadBeBlocked, final IEventSource eventSource, final AsyncContext async) throws IOException {
+    public EventSourceEmitter(final AtomicBoolean shouldResourceThreadBeBlocked, final IEventSource eventSource, final AsyncContext async, final RequestInfo info) throws IOException {
         this.shouldResourceThreadBeBlocked = shouldResourceThreadBeBlocked;
         this.eventSource = eventSource;
         this.async = async;
         this.output = async.getResponse().getOutputStream();
+        this.info = info;
+        logger.info(format("Started event source emitter: %s", info.toString()));
     }
 
     @Override
@@ -73,8 +83,7 @@ public final class EventSourceEmitter implements IEmitter, Runnable {
     @Override
     public void data(final String data) throws IOException {
         synchronized (this) {
-            try {
-                final BufferedReader reader = new BufferedReader(new StringReader(data));
+            try (final BufferedReader reader = new BufferedReader(new StringReader(data))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     output.write(DATA_FIELD);
@@ -140,7 +149,7 @@ public final class EventSourceEmitter implements IEmitter, Runnable {
             async.complete();
             eventSource.onClose();
         } finally {
-            System.out.println("event source emitter closed!");
+            logger.info(format("Closed event source emitter: %s", info.toString()));
             shouldResourceThreadBeBlocked.set(false);
         }
     }

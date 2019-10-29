@@ -8,8 +8,8 @@ import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
 
-import ua.com.fielden.platform.web.app.ISourceController;
-import ua.com.fielden.platform.web.resources.RestServerUtil;
+import ua.com.fielden.platform.web.app.IWebResourceLoader;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.webui.FileResource;
 
 /**
@@ -19,19 +19,19 @@ import ua.com.fielden.platform.web.resources.webui.FileResource;
  *
  */
 public class FileResourceFactory extends Restlet {
-    private final ISourceController sourceController;
-    private final RestServerUtil restUtil;
+    private final IWebResourceLoader webResourceLoader;
     private final List<String> resourcePaths;
+    private final IDeviceProvider deviceProvider;
 
     /**
      * Creates new {@link FileResourceFactory} instance with specified paths of file resources.
      *
      * @param resourcePaths
      */
-    public FileResourceFactory(final ISourceController sourceController, final RestServerUtil restUtil, final List<String> resourcePaths) {
-        this.sourceController = sourceController;
-        this.restUtil = restUtil;
+    public FileResourceFactory(final IWebResourceLoader webResourceLoader, final List<String> resourcePaths, final IDeviceProvider deviceProvider) {
+        this.webResourceLoader = webResourceLoader;
         this.resourcePaths = resourcePaths;
+        this.deviceProvider = deviceProvider;
     }
 
     /**
@@ -42,7 +42,7 @@ public class FileResourceFactory extends Restlet {
         super.handle(request, response);
 
         if (Method.GET.equals(request.getMethod())) {
-            new FileResource(sourceController, restUtil, Collections.unmodifiableList(resourcePaths), getContext(), request, response).handle();
+            new FileResource(webResourceLoader, Collections.unmodifiableList(resourcePaths), deviceProvider, getContext(), request, response).handle();
         }
     }
 

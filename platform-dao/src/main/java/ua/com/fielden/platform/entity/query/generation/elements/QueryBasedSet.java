@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -12,7 +14,6 @@ public class QueryBasedSet implements ISetOperand {
     }
 
     public QueryBasedSet(final EntQuery model) {
-        super();
         this.model = model;
     }
 
@@ -28,7 +29,7 @@ public class QueryBasedSet implements ISetOperand {
 
     @Override
     public List<EntQuery> getLocalSubQueries() {
-        return Arrays.asList(new EntQuery[] { model });
+        return  listOf(model);
     }
 
     @Override

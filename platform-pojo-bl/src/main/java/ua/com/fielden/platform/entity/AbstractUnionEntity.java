@@ -47,37 +47,24 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
     @Override
     public Long getId() {
         ensureActiveProperty();
-        if (activeEntity() != null) {
-            return activeEntity().getId();
-        }
-        return null;
-    }
-
-    private void ensureActiveProperty() {
-        if (StringUtils.isEmpty(activePropertyName)) {
-            activePropertyName = getNameOfAssignedUnionProperty();
-            if (StringUtils.isEmpty(activePropertyName)) {
-                throw new EntityException(format("Active property for union entity [%s] has not been determined.", getType().getName()));
-            }
-        }
+        final AbstractEntity<?> activeEntity = activeEntity();
+        return activeEntity != null ? activeEntity.getId() : null;
     }
 
     @Override
     public String getKey() {
         ensureActiveProperty();
-        if (activeEntity() != null) {
-            return activeEntity().getKey() != null ? activeEntity().getKey().toString() : null;
-        }
-        return null;
+        final AbstractEntity<?> activeEntity = activeEntity();
+        return activeEntity != null && activeEntity.getKey() != null
+               ? activeEntity.getKey().toString()
+               : null;
     }
 
     @Override
     public String getDesc() {
         ensureActiveProperty();
-        if (activeEntity() != null) {
-            return activeEntity().getDesc();
-        }
-        return null;
+        final AbstractEntity<?> activeEntity = activeEntity();
+        return activeEntity != null ? activeEntity.getDesc() : null;
     }
 
     @Override
@@ -95,6 +82,15 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
     @Observable
     public AbstractUnionEntity setDesc(final String desc) {
         throw new UnsupportedOperationException("Setting desc is not permitted for union entity.");
+    }
+
+    private void ensureActiveProperty() {
+        if (StringUtils.isEmpty(activePropertyName)) {
+            activePropertyName = getNameOfAssignedUnionProperty();
+            if (StringUtils.isEmpty(activePropertyName)) {
+                throw new EntityException(format("Active property for union entity [%s] has not been determined.", getType().getName()));
+            }
+        }
     }
 
     /**
@@ -151,7 +147,7 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
      * @return
      */
     public final AbstractEntity<?> activeEntity() {
-        final Stream<String> propertyNames = Finder.streamRealProperties(getType()).map(field -> field.getName());
+        final Stream<String> propertyNames = Finder.streamRealProperties(getType()).map(Field::getName);
 
         return propertyNames
                 .filter(propName -> !Reflector.isPropertyProxied(this, propName) && !COMMON_PROPS.contains(propName) && get(propName) != null)
@@ -177,9 +173,7 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
             }
         }
         // return the list of common properties
-        final List<String> list = Finder.findCommonProperties(propertyTypes);
-        // list.remove(KEY);
-        return list;
+        return Finder.findCommonProperties(propertyTypes);
     }
 
     public String activePropertyName() {
@@ -213,7 +207,7 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
      *             - throws when couldn't found property getter or setter for some property.
      */
     public static final List<String> commonMethodNames(final Class<? extends AbstractUnionEntity> type) {
-        final List<String> commonMethods = new ArrayList<String>();
+        final List<String> commonMethods = new ArrayList<>();
         for (final Method method : commonMethods(type)) {
             commonMethods.add(method.getName());
         }
@@ -238,8 +232,8 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
             try {
                 commonMethods.add(Reflector.obtainPropertyAccessor(propertyType, property));
                 commonMethods.add(Reflector.obtainPropertySetter(propertyType, property));
-            } catch (final ReflectionException e) {
-                throw new RuntimeException("Common property [" + property + "] inside [" + propertyType + "] does not have accessor or setter.");
+            } catch (final ReflectionException ex) {
+                throw new ReflectionException(format("Common property [%s] inside [%s] does not have accessor or setter.", property, propertyType), ex);
             }
         }
         return commonMethods;

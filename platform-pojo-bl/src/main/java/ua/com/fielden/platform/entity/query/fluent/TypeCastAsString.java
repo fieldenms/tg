@@ -16,7 +16,6 @@ public class TypeCastAsString implements ITypeCast {
     private final int length;
 
     private TypeCastAsString(final int length) {
-        super();
         this.length = length;
     }
     
@@ -34,7 +33,7 @@ public class TypeCastAsString implements ITypeCast {
 
     @Override
     public String typecast(final String argument, final DbVersion dbVersion) {
-        if (H2.equals(dbVersion) || POSTGRESQL.equals(dbVersion)  || MSSQL.equals(dbVersion)) {
+        if (dbVersion == H2 || dbVersion == POSTGRESQL || dbVersion == MSSQL) {
             return "CAST(" + argument + " AS VARCHAR(" + length + "))";
         } else {
             return argument;

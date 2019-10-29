@@ -2,6 +2,8 @@ package ua.com.fielden.platform.entity.query.fluent;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IConcatFunctionArgument;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IDateAddIntervalFunctionArgument;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IDateAddIntervalFunctionTo;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IDateDiffIntervalFunction;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionLastArgument;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IFunctionWhere0;
@@ -82,6 +84,11 @@ abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
 	}
 
 	@Override
+	public IDateAddIntervalFunctionArgument<T, ET> addTimeIntervalOf() {
+		return createDateAddIntervalFunctionArgument(getTokens().addDateInterval());
+	}
+
+	@Override
 	public IDateDiffIntervalFunction<T, ET> count() {
 		return createDateDiffIntervalFunction(getTokens().countDateIntervalFunction());
 	}
@@ -150,6 +157,11 @@ abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
 	public IFunctionLastArgument<T, ET> yearOf() {
 		return createFunctionLastArgument(getTokens().yearOf());
 	}
+	
+	@Override
+	public IFunctionLastArgument<T, ET> dayOfWeekOf() {
+		return createFunctionLastArgument(getTokens().dayOfWeekOf());
+	}
 
 	@Override
 	public IFunctionLastArgument<T, ET> dateOf() {
@@ -161,6 +173,17 @@ abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
 		return createFunctionLastArgument(getTokens().absOf());
 	}
 	
+	private IDateAddIntervalFunctionArgument<T, ET> createDateAddIntervalFunctionArgument(final Tokens tokens) {
+		return new DateAddIntervalFunctionArgument<T, ET>(tokens) {
+
+			@Override
+			protected T nextForDateAddIntervalFunctionArgument(Tokens tokens) {
+				return SingleOperand.this.nextForSingleOperand(tokens);
+			}
+
+		};
+	}
+
 	private DateDiffIntervalFunction<T, ET> createDateDiffIntervalFunction(final Tokens tokens) {
 		return new DateDiffIntervalFunction<T, ET>(tokens) {
 

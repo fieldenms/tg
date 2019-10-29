@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.dao;
 
-import static ua.com.fielden.platform.dao.DomainMetadata.specialProps;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
+import static ua.com.fielden.platform.entity.query.metadata.DomainMetadata.specialProps;
 
 import java.lang.reflect.Field;
 import java.util.Collection;
@@ -16,6 +16,10 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
+import ua.com.fielden.platform.entity.query.metadata.PersistedEntityMetadata;
+import ua.com.fielden.platform.entity.query.metadata.PropertyColumn;
+import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 
 /**
@@ -26,6 +30,8 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
  */
 public class HibernateMappingsGenerator {
     private static final Logger LOGGER = Logger.getLogger(HibernateMappingsGenerator.class);
+
+    public static final String ID_SEQUENCE_NAME = "TG_ENTITY_ID_SEQ";
     
     public String generateMappings(final DomainMetadata domainMetadata) {
         final Collection<PersistedEntityMetadata<?>> entityMetadatas = domainMetadata.getPersistedEntityMetadatas();
@@ -40,7 +46,6 @@ public class HibernateMappingsGenerator {
             try {
                 sb.append(generateEntityClassMapping(entityMetadata, domainMetadata.dbVersion));
             } catch (final Exception e) {
-                e.printStackTrace();
                 throw new RuntimeException("Couldn't generate mapping for " + entityMetadata.getType().getName() + " due to: " + e.getMessage());
             }
             sb.append("\n");
@@ -53,19 +58,8 @@ public class HibernateMappingsGenerator {
     }
 
     private String generateEntityIdMapping(final String name, final PropertyColumn column, final String hibTypeName, final DbVersion dbVersion) {
-        final StringBuffer sb = new StringBuffer();
+        final StringBuilder sb = new StringBuilder();
         sb.append("\t<id name=\"" + name + "\" column=\"" + column.getName() + "\" type=\"" + hibTypeName + "\" access=\"property\">\n");
-        if (dbVersion != DbVersion.ORACLE) {
-            sb.append("\t\t<generator class=\"hilo\">\n");
-            sb.append("\t\t\t<param name=\"table\">UNIQUE_ID</param>\n");
-            sb.append("\t\t\t<param name=\"column\">NEXT_VALUE</param>\n");
-            sb.append("\t\t\t<param name=\"max_lo\">0</param>\n");
-            sb.append("\t\t</generator>\n");
-        } else {
-            sb.append("\t\t<generator class=\"sequence-identity\">\n");
-            sb.append("\t\t\t<param name=\"sequence\">TG_ENTITY_ID_SEQ</param>\n");
-            sb.append("\t\t</generator>\n");
-        }
         sb.append("\t</id>\n");
         return sb.toString();
     }
@@ -174,7 +168,7 @@ public class HibernateMappingsGenerator {
      * @throws Exception
      */
     private String generatePropertyMappingFromPropertyMetadata(final PropertyMetadata propMetadata, final DbVersion dbVersion) throws Exception {
-        switch (propMetadata.getType()) {
+        switch (propMetadata.getCategory()) {
         case UNION_ENTITY_HEADER:
             return generateUnionEntityPropertyMapping(propMetadata);
         case ENTITY_AS_KEY:

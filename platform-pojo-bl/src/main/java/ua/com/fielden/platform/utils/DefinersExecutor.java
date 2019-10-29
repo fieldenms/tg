@@ -1,7 +1,12 @@
 package ua.com.fielden.platform.utils;
 
 import static java.lang.String.format;
+import static java.util.stream.Collectors.partitioningBy;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isCritOnlySingle;
 import static ua.com.fielden.platform.entity.AbstractEntity.COMMON_PROPS;
+import static ua.com.fielden.platform.reflection.Finder.streamRealProperties;
+import static ua.com.fielden.platform.reflection.Reflector.isPropertyProxied;
+import static ua.com.fielden.platform.utils.EntityUtils.getEntityIdentity;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -13,14 +18,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 
 /**
@@ -69,7 +70,7 @@ public class DefinersExecutor {
         // declare data structures for DFS
         final Deque<AbstractEntity<?>> frontier = new LinkedList<>(); // to be used on LIFO mode
         // the set of explored entities utilises object identities in memory to differentiate equal entities represented by different objects
-        final Set<Integer> explored = new HashSet<>();
+        final Set<String> explored = new HashSet<>();
         
         // The same mutable set of entity identities 'explored' will be used for every 'explore(frontier, explored)' call for each top-level graph node (entity).
         // This will ensure that the same shared nodes will not be traversed more than once for different sub-graphs for each top-level graph node (entity).
@@ -95,15 +96,15 @@ public class DefinersExecutor {
      */
     private static void explore(
             final Deque<AbstractEntity<?>> frontier, 
-            final Set<Integer> explored) {
+            final Set<String> explored) {
         
         if (frontier.isEmpty()) {
             throw new DefinersExecutorException("There is nothing to process.");
         }
 
         final AbstractEntity<?> entity = frontier.pop();
-        final int identity = System.identityHashCode(entity);
-        if (explored.contains(identity)) {
+        final String identity = getEntityIdentity(entity);
+        if (explored.contains(identity) || !entity.isInstrumented()) {
             return;
         }
 
@@ -114,8 +115,7 @@ public class DefinersExecutor {
         explored.add(identity);
 
         final boolean unionEntity = entity instanceof AbstractUnionEntity;
-        final boolean isInstrumented = PropertyTypeDeterminator.isInstrumented(entity.getClass());
-        final boolean isEntityPersisted = isInstrumented ? entity.isPersisted() : false;
+        final boolean isEntityPersisted = entity.isPersisted();
 
         // FIXME please, consider applicability of the following logic (legacy code from EntityUtils.handleMetaProperties method):
         //------------------------------------------------------------------
@@ -129,12 +129,12 @@ public class DefinersExecutor {
         //------------------------------------------------------------------
 
         // collect properties to process
-        final Map<Boolean, List<Field>> propFieldsToProcess = Finder.streamRealProperties(entity.getType())
-                .filter(field -> !Reflector.isPropertyProxied(entity, field.getName()))
-                .collect(Collectors.partitioningBy(field -> isValueProxied(entity, field)));
+        final Map<Boolean, List<Field>> propFieldsToProcess = streamRealProperties(entity.getType())
+                .filter(field -> !isPropertyProxied(entity, field.getName()) && !isCritOnlySingle(entity.getType(), field.getName()) )
+                .collect(partitioningBy(field -> isValueProxied(entity, field)));
 
         // process original values of properties that have id-only-proxy value if the entity is instrumented and persisted
-        if (isInstrumented && isEntityPersisted) {
+        if (isEntityPersisted) {
             final List<Field> idOnlyProxyPropFields = propFieldsToProcess.get(true);
             for (final Field propField : idOnlyProxyPropFields) {
                 final String propName = propField.getName();
@@ -175,9 +175,7 @@ public class DefinersExecutor {
                 }
                 
                 // original values and execution of ACE handlers is relevant only for instrumented entities
-                if (isInstrumented) {
-                    handleOriginalValueAndACE(entity.getProperty(propName), propertyValue, isEntityPersisted);
-                }
+                handleOriginalValueAndACE(entity.getProperty(propName), propertyValue, isEntityPersisted);
             }
         }
 

@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.entity.query;
 
+import static java.lang.String.format;
+import static java.util.Collections.unmodifiableMap;
+import static java.util.Collections.unmodifiableSet;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
 import java.util.HashMap;
@@ -8,17 +11,18 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
-import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
+import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
 
-public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> {
+public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> implements IRetrievalModel<T> {
 
-    private final fetch<T> originalFetch;
+    protected final fetch<T> originalFetch;
     private DomainMetadataAnalyser domainMetadataAnalyser;
 
-    private final Map<String, fetch<? extends AbstractEntity<?>>> entityProps = new HashMap<String, fetch<? extends AbstractEntity<?>>>();
+    private final Map<String, EntityRetrievalModel<? extends AbstractEntity<?>>> entityProps = new HashMap<>();
     private final Set<String> primProps = new HashSet<String>();
     private final Set<String> proxiedProps = new HashSet<String>();
 
@@ -31,10 +35,7 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> {
         return originalFetch;
     }
 
-    public Map<String, fetch<? extends AbstractEntity<?>>> getEntityProps() {
-        return entityProps;
-    }
-
+    @Override
     public Set<String> getProxiedProps() {
         return proxiedProps;
     }
@@ -43,28 +44,42 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> {
         return domainMetadataAnalyser;
     }
 
+    @Override
     public boolean containsProp(final String propName) {
         return primProps.contains(propName) || entityProps.containsKey(propName);
     }
 
+    @Override
     public boolean containsProxy(final String propName) {
         return proxiedProps.contains(propName);
     }
 
+    @Override
     public Class<T> getEntityType() {
         return originalFetch.getEntityType();
     }
 
+    @Override
     public boolean isInstrumented() {
         return originalFetch.isInstrumented();
     }
 
+    @Override
     public Set<String> getPrimProps() {
-        return primProps;
+        return unmodifiableSet(primProps);
     }
 
-    public Map<String, fetch<? extends AbstractEntity<?>>> getFetchModels() {
-        return entityProps;
+    @Override
+    public Map<String, EntityRetrievalModel<? extends AbstractEntity<?>>> getRetrievalModels() {
+        return unmodifiableMap(entityProps);
+    }
+    
+    protected void addPrimProp(final String name) {
+        primProps.add(name);
+    }
+
+    protected void addEntityPropFetchModel(final String propName, final EntityRetrievalModel<? extends AbstractEntity<?>> fetchModel) {
+        entityProps.put(propName, fetchModel);
     }
 
     @Override
@@ -75,7 +90,7 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> {
         sb.append(primProps);
         if (entityProps.size() > 0) {
             sb.append("\n------------------------------------------------");
-            for (final Entry<String, fetch<? extends AbstractEntity<?>>> fetchEntry : entityProps.entrySet()) {
+            for (final Entry<String, EntityRetrievalModel<? extends AbstractEntity<?>>> fetchEntry : entityProps.entrySet()) {
                 sb.append("\n" + fetchEntry.getKey() + " <<< " + fetchEntry.getValue());
                 sb.append("\n------------------------------------------------");
             }
@@ -85,30 +100,30 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> {
     }
 
     protected PropertyMetadata getPropMetadata(final String propName) {
-        final PropertyMetadata ppi = getDomainMetadataAnalyser().getPropPersistenceInfoExplicitly(getEntityType(), propName);
+        final PropertyMetadata ppi = domainMetadataAnalyser.getPropPersistenceInfoExplicitly(getEntityType(), propName);
         if (ppi != null) {
             if (ppi.getJavaType() != null) {
                 return ppi;
             } else {
-                throw new IllegalStateException("Couldn't determine type of property " + propName + " of entity type " + getEntityType());
+                throw new EqlException(format("Couldn't determine type of property [%s] of entity type [%s]", propName, getEntityType()));
             }
         } else {
-            throw new IllegalArgumentException("Trying fetch entity of type [" + getEntityType() + "] with non-existing property [" + propName + "]");
+            throw new EqlException(format("Trying to fetch entity of type [%s] with non-existing property [%s]", getEntityType(), propName));
         }
     }
 
     protected void without(final String propName) {
-        final Class propType = getPropMetadata(propName).getJavaType();
+        final Class<?> propType = getPropMetadata(propName).getJavaType();
 
         if (isEntityType(propType)) {
-            final Object removalResult = getEntityProps().remove(propName);
+            final Object removalResult = entityProps.remove(propName);
             if (removalResult == null) {
-                throw new IllegalStateException("Couldn't find property [" + propName + "] to be excluded from fetched entity properties of entity type " + getEntityType());
+                throw new EqlException(format("Couldn't find property [%s] to be excluded from fetched entity properties of entity type [%s]", propName, getEntityType()));
             }
         } else {
-            final boolean removalResult = getPrimProps().remove(propName);
+            final boolean removalResult = primProps.remove(propName);
             if (!removalResult) {
-                throw new IllegalStateException("Couldn't find property [" + propName + "] to be excluded from fetched primitive properties of entity type " + getEntityType());
+                throw new EqlException(format("Couldn't find property [%s] to be excluded from fetched primitive properties of entity type [%s]", propName, getEntityType()));
             }
         }
     }

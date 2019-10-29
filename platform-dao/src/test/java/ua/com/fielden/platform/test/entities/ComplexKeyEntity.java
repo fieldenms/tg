@@ -14,6 +14,4 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 @CompanionObject(IComplexKeyEntity.class)
 public class ComplexKeyEntity extends AbstractEntity<CompositeEntityKey> {
 
-    private static final long serialVersionUID = -8837409604335848090L;
-
 }

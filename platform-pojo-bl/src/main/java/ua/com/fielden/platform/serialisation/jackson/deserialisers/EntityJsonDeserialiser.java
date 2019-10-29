@@ -1,10 +1,15 @@
 package ua.com.fielden.platform.serialisation.jackson.deserialisers;
 
+import static java.util.Optional.of;
+import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
+import static ua.com.fielden.platform.entity.meta.PropertyDescriptor.fromString;
+import static ua.com.fielden.platform.entity.proxy.EntityProxyContainer.proxy;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getEditableDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getRequiredDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getValueChangeCountDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getVisibleDefault;
 import static ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.ID_ONLY_PROXY_PREFIX;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.entityWithMocksFromString;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -12,7 +17,6 @@ import java.lang.reflect.ParameterizedType;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
@@ -25,13 +29,12 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import com.fasterxml.jackson.databind.type.SimpleType;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
-import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -108,8 +111,8 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
             final JsonNode idJsonNode = node.get(AbstractEntity.ID); // the node should not be null itself
             final Long id = idJsonNode.isNull() ? null : idJsonNode.asLong();
             
-            final JsonNode uninstrumentedJsonNode = node.get("@uninstrumented");
-            final boolean uninstrumented = uninstrumentedJsonNode != null;
+            final JsonNode instrumentedJsonNode = node.get("@_i");
+            final boolean uninstrumented = instrumentedJsonNode == null;
 
             final String[] proxiedProps = properties.stream()
                     .map(cachedProp -> cachedProp.field().getName())
@@ -118,18 +121,10 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                     .toArray(new String[] {});
             final T entity;
             // Property Descriptor: key and desc properties of propDescriptor are set through setters, not through fields; avoid validators on these properties or otherwise isInitialising:=true would be needed here
-            if (uninstrumented) {
-                if (propertyDescriptorType) {
-                    entity = (T) PropertyDescriptor.fromString(node.get("@pdString").asText());
-                } else {
-                    entity = EntityFactory.newPlainEntity(EntityProxyContainer.proxy(type, proxiedProps), id);
-                }
+            if (propertyDescriptorType) {
+                entity = entityWithMocksFromString(str -> (T) (uninstrumented ? fromString(str) : fromString(str, of(factory))), node.get("@pdString").asText(), type);
             } else {
-                if (propertyDescriptorType) {
-                    entity = (T) PropertyDescriptor.fromString(node.get("@pdString").asText(), Optional.of(factory));
-                } else {
-                    entity = factory.newEntity(EntityProxyContainer.proxy(type, proxiedProps), id);
-                }
+                entity = uninstrumented ? newPlainEntity(proxy(type, proxiedProps), id) : factory.newEntity(proxy(type, proxiedProps), id);
             }
             final JsonNode atIdNode = node.get("@id");
             // At this stage 'clientSideReference' has been already decoded using ISerialisationTypeEncoder, that is why concrete EntityJsonDeserialiser has been chosen for deserialisation
@@ -187,9 +182,7 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
         if (valueNode.isNull()) {
             value = null;
         } else {
-            final JavaType concreteType = concreteTypeOf(constructType(mapper.getTypeFactory(), propertyField), () -> {
-                return valueNode.get("@id") == null ? valueNode.get("@id_ref") : valueNode.get("@id");
-            });
+            final JavaType concreteType = concreteTypeOf(constructType(type, mapper.getTypeFactory(), propertyField), () -> valueNode.get("@id") == null ? valueNode.get("@id_ref") : valueNode.get("@id"));
             if (valueNode.isTextual() && EntityUtils.isEntityType(concreteType.getRawClass()) && valueNode.asText().startsWith(ID_ONLY_PROXY_PREFIX)) { // id-only proxy instance is represented as id-only proxy prefix concatenated with id number
                 final Long determinedId = Long.valueOf(valueNode.asText().replaceFirst(Pattern.quote(ID_ONLY_PROXY_PREFIX), ""));
                 value = EntityFactory.newPlainEntity(idOnlyProxiedEntityTypeCache.getIdOnlyProxiedTypeFor((Class) concreteType.getRawClass()), determinedId);
@@ -335,7 +328,7 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
         }
     }
     
-    private ResolvedType constructType(final TypeFactory typeFactory, final Field propertyField) {
+    private static <T extends AbstractEntity<?>> ResolvedType constructType(final Class<T> type, final TypeFactory typeFactory, final Field propertyField) {
         final Class<?> fieldType = AbstractEntity.KEY.equals(propertyField.getName()) ? AnnotationReflector.getKeyType(type) : PropertyTypeDeterminator.stripIfNeeded(propertyField.getType());
         if (Set.class.isAssignableFrom(fieldType) || List.class.isAssignableFrom(fieldType)) {
             final ParameterizedType paramType = (ParameterizedType) propertyField.getGenericType();
@@ -349,6 +342,8 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
             final Class<?> valueClass = PropertyTypeDeterminator.classFrom(paramType.getActualTypeArguments()[1]);
 
             return typeFactory.constructMapType((Class<? extends Map>) fieldType, keyClass, valueClass);
+        } else if (EntityUtils.isEntityType(fieldType)) {
+            return SimpleType.constructUnsafe(fieldType);
         } else {
             // TODO no other collectional types are supported at this stage -- should be added one by one
             return typeFactory.constructType(fieldType);

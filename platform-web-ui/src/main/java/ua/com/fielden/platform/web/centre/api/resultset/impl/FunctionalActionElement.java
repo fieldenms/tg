@@ -101,9 +101,12 @@ public class FunctionalActionElement implements IRenderable, IImportable {
 
         if (FunctionalActionKind.TOP_LEVEL == functionalActionKind) {
             attrs.put("class", "entity-specific-action");
+            attrs.put("slot", "entity-specific-action");
         } else if (FunctionalActionKind.MENU_ITEM == functionalActionKind) {
-            attrs.put("class", "menu-item-action");
+            attrs.put("slot", "menu-item-action");
             attrs.put("data-route", getDataRoute());
+        } else if (FunctionalActionKind.FRONT == functionalActionKind) {
+            attrs.put("slot", "custom-front-action");
         }
 
         attrs.put("ui-role", conf().role.toString());
@@ -184,7 +187,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
      */
     protected Map<String, Object> createCustomAttributes() {
         return new LinkedHashMap<>();
-    };
+    }
 
     public EntityActionConfig conf() {
         return entityActionConfig;
@@ -229,7 +232,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         }
         attrs.append("},\n");
 
-        attrs.append("postActionSuccess: function (functionalEntity) {\n");
+        attrs.append("postActionSuccess: function (functionalEntity, action, master) {\n");
         attrs.append("    console.log('postActionSuccess: " + conf().shortDesc.orElse("noname") + "', functionalEntity);\n");
         if (conf().successPostAction.isPresent()) {
             attrs.append(conf().successPostAction.get().build().toString());
@@ -246,7 +249,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
 
         attrs.append("},\n");
 
-        attrs.append("postActionError: function (functionalEntity) {\n");
+        attrs.append("postActionError: function (functionalEntity, action, master) {\n");
         attrs.append("    console.log('postActionError: " + conf().shortDesc.orElse("noname") + "', functionalEntity);\n");
         if (conf().errorPostAction.isPresent()) {
             attrs.append(conf().errorPostAction.get().build().toString());

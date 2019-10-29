@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.web.menu.module.impl;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
+
 import ua.com.fielden.platform.menu.CustomView;
 import ua.com.fielden.platform.menu.EntityCentreView;
 import ua.com.fielden.platform.menu.EntityMasterView;
@@ -44,8 +46,8 @@ public class WebView implements IExecutable {
             final String typeUrl = entityMaster != null ? entityMaster.getEntityType().getName() : (entityCentre != null ? entityCentre.getMenuItemType().getName()
                     : customView.getViewName());
             final String importUrl = "\"/" + viewUrl + "/" + typeUrl + "\"";
-            final String typeName = entityMaster != null ? (entityMaster.getEntityType().getSimpleName() + "-master")
-                    : (entityCentre != null ? (entityCentre.getMenuItemType().getSimpleName() + "-centre") : customView.getViewName());
+            final String typeName = entityMaster != null ? (flattenedNameOf(entityMaster.getEntityType()) + "-master")
+                    : (entityCentre != null ? (flattenedNameOf(entityCentre.getMenuItemType()) + "-centre") : customView.getViewName());
             final String elementName = "\"tg-" + typeName + "\"";
             final String viewType = entityMaster != null ? "\"master\"" : (entityCentre != null ? "\"centre\"" : "\"view\"");
             final StringBuilder attrs = new StringBuilder();
@@ -54,7 +56,7 @@ public class WebView implements IExecutable {
                 attrs
                 .append("{")
                 .append("entityId: \"new\",")
-                .append("centreUuid: \"menu\",")
+//                .append("centreUuid: \"menu\",")
                 .append("currentState: \"EDIT\",")
                 .append("entityType: \"" + entityMaster.getEntityType().getName() + "\",")
                 .append("uuid: \"" + entityMaster.getEntityType().getSimpleName() + "\",")
@@ -91,8 +93,8 @@ public class WebView implements IExecutable {
             final String typeUrl = entityMaster != null ? entityMaster.getEntityType().getName() : (entityCentre != null ? entityCentre.getMenuItemType().getName()
                     : customView.getViewName());
             final String importUrl = "/" + viewUrl + "/" + typeUrl;
-            final String typeName = entityMaster != null ? (entityMaster.getEntityType().getSimpleName() + "-master")
-                    : (entityCentre != null ? (entityCentre.getMenuItemType().getSimpleName() + "-centre") : customView.getViewName());
+            final String typeName = entityMaster != null ? (flattenedNameOf(entityMaster.getEntityType()) + "-master")
+                    : (entityCentre != null ? (flattenedNameOf(entityCentre.getMenuItemType()) + "-centre") : customView.getViewName());
             final String elementName = "tg-" + typeName + "";
             final String viewType = entityMaster != null ? "master" : (entityCentre != null ? "centre" : "view");
 

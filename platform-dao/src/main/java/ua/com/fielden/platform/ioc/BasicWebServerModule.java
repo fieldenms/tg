@@ -6,15 +6,19 @@ import java.util.Properties;
 import com.google.inject.Scopes;
 import com.google.inject.name.Names;
 
+import ua.com.fielden.platform.attachment.AttachmentDao;
+import ua.com.fielden.platform.attachment.AttachmentPreviewEntityActionDao;
+import ua.com.fielden.platform.attachment.AttachmentUploaderDao;
+import ua.com.fielden.platform.attachment.AttachmentsUploadActionDao;
 import ua.com.fielden.platform.attachment.IAttachment;
-import ua.com.fielden.platform.attachment.IEntityAttachmentAssociationController;
+import ua.com.fielden.platform.attachment.IAttachmentPreviewEntityAction;
+import ua.com.fielden.platform.attachment.IAttachmentUploader;
+import ua.com.fielden.platform.attachment.IAttachmentsUploadAction;
 import ua.com.fielden.platform.basic.config.ApplicationSettings;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaGenerator;
-import ua.com.fielden.platform.dao.AttachmentDao;
-import ua.com.fielden.platform.dao.EntityAttachmentAssociationDao;
 import ua.com.fielden.platform.dao.GeneratedEntityDao;
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.dao.ISecurityRoleAssociation;
@@ -22,10 +26,18 @@ import ua.com.fielden.platform.dao.IUserAndRoleAssociation;
 import ua.com.fielden.platform.dao.IUserRole;
 import ua.com.fielden.platform.entity.EntityDeleteActionDao;
 import ua.com.fielden.platform.entity.EntityEditActionDao;
+import ua.com.fielden.platform.entity.EntityNavigationActionDao;
 import ua.com.fielden.platform.entity.EntityNewActionDao;
 import ua.com.fielden.platform.entity.IEntityDeleteAction;
 import ua.com.fielden.platform.entity.IEntityEditAction;
+import ua.com.fielden.platform.entity.IEntityNavigationAction;
 import ua.com.fielden.platform.entity.IEntityNewAction;
+import ua.com.fielden.platform.entity.ISecurityMatrixInsertionPoint;
+import ua.com.fielden.platform.entity.ISecurityMatrixSaveAction;
+import ua.com.fielden.platform.entity.ISecurityTokenTreeNodeEntity;
+import ua.com.fielden.platform.entity.SecurityMatrixInsertionPointDao;
+import ua.com.fielden.platform.entity.SecurityMatrixSaveActionDao;
+import ua.com.fielden.platform.entity.SecurityTokenTreeNodeEntityDao;
 import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarningsDao;
 import ua.com.fielden.platform.entity.functional.master.IAcknowledgeWarnings;
 import ua.com.fielden.platform.entity.functional.master.IPropertyWarning;
@@ -74,7 +86,9 @@ import ua.com.fielden.platform.security.user.ISecurityTokenInfo;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserRoleTokensUpdater;
 import ua.com.fielden.platform.security.user.IUserRolesUpdater;
+import ua.com.fielden.platform.security.user.IUserSecret;
 import ua.com.fielden.platform.security.user.UserDao;
+import ua.com.fielden.platform.security.user.UserSecretDao;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.ISerialiser0;
@@ -90,12 +104,20 @@ import ua.com.fielden.platform.ui.config.controller.EntityCentreConfigDao;
 import ua.com.fielden.platform.ui.config.controller.EntityLocatorConfigDao;
 import ua.com.fielden.platform.ui.config.controller.EntityMasterConfigDao;
 import ua.com.fielden.platform.ui.config.controller.MainMenuItemDao;
-import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDefaultActionDao;
+import ua.com.fielden.platform.web.centre.CentreConfigDeleteActionDao;
+import ua.com.fielden.platform.web.centre.CentreConfigDuplicateActionDao;
+import ua.com.fielden.platform.web.centre.CentreConfigNewActionDao;
 import ua.com.fielden.platform.web.centre.CustomisableColumnDao;
-import ua.com.fielden.platform.web.centre.ICentreConfigUpdaterDefaultAction;
+import ua.com.fielden.platform.web.centre.ICentreConfigDeleteAction;
+import ua.com.fielden.platform.web.centre.ICentreConfigDuplicateAction;
+import ua.com.fielden.platform.web.centre.ICentreConfigNewAction;
 import ua.com.fielden.platform.web.centre.ICustomisableColumn;
 import ua.com.fielden.platform.web_api.GraphQLService;
 import ua.com.fielden.platform.web_api.IGraphQLService;
+import ua.com.fielden.platform.web.centre.ILoadableCentreConfig;
+import ua.com.fielden.platform.web.centre.IOverrideCentreConfig;
+import ua.com.fielden.platform.web.centre.LoadableCentreConfigDao;
+import ua.com.fielden.platform.web.centre.OverrideCentreConfigDao;
 
 /**
  * Basic IoC module for server web applications, which should be enhanced by the application specific IoC module.
@@ -178,9 +200,11 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(IFilter.class).to(automaticDataFilterType); // UserDrivenFilter.class
         bind(IKeyNumber.class).to(KeyNumberDao.class);
 
-        // bind attachment controllers
+        // bind attachment related companions
         bind(IAttachment.class).to(AttachmentDao.class);
-        bind(IEntityAttachmentAssociationController.class).to(EntityAttachmentAssociationDao.class);
+        bind(IAttachmentUploader.class).to(AttachmentUploaderDao.class);
+        bind(IAttachmentsUploadAction.class).to(AttachmentsUploadActionDao.class);
+        bind(IAttachmentPreviewEntityAction.class).to(AttachmentPreviewEntityActionDao.class);
 
         // configuration menu related binding
         bind(IModuleMenuItem.class).to(ModuleMenuItemDao.class);
@@ -205,18 +229,27 @@ public class BasicWebServerModule extends CommonFactoryModule {
         // bind entity manipulation controller
         bind(IEntityNewAction.class).to(EntityNewActionDao.class);
         bind(IEntityEditAction.class).to(EntityEditActionDao.class);
+        bind(IEntityNavigationAction.class).to(EntityNavigationActionDao.class);
         bind(IEntityDeleteAction.class).to(EntityDeleteActionDao.class);
 
         // user security related bindings
         bind(IUser.class).to(UserDao.class);
+        bind(IUserSecret.class).to(UserSecretDao.class);
         bind(IUserRolesUpdater.class).to(UserRolesUpdaterDao.class);
 
         bind(IUserRole.class).to(UserRoleDao.class);
         bind(IUserRoleTokensUpdater.class).to(UserRoleTokensUpdaterDao.class);
         bind(ISecurityTokenInfo.class).to(SecurityTokenInfoDao.class);
+        bind(ISecurityMatrixInsertionPoint.class).to(SecurityMatrixInsertionPointDao.class);
+        bind(ISecurityTokenTreeNodeEntity.class).to(SecurityTokenTreeNodeEntityDao.class);
+        bind(ISecurityMatrixSaveAction.class).to(SecurityMatrixSaveActionDao.class);
 
-        bind(ICentreConfigUpdaterDefaultAction.class).to(CentreConfigUpdaterDefaultActionDao.class);
         bind(ICustomisableColumn.class).to(CustomisableColumnDao.class);
+        bind(ICentreConfigNewAction.class).to(CentreConfigNewActionDao.class);
+        bind(ICentreConfigDuplicateAction.class).to(CentreConfigDuplicateActionDao.class);
+        bind(ICentreConfigDeleteAction.class).to(CentreConfigDeleteActionDao.class);
+        bind(ILoadableCentreConfig.class).to(LoadableCentreConfigDao.class);
+        bind(IOverrideCentreConfig.class).to(OverrideCentreConfigDao.class);
 
         bind(IUserAndRoleAssociation.class).to(UserAndRoleAssociationDao.class);
         bind(ISecurityRoleAssociation.class).to(SecurityRoleAssociationDao.class);

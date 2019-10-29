@@ -13,7 +13,7 @@ public class GroupBys implements IPropertyCollector {
 
     @Override
     public List<EntValue> getAllValues() {
-        final List<EntValue> result = new ArrayList<EntValue>();
+        final List<EntValue> result = new ArrayList<>();
         for (final GroupBy group : groups) {
             result.addAll(group.getOperand().getAllValues());
         }
@@ -22,7 +22,7 @@ public class GroupBys implements IPropertyCollector {
 
     @Override
     public List<EntQuery> getLocalSubQueries() {
-        final List<EntQuery> result = new ArrayList<EntQuery>();
+        final List<EntQuery> result = new ArrayList<>();
         for (final GroupBy group : groups) {
             result.addAll(group.getOperand().getLocalSubQueries());
         }
@@ -31,7 +31,7 @@ public class GroupBys implements IPropertyCollector {
 
     @Override
     public List<EntProp> getLocalProps() {
-        final List<EntProp> result = new ArrayList<EntProp>();
+        final List<EntProp> result = new ArrayList<>();
         for (final GroupBy group : groups) {
             result.addAll(group.getOperand().getLocalProps());
         }

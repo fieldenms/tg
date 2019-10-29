@@ -4,9 +4,9 @@ import java.util.Properties;
 
 import com.google.inject.Injector;
 
-import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
+import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.NewUserNotifierMockBindingModule;
 import ua.com.fielden.platform.test.DbDrivenTestCase;

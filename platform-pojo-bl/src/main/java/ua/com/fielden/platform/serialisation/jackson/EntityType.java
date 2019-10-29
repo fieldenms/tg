@@ -30,7 +30,7 @@ public class EntityType extends AbstractEntity<String> {
 
     @IsProperty(String.class)
     @Title(value = "Composite Keys", desc = "Composite key property names")
-    private List<String> _compositeKeyNames;
+    private List<String> _compositeKeyNames = new ArrayList<>();
 
     @IsProperty
     @Title(value = "Composite Key Separator", desc = "Separator for composite key members (for autocompletion)")
@@ -46,7 +46,7 @@ public class EntityType extends AbstractEntity<String> {
 
     @IsProperty(EntityTypeProp.class)
     @Title(value = "Entity Type Properties", desc = "A map of entity type properties by their names")
-    private Map<String, EntityTypeProp> _props;
+    private Map<String, EntityTypeProp> _props = new LinkedHashMap<>();
 
     @IsProperty
     @Title(value = "Is Persistent?", desc = "Indicated whether the associated entity type represents a persistent entity.")
@@ -106,8 +106,6 @@ public class EntityType extends AbstractEntity<String> {
 
     @Observable
     protected EntityType set_props(final Map<String, EntityTypeProp> _props) {
-        this._props = new LinkedHashMap<>();
-
         this._props.clear();
         this._props.putAll(_props);
         return this;
@@ -149,8 +147,6 @@ public class EntityType extends AbstractEntity<String> {
 
     @Observable
     protected EntityType set_compositeKeyNames(final List<String> _compositeKeyNames) {
-        this._compositeKeyNames = new ArrayList<>();
-
         this._compositeKeyNames.clear();
         this._compositeKeyNames.addAll(_compositeKeyNames);
         return this;

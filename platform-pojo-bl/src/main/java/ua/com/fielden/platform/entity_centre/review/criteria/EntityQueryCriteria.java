@@ -1,8 +1,16 @@
 package ua.com.fielden.platform.entity_centre.review.criteria;
 
+import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toMap;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isBooleanCriterion;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isPlaceholder;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isShortCollection;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.entity_centre.review.DynamicParamBuilder.buildParametersMap;
+import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty.queryPropertyParamName;
+import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils.createParamValuesMap;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isDotNotation;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.penultAndLast;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.transform;
@@ -11,6 +19,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -42,11 +51,11 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.review.DynamicFetchBuilder;
 import ua.com.fielden.platform.entity_centre.review.DynamicOrderingBuilder;
-import ua.com.fielden.platform.entity_centre.review.DynamicParamBuilder;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel;
@@ -77,6 +86,8 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     private Optional<IQueryEnhancer<T>> additionalQueryEnhancer = Optional.empty();
     private Optional<CentreContext<T, ?>> centreContextForQueryEnhancer = Optional.empty();
     private Optional<User> createdByUserConstraint = Optional.empty();
+    private final List<List<DynamicColumnForExport>> dynamicProperties = new ArrayList<>();
+    private AbstractEntity<?> critOnlySinglePrototype;
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Inject
@@ -162,7 +173,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     public void setAdditionalFetchProvider(final IFetchProvider<T> additionalFetchProvider) {
         this.additionalFetchProvider = Optional.of(additionalFetchProvider);
     }
-    
+
     /**
      * Enhances this criteria entity with fetch provider consisting from properties that are used for tooltips of other properties; it will extend the fetching strategy of running queries on top of chosen result-set properties.
      *
@@ -171,7 +182,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     public void setAdditionalFetchProviderForTooltipProperties(final IFetchProvider<T> additionalFetchProviderForTooltipProperties) {
         this.additionalFetchProviderForTooltipProperties = Optional.of(additionalFetchProviderForTooltipProperties);
     }
-    
+
     public void setCreatedByUserConstraint(final User user) {
         this.createdByUserConstraint = Optional.of(user);
     }
@@ -197,6 +208,12 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      * @return
      */
     private static <T extends AbstractEntity<?>> EntityResultQueryModel<T> createQuery(final Class<T> managedType, final List<QueryProperty> queryProperties, final Optional<IQueryEnhancer<T>> additionalQueryEnhancer, final Optional<CentreContext<T, ?>> centreContextForQueryEnhancer, final Optional<User> createdByUserConstraint) {
+        final EntityResultQueryModel<T> query = createCompletedQuery(managedType, queryProperties, additionalQueryEnhancer, centreContextForQueryEnhancer, createdByUserConstraint).model();
+        query.setFilterable(true);
+        return query;
+    }
+
+    private static <T extends AbstractEntity<?>> ICompleted<T> createCompletedQuery (final Class<T> managedType, final List<QueryProperty> queryProperties, final Optional<IQueryEnhancer<T>> additionalQueryEnhancer, final Optional<CentreContext<T, ?>> centreContextForQueryEnhancer, final Optional<User> createdByUserConstraint) {
         if (createdByUserConstraint.isPresent()) {
             final QueryProperty queryProperty = EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(managedType, "createdBy");
             final List<String> createdByCriteria = new ArrayList<>();
@@ -204,16 +221,48 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
             queryProperty.setValue(createdByCriteria);
             queryProperties.add(queryProperty);
         }
-        final EntityResultQueryModel<T> query;
         if (additionalQueryEnhancer.isPresent()) {
-            query = DynamicQueryBuilder.createQuery(managedType, queryProperties, Optional.of(new Pair<>(additionalQueryEnhancer.get(), centreContextForQueryEnhancer))).model();
+            return DynamicQueryBuilder.createQuery(managedType, queryProperties, Optional.of(new Pair<>(additionalQueryEnhancer.get(), centreContextForQueryEnhancer)));
         } else {
-            query = DynamicQueryBuilder.createQuery(managedType, queryProperties).model();
+            return DynamicQueryBuilder.createQuery(managedType, queryProperties);
         }
-        query.setFilterable(true);
-        return query;
     }
 
+    /**
+     * Generates an EQL model to the stage of {@link ICompleted}, which can be conveniently complemented with custom yield instructions.
+     *
+     * @return
+     */
+    public ICompleted<T> createQuery() {
+        return createCompletedQuery(getManagedType(), createQueryProperties(), additionalQueryEnhancer, centreContextForQueryEnhancer, createdByUserConstraint);
+    }
+
+    /**
+     * Returns the parameter map for query.
+     *
+     * @return
+     */
+    public Map<String, Object> getParameters () {
+        final IAddToCriteriaTickManager criteriaTickManager = getCentreDomainTreeMangerAndEnhancer().getFirstTick();
+        final Map<String, Pair<Object, Object>> paramMap = createParamValuesMap(getEntityClass(), getManagedType(), criteriaTickManager);
+        final Map<String, Object> resultMap = enhanceQueryParams(buildParametersMap(getManagedType(), paramMap));
+        resultMap.putAll(getQueryPropertyParameters());
+        return resultMap;
+    }
+
+    /**
+     * Populates parameters map with instances of {@link QueryProperty}.
+     * This method should be used to expand mnemonics value into conditions for the EQL {@code critCondition} operator.
+     *
+     * @return
+     */
+    private Map<String, QueryProperty> getQueryPropertyParameters() {
+        return getCentreDomainTreeMangerAndEnhancer().getFirstTick().checkedProperties(getEntityClass()).stream()
+                .filter(propName -> !isPlaceholder(propName))
+                .map(propName -> createQueryProperty(propName))
+                .filter(qp -> qp.isCritOnly() || qp.isAECritOnlyChild())
+                .collect(toMap(qp -> queryPropertyParamName(qp.getPropertyName()), qp -> qp));
+    }
     /**
      * Creates the fetch provider based on 'properties' of the 'managedType' and on custom fetch provider (if any).
      * <p>
@@ -224,7 +273,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      * @param properties
      * @param additionalFetchProvider
      * @param additionalFetchProviderForTooltipProperties
-     * 
+     *
      * @return
      */
     protected static <T extends AbstractEntity<?>, V extends AbstractEntity<?>> IFetchProvider<V> createFetchModelFrom(final Class<V> managedType, final Set<String> properties, final Optional<IFetchProvider<T>> additionalFetchProvider, final Optional<IFetchProvider<T>> additionalFetchProviderForTooltipProperties) {
@@ -312,20 +361,19 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     private Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> generateQueryWithSummaries() {
         final Class<?> root = getEntityClass();
         final IAddToResultTickManager resultTickManager = getCentreDomainTreeMangerAndEnhancer().getSecondTick();
-        final IAddToCriteriaTickManager criteriaTickManager = getCentreDomainTreeMangerAndEnhancer().getFirstTick();
         final IDomainTreeEnhancer enhancer = getCentreDomainTreeMangerAndEnhancer().getEnhancer();
         final Pair<Set<String>, Set<String>> separatedFetch = EntityQueryCriteriaUtils.separateFetchAndTotalProperties(root, resultTickManager, enhancer);
-        final Map<String, Pair<Object, Object>> paramMap = EntityQueryCriteriaUtils.createParamValuesMap(getEntityClass(), getManagedType(), criteriaTickManager);
+        final Map<String, Object> paramMap = getParameters();
         final EntityResultQueryModel<T> notOrderedQuery = createQuery(getManagedType(), createQueryProperties(), additionalQueryEnhancer, centreContextForQueryEnhancer, createdByUserConstraint);
         final IFetchProvider<T> fetchProvider = createFetchModelFrom(getManagedType(), separatedFetch.getKey(), additionalFetchProvider, additionalFetchProviderForTooltipProperties);
         final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = adjustLightweightness(notOrderedQuery, fetchProvider.instrumented())
                 .with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), resultTickManager.orderedProperties(root)))//
                 .with(fetchProvider.fetchModel())//
-                .with(enhanceQueryParams(DynamicParamBuilder.buildParametersMap(getManagedType(), paramMap))).model();
+                .with(paramMap).model();
         if (!separatedFetch.getValue().isEmpty()) {
             final QueryExecutionModel<T, EntityResultQueryModel<T>> totalQuery = adjustLightweightness(notOrderedQuery, false)
                     .with(DynamicFetchBuilder.createTotalFetchModel(getManagedType(), separatedFetch.getValue()))//
-                    .with(enhanceQueryParams(DynamicParamBuilder.buildParametersMap(getManagedType(), paramMap))).model();
+                    .with(paramMap).model();
             return new Pair<>(resultQuery, totalQuery);
         }
         return new Pair<>(resultQuery, null);
@@ -463,17 +511,15 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      */
     public void export(final String fileName, final String[] propertyNames, final String[] propertyTitles) throws IOException {
         final Class<?> root = getEntityClass();
-        final IAddToCriteriaTickManager criteriaTickManager = getCentreDomainTreeMangerAndEnhancer().getFirstTick();
         final IAddToResultTickManager tickManager = getCentreDomainTreeMangerAndEnhancer().getSecondTick();
         final IDomainTreeEnhancer enhancer = getCentreDomainTreeMangerAndEnhancer().getEnhancer();
         final Pair<Set<String>, Set<String>> separatedFetch = EntityQueryCriteriaUtils.separateFetchAndTotalProperties(root, tickManager, enhancer);
-        final Map<String, Pair<Object, Object>> paramMap = EntityQueryCriteriaUtils.createParamValuesMap(getEntityClass(), getManagedType(), criteriaTickManager);
         final EntityResultQueryModel<T> notOrderedQuery = createQuery(getManagedType(), createQueryProperties(), additionalQueryEnhancer, centreContextForQueryEnhancer, createdByUserConstraint);
         final IFetchProvider<T> fetchProvider = createFetchModelFrom(getManagedType(), separatedFetch.getKey(), additionalFetchProvider, additionalFetchProviderForTooltipProperties);
         final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = adjustLightweightness(notOrderedQuery, fetchProvider.instrumented())
                 .with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), tickManager.orderedProperties(root)))//
                 .with(fetchProvider.fetchModel())//
-                .with(enhanceQueryParams(DynamicParamBuilder.buildParametersMap(getManagedType(), paramMap))).model();
+                .with(getParameters()).model();
         export(fileName, resultQuery, propertyNames, propertyTitles);
     }
 
@@ -509,23 +555,21 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     private QueryExecutionModel<T, EntityResultQueryModel<T>> generateQuery() {
         final Class<?> root = getEntityClass();
         final IAddToResultTickManager resultTickManager = getCentreDomainTreeMangerAndEnhancer().getSecondTick();
-        final IAddToCriteriaTickManager criteriaTickManager = getCentreDomainTreeMangerAndEnhancer().getFirstTick();
         final IDomainTreeEnhancer enhancer = getCentreDomainTreeMangerAndEnhancer().getEnhancer();
         final Pair<Set<String>, Set<String>> separatedFetch = EntityQueryCriteriaUtils.separateFetchAndTotalProperties(root, resultTickManager, enhancer);
-        final Map<String, Pair<Object, Object>> paramMap = EntityQueryCriteriaUtils.createParamValuesMap(getEntityClass(), getManagedType(), criteriaTickManager);
         final EntityResultQueryModel<T> notOrderedQuery = createQuery(getManagedType(), createQueryProperties(), additionalQueryEnhancer, centreContextForQueryEnhancer, createdByUserConstraint);
         final IFetchProvider<T> fetchProvider = createFetchModelFrom(getManagedType(), separatedFetch.getKey(), additionalFetchProvider, additionalFetchProviderForTooltipProperties);
         return adjustLightweightness(notOrderedQuery, fetchProvider.instrumented())
                 .with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), resultTickManager.orderedProperties(root)))//
                 .with(fetchProvider.fetchModel())//
-                .with(enhanceQueryParams(DynamicParamBuilder.buildParametersMap(getManagedType(), paramMap))).model();
+                .with(getParameters()).model();
     }
 
     public Pair<String[], String[]> generatePropTitlesToExport() {
         final Class<?> root = getEntityClass();
         final IAddToResultTickManager tickManager = getCentreDomainTreeMangerAndEnhancer().getSecondTick();
-        final List<String> propertyNames = new ArrayList<String>();
-        final List<String> propertyTitles = new ArrayList<String>();
+        final List<String> propertyNames = new ArrayList<>();
+        final List<String> propertyTitles = new ArrayList<>();
         for (final String propertyName : tickManager.usedProperties(root)) {
             if (tickManager.getWidth(root, propertyName) > 0) {
                 propertyNames.add(propertyName);
@@ -594,7 +638,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      * @return
      */
     public final List<QueryProperty> createQueryProperties() {
-        final List<QueryProperty> queryProperties = new ArrayList<QueryProperty>();
+        final List<QueryProperty> queryProperties = new ArrayList<>();
         for (final String actualProperty : getCentreDomainTreeMangerAndEnhancer().getFirstTick().checkedProperties(getEntityClass())) {
             if (!AbstractDomainTree.isPlaceholder(actualProperty)) {
                 queryProperties.add(createQueryProperty(actualProperty));
@@ -660,7 +704,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      * The returned stream must always be wrapped into <code>try with resources</code> clause to ensure that the underlying resultset is closed.
      */
     public final Stream<T> streamEntities(final QueryExecutionModel<T, EntityResultQueryModel<T>> queryModel, final int fetchSize, final Long... ids) {
-        
+
         final QueryExecutionModel<T, EntityResultQueryModel<T>> qem;
         if (ids.length == 0) {
             qem = queryModel;
@@ -668,9 +712,9 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
             final EntityResultQueryModel<T> queryWithIds = select(getManagedType())
                     .where().prop("id").in().values(ids)
                     .model();
-            qem = from(queryWithIds).with(queryModel.getFetchModel()).with(queryModel.getOrderModel()).lightweight().model();
+            qem = from(queryWithIds).with(queryModel.getFetchModel()).with(queryModel.getOrderModel()).with(queryModel.getParamValues()).lightweight().model();
         }
-        
+
         if (getManagedType().equals(getEntityClass())) {
             return dao.stream(qem, fetchSize);
         } else {
@@ -726,10 +770,10 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         final QueryProperty queryProperty = EntityQueryCriteriaUtils.createNotInitialisedQueryProperty(getManagedType(), actualProperty);
 
         queryProperty.setValue(tickManager.getValue(root, actualProperty));
-        if (AbstractDomainTree.isDoubleCriterionOrBoolean(getManagedType(), actualProperty)) {
+        if (isDoubleCriterion(getManagedType(), actualProperty)) {
             queryProperty.setValue2(tickManager.getValue2(root, actualProperty));
         }
-        if (AbstractDomainTree.isDoubleCriterion(getManagedType(), actualProperty)) {
+        if (isDoubleCriterion(getManagedType(), actualProperty) && !isBooleanCriterion(getManagedType(), actualProperty)) {
             queryProperty.setExclusive(tickManager.getExclusive(root, actualProperty));
             queryProperty.setExclusive2(tickManager.getExclusive2(root, actualProperty));
         }
@@ -741,6 +785,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         }
         queryProperty.setOrNull(tickManager.getOrNull(root, actualProperty));
         queryProperty.setNot(tickManager.getNot(root, actualProperty));
+        queryProperty.setOrGroup(tickManager.getOrGroup(root, actualProperty));
         return queryProperty;
     }
 
@@ -760,7 +805,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      * @return
      */
     private List<byte[]> toByteArray(final List<ByteArray> list) {
-        final List<byte[]> byteArray = new ArrayList<byte[]>(list.size());
+        final List<byte[]> byteArray = new ArrayList<>(list.size());
         for (final ByteArray array : list) {
             byteArray.add(array.getArray());
         }
@@ -781,4 +826,49 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     public ICompanionObjectFinder getControllerProvider() {
         return controllerProvider;
     }
+
+    /**
+     * Initialises crit-only single prototype entity if it was not initialised before. Returns it as a result.
+     *
+     * @param entityType -- the type of the prototype (only for initialisation)
+     * @param id -- id for the prototype (only for initialisation)
+     * @return
+     */
+    public AbstractEntity<?> critOnlySinglePrototypeInit(final Class<AbstractEntity<?>> entityType, final Long id) {
+        if (critOnlySinglePrototype == null) {
+            critOnlySinglePrototype = getEntityFactory().newEntity(entityType, id);
+            critOnlySinglePrototype.resetMetaState();
+            // Initialisation phase is started here, so that definers will be actioned with isInitialising = true mark. Validation will be deferred to the moment when initialisation phase ends.
+            critOnlySinglePrototype.beginInitialising();
+        }
+        return critOnlySinglePrototype();
+    }
+
+    /**
+     * Returns crit-only single prototype entity.
+     *
+     * @return
+     */
+    public AbstractEntity<?> critOnlySinglePrototype() {
+        return critOnlySinglePrototype;
+    }
+
+    /**
+     * Returns crit-only single prototype entity if exists.
+     *
+     * @return
+     */
+    public Optional<AbstractEntity<?>> critOnlySinglePrototypeOptional() {
+        return ofNullable(critOnlySinglePrototype());
+    }
+
+    public void setDynamicProperties (final List<List<DynamicColumnForExport>> dynamicProperties) {
+        this.dynamicProperties.clear();
+        this.dynamicProperties.addAll(dynamicProperties);
+    }
+
+    public List<List<DynamicColumnForExport>> getDynamicProperties() {
+        return Collections.unmodifiableList(dynamicProperties);
+    }
+
 }

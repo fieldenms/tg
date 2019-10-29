@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
@@ -18,10 +19,8 @@ import ua.com.fielden.platform.domaintree.IDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.IUsageManager;
-import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.IPropertyListener;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.ITickManagerWithMutability;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.ITickRepresentationWithMutability;
-import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.IncludedAndCheckedPropertiesSynchronisationListener;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.TickManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.AbstractTickRepresentation;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.ByteArray;
@@ -113,7 +112,7 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
          * @return
          */
         private Set<Pair<Class<?>, String>> migrateToSet(final Map<Class<?>, List<CalculatedProperty>> calculatedProperties) {
-            final Set<Pair<Class<?>, String>> set = new HashSet<Pair<Class<?>, String>>();
+            final Set<Pair<Class<?>, String>> set = new HashSet<>();
             for (final Entry<Class<?>, List<CalculatedProperty>> entry : calculatedProperties.entrySet()) {
                 for (final CalculatedProperty prop : entry.getValue()) {
                     set.add(new Pair<Class<?>, String>(entry.getKey(), prop.pathAndName()));
@@ -123,19 +122,19 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
         }
 
         protected static Set<Pair<Class<?>, String>> union(final Set<Pair<Class<?>, String>> a, final Set<Pair<Class<?>, String>> b) {
-            final Set<Pair<Class<?>, String>> a_union_b = new HashSet<Pair<Class<?>, String>>(a);
+            final Set<Pair<Class<?>, String>> a_union_b = new HashSet<>(a);
             a_union_b.addAll(b);
             return a_union_b;
         }
 
         private static Set<Pair<Class<?>, String>> subtract(final Set<Pair<Class<?>, String>> a, final Set<Pair<Class<?>, String>> b) {
-            final Set<Pair<Class<?>, String>> a_subtract_b = new HashSet<Pair<Class<?>, String>>(a);
+            final Set<Pair<Class<?>, String>> a_subtract_b = new HashSet<>(a);
             a_subtract_b.removeAll(b);
             return a_subtract_b;
         }
 
         private static Set<Pair<Class<?>, String>> intersect(final Set<Pair<Class<?>, String>> a, final Set<Pair<Class<?>, String>> b) {
-            final Set<Pair<Class<?>, String>> a_intersect_b = new HashSet<Pair<Class<?>, String>>(a);
+            final Set<Pair<Class<?>, String>> a_intersect_b = new HashSet<>(a);
             a_intersect_b.retainAll(b);
             return a_intersect_b;
         }
@@ -143,14 +142,14 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
         @Override
         public void apply() {
             final Map<Class<?>, List<CalculatedProperty>> oldCalculatedProperties = DomainTreeEnhancer.extractAll(baseEnhancer(), false);
-            final Map<Class<?>, List<CalculatedProperty>> newCalculatedProperties = new HashMap<Class<?>, List<CalculatedProperty>>(baseEnhancer().calculatedProperties());
+            final Map<Class<?>, List<CalculatedProperty>> newCalculatedProperties = new HashMap<>(baseEnhancer().calculatedProperties());
 
             final Set<Pair<Class<?>, String>> was = migrateToSet(oldCalculatedProperties);
             final Set<Pair<Class<?>, String>> is = migrateToSet(newCalculatedProperties);
 
             // form a set of retained calculated properties:
             final Set<Pair<Class<?>, String>> retained = intersect(was, is);
-            final Set<Pair<Class<?>, String>> retainedAndSignificantlyChanged = new HashSet<Pair<Class<?>, String>>();
+            final Set<Pair<Class<?>, String>> retainedAndSignificantlyChanged = new HashSet<>();
             for (final Pair<Class<?>, String> rootAndProp : retained) {
                 final CalculatedProperty newProp = DomainTreeEnhancer.calculatedProperty(newCalculatedProperties.get(rootAndProp.getKey()), rootAndProp.getValue());
                 final CalculatedProperty oldProp = DomainTreeEnhancer.calculatedProperty(oldCalculatedProperties.get(rootAndProp.getKey()), rootAndProp.getValue());
@@ -243,7 +242,12 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
         public Class<?> adjustManagedTypeAnnotations(final Class<?> root, final Annotation... additionalAnnotations) {
             return baseEnhancer().adjustManagedTypeAnnotations(root, additionalAnnotations);
         }
-
+        
+        @Override
+        public Class<?> replaceManagedTypeBy(final Class<?> root, final Class<?> newManagedType) {
+            return baseEnhancer().replaceManagedTypeBy(root, newManagedType);
+        }
+        
         @Override
         public void discard() {
             baseEnhancer().discard();
@@ -265,18 +269,18 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
         }
 
         @Override
-        public ICalculatedProperty addCalculatedProperty(final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty) {
-            return baseEnhancer().addCalculatedProperty(root, contextPath, contextualExpression, title, desc, attribute, originationProperty);
+        public ICalculatedProperty addCalculatedProperty(final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final Integer precision, final Integer scale) {
+            return baseEnhancer().addCalculatedProperty(root, contextPath, contextualExpression, title, desc, attribute, originationProperty, precision, scale);
         }
 
         @Override
-        public ICalculatedProperty addCalculatedProperty(final Class<?> root, final String contextPath, final String customPropertyName, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty) {
-            return baseEnhancer().addCalculatedProperty(root, contextPath, customPropertyName, contextualExpression, title, desc, attribute, originationProperty);
+        public ICalculatedProperty addCalculatedProperty(final Class<?> root, final String contextPath, final String customPropertyName, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final Integer precision, final Integer scale) {
+            return baseEnhancer().addCalculatedProperty(root, contextPath, customPropertyName, contextualExpression, title, desc, attribute, originationProperty, precision, scale);
         }
 
         @Override
-        public IDomainTreeEnhancer addCustomProperty(final Class<?> root, final String contextPath, final String name, final String title, final String desc, final Class<?> type) {
-            return baseEnhancer().addCustomProperty(root, contextPath, name, title, desc, type);
+        public IDomainTreeEnhancer addCustomProperty(final Class<?> root, final String contextPath, final String name, final String title, final String desc, final Class<?> type, final Integer precision, final Integer scale) {
+            return baseEnhancer().addCustomProperty(root, contextPath, name, title, desc, type, precision, scale);
         }
 
         @Override
@@ -340,11 +344,6 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
         firstTick = createFirstTick((TickManager) base.getFirstTick());
         secondTick = createSecondTick((TickManager) base.getSecondTick());
         enhancerWithPropertiesPopulation = createEnhancerWrapperWithPropertiesPopulation();
-
-        final IPropertyListener oldListener = this.base.listener();
-        final IPropertyListener newListener = new IncludedAndCheckedPropertiesSynchronisationListener(this.firstTick, this.secondTick, (ITickRepresentationWithMutability) this.getRepresentation().getFirstTick(), (ITickRepresentationWithMutability) this.getRepresentation().getSecondTick(), (IDomainTreeRepresentationWithMutability) this.getRepresentation());
-        this.base.getRepresentation().removePropertyListener(oldListener);
-        this.getRepresentation().addPropertyListener(newListener);
     }
 
     /**
@@ -433,18 +432,6 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
         }
 
         @Override
-        public void addPropertyCheckingListener(final IPropertyCheckingListener listener) {
-            // inject an enhanced type into method implementation
-            base.addPropertyCheckingListener(listener);
-        }
-
-        @Override
-        public void removePropertyCheckingListener(final IPropertyCheckingListener listener) {
-            // inject an enhanced type into method implementation
-            base.removePropertyCheckingListener(listener);
-        }
-
-        @Override
         public ITickManager swap(final Class<?> root, final String property1, final String property2) {
             // inject an enhanced type into method implementation
             base.swap(enhancerWithPropertiesPopulation.getManagedType(root), property1, property2);
@@ -487,6 +474,19 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
         protected IDomainTreeEnhancer enhancer() {
             return enhancerWithPropertiesPopulation;
         }
+
+        @Override
+        public boolean equals(final Object obj) {
+            return this == obj ||
+                super.equals(obj)
+                && getClass() == obj.getClass()
+                && Objects.equals(base, ((TickManagerAndEnhancer) obj).base);
+        }
+
+        @Override
+        public int hashCode() {
+            return 31 * super.hashCode() + ((base == null) ? 0 : base.hashCode());
+        }
     }
 
     @Override
@@ -513,16 +513,6 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 
             firstTick = createFirstTick((AbstractTickRepresentation) base.getFirstTick());
             secondTick = createSecondTick((AbstractTickRepresentation) base.getSecondTick());
-        }
-
-        @Override
-        public void addPropertyListener(final IPropertyListener listener) {
-            base.addPropertyListener(listener);
-        }
-
-        @Override
-        public void removePropertyListener(final IPropertyListener listener) {
-            base.removePropertyListener(listener);
         }
 
         /**
@@ -589,18 +579,6 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
             }
 
             @Override
-            public void addPropertyDisablementListener(final IPropertyDisablementListener listener) {
-                // inject an enhanced type into method implementation
-                base.addPropertyDisablementListener(listener);
-            }
-
-            @Override
-            public void removePropertyDisablementListener(final IPropertyDisablementListener listener) {
-                // inject an enhanced type into method implementation
-                base.removePropertyDisablementListener(listener);
-            }
-
-            @Override
             public EnhancementSet disabledManuallyPropertiesMutable() {
                 return base.disabledManuallyPropertiesMutable();
             }
@@ -614,11 +592,6 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
             protected boolean isCheckedImmutablyLightweight(final Class<?> root, final String property) {
                 // inject an enhanced type into method implementation
                 return base.isCheckedImmutablyLightweight(enhancerWithPropertiesPopulation.getManagedType(root), property);
-            }
-
-            @Override
-            public void addWeakPropertyDisablementListener(final IPropertyDisablementListener listener) {
-                base.addWeakPropertyDisablementListener(listener);
             }
         }
 
@@ -673,10 +646,6 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
             return enhancerWithPropertiesPopulation;
         }
 
-        @Override
-        public void addWeakPropertyListener(final IPropertyListener listener) {
-            base.addWeakPropertyListener(listener);
-        }
     }
 
     @Override

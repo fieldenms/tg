@@ -38,7 +38,9 @@ public class EntityCentreAnalysisConfigPersistenceTest extends AbstractDaoTestCa
     public void test_insertion_and_retrieval_of_data() {
         final EntityCentreConfig config = new_composite(EntityCentreConfig.class, userDao.findByKey("USER"), "CONFIG 1", menuDao.findByKey("type"));
         config.setConfigBody(new byte[] { 1, 2, 3 });
-        final EntityCentreConfig config2 = daoECC.save(config);
+        config.setDesc("desc");
+        daoECC.saveWithConflicts(config);
+        final EntityCentreConfig config2 = daoECC.findByEntityAndFetch(null, config);
 
         final EntityCentreAnalysisConfig analysis = new_composite(EntityCentreAnalysisConfig.class, config2, "ANALYSIS 1");
         dao.save(analysis);
@@ -52,7 +54,7 @@ public class EntityCentreAnalysisConfigPersistenceTest extends AbstractDaoTestCa
     protected void populateDomain() {
         super.populateDomain();
         
-        save(new_(User.class, "USER", "DESC").setBase(true).setEmail("USER@unit-test.software").setActive(true).setPassword("PASSWD"));
+        save(new_(User.class, "USER", "DESC").setBase(true).setEmail("USER@unit-test.software").setActive(true));
         save(new_(MainMenuItem.class, "type", "desc").setOrder(1));
     }
 }

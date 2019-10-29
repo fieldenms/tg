@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.domaintree.centre.impl;
 
-import java.lang.ref.WeakReference;
+import static java.lang.String.format;
+
 import java.nio.ByteBuffer;
 import java.util.Date;
 import java.util.LinkedHashSet;
@@ -8,14 +9,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.swing.event.EventListenerList;
-
 import com.esotericsoftware.kryo.Kryo;
 
 import ua.com.fielden.platform.domaintree.ILocatorManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.IPropertyValueListener;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation.IAddToCriteriaTickRepresentation;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManager.AddToResultTickManager;
@@ -87,37 +86,6 @@ public class CentreDomainTreeManager0 extends AbstractDomainTreeManager implemen
         return super.getSerialiser();
     }
 
-    private static class WeakPropertyValueListener implements IPropertyValueListener {
-
-        private final IAddToCriteriaTickManager tickManager;
-        private final WeakReference<IPropertyValueListener> ref;
-        private final boolean isFirst;
-
-        public WeakPropertyValueListener(final IAddToCriteriaTickManager tickManager, final IPropertyValueListener listener, final boolean isFirst) {
-            this.tickManager = tickManager;
-            this.ref = new WeakReference<IPropertyValueListener>(listener);
-            this.isFirst = isFirst;
-        }
-
-        @Override
-        public void propertyStateChanged(final Class<?> root, final String property, final Object newValue, final Object oldState) {
-            if (ref.get() != null) {
-                ref.get().propertyStateChanged(root, property, newValue, oldState);
-            } else {
-                if (isFirst) {
-                    tickManager.removePropertyValueListener(this);
-                } else {
-                    tickManager.removePropertyValue2Listener(this);
-                }
-            }
-        }
-
-        public IPropertyValueListener getRef() {
-            return ref.get();
-        }
-
-    }
-
     /**
      * WARNING: this is an OLD version!
      *
@@ -140,12 +108,11 @@ public class CentreDomainTreeManager0 extends AbstractDomainTreeManager implemen
 
         private final EnhancementPropertiesMap<Boolean> propertiesOrNulls;
         private final EnhancementPropertiesMap<Boolean> propertiesNots;
+        private final EnhancementPropertiesMap<Integer> propertiesOrGroups;
 
         private Integer columnsNumber;
 
         private final LocatorManager0 locatorManager;
-
-        private final transient EventListenerList propertyValueListeners, propertyValue2Listeners;
 
         private final EnhancementPropertiesMap<Set<MetaValueType>> propertiesMetaValuePresences;
 
@@ -153,8 +120,9 @@ public class CentreDomainTreeManager0 extends AbstractDomainTreeManager implemen
          * Used for the first time instantiation. IMPORTANT : To use this tick it should be passed into manager constructor, which will initialise "dtr", "tr" and "serialiser"
          * fields.
          */
+        @Deprecated
         public AddToCriteriaTickManager0(final ISerialiser0 serialiser, final Set<Class<?>> rootTypes) {
-            this(AbstractDomainTree.<List<String>> createRootsMap(), serialiser, AbstractDomainTree.<Object> createPropertiesMap(), AbstractDomainTree.<Object> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<DateRangePrefixEnum> createPropertiesMap(), AbstractDomainTree.<MnemonicEnum> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), null, new LocatorManager0(serialiser, rootTypes), AbstractDomainTree.<Set<MetaValueType>> createPropertiesMap());
+            this(AbstractDomainTree.<List<String>> createRootsMap(), serialiser, AbstractDomainTree.<Object> createPropertiesMap(), AbstractDomainTree.<Object> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<DateRangePrefixEnum> createPropertiesMap(), AbstractDomainTree.<MnemonicEnum> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Boolean> createPropertiesMap(), AbstractDomainTree.<Integer> createPropertiesMap(), null, new LocatorManager0(serialiser, rootTypes), AbstractDomainTree.<Set<MetaValueType>> createPropertiesMap());
         }
 
         /**
@@ -162,7 +130,8 @@ public class CentreDomainTreeManager0 extends AbstractDomainTreeManager implemen
          *
          * @param serialiser
          */
-        protected AddToCriteriaTickManager0(final Map<Class<?>, List<String>> checkedProperties, final ISerialiser0 serialiser, final Map<Pair<Class<?>, String>, Object> propertiesValues1, final Map<Pair<Class<?>, String>, Object> propertiesValues2, final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive1, final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive2, final Map<Pair<Class<?>, String>, DateRangePrefixEnum> propertiesDatePrefixes, final Map<Pair<Class<?>, String>, MnemonicEnum> propertiesDateMnemonics, final Map<Pair<Class<?>, String>, Boolean> propertiesAndBefore, final Map<Pair<Class<?>, String>, Boolean> propertiesOrNulls, final Map<Pair<Class<?>, String>, Boolean> propertiesNots, final Integer columnsNumber, final LocatorManager0 locatorManager, final Map<Pair<Class<?>, String>, Set<MetaValueType>> propertiesMetaValuePresences) {
+        @Deprecated
+        protected AddToCriteriaTickManager0(final Map<Class<?>, List<String>> checkedProperties, final ISerialiser0 serialiser, final Map<Pair<Class<?>, String>, Object> propertiesValues1, final Map<Pair<Class<?>, String>, Object> propertiesValues2, final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive1, final Map<Pair<Class<?>, String>, Boolean> propertiesExclusive2, final Map<Pair<Class<?>, String>, DateRangePrefixEnum> propertiesDatePrefixes, final Map<Pair<Class<?>, String>, MnemonicEnum> propertiesDateMnemonics, final Map<Pair<Class<?>, String>, Boolean> propertiesAndBefore, final Map<Pair<Class<?>, String>, Boolean> propertiesOrNulls, final Map<Pair<Class<?>, String>, Boolean> propertiesNots, final Map<Pair<Class<?>, String>, Integer> propertiesOrGroups, final Integer columnsNumber, final LocatorManager0 locatorManager, final Map<Pair<Class<?>, String>, Set<MetaValueType>> propertiesMetaValuePresences) {
             super(checkedProperties);
             this.serialiser = serialiser;
 
@@ -184,13 +153,12 @@ public class CentreDomainTreeManager0 extends AbstractDomainTreeManager implemen
             this.propertiesOrNulls.putAll(propertiesOrNulls);
             this.propertiesNots = createPropertiesMap();
             this.propertiesNots.putAll(propertiesNots);
+            this.propertiesOrGroups = createPropertiesMap();
+            this.propertiesOrGroups.putAll(propertiesOrGroups);
 
             this.columnsNumber = columnsNumber;
 
             this.locatorManager = locatorManager;
-
-            this.propertyValueListeners = new EventListenerList();
-            this.propertyValue2Listeners = new EventListenerList();
 
             this.propertiesMetaValuePresences = createPropertiesMap();
             this.propertiesMetaValuePresences.putAll(propertiesMetaValuePresences);
@@ -238,7 +206,7 @@ public class CentreDomainTreeManager0 extends AbstractDomainTreeManager implemen
 
         @Override
         public ILocatorManager refreshLocatorManager(final Class<?> root, final String property) {
-            AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not refresh a locator for 'unchecked' property [" + property + "] in type ["
+            illegalUncheckedProperties(this, root, property, "Could not refresh a locator for 'unchecked' property [" + property + "] in type ["
                     + root.getSimpleName() + "].");
             locatorManager.refreshLocatorManager(root, property);
             return this;
@@ -246,7 +214,7 @@ public class CentreDomainTreeManager0 extends AbstractDomainTreeManager implemen
 
         @Override
         public ILocatorManager resetLocatorManagerToDefault(final Class<?> root, final String property) {
-            AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not reset a locator for 'unchecked' property [" + property + "] in type ["
+            illegalUncheckedProperties(this, root, property, "Could not reset a locator for 'unchecked' property [" + property + "] in type ["
                     + root.getSimpleName() + "].");
             locatorManager.resetLocatorManagerToDefault(root, property);
             return this;
@@ -254,7 +222,7 @@ public class CentreDomainTreeManager0 extends AbstractDomainTreeManager implemen
 
         @Override
         public ILocatorManager acceptLocatorManager(final Class<?> root, final String property) {
-            AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not accept a locator for 'unchecked' property [" + property + "] in type ["
+            illegalUncheckedProperties(this, root, property, "Could not accept a locator for 'unchecked' property [" + property + "] in type ["
                     + root.getSimpleName() + "].");
             locatorManager.acceptLocatorManager(root, property);
             return this;
@@ -262,7 +230,7 @@ public class CentreDomainTreeManager0 extends AbstractDomainTreeManager implemen
 
         @Override
         public ILocatorManager discardLocatorManager(final Class<?> root, final String property) {
-            AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not discard a locator for 'unchecked' property [" + property + "] in type ["
+            illegalUncheckedProperties(this, root, property, "Could not discard a locator for 'unchecked' property [" + property + "] in type ["
                     + root.getSimpleName() + "].");
             locatorManager.discardLocatorManager(root, property);
             return this;
@@ -270,7 +238,7 @@ public class CentreDomainTreeManager0 extends AbstractDomainTreeManager implemen
 
         @Override
         public ILocatorManager saveLocatorManagerGlobally(final Class<?> root, final String property) {
-            AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not save globally a locator for 'unchecked' property [" + property + "] in type ["
+            illegalUncheckedProperties(this, root, property, "Could not save globally a locator for 'unchecked' property [" + property + "] in type ["
                     + root.getSimpleName() + "].");
             locatorManager.saveLocatorManagerGlobally(root, property);
             return this;
@@ -278,7 +246,7 @@ public class CentreDomainTreeManager0 extends AbstractDomainTreeManager implemen
 
         @Override
         public ILocatorManager freezeLocatorManager(final Class<?> root, final String property) {
-            AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not freeze a locator for 'unchecked' property [" + property + "] in type ["
+            illegalUncheckedProperties(this, root, property, "Could not freeze a locator for 'unchecked' property [" + property + "] in type ["
                     + root.getSimpleName() + "].");
             locatorManager.freezeLocatorManager(root, property);
             return this;
@@ -286,21 +254,21 @@ public class CentreDomainTreeManager0 extends AbstractDomainTreeManager implemen
 
         @Override
         public ILocatorDomainTreeManagerAndEnhancer getLocatorManager(final Class<?> root, final String property) {
-            AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not get a locator for 'unchecked' property [" + property + "] in type ["
+            illegalUncheckedProperties(this, root, property, "Could not get a locator for 'unchecked' property [" + property + "] in type ["
                     + root.getSimpleName() + "].");
             return locatorManager.getLocatorManager(root, property);
         }
 
         @Override
         public Pair<Phase, Type> phaseAndTypeOfLocatorManager(final Class<?> root, final String property) {
-            AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not ask a locator state for 'unchecked' property [" + property + "] in type ["
+            illegalUncheckedProperties(this, root, property, "Could not ask a locator state for 'unchecked' property [" + property + "] in type ["
                     + root.getSimpleName() + "].");
             return locatorManager.phaseAndTypeOfLocatorManager(root, property);
         }
 
         @Override
         public boolean isChangedLocatorManager(final Class<?> root, final String property) {
-            AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not ask whether a locator has been changed for 'unchecked' property [" + property
+            illegalUncheckedProperties(this, root, property, "Could not ask whether a locator has been changed for 'unchecked' property [" + property
                     + "] in type [" + root.getSimpleName() + "].");
             return locatorManager.isChangedLocatorManager(root, property);
         }
@@ -338,14 +306,14 @@ public class CentreDomainTreeManager0 extends AbstractDomainTreeManager implemen
 
         @Override
         public Object getValue(final Class<?> root, final String property) {
-            AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not get a 'value' for 'unchecked' property [" + property + "] in type ["
+            illegalUncheckedProperties(this, root, property, "Could not get a 'value' for 'unchecked' property [" + property + "] in type ["
                     + root.getSimpleName() + "].");
             return (propertiesValues1.containsKey(key(root, property))) ? propertiesValues1.get(key(root, property)) : tr().getValueByDefault(root, property);
         }
 
         @Override
         public boolean isValueEmpty(final Class<?> root, final String property) {
-            AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not ask whether 'value' is empty for 'unchecked' property [" + property + "] in type ["
+            illegalUncheckedProperties(this, root, property, "Could not ask whether 'value' is empty for 'unchecked' property [" + property + "] in type ["
                     + root.getSimpleName() + "].");
             final Object value = (propertiesValues1.containsKey(key(root, property))) ? propertiesValues1.get(key(root, property)) : tr().getValueByDefault(root, property);
             return EntityUtils.equalsEx(value, tr().getEmptyValueFor(root, property));
@@ -353,7 +321,7 @@ public class CentreDomainTreeManager0 extends AbstractDomainTreeManager implemen
 
         @Override
         public IAddToCriteriaTickManager setValue(final Class<?> root, final String propertyName, final Object value) {
-            AbstractDomainTree.illegalUncheckedProperties(this, root, propertyName, "Could not set a 'value' for 'unchecked' property [" + propertyName + "] in type ["
+            illegalUncheckedProperties(this, root, propertyName, "Could not set a 'value' for 'unchecked' property [" + propertyName + "] in type ["
                     + root.getSimpleName() + "].");
             final Object oldValue = getValue(root, propertyName);
             final Object defaultValue = tr().getValueByDefault(root, propertyName);
@@ -362,26 +330,23 @@ public class CentreDomainTreeManager0 extends AbstractDomainTreeManager implemen
             } else {
                 propertiesValues1.put(key(root, propertyName), value);
             }
-            for (final IPropertyValueListener listener : propertyValueListeners.getListeners(IPropertyValueListener.class)) {
-                listener.propertyStateChanged(root, propertyName, value, oldValue);
-            }
             return this;
         }
 
         @Override
         public Object getValue2(final Class<?> root, final String property) {
-            AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not get a 'value 2' for 'unchecked' property [" + property + "] in type ["
+            illegalUncheckedProperties(this, root, property, "Could not get a 'value 2' for 'unchecked' property [" + property + "] in type ["
                     + root.getSimpleName() + "].");
-            AbstractDomainTree.illegalNonDoubleEditorAndNonBooleanProperties(root, property, "Could not get a 'value 2' for 'non-double (or boolean) editor' property [" + property
+            illegalNonDoubleEditorProperties(root, property, "Could not get a 'value 2' for 'non-double (or boolean) editor' property [" + property
                     + "] in type [" + root.getSimpleName() + "].");
             return (propertiesValues2.containsKey(key(root, property))) ? propertiesValues2.get(key(root, property)) : tr().getValue2ByDefault(root, property);
         }
 
         @Override
         public boolean is2ValueEmpty(final Class<?> root, final String property) {
-            AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not ask whether 'value 2' is empty for 'unchecked' property [" + property + "] in type ["
+            illegalUncheckedProperties(this, root, property, "Could not ask whether 'value 2' is empty for 'unchecked' property [" + property + "] in type ["
                     + root.getSimpleName() + "].");
-            AbstractDomainTree.illegalNonDoubleEditorAndNonBooleanProperties(root, property, "Could not ask whether 'value 2' is empty for 'non-double (or boolean) editor' property ["
+            illegalNonDoubleEditorProperties(root, property, "Could not ask whether 'value 2' is empty for 'non-double (or boolean) editor' property ["
                     + property + "] in type [" + root.getSimpleName() + "].");
             final Object value = (propertiesValues2.containsKey(key(root, property))) ? propertiesValues2.get(key(root, property)) : tr().getValue2ByDefault(root, property);
             return EntityUtils.equalsEx(value, tr().get2EmptyValueFor(root, property));
@@ -389,9 +354,9 @@ public class CentreDomainTreeManager0 extends AbstractDomainTreeManager implemen
 
         @Override
         public IAddToCriteriaTickManager setValue2(final Class<?> root, final String propertyName, final Object value2) {
-            AbstractDomainTree.illegalUncheckedProperties(this, root, propertyName, "Could not set a 'value 2' for 'unchecked' property [" + propertyName + "] in type ["
+            illegalUncheckedProperties(this, root, propertyName, "Could not set a 'value 2' for 'unchecked' property [" + propertyName + "] in type ["
                     + root.getSimpleName() + "].");
-            illegalNonDoubleEditorAndNonBooleanProperties(root, propertyName, "Could not set a 'value 2' for 'non-double (or boolean) editor' property [" + propertyName
+            illegalNonDoubleEditorProperties(root, propertyName, "Could not set a 'value 2' for 'non-double (or boolean) editor' property [" + propertyName
                     + "] in type [" + root.getSimpleName() + "].");
             final Object oldValue2 = getValue2(root, propertyName);
 
@@ -401,87 +366,23 @@ public class CentreDomainTreeManager0 extends AbstractDomainTreeManager implemen
             } else {
                 propertiesValues2.put(key(root, propertyName), value2);
             }
-
-            for (final IPropertyValueListener listener : propertyValue2Listeners.getListeners(IPropertyValueListener.class)) {
-                listener.propertyStateChanged(root, propertyName, value2, oldValue2);
-            }
             return this;
         }
 
         @Override
-        public void addPropertyValueListener(final IPropertyValueListener listener) {
-            removeEmptyPropertyValueListenersFrom(propertyValueListeners);
-            propertyValueListeners.add(IPropertyValueListener.class, listener);
-        }
-
-        @Override
-        public void addWeakPropertyValueListener(final IPropertyValueListener listener) {
-            removeEmptyPropertyValueListenersFrom(propertyValueListeners);
-            propertyValueListeners.add(IPropertyValueListener.class, new WeakPropertyValueListener(this, listener, true));
-        }
-
-        @Override
-        public void removePropertyValueListener(final IPropertyValueListener listener) {
-            for (final IPropertyValueListener obj : propertyValueListeners.getListeners(IPropertyValueListener.class)) {
-                if (listener == obj) {
-                    propertyValueListeners.remove(IPropertyValueListener.class, listener);
-                } else if (obj instanceof WeakPropertyValueListener) {
-                    final IPropertyValueListener weakRef = ((WeakPropertyValueListener) obj).getRef();
-                    if (weakRef == listener || weakRef == null) {
-                        propertyValueListeners.remove(IPropertyValueListener.class, obj);
-                    }
-                }
-            }
-        }
-
-        @Override
-        public void addPropertyValue2Listener(final IPropertyValueListener listener) {
-            removeEmptyPropertyValueListenersFrom(propertyValue2Listeners);
-            propertyValue2Listeners.add(IPropertyValueListener.class, listener);
-        }
-
-        @Override
-        public void addWeakPropertyValue2Listener(final IPropertyValueListener listener) {
-            removeEmptyPropertyValueListenersFrom(propertyValue2Listeners);
-            propertyValue2Listeners.add(IPropertyValueListener.class, new WeakPropertyValueListener(this, listener, false));
-        }
-
-        @Override
-        public void removePropertyValue2Listener(final IPropertyValueListener listener) {
-            for (final IPropertyValueListener obj : propertyValue2Listeners.getListeners(IPropertyValueListener.class)) {
-                if (listener == obj) {
-                    propertyValue2Listeners.remove(IPropertyValueListener.class, listener);
-                } else if (obj instanceof WeakPropertyValueListener) {
-                    final IPropertyValueListener weakRef = ((WeakPropertyValueListener) obj).getRef();
-                    if (weakRef == listener || weakRef == null) {
-                        propertyValue2Listeners.remove(IPropertyValueListener.class, obj);
-                    }
-                }
-            }
-        }
-
-        private void removeEmptyPropertyValueListenersFrom(final EventListenerList listeners) {
-            for (final IPropertyValueListener obj : listeners.getListeners(IPropertyValueListener.class)) {
-                if (obj instanceof WeakPropertyValueListener && ((WeakPropertyValueListener) obj).getRef() == null) {
-                    listeners.remove(IPropertyValueListener.class, obj);
-                }
-            }
-        }
-
-        @Override
         public Boolean getExclusive(final Class<?> root, final String property) {
-            AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not get an 'exclusive' flag for 'unchecked' property [" + property + "] in type ["
+            illegalUncheckedProperties(this, root, property, "Could not get an 'exclusive' flag for 'unchecked' property [" + property + "] in type ["
                     + root.getSimpleName() + "].");
-            AbstractDomainTree.illegalNonDoubleEditorProperties(root, property, "Could not get an 'exclusive' flag for 'non-double editor' property [" + property + "] in type ["
+            illegalNonDoubleEditorOrBooleanProperties(root, property, "Could not get an 'exclusive' flag for 'non-double editor' property [" + property + "] in type ["
                     + root.getSimpleName() + "].");
             return (propertiesExclusive1.containsKey(key(root, property))) ? propertiesExclusive1.get(key(root, property)) : null;
         }
 
         @Override
         public IAddToCriteriaTickManager setExclusive(final Class<?> root, final String property, final Boolean exclusive) {
-            AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not set an 'exclusive' flag for 'unchecked' property [" + property + "] in type ["
+            illegalUncheckedProperties(this, root, property, "Could not set an 'exclusive' flag for 'unchecked' property [" + property + "] in type ["
                     + root.getSimpleName() + "].");
-            AbstractDomainTree.illegalNonDoubleEditorProperties(root, property, "Could not set an 'exclusive' flag for 'non-double editor' property [" + property + "] in type ["
+            illegalNonDoubleEditorOrBooleanProperties(root, property, "Could not set an 'exclusive' flag for 'non-double editor' property [" + property + "] in type ["
                     + root.getSimpleName() + "].");
             propertiesExclusive1.put(key(root, property), exclusive);
             return this;
@@ -489,18 +390,18 @@ public class CentreDomainTreeManager0 extends AbstractDomainTreeManager implemen
 
         @Override
         public Boolean getExclusive2(final Class<?> root, final String property) {
-            AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not get an 'exclusive 2' flag for 'unchecked' property [" + property + "] in type ["
+            illegalUncheckedProperties(this, root, property, "Could not get an 'exclusive 2' flag for 'unchecked' property [" + property + "] in type ["
                     + root.getSimpleName() + "].");
-            AbstractDomainTree.illegalNonDoubleEditorProperties(root, property, "Could not get an 'exclusive 2' flag for 'non-double editor' property [" + property + "] in type ["
+            illegalNonDoubleEditorOrBooleanProperties(root, property, "Could not get an 'exclusive 2' flag for 'non-double editor' property [" + property + "] in type ["
                     + root.getSimpleName() + "].");
             return (propertiesExclusive2.containsKey(key(root, property))) ? propertiesExclusive2.get(key(root, property)) : null;
         }
 
         @Override
         public IAddToCriteriaTickManager setExclusive2(final Class<?> root, final String property, final Boolean exclusive2) {
-            AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not set an 'exclusive 2' flag for 'unchecked' property [" + property + "] in type ["
+            illegalUncheckedProperties(this, root, property, "Could not set an 'exclusive 2' flag for 'unchecked' property [" + property + "] in type ["
                     + root.getSimpleName() + "].");
-            AbstractDomainTree.illegalNonDoubleEditorProperties(root, property, "Could not set an 'exclusive 2' flag for 'non-double editor' property [" + property + "] in type ["
+            illegalNonDoubleEditorOrBooleanProperties(root, property, "Could not set an 'exclusive 2' flag for 'non-double editor' property [" + property + "] in type ["
                     + root.getSimpleName() + "].");
             propertiesExclusive2.put(key(root, property), exclusive2);
             return this;
@@ -508,65 +409,65 @@ public class CentreDomainTreeManager0 extends AbstractDomainTreeManager implemen
 
         @Override
         public DateRangePrefixEnum getDatePrefix(final Class<?> root, final String property) {
-            AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not get a 'date prefix' for 'unchecked' property [" + property + "] in type ["
+            illegalUncheckedProperties(this, root, property, "Could not get a 'date prefix' for 'unchecked' property [" + property + "] in type ["
                     + root.getSimpleName() + "].");
-            AbstractDomainTree.illegalType(root, property, "Could not get a 'date prefix' for 'non-date' property [" + property + "] in type [" + root.getSimpleName() + "].", Date.class);
+            illegalType(root, property, "Could not get a 'date prefix' for 'non-date' property [" + property + "] in type [" + root.getSimpleName() + "].", Date.class);
             return (propertiesDatePrefixes.containsKey(key(root, property))) ? propertiesDatePrefixes.get(key(root, property)) : null;
         }
 
         @Override
         public IAddToCriteriaTickManager setDatePrefix(final Class<?> root, final String property, final DateRangePrefixEnum datePrefix) {
-            AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not set a 'date prefix' for 'unchecked' property [" + property + "] in type ["
+            illegalUncheckedProperties(this, root, property, "Could not set a 'date prefix' for 'unchecked' property [" + property + "] in type ["
                     + root.getSimpleName() + "].");
-            AbstractDomainTree.illegalType(root, property, "Could not set a 'date prefix' for 'non-date' property [" + property + "] in type [" + root.getSimpleName() + "].", Date.class);
+            illegalType(root, property, "Could not set a 'date prefix' for 'non-date' property [" + property + "] in type [" + root.getSimpleName() + "].", Date.class);
             propertiesDatePrefixes.put(key(root, property), datePrefix);
             return this;
         }
 
         @Override
         public MnemonicEnum getDateMnemonic(final Class<?> root, final String property) {
-            AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not get a 'date mnemonic' for 'unchecked' property [" + property + "] in type ["
+            illegalUncheckedProperties(this, root, property, "Could not get a 'date mnemonic' for 'unchecked' property [" + property + "] in type ["
                     + root.getSimpleName() + "].");
-            AbstractDomainTree.illegalType(root, property, "Could not get a 'date mnemonic' for 'non-date' property [" + property + "] in type [" + root.getSimpleName() + "].", Date.class);
+            illegalType(root, property, "Could not get a 'date mnemonic' for 'non-date' property [" + property + "] in type [" + root.getSimpleName() + "].", Date.class);
             return (propertiesDateMnemonics.containsKey(key(root, property))) ? propertiesDateMnemonics.get(key(root, property)) : null;
         }
 
         @Override
         public IAddToCriteriaTickManager setDateMnemonic(final Class<?> root, final String property, final MnemonicEnum dateMnemonic) {
-            AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not set a 'date mnemonic' for 'unchecked' property [" + property + "] in type ["
+            illegalUncheckedProperties(this, root, property, "Could not set a 'date mnemonic' for 'unchecked' property [" + property + "] in type ["
                     + root.getSimpleName() + "].");
-            AbstractDomainTree.illegalType(root, property, "Could not set a 'date mnemonic' for 'non-date' property [" + property + "] in type [" + root.getSimpleName() + "].", Date.class);
+            illegalType(root, property, "Could not set a 'date mnemonic' for 'non-date' property [" + property + "] in type [" + root.getSimpleName() + "].", Date.class);
             propertiesDateMnemonics.put(key(root, property), dateMnemonic);
             return this;
         }
 
         @Override
         public Boolean getAndBefore(final Class<?> root, final String property) {
-            AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not get an 'and before' for 'unchecked' property [" + property + "] in type ["
+            illegalUncheckedProperties(this, root, property, "Could not get an 'and before' for 'unchecked' property [" + property + "] in type ["
                     + root.getSimpleName() + "].");
-            AbstractDomainTree.illegalType(root, property, "Could not get an 'and before' for 'non-date' property [" + property + "] in type [" + root.getSimpleName() + "].", Date.class);
+            illegalType(root, property, "Could not get an 'and before' for 'non-date' property [" + property + "] in type [" + root.getSimpleName() + "].", Date.class);
             return (propertiesAndBefore.containsKey(key(root, property))) ? propertiesAndBefore.get(key(root, property)) : null;
         }
 
         @Override
         public IAddToCriteriaTickManager setAndBefore(final Class<?> root, final String property, final Boolean andBefore) {
-            AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not set an 'and before' for 'unchecked' property [" + property + "] in type ["
+            illegalUncheckedProperties(this, root, property, "Could not set an 'and before' for 'unchecked' property [" + property + "] in type ["
                     + root.getSimpleName() + "].");
-            AbstractDomainTree.illegalType(root, property, "Could not set an 'and before' for 'non-date' property [" + property + "] in type [" + root.getSimpleName() + "].", Date.class);
+            illegalType(root, property, "Could not set an 'and before' for 'non-date' property [" + property + "] in type [" + root.getSimpleName() + "].", Date.class);
             propertiesAndBefore.put(key(root, property), andBefore);
             return this;
         }
 
         @Override
         public Boolean getOrNull(final Class<?> root, final String property) {
-            AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not get an 'or null' for 'unchecked' property [" + property + "] in type ["
+            illegalUncheckedProperties(this, root, property, "Could not get an 'or null' for 'unchecked' property [" + property + "] in type ["
                     + root.getSimpleName() + "].");
             return (propertiesOrNulls.containsKey(key(root, property))) ? propertiesOrNulls.get(key(root, property)) : null;
         }
 
         @Override
         public IAddToCriteriaTickManager setOrNull(final Class<?> root, final String property, final Boolean orNull) {
-            AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not set an 'or null' for 'unchecked' property [" + property + "] in type ["
+            illegalUncheckedProperties(this, root, property, "Could not set an 'or null' for 'unchecked' property [" + property + "] in type ["
                     + root.getSimpleName() + "].");
             propertiesOrNulls.put(key(root, property), orNull);
             return this;
@@ -574,19 +475,36 @@ public class CentreDomainTreeManager0 extends AbstractDomainTreeManager implemen
 
         @Override
         public Boolean getNot(final Class<?> root, final String property) {
-            AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not get a 'not' for 'unchecked' property [" + property + "] in type ["
+            illegalUncheckedProperties(this, root, property, "Could not get a 'not' for 'unchecked' property [" + property + "] in type ["
                     + root.getSimpleName() + "].");
             return (propertiesNots.containsKey(key(root, property))) ? propertiesNots.get(key(root, property)) : null;
         }
 
         @Override
         public IAddToCriteriaTickManager setNot(final Class<?> root, final String property, final Boolean not) {
-            AbstractDomainTree.illegalUncheckedProperties(this, root, property, "Could not set a 'not' for 'unchecked' property [" + property + "] in type ["
+            illegalUncheckedProperties(this, root, property, "Could not set a 'not' for 'unchecked' property [" + property + "] in type ["
                     + root.getSimpleName() + "].");
             propertiesNots.put(key(root, property), not);
             return this;
         }
-
+        
+        @Override
+        public Integer getOrGroup(final Class<?> root, final String property) {
+            illegalUncheckedProperties(this, root, property, format("Could not get an 'or group' for 'unchecked' property [%s] in type [%s].", property, root.getSimpleName()));
+            return (propertiesOrGroups.containsKey(key(root, property))) ? propertiesOrGroups.get(key(root, property)) : null;
+        }
+        
+        @Override
+        public IAddToCriteriaTickManager setOrGroup(final Class<?> root, final String property, final Integer orGroup) {
+            illegalUncheckedProperties(this, root, property, format("Could not set an 'or group' for 'unchecked' property [%s] in type [%s].", property, root.getSimpleName()));
+            if (orGroup == null) {
+                propertiesOrGroups.remove(key(root, property));
+            } else {
+                propertiesOrGroups.put(key(root, property), orGroup);
+            }
+            return this;
+        }
+        
         /////////////////// Checked properties with placeholders ///////////////////
         @Override
         public IAddToCriteriaTickManager swap(final Class<?> root, final String property1, final String property2) {
@@ -734,10 +652,11 @@ public class CentreDomainTreeManager0 extends AbstractDomainTreeManager implemen
                 final EnhancementPropertiesMap<Boolean> propertiesAndBefore = readValue(buffer, EnhancementPropertiesMap.class);
                 final EnhancementPropertiesMap<Boolean> propertiesOrNulls = readValue(buffer, EnhancementPropertiesMap.class);
                 final EnhancementPropertiesMap<Boolean> propertiesNots = readValue(buffer, EnhancementPropertiesMap.class);
+                final EnhancementPropertiesMap<Integer> propertiesOrGroups = readValue(buffer, EnhancementPropertiesMap.class);
                 final Integer columnsNumber = readValue(buffer, Integer.class);
                 final LocatorManager0 locatorManager = readValue(buffer, LocatorManager0.class);
                 final EnhancementPropertiesMap<Set<MetaValueType>> propertiesMetaValuePresences = readValue(buffer, EnhancementPropertiesMap.class);
-                return new AddToCriteriaTickManager0(checkedProperties, serialiser(), propertiesValues1, propertiesValues2, propertiesExclusive1, propertiesExclusive2, propertiesDatePrefixes, propertiesDateMnemonics, propertiesAndBefore, propertiesOrNulls, propertiesNots, columnsNumber, locatorManager, propertiesMetaValuePresences);
+                return new AddToCriteriaTickManager0(checkedProperties, serialiser(), propertiesValues1, propertiesValues2, propertiesExclusive1, propertiesExclusive2, propertiesDatePrefixes, propertiesDateMnemonics, propertiesAndBefore, propertiesOrNulls, propertiesNots, propertiesOrGroups, columnsNumber, locatorManager, propertiesMetaValuePresences);
             }
 
             @Override
@@ -752,6 +671,7 @@ public class CentreDomainTreeManager0 extends AbstractDomainTreeManager implemen
                 writeValue(buffer, manager.propertiesAndBefore);
                 writeValue(buffer, manager.propertiesOrNulls);
                 writeValue(buffer, manager.propertiesNots);
+                writeValue(buffer, manager.propertiesOrGroups);
                 writeValue(buffer, manager.columnsNumber);
                 writeValue(buffer, manager.locatorManager);
                 writeValue(buffer, manager.propertiesMetaValuePresences);
@@ -769,6 +689,7 @@ public class CentreDomainTreeManager0 extends AbstractDomainTreeManager implemen
             result = prime * result + ((propertiesDatePrefixes == null) ? 0 : propertiesDatePrefixes.hashCode());
             result = prime * result + ((propertiesExclusive1 == null) ? 0 : propertiesExclusive1.hashCode());
             result = prime * result + ((propertiesExclusive2 == null) ? 0 : propertiesExclusive2.hashCode());
+            result = prime * result + propertiesOrGroups.hashCode();
             result = prime * result + ((propertiesNots == null) ? 0 : propertiesNots.hashCode());
             result = prime * result + ((propertiesOrNulls == null) ? 0 : propertiesOrNulls.hashCode());
             result = prime * result + ((propertiesValues1 == null) ? 0 : propertiesValues1.hashCode());
@@ -835,6 +756,9 @@ public class CentreDomainTreeManager0 extends AbstractDomainTreeManager implemen
                     return false;
                 }
             } else if (!propertiesExclusive2.equals(other.propertiesExclusive2)) {
+                return false;
+            }
+            if (!propertiesOrGroups.equals(other.propertiesOrGroups)) {
                 return false;
             }
             if (propertiesNots == null) {
@@ -906,6 +830,10 @@ public class CentreDomainTreeManager0 extends AbstractDomainTreeManager implemen
 
         public Map<Pair<Class<?>, String>, Boolean> propertiesNots() {
             return propertiesNots;
+        }
+
+        public Map<Pair<Class<?>, String>, Integer> propertiesOrGroups() {
+            return propertiesOrGroups;
         }
 
         public Map<Pair<Class<?>, String>, Set<MetaValueType>> propertiesMetaValuePresences() {

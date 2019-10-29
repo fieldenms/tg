@@ -1,5 +1,9 @@
 package ua.com.fielden.platform.migration;
 
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
+import static ua.com.fielden.platform.utils.EntityUtils.isOneToOne;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -7,17 +11,17 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.SortedMap;
 
-import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
-import ua.com.fielden.platform.dao.PersistedEntityMetadata;
-import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
+import ua.com.fielden.platform.entity.query.metadata.PersistedEntityMetadata;
+import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
 
 public class RetrieverBatchInsertStmtGenerator extends AbstractRetrieverBatchStmtGenerator {
-    private List<PropertyMetadata> extraFields;
+    private final List<PropertyMetadata> extraFields;
 
     public RetrieverBatchInsertStmtGenerator(final DomainMetadataAnalyser dma, final IRetriever<? extends AbstractEntity<?>> retriever) {
         super(dma, retriever);
-        this.extraFields = extractSystemFields(getEmd());
+        extraFields = extractSystemFields(getEmd());
     }
 
     @Override
@@ -31,9 +35,9 @@ public class RetrieverBatchInsertStmtGenerator extends AbstractRetrieverBatchStm
     private List<PropertyMetadata> extractSystemFields(final PersistedEntityMetadata<? extends AbstractEntity<?>> emd) {
         final List<PropertyMetadata> result = new ArrayList<>();
         final SortedMap<String, PropertyMetadata> props = emd.getProps();
-        result.add(props.get("version"));
-        if (!emd.isOneToOne()) {
-            result.add(props.get("id"));
+        result.add(props.get(VERSION));
+        if (!isOneToOne(emd.getType())) {
+            result.add(props.get(ID));
         }
         return result;
     }
@@ -63,7 +67,7 @@ public class RetrieverBatchInsertStmtGenerator extends AbstractRetrieverBatchStm
         return sb.toString();
     }
 
-    List<Object> transformValuesForInsert(final ResultSet rs, final IdCache cache, final int id) throws SQLException {
+    List<Object> transformValuesForInsert(final ResultSet rs, final IdCache cache, final long id) throws SQLException {
         final List<Object> result = new ArrayList<>();
         for (final Container container : getContainers()) {
             final List<Object> values = new ArrayList<>();
@@ -74,7 +78,7 @@ public class RetrieverBatchInsertStmtGenerator extends AbstractRetrieverBatchStm
         }
 
         for (final PropertyMetadata propMetadata : extraFields) {
-            result.add(propMetadata.getName().equals(AbstractEntity.ID) ? id : 0);
+            result.add(propMetadata.getName().equals(ID) ? id : 0);
         }
 
         return result;

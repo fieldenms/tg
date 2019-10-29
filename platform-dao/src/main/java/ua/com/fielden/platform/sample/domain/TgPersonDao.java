@@ -42,7 +42,7 @@ public class TgPersonDao extends CommonEntityDao<TgPerson> implements ITgPerson 
     @Override
     @SessionRequired
     public TgPerson makeUser(final TgPerson person) {
-        if (person.isUser()) {
+        if (person.isAUser()) {
             throw Result.failure(format("Person [%s] is already an application user.", person.getKey()));
         }
 
@@ -50,7 +50,7 @@ public class TgPersonDao extends CommonEntityDao<TgPerson> implements ITgPerson 
         user.setDesc(format("User for person [%s].", person.getDesc()));
         final User su = coUser.findByKeyAndFetch(fetchAll(User.class), User.system_users.SU.name());
         user.setBasedOnUser(su);
-        final User savedUser = coUser.resetPasswd(user, user.getKey());
+        final User savedUser = coUser.resetPasswd(user, user.getKey()).getKey();
         
         final TgPerson latestPerson = findById(person.getId(), fetchAll(TgPerson.class));
         latestPerson.setUser(savedUser);
@@ -60,7 +60,7 @@ public class TgPersonDao extends CommonEntityDao<TgPerson> implements ITgPerson 
     @Override
     @SessionRequired
     public TgPerson unmakeUser(final TgPerson person) {
-        if (!person.isUser()) {
+        if (!person.isAUser()) {
             throw new SecurityException(format("Person [%s] is not an application user.", person.getKey()));
         }
         

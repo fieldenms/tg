@@ -6,15 +6,16 @@ import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.data.Encoding;
+import org.restlet.data.MediaType;
 import org.restlet.engine.application.EncodeRepresentation;
 import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
-import org.restlet.resource.ResourceException;
-import org.restlet.resource.ServerResource;
+import org.restlet.resource.Get;
 
 import com.google.common.base.Charsets;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 /**
@@ -23,7 +24,7 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
  * @author TG Team
  *
  */
-public class MasterTestsComponentResource extends ServerResource {
+public class MasterTestsComponentResource extends AbstractWebResource {
     private final EntityMaster<? extends AbstractEntity<?>> master;
 
     /**
@@ -36,16 +37,18 @@ public class MasterTestsComponentResource extends ServerResource {
      */
     public MasterTestsComponentResource(
             final EntityMaster<? extends AbstractEntity<?>> master,
+            final IDeviceProvider deviceProvider,
             final Context context,
             final Request request,
             final Response response //
     ) {
-        init(context, request, response);
+        super(context, request, response, deviceProvider);
         this.master = master;
     }
 
+    @Get
     @Override
-    protected Representation get() throws ResourceException {
-        return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(master.render().toString().getBytes(Charsets.UTF_8))));
+    public Representation get() {
+        return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(master.render().toString().getBytes(Charsets.UTF_8)), MediaType.TEXT_HTML));
     }
 }

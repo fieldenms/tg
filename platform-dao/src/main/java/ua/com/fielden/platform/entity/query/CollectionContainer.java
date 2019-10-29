@@ -12,7 +12,6 @@ public final class CollectionContainer<R extends AbstractEntity<?>> {
     }
 
     public CollectionContainer(final List<EntityContainer<R>> containers) {
-        super();
         this.containers = containers;
     }
 }

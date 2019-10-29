@@ -1,17 +1,20 @@
 package ua.com.fielden.platform.web.factories.webui;
 
+import static org.restlet.data.Method.GET;
+import static org.restlet.data.Method.POST;
+
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.Restlet;
-import org.restlet.data.Method;
 
 import com.google.inject.Injector;
 import com.google.inject.Key;
 
-import ua.com.fielden.platform.security.user.IUser;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.annotations.AppUri;
+import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.resources.webui.LoginInitiateResetResource;
 
 /**
@@ -21,23 +24,22 @@ import ua.com.fielden.platform.web.resources.webui.LoginInitiateResetResource;
  *
  */
 public class LoginInitiateResetResourceFactory extends Restlet {
-
+    
     private final Injector injector;
-
+    
     public LoginInitiateResetResourceFactory(final Injector injector) {
         this.injector = injector;
     }
-
+    
     @Override
     public void handle(final Request request, final Response response) {
         super.handle(request, response);
-
-        if (Method.GET.equals(request.getMethod()) || Method.POST.equals(request.getMethod())) {
-
+        if (GET.equals(request.getMethod()) || POST.equals(request.getMethod())) {
             new LoginInitiateResetResource(
+                    injector.getInstance(IWebResourceLoader.class),
                     injector.getInstance(Key.get(String.class, AppUri.class)),
                     injector.getInstance(IUniversalConstants.class),
-                    injector.getInstance(IUser.class),
+                    injector.getInstance(ICompanionObjectFinder.class),
                     injector.getInstance(IUserProvider.class),
                     getContext(),
                     request,
@@ -45,4 +47,5 @@ public class LoginInitiateResetResourceFactory extends Restlet {
             ).handle();
         }
     }
+    
 }

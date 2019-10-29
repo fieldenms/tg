@@ -31,4 +31,11 @@ public @interface KeyType {
      * @return
      */
     String keyMemberSeparator() default " ";
+    
+    /**
+     * Used to indicate whether entity values should be enlisted in descending (key) order.
+     * 
+     * @return
+     */
+    boolean descendingOrder() default false;
 }

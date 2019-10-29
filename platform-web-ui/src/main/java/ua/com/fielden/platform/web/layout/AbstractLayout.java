@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.web.layout;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
@@ -20,7 +20,7 @@ public abstract class AbstractLayout<T extends AbstractLayoutSetter<?>> implemen
     /**
      * Map of available layouts.
      */
-    protected final Map<Pair<Device, Orientation>, T> layouts = new HashMap<>();
+    protected final Map<Pair<Device, Orientation>, T> layouts = new LinkedHashMap<>();
 
     @Override
     public T whenMedia(final Device device, final Orientation orientation) {

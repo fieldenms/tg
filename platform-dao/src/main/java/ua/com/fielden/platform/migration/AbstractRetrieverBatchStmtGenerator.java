@@ -8,10 +8,10 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.SortedSet;
 
-import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
-import ua.com.fielden.platform.dao.PersistedEntityMetadata;
-import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
+import ua.com.fielden.platform.entity.query.metadata.PersistedEntityMetadata;
+import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.EntityUtils;
 
@@ -31,6 +31,7 @@ public abstract class AbstractRetrieverBatchStmtGenerator {
         insertFields = Collections.unmodifiableList(getInsertFields(fields));
         insertStmt = generateInsertStmt(insertFields, emd.getTable());
         containers = produceContainers(fields);
+        System.out.println("Processing retriever " + retriever);
     }
 
     protected abstract List<PropertyMetadata> getInsertFields(final List<PropertyMetadata> fields);
@@ -88,11 +89,11 @@ public abstract class AbstractRetrieverBatchStmtGenerator {
 
     protected Object transformValue(final Class type, final List<Object> values, final IdCache cache) {
         if (EntityUtils.isPersistedEntityType(type)) {
-            final Map<Object, Integer> cacheForType = cache.getCacheForType(type);
+            final Map<Object, Long> cacheForType = cache.getCacheForType(type);
             final Object entityKeyObject = values.size() == 1 ? values.get(0) : values;
-            final Object result = cacheForType.get(entityKeyObject);
+            final Long result = cacheForType.get(entityKeyObject);
             if (values.size() == 1 && values.get(0) != null && result == null) {
-                System.out.println("           !!! can't find id for " + type.getSimpleName() + " with key: " + values.get(0));
+                System.out.println("           !!! can't find id for " + type.getSimpleName() + " with key: [" + values.get(0) + "]");
             }
             if (values.size() > 1 && !containsOnlyNull(values) && result == null) {
                 System.out.println("           !!! can't find id for " + type.getSimpleName() + " with key: " + values);

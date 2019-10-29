@@ -7,9 +7,11 @@ package ua.com.fielden.platform.security.user;
  * 
  */
 public interface IUserProvider {
+
     User getUser();
 
-    void setUsername(final String username, final IUser coUser);
-    
-    void setUser(final User user);
+    IUserProvider setUsername(final String username, final IUser coUser);
+
+    IUserProvider setUser(final User user);
+
 }

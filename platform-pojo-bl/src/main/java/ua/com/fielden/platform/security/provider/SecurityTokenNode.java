@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.security.provider;
 
-import static ua.com.fielden.platform.security.SecurityTokenInfo.isSuperTokenOf;
-import static ua.com.fielden.platform.security.SecurityTokenInfo.isTopLevel;
-import static ua.com.fielden.platform.security.SecurityTokenInfo.longDesc;
-import static ua.com.fielden.platform.security.SecurityTokenInfo.shortDesc;
+import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.isSuperTokenOf;
+import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.isTopLevel;
+import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.longDesc;
+import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.shortDesc;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -61,15 +61,13 @@ public class SecurityTokenNode implements Comparable<SecurityTokenNode>, ITreeNo
     public SecurityTokenNode(final Class<? extends ISecurityToken> token, final SecurityTokenNode superTokenNode) {
         if (superTokenNode == null && !isTopLevel(token)) {
             throw new IllegalArgumentException("Security token " + token.getName() + " is not a top level token, but super toke node is not provided.");
-        } else if (superTokenNode != null && isTopLevel(token)) {
-            throw new IllegalArgumentException("Security token " + token.getName() + " is a top level token and should not have a super toke node, which was provided.");
         }
 
-        shortDesc = shortDesc(token);
-        longDesc = longDesc(token);
+        this.shortDesc = shortDesc(token);
+        this.longDesc = longDesc(token);
         this.token = token;
         this.superTokenNode = superTokenNode;
-        subTokenNodes = new TreeSet<SecurityTokenNode>();
+        this.subTokenNodes = new TreeSet<>();
 
         if (superTokenNode != null) {
             superTokenNode.add(this);
@@ -92,9 +90,6 @@ public class SecurityTokenNode implements Comparable<SecurityTokenNode>, ITreeNo
      * @return
      */
     private SecurityTokenNode add(final SecurityTokenNode subTokenNode) {
-        if (!isSuperTokenOf(token, subTokenNode.getToken())) {
-            throw new IllegalArgumentException("Token " + token.getName() + " is not a super token for " + subTokenNode.getToken().getName() + ".");
-        }
         subTokenNodes.add(subTokenNode);
         return this;
     }
@@ -139,12 +134,17 @@ public class SecurityTokenNode implements Comparable<SecurityTokenNode>, ITreeNo
 
     @Override
     public int compareTo(final SecurityTokenNode anotherToken) {
-        return getShortDesc().compareTo(anotherToken.getShortDesc());
+        return shortDesc.compareTo(anotherToken.shortDesc);
     }
 
     @Override
+    public String toString() {
+        return shortDesc;
+    }
+    
+    @Override
     public List<SecurityTokenNode> daughters() {
-        return new ArrayList<SecurityTokenNode>(subTokenNodes);
+        return new ArrayList<>(subTokenNodes);
     }
 
     @Override

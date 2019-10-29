@@ -1,8 +1,11 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
+import static java.lang.String.format;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.web.app.exceptions.WebUiBuilderException;
 import ua.com.fielden.platform.web.centre.api.crit.IMultiValueCritSelector;
 import ua.com.fielden.platform.web.centre.api.crit.IMutliValueAutocompleterBuilder;
 import ua.com.fielden.platform.web.centre.api.crit.ISelectionCriteriaBuilder;
@@ -32,17 +35,19 @@ class SelectionCriteriaBuilderAsMulti<T extends AbstractEntity<?>> implements IM
     @Override
     public <V extends AbstractEntity<?>> IMutliValueAutocompleterBuilder<T, V> autocompleter(final Class<V> type) {
         if (type == null) {
-            throw new IllegalArgumentException("Property type is a required argument and cannot be omitted.");
+            throw new WebUiBuilderException("Property type is a required argument and cannot be omitted.");
         }
         // check if the specified property type is applicable to an autocompleter
-        final Class<?> propType = PropertyTypeDeterminator.determinePropertyType(builder.getEntityType(), builder.currSelectionCrit.get());
+        final String propPath = builder.currSelectionCrit.orElseThrow(() -> new WebUiBuilderException("Selection criteria is not defined."));
+        final Class<?> propType = PropertyTypeDeterminator.determinePropertyType(builder.getEntityType(), propPath);
         if (!EntityUtils.isEntityType(propType)) {
-            throw new IllegalArgumentException(String.format("Property '%s'@'%s' cannot be used for autocompletion as it is not of an entity type (%s).", builder.currSelectionCrit.get(), builder.getEntityType().getSimpleName(), propType.getSimpleName()));
+            throw new WebUiBuilderException(format("Property '%s'@'%s' cannot be used for autocompletion as it is not of an entity type (%s).", propPath, builder.getEntityType().getSimpleName(), propType.getSimpleName()));
         } else if (!type.isAssignableFrom(propType)) {
-            throw new IllegalArgumentException(String.format("Property '%s'@'%s' has type %s, but type %s has been specified instead.", builder.currSelectionCrit.get(), builder.getEntityType().getSimpleName(), propType.getSimpleName(), type.getSimpleName()));
+            throw new WebUiBuilderException(format("Property '%s'@'%s' has type %s, but type %s has been specified instead.", propPath, builder.getEntityType().getSimpleName(), propType.getSimpleName(), type.getSimpleName()));
         }
 
-        return new SelectionCriteriaBuilderAsMultiString<T, V>(builder, selectionCritBuilder);
+        builder.providedTypesForAutocompletedSelectionCriteria.put(propPath, type);
+        return new SelectionCriteriaBuilderAsMultiString<>(builder, selectionCritBuilder);
     }
 
 
@@ -67,7 +72,7 @@ class SelectionCriteriaBuilderAsMulti<T extends AbstractEntity<?>> implements IM
             throw new IllegalArgumentException(String.format("Property '%s'@'%s' cannot be used for a boolean component as it is not of type boolean (%s).", builder.currSelectionCrit.get(), builder.getEntityType().getSimpleName(), propType.getSimpleName()));
         }
 
-        return new SelectionCriteriaBuilderAsMultiBool<T>(builder, selectionCritBuilder);
+        return new SelectionCriteriaBuilderAsMultiBool<>(builder, selectionCritBuilder);
     }
 
 }

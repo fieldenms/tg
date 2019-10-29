@@ -17,7 +17,6 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @CompanionObject(ITgAuthoriser.class)
 @MapEntityTo
 public class TgAuthoriser extends ActivatableAbstractEntity<DynamicEntityKey> {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty
     @MapTo

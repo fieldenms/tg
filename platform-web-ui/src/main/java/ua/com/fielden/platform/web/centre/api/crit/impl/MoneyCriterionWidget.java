@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.centre.api.crit.impl;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.view.master.api.widgets.money.impl.MoneyWidget;
 
 /**
@@ -16,7 +17,7 @@ public class MoneyCriterionWidget extends AbstractRangeCriterionWidget {
      * @param criteriaType
      * @param propertyName
      */
-    public MoneyCriterionWidget(final Class<?> root, final Class<?> managedType, final String propertyName) {
+    public MoneyCriterionWidget(final Class<? extends AbstractEntity<?>> root, final Class<?> managedType, final String propertyName) {
         super(root, "centre/criterion/multi/range/tg-range-criterion", propertyName,
                 new MoneyWidget(
                         AbstractCriterionWidget.generateTitleDesc(root, managedType, propertyName).getKey(),

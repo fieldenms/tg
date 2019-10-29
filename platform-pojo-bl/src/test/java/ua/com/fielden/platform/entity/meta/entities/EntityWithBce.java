@@ -20,8 +20,6 @@ import ua.com.fielden.platform.entity.annotation.mutator.StrParam;
 @KeyType(String.class)
 public class EntityWithBce extends AbstractEntity<String> {
 
-    private static final long serialVersionUID = 1L;
-
     @IsProperty
     @Title(value = "Property 1", desc = "Description")
     @BeforeChange(@Handler(value = BceNotPermittedValue.class, str = { @StrParam(name = "notPermittedValue", value = "failure") }))
@@ -35,6 +33,7 @@ public class EntityWithBce extends AbstractEntity<String> {
     @MapTo
     @Title(value = "Property 3", desc = "Required property")
     @Required("Curstom requiredness error message")
+    @BeforeChange(@Handler(BceWithWarning.class))
     private Integer propRequired;
     
     @Observable

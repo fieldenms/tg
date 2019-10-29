@@ -1,20 +1,16 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import java.io.ByteArrayInputStream;
+import static org.restlet.data.MediaType.TEXT_JAVASCRIPT;
+import static ua.com.fielden.platform.web.resources.webui.FileResource.createRepresentation;
 
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
-import org.restlet.data.Encoding;
-import org.restlet.engine.application.EncodeRepresentation;
-import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
-import org.restlet.resource.ResourceException;
+import org.restlet.resource.Get;
 
-import com.google.common.base.Charsets;
-
-import ua.com.fielden.platform.web.app.ISourceController;
-import ua.com.fielden.platform.web.resources.RestServerUtil;
+import ua.com.fielden.platform.web.app.IWebResourceLoader;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 
 /**
  * Resource for tg-reflector component.
@@ -24,17 +20,21 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  * @param <T>
  * @param <DAO>
  */
-public class TgReflectorComponentResource extends DeviceProfileDifferentiatorResource {
-    public TgReflectorComponentResource(final ISourceController sourceController, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
-        super(sourceController, restUtil, context, request, response);
+public class TgReflectorComponentResource extends AbstractWebResource {
+    private final IWebResourceLoader webResourceLoader;
+
+    public TgReflectorComponentResource(final IWebResourceLoader webResourceLoader, final IDeviceProvider deviceProvider, final Context context, final Request request, final Response response) {
+        super(context, request, response, deviceProvider);
+        this.webResourceLoader = webResourceLoader;
     }
 
     /**
      * Handles sending of the serialised testing entities to the Web UI client (GET method).
      */
+    @Get
     @Override
-    protected Representation get() throws ResourceException {
-        final String source = sourceController().loadSource("/app/tg-reflector.html", deviceProfile());
-        return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8))));
+    public Representation get() {
+        return createRepresentation(webResourceLoader, TEXT_JAVASCRIPT, "/app/tg-reflector.js", getReference().getRemainingPart());
     }
+
 }

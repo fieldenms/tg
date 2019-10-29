@@ -25,5 +25,7 @@ public interface IValueMatcher<T> {
      *
      * @return
      */
-    Integer getPageSize();
+    default Integer getPageSize() {
+        return 10;
+    }
 }

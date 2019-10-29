@@ -1,6 +1,10 @@
 package ua.com.fielden.platform.property.validator;
 
-import static java.lang.String.*;
+import static java.lang.String.format;
+import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.error.Result.successful;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
+
 import java.lang.annotation.Annotation;
 import java.util.Set;
 
@@ -17,17 +21,17 @@ import ua.com.fielden.platform.error.Result;
 public class StringValidator implements IBeforeChangeEventHandler<String> {
 
     public static final String regexProp = "regex";
-    public static final String validationErrorTemplate = "New value [%s] for property [%s] in entity [%s] does not pass pattern validation.";
+    public static final String validationErrorTemplate = "Value for [%s] in [%s] does not match the pattern.";
     
     protected String regex;
 
     @Override
     public Result handle(final MetaProperty<String> property, final String newValue, final Set<Annotation> mutatorAnnotations) {
         if (newValue != null && !newValue.matches(regex)) {
-            return Result.failure(format(validationErrorTemplate, newValue, property.getName(), property.getEntity().getType().getSimpleName()));
+            return failure(format(validationErrorTemplate, property.getTitle(), getEntityTitleAndDesc(property.getEntity().getType()).getKey()));
         }
 
-        return Result.successful(newValue);
+        return successful(newValue);
     }
 
 }

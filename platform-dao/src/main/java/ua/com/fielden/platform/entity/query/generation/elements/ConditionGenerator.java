@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
-import ua.com.fielden.platform.dao.DomainMetadata;
-import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
-import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
+import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
+import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -14,7 +14,6 @@ public class ConditionGenerator {
     private final DomainMetadataAnalyser domainMetadataAnalyser;
 
     public ConditionGenerator(final DomainMetadata domainMetadata) {
-        super();
         this.domainMetadataAnalyser = new DomainMetadataAnalyser(domainMetadata);
     }
 

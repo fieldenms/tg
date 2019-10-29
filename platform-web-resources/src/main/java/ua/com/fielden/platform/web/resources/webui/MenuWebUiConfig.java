@@ -13,15 +13,15 @@ public class MenuWebUiConfig {
 
     public final EntityMaster<Menu> master;
 
-    public MenuWebUiConfig(final Injector injector, final MainMenuBuilder menuBuilder) {
-        master = createMaster(injector, menuBuilder);
+    public MenuWebUiConfig(final Injector injector, final MainMenuBuilder desktopMenuBuilder, final MainMenuBuilder mobileMenuBuilder) {
+        master = createMaster(injector, desktopMenuBuilder, mobileMenuBuilder);
     }
 
-    private static EntityMaster<Menu> createMaster(final Injector injector, final MainMenuBuilder menuBuilder) {
+    private static EntityMaster<Menu> createMaster(final Injector injector, final MainMenuBuilder desktopMenuBuilder, final MainMenuBuilder mobileMenuBuilder) {
         return new EntityMaster<Menu>(Menu.class, MenuProducer.class, null, injector) {
             @Override
             public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
-                return menuBuilder.getActionConfig(actionNumber, actionKind);
+                return desktopMenuBuilder.getActionConfig(actionNumber, actionKind);
             }
         };
     }

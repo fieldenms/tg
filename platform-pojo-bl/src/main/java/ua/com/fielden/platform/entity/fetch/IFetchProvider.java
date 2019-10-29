@@ -124,4 +124,15 @@ public interface IFetchProvider<T extends AbstractEntity<?>> {
      * @return
      */
     boolean instrumented();
+    
+    /**
+     * Adds (mutably) key properties to the fetch provider of <code>dotNotationProperty</code> in case it is entity-typed.
+     * <p>
+     * This method is based on a premise that property already has its provider (with NONE fetch category) if it is entity-typed.
+     * 
+     * @param dotNotationProperty
+     * @return
+     */
+    FetchProvider<T> addKeysTo(final String dotNotationProperty);
+    
 }

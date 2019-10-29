@@ -24,6 +24,10 @@ import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgBogieClass;
 import ua.com.fielden.platform.sample.domain.TgCategory;
+import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisation;
+import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationNonPersistentChild;
+import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationNonPersistentCompositeChild;
+import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationPersistentChild;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationChild;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParent;
 import ua.com.fielden.platform.sample.domain.TgEntityWithComplexSummaries;
@@ -58,6 +62,9 @@ import ua.com.fielden.platform.test.entities.ComplexKeyEntity;
 import ua.com.fielden.platform.test.entities.CompositeEntity;
 import ua.com.fielden.platform.test.entities.CompositeEntityKey;
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater;
+import ua.com.fielden.platform.web.centre.CentreConfigEditAction;
+import ua.com.fielden.platform.web.centre.CentreConfigLoadAction;
+import ua.com.fielden.platform.web.centre.CentreConfigSaveAction;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
 
 /**
@@ -67,7 +74,7 @@ import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
  *
  */
 public class PlatformTestDomainTypes implements IApplicationDomainProvider {
-    public static final List<Class<? extends AbstractEntity<?>>> entityTypes = new ArrayList<Class<? extends AbstractEntity<?>>>();
+    public static final List<Class<? extends AbstractEntity<?>>> entityTypes = new ArrayList<>();
 
     static void add(final Class<? extends AbstractEntity<?>> domainType) {
         entityTypes.add(domainType);
@@ -80,6 +87,9 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         entityTypes.remove(EntityExportAction.class);
         entityTypes.remove(CentreColumnWidthConfigUpdater.class);
         entityTypes.remove(CentreConfigUpdater.class);
+        entityTypes.remove(CentreConfigLoadAction.class);
+        entityTypes.remove(CentreConfigEditAction.class);
+        entityTypes.remove(CentreConfigSaveAction.class);
         // and test domain entities
         add(TgPerson.class);
         add(TgPersonName.class);
@@ -131,6 +141,10 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(TgEntityWithComplexSummaries.class);
         add(TgCollectionalSerialisationParent.class);
         add(TgCollectionalSerialisationChild.class);
+        add(TgCentreDiffSerialisation.class);
+        add(TgCentreDiffSerialisationPersistentChild.class);
+        add(TgCentreDiffSerialisationNonPersistentChild.class);
+        add(TgCentreDiffSerialisationNonPersistentCompositeChild.class);
     }
 
     @Override

@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeRepresentation;
@@ -104,7 +105,8 @@ public class PivotDomainTreeRepresentationTest extends AbstractAnalysisDomainTre
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////// End of Test initialisation ////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-
+    
+    @Ignore
     @Override
     @Test
     public void test_that_excluded_properties_actions_for_second_ticks_cause_exceptions_for_all_specific_logic() {

@@ -2,8 +2,6 @@ package ua.com.fielden.platform.entity.meta;
 
 import static java.lang.String.format;
 
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -12,6 +10,8 @@ import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
+import ua.com.fielden.platform.entity.annotation.CritOnly;
+import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.proxy.StrictProxyException;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
@@ -28,11 +28,12 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
-    
+
+    public static final String ERR_REQUIRED = "Required property [%s] is not specified for entity [%s].";
     public static final String EDITABLE_PROPERTY_NAME = "editable";
     public static final String REQUIRED_PROPERTY_NAME = "required";
     public static final String VALIDATION_RESULTS_PROPERTY_NAME = "validationResults";
-    
+
     protected final AbstractEntity<?> entity;
     protected final String name;
     protected Class<?> type;
@@ -40,14 +41,13 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
     protected final boolean key;
     protected final boolean retrievable;
     private final boolean activatable;
+    private final boolean critOnly;
     
     private final String[] dependentPropertyNames;
     private MetaProperty<?> parentMetaPropertyOnDependencyPath;
-
     
     protected String title;
     protected String desc;
-
     
     /**
      * Indicated whether a corresponding property is a proxy.
@@ -60,8 +60,7 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
             final Class<?> type,
             final boolean isKey,
             final boolean isProxy,
-            final String[] dependentPropertyNames
-            ) {
+            final String[] dependentPropertyNames) {
         this.entity = entity;
         this.name = field.getName();
         this.type = type;
@@ -75,16 +74,19 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         
         this.retrievable = Reflector.isPropertyRetrievable(entity, field);
         this.dependentPropertyNames = dependentPropertyNames != null ? Arrays.copyOf(dependentPropertyNames, dependentPropertyNames.length) : new String[] {};
+        this.critOnly = field.isAnnotationPresent(CritOnly.class);
         
         // let's identify whether property represents an activatable entity in the current context
-        final SkipEntityExistsValidation seevAnnotation = field.getAnnotation(SkipEntityExistsValidation.class);
-        boolean skipActiveOnly;
-        if (seevAnnotation != null) {
-            skipActiveOnly = seevAnnotation.skipActiveOnly();
+        // a property of an ativatable entity type is considered "activatable" only if annotation SkipEntityExistsValidation is not present or
+        // it is present with attribute skipActiveOnly == true
+        // There is also annotation SkipActivatableTracking, but it does not affect the activatable nature of the property -- only the counting of references.
+        if (!ActivatableAbstractEntity.class.isAssignableFrom(type)) {
+            this.activatable = false;
         } else {
-            skipActiveOnly = false;
+            final SkipEntityExistsValidation seevAnnotation = field.getAnnotation(SkipEntityExistsValidation.class);
+            final boolean skipActiveOnly = seevAnnotation != null ? seevAnnotation.skipActiveOnly() : false;        
+            this.activatable = !skipActiveOnly;
         }
-        this.activatable = ActivatableAbstractEntity.class.isAssignableFrom(type) && !skipActiveOnly;
     }
 
     public Result validate(final T newValue, final Set<Annotation> applicableValidationAnnotations, final boolean ignoreRequiredness) {
@@ -178,37 +180,20 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
     public Result getFirstFailure() {
         throw new StrictProxyException(format("Invalid call [getFirstFailure] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
+    
+    /**
+     * A convenient method to obtain the last validation result.
+     * May return either a failure, a warning or a successful result, and never <code>null</code>.
+     * <p>
+     * A successful result is returned in case no validation took place.
+     * @return
+     */
+    public Result validationResult() {
+        throw new StrictProxyException(format("Invalid call [validationResult] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
+    }
 
     public int numberOfValidators() {
         throw new StrictProxyException(format("Invalid call [numberOfValidators] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
-    }
-
-    public void addValidationResultsChangeListener(final PropertyChangeListener listener) {
-        throw new StrictProxyException(format("Invalid call [addValidationResultsChangeListener] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
-    }
-
-    public void removeValidationResultsChangeListener(final PropertyChangeListener listener) {
-        throw new StrictProxyException(format("Invalid call [removeValidationResultsChangeListener] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
-    }
-
-    public void addEditableChangeListener(final PropertyChangeListener listener) {
-        throw new StrictProxyException(format("Invalid call [addEditableChangeListener] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
-    }
-
-    public void removeEditableChangeListener(final PropertyChangeListener listener) {
-        throw new StrictProxyException(format("Invalid call [removeEditableChangeListener] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
-    }
-
-    public void addRequiredChangeListener(final PropertyChangeListener listener) {
-        throw new StrictProxyException(format("Invalid call [addRequiredChangeListener] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
-    }
-
-    public void removeRequiredChangeListener(final PropertyChangeListener listener) {
-        throw new StrictProxyException(format("Invalid call [removeRequiredChangeListener] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
-    }
-
-    public PropertyChangeSupport getChangeSupport() {
-        throw new StrictProxyException(format("Invalid call [getChangeSupport] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
 
     public T getOriginalValue() {
@@ -240,7 +225,8 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
     }
     
     /**
-     * The same as {@link #setValue(Object)}, but can enforce value assignment logic even if the current value is the same if the one being assigned.
+     * The same as {@link #setValue(Object)}, but can enforce value assignment logic even if the current value is the same as the one being assigned.
+     *
      * @param value -- the value to be assigned.
      * @param enforce -- will force value assignment (with all the BCE and ACE related logic) even if it matches the current value
      */
@@ -291,8 +277,8 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
     }
 
     /** Returns the owning entity instance. */
-    public final AbstractEntity<?> getEntity() {
-        return entity;
+    public final <A extends AbstractEntity<?>> A getEntity() {
+        return (A) entity;
     }
 
     public boolean isCollectional() {
@@ -525,6 +511,10 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
 
     public final boolean isActivatable() {
         return activatable;
+    }
+    
+    public final boolean isCritOnly() {
+        return critOnly;
     }
 
     public boolean shouldAssignBeforeSave() {

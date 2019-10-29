@@ -1,5 +1,9 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -30,14 +34,16 @@ public class ValuePreprocessor {
     /** Ensures that values of special types such as {@link Class} or {@link PropertyDescriptor} are converted to String. */
     private Object convertValue(final Object value) {
         final Object result;
-        if (value instanceof PropertyDescriptor || 
-            value instanceof Class || 
-            value instanceof Colour || 
+        if (value instanceof PropertyDescriptor ||
+            value instanceof Class ||
+            value instanceof Colour ||
             value instanceof Enum ||
             value instanceof Hyperlink) {
             result = value.toString();
         } else if (value instanceof AbstractEntity) {
-            result = ((AbstractEntity<?>) value).getId();
+            final AbstractEntity<?> entity = (AbstractEntity<?>) value;
+            final Class<? extends AbstractEntity<?>> type = entity.getType();
+            result = entity.getId() == null && !(isPersistedEntityType(type) || isSyntheticEntityType(type) || isUnionEntityType(type)) ? entity.getKey() : entity.getId();
         } else if (value instanceof Money) {
             result = ((Money) value).getAmount();
         } else {

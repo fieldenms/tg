@@ -8,7 +8,7 @@ import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.Authorise;
-import ua.com.fielden.platform.security.tokens.user.UserRoleSaveToken;
+import ua.com.fielden.platform.security.tokens.user.UserRole_CanSave_Token;
 
 /**
  * A producer for new instances of entity {@link UserRole}.
@@ -24,13 +24,13 @@ public class UserRoleProducer extends DefaultEntityProducerWithContext<UserRole>
     }
 
     @Override
-    @Authorise(UserRoleSaveToken.class)
+    @Authorise(UserRole_CanSave_Token.class)
     protected UserRole provideDefaultValuesForStandardNew(final UserRole entity, final EntityNewAction masterEntity) {
         return super.provideDefaultValuesForStandardNew(entity, masterEntity);
     }
     
     @Override
-    @Authorise(UserRoleSaveToken.class)
+    @Authorise(UserRole_CanSave_Token.class)
     protected UserRole provideDefaultValuesForStandardEdit(final Long entityId, final EntityEditAction masterEntity) {
         return super.provideDefaultValuesForStandardEdit(entityId, masterEntity);
     }

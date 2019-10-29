@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.centre.api.crit.impl;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.view.master.api.widgets.spinner.impl.SpinnerWidget;
 
 /**
@@ -16,7 +17,7 @@ public class IntegerSingleCriterionWidget extends AbstractSingleCriterionWidget 
      * @param criteriaType
      * @param propertyName
      */
-    public IntegerSingleCriterionWidget(final Class<?> root, final Class<?> managedType, final String propertyName) {
+    public IntegerSingleCriterionWidget(final Class<? extends AbstractEntity<?>> root, final Class<?> managedType, final String propertyName) {
         super(root, propertyName,
                 new SpinnerWidget(
                         AbstractCriterionWidget.generateSingleTitleDesc(root, managedType, propertyName),

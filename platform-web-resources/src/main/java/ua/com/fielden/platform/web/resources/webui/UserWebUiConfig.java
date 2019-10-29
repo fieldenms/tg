@@ -3,20 +3,25 @@ package ua.com.fielden.platform.web.resources.webui;
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.security.user.User.EMAIL;
+import static ua.com.fielden.platform.web.PrefDim.mkDim;
+import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MASTER_ACTION_SPECIFICATION;
 import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.okCancel;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 
 import java.util.Optional;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.entity.EntityDeleteAction;
-import ua.com.fielden.platform.entity.EntityEditAction;
+import ua.com.fielden.platform.entity.EntityNavigationAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserProducer;
 import ua.com.fielden.platform.security.user.UserRolesUpdater;
 import ua.com.fielden.platform.security.user.UserRolesUpdaterProducer;
 import ua.com.fielden.platform.ui.menu.sample.MiUser;
+import ua.com.fielden.platform.web.action.pre.EntityNavigationPreAction;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
@@ -26,8 +31,6 @@ import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
-import com.google.inject.Injector;
-
 /**
  * {@link User} Web UI configuration.
  *
@@ -35,7 +38,7 @@ import com.google.inject.Injector;
  *
  */
 public class UserWebUiConfig {
-    private static final String actionButton = "'margin: 10px', 'width: 110px'";
+    private static final String actionButton = MASTER_ACTION_SPECIFICATION;
     private static final String bottomButtonPanel = "['horizontal', 'padding: 20px', 'justify-content: center', 'wrap', [%s], [%s]]";
 
     public final EntityMaster<UserRolesUpdater> rolesUpdater;
@@ -114,6 +117,7 @@ public class UserWebUiConfig {
                 .addAction(MasterActions.SAVE)
                 .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), format(bottomButtonPanel, actionButton, actionButton))
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
+                .withDimensions(mkDim(400, 324))
                 .done();
         return new EntityMaster<User>(
                 User.class,
@@ -130,16 +134,17 @@ public class UserWebUiConfig {
     private static EntityMaster<UserRolesUpdater> createRolesUpdater(final Injector injector) {
         final IMaster<UserRolesUpdater> masterConfig = new SimpleMasterBuilder<UserRolesUpdater>()
                 .forEntity(UserRolesUpdater.class)
-                .addProp("roles").asCollectionalEditor().maxVisibleRows(5)
+                .addProp("roles").asCollectionalEditor()
                 .also()
                 .addAction(MasterActions.REFRESH).shortDesc("CANCEL").longDesc("Cancel action")
                 .addAction(MasterActions.SAVE)
 
                 .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), format(bottomButtonPanel, actionButton, actionButton))
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), (
-                        "      ['padding:20px', 'width:750px', "
+                        "      ['padding:20px', 'height: 100%', 'box-sizing: border-box', "
                         + format("['flex', ['flex']]")
                         + "    ]"))
+                .withDimensions(mkDim("'30%'", "'50%'"))
                 .done();
         return new EntityMaster<UserRolesUpdater>(
                 UserRolesUpdater.class,
@@ -167,11 +172,13 @@ public class UserWebUiConfig {
         EDIT_ACTION {
             @Override
             public EntityActionConfig mkAction() {
-                return action(EntityEditAction.class)
+                return action(EntityNavigationAction.class)
                         .withContext(context().withCurrentEntity().withSelectionCrit().build())
+                        .preAction(new EntityNavigationPreAction("User"))
                         .icon("editor:mode-edit")
                         .shortDesc("Edit User")
                         .longDesc("Opens master for User editing.")
+                        .withNoParentCentreRefresh()
                         .build();
             }
 

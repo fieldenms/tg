@@ -8,14 +8,14 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
 public interface ICompoundMaster6<T extends AbstractEntity<?>, F extends AbstractFunctionalEntityWithCentreContext<T>> {
     /**
      * Specify the instance of unregistered embedded master that will be a view for this menu item.
-     * 
+     *
      * @param embeddedMaster
      * @return
      */
     ICompoundMaster7<T, F> withView(final EntityMaster<?> embeddedMaster);
     /**
      * Specify the instance of unregistered embedded centre that will be a view for this menu item.
-     * 
+     *
      * @param embeddedCentre
      * @return
      */

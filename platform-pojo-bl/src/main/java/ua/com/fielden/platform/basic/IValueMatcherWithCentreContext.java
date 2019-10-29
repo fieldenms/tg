@@ -23,7 +23,7 @@ public interface IValueMatcherWithCentreContext<T extends AbstractEntity<?>> ext
      *
      * @param context
      */
-    void setContext(final CentreContext<T, ?> context);
+    IValueMatcherWithCentreContext<T> setContext(final CentreContext<T, ?> context);
 
     /**
      * Provides access to the context, which is needed in order to use it in custom autocompletion logic.

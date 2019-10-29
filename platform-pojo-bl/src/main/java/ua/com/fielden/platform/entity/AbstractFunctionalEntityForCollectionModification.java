@@ -50,6 +50,7 @@ public abstract class AbstractFunctionalEntityForCollectionModification<ID_TYPE>
     @IsProperty
     @Title(value = "Master entity", desc = "Master entity instance that is set during producing of this functional action.")
     private AbstractEntity<?> masterEntity;
+    public static final String MASTER_ENTITY_PROPERTY_NAME = "masterEntity";
 
     @Observable
     public AbstractFunctionalEntityForCollectionModification<ID_TYPE> setMasterEntity(final AbstractEntity<?> masterEntity) {

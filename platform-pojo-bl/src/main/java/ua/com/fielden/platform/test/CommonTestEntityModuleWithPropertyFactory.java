@@ -1,11 +1,13 @@
 package ua.com.fielden.platform.test;
 
-import com.google.inject.Injector;
+import com.google.inject.Scopes;
 
+import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.entity.factory.DefaultCompanionObjectFinderImpl;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.ioc.EntityModule;
+import ua.com.fielden.platform.web.test.config.ApplicationDomain;
 
 /**
  * This Guice module ensures that all observable and validatable properties are handled correctly. In addition to {@link EntityModule}, this module binds
@@ -17,22 +19,12 @@ import ua.com.fielden.platform.entity.ioc.EntityModule;
  */
 public final class CommonTestEntityModuleWithPropertyFactory extends EntityModuleWithPropertyFactory {
 
-    protected final DefaultCompanionObjectFinderImpl defaultControllerProvider;
-    
-    public CommonTestEntityModuleWithPropertyFactory() {
-        defaultControllerProvider = new DefaultCompanionObjectFinderImpl();
-    }
-
     @Override
     protected void configure() {
         super.configure();
-        // bind provider for default entity controller
-        bind(ICompanionObjectFinder.class).toInstance(defaultControllerProvider);
+        
+        bind(IApplicationDomainProvider.class).to(ApplicationDomain.class);
+        bind(ICompanionObjectFinder.class).to(DefaultCompanionObjectFinderImpl.class).in(Scopes.SINGLETON);
     }
     
-    @Override
-    public void setInjector(final Injector injector) {
-        super.setInjector(injector);
-        defaultControllerProvider.setInjector(injector);
-    }
 }

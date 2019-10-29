@@ -16,26 +16,16 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 @KeyType(TgVehicle.class)
 @CompanionObject(ITgAverageFuelUsage.class)
 public class TgAverageFuelUsage extends AbstractEntity<TgVehicle> {
-    // TODO support make property being entity key (KeyType(TgVehicleMake))
-    private static final long serialVersionUID = 1L;
-
-    private static String from(final String param) {
-        return param + ".from";
-    }
-
-    private static String to(final String param) {
-        return param + ".to";
-    }
 
     private static final EntityResultQueryModel<TgAverageFuelUsage> model_ = //
-    select(TgFuelUsage.class). //
-    where(). //
-    prop("date").gt().iParam(from("datePeriod")).and(). //
-    prop("date").lt().iParam(to("datePeriod")). //
-    groupBy().prop("vehicle"). //
-    yield().prop("vehicle").as("key"). //
-    yield().sumOf().prop("qty").as("qty"). //
-    modelAsEntity(TgAverageFuelUsage.class);
+            select(TgFuelUsage.class). //
+                    where(). //
+                    prop("date").gt().iParam("datePeriod.from").and(). //
+                    prop("date").lt().iParam("datePeriod.to"). //
+                    groupBy().prop("vehicle"). //
+                    yield().prop("vehicle").as("key"). //
+                    yield().sumOf().prop("qty").as("qty"). //
+                    modelAsEntity(TgAverageFuelUsage.class);
 
     @IsProperty
     @Title("Total qty over the period")
@@ -64,11 +54,5 @@ public class TgAverageFuelUsage extends AbstractEntity<TgVehicle> {
 
     public BigDecimal getQty() {
         return qty;
-    }
-
-    /**
-     * Constructor for (@link EntityFactory}.
-     */
-    protected TgAverageFuelUsage() {
     }
 }

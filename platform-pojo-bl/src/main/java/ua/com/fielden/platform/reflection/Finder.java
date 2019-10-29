@@ -6,6 +6,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_LINK_PROPERTY;
+import static ua.com.fielden.platform.reflection.Reflector.MAXIMUM_CACHE_SIZE;
 import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
 
 import java.lang.annotation.Annotation;
@@ -16,11 +17,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedMap;
@@ -32,6 +31,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
+
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
@@ -59,7 +61,12 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class Finder {
-    private final static Map<Class<?>, List<Field>> entityKeyMembers = new HashMap<>();
+    private static final Cache<Class<?>, List<Field>> ENTITY_KEY_MEMBERS = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).maximumSize(MAXIMUM_CACHE_SIZE).concurrencyLevel(50).build();
+
+    public static long cleanUp() {
+        ENTITY_KEY_MEMBERS.cleanUp();
+        return ENTITY_KEY_MEMBERS.size();
+    }
 
     /**
      * Let's hide default constructor, which is not needed for a static class.
@@ -85,7 +92,7 @@ public class Finder {
      * 
      */
     public static <T extends AbstractEntity<?>> List<PropertyDescriptor<T>> getPropertyDescriptors(final Class<T> entityType, final Predicate<Field> shouldSkip) {
-        final List<PropertyDescriptor<T>> result = new ArrayList<PropertyDescriptor<T>>();
+        final List<PropertyDescriptor<T>> result = new ArrayList<>();
         for (final Field field : findProperties(entityType)) {
             if (!shouldSkip.test(field)) {
                 result.add(new PropertyDescriptor<T>(entityType, field.getName()));
@@ -101,10 +108,11 @@ public class Finder {
      * @param entityType
      * @param factory
      * @return
+     * @deprecated Used only in the deprecated class {@code ValueMatcherFactory}.
      */
     @Deprecated
     public static <T extends AbstractEntity<?>> List<PropertyDescriptor<T>> getPropertyDescriptors(final Class<T> entityType, final EntityFactory factory) {
-        final List<PropertyDescriptor<T>> result = new ArrayList<PropertyDescriptor<T>>();
+        final List<PropertyDescriptor<T>> result = new ArrayList<>();
         for (final Field field : findProperties(entityType)) {
             try {
                 final PropertyDescriptor<T> pd = PropertyDescriptor.fromString(entityType.getName() + ":" + field.getName(), Optional.of(factory));
@@ -298,14 +306,15 @@ public class Finder {
     }
 
     /**
-     * Returns a list of properties of the specified type that are declared in the provided entity type.
+     * Returns a list of properties of the specified type that are declared in the provided entity type and are annotated with specified <code>annotations</code> (if any).
      *
      * @param entityType
      * @param propertyType
+     * @param annotations
      * @return
      */
-    public static List<Field> findPropertiesOfSpecifiedType(final Class<?> entityType, final Class<?> propertyType) {
-        final List<Field> properties = findProperties(entityType);
+    public static List<Field> findPropertiesOfSpecifiedType(final Class<?> entityType, final Class<?> propertyType, final Class<? extends Annotation>... annotations) {
+        final List<Field> properties = findProperties(entityType, annotations);
 
         for (final Iterator<Field> iter = properties.iterator(); iter.hasNext();) {
             final Field property = iter.next();
@@ -329,7 +338,7 @@ public class Finder {
      * @param klass
      * @return
      */
-    public final static List<Field> getKeyMembers(final Class<?> type) {
+    public static final List<Field> getKeyMembers(final Class<?> type) {
         // NOTE: please note that perhaps for generated types the key members are often similar as in
         // original types. But this is not the case when someone changed a key member property
         // by adding another property inside it etc. (this is fully allowed in TG). Thus such an optimisation
@@ -337,9 +346,8 @@ public class Finder {
         //
         // final Class<?> referenceTypeFromWhichKeyMembersCanBeDetermined = DynamicEntityClassLoader.getOriginalType(type); ?
 
-        final List<Field> cachedKeyMembers = entityKeyMembers.get(type); // TODO consider soft references here..
-        return cachedKeyMembers == null ? new ArrayList<>(loadAndCacheKeyMembers(type)) : new ArrayList<>(cachedKeyMembers); // new list should be returned, not the same reference
-        // old implementation -- return loadKeyMembers(type);
+        final List<Field> cachedKeyMembers = ENTITY_KEY_MEMBERS.getIfPresent(type);
+        return new ArrayList<>(cachedKeyMembers == null ? loadAndCacheKeyMembers(type) : cachedKeyMembers); // new list should be returned, not the same reference
     }
 
     /**
@@ -348,9 +356,9 @@ public class Finder {
      * @param type
      * @return
      */
-    private final static List<Field> loadAndCacheKeyMembers(final Class<?> type) {
+    private static final List<Field> loadAndCacheKeyMembers(final Class<?> type) {
         final List<Field> loadedKeyMembers = Collections.unmodifiableList(loadKeyMembers(type)); // should be immutable
-        entityKeyMembers.put(type, loadedKeyMembers);
+        ENTITY_KEY_MEMBERS.put(type, loadedKeyMembers);
         return loadedKeyMembers;
     }
 
@@ -364,9 +372,9 @@ public class Finder {
      * @param klass
      * @return
      */
-    private final static List<Field> loadKeyMembers(final Class<?> type) {
+    private static final List<Field> loadKeyMembers(final Class<?> type) {
         // the use of SortedMap ensures the correct order of properties to be used for composite key
-        final SortedMap<Integer, Field> properties = new TreeMap<Integer, Field>();
+        final SortedMap<Integer, Field> properties = new TreeMap<>();
         final List<Field> compositeKeyFields = findRealProperties(type, CompositeKeyMember.class);
 
         for (final Field field : compositeKeyFields) {
@@ -379,10 +387,10 @@ public class Finder {
             }
             properties.put(order, field);
         }
-        final List<Field> keyMembers = new ArrayList<Field>(properties.values());
+        final List<Field> keyMembers = new ArrayList<>(properties.values());
         // if there where no fields annotated with CompositeKeyMember then this
         // entity uses a non-composite (simple) key.
-        if (keyMembers.size() == 0) {
+        if (keyMembers.isEmpty()) {
             keyMembers.add(getFieldByName(type, KEY));
         }
         return keyMembers;
@@ -529,7 +537,7 @@ public class Finder {
         if (fieldTypes == null || fieldTypes.isEmpty()) {
             throw new IllegalArgumentException("The list of types should be non-empty.");
         }
-        final List<Field> fields = new ArrayList<Field>();
+        final List<Field> fields = new ArrayList<>();
         for (Class<?> klass = ownerType; klass != Object.class; klass = klass.getSuperclass()) {
             // need to iterated thought hierarchy in order to retrieve fields from above the current instance
             // iterate though the list of fields declared in the class represented by klass variable, and add those of the specified field type
@@ -562,7 +570,7 @@ public class Finder {
      * @return
      */
     private static List<Field> getUnionEntityFields(final Class<? extends AbstractUnionEntity> type) {
-        final List<Field> fields = new ArrayList<Field>();
+        final List<Field> fields = new ArrayList<>();
         final List<Field> unionProperties = AbstractUnionEntity.unionProperties(type);
         final List<String> commonProperties = AbstractUnionEntity.commonProperties(type);
         for (final String propertyName : commonProperties) {
@@ -600,7 +608,7 @@ public class Finder {
      * @return
      */
     public static List<Field> getFields(final Class<?> type, final boolean withUnion) {
-        final List<Field> properties = new ArrayList<Field>();
+        final List<Field> properties = new ArrayList<>();
         Class<?> klass = type;
         if (AbstractUnionEntity.class.isAssignableFrom(klass) && withUnion) {
             properties.addAll(getUnionEntityFields((Class<AbstractUnionEntity>) type));
@@ -623,7 +631,7 @@ public class Finder {
     }
 
     private static List<Field> removeDuplicates(final List<Field> wholeHierarchyProperties) {
-        final List<Field> properties = new ArrayList<Field>();
+        final List<Field> properties = new ArrayList<>();
         final List<Field> keyProps = new ArrayList<>();
         final Set<String> fieldNames = new HashSet<>();
         for (final Field field : wholeHierarchyProperties) {
@@ -639,7 +647,7 @@ public class Finder {
 
         // prepend key properties at the beginning of the list of properties
         // this is essential for serialisation to correctly initialise collectional properties
-        final List<Field> propertiesWithKeys = new ArrayList<Field>(keyProps);
+        final List<Field> propertiesWithKeys = new ArrayList<>(keyProps);
         propertiesWithKeys.addAll(properties);
 
         return propertiesWithKeys;
@@ -660,7 +668,7 @@ public class Finder {
      * @return
      */
     private static Stream<Field> getFieldsAnnotatedWith(final Class<?> type, final boolean withUnion, final Class<? extends Annotation> annot, final Class<? extends Annotation>... annotations) {
-        final Set<Class<? extends Annotation>> allAnnotations = new HashSet<Class<? extends Annotation>>();
+        final Set<Class<? extends Annotation>> allAnnotations = new HashSet<>();
         allAnnotations.add(annot);
         allAnnotations.addAll(Arrays.asList(annotations));
         return streamFieldsAnnotatedWith(getFields(type, withUnion), allAnnotations);
@@ -711,8 +719,7 @@ public class Finder {
      * @throws IllegalAccessException
      * @throws InvocationTargetException
      */
-    private static Object getAbstractUnionEntityMethodValue(final AbstractUnionEntity instance, final String methodName, final Class<?>... arguments) throws NoSuchMethodException,
-            InvocationTargetException {
+    private static Object getAbstractUnionEntityMethodValue(final AbstractUnionEntity instance, final String methodName, final Class<?>... arguments) throws NoSuchMethodException {
         try {
             final Method method = Reflector.getMethodForClass(instance.getClass(), methodName, arguments);
             return getMethodValue(method, instance);
@@ -792,8 +799,6 @@ public class Finder {
                 }
             } catch (final NoSuchMethodException e) {
                 throw new IllegalArgumentException("Failed to locate parameterless method " + property + " in " + entity.getClass(), e);
-            } catch (final InvocationTargetException e) {
-                throw new IllegalArgumentException("Failed to invoke parameterless method " + property + " on instance of " + entity.getClass(), e);
             }
         }
         return value;

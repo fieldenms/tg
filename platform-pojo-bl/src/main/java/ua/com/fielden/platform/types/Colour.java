@@ -3,7 +3,7 @@ package ua.com.fielden.platform.types;
 import ua.com.fielden.platform.types.exceptions.ValueObjectException;
 
 public class Colour {
-    private final String hashlessUppercasedColourValue;
+    public final String hashlessUppercasedColourValue;
 
     public static final Colour BLACK = new Colour("000000");
     public static final Colour RED = new Colour("FF0000");

@@ -13,7 +13,7 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  * 
  */
 public interface IWebDrivenTestCaseConfiguration {
-    final static int PORT = 9000;
+    final static int PORT = 9042;
 
     EntityFactory entityFactory();
 

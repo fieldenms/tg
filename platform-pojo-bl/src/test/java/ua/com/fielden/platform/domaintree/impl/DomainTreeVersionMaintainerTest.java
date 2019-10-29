@@ -71,11 +71,11 @@ public class DomainTreeVersionMaintainerTest extends AbstractDomainTreeTest {
     }
 
     private static ISerialiser0 createSerialiser0(final EntityFactory factory) {
-        return new Serialiser0(factory, new ClassProviderForTestingPurposes());
+        return new Serialiser0(factory, new ClassProviderForTestingPurposes(), DomainTreeEnhancerCache.CACHE);
     }
 
     private static ISerialiser createSerialiser(final EntityFactory factory) {
-        return new Serialiser(factory, new ClassProviderForTestingPurposes());
+        return new Serialiser(factory, new ClassProviderForTestingPurposes(), DomainTreeEnhancerCache.CACHE);
     }
 
     public DomainTreeVersionMaintainerTest() {

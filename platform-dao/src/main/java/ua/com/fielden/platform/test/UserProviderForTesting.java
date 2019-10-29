@@ -19,22 +19,24 @@ public class UserProviderForTesting implements IUserProvider {
         user.setKey("TEST-USER");
         user.setDesc("test user");
     }
-    
+
     @Override
     public User getUser() {
         return user;
     }
 
     @Override
-    public void setUsername(final String username, final IUser coUser) {
+    public IUserProvider setUsername(final String username, final IUser coUser) {
         user = new User();
         user.setKey(username);
         user.setDesc("test user");
+        return this;
     }
 
     @Override
-    public void setUser(final User user) {
+    public IUserProvider setUser(final User user) {
         this.user = user;
+        return this;
     }
 
 }

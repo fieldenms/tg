@@ -13,6 +13,8 @@ import java.util.Optional;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.DbVersion.CaseSensitivity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
@@ -31,7 +33,8 @@ public class KeyConditionBuilder {
     
     /**
      * Convenient method for composing a query to select an entity by key value.
-     * 
+     *
+     * @param dbVersion
      * @param entityType
      * @param keyType
      * @param filetrable
@@ -39,6 +42,7 @@ public class KeyConditionBuilder {
      * @return
      */
     public static <T extends AbstractEntity<?>> EntityResultQueryModel<T> createQueryByKey(
+            final DbVersion dbVersion,
             final Class<T> entityType,
             final Class<? extends Comparable<?>> keyType,
             final boolean filetrable,
@@ -46,7 +50,7 @@ public class KeyConditionBuilder {
         if (keyValues == null || keyValues.length == 0) {
             throw new IllegalArgumentException("No key values provided.");
         }
-        final EntityResultQueryModel<T> query = attachKeyConditions(entityType, keyType, select(entityType).where(), keyValues).model();
+        final EntityResultQueryModel<T> query = attachKeyConditions(dbVersion, entityType, keyType, select(entityType).where(), keyValues).model();
         query.setFilterable(filetrable);
         return query;
     }
@@ -60,6 +64,7 @@ public class KeyConditionBuilder {
      * @return
      */
     public static <T extends AbstractEntity<?>> Optional<EntityResultQueryModel<T>> createQueryByKeyFor(
+            final DbVersion dbVersion,
             final Class<T> entityType,
             final Class<? extends Comparable<?>> keyType,
             final Collection<T> entitiesWithKeys) {
@@ -68,7 +73,7 @@ public class KeyConditionBuilder {
         
         for (final Iterator<T> iter = entitiesWithKeys.iterator(); iter.hasNext();) {
             final T entityWithKey = iter.next();
-            final ICompoundCondition0<T> or = attachKeyConditions(keyType, partQ, keyMembers, keyMembers.stream().map(keyMember -> entityWithKey.get(keyMember.getName())).toArray());
+            final ICompoundCondition0<T> or = attachKeyConditions(dbVersion, keyType, partQ, keyMembers, keyMembers.stream().map(keyMember -> entityWithKey.get(keyMember.getName())).toArray());
             if (iter.hasNext()) {
                 partQ = or.or();
             } else {
@@ -89,11 +94,12 @@ public class KeyConditionBuilder {
      * @return
      */
     public static <T extends AbstractEntity<?>> ICompoundCondition0<T> attachKeyConditions(
+            final DbVersion dbVersion,
             final Class<T> entityType,
             final Class<? extends Comparable<?>> keyType,
             final IWhere0<T> entryPoint,
             final Object... keyValues) {
-        return attachKeyConditions(keyType, entryPoint, Finder.getKeyMembers(entityType), keyValues);
+        return attachKeyConditions(dbVersion, keyType, entryPoint, Finder.getKeyMembers(entityType), keyValues);
     }
 
     /**
@@ -105,6 +111,7 @@ public class KeyConditionBuilder {
      * @return
      */
     public static <T extends AbstractEntity<?>> ICompoundCondition0<T> attachKeyConditions(
+            final DbVersion dbVersion,
             final Class<? extends Comparable<?>> keyType, 
             final IWhere0<T> entryPoint, final List<Field> keyMembers, 
             final Object... keyValues) {
@@ -121,24 +128,28 @@ public class KeyConditionBuilder {
                 throw new EntityCompanionException(format("The number of provided values (%s) does not match the number of properties in the entity composite key (%s).", realKeyValues.length, keyMembers.size()));
             }
 
-            ICompoundCondition0<T> cc = entryPoint.condition(buildConditionForKeyMember(keyMembers.get(0).getName(), keyMembers.get(0).getType(), realKeyValues[0]));
+            ICompoundCondition0<T> cc = entryPoint.condition(buildConditionForKeyMember(dbVersion, keyMembers.get(0).getName(), keyMembers.get(0).getType(), realKeyValues[0]));
 
             for (int index = 1; index < keyMembers.size(); index++) {
-                cc = cc.and().condition(buildConditionForKeyMember(keyMembers.get(index).getName(), keyMembers.get(index).getType(), realKeyValues[index]));
+                cc = cc.and().condition(buildConditionForKeyMember(dbVersion, keyMembers.get(index).getName(), keyMembers.get(index).getType(), realKeyValues[index]));
             }
             return cc;
         } else if (keyValues.length != 1) {
             throw new EntityCompanionException(format("Only one key value is expected instead of %s when looking for an entity by a non-composite key.", keyValues.length));
         } else {
-            return entryPoint.condition(buildConditionForKeyMember(AbstractEntity.KEY, keyType, keyValues[0]));
+            return entryPoint.condition(buildConditionForKeyMember(dbVersion, AbstractEntity.KEY, keyType, keyValues[0]));
         }
     }
 
-    private static ConditionModel buildConditionForKeyMember(final String propName, final Class<?> propType, final Object propValue) {
+    private static ConditionModel buildConditionForKeyMember(final DbVersion dbVersion, final String propName, final Class<?> propType, final Object propValue) {
         if (propValue == null) {
             return cond().prop(propName).isNull().model();
         } else if (String.class.equals(propType)) {
-            return cond().lowerCase().prop(propName).eq().lowerCase().val(propValue).model();
+            if (dbVersion.caseSensitivity == CaseSensitivity.SENSITIVE) {
+                return cond().lowerCase().prop(propName).eq().lowerCase().val(propValue).model();
+            } else {
+                return cond().prop(propName).eq().val(propValue).model();
+            }
         } else if (Class.class.equals(propType)) {
             return cond().prop(propName).eq().val(((Class<?>) propValue).getName()).model();
         } else {

@@ -130,45 +130,6 @@ public interface IDomainTreeManager {
         List<String> checkedProperties(final Class<?> root);
 
         /**
-         * A post-successful listener for property checking.
-         * 
-         * @author TG Team
-         * 
-         */
-        public interface IPropertyCheckingListener extends EventListener {
-            /**
-             * @param hasBeenChecked
-             *            -- <code>true</code> to indicate that property was successfully checked, <code>false</code> to indicate that it was successfully unchecked.
-             * @param index
-             *            -- the <code>index</code> of the property being checked / unchecked inside "checking properties" list.
-             */
-            void propertyStateChanged(final Class<?> root, final String property, final Boolean hasBeenChecked, final Boolean oldState, final int index);
-        }
-
-        /**
-         * Adds a {@link IPropertyCheckingListener} listener.
-         * 
-         * @param listener
-         * @return
-         */
-        void addPropertyCheckingListener(final IPropertyCheckingListener listener);
-
-        /**
-         * Adds a weak reference on the specified {@link IPropertyCheckingListener} listener.
-         * 
-         * @param listener
-         */
-        void addWeakPropertyCheckingListener(final IPropertyCheckingListener listener);
-
-        /**
-         * Removes a {@link IPropertyCheckingListener} listener.
-         * 
-         * @param listener
-         * @return
-         */
-        void removePropertyCheckingListener(final IPropertyCheckingListener listener);
-
-        /**
          * Swaps two properties (<code>property1</code> and <code>property2</code>) in an ordered list of checked properties for concrete <code>root</code> type.
          * 
          * @param root

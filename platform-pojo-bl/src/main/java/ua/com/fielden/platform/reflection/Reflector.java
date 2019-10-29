@@ -1,19 +1,26 @@
 package ua.com.fielden.platform.reflection;
 
 import static java.lang.String.format;
+import static java.util.stream.Collectors.joining;
+import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
@@ -36,7 +43,19 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public final class Reflector {
-    private static final Map<MethodKey, Pair<Method, NoSuchMethodException>> methods = new ConcurrentHashMap<>();
+    /**
+     * A maximum cache size for caching reflection related information.
+     */
+    public static final int MAXIMUM_CACHE_SIZE = 32000;
+    /**
+     * A cache for {@link Method} instances.
+     */
+    private static final Cache<Class<?>, Cache<String, Method>> METHOD_CACHE = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).maximumSize(MAXIMUM_CACHE_SIZE).concurrencyLevel(50).build();
+
+    public static long cleanUp() {
+        METHOD_CACHE.cleanUp();
+        return METHOD_CACHE.size();
+    }
 
     /** A symbol that represents a separator between properties in property path expressions. */
     public static final String DOT_SPLITTER = "\\.";
@@ -46,6 +65,8 @@ public final class Reflector {
      */
     public static final String UP_LEVEL = "←";
 
+    private static final Logger LOGGER = Logger.getLogger(Reflector.class);
+    
     /**
      * Let's hide default constructor, which is not needed for a static class.
      */
@@ -69,7 +90,7 @@ public final class Reflector {
         try {
             // setKey is a special case, because property "key" has a parametrised type that extends comparable.
             // this means that there are two cases:
-            // 1. setter is overridden and a final key type is specified there -- need to use the assigned type as input parameter to setter in order to find it;
+            // 1. setter is overridden and a final key type is specified there -- need to use the assigned type as input parameter to setter in order to find it
             // 2. setter is not overridden -- need to use the lowest common denominator (Comparable) as input parameter to setter in order to find it.
             if ("setKey".equals(methodName)) {
                 try {
@@ -89,11 +110,6 @@ public final class Reflector {
                 + "].");
     }
 
-    /** Clear cached methods. */
-    public static void clearMethodsCache() {
-        methods.clear();
-    }
-
     /**
      * Returns method specified with methodName from {@code startWithClass} class.
      *
@@ -110,94 +126,31 @@ public final class Reflector {
             // the current instance
             try {
                 return getDeclaredMethod(klass, methodName, arguments);
-            } catch (final NoSuchMethodException e) {
+            } catch (final ReflectionException e) {
                 klass = klass.getSuperclass();
             }
         }
         throw new NoSuchMethodException(methodName);
     }
 
-    private static class MethodKey {
-        private final String klassName;
-        private final String methodName;
-        private final List<String> argumentsTypeNames;
 
-        public MethodKey(final Class<?> klass, final String methodName, final Class<?>... arguments) {
-            this.klassName = klass.getName();
-            this.methodName = methodName;
-            argumentsTypeNames = new ArrayList<>();
-            for (final Class<?> argument : arguments) {
-                argumentsTypeNames.add(argument.getName());
-            }
+    private static Method getDeclaredMethod(final Class<?> klass, final String methodName, final Class<?>... arguments) {
+        final String methodKey = format("%s(%s)", methodName, Stream.of(arguments).map(Class::getName).collect(joining(", ")));
+        final Cache<String, Method> methodOrException;
+        try {
+            methodOrException = METHOD_CACHE.get(klass, () -> { 
+                final Cache<String, Method> newTypeCache = CacheBuilder.newBuilder().weakValues().build();
+                METHOD_CACHE.put(klass, newTypeCache);
+                return newTypeCache;
+            });
+        } catch (final ExecutionException ex) {
+            throw new ReflectionException(format("Could not find method [%s] for type [%s].", methodKey, klass), ex);
         }
-
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + ((argumentsTypeNames == null) ? 0 : argumentsTypeNames.hashCode());
-            result = prime * result + ((klassName == null) ? 0 : klassName.hashCode());
-            result = prime * result + ((methodName == null) ? 0 : methodName.hashCode());
-            return result;
-        }
-
-        @Override
-        public boolean equals(final Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if (obj == null) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            final MethodKey other = (MethodKey) obj;
-            if (argumentsTypeNames == null) {
-                if (other.argumentsTypeNames != null) {
-                    return false;
-                }
-            } else if (!argumentsTypeNames.equals(other.argumentsTypeNames)) {
-                return false;
-            }
-            if (klassName == null) {
-                if (other.klassName != null) {
-                    return false;
-                }
-            } else if (!klassName.equals(other.klassName)) {
-                return false;
-            }
-            if (methodName == null) {
-                if (other.methodName != null) {
-                    return false;
-                }
-            } else if (!methodName.equals(other.methodName)) {
-                return false;
-            }
-            return true;
-        }
-    }
-
-    private static synchronized Method getDeclaredMethod(final Class<?> klass, final String methodName, final Class<?>... arguments) throws NoSuchMethodException,
-            SecurityException {
-        // return klass.getDeclaredMethod(methodName, arguments);
-        final MethodKey methodKey = new MethodKey(klass, methodName, arguments);
-        final Pair<Method, NoSuchMethodException> methodOrException = methods.get(methodKey);
-        if (methodOrException == null) {
-            try {
-                final Method method = klass.getDeclaredMethod(methodName, arguments);
-                methods.put(methodKey, new Pair<Method, NoSuchMethodException>(method, null));
-                return method;
-            } catch (final NoSuchMethodException e1) {
-                methods.put(methodKey, new Pair<Method, NoSuchMethodException>(null, e1));
-                throw e1;
-            } catch (final SecurityException e2) {
-                throw e2;
-            }
-        } else if (methodOrException.getKey() != null) {
-            return methodOrException.getKey();
-        } else {
-            throw methodOrException.getValue();
+        
+        try {
+            return methodOrException.get(methodKey, () -> klass.getDeclaredMethod(methodName, arguments));
+        } catch (final ExecutionException ex) {
+            throw new ReflectionException(format("Could not find method [%s] for type [%s].", methodKey, klass), ex);
         }
     }
 
@@ -246,6 +199,33 @@ public final class Reflector {
             }
         }
         throw new NoSuchMethodException(methodName);
+    }
+
+    
+    /**
+     * Returns <code>true</code> if the specified method <code>methodName</code> is overridden in <code>type</code> or its super types that extend <code>baseType</code> where this method is inherited from.
+     * Or the method is declared in <code>type</code> (i.e. it is not ingerited).
+     * <p>
+     * Basically, <code>true</code> is returned if <code>methodName</code> appears anywhere in the type hierarchy but the base type. 
+     * 
+     * @param baseType
+     * @param type
+     * @param methodName
+     * @param arguments
+     * @return
+     */
+    public static <BASE> boolean isMethodOverriddenOrDeclared(final Class<BASE> baseType, final Class<? extends BASE> type, final String methodName, final Class<?>... arguments) {
+        try {
+            
+            final Method method = Reflector.getMethod(type, methodName, arguments);
+            if (method.getDeclaringClass() != baseType) {
+                return true;
+            }
+        } catch (NoSuchMethodException | SecurityException ex) {
+            LOGGER.debug(format("Checking the oberriding of method [%s] for type [%s] with base type [%s] failed.", methodName, type.getName(), baseType.getName()), ex);
+        }
+        
+        return false;
     }
 
     /**
@@ -362,10 +342,9 @@ public final class Reflector {
         try {
             final Method method = annotation.getClass().getDeclaredMethod(paramName);
             method.setAccessible(true);
-            final Pair<Class<?>, Object> result = new Pair<Class<?>, Object>(method.getReturnType(), method.invoke(annotation));
-            return result;
+            return pair(method.getReturnType(), method.invoke(annotation));
         } catch (final Exception e) {
-            throw new IllegalStateException(e);
+            throw new ReflectionException("Could not get annotation param value.", e);
         }
     }
 
@@ -551,7 +530,7 @@ public final class Reflector {
     
     /**
      * Identifies whether the specified field represents a retrievable property.
-     * The notion retrievable is different to persistent as it also includes calculated properties, which do get retrieved from a database. 
+     * The notion of <code>retrievable</code> is different to <code>persistent</code> as it also includes calculated properties, which do get retrieved from a database. 
      * 
      * @param entity
      * @param propName
@@ -578,5 +557,24 @@ public final class Reflector {
      */
     public static boolean isPropertyRetrievable(final AbstractEntity<?> entity, final String propName) {
         return isPropertyRetrievable(entity, Finder.findFieldByName(entity.getClass(), propName)); 
+    }
+    
+    /**
+     * A helper function to assign value to a static final field.
+     *  
+     * @param field
+     * @param value
+     */
+    public static void assignStatic(final Field field, final Object value) {
+        try {
+            field.setAccessible(true);
+            final Field modifiersField = Field.class.getDeclaredField("modifiers");
+            modifiersField.setAccessible(true);
+            modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+
+            field.set(null, value);
+        } catch (final Exception ex) {
+            throw new ReflectionException("Could not assign value to a static field.", ex);
+        }
     }
 }

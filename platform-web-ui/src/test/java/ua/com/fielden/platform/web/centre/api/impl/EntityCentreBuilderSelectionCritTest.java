@@ -21,6 +21,7 @@ import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.web.app.exceptions.WebUiBuilderException;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.impl.helpers.CustomOrgUnit1Matcher;
 import ua.com.fielden.platform.web.centre.api.impl.helpers.CustomVehicleMatcher;
@@ -116,7 +117,7 @@ public class EntityCentreBuilderSelectionCritTest {
                     .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', [][]]")
                     .addProp("desc").build();
             fail();
-        } catch (final IllegalArgumentException ex) {
+        } catch (final WebUiBuilderException ex) {
             assertEquals(String.format("Property '%s'@'%s' has type %s, but type %s has been specified instead.", "this", TgWorkOrder.class.getSimpleName(), TgWorkOrder.class.getSimpleName(), TgVehicle.class.getSimpleName()), ex.getMessage());
         }
     }
@@ -234,7 +235,7 @@ public class EntityCentreBuilderSelectionCritTest {
                     .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', []")
                     .addProp("desc").build();
             fail();
-        } catch (final IllegalArgumentException ex) {
+        } catch (final WebUiBuilderException ex) {
             assertEquals("Property type is a required argument and cannot be omitted.", ex.getMessage());
         }
     }
@@ -247,7 +248,7 @@ public class EntityCentreBuilderSelectionCritTest {
                     .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', []")
                     .addProp("desc").build();
             fail();
-        } catch (final IllegalArgumentException ex) {
+        } catch (final WebUiBuilderException ex) {
             assertEquals(String.format("Property '%s'@'%s' cannot be used for autocompletion as it is not of an entity type (%s).", "key", TgWorkOrder.class.getSimpleName(), String.class.getSimpleName()), ex.getMessage());
         }
     }
@@ -260,7 +261,7 @@ public class EntityCentreBuilderSelectionCritTest {
                     .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', []")
                     .addProp("desc").build();
             fail();
-        } catch (final IllegalArgumentException ex) {
+        } catch (final WebUiBuilderException ex) {
             assertEquals(String.format("Property '%s'@'%s' has type %s, but type %s has been specified instead.", "orgunitCritOnly", TgWorkOrder.class.getSimpleName(), TgOrgUnit1.class.getSimpleName(), TgWorkOrder.class.getSimpleName()), ex.getMessage());
         }
     }

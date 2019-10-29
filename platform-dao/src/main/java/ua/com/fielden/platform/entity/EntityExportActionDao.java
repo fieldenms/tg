@@ -1,8 +1,11 @@
 package ua.com.fielden.platform.entity;
 
+import static ua.com.fielden.platform.error.Result.failure;
+
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 import com.google.inject.Inject;
@@ -26,7 +29,7 @@ import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 @EntityType(EntityExportAction.class)
 public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> implements IEntityExportAction {
     private final ICriteriaEntityRestorer criteriaEntityRestorer;
-    
+
     @Inject
     public EntityExportActionDao(final IFilter filter, final ICriteriaEntityRestorer criteriaEntityRestorer) {
         super(filter);
@@ -39,7 +42,7 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
         entity.setExportAll(true);
         return entity;
     }
-    
+
     @Override
     @SessionRequired
     public EntityExportAction save(final EntityExportAction entity) {
@@ -50,28 +53,30 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
         }
         // Otherwise continue data exporting.
         final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit = criteriaEntityRestorer.restoreCriteriaEntity(entity.getCentreContextHolder());
-        
+
         entity.setFileName(String.format("export-of-%s.xls", selectionCrit.getEntityClass().getSimpleName()));
         entity.setMime("application/vnd.ms-excel");
         final Map<String, Object> adhocParams = new LinkedHashMap<>();
         final Stream<AbstractEntity<?>> entities;
         if (entity.isExportAll()) {
-            entities = selectionCrit.exportQueryRunner().apply(adhocParams);
+            entities = selectionCrit.export(adhocParams);
         } else if (entity.isExportTop()) {
             adhocParams.put("fetchSize", entity.getNumber());
-            entities = selectionCrit.exportQueryRunner().apply(adhocParams).limit(entity.getNumber());
+            entities = selectionCrit.export(adhocParams).limit(entity.getNumber());
         } else {
             if (entity.getSelectedEntityIds().isEmpty()) {
-                throw Result.failure("Please select at least one entry to export.");
+                throw failure("Please select at least one entry to export.");
+            } else if (entity.getSelectedEntityIds().stream().anyMatch(Objects::isNull)) {
+                throw failure("Export of selected entities is not supported due to missing IDs.");
             }
             adhocParams.put("ids", entity.getSelectedEntityIds().toArray(new Long[0]));
-            entities = selectionCrit.exportQueryRunner().apply(adhocParams);
+            entities = selectionCrit.export(adhocParams);
         }
         try {
             final Pair<String[], String[]> propAndTitles = selectionCrit.generatePropTitlesToExport();
-            entity.setData(WorkbookExporter.convertToByteArray(WorkbookExporter.export(entities, propAndTitles.getKey(), propAndTitles.getValue())));
+            entity.setData(WorkbookExporter.convertToByteArray(WorkbookExporter.export(entities, propAndTitles.getKey(), propAndTitles.getValue(), selectionCrit.getDynamicProperties())));
         } catch (final IOException e) {
-            throw Result.failure("An exception occurred during the data export.", e);
+            throw failure("An exception occurred during the data export.", e);
         } finally {
             entities.close();
         }

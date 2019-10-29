@@ -1,9 +1,12 @@
 package ua.com.fielden.platform.attachment;
 
+import java.io.File;
+import java.util.Optional;
+
 import ua.com.fielden.platform.dao.IEntityDao;
 
 /**
- * A controller for managing DAO related operations with {@link Attachment}.
+ * A companion contract for {@link Attachment}.
  * 
  * @author TG Team
  * 
@@ -11,20 +14,19 @@ import ua.com.fielden.platform.dao.IEntityDao;
 public interface IAttachment extends IEntityDao<Attachment> {
 
     /**
-     * Downloads attached file and returns it as a byte array.
+     * Returns a file optionally. An empty result is returned if the identified by the attachment file could be located.
      * 
      * @param attachment
      * @return
      */
-    byte[] download(final Attachment attachment);
-
+    Optional<File> asFile(final Attachment attachment);
+    
     /**
-     * Copies attachment together with associated file. Returns a newly crated and persisted attachmen.
-     * 
-     * @param attachment
-     *            -- attachment that gets copied
+     * Creates a new attachment that represents a hyperlink.
+     * Returns an empty optional if {@code potentialUri} does not represent a valid URI.
+     *
+     * @param potentialUri
      * @return
      */
-    Attachment copy(final Attachment fromAttachment, final String key, final String desc);
-
+    Optional<Attachment> newAsHyperlink(final String potentialUri);
 }

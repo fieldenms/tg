@@ -1,9 +1,14 @@
 package ua.com.fielden.platform.utils;
 
+import static java.lang.String.format;
+
 import java.awt.Image;
 import java.awt.Toolkit;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Optional;
 
 import javax.swing.ImageIcon;
 
@@ -18,13 +23,14 @@ import org.apache.log4j.Logger;
  */
 public class ResourceLoader {
 
-    private static final Logger logger = Logger.getLogger(ResourceLoader.class);
+    private static final String ERR_COULD_NOT_LOAD = "Could not load resource [%s].";
+    private static final Logger LOGGER = Logger.getLogger(ResourceLoader.class);
 
     public static Image getImage(final String pathAndFileName) {
         try {
             return Toolkit.getDefaultToolkit().getImage(getURL(pathAndFileName));
-        } catch (final Exception e) {
-            logger.error("Error loading " + pathAndFileName + ". Cause: " + e.getMessage(), e);
+        } catch (final Exception ex) {
+            LOGGER.error(format(ERR_COULD_NOT_LOAD, pathAndFileName), ex);
             return null;
         }
     }
@@ -32,8 +38,8 @@ public class ResourceLoader {
     public static ImageIcon getIcon(final String pathAndFileName) {
         try {
             return new ImageIcon(getImage(pathAndFileName));
-        } catch (final Exception e) {
-            logger.error(e.getMessage());
+        } catch (final Exception ex) {
+            LOGGER.error(format(ERR_COULD_NOT_LOAD, pathAndFileName), ex);
             return null;
         }
     }
@@ -46,9 +52,9 @@ public class ResourceLoader {
      */
     public static String getText(final String pathAndFileName) {
         try {
-            return IOUtils.toString(getURL(pathAndFileName).openStream(), "UTF-8");
-        } catch (final Exception e) {
-            logger.error(e.getMessage() + " for path: " + pathAndFileName);
+            return IOUtils.toString(getStream(pathAndFileName), "UTF-8");
+        } catch (final Exception ex) {
+            LOGGER.error(format(ERR_COULD_NOT_LOAD, pathAndFileName), ex);
             return null;
         }
     }
@@ -72,13 +78,41 @@ public class ResourceLoader {
     public static InputStream getStream(final String pathAndFileName) {
         try {
             return getURL(pathAndFileName).openStream();
-        } catch (final Exception e) {
-            logger.error(e.getMessage() + " for path: " + pathAndFileName);
+        } catch (final Exception ex) {
+            LOGGER.error(format(ERR_COULD_NOT_LOAD, pathAndFileName), ex);
             return null;
         }
     }
 
+    /**
+     * Returns the URL for given resource path. Returns null if the resource doesn't exists.
+     *
+     * @param pathAndFileName
+     * @return
+     */
     public static URL getURL(final String pathAndFileName) {
         return Thread.currentThread().getContextClassLoader().getResource(pathAndFileName);
+    }
+
+    /**
+     * Returns Optional<Path> for given resource path.
+     * Performs URL -> URI -> Path conversion to convert %20 to spaces. 
+     * Returns Optional.empty() if the resource doesn't exists.
+     *
+     * @param pathAndFileName
+     * @return
+     */
+    public static Optional<Path> getPath(final String pathAndFileName) {
+        final URL url = getURL(pathAndFileName);
+        if (url == null) {
+            return Optional.empty();
+        } else {
+            try {
+                return Optional.of(Paths.get(url.toURI()));
+            } catch (final Exception ex) {
+                LOGGER.error(format(ERR_COULD_NOT_LOAD, pathAndFileName), ex);
+                return Optional.empty();
+            }
+        }
     }
 }

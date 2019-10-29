@@ -1,13 +1,22 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
+import static java.util.Collections.emptyList;
+import static ua.com.fielden.platform.entity.query.generation.elements.EntPropStage.EXTERNAL;
+import static ua.com.fielden.platform.entity.query.generation.elements.EntPropStage.FINALLY_RESOLVED;
+import static ua.com.fielden.platform.entity.query.generation.elements.EntPropStage.PRELIMINARY_RESOLVED;
+import static ua.com.fielden.platform.entity.query.generation.elements.EntPropStage.UNPROCESSED;
+import static ua.com.fielden.platform.entity.query.generation.elements.EntPropStage.UNRESOLVED;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+
+import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 
 public class EntProp implements ISingleOperand {
     private String name;
-    private Class propType;
+    private Class<?> propType;
     private Object hibType;
     private boolean nullable;
     private boolean unresolved = false;
@@ -27,15 +36,15 @@ public class EntProp implements ISingleOperand {
 
     public EntPropStage getStage() {
         if (unresolved) {
-            return EntPropStage.UNRESOLVED;
+            return UNRESOLVED;
         } else if (external) {
-            return EntPropStage.EXTERNAL;
+            return EXTERNAL;
         } else if (isFinallyResolved()) {
-            return EntPropStage.FINALLY_RESOLVED;
+            return FINALLY_RESOLVED;
         } else if (isPreliminaryResolved()) {
-            return EntPropStage.PRELIMINARY_RESOLVED;
+            return PRELIMINARY_RESOLVED;
         } else {
-            return EntPropStage.UNPROCESSED;
+            return UNPROCESSED;
         }
     }
 
@@ -59,7 +68,6 @@ public class EntProp implements ISingleOperand {
     }
 
     public EntProp(final String name, final boolean external, final boolean generated) {
-        super();
         this.name = name;
         this.external = external;
         this.generated = generated;
@@ -75,20 +83,20 @@ public class EntProp implements ISingleOperand {
 
     @Override
     public List<EntProp> getLocalProps() {
-        return isExpression() ? expression.getLocalProps() : Arrays.asList(new EntProp[] { this });
+        return isExpression() ? expression.getLocalProps() : listOf(this);
     }
 
     @Override
     public List<EntQuery> getLocalSubQueries() {
-        return isExpression() ? expression.getLocalSubQueries() : Collections.<EntQuery> emptyList();
+        return isExpression() ? expression.getLocalSubQueries() : emptyList();
     }
 
     @Override
     public List<EntValue> getAllValues() {
-        return isExpression() ? expression.getAllValues() : Collections.<EntValue> emptyList();
+        return isExpression() ? expression.getAllValues() : emptyList();
     }
 
-    public Class getPropType() {
+    public Class<?> getPropType() {
         return propType;
     }
 
@@ -100,7 +108,7 @@ public class EntProp implements ISingleOperand {
         this.hibType = hibType;
     }
 
-    public void setPropType(final Class propType) {
+    public void setPropType(final Class<?> propType) {
         this.propType = propType;
     }
 
@@ -114,16 +122,16 @@ public class EntProp implements ISingleOperand {
     }
 
     @Override
-    public Class type() {
+    public Class<?> type() {
         return propType;
     }
 
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((name == null) ? 0 : name.hashCode());
-        return result;
+        if (name == null) {
+            throw new EqlException("EntProp instance is missing a value for property name and its hashCode should not be calculated yet.");
+        }
+        return 31 * ((name == null) ? 0 : name.hashCode());
     }
 
     @Override
@@ -131,21 +139,11 @@ public class EntProp implements ISingleOperand {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
         if (!(obj instanceof EntProp)) {
             return false;
         }
-        final EntProp other = (EntProp) obj;
-        if (name == null) {
-            if (other.name != null) {
-                return false;
-            }
-        } else if (!name.equals(other.name)) {
-            return false;
-        }
-        return true;
+        final EntProp that = (EntProp) obj;
+        return Objects.equals(this.name, that.name);
     }
 
     public String getSql() {
@@ -195,7 +193,7 @@ public class EntProp implements ISingleOperand {
                 prop.setName(prefix + "." + prop.getName());
             }
 
-            final List<EntProp> unresolvedPropsFromSubqueries = new ArrayList<EntProp>();
+            final List<EntProp> unresolvedPropsFromSubqueries = new ArrayList<>();
             for (final EntQuery entQuery : getLocalSubQueries()) {
                 unresolvedPropsFromSubqueries.addAll(entQuery.getUnresolvedProps());
             }

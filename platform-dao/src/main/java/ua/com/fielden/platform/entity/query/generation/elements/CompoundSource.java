@@ -11,7 +11,6 @@ public class CompoundSource implements IPropertyCollector {
     private final Conditions joinConditions;
 
     public CompoundSource(final ISource source, final JoinType joinType, final Conditions joinConditions) {
-        super();
         this.source = source;
         this.joinType = joinType;
         this.joinConditions = joinConditions;
@@ -45,7 +44,7 @@ public class CompoundSource implements IPropertyCollector {
 
     @Override
     public List<EntValue> getAllValues() {
-        final List<EntValue> result = new ArrayList<EntValue>();
+        final List<EntValue> result = new ArrayList<>();
         result.addAll(source.getValues());
         result.addAll(joinConditions.getAllValues());
         return result;

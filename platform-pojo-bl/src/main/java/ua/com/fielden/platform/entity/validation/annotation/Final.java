@@ -11,12 +11,13 @@ import java.lang.annotation.Target;
  * If its value is <code>true</code> (the default) then the final semantics is enforced only for properties that had been persisted.
  * Otherwise, the final semantics are enforced immediately after assigning a <code>non-null</code> value to a property.
  * 
- * @author 01es
+ * @author TG Team
  * 
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.FIELD })
 public @interface Final {
+    public static final String ERR_REASSIGNMENT = "Reassigning a value for property [%s] in entity %s is not permitted.";
     
     /** 
      * Controls when the final semantics are enforced -- before or after (default) the assigned property value is persisted.

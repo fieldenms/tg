@@ -13,4 +13,11 @@ public class PrimitiveResultQueryModel extends SingleResultQueryModel {
     public PrimitiveResultQueryModel(final List<Pair<TokenCategory, Object>> tokens) {
         super(tokens, null, false);
     }
+
+    @Override
+    public PrimitiveResultQueryModel setFilterable(boolean filterable) {
+        super.setFilterable(filterable);
+        return this;
+    }
+
 }

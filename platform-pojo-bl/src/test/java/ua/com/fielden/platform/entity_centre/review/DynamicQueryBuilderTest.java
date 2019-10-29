@@ -5,7 +5,10 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.getEmptyValue;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -19,6 +22,7 @@ import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.UnsupportedTypeException;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
 import ua.com.fielden.snappy.MnemonicEnum;
 
@@ -288,6 +292,16 @@ public class DynamicQueryBuilderTest {
         qp.setValue(null);
         assertTrue(qp.getType().getSimpleName() + " property with null value should recognised be empty.", qp.isEmpty());
     }
+    
+    @Test
+    public void queryProperty_is_still_considered_empty_if_orGroup_is_not_empty () {
+        final QueryProperty qp = new QueryProperty(EntityForQueryPropertyTesting.class, "entity1");
+        qp.setValue(listOf());
+        qp.setOrGroup(1);
+        
+        assertTrue(qp.isEmpty());
+        assertTrue(qp.isEmptyWithoutMnemonics());
+    }
 
     @SuppressWarnings("serial")
     @Test
@@ -439,7 +453,34 @@ public class DynamicQueryBuilderTest {
         qp.setValue(null);
         assertTrue(qp.getType().getSimpleName() + " property with null value should be ignored.", qp.shouldBeIgnored());
     }
-
+    
+    @Test
+    public void queryProperty_still_shouldBeIgnored_if_orGroup_is_not_empty () {
+        final QueryProperty qp = new QueryProperty(EntityForQueryPropertyTesting.class, "entity1");
+        qp.setValue(listOf());
+        qp.setOrGroup(1);
+        
+        assertTrue(qp.shouldBeIgnored());
+    }
+    
+    @Test
+    public void critOnly_queryProperty_still_shouldBeIgnored_if_orGroup_is_not_empty () {
+        final QueryProperty qp = new QueryProperty(EntityForQueryPropertyTesting.class, "entity2");
+        qp.setValue(listOf());
+        qp.setOrGroup(1);
+        
+        assertTrue(qp.shouldBeIgnored());
+    }
+    
+    @Test
+    public void critOnlyAEChild_queryProperty_still_shouldBeIgnored_if_orGroup_is_not_empty () {
+        final QueryProperty qp = new QueryProperty(EntityForQueryPropertyTesting.class, "entity2.entity1");
+        qp.setValue(listOf());
+        qp.setOrGroup(1);
+        
+        assertTrue(qp.shouldBeIgnored());
+    }
+    
     @Test
     public void test_QueryProperty_meta_information_determination() {
         final Class<?> klass = EntityForQueryPropertyTesting.class;
@@ -489,12 +530,13 @@ public class DynamicQueryBuilderTest {
     }
 
     @Test
-    public void test_QueryProperty_ignoring_key_part_not_to_do_extra_joins() {
-        assertEquals("Should be equal.", "alias", DynamicQueryBuilder.getPropertyNameWithoutKeyPart("alias"));
-        assertEquals("Should be equal.", "alias", DynamicQueryBuilder.getPropertyNameWithoutKeyPart("alias.key"));
-        assertEquals("Should be equal.", "alias.prop", DynamicQueryBuilder.getPropertyNameWithoutKeyPart("alias.prop.key"));
-        assertEquals("Should be equal.", "alias.key.prop", DynamicQueryBuilder.getPropertyNameWithoutKeyPart("alias.key.prop"));
-        assertEquals("Should be equal.", "alias.key.prop1.prop2", DynamicQueryBuilder.getPropertyNameWithoutKeyPart("alias.key.prop1.prop2"));
+    public void QueryProperty_ignoring_key_part_does_not_add_extra_joins() {
+        assertEquals(ID, DynamicQueryBuilder.getPropertyNameWithoutKeyPart(KEY));
+        assertEquals("alias", DynamicQueryBuilder.getPropertyNameWithoutKeyPart("alias"));
+        assertEquals("alias", DynamicQueryBuilder.getPropertyNameWithoutKeyPart("alias.key"));
+        assertEquals("alias.prop", DynamicQueryBuilder.getPropertyNameWithoutKeyPart("alias.prop.key"));
+        assertEquals("alias.key.prop", DynamicQueryBuilder.getPropertyNameWithoutKeyPart("alias.key.prop"));
+        assertEquals("alias.key.prop1.prop2", DynamicQueryBuilder.getPropertyNameWithoutKeyPart("alias.key.prop1.prop2"));
     }
 
     @Test

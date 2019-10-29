@@ -31,6 +31,7 @@ import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.testing.EvenSlaverEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.domaintree.testing.SlaveEntity;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 
 /**
  * A test for {@link CalculatedProperty}.
@@ -83,7 +84,7 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
     //////////////////////////////////////////// Utilities ////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     protected CalculatedProperty correctCalculatedPropertyCreation(final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty) {
-        final CalculatedProperty calc = CalculatedProperty.createCorrect(factory(), root, contextPath, contextualExpression, title, desc, attribute, originationProperty, dtm());
+        final CalculatedProperty calc = CalculatedProperty.createCorrect(factory(), root, contextPath, contextualExpression, title, desc, attribute, originationProperty, IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE, dtm());
         checkTrivialParams(calc, root, contextPath, contextualExpression, title, desc, attribute, originationProperty, dtm());
         return calc;
     }

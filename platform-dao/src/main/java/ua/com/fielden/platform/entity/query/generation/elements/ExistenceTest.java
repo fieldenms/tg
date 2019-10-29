@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
-import java.util.ArrayList;
-import java.util.Arrays;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+
 import java.util.List;
 
 public class ExistenceTest extends AbstractCondition {
@@ -20,7 +20,7 @@ public class ExistenceTest extends AbstractCondition {
 
     @Override
     public List<EntQuery> getLocalSubQueries() {
-        return Arrays.asList(new EntQuery[] { subQuery });
+        return listOf(subQuery);
     }
 
     @Override
@@ -64,10 +64,6 @@ public class ExistenceTest extends AbstractCondition {
 
     @Override
     protected List<IPropertyCollector> getCollection() {
-        return new ArrayList<IPropertyCollector>() {
-            {
-                add(subQuery);
-            }
-        };
+        return listOf(subQuery);
     }
 }

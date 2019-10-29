@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.APPENDIX;
 import static ua.com.fielden.platform.utils.EntityUtils.isDecimal;
 import static ua.com.fielden.platform.utils.EntityUtils.isInteger;
+import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.GenericArrayType;
@@ -17,9 +18,14 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
+import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.DescRequired;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Required;
+import ua.com.fielden.platform.entity.proxy.MockNotFoundEntityMaker;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -32,7 +38,8 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class PropertyTypeDeterminator {
-    private static final String PROPERTY_SPLITTER = ".";
+    public static final String PROPERTY_SPLITTER = ".";
+    public static final String ERR_TYPE_AND_PROP_REQUIRED = "Property type cannot be determined without both property name and owning type specified.";
 
     /**
      * Let's hide default constructor, which is not needed for a static class.
@@ -51,6 +58,10 @@ public class PropertyTypeDeterminator {
      * @return -- property/function class
      */
     public static Class<?> determinePropertyType(final Class<?> type, final String dotNotationExp) {
+        if (type == null || StringUtils.isEmpty(dotNotationExp)) {
+            throw new ReflectionException(ERR_TYPE_AND_PROP_REQUIRED);
+        }
+        
         if ("this".equals(dotNotationExp)) {
             return stripIfNeeded(type);
         }
@@ -60,7 +71,8 @@ public class PropertyTypeDeterminator {
         for (final String propertyOrFunction : propertiesOrFunctions) {
             result = determineClass(result, propertyOrFunction, true, true);
         }
-        return stripIfNeeded(result);
+        
+        return result == null ? null : stripIfNeeded(result);
     }
 
     /**
@@ -252,7 +264,7 @@ public class PropertyTypeDeterminator {
     public static Class<?> stripIfNeeded(final Class<?> clazz) {
         if (clazz == null) {
             throw new ReflectionException("Class stripping is not applicable to null values.");
-        } else if (isInstrumented(clazz) || isProxied(clazz) || isLoadedByHibernate(clazz)) {
+        } else if (isInstrumented(clazz) || isProxied(clazz) || isLoadedByHibernate(clazz) || isMockNotFoundType(clazz)) {
             return stripIfNeeded(clazz.getSuperclass());
         }
         return clazz;
@@ -280,7 +292,7 @@ public class PropertyTypeDeterminator {
     }
 
     private static boolean isLoadedByHibernate(final Class<?> clazz) {
-        return clazz.getName().contains("$$_javassist");
+        return clazz.getName().contains("$$_javassist") || clazz.getName().contains("_$$_");
     }
 
     /**
@@ -304,6 +316,16 @@ public class PropertyTypeDeterminator {
         return clazz.getName().contains("$$EnhancerByGuice");
     }
 
+    /**
+     * A predicate to identify whether {@code entityType} represents a mock-not-found type.
+     *
+     * @param entityType
+     * @return
+     */
+    public static boolean isMockNotFoundType(final Class<?> entityType) {
+        return entityType.getName().endsWith(MockNotFoundEntityMaker.MOCK_TYPE_ENDING);
+    }
+
     public static boolean isDotNotation(final String exp) {
         return exp.contains(PROPERTY_SPLITTER);
     }
@@ -325,7 +347,7 @@ public class PropertyTypeDeterminator {
         final int indexOfFirstDot = dotNotationExp.indexOf(PROPERTY_SPLITTER);
         final String firstPart = dotNotationExp.substring(0, indexOfFirstDot);
         final String restPart = dotNotationExp.substring(indexOfFirstDot + 1);
-        return new Pair<String, String>(firstPart, restPart);
+        return pair(firstPart, restPart);
     }
 
     /**
@@ -368,6 +390,21 @@ public class PropertyTypeDeterminator {
         return Map.class.isAssignableFrom(field.getType());
     }
 
+    /**
+     * Identifies whether the specified property is defined as mapped or calculated.
+     * The main intent for such information is to identify properties that are query-able.
+     * For example, plain properties and {@link CritOnly} properties are not.
+     * 
+     * @param entitType
+     * @param dotNotationExp
+     * @return
+     */
+    public static boolean isMappedOrCalculated(final Class<? extends AbstractEntity<?>> entitType, final String dotNotationExp) {
+        return Finder.findFieldByNameOptionally(entitType, dotNotationExp)
+               .map(field -> field.isAnnotationPresent(IsProperty.class) && (field.isAnnotationPresent(MapTo.class) || field.isAnnotationPresent(Calculated.class)))
+               .orElse(false);
+    }
+    
     /**
      * Identifies whether property <code>doNotationExp</code> has a type, which is recognized as representing a numeric value such as decimal, money, long or integer.
      *

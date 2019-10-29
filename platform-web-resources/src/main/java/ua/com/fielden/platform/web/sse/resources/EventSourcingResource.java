@@ -14,8 +14,10 @@ import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.resource.Get;
 import org.restlet.resource.ResourceException;
-import org.restlet.resource.ServerResource;
 
+import ua.com.fielden.platform.web.application.RequestInfo;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
+import ua.com.fielden.platform.web.resources.webui.AbstractWebResource;
 import ua.com.fielden.platform.web.sse.EventSourceEmitter;
 import ua.com.fielden.platform.web.sse.IEventSource;
 import ua.com.fielden.platform.web.utils.ServletUtils;
@@ -25,7 +27,7 @@ import ua.com.fielden.platform.web.utils.ServletUtils;
  *
  * @author TG Team
  */
-public class EventSourcingResource extends ServerResource {
+public class EventSourcingResource extends AbstractWebResource {
 
     private final Logger logger = Logger.getLogger(this.getClass());
     private final AtomicBoolean shouldKeepGoing = new AtomicBoolean(true);
@@ -33,10 +35,11 @@ public class EventSourcingResource extends ServerResource {
 
     public EventSourcingResource(
             final IEventSource eventSource,
+            final IDeviceProvider deviceProvider,
             final Context context,
             final Request request,
             final Response response) {
-        init(context, request, response);
+        super(context, request, response, deviceProvider);
         this.eventSource = eventSource;
     }
 
@@ -56,7 +59,7 @@ public class EventSourcingResource extends ServerResource {
             // Infinite timeout because the continuation is never resumed,
             // but only completed on close
             async.setTimeout(0);
-            final EventSourceEmitter emitter = new EventSourceEmitter(shouldKeepGoing, eventSource, async);
+            final EventSourceEmitter emitter = new EventSourceEmitter(shouldKeepGoing, eventSource, async, new RequestInfo(getRequest()));
             emitter.scheduleHeartBeat();
             eventSource.onOpen(emitter);
         } catch (final IOException ex) {

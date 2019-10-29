@@ -43,6 +43,7 @@ import ua.com.fielden.platform.utils.Pair;
  * @author TG Team
  *
  */
+@Deprecated
 public class DomainTreeVersionMaintainer extends AbstractDomainTree {
     private final static Logger logger = Logger.getLogger(DomainTreeVersionMaintainer.class);
 
@@ -73,7 +74,7 @@ public class DomainTreeVersionMaintainer extends AbstractDomainTree {
             logger.debug("\tA default locator instance for [" + elcKey + "] is of CURRENT (1) version and has been succesfully deserialised.");
             // all is okay -- the version is current
             logger.debug("Ended maintaining the version of default locator instance for [" + elcKey + "].");
-            return new Pair<LocatorDomainTreeManagerAndEnhancer, Boolean>(ldtmae, false);
+            return new Pair<>(ldtmae, false);
         } catch (final Exception e) {
             System.out.println("EXCEPTION:" + e.getMessage());
             //e.printStackTrace();
@@ -85,7 +86,7 @@ public class DomainTreeVersionMaintainer extends AbstractDomainTree {
             final LocatorDomainTreeManagerAndEnhancer ldtmae = convert(ldtmae0, serialiser);
             logger.warn("\tA default locator instance for [" + elcKey + "] has been converted succesfully to CURRENT (1) version from OLD (0) version.");
 
-            return new Pair<LocatorDomainTreeManagerAndEnhancer, Boolean>(ldtmae, true);
+            return new Pair<>(ldtmae, true);
         }
     }
 
@@ -110,7 +111,7 @@ public class DomainTreeVersionMaintainer extends AbstractDomainTree {
         return //
         new LocatorDomainTreeManagerAndEnhancer(//
         serialiser, //
-        new LocatorDomainTreeManager(serialiser, (LocatorDomainTreeRepresentation) ldtmae0.base().getRepresentation(), new AddToCriteriaTickManagerForLocator(atctmfl0.checkedProperties(), serialiser, atctmfl0.propertiesValues1(), atctmfl0.propertiesValues2(), atctmfl0.propertiesExclusive1(), atctmfl0.propertiesExclusive2(), atctmfl0.propertiesDatePrefixes(), atctmfl0.propertiesDateMnemonics(), atctmfl0.propertiesAndBefore(), atctmfl0.propertiesOrNulls(), atctmfl0.propertiesNots(), atctmfl0.columnsNumber(), new LocatorManager(serialiser, ldtmae0.base().getRepresentation().rootTypes(), convert(atctmfl0.locatorManager().persistentLocators(), serialiser)), atctmfl0.propertiesMetaValuePresences()), (AddToResultTickManager) ldtmae0.base().getSecondTick(), ldtmae0.base().isRunAutomatically(), ldtmae0.base().isUseForAutocompletion(), ldtmae0.base().getSearchBy()), new DomainTreeEnhancer(serialiser, ldtmae0.getEnhancer().originalAndEnhancedRootTypesAndArrays(), ldtmae0.getEnhancer().calculatedProperties(), ldtmae0.getEnhancer().customProperties()), ldtmae0.persistentAnalyses(), ldtmae0.currentAnalyses(), ldtmae0.freezedAnalyses());
+        new LocatorDomainTreeManager(serialiser, (LocatorDomainTreeRepresentation) ldtmae0.base().getRepresentation(), new AddToCriteriaTickManagerForLocator(atctmfl0.checkedProperties(), serialiser, atctmfl0.propertiesValues1(), atctmfl0.propertiesValues2(), atctmfl0.propertiesExclusive1(), atctmfl0.propertiesExclusive2(), atctmfl0.propertiesDatePrefixes(), atctmfl0.propertiesDateMnemonics(), atctmfl0.propertiesAndBefore(), atctmfl0.propertiesOrNulls(), atctmfl0.propertiesNots(), atctmfl0.propertiesOrGroups(), atctmfl0.columnsNumber(), new LocatorManager(serialiser, ldtmae0.base().getRepresentation().rootTypes(), convert(atctmfl0.locatorManager().persistentLocators(), serialiser)), atctmfl0.propertiesMetaValuePresences()), (AddToResultTickManager) ldtmae0.base().getSecondTick(), ldtmae0.base().isRunAutomatically(), ldtmae0.base().isUseForAutocompletion(), ldtmae0.base().getSearchBy()), new DomainTreeEnhancer(serialiser, ldtmae0.getEnhancer().originalAndEnhancedRootTypesAndArrays(), ldtmae0.getEnhancer().calculatedProperties(), ldtmae0.getEnhancer().customProperties()), ldtmae0.persistentAnalyses(), ldtmae0.currentAnalyses(), ldtmae0.freezedAnalyses());
     }
 
     public static Pair<CentreDomainTreeManagerAndEnhancer, Boolean> retrieveCentre(final String eccKey, final byte[] array, final ISerialiser serialiser, final ISerialiser0 serialiser0)
@@ -122,7 +123,7 @@ public class DomainTreeVersionMaintainer extends AbstractDomainTree {
             logger.debug("\tA centre instance for [" + eccKey + "] is of CURRENT (1) version and has been succesfully deserialised.");
             // all is okay -- the version is current
             logger.debug("Ended maintaining the version of centre instance for [" + eccKey + "].");
-            return new Pair<CentreDomainTreeManagerAndEnhancer, Boolean>(cdtmae, false);
+            return new Pair<>(cdtmae, false);
         } catch (final Exception e) {
             logger.debug("Ended maintaining the version of centre instance for [" + eccKey + "] -- the exception has occured.");
             throw e;
@@ -140,12 +141,10 @@ public class DomainTreeVersionMaintainer extends AbstractDomainTree {
 
     public CentreDomainTreeManagerAndEnhancer maintainCentreVersion(final EntityCentreConfig downloadedEcc) throws Exception {
         final Pair<CentreDomainTreeManagerAndEnhancer, Boolean> cdtmaeAndShouldBePromoted = retrieveCentre(downloadedEcc.toString(), downloadedEcc.getConfigBody(), getSerialiser(), serialiser0);
-        // populate Id and Version to be able to determine staleness of the centre
-        cdtmaeAndShouldBePromoted.getKey().setSavedEntityId(downloadedEcc.getId());
-        cdtmaeAndShouldBePromoted.getKey().setSavedEntityVersion(downloadedEcc.getVersion());
         if (cdtmaeAndShouldBePromoted.getValue()) {
             // the converted version should be promoted to the cloud
             downloadedEcc.setConfigBody(getSerialiser().serialise(cdtmaeAndShouldBePromoted.getKey())); // serialise with CURRENT version of serialiser
+            // TODO DomainTreeVersionMaintainer is not used anywhere; delete it once inspiration for issue #1145 will be gained.
             final EntityCentreConfig updatedEcc = eccController.save(downloadedEcc);
             logger.warn("\tA centre instance, converted to CURRENT (1) version, for [" + downloadedEcc + "] has been succesfully saved (promoted to the cloud).");
 
@@ -162,7 +161,7 @@ public class DomainTreeVersionMaintainer extends AbstractDomainTree {
         return //
         new CentreDomainTreeManagerAndEnhancer(//
         serialiser, //
-        new CentreDomainTreeManager(serialiser, (CentreDomainTreeRepresentation) cdtmae0.base().getRepresentation(), new AddToCriteriaTickManager(atctm0.checkedProperties(), serialiser, atctm0.propertiesValues1(), atctm0.propertiesValues2(), atctm0.propertiesExclusive1(), atctm0.propertiesExclusive2(), atctm0.propertiesDatePrefixes(), atctm0.propertiesDateMnemonics(), atctm0.propertiesAndBefore(), atctm0.propertiesOrNulls(), atctm0.propertiesNots(), atctm0.columnsNumber(), new LocatorManager(serialiser, cdtmae0.base().getRepresentation().rootTypes(), convert(atctm0.locatorManager().persistentLocators(), serialiser)), atctm0.propertiesMetaValuePresences()), (AddToResultTickManager) cdtmae0.base().getSecondTick(), cdtmae0.base().isRunAutomatically()), new DomainTreeEnhancer(serialiser, cdtmae0.getEnhancer().originalAndEnhancedRootTypesAndArrays(), cdtmae0.getEnhancer().calculatedProperties(), cdtmae0.getEnhancer().customProperties()), cdtmae0.persistentAnalyses(), cdtmae0.currentAnalyses(), cdtmae0.freezedAnalyses());
+        new CentreDomainTreeManager(serialiser, (CentreDomainTreeRepresentation) cdtmae0.base().getRepresentation(), new AddToCriteriaTickManager(atctm0.checkedProperties(), serialiser, atctm0.propertiesValues1(), atctm0.propertiesValues2(), atctm0.propertiesExclusive1(), atctm0.propertiesExclusive2(), atctm0.propertiesDatePrefixes(), atctm0.propertiesDateMnemonics(), atctm0.propertiesAndBefore(), atctm0.propertiesOrNulls(), atctm0.propertiesNots(), atctm0.propertiesOrGroups(), atctm0.columnsNumber(), new LocatorManager(serialiser, cdtmae0.base().getRepresentation().rootTypes(), convert(atctm0.locatorManager().persistentLocators(), serialiser)), atctm0.propertiesMetaValuePresences()), (AddToResultTickManager) cdtmae0.base().getSecondTick(), cdtmae0.base().isRunAutomatically()), new DomainTreeEnhancer(serialiser, cdtmae0.getEnhancer().originalAndEnhancedRootTypesAndArrays(), cdtmae0.getEnhancer().calculatedProperties(), cdtmae0.getEnhancer().customProperties()), cdtmae0.persistentAnalyses(), cdtmae0.currentAnalyses(), cdtmae0.freezedAnalyses());
     }
 
     public static Pair<MasterDomainTreeManager, Boolean> retrieveMaster(final String emcKey, final byte[] array, final ISerialiser serialiser, final ISerialiser0 serialiser0)
@@ -174,7 +173,7 @@ public class DomainTreeVersionMaintainer extends AbstractDomainTree {
             logger.debug("\tA master instance for [" + emcKey + "] is of CURRENT (1) version and has been succesfully deserialised.");
             // all is okay -- the version is current
             logger.debug("Ended maintaining the version of master instance for [" + emcKey + "].");
-            return new Pair<MasterDomainTreeManager, Boolean>(mdtm, false);
+            return new Pair<>(mdtm, false);
         } catch (final Exception e) {
             System.out.println("EXCEPTION:" + e.getMessage());
             //e.printStackTrace();
@@ -186,7 +185,7 @@ public class DomainTreeVersionMaintainer extends AbstractDomainTree {
             final MasterDomainTreeManager mdtm = convert(mdtm0, serialiser);
             logger.warn("\tA master instance for [" + emcKey + "] has been converted succesfully to CURRENT (1) version from OLD (0) version.");
 
-            return new Pair<MasterDomainTreeManager, Boolean>(mdtm, true);
+            return new Pair<>(mdtm, true);
         }
     }
 

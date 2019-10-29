@@ -37,7 +37,6 @@ public class FirstLevelEntity extends AbstractEntity<DynamicEntityKey> implement
 
     @IsProperty
     @CritOnly
-    @Title("AE")
     private SimpleEntity critOnlyAEProperty;
 
     public String getProperty() {

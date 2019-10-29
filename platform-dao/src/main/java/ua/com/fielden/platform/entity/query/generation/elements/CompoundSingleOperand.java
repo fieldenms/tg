@@ -11,7 +11,6 @@ public class CompoundSingleOperand {
     }
 
     public CompoundSingleOperand(final ISingleOperand operand, final ArithmeticalOperator operator) {
-        super();
         this.operand = operand;
         this.operator = operator;
     }

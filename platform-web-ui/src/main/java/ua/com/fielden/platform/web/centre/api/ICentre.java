@@ -18,6 +18,6 @@ public interface ICentre<T extends AbstractEntity<?>> {
      *
      * @return
      */
-    IRenderable build();
+    IRenderable buildFor();
 
 }

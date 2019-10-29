@@ -17,6 +17,7 @@ import ua.com.fielden.platform.domaintree.centre.analyses.ILifecycleDomainTreeRe
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTreeRepresentation.LifecycleAddToCategoriesTickRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.LifecycleDomainTreeRepresentation.LifecycleAddToDistributionTickRepresentation;
 import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Monitoring;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel.GroupingPeriods;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -149,7 +150,7 @@ public class LifecycleDomainTreeManager extends AbstractAnalysisDomainTreeManage
             final ICategorizer categorizer = categorizer(root, lifecycleProperty);
             for (final ICategory category : categorizer.getAllCategories()) {
                 final Class<?> originalType = DynamicEntityClassLoader.getOriginalType(root);
-                final ICalculatedProperty calcProp = getEnhancerFromCentre().addCalculatedProperty(originalType, "", LifecycleDomainTreeRepresentation.CATEGORY_PROPERTY_MARKER, category.getName(), category.getDesc(), CalculatedPropertyAttribute.NO_ATTR, "SELF");
+                final ICalculatedProperty calcProp = getEnhancerFromCentre().addCalculatedProperty(originalType, "", LifecycleDomainTreeRepresentation.CATEGORY_PROPERTY_MARKER, category.getName(), category.getDesc(), CalculatedPropertyAttribute.NO_ATTR, "SELF", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
                 getEnhancerFromCentre().apply();
                 final String categoryPropertyName = calcProp.pathAndName();
                 check(root, categoryPropertyName, true); // all categories should be checked by default

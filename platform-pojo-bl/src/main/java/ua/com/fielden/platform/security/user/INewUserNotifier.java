@@ -12,8 +12,8 @@ public interface INewUserNotifier {
     
     /**
      * Notifies the specified user of their registration of a new application user.
-     * @param user
+     * @param userSecret
      */
-    void notify(final User user);
+    void notify(final UserSecret userSecret);
     
 }

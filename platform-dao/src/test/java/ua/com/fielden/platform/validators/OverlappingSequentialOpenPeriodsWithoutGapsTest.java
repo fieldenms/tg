@@ -1,22 +1,19 @@
 package ua.com.fielden.platform.validators;
 
-import java.util.List;
-
-import org.junit.Test;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.sample.domain.ITgTimesheet;
-import ua.com.fielden.platform.sample.domain.TgTimesheet;
-import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
-import ua.com.fielden.platform.test.PlatformTestDomainTypes;
-import ua.com.fielden.platform.utils.Validators;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class OverlappingSequentialOpenPeriodsWithoutGapsTest extends AbstractDomainDrivenTestCase {
+import org.junit.Test;
+
+import ua.com.fielden.platform.sample.domain.ITgTimesheet;
+import ua.com.fielden.platform.sample.domain.TgTimesheet;
+import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
+import ua.com.fielden.platform.utils.Validators;
+
+public class OverlappingSequentialOpenPeriodsWithoutGapsTest extends AbstractDaoTestCase {
 
     private final ITgTimesheet dao = getInstance(ITgTimesheet.class);
-
+    
     @Test
     public void test_overlapping_for_new_closed_between_and_touching_existing() {
         final TgTimesheet ts = new_composite(TgTimesheet.class, "USER1", date("2011-11-01 13:00:00")).setFinishDate(date("2011-11-01 14:00:00")).setIncident("001");
@@ -61,11 +58,6 @@ public class OverlappingSequentialOpenPeriodsWithoutGapsTest extends AbstractDom
         save(new_composite(TgTimesheet.class, "USER1", date("2011-11-01 12:00:00")).setFinishDate(date("2011-11-01 13:00:00")).setIncident("001"));
         save(new_composite(TgTimesheet.class, "USER1", date("2011-11-01 14:00:00")).setFinishDate(date("2011-11-01 15:00:00")).setIncident("002"));
         save(new_composite(TgTimesheet.class, "USER1", date("2011-11-01 16:00:00")).setIncident("001"));
-    }
-
-    @Override
-    protected List<Class<? extends AbstractEntity<?>>> domainEntityTypes() {
-        return PlatformTestDomainTypes.entityTypes;
     }
 
 }

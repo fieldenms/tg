@@ -7,9 +7,12 @@ import org.restlet.data.Method;
 
 import com.google.inject.Injector;
 
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.resources.webui.LogoutResource;
 
 /**
@@ -20,9 +23,13 @@ import ua.com.fielden.platform.web.resources.webui.LogoutResource;
  */
 public class LogoutResourceFactory extends Restlet {
 
+    private final String domainName;
+    private final String path;
     private final Injector injector;
 
-    public LogoutResourceFactory(final Injector injector) {
+    public LogoutResourceFactory(final String domainName, final String path, final Injector injector) {
+        this.domainName = domainName;
+        this.path = path;
         this.injector = injector;
     }
 
@@ -31,10 +38,17 @@ public class LogoutResourceFactory extends Restlet {
         super.handle(request, response);
 
         if (Method.GET.equals(request.getMethod())) {
+            
+            final ICompanionObjectFinder coFinder = injector.getInstance(ICompanionObjectFinder.class);
+            final IUser coUser = coFinder.find(User.class, true);
+            
             new LogoutResource(
+                    injector.getInstance(IWebResourceLoader.class),
                     injector.getInstance(IUserProvider.class),
-                    injector.getInstance(IUser.class),
+                    coUser,
                     injector.getInstance(IUserSession.class),
+                    domainName,
+                    path,
                     getContext(),
                     request,
                     response

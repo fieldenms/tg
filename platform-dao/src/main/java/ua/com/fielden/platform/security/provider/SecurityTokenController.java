@@ -56,7 +56,7 @@ public class SecurityTokenController implements ISecurityTokenController, ISessi
 
     @Override
     public List<UserRole> findUserRolesFor(final Class<? extends ISecurityToken> securityTokenClass) {
-        final List<UserRole> roles = new ArrayList<UserRole>();
+        final List<UserRole> roles = new ArrayList<>();
         for (final SecurityRoleAssociation association : securityAssociationDao.findAssociationsFor(securityTokenClass)) {
             roles.add(association.getRole());
         }

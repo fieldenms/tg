@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.sample.domain;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithoutCritOnly;
 
 import java.util.Collection;
 import java.util.Date;
@@ -10,6 +11,8 @@ import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
 
+import ua.com.fielden.platform.attachment.Attachment;
+import ua.com.fielden.platform.attachment.ICanAttach;
 import ua.com.fielden.platform.continuation.NeedMoreData;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
@@ -23,7 +26,12 @@ import ua.com.fielden.platform.sample.domain.observables.TgPersistentEntityWithP
 
 /**
  * DAO implementation for companion object {@link ITgPersistentEntityWithProperties}.
- * It demos the use of {@link TgPersistentEntityWithPropertiesChangeSubject} for publishing change events to be propagated to the subscribed clients.
+ * <p>
+ * It demos:
+ * <ul>
+ * <li> The use of {@link TgPersistentEntityWithPropertiesChangeSubject} for publishing change events to be propagated to the subscribed clients.
+ * <li> Implementation of {@link ICanAttach} for associating attachments.
+ * </ul
  *
  * @author Developers
  *
@@ -46,7 +54,12 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
     @Override
     @SessionRequired
     public TgPersistentEntityWithProperties save(final TgPersistentEntityWithProperties entity) {
-        if (!entity.isPersisted()) {
+        // need to make crit-only required props non-required before actual saving; these properties are not relevant to persistent nature of TgPersistentEntityWithProperties
+        entity.getProperty("cosStaticallyRequired").setRequired(false);
+        entity.getProperty("cosStaticallyRequiredWithDefaultValue").setRequired(false);
+        entity.getProperty("cosStaticallyRequiredWithNonEmptyDefaultValue").setRequired(false);
+        final boolean wasPersisted = entity.isPersisted();
+        if (!wasPersisted) {
             final Date dateValue = entity.getDateProp();
             if (dateValue != null && new DateTime(2003, 2, 1, 6, 20).equals(new DateTime(dateValue))) {
                 throw new IllegalArgumentException(format("Creation failed: [1/2/3 6:20] date is not permitted."));
@@ -85,10 +98,17 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
         final boolean wasNew = false; // !entity.isPersisted();
         final TgPersistentEntityWithProperties saved = super.save(entity);
         changeSubject.publish(saved);
-
+        
+        if (!wasPersisted) {
+            final Date dateValue = saved.getDateProp();
+            if (dateValue != null && new DateTime(2003, 2, 1, 6, 22).equals(new DateTime(dateValue))) {
+                throw new IllegalArgumentException(format("Creation failed: [1/2/3 6:22] date is not permitted."));
+            }
+        }
+        
         // if the entity was new and just successfully saved then let's return a new entity to mimic "continuous" entry
         // otherwise simply return the same entity
-        if (wasNew && saved.isValid().isSuccessful()) {
+        if (wasNew && saved.isValid(validateWithoutCritOnly).isSuccessful()) { 
             final TgPersistentEntityWithProperties newEntity = saved.getEntityFactory().newEntity(TgPersistentEntityWithProperties.class);
             // the following two lines can be uncommented to simulate the situation of an invalid new entity returned from save
             //newEntity.setRequiredValidatedProp(1);
@@ -133,5 +153,16 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
                 .with("producerInitProp", "status.key", "status.desc")
                 .with("colourProp", "hyperlinkProp")
                 .with("idOnlyProxyProp"); //
+    }
+
+    @Override
+    public TgPersistentEntityWithPropertiesAttachment attach(final Attachment attachment, final TgPersistentEntityWithProperties entity) {
+        final ITgPersistentEntityWithPropertiesAttachment co$ = co$(TgPersistentEntityWithPropertiesAttachment.class);
+        final TgPersistentEntityWithPropertiesAttachment entityAttachment = co$.new_()
+                .setMaster(entity)
+                .setAttachment(attachment);
+        
+        return co$.findByEntityAndFetchOptional(co$.getFetchProvider().fetchModel(), entityAttachment)
+                  .orElseGet(() -> co$.save(entityAttachment));        
     }
 }

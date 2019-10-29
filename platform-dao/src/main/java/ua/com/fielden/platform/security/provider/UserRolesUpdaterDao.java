@@ -16,7 +16,7 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.security.UserAndRoleAssociationBatchAction;
-import ua.com.fielden.platform.security.tokens.user.UserSaveToken;
+import ua.com.fielden.platform.security.tokens.user.User_CanSave_Token;
 import ua.com.fielden.platform.security.user.IUserRolesUpdater;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
@@ -41,7 +41,7 @@ public class UserRolesUpdaterDao extends CommonEntityDao<UserRolesUpdater> imple
     
     @Override
     @SessionRequired
-    @Authorise(UserSaveToken.class)
+    @Authorise(User_CanSave_Token.class)
     public UserRolesUpdater save(final UserRolesUpdater action) {
         final T2<UserRolesUpdater, User> actionAndUserBeingUpdated = validateAction(action, this, Long.class, new UserRolesUpdaterController(co(User.class), co$(UserRolesUpdater.class), this.<IUserRole, UserRole>co(UserRole.class)));
         final UserRolesUpdater actionToSave = actionAndUserBeingUpdated._1;

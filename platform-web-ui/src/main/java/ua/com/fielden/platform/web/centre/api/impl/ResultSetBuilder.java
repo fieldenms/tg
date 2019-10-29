@@ -1,15 +1,23 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp.dynamicProps;
+import static ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.mkInsertionPoint;
+import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig.configInsertionPoint;
+import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig.configInsertionPointWithPagination;
 
 import java.util.Optional;
+import java.util.function.BiConsumer;
+import java.util.function.Supplier;
 
 import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.OrderDirection;
@@ -24,18 +32,23 @@ import ua.com.fielden.platform.web.centre.api.query_enhancer.IQueryEnhancerSette
 import ua.com.fielden.platform.web.centre.api.resultset.IAlsoProp;
 import ua.com.fielden.platform.web.centre.api.resultset.IAlsoSecondaryAction;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
+import ua.com.fielden.platform.web.centre.api.resultset.IDynamicColumnBuilder;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder0Checkbox;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1Toolbar;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aScroll;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1bPageCapacity;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cVisibleRows;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1dFitBehaviour;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1eRowHeight;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2Properties;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2aDraggable;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder3Ordering;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder4OrderingDirection;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder4aWidth;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder7SecondaryAction;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder9RenderingCustomiser;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilderAlsoDynamicProps;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.centre.api.resultset.layout.ICollapsedCardLayoutConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.layout.IExpandedCardLayoutConfig;
@@ -55,7 +68,7 @@ import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
  *
  * @param <T>
  */
-class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder0Checkbox<T>, IResultSetBuilder3Ordering<T>, IResultSetBuilder4OrderingDirection<T>, IResultSetBuilder7SecondaryAction<T>, IExpandedCardLayoutConfig<T>, ISummaryCardLayout<T> {
+class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilderAlsoDynamicProps<T>, IResultSetBuilder0Checkbox<T>, IResultSetBuilder3Ordering<T>, IResultSetBuilder4OrderingDirection<T>, IResultSetBuilder7SecondaryAction<T>, IExpandedCardLayoutConfig<T>, ISummaryCardLayout<T> {
 
     private final EntityCentreBuilder<T> builder;
     private final ResultSetSecondaryActionsBuilder secondaryActionBuilder = new ResultSetSecondaryActionsBuilder();
@@ -63,7 +76,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     protected Optional<String> propName = Optional.empty();
     protected Optional<String> tooltipProp = Optional.empty();
     protected Optional<PropDef<?>> propDef = Optional.empty();
-    private EntityActionConfig entityActionConfig;
+    private Supplier<Optional<EntityActionConfig>> entityActionConfig;
     private Integer orderSeq;
     private int width = 80;
     private boolean isFlexible = true;
@@ -86,7 +99,14 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         this.tooltipProp = Optional.empty();
         this.propDef = Optional.empty();
         this.orderSeq = null;
-        this.entityActionConfig = null;
+        this.entityActionConfig = Optional::empty;
+        return this;
+    }
+
+    @Override
+    public <M extends AbstractEntity<?>> IResultSetBuilderAlsoDynamicProps<T> addProps(final String propName, final Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, final BiConsumer<M, Optional<CentreContext<T, ?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
+        final ResultSetProp<T> prop = dynamicProps(propName, dynColBuilderType, entityPreProcessor, contextConfig);
+        this.builder.resultSetProperties.add(prop);
         return this;
     }
 
@@ -137,7 +157,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         this.tooltipProp = Optional.empty();
         this.propDef = Optional.of(propDef);
         this.orderSeq = null;
-        this.entityActionConfig = null;
+        this.entityActionConfig = Optional::empty;
         return this;
     }
 
@@ -149,14 +169,24 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
 
     @Override
     public IWithSummary<T> withSummary(final String alias, final String expression, final String titleAndDesc) {
+        this.builder.summaryExpressions.put(propName.get(), mkSummaryPropDef(alias, expression, titleAndDesc, IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE));
+        return this;
+    }
+
+    @Override
+    public IWithSummary<T> withSummary(final String alias, final String expression, final String titleAndDesc, final int precision, final int scale) {
+        this.builder.summaryExpressions.put(propName.get(), mkSummaryPropDef(alias, expression, titleAndDesc, precision, scale));
+        return this;
+    }
+
+    private SummaryPropDef mkSummaryPropDef(final String alias, final String expression, final String titleAndDesc, final int precision, final int scale) {
         if (!propName.isPresent()) {
             throw new IllegalStateException("There is no property to associated the summary expression with. This indicated an out of secuquence call, which is most likely due to a programming mistake.");
         }
         final String[] td = titleAndDesc.split(":");
         final String title = td[0];
         final String desc = td.length > 1 ? td[1] : null;
-        this.builder.summaryExpressions.put(propName.get(), new SummaryPropDef(alias, expression, title, desc));
-        return this;
+        return new SummaryPropDef(alias, expression, title, desc, precision, scale);
     }
 
     @Override
@@ -165,13 +195,18 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
             throw new IllegalArgumentException("Property action configuration should not be null.");
         }
 
-        this.entityActionConfig = actionConfig;
+        this.entityActionConfig = () -> Optional.of(actionConfig);
         completePropIfNeeded();
         return this;
     }
 
     @Override
-    public IResultSetBuilder2Properties<T> also() {
+    public IAlsoProp<T> withActionSupplier(final Supplier<Optional<EntityActionConfig>> actionConfigSupplier) {
+        if (actionConfigSupplier == null) {
+            throw new IllegalArgumentException("Property action configuration supplier should not be null.");
+        }
+
+        this.entityActionConfig = actionConfigSupplier;
         completePropIfNeeded();
         return this;
     }
@@ -311,7 +346,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         this.tooltipProp = Optional.empty();
         this.propDef = Optional.empty();
         this.orderSeq = null;
-        this.entityActionConfig = null;
+        this.entityActionConfig = Optional::empty;
     }
 
     @Override
@@ -374,11 +409,22 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
             return ResultSetBuilder.this.addInsertionPoint(actionConfig, whereToInsertView);
         }
 
+        @Override
+        public IInsertionPoints<T> addInsertionPointWithPagination(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
+            return ResultSetBuilder.this.addInsertionPointWithPagination(actionConfig, whereToInsertView);
+        }
+
     }
 
     @Override
     public IInsertionPoints<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
-        this.builder.insertionPointActions.add(EntityActionConfig.mkInsertionPoint(actionConfig, whereToInsertView));
+        this.builder.insertionPointConfigs.add(configInsertionPoint(mkInsertionPoint(actionConfig, whereToInsertView)));
+        return this;
+    }
+
+    @Override
+    public IInsertionPoints<T> addInsertionPointWithPagination(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
+        this.builder.insertionPointConfigs.add(configInsertionPointWithPagination(mkInsertionPoint(actionConfig, whereToInsertView)));
         return this;
     }
 
@@ -395,7 +441,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IResultSetBuilder1bPageCapacity<T> notScrollable() {
+    public IResultSetBuilder2aDraggable<T> notScrollable() {
         this.builder.scrollConfig = ScrollConfig.configScroll()
                 .withFixedCheckboxesAndPrimaryActions()
                 .withFixedSecondaryActions()
@@ -412,13 +458,13 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IResultSetBuilder2Properties<T> setVisibleRowsCount(final int visibleRowsCount) {
+    public IResultSetBuilder1dFitBehaviour<T> setVisibleRowsCount(final int visibleRowsCount) {
         this.builder.visibleRowsCount = visibleRowsCount;
         return this;
     }
 
     @Override
-    public IResultSetBuilder1bPageCapacity<T> withScrollingConfig(final IScrollConfig scrollConfig) {
+    public IResultSetBuilder2aDraggable<T> withScrollingConfig(final IScrollConfig scrollConfig) {
         this.builder.scrollConfig = scrollConfig;
         return this;
     }
@@ -426,6 +472,36 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     @Override
     public IResultSetBuilder1aScroll<T> setToolbar(final IToolbarConfig toolbar) {
         this.builder.toolbarConfig = toolbar;
+        return this;
+    }
+
+    @Override
+    public IResultSetBuilder1bPageCapacity<T> draggable() {
+        builder.draggable = true;
+        return this;
+    }
+
+    @Override
+    public IResultSetBuilder1dFitBehaviour<T> setHeight(final String height) {
+        this.builder.egiHeight = height;
+        return this;
+    }
+
+    @Override
+    public IResultSetBuilder1eRowHeight<T> fitToHeight() {
+        this.builder.fitToHeight = true;
+        return this;
+    }
+
+    @Override
+    public IResultSetBuilder2Properties<T> rowHeight(final String rowHeight) {
+        this.builder.rowHeight = rowHeight;
+        return this;
+    }
+
+    @Override
+    public IResultSetBuilder2Properties<T> also() {
+        completePropIfNeeded();
         return this;
     }
 }

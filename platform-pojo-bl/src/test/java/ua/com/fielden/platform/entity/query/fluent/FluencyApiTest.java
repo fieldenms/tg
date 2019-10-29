@@ -31,7 +31,7 @@ public class FluencyApiTest extends TestCase {
     }
 
 	private static final String[] functions = new String[] { "round", "now", "caseWhen", "lowerCase", "upperCase", "ifNull",
-			"dateOf", "hourOf", "dayOf", "monthOf", "yearOf", "minuteOf", "secondOf", "count", "concat", "absOf" };
+			"dateOf", "hourOf", "dayOf", "monthOf", "yearOf", "minuteOf", "secondOf", "count", "concat", "absOf", "addTimeIntervalOf", "dayOfWeekOf" };
 
 	private static final String[] aggregateFunctions = new String[] { "maxOf", "minOf", "sumOf", "countOf", "avgOf",
 			"sumOfDistinct", "countOfDistinct", "avgOfDistinct", "countAll" };
@@ -42,8 +42,8 @@ public class FluencyApiTest extends TestCase {
 	private static final String[] allOfs = new String[] { "allOfProps", "allOfModels", "allOfValues", "allOfParams",
 			"allOfIParams", "allOfExpressions" };
 
-	private static final String[] exists = new String[] { "exists", "notExists", "existsAnyOf", "notExistsAnyOf",
-			"existsAllOf", "notExistsAllOf" };
+	private static final String[] singleOperatorConditions = new String[] { "exists", "notExists", "existsAnyOf", "notExistsAnyOf",
+			"existsAllOf", "notExistsAllOf", "critCondition", "condition", "negatedCondition"};
 
 	private static final String model = "model";
 	private static final String modelAsAggregate = "modelAsAggregate";
@@ -57,8 +57,6 @@ public class FluencyApiTest extends TestCase {
 	private static final String notBegin = "notBegin";
 	private static final String beginExpr = "beginExpr";
 	private static final String expr = "expr";
-	private static final String condition = "condition";
-	private static final String negatedCondition = "negatedCondition";
 	private static final String join = "join";
 	private static final String as = "as";
 	private static final String asRequired = "asRequired";
@@ -137,31 +135,31 @@ public class FluencyApiTest extends TestCase {
 	public void test_IWhere0() {
 		checkFluency( //
 				select(TgVehicle.class).where(), //
-				array(condition, negatedCondition, model, prop, extProp, param, iParam, val, iVal, begin, notBegin,
+				array(model, prop, extProp, param, iParam, val, iVal, begin, notBegin,
 						beginExpr, expr),
-				exists, functions, anyOfs, allOfs);
+				singleOperatorConditions, functions, anyOfs, allOfs);
 	}
 
 	public void test_IWhere1() {
 		checkFluency( //
 				select(TgVehicle.class).where().begin(), //
-				array(condition, negatedCondition, model, prop, extProp, param, iParam, val, iVal, begin, notBegin,
+				array(model, prop, extProp, param, iParam, val, iVal, begin, notBegin,
 						beginExpr, expr),
-				exists, functions, anyOfs, allOfs);
+				singleOperatorConditions, functions, anyOfs, allOfs);
 	}
 
 	public void test_IWhere2() {
 		checkFluency( //
 				select(TgVehicle.class).where().begin().begin(), //
-				array(condition, negatedCondition, model, prop, extProp, param, iParam, val, iVal, begin, notBegin,
+				array(model, prop, extProp, param, iParam, val, iVal, begin, notBegin,
 						beginExpr, expr),
-				exists, functions, anyOfs, allOfs);
+				singleOperatorConditions, functions, anyOfs, allOfs);
 	}
 
 	public void test_IWhere3() {
 		checkFluency( //
 				select(TgVehicle.class).where().begin().begin().begin(), //
-				array(/* condition, */model, prop, extProp, param, iParam, val, iVal, beginExpr, expr), exists,
+				array(/* condition, */model, prop, extProp, param, iParam, val, iVal, beginExpr, expr), singleOperatorConditions,
 				functions, anyOfs, allOfs);
 	}
 

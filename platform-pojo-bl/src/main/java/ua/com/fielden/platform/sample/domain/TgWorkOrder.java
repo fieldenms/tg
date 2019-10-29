@@ -81,7 +81,7 @@ public class TgWorkOrder extends AbstractEntity<String> {
     @IsProperty
     @CritOnly(Type.SINGLE)
     @Title(value = "Boolean Single", desc = "A single crit only property of type boolean")
-    private boolean boolSingle;
+    private boolean boolSingle = false;
 
 
     @IsProperty
@@ -253,8 +253,9 @@ public class TgWorkOrder extends AbstractEntity<String> {
     }
 
     @Observable
-    public void setImportantProperty(final PropertyDescriptor<TgWorkOrder> importantProperty) {
+    public TgWorkOrder setImportantProperty(final PropertyDescriptor<TgWorkOrder> importantProperty) {
         this.importantProperty = importantProperty;
+        return this;
     }
 
     public TgVehicle getVehicle() {

@@ -1,26 +1,22 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import java.io.ByteArrayInputStream;
+import static org.restlet.data.MediaType.TEXT_HTML;
+import static ua.com.fielden.platform.web.resources.webui.FileResource.createRepresentation;
+
 import java.lang.management.ManagementFactory;
 
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
-import org.restlet.data.Encoding;
-import org.restlet.engine.application.EncodeRepresentation;
-import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
-import org.restlet.resource.ResourceException;
-
-import com.google.common.base.Charsets;
+import org.restlet.resource.Get;
 
 import ua.com.fielden.platform.basic.config.Workflows;
-import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.web.app.ISourceController;
+import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
-import ua.com.fielden.platform.web.resources.RestServerUtil;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 
 /**
  * Responds to GET request with a generated application specific index resource (for desktop and mobile web apps).
@@ -30,46 +26,43 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  * @author TG Team
  *
  */
-public class AppIndexResource extends DeviceProfileDifferentiatorResource {
-    private final IServerGlobalDomainTreeManager serverGdtm;
+public class AppIndexResource extends AbstractWebResource {
     private final IWebUiConfig webUiConfig;
     private final IUserProvider userProvider;
+    private final IWebResourceLoader webResourceLoader;
     
     /**
      * Creates {@link AppIndexResource} instance.
      *
-     * @param sourceController
      * @param context
      * @param request
      * @param response
      */
     public AppIndexResource(
-            final ISourceController sourceController, 
-            final RestServerUtil restUtil,
-            final IServerGlobalDomainTreeManager serverGdtm,
+            final IWebResourceLoader webResourceLoader,
             final IWebUiConfig webUiConfig,
             final IUserProvider userProvider,
+            final IDeviceProvider deviceProvider,
             final Context context, 
             final Request request, 
             final Response response) {
-        super(sourceController, restUtil, context, request, response);
-        this.serverGdtm = serverGdtm;
+        super(context, request, response, deviceProvider);
         this.webUiConfig = webUiConfig;
         this.userProvider = userProvider;
+        this.webResourceLoader = webResourceLoader;
     }
 
+    @Get
     @Override
-    protected Representation get() throws ResourceException {
+    public Representation get() {
         final User currentUser = userProvider.getUser();
         if (!Workflows.deployment.equals(webUiConfig.workflow()) && !Workflows.vulcanizing.equals(webUiConfig.workflow()) && isDebugMode() && currentUser != null) {
-            // if application user hits refresh -- all configurations will be cleared (including cahced instances of centres). This is useful when using with JRebel -- no need to restart server after 
+            // if application user hits refresh -- all configurations will be cleared. This is useful when using with JRebel / Eclipse Debug -- no need to restart server after 
             //  changing Web UI configurations (all configurations should exist in scope of IWebUiConfig.initConfiguration() method).
-            webUiConfig.clearConfiguration(serverGdtm.get(currentUser.getKey()));
+            webUiConfig.clearConfiguration();
             webUiConfig.initConfiguration();
         }
-        
-        final String source = sourceController().loadSource("/app/tg-app-index.html", deviceProfile());
-        return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8))));
+        return createRepresentation(webResourceLoader, TEXT_HTML, "/app/tg-app-index.html", getReference().getRemainingPart());
     }
 
     /**

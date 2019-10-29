@@ -1,23 +1,30 @@
 package ua.com.fielden.platform.web.centre.api.crit.impl;
 
+import static java.util.Optional.empty;
+import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.from;
+import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.critName;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.is;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.not;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.to;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
+import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty.critOnlyWithMnemonics;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotationInHierarchy;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
 
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
-
-import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.dom.DomElement;
-import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
-import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -40,13 +47,15 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
     private static final String sufixYes = " (Yes)";
     private static final String sufixNo = " (No)";
 
-    private final Class<?> root;
+    private final Class<? extends AbstractEntity<?>> root;
     private final String propertyName;
     private final String widgetName;
     private final String widgetPath;
-    private final boolean isCritOnly;
     private boolean debug = false;
     private final Pair<AbstractWidget, AbstractWidget> editors;
+    private final boolean mnemonicsVisible;
+    private final boolean excludeMissing;
+    private final boolean excludeOrGroup;
 
     /**
      * Creates {@link AbstractCriterionWidget} from <code>entityType</code> type and <code>propertyName</code> and the name&path of widget.
@@ -54,12 +63,16 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
      * @param criteriaType
      * @param propertyName
      */
-    public AbstractCriterionWidget(final Class<?> root, final String widgetPath, final String propertyName, final AbstractWidget... editors) {
+    public AbstractCriterionWidget(final Class<? extends AbstractEntity<?>> root, final String widgetPath, final String propertyName, final AbstractWidget... editors) {
         this.root = root;
         this.widgetName = extractNameFrom(widgetPath);
         this.widgetPath = widgetPath;
         this.propertyName = propertyName;
-        this.isCritOnly = StringUtils.isEmpty(propertyName) ? false : AnnotationReflector.getPropertyAnnotation(CritOnly.class, root, propertyName) != null;
+
+        final Optional<CritOnly> optionalCritOnlyAnnotation = isEmpty(propertyName) ? empty(): getPropertyAnnotationInHierarchy(CritOnly.class, root, propertyName);
+        this.mnemonicsVisible = optionalCritOnlyAnnotation.map(val -> critOnlyWithMnemonics(val)).orElse(true);
+        this.excludeMissing = optionalCritOnlyAnnotation.map(val -> val.excludeMissing()).orElse(false);
+        this.excludeOrGroup = optionalCritOnlyAnnotation.isPresent() || shouldExcludeOrGroup(root, propertyName); // short-circuit crit-only properties exclusion, or if not crit-only then apply rules defined by QueryProperty / DynamicQueryBuilder
         this.editors = new Pair<>(editors[0], null);
         if (editors.length > 1) {
             this.editors.setValue(editors[1]);
@@ -74,11 +87,30 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
         final List<AbstractWidget> editors = editors0();
         final DomElement[] editorsDOM = new DomElement[editors.size()];
         for (int editorIndex = 0; editorIndex < editors.size(); editorIndex++) {
-            final DomElement editorElement = editors.get(editorIndex).render().clazz(getCriterionClass(editorIndex));
+            final DomElement editorElement = editors.get(editorIndex).render().clazz(getCriterionClass(editorIndex)).attr("slot", getCriterionClass(editorIndex));
             editorElement.clazz("flex", true);
             editorsDOM[editorIndex] = editorElement;
         }
         return editorsDOM;
+    }
+
+    /**
+     * Returns <code>true</code> if or-group mnemonic should be excluded for this criterion, <code>false</code> otherwise.
+     * 
+     * @param root
+     * @param propertyName
+     * @return
+     */
+    private static boolean shouldExcludeOrGroup(final Class<? extends AbstractEntity<?>> root, final String propertyName) {
+        try {
+            final QueryProperty queryProperty = new QueryProperty(root, propertyName);
+            return queryProperty.isCritOnly() // crit only property itself represents criteria values that are glued together inside custom query (AND, OR) and this can not be customised - will be excluded
+                    || queryProperty.isAECritOnlyChild() // children of crit-only properties can be added to selection crit, but they will be treated as crit-only as well; so they should be excluded too
+                    || queryProperty.isInUnionHierarchy() // union properties to be excluded
+                    || queryProperty.isWithinCollectionalHierarchyOrOutsideCollectionWithANYorALL(); // collectional properties to be excluded; in future ANY/ALL aggregation expressions can be considered for inclusion, however they are not even possible in current Centre DSL
+        } catch (final Exception ex) {
+            return true; // in case where property is unsupported for dynamic query building or malformed -- exclude 'orGroup' mnemonic
+        }
     }
 
     protected String getCriterionClass(final int editorIndex) {
@@ -110,10 +142,16 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
         if (isDebug()) {
             attrs.put("debug", "true");
         }
-        attrs.put("id", "criterion_4_" + CriteriaReflector.generateCriteriaPropertyName(root, this.propertyName));
+        attrs.put("id", "criterion_4_" + CriteriaReflector.critName(root, this.propertyName));
         attrs.put("validation-callback", "[[validate]]");
-        if (isCritOnly) {
-            attrs.put("crit-only", null);
+        if (mnemonicsVisible) {
+            attrs.put("mnemonics-visible", null);
+        }
+        if (excludeMissing) {
+            attrs.put("exclude-missing", null);
+        }
+        if (excludeOrGroup) {
+            attrs.put("exclude-or-group", null);
         }
         return attrs;
     }
@@ -127,11 +165,11 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
      */
     protected Map<String, Object> createCustomAttributes() {
         return new LinkedHashMap<>();
-    };
+    }
 
     @Override
     public final DomElement render() {
-        return new DomElement(widgetName).attrs(createAttributes()).attrs(createCustomAttributes()).add(editors());
+        return new DomElement(widgetName).attrs(createAttributes()).attrs(createCustomAttributes()).add(editors()).clazz("criterion-widget");
     }
 
     /**
@@ -164,14 +202,14 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
 
     public static Pair<String, String> generateNames(final Class<?> root, final Class<?> managedType, final String propertyName) {
         final boolean isEntityItself = "".equals(propertyName); // empty property means "entity itself"
-        final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, propertyName);
+        final Class<?> propertyType = isEntityItself ? managedType : determinePropertyType(managedType, propertyName);
 
         final String firstPropertyName, secondPropertyName;
-        if (AbstractDomainTree.isDoubleCriterionOrBoolean(managedType, propertyName)) {
-            firstPropertyName = CriteriaReflector.generateCriteriaPropertyName(root, EntityUtils.isBoolean(propertyType) ? is(propertyName) : from(propertyName));
-            secondPropertyName = CriteriaReflector.generateCriteriaPropertyName(root, EntityUtils.isBoolean(propertyType) ? not(propertyName) : to(propertyName));
+        if (isDoubleCriterion(managedType, propertyName)) {
+            firstPropertyName = critName(root, isBoolean(propertyType) ? is(propertyName) : from(propertyName));
+            secondPropertyName = critName(root, isBoolean(propertyType) ? not(propertyName) : to(propertyName));
         } else {
-            firstPropertyName = CriteriaReflector.generateCriteriaPropertyName(root, propertyName);
+            firstPropertyName = critName(root, propertyName);
             secondPropertyName = null;
         }
         return new Pair<>(firstPropertyName, secondPropertyName);

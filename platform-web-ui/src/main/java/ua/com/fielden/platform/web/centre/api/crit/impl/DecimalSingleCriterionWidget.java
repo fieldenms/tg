@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.centre.api.crit.impl;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.view.master.api.widgets.decimal.impl.DecimalWidget;
 
 /**
@@ -16,7 +17,7 @@ public class DecimalSingleCriterionWidget extends AbstractSingleCriterionWidget 
      * @param criteriaType
      * @param propertyName
      */
-    public DecimalSingleCriterionWidget(final Class<?> root, final Class<?> managedType, final String propertyName) {
+    public DecimalSingleCriterionWidget(final Class<? extends AbstractEntity<?>> root, final Class<?> managedType, final String propertyName) {
         super(root, propertyName,
                 new DecimalWidget(
                         AbstractCriterionWidget.generateSingleTitleDesc(root, managedType, propertyName),

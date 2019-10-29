@@ -32,6 +32,7 @@ import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.RangeCritD
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.RangeCritOtherValueMnemonic;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritDateValueMnemonic;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritOtherValueMnemonic;
+import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.scrolling.IScrollConfig;
@@ -54,14 +55,20 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
 
     protected Optional<String> currGroup = Optional.empty();
     protected final List<Pair<EntityActionConfig, Optional<String>>> topLevelActions = new ArrayList<>();
-    protected final List<EntityActionConfig> insertionPointActions = new ArrayList<>();
+    protected final List<EntityActionConfig> frontActions = new ArrayList<>();
+    protected final List<InsertionPointConfig> insertionPointConfigs = new ArrayList<>();
 
+    protected boolean draggable = false;
     protected boolean hideCheckboxes = false;
     protected IToolbarConfig toolbarConfig = new CentreToolbar();
     protected boolean hideToolbar = false;
     protected IScrollConfig scrollConfig = ScrollConfig.configScroll().done();
     protected int pageCapacity = 30;
+    //EGI height related properties
     protected int visibleRowsCount = 0;
+    protected String egiHeight = "";
+    protected boolean fitToHeight = false;
+    protected String rowHeight = "1.5rem";
 
     ////////////////////////////////////////////////
     //////////////// SELECTION CRITERIA ////////////
@@ -106,17 +113,18 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
 
     protected final Map<String, Pair<Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>>, Optional<CentreContextConfig>>> valueMatchersForSelectionCriteria = new HashMap<>();
     protected final Map<String, List<Pair<String, Boolean>>> additionalPropsForAutocompleter = new HashMap<>();
+    protected final Map<String, Class<? extends AbstractEntity<?>>> providedTypesForAutocompletedSelectionCriteria = new HashMap<>();
 
-    protected final FlexLayout selectionCriteriaLayout = new FlexLayout();
-    protected final FlexLayout resultsetCollapsedCardLayout = new FlexLayout();
-    protected final FlexLayout resultsetExpansionCardLayout = new FlexLayout();
-    protected final FlexLayout resultsetSummaryCardLayout = new FlexLayout();
+    protected final FlexLayout selectionCriteriaLayout = new FlexLayout("sel_crit");
+    protected final FlexLayout resultsetCollapsedCardLayout = new FlexLayout("collapsed_card");
+    protected final FlexLayout resultsetExpansionCardLayout = new FlexLayout("expansion_card");
+    protected final FlexLayout resultsetSummaryCardLayout = new FlexLayout("summary_card");
 
     /////////////////////////////////////////
     ////////////// RESULT SET ///////////////
     /////////////////////////////////////////
 
-    protected final List<ResultSetProp> resultSetProperties = new ArrayList<>();
+    protected final List<ResultSetProp<T>> resultSetProperties = new ArrayList<>();
     protected final SortedMap<Integer, Pair<String, OrderDirection>> resultSetOrdering = new TreeMap<>();
     protected final ListMultimap<String, SummaryPropDef> summaryExpressions = ArrayListMultimap.create();
     protected EntityActionConfig resultSetPrimaryEntityAction;
@@ -142,7 +150,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     @Override
     public ICentreTopLevelActionsWithRunConfig<T> forEntity(final Class<T> type) {
         this.entityType = type;
-        return new TopLevelActionsBuilder<T>(this);
+        return new GenericCentreConfigBuilder<T>(this);
     }
 
     public EntityCentreConfig<T> build() {
@@ -156,15 +164,20 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
         final LinkedHashMap<String, OrderDirection> properResultSetOrdering = new LinkedHashMap<>();
         resultSetOrdering.forEach((k, v) -> properResultSetOrdering.put(v.getKey(), v.getValue()));
 
-        return new EntityCentreConfig<T>(
-        		hideCheckboxes,
+        return new EntityCentreConfig<>(
+                draggable,
+                hideCheckboxes,
                 toolbarConfig,
-        		hideToolbar,
+                hideToolbar,
                 scrollConfig,
                 pageCapacity,
                 visibleRowsCount,
+                egiHeight,
+                fitToHeight,
+                rowHeight,
                 topLevelActions,
-                insertionPointActions,
+                frontActions,
+                insertionPointConfigs,
                 selectionCriteria,
                 defaultMultiValueAssignersForEntityAndStringSelectionCriteria,
                 defaultMultiValueAssignersForBooleanSelectionCriteria,
@@ -190,6 +203,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
                 defaultSingleValuesForDateSelectionCriteria,
                 valueMatchersForSelectionCriteria,
                 additionalPropsForAutocompleter,
+                providedTypesForAutocompletedSelectionCriteria,
                 runAutomatically,
                 enforcePostSaveRefresh,
                 sseUri,

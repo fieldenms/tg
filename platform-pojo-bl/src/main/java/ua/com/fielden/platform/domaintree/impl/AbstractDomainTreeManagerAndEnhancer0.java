@@ -8,10 +8,8 @@ import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
-import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation.IPropertyListener;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.ITickManagerWithMutability;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.ITickRepresentationWithMutability;
-import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.IncludedAndCheckedPropertiesSynchronisationListener;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.TickManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManagerAndEnhancer.DomainTreeEnhancerWithPropertiesPopulation;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.AbstractTickRepresentation;
@@ -69,11 +67,6 @@ public abstract class AbstractDomainTreeManagerAndEnhancer0 implements IDomainTr
         firstTick = createFirstTick((TickManager) base.getFirstTick());
         secondTick = createSecondTick((TickManager) base.getSecondTick());
         enhancerWithPropertiesPopulation = createEnhancerWrapperWithPropertiesPopulation();
-
-        final IPropertyListener oldListener = this.base.listener();
-        final IPropertyListener newListener = new IncludedAndCheckedPropertiesSynchronisationListener(this.firstTick, this.secondTick, (ITickRepresentationWithMutability) this.getRepresentation().getFirstTick(), (ITickRepresentationWithMutability) this.getRepresentation().getSecondTick(), (IDomainTreeRepresentationWithMutability) this.getRepresentation());
-        this.base.getRepresentation().removePropertyListener(oldListener);
-        this.getRepresentation().addPropertyListener(newListener);
     }
 
     /**
@@ -162,18 +155,6 @@ public abstract class AbstractDomainTreeManagerAndEnhancer0 implements IDomainTr
         }
 
         @Override
-        public void addPropertyCheckingListener(final IPropertyCheckingListener listener) {
-            // inject an enhanced type into method implementation
-            base.addPropertyCheckingListener(listener);
-        }
-
-        @Override
-        public void removePropertyCheckingListener(final IPropertyCheckingListener listener) {
-            // inject an enhanced type into method implementation
-            base.removePropertyCheckingListener(listener);
-        }
-
-        @Override
         public ITickManager swap(final Class<?> root, final String property1, final String property2) {
             // inject an enhanced type into method implementation
             base.swap(enhancerWithPropertiesPopulation.getManagedType(root), property1, property2);
@@ -223,16 +204,6 @@ public abstract class AbstractDomainTreeManagerAndEnhancer0 implements IDomainTr
 
             firstTick = createFirstTick((AbstractTickRepresentation) base.getFirstTick());
             secondTick = createSecondTick((AbstractTickRepresentation) base.getSecondTick());
-        }
-
-        @Override
-        public void addPropertyListener(final IPropertyListener listener) {
-            base.addPropertyListener(listener);
-        }
-
-        @Override
-        public void removePropertyListener(final IPropertyListener listener) {
-            base.removePropertyListener(listener);
         }
 
         /**
@@ -298,18 +269,6 @@ public abstract class AbstractDomainTreeManagerAndEnhancer0 implements IDomainTr
             }
 
             @Override
-            public void addPropertyDisablementListener(final IPropertyDisablementListener listener) {
-                // inject an enhanced type into method implementation
-                base.addPropertyDisablementListener(listener);
-            }
-
-            @Override
-            public void removePropertyDisablementListener(final IPropertyDisablementListener listener) {
-                // inject an enhanced type into method implementation
-                base.removePropertyDisablementListener(listener);
-            }
-
-            @Override
             public EnhancementSet disabledManuallyPropertiesMutable() {
                 return base.disabledManuallyPropertiesMutable();
             }
@@ -323,11 +282,6 @@ public abstract class AbstractDomainTreeManagerAndEnhancer0 implements IDomainTr
             protected boolean isCheckedImmutablyLightweight(final Class<?> root, final String property) {
                 // inject an enhanced type into method implementation
                 return base.isCheckedImmutablyLightweight(enhancerWithPropertiesPopulation.getManagedType(root), property);
-            }
-
-            @Override
-            public void addWeakPropertyDisablementListener(final IPropertyDisablementListener listener) {
-                base.addWeakPropertyDisablementListener(listener);
             }
         }
 
@@ -380,11 +334,6 @@ public abstract class AbstractDomainTreeManagerAndEnhancer0 implements IDomainTr
 
         protected IDomainTreeEnhancer enhancer() {
             return enhancerWithPropertiesPopulation;
-        }
-
-        @Override
-        public void addWeakPropertyListener(final IPropertyListener listener) {
-            base.addWeakPropertyListener(listener);
         }
     }
 

@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.migration;
 
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -25,18 +24,18 @@ public class MigrateDb {
      *
      * @param ddl
      * @param conn
-     * @throws SQLException 
+     * @throws SQLException
      * @throws Exception
      */
     private static void checkAndCreate(final List<String> ddl, final HibernateUtil hiberUtil) throws SQLException {
         final Transaction tr = hiberUtil.getSessionFactory().getCurrentSession().beginTransaction();
-        final Connection conn = hiberUtil.getSessionFactory().getCurrentSession().connection();
-        for (final String sql : ddl) {
-            final Statement st = conn.createStatement();
-            st.execute(sql);
-            st.close();
-        }
-
+        hiberUtil.getSessionFactory().getCurrentSession().doWork(conn -> {
+            for (final String sql : ddl) {
+                final Statement st = conn.createStatement();
+                st.execute(sql);
+                st.close();
+            }
+        });
         tr.commit();
     }
 
@@ -206,6 +205,7 @@ public class MigrateDb {
             passwordReset.resetAll();
         }
 
-        LOGGER.info("\nData migration completed.");
+        LOGGER.info("Data migration completed.");
     }
 }
+

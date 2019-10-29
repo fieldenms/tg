@@ -1,18 +1,21 @@
 package ua.com.fielden.web;
 
+import java.io.ByteArrayInputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.HibernateException;
+import org.hibernate.MappingException;
 import org.hibernate.cfg.Configuration;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.attachment.Attachment;
-import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.HibernateMappingsGenerator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -21,6 +24,7 @@ import ua.com.fielden.platform.entity.functional.master.PropertyWarning;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
+import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
@@ -37,15 +41,23 @@ import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.security.user.UserRoleTokensUpdater;
 import ua.com.fielden.platform.security.user.UserRolesUpdater;
+import ua.com.fielden.platform.security.user.UserSecret;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.impl.ProvidedSerialisationClassProvider;
 import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.test.IDbDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater;
+import ua.com.fielden.platform.web.centre.CentreConfigDeleteAction;
+import ua.com.fielden.platform.web.centre.CentreConfigDuplicateAction;
+import ua.com.fielden.platform.web.centre.CentreConfigEditAction;
+import ua.com.fielden.platform.web.centre.CentreConfigLoadAction;
+import ua.com.fielden.platform.web.centre.CentreConfigNewAction;
+import ua.com.fielden.platform.web.centre.CentreConfigSaveAction;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
-import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDefaultAction;
 import ua.com.fielden.platform.web.centre.CustomisableColumn;
+import ua.com.fielden.platform.web.centre.LoadableCentreConfig;
+import ua.com.fielden.platform.web.centre.OverrideCentreConfig;
 
 /**
  * Provides a test specific implementation of {@link IDbDrivenTestCaseConfiguration}.
@@ -60,7 +72,7 @@ public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCa
 
     private final WebHibernateModule hibernateModule;
 
-    public static final Map<Class, Class> hibTypeDefaults = new HashMap<Class, Class>();
+    public static final Map<Class, Class> hibTypeDefaults = new HashMap<>();
 
     static {
         hibTypeDefaults.put(Date.class, DateTimeType.class);
@@ -80,14 +92,24 @@ public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCa
             final Configuration cfg = new Configuration();
             final List<Class<? extends AbstractEntity<?>>> domainTypes = new ArrayList<Class<? extends AbstractEntity<?>>>();
             domainTypes.add(User.class);
+            domainTypes.add(UserSecret.class);
             domainTypes.add(UserRolesUpdater.class);
             domainTypes.add(UserRole.class);
             domainTypes.add(UserRoleTokensUpdater.class);
             domainTypes.add(SecurityTokenInfo.class);
             domainTypes.add(CentreConfigUpdater.class);
-            domainTypes.add(CentreConfigUpdaterDefaultAction.class);
             domainTypes.add(CustomisableColumn.class);
             domainTypes.add(CentreColumnWidthConfigUpdater.class);
+            
+            domainTypes.add(CentreConfigNewAction.class);
+            domainTypes.add(CentreConfigDuplicateAction.class);
+            domainTypes.add(CentreConfigLoadAction.class);
+            domainTypes.add(CentreConfigEditAction.class);
+            domainTypes.add(CentreConfigDeleteAction.class);
+            domainTypes.add(CentreConfigSaveAction.class);
+            domainTypes.add(LoadableCentreConfig.class);
+            domainTypes.add(OverrideCentreConfig.class);
+            
             domainTypes.add(UserAndRoleAssociation.class);
             domainTypes.add(UserAndRoleAssociationBatchAction.class);
             domainTypes.add(SecurityRoleAssociation.class);
@@ -97,7 +119,12 @@ public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCa
             domainTypes.add(Attachment.class);
             final DomainMetadata domainMetadata = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), domainTypes, DbVersion.H2);
             final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache = new IdOnlyProxiedEntityTypeCache(domainMetadata);
-            cfg.addXML(new HibernateMappingsGenerator().generateMappings(domainMetadata));
+
+            try {
+                cfg.addInputStream(new ByteArrayInputStream(new HibernateMappingsGenerator().generateMappings(domainMetadata).getBytes("UTF8")));
+            } catch (final MappingException | UnsupportedEncodingException e) {
+                throw new HibernateException("Could not add mappings.", e);
+            }
 
             cfg.setProperty("hibernate.current_session_context_class", "thread");
             cfg.setProperty("hibernate.show_sql", "false");

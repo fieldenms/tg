@@ -1,9 +1,14 @@
 package ua.com.fielden.platform.entity;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import ua.com.fielden.platform.entity.annotation.Calculated;
+import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.Dependent;
 import ua.com.fielden.platform.entity.annotation.DescRequired;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
@@ -11,12 +16,14 @@ import ua.com.fielden.platform.entity.annotation.Invisible;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Monitoring;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Readonly;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.validation.annotation.DomainValidation;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
@@ -28,10 +35,10 @@ import ua.com.fielden.platform.types.Money;
 /**
  * Entity class used for testing.
  *
- * @author 01es
+ * @author TG Team
  *
  */
-@KeyType(String.class)
+@KeyType(value = String.class, descendingOrder = true)
 @KeyTitle(value = "Entity No", desc = "Key Property")
 @DescTitle(value = "Description", desc = "Description Property")
 @DescRequired("Property \"{{prop-title}}\" in entity \"{{entity-title}}\" does not permit blank values.")
@@ -43,11 +50,14 @@ public class Entity extends AbstractEntity<String> {
     @Required
     @Readonly
     @Title(value = "First Property", desc = "used for testing")
+    @Calculated
     private Integer firstProperty = null;
+    protected static ExpressionModel firstProperty_ = expr().val(null).model();
 
     @IsProperty
     @Title("Observable Property")
     @Required(NOT_NULL_MSG)
+    @CritOnly
     private Double observableProperty = 0.0;
 
     @IsProperty
@@ -55,6 +65,7 @@ public class Entity extends AbstractEntity<String> {
     private String monitoring;
 
     @IsProperty
+    @MapTo
     private Double observablePropertyInitialisedAsNull;
 
     @IsProperty
@@ -177,8 +188,9 @@ public class Entity extends AbstractEntity<String> {
     }
 
     @Observable
-    public void setEntity(final Entity entity) {
+    public Entity setEntity(final Entity entity) {
         this.entity = entity;
+        return this;
     }
 
     public Date getDate() {

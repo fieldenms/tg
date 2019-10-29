@@ -6,9 +6,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
-import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
+import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
 import ua.com.fielden.platform.reflection.Finder;
 
 public class RetrieverBatchUpdateStmtGenerator extends AbstractRetrieverBatchStmtGenerator {
@@ -41,7 +41,7 @@ public class RetrieverBatchUpdateStmtGenerator extends AbstractRetrieverBatchStm
         return sb.toString();
     }
 
-    List<Object> transformValues(final ResultSet rs, final IdCache cache, final int id) throws SQLException {
+    List<Object> transformValues(final ResultSet rs, final IdCache cache, final long id) throws SQLException {
         final List<Object> result = new ArrayList<>();
         for (final Container container : getContainers()) {
             final List<Object> values = new ArrayList<>();

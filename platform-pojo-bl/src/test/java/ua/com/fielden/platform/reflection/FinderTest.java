@@ -122,7 +122,7 @@ public class FinderTest {
     public void properties_other_than_from_the_middle_of_type_hierarchy_are_skiped_from_property_descriptor_creation() {
         final List<PropertyDescriptor<SecondLevelEntity>> propertyDescriptors = Finder.getPropertyDescriptors(SecondLevelEntity.class, f -> f.getDeclaringClass() != FirstLevelEntity.class);
         assertEquals("Incorrect number of properties.", 3, propertyDescriptors.size());
-        assertEquals("Result should have properties ordered in accordance with their declaration.", new ArrayList<String>(Arrays.asList(new String[]{"Two", "Property", "AE"})), propertyDescriptors.stream().map(p -> p.getKey()).collect(Collectors.toList()));
+        assertEquals("Result should have properties ordered in accordance with their declaration.", new ArrayList<String>(Arrays.asList(new String[]{"Two", "Property", "Simple Entity"})), propertyDescriptors.stream().map(p -> p.getKey()).collect(Collectors.toList()));
     }
 
     
@@ -555,7 +555,7 @@ public class FinderTest {
 
     @Test
     public void test_field_of_type_search_routine() {
-        assertEquals("Incorrect number of string fields.", 10, Finder.getFieldsOfSpecifiedType(DynamicKeyEntity.class, String.class).size());
+        assertEquals("Incorrect number of string fields.", 11, Finder.getFieldsOfSpecifiedType(DynamicKeyEntity.class, String.class).size());
         assertEquals("Incorrect number of SimpleEntity fields.", 1, Finder.getFieldsOfSpecifiedType(DynamicKeyEntity.class, SimpleEntity.class).size());
     }
 

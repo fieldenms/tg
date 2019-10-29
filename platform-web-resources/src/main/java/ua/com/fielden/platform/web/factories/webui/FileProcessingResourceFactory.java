@@ -17,10 +17,9 @@ import com.google.inject.Injector;
 import ua.com.fielden.platform.entity.AbstractEntityWithInputStream;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.FileProcessingResource;
-import ua.com.fielden.platform.web.sse.resources.EventSourcingResourceFactory;
-import ua.com.fielden.platform.web.test.eventsources.TgPersistentEntityWithPropertiesEventSrouce;
 
 /**
  * Factory to instantiate {@link FileProcessingResource}.
@@ -35,14 +34,16 @@ public class FileProcessingResourceFactory<T extends AbstractEntityWithInputStre
     private final ICompanionObjectFinder companionFinder;
     private final Router router;
     
-    private final long fileSizeLimitKb;
+    private final long fileSizeLimitBytes;
     private final Set<MediaType> types = new HashSet<>();
+    private final IDeviceProvider deviceProvider;
 
     public FileProcessingResourceFactory(
             final Router router,
             final Injector injector,
             final Class<T> entityType,
             final Function<EntityFactory, T> entityCreator,
+            final IDeviceProvider deviceProvider,
             final long fileSizeLimitKb,
             final MediaType type, // at least one type is required 
             final MediaType... types) {
@@ -51,9 +52,10 @@ public class FileProcessingResourceFactory<T extends AbstractEntityWithInputStre
         this.entityType = entityType;
         this.entityCreator = entityCreator;
         this.companionFinder = injector.getInstance(ICompanionObjectFinder.class);
-        this.fileSizeLimitKb = fileSizeLimitKb;
+        this.fileSizeLimitBytes = fileSizeLimitKb * 1024;
         this.types.add(type);
-        Arrays.stream(types).forEach(t -> this.types.add(t));
+        Arrays.stream(types).forEach(this.types::add);
+        this.deviceProvider = deviceProvider;
     }
 
     @Override
@@ -67,8 +69,9 @@ public class FileProcessingResourceFactory<T extends AbstractEntityWithInputStre
                     injector.getInstance(EntityFactory.class), 
                     entityCreator, 
                     injector.getInstance(RestServerUtil.class), 
-                    fileSizeLimitKb, 
+                    fileSizeLimitBytes, 
                     types, 
+                    deviceProvider,
                     getContext(), request, response).handle();
         }
     }

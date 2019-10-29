@@ -12,10 +12,11 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.reflection.Reflector.isPropertyProxied;
 import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
 
 import java.math.BigDecimal;
-import java.util.List;
+import java.util.stream.Stream;
 
 import org.junit.Test;
 
@@ -36,6 +37,7 @@ import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
 import ua.com.fielden.platform.sample.domain.TgPersonName;
+import ua.com.fielden.platform.sample.domain.TgReVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgTimesheet;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
@@ -47,7 +49,6 @@ import ua.com.fielden.platform.sample.domain.TgWorkshop;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
-import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.either.Either;
@@ -91,7 +92,6 @@ public class EntityProxyLoadingTest extends AbstractDaoTestCase {
         final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("key").eq().val("CAR2").model();
         final TgVehicle vehicle = coVehicle.getEntity(from(model).model());
         assertNotNull("Should be not null", vehicle.getReplacedBy().getId());
-        System.out.println(vehicle.getReplacedBy().getClass().getName());
         shouldBeProxy(vehicle.getReplacedBy(), "model");
         shouldBeProxy(vehicle.getReplacedBy(), "key");
     }
@@ -289,7 +289,7 @@ public class EntityProxyLoadingTest extends AbstractDaoTestCase {
 
     @Test
     public void explicitly_unfetched_properties_of_entity_type_can_neither_be_accessed_nor_mutated() {
-        final ITgVehicle coVehicle = co$(TgVehicle.class);
+        final ITgVehicle coVehicle = co(TgVehicle.class);
         final fetch<TgVehicle> fetch = fetchKeyAndDescOnly(TgVehicle.class);
         final TgVehicle vehicle = coVehicle.findByKeyAndFetch(fetch, "CAR2");
 
@@ -304,6 +304,47 @@ public class EntityProxyLoadingTest extends AbstractDaoTestCase {
         assertTrue(setStationResult instanceof Left);
         final Left<Exception, TgVehicle> setError = (Left<Exception, TgVehicle>) setStationResult;
         assertTrue(setError.value instanceof StrictProxyException);
+    }
+    
+    @Test
+    public void ordinary_non_persistent_properties_in_persistent_entities_do_not_get_proxied() {
+        try (final Stream<TgVehicleModel> stream = co(TgVehicleModel.class).stream(from(select(TgVehicleModel.class).model()).with(fetchOnly(TgVehicleModel.class).with("key")).model())) {
+            stream.forEach(vm -> {
+                assertFalse("Oridinary, not persistent props should not be proxied", isPropertyProxied(vm, "ordinaryIntProp"));
+                assertNull(vm.getOrdinaryIntProp());
+                assertFalse("Fetched inherited @MapTo props should not be proxied.", isPropertyProxied(vm, "key"));
+            });
+        }
+    }
+    
+    @Test
+    public void properties_of_synthetic_entities_get_proxied_except_crit_only_ones() {
+        try (final Stream<TgReVehicleModel> stream = co(TgReVehicleModel.class)
+                                                    .stream(from(select(TgReVehicleModel.class).model())
+                                                            .with(fetchOnly(TgReVehicleModel.class).with("key")).model())) {
+            stream.forEach(vm -> {
+                assertTrue("Not-fetched yielded props should be proxied", isPropertyProxied(vm, "intProp"));
+                assertTrue("Not-feched and not-yielded props should be proxied", isPropertyProxied(vm, "noYieldIntProp"));
+                assertTrue("Not-fetched inherited @MapTo props should be proxied", isPropertyProxied(vm, "make"));
+                assertTrue("Even inherited, oridinary, not persistent props should become proxied in the context of a synthetic entity", isPropertyProxied(vm, "ordinaryIntProp"));
+                assertFalse("@CritOnly props should not be proxied", isPropertyProxied(vm, "intCritProp"));
+                assertFalse("Fetched inherited @MapTo props should not be proxied.", isPropertyProxied(vm, "key"));
+                assertNull(vm.getIntCritProp());
+            });
+        }
+    }
+
+    @Test
+    public void not_yielded_but_fetched_properties_of_synthetic_entities_do_not_get_proxied() {
+        
+        try (final Stream<TgReVehicleModel> stream = co(TgReVehicleModel.class)
+                                                    .stream(from(select(TgReVehicleModel.class).model())
+                                                            .with(fetchOnly(TgReVehicleModel.class).with("key").with("noYieldIntProp")).model())) {
+            stream.forEach(vm -> {
+                assertFalse("Feched and not-yielded props should not be proxied", isPropertyProxied(vm, "noYieldIntProp"));
+                assertNull(vm.getNoYieldIntProp());
+            });
+        }
     }
 
     @Override
@@ -393,10 +434,10 @@ public class EntityProxyLoadingTest extends AbstractDaoTestCase {
         final UserRole workshopOperatorRole = save(new_(UserRole.class, "WORKSHOP_OPERATOR", "Workshop operator role"));
         final UserRole warehouseOperatorRole = save(new_(UserRole.class, "WAREHOUSE_OPERATOR", "Warehouse operator role"));
 
-        final User baseUser1 = save(new_(User.class, "base_user1", "base user1").setBase(true).setPassword("password1"));
-        final User user1 = save(new_(User.class, "user1", "user1 desc").setBase(false).setBasedOnUser(baseUser1).setPassword("password1"));
-        final User user2 = save(new_(User.class, "user2", "user2 desc").setBase(false).setBasedOnUser(baseUser1).setPassword("password1"));
-        final User user3 = save(new_(User.class, "user3", "user3 desc").setBase(false).setBasedOnUser(baseUser1).setPassword("password1"));
+        final User baseUser1 = save(new_(User.class, "base_user1", "base user1").setBase(true));
+        final User user1 = save(new_(User.class, "user1", "user1 desc").setBase(false).setBasedOnUser(baseUser1)); //.setPassword("password1")
+        final User user2 = save(new_(User.class, "user2", "user2 desc").setBase(false).setBasedOnUser(baseUser1));
+        final User user3 = save(new_(User.class, "user3", "user3 desc").setBase(false).setBasedOnUser(baseUser1));
 
         save(new_composite(UserAndRoleAssociation.class, user1, managerRole));
         save(new_composite(UserAndRoleAssociation.class, user1, analyticRole));
@@ -412,12 +453,6 @@ public class EntityProxyLoadingTest extends AbstractDaoTestCase {
 
         final TgPersonName yurij = save(new_(TgPersonName.class, "Yurij", "Yurij"));
         save(new_composite(TgAuthor.class, yurij, "Shcherbyna", "Mykolajovych"));
-
-        System.out.println("\n\n\n\n\n\n\n\n\n   =====  DATA POPULATED SUCCESSFULLY   =====\n\n\n\n\n\n\n\n\n");
     }
 
-    @Override
-    protected List<Class<? extends AbstractEntity<?>>> domainEntityTypes() {
-        return PlatformTestDomainTypes.entityTypes;
-    }
 }

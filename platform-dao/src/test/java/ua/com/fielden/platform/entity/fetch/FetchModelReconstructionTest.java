@@ -30,11 +30,11 @@ import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgWorkshop;
-import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
+import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
 
-public class FetchModelReconstructionTest extends AbstractDomainDrivenTestCase {
+public class FetchModelReconstructionTest extends AbstractDaoTestCase {
 
     private final ITgVehicle vehicleDao = getInstance(ITgVehicle.class);
 

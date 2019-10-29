@@ -9,12 +9,12 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  *
  * @param <T>
  */
-public interface ICollectionalEditorWithReordering<T extends AbstractEntity<?>> extends ICollectionalEditorConfig0<T> {
+public interface ICollectionalEditorWithReordering<T extends AbstractEntity<?>> extends ICollectionalEditorConfig1<T> {
 
     /**
      * Marks this colletional editor with reordering capabilities.
      *
      * @return
      */
-    ICollectionalEditorConfig0<T> reorderable();
+    ICollectionalEditorConfig1<T> reorderable();
 }

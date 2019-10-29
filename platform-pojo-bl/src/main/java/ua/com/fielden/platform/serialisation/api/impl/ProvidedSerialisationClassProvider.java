@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.serialisation.api.impl;
 
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
@@ -23,7 +25,7 @@ public class ProvidedSerialisationClassProvider implements ISerialisationClassPr
 
     @Override
     public List<Class<?>> classes() {
-        return types;
+        return Collections.unmodifiableList(types);
     }
 
 }

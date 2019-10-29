@@ -11,8 +11,8 @@ import java.util.TreeMap;
 
 import org.apache.commons.collections.CollectionUtils;
 
-import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.EntityUtils;
 import static ua.com.fielden.platform.migration.RetrieverPropsValidator.RetrievedPropValidationError.INAPPROPRIATE_BUT_PRESENT;

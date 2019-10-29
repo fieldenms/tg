@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.multi;
 
-import java.util.Arrays;
+import static java.util.Arrays.asList;
+import static java.util.Optional.of;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,9 +25,12 @@ public class MultiCritStringValueMnemonicBuilder implements IMultiCritStringValu
         if (values == null || values.length == 0) {
             throw new IllegalArgumentException("At least one values is expected.");
         }
-
-        final List<String> list = Arrays.asList(values);
-        this.values = Optional.of(list);
+        
+        // Simple ArrayList must be used here instead of Arrays$ArrayList.
+        // This is due to generic collection copying in EntityUtils.copyCollectionalValue (used in MetaPropertyFull.setOriginalValue) that is implemented through obtaining of empty constructor and addAll method.
+        // Unfortunately Arrays$ArrayList does not have empty constructor.
+        final List<String> list = new ArrayList<>(asList(values));
+        this.values = of(list);
         return this;
     }
 

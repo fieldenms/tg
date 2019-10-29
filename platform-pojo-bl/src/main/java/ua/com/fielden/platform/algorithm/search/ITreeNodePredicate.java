@@ -10,6 +10,7 @@ package ua.com.fielden.platform.algorithm.search;
  * @param <N>
  *            -- type of the tree node itself
  */
+@FunctionalInterface
 public interface ITreeNodePredicate<T, N extends ITreeNode<T>> {
     /**
      * Should return <code>true</code> if the node satisfies the predicate. Otherwise, false.

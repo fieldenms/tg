@@ -9,26 +9,23 @@ import ua.com.fielden.platform.dao.ISecurityRoleAssociation;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
-import ua.com.fielden.platform.security.mixin.SecurityRoleAssociationBatchActionMixin;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 
 /**
  * DAO implementation for companion object {@link ISecurityRoleAssociationBatchAction}.
  * 
- * @author Developers
+ * @author TG Team
  * 
  */
 @EntityType(SecurityRoleAssociationBatchAction.class)
 public class SecurityRoleAssociationBatchActionDao extends CommonEntityDao<SecurityRoleAssociationBatchAction> implements ISecurityRoleAssociationBatchAction {
 
-    private final SecurityRoleAssociationBatchActionMixin mixin;
     private final ISecurityRoleAssociation associationDao;
 
     @Inject
     public SecurityRoleAssociationBatchActionDao(final ISecurityRoleAssociation associationDao, final IFilter filter) {
         super(filter);
 
-        mixin = new SecurityRoleAssociationBatchActionMixin(this);
         this.associationDao = associationDao;
     }
 
@@ -48,7 +45,7 @@ public class SecurityRoleAssociationBatchActionDao extends CommonEntityDao<Secur
      */
     private void processSaveAction(final Set<SecurityRoleAssociation> associations) {
         for (final SecurityRoleAssociation association : associations) {
-            associationDao.save(association);
+            associationDao.quickSave(association);
         }
     }
 

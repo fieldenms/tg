@@ -57,8 +57,7 @@ public class UniqueValidator<E extends AbstractEntity<?>, T> implements IBeforeC
                 ? select(type).where().prop(ID).ne().val(entity.getId()).and().prop(property.getName()).eq().val(newValue).model()
                 : select(type).where().prop(property.getName()).eq().val(newValue).model();
 
-        int count = co.count(query);
-        if (count > 0) {
+        if (co.exists(query)) {
             return Result.failure(format(validationErrorTemplate, newValue, property.getName(), type.getName()));
         }
         

@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.web.view.master;
 
+import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
+import static ua.com.fielden.platform.web.centre.EntityCentre.createFetchModelForAutocompleterFrom;
+
 import java.util.Optional;
 
 import com.google.inject.Injector;
@@ -19,14 +22,18 @@ import ua.com.fielden.platform.entity.IEntityProducer;
 import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.ResourceLoader;
+import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
+import ua.com.fielden.platform.web.view.master.api.helpers.impl.WidgetSelector;
+import ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.AbstractEntityAutocompletionWidget;
 
 /**
  * Represents entity master.
@@ -35,6 +42,7 @@ import ua.com.fielden.platform.web.view.master.api.IMaster;
  *
  */
 public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
+    public static final String ENTITY_TYPE = "@entity_type";
     private final Class<T> entityType;
     private final Class<? extends IEntityProducer<T>> entityProducerType;
     private final IMaster<T> masterConfig;
@@ -152,7 +160,7 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
         if (AbstractFunctionalEntityForCompoundMenuItem.class.isAssignableFrom(entityType)) {
             return new DefaultEntityProducerForCompoundMenuItem(factory, entityType, coFinder);
         }
-        return new DefaultEntityProducerWithContext<T>(factory, entityType, coFinder);
+        return new DefaultEntityProducerWithContext<>(factory, entityType, coFinder);
     }
 
     /**
@@ -169,7 +177,18 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
 
         return createDefaultValueMatcher(propertyName, entityType, coFinder);
     }
-
+    
+    /**
+     * Creates fetch model for entity-typed autocompleted values. Fetches only properties specified in Master DSL configuration.
+     *
+     * @param propertyName
+     * @param propType
+     * @return
+     */
+    public <V extends AbstractEntity<?>> fetch<V> createFetchModelForAutocompleter(final String propertyName, final Class<V> propType) {
+        return createFetchModelForAutocompleterFrom(propType, masterConfig.additionalAutocompleterPropertiesFor(propertyName));
+    }
+    
     /**
      * Creates default value matcher with context for the specified entity property.
      *
@@ -200,6 +219,10 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
         return masterConfig.render().render();
     }
 
+    public static String flattenedNameOf(final Class<?> type) {
+        return type.getSimpleName().toLowerCase();
+    }
+
     /**
      * An entity master that has no UI. Its main purpose is to be used for functional entities that have no visual representation.
      *
@@ -216,9 +239,9 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
         }
 
         public NoUiMaster(final Class<T> entityType, final JsCode customCode, final JsCode customCodeOnAttach) {
-            final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
-                    .replace("<!--@imports-->", "")
-                    .replace("@entity_type", entityType.getSimpleName())
+            final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
+                    .replace(IMPORTS, "")
+                    .replace(ENTITY_TYPE, flattenedNameOf(entityType))
                     .replace("<!--@tg-entity-master-content-->", "")
                     .replace("//@ready-callback", "")
                     .replace("//@master-is-ready-custom-code", customCode.toString())
@@ -227,13 +250,7 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
                     .replace("@noUiValue", "true")
                     .replace("@saveOnActivationValue", "true");
 
-            renderable = new IRenderable() {
-                @Override
-                public DomElement render() {
-                    return new InnerTextElement(entityMasterStr);
-                }
-            };
-
+            renderable = () -> new InnerTextElement(entityMasterStr);
         }
 
         @Override

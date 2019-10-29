@@ -1,5 +1,9 @@
 package ua.com.fielden.platform.domaintree.impl;
 
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
+import static ua.com.fielden.platform.utils.EntityUtils.isRangeType;
+
 import java.util.Set;
 
 import org.apache.log4j.Logger;
@@ -169,7 +173,24 @@ public abstract class AbstractDomainTree {
      * @param message
      */
     protected static void illegalUncheckedProperties(final ITickManager tm, final Class<?> root, final String property, final String message) {
-        if (!tm.isChecked(root, property)) {
+        // The check below is important to maintain the integrity of domain trees.
+        // However, it also causes performance bottlenecks when invoking multiple times.
+        // In current Web UI logic, that uses centre domain trees, this check does not add any significant value due to other checks implemented as part of Centre DSL.
+        // Reintroducing of this check may be significant when management of domain trees from UI will be implemented.
+        // if (!tm.isChecked(root, property)) {
+        //     throw new DomainTreeException(message);
+        // }
+    }
+
+    /**
+     * Throws an {@link DomainTreeException} if the property can not represent a "double criterion" or boolean criterion.
+     *
+     * @param root
+     * @param property
+     * @param message
+     */
+    protected static void illegalNonDoubleEditorOrBooleanProperties(final Class<?> root, final String property, final String message) {
+        if (!isDoubleCriterion(root, property) || isBooleanCriterion(root, property)) {
             throw new DomainTreeException(message);
         }
     }
@@ -183,19 +204,6 @@ public abstract class AbstractDomainTree {
      */
     protected static void illegalNonDoubleEditorProperties(final Class<?> root, final String property, final String message) {
         if (!isDoubleCriterion(root, property)) {
-            throw new DomainTreeException(message);
-        }
-    }
-
-    /**
-     * Throws an {@link DomainTreeException} if the property can not represent a "double criterion".
-     *
-     * @param root
-     * @param property
-     * @param message
-     */
-    protected static void illegalNonDoubleEditorAndNonBooleanProperties(final Class<?> root, final String property, final String message) {
-        if (!isDoubleCriterionOrBoolean(root, property)) {
             throw new DomainTreeException(message);
         }
     }
@@ -265,7 +273,7 @@ public abstract class AbstractDomainTree {
      * @return
      */
     public static <T> EnhancementPropertiesMap<T> createPropertiesMap() {
-        return new EnhancementPropertiesMap<T>();
+        return new EnhancementPropertiesMap<>();
     }
 
     /**
@@ -288,7 +296,7 @@ public abstract class AbstractDomainTree {
      * @return
      */
     public static Pair<Class<?>, String> key(final Class<?> root, final String property) {
-        return new Pair<Class<?>, String>(root, property);
+        return new Pair<>(root, property);
     }
 
     /**
@@ -315,42 +323,35 @@ public abstract class AbstractDomainTree {
             return factory;
         }
     }
-
+    
     /**
      * Returns <code>true</code> when the property can represent criterion with two editors, <code>false</code> otherwise.
      *
-     * TODO unit test.
-     *
-     * @param root
-     *            -- a root type that contains property.
-     * @param property
-     *            -- a dot-notation expression that defines a property.
-     * @return
-     */
-    public static boolean isDoubleCriterionOrBoolean(final Class<?> root, final String property) {
-        final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
-        final Class<?> propertyType = isEntityItself ? root : PropertyTypeDeterminator.determinePropertyType(root, property);
-        return EntityUtils.isBoolean(propertyType) || isDoubleCriterion(root, property);
-    }
-
-    /**
-     * Returns <code>true</code> when the property can represent criterion with two editors, <code>false</code> otherwise.
-     *
-     * TODO unit test.
-     *
-     * @param root
-     *            -- a root type that contains property.
-     * @param property
-     *            -- a dot-notation expression that defines a property.
+     * @param root -- a root type that contains property.
+     * @param property -- a dot-notation expression that defines a property.
+     * 
      * @return
      */
     public static boolean isDoubleCriterion(final Class<?> root, final String property) {
         final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
-        final Class<?> propertyType = isEntityItself ? root : PropertyTypeDeterminator.determinePropertyType(root, property);
-        final CritOnly critOnlyAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(CritOnly.class, root, property);
-        return EntityUtils.isRangeType(propertyType) && !(critOnlyAnnotation != null && Type.SINGLE.equals(critOnlyAnnotation.value()));
+        final Class<?> propertyType = isEntityItself ? root : determinePropertyType(root, property);
+        return (isRangeType(propertyType) || isBoolean(propertyType)) && !isCritOnlySingle(root, property);
     }
-
+    
+    /**
+     * Returns <code>true</code> when the property can represent boolean criterion with one (crit-only single) or two (otherwise) editors, <code>false</code> otherwise.
+     *
+     * @param root -- a root type that contains property.
+     * @param property -- a dot-notation expression that defines a property.
+     * 
+     * @return
+     */
+    public static boolean isBooleanCriterion(final Class<?> root, final String property) {
+        final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
+        final Class<?> propertyType = isEntityItself ? root : determinePropertyType(root, property);
+        return isBoolean(propertyType);
+    }
+    
     /**
      * Returns <code>true</code> when the property represents crit-only single criterion, <code>false</code> otherwise.
      *

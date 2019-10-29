@@ -3,9 +3,9 @@ package ua.com.fielden.platform.web.view.master.api.with_master.impl;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractEntityManipulationAction;
 
-class EntityManipulationMaster<T extends AbstractEntityManipulationAction> extends AbstractMasterWithMaster<T> {
+public class EntityManipulationMaster<T extends AbstractEntityManipulationAction> extends AbstractMasterWithMaster<T> {
 
-    EntityManipulationMaster(final Class<T> entityType, final boolean shouldRefreshParentCentreAfterSave) {
+    protected EntityManipulationMaster(final Class<T> entityType, final boolean shouldRefreshParentCentreAfterSave) {
         super(entityType, null, shouldRefreshParentCentreAfterSave);
     }
 
@@ -16,7 +16,7 @@ class EntityManipulationMaster<T extends AbstractEntityManipulationAction> exten
                 "   centreUuid: this.centreUuid, " +
                 "   entityId: " + bindingEntityName + ".entityId, " +
                 "   entityType: " + bindingEntityName + ".entityType, " +
-                "   shouldRefreshParentCentreAfterSave: " + shouldRefreshParentCentreAfterSave + 
+                "   shouldRefreshParentCentreAfterSave: " + shouldRefreshParentCentreAfterSave +
                 "};";
     }
 

@@ -6,15 +6,10 @@
 	<title>entity-master basic tests</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 	
-	<script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
-	<script src="/resources/polymer/web-component-tester/browser.js"></script>
-	<script src="/resources/polymer/test-fixture/test-fixture-mocha.js"></script>
-	<script src="/resources/polymer/iron-test-helpers/mock-interactions.js"></script>
-	
-	<link rel="import" href="/resources/polymer/test-fixture/test-fixture.html">
-  
-    <link rel="import" href="/app/tg-reflector.html">
-    <link rel="import" href="/master_ui/ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependency">
+	<script src="/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
+    <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
+    <script src="/resources/filesaver/FileSaver.min.js"></script>
+    <script src="/resources/polymer/wct-browser-legacy/browser.js"></script>
 </head>
 
 <body>
@@ -30,9 +25,13 @@
     	</template>
 	</test-fixture>
 
-	<script>
+	<script type="module">
+
+        import '/app/tg-reflector.js';
+        import '/master_ui/ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependency';
+
 		suite('editors touching', function() {
-		    var master, reflector;
+		    let master, reflector;
 		
 		    setup(function() {
 				master = fixture('MasterFixture');
@@ -40,11 +39,12 @@
 		    });
 		
 		    test('works for property, that is dependent on touched property', function(done) {
-		        var edProperty = master.$.editor_4_property;
-		        var edDependentProp = master.$.editor_4_dependentProp;
+		        const edProperty = master.$.editor_4_property;
+		        const edDependentProp = master.$.editor_4_dependentProp;
 		        
  	            master.postValidated = function (validatedEntity, bindingEntity, customObject) {
  	                assert.deepEqual(bindingEntity['@@touchedProps'].names, ['property'], 'After changing "property" touchedProperties names should be ["property"].');
+ 	                assert.deepEqual(bindingEntity['@@touchedProps'].values, ['IS'], 'After changing "property" touchedProperties values should be ["IS"].');
  	                
 	                assert.strictEqual(edProperty._editingValue, 'IS', "_editingValue should be 'IS'.");
 	                assert.strictEqual(edProperty._commValue, 'IS', "_commValue should be 'IS'.");
@@ -61,6 +61,7 @@
 	                // the following code is intended to check whether touchedProps are reset after retrieval [START]
 		            master.postRetrieved = function (entity, bindingEntity, customObject) {
 		                assert.deepEqual(bindingEntity['@@touchedProps'].names, [], 'After second retrieval touchedProperties names should be empty.');
+		                assert.deepEqual(bindingEntity['@@touchedProps'].values, [], 'After second retrieval touchedProperties values should be empty.');
 		                done();
 		            };
 	                
@@ -70,6 +71,7 @@
 
 	            master.postRetrieved = function (entity, bindingEntity, customObject) {
 	                assert.deepEqual(bindingEntity['@@touchedProps'].names, [], 'After retrieval touchedProperties names should be empty.');
+	                assert.deepEqual(bindingEntity['@@touchedProps'].values, [], 'After retrieval touchedProperties values should be empty.');
 	                
 	                assert.strictEqual(edProperty._editingValue, '', "_editingValue should be empty on start (empty string).");
 	                assert.strictEqual(edProperty._commValue, '', "_commValue should be empty on start (empty string).");
@@ -91,11 +93,12 @@
 		    });
 		    
 		    test('works for property, that is dependent on touched property when resetting to the previous value', function(done) {
-		        var edProperty = master.$.editor_4_property;
-		        var edDependentProp = master.$.editor_4_dependentProp;
+		        const edProperty = master.$.editor_4_property;
+		        const edDependentProp = master.$.editor_4_dependentProp;
 		        
  	            master.postValidated = function (validatedEntity, bindingEntity, customObject) {
  	                assert.deepEqual(bindingEntity['@@touchedProps'].names, ['property'], 'After changing "property" touchedProperties names should be ["property"].');
+ 	                assert.deepEqual(bindingEntity['@@touchedProps'].values, ['IS'], 'After changing "property" touchedProperties names should be ["property"].');
  	                
 	                assert.strictEqual(edProperty._editingValue, 'IS', "_editingValue should be 'IS'.");
 	                assert.strictEqual(edProperty._commValue, 'IS', "_commValue should be 'IS'.");
@@ -111,7 +114,8 @@
 	                
 	 	            master.postValidated = function (validatedEntity, bindingEntity, customObject) {
 	 	                assert.deepEqual(bindingEntity['@@touchedProps'].names, ['property', 'dependentProp'], 'After changing "dependentProperty" sequentially to "property" touchedProperties names should be ["property", "dependentProp"].');
-	 	                
+	 	                assert.deepEqual(bindingEntity['@@touchedProps'].values, ['IS', null], 'After changing "dependentProperty" sequentially to "property" touchedProperties values should be ["IS", null].');
+	 	               
 		                assert.strictEqual(edProperty._editingValue, 'IS', "_editingValue should be 'IS'.");
 		                assert.strictEqual(edProperty._commValue, 'IS', "_commValue should be 'IS'.");
 		                assert.strictEqual(edProperty._acceptedValue, 'IS', "_acceptedValue should be 'IS'.");
@@ -127,10 +131,12 @@
 		                // the following code is intended to check whether touchedProps are NOT reset after unsuccessful save -- key is missing [START]
 			            master.postSaved = function (potentiallySavedOrNewEntity, bindingEntity) {
 			                assert.deepEqual(bindingEntity['@@touchedProps'].names, ['property', 'dependentProp'], 'After unsuccessful saving touchedProperties names should remain ["property", "dependentProp"].');
+			                assert.deepEqual(bindingEntity['@@touchedProps'].values, ['IS', null], 'After unsuccessful saving touchedProperties names should remain ["IS", null].');
 			                
 			                // the following code is intended to check whether touchedProps are reset after successfull save [START]
 				            master.postSaved = function (potentiallySavedOrNewEntity, bindingEntity) {
 				                assert.deepEqual(bindingEntity['@@touchedProps'].names, [], 'After successful saving touchedProperties names should be empty.');
+				                assert.deepEqual(bindingEntity['@@touchedProps'].values, [], 'After successful saving touchedProperties values should be empty.');
 				                done();
 				            };
 			                
@@ -149,6 +155,7 @@
 
 	            master.postRetrieved = function (entity, bindingEntity, customObject) {
  	                assert.deepEqual(bindingEntity['@@touchedProps'].names, [], 'After retrieval touchedProperties names should be empty.');
+ 	                assert.deepEqual(bindingEntity['@@touchedProps'].values, [], 'After retrieval touchedProperties values should be empty.');
 	                
 	                assert.strictEqual(edProperty._editingValue, '', "_editingValue should be empty on start (empty string).");
 	                assert.strictEqual(edProperty._commValue, '', "_commValue should be empty on start (empty string).");
@@ -242,6 +249,138 @@
                 };
                 
                 master.retrieve();
+            });
+            
+            /**
+             * Returns promise instance that resolves after 'propName' property was changed to 'propValue' in 'master'.
+             */
+            const _changePropertyAndValidate = function (master, propName, propValue) {
+                return new Promise(function (resolve, reject) {
+                    master._validationPromiseChanged = function (newValidationPromise) {
+                        resolve(newValidationPromise);
+                    };
+                    const masterEditor = master.$['editor_4_' + propName];
+                    masterEditor._editingValue = '' + propValue; // change the value and commit
+                    masterEditor.commit();
+                });
+            };
+            
+            const _propValue = function (master, propName) {
+                return master._currEntity.get(propName);
+            };
+            
+            test('touched modified: property prop1, that holds val1 value derived from propX, invokes its definer when changing value to val1 through explicit touch', function (done) {
+                master.retrieve().then(function () {
+                    assert.strictEqual(_propValue(master, 'propX'), null);
+                    assert.strictEqual(_propValue(master, 'propY'), null);
+                    assert.strictEqual(_propValue(master, 'prop1'), 'val0');
+                    assert.strictEqual(_propValue(master, 'prop2'), null);
+                }).then(function () {
+                    return _changePropertyAndValidate(master, 'propX', 'v1');
+                }).then(function () {
+                    assert.strictEqual(_propValue(master, 'propX'), 'v1');
+                    assert.strictEqual(_propValue(master, 'propY'), null);
+                    assert.strictEqual(_propValue(master, 'prop1'), 'val1');
+                    assert.strictEqual(_propValue(master, 'prop2'), 'value1');
+                }).then(function () {
+                    return _changePropertyAndValidate(master, 'prop2', 'XXX');
+                }).then(function () {
+                    assert.strictEqual(_propValue(master, 'propX'), 'v1');
+                    assert.strictEqual(_propValue(master, 'propY'), null);
+                    assert.strictEqual(_propValue(master, 'prop1'), 'val1');
+                    assert.strictEqual(_propValue(master, 'prop2'), 'XXX');
+                }).then(function () {
+                    return _changePropertyAndValidate(master, 'prop1', 'val0');
+                }).then(function () {
+                    assert.strictEqual(_propValue(master, 'propX'), 'v1');
+                    assert.strictEqual(_propValue(master, 'propY'), null);
+                    assert.strictEqual(_propValue(master, 'prop1'), 'val0');
+                    assert.strictEqual(_propValue(master, 'prop2'), 'value0');
+                }).then(function () {
+                    return _changePropertyAndValidate(master, 'prop1', 'val1');
+                }).then(function () {
+                    assert.strictEqual(_propValue(master, 'propX'), 'v1');
+                    assert.strictEqual(_propValue(master, 'propY'), null);
+                    assert.strictEqual(_propValue(master, 'prop1'), 'val1');
+                    assert.strictEqual(_propValue(master, 'prop2'), 'value1');
+                    done();
+                });
+            });
+            
+            test('untouched modified: property prop1, that holds val0 value derived from propX, invokes its definer when changing value to val0 (ORIGINAL) through another property propY', function (done) {
+                master.retrieve().then(function () {
+                    assert.strictEqual(_propValue(master, 'propX'), null);
+                    assert.strictEqual(_propValue(master, 'propY'), null);
+                    assert.strictEqual(_propValue(master, 'prop1'), 'val0');
+                    assert.strictEqual(_propValue(master, 'prop2'), null);
+                }).then(function () {
+                    return _changePropertyAndValidate(master, 'propX', 'v0');
+                }).then(function () {
+                    assert.strictEqual(_propValue(master, 'propX'), 'v0');
+                    assert.strictEqual(_propValue(master, 'propY'), null);
+                    assert.strictEqual(_propValue(master, 'prop1'), 'val0');
+                    assert.strictEqual(_propValue(master, 'prop2'), null);
+                }).then(function () {
+                    return _changePropertyAndValidate(master, 'prop2', 'XXX');
+                }).then(function () {
+                    assert.strictEqual(_propValue(master, 'propX'), 'v0');
+                    assert.strictEqual(_propValue(master, 'propY'), null);
+                    assert.strictEqual(_propValue(master, 'prop1'), 'val0');
+                    assert.strictEqual(_propValue(master, 'prop2'), 'XXX');
+                }).then(function () {
+                    return _changePropertyAndValidate(master, 'propY', 'v1');
+                }).then(function () {
+                    assert.strictEqual(_propValue(master, 'propX'), 'v0');
+                    assert.strictEqual(_propValue(master, 'propY'), 'v1');
+                    assert.strictEqual(_propValue(master, 'prop1'), 'val1');
+                    assert.strictEqual(_propValue(master, 'prop2'), 'value1');
+                }).then(function () {
+                    return _changePropertyAndValidate(master, 'propY', 'v0');
+                }).then(function () {
+                    assert.strictEqual(_propValue(master, 'propX'), 'v0');
+                    assert.strictEqual(_propValue(master, 'propY'), 'v0');
+                    assert.strictEqual(_propValue(master, 'prop1'), 'val0');
+                    assert.strictEqual(_propValue(master, 'prop2'), 'value0');
+                    done();
+                });
+            });
+            
+            test('untouched unmodified: property prop1, that holds val1 value derived from propX, invokes its definer when changing value to val1 (NON-ORIGINAL) through another property propY', function (done) {
+                master.retrieve().then(function () {
+                    assert.strictEqual(_propValue(master, 'propX'), null);
+                    assert.strictEqual(_propValue(master, 'propY'), null);
+                    assert.strictEqual(_propValue(master, 'prop1'), 'val0');
+                    assert.strictEqual(_propValue(master, 'prop2'), null);
+                }).then(function () {
+                    return _changePropertyAndValidate(master, 'propX', 'v1');
+                }).then(function () {
+                    assert.strictEqual(_propValue(master, 'propX'), 'v1');
+                    assert.strictEqual(_propValue(master, 'propY'), null);
+                    assert.strictEqual(_propValue(master, 'prop1'), 'val1');
+                    assert.strictEqual(_propValue(master, 'prop2'), 'value1');
+                }).then(function () {
+                    return _changePropertyAndValidate(master, 'prop2', 'XXX');
+                }).then(function () {
+                    assert.strictEqual(_propValue(master, 'propX'), 'v1');
+                    assert.strictEqual(_propValue(master, 'propY'), null);
+                    assert.strictEqual(_propValue(master, 'prop1'), 'val1');
+                    assert.strictEqual(_propValue(master, 'prop2'), 'XXX');
+                }).then(function () {
+                    return _changePropertyAndValidate(master, 'propY', 'v0');
+                }).then(function () {
+                    assert.strictEqual(_propValue(master, 'propX'), 'v1');
+                    assert.strictEqual(_propValue(master, 'propY'), 'v0');
+                    assert.strictEqual(_propValue(master, 'prop1'), 'val0');
+                    assert.strictEqual(_propValue(master, 'prop2'), 'value0');
+                }).then(function () {
+                    return _changePropertyAndValidate(master, 'propY', 'v1');
+                }).then(function () {
+                    assert.strictEqual(_propValue(master, 'propX'), 'v1');
+                    assert.strictEqual(_propValue(master, 'propY'), 'v1');
+                    assert.strictEqual(_propValue(master, 'prop1'), 'val1');
+                    assert.strictEqual(_propValue(master, 'prop2'), 'value1');
+                    done();
+                });
             });
         });
     </script>

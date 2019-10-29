@@ -23,8 +23,6 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
 @EntityTitle("Centre Selection Criteria")
 public class CentreEntityQueryCriteriaToEnhance<T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends EnhancedCentreEntityQueryCriteria<T, DAO> {
 
-    private static final long serialVersionUID = -5189571197523084383L;
-
     /**
      * Constructs {@link CentreEntityQueryCriteriaToEnhance} with specified {@link IValueMatcherFactory}. Needed mostly for instantiating through injector.
      * 

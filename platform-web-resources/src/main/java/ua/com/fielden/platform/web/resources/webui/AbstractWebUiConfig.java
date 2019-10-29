@@ -1,24 +1,32 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static java.util.Optional.ofNullable;
+import static ua.com.fielden.platform.utils.ResourceLoader.getStream;
+import static ua.com.fielden.platform.web.resources.webui.FileResource.generateFileName;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.log4j.Logger;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Injector;
 
+import ua.com.fielden.platform.attachment.AttachmentPreviewEntityAction;
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.dom.DomElement;
-import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.EntityDeleteAction;
 import ua.com.fielden.platform.entity.EntityDeleteActionProducer;
 import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityExportAction;
+import ua.com.fielden.platform.entity.EntityNavigationAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.menu.Menu;
 import ua.com.fielden.platform.menu.MenuSaveAction;
@@ -26,13 +34,14 @@ import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig;
+import ua.com.fielden.platform.web.action.StandardMastersWebUiConfig;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.app.config.WebUiBuilder;
-import ua.com.fielden.platform.web.centre.CentreUpdater;
 import ua.com.fielden.platform.web.centre.EntityCentre;
-import ua.com.fielden.platform.web.config.StandardMastersWebUiConfig;
 import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
+import ua.com.fielden.platform.web.interfaces.DeviceProfile;
+import ua.com.fielden.platform.web.ioc.exceptions.MissingWebResourceException;
 import ua.com.fielden.platform.web.menu.IMainMenuBuilder;
 import ua.com.fielden.platform.web.menu.impl.MainMenuBuilder;
 import ua.com.fielden.platform.web.minijs.JsCode;
@@ -61,6 +70,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
      */
     private final List<String> resourcePaths;
     private final Workflows workflow;
+    private final Map<String, String> checksums;
 
     /**
      * Creates abstract {@link IWebUiConfig}.
@@ -80,15 +90,24 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         final LinkedHashSet<String> allResourcePaths = new LinkedHashSet<>();
         allResourcePaths.addAll(Arrays.asList("", "ua/com/fielden/platform/web/"));
         allResourcePaths.addAll(Arrays.asList(externalResourcePaths));
-        this.resourcePaths = new ArrayList<String>(Collections.unmodifiableSet(allResourcePaths));
+        this.resourcePaths = new ArrayList<>(Collections.unmodifiableSet(allResourcePaths));
         Collections.reverse(this.resourcePaths);
+        
+        final ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            checksums = objectMapper.readValue(getStream(generateFileName(resourcePaths, "checksums.json")), LinkedHashMap.class);
+        } catch (final Exception ex) {
+            throw new MissingWebResourceException("Could not read checksums from file.", ex);
+        }
     }
 
     @Override
     public void initConfiguration() {
         final EntityMaster<EntityNewAction> genericEntityNewActionMaster = StandardMastersWebUiConfig.createEntityNewMaster(injector());
         final EntityMaster<EntityEditAction> genericEntityEditActionMaster = StandardMastersWebUiConfig.createEntityEditMaster(injector());
+        final EntityMaster<EntityNavigationAction> genericEntityNavigationActionMaster = StandardMastersWebUiConfig.createEntityNavigationMaster(injector());
         final EntityMaster<EntityExportAction> genericEntityExportActionMaster = StandardMastersWebUiConfig.createExportMaster(injector());
+        final EntityMaster<AttachmentPreviewEntityAction> attachmentPreviewMaster = StandardMastersWebUiConfig.createAttachmentPreviewMaster(injector());
         final EntityMaster<EntityDeleteAction> genericEntityDeleteActionMaster = EntityMaster.noUiFunctionalMaster(EntityDeleteAction.class, EntityDeleteActionProducer.class, injector());
         final EntityMaster<MenuSaveAction> genericMenuSaveMaster = EntityMaster.noUiFunctionalMaster(MenuSaveAction.class, injector());
         final CentreConfigurationWebUiConfig centreConfigurationWebUiConfig = new CentreConfigurationWebUiConfig(injector());
@@ -99,13 +118,23 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         // register generic actions
         .addMaster(genericEntityNewActionMaster)
         .addMaster(genericEntityEditActionMaster)
+        .addMaster(genericEntityNavigationActionMaster)
+        .addMaster(attachmentPreviewMaster)
         .addMaster(genericEntityDeleteActionMaster)
         .addMaster(genericEntityExportActionMaster)
         .addMaster(genericMenuSaveMaster)
-        .addMaster(new MenuWebUiConfig(injector(), desktopMainMenuConfig).master)
+        .addMaster(new MenuWebUiConfig(injector(), desktopMainMenuConfig, mobileMainMenuConfig).master)
+        // centre configuration management
         .addMaster(centreConfigurationWebUiConfig.centreConfigUpdater)
-        .addMaster(centreConfigurationWebUiConfig.centreConfigUpdaterDefaultAction)
-        .addMaster(centreConfigurationWebUiConfig.centreColumnWidthConfigUpdater);// centre configuration management
+        .addMaster(centreConfigurationWebUiConfig.centreColumnWidthConfigUpdater)
+        // centre config actions
+        .addMaster(centreConfigurationWebUiConfig.centreConfigNewActionMaster)
+        .addMaster(centreConfigurationWebUiConfig.centreConfigDuplicateActionMaster)
+        .addMaster(centreConfigurationWebUiConfig.centreConfigLoadActionMaster)
+        .addMaster(centreConfigurationWebUiConfig.centreConfigEditActionMaster)
+        .addMaster(centreConfigurationWebUiConfig.centreConfigDeleteActionMaster)
+        .addMaster(centreConfigurationWebUiConfig.centreConfigSaveActionMaster)
+        .addMaster(centreConfigurationWebUiConfig.overrideCentreConfigMaster);
     }
 
     @Override
@@ -129,45 +158,26 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     }
 
     @Override
-    public final String genDesktopMainWebUIComponent() {
+    public final String genMainWebUIComponent() {
         final Pair<DomElement, JsCode> generatedMenu = desktopMainMenuConfig.generateMenuActions();
-        return ResourceLoader.getText("ua/com/fielden/platform/web/app/tg-desktop-app.html").
+        return ResourceLoader.getText("ua/com/fielden/platform/web/app/tg-app-template.js").
                 replace("<!--menu action dom-->", generatedMenu.getKey().toString()).
                 replace("//actionsObject", generatedMenu.getValue().toString());
     }
 
     @Override
-    public final String genMobileMainWebUIComponent() {
-        final Pair<DomElement, JsCode> generatedMenu = mobileMainMenuConfig.generateMenuActions();
-        return ResourceLoader.getText("ua/com/fielden/platform/web/app/tg-mobile-app.html").
-                replace("<!--menu action dom-->", generatedMenu.getKey().toString()).
-                replace("//actionsObject", generatedMenu.getValue().toString());
-    }
-
-    @Override
-    public final String genDesktopAppIndex() {
-        final String indexSource = ResourceLoader.getText("ua/com/fielden/platform/web/desktop-index.html").
-                replace("@title", title);
+    public final String genAppIndex() {
+        final String indexSource = webUiBuilder.getAppIndex().replace("@title", title);
         if (isDevelopmentWorkflow(this.workflow)) {
-            return indexSource.replace("@desktopStartupResources", "desktop-startup-resources-origin");
+            return indexSource.replace("@startupResources", "startup-resources-origin");
         } else {
-            return indexSource.replace("@desktopStartupResources", "desktop-startup-resources-vulcanized");
+            return indexSource.replace("@startupResources", "startup-resources-vulcanized");
         }
+
     }
 
     private static boolean isDevelopmentWorkflow(final Workflows workflow) {
         return Workflows.development.equals(workflow) || Workflows.vulcanizing.equals(workflow);
-    }
-
-    @Override
-    public String genMobileAppIndex() {
-        final String indexSource = ResourceLoader.getText("ua/com/fielden/platform/web/mobile-index.html").
-                replace("@title", title);
-        if (isDevelopmentWorkflow(this.workflow)) {
-            return indexSource.replace("@mobileStartupResources", "mobile-startup-resources-origin");
-        } else {
-            return indexSource.replace("@mobileStartupResources", "mobile-startup-resources-vulcanized");
-        }
     }
 
     /**
@@ -214,20 +224,22 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     }
 
     @Override
-    public final void clearConfiguration(final IGlobalDomainTreeManager gdtm) {
+    public final void clearConfiguration() {
         logger.error("Clearing configurations...");
         this.webUiBuilder = new WebUiBuilder(this);
         this.desktopMainMenuConfig = new MainMenuBuilder(this);
         this.mobileMainMenuConfig = new MainMenuBuilder(this);
         logger.error("Clearing configurations...done");
-
-        logger.error(String.format("Clearing centres for user [%s]...", gdtm.getUserProvider().getUser()));
-        CentreUpdater.clearAllCentres(gdtm);
-        logger.error(String.format("Clearing centres for user [%s]...done", gdtm.getUserProvider().getUser()));
     }
 
     @Override
-    public Menu getMenuEntity() {
-        return desktopMainMenuConfig.getMenu();
+    public Menu getMenuEntity(final DeviceProfile deviceProfile) {
+        return DeviceProfile.DESKTOP.equals(deviceProfile) ? desktopMainMenuConfig.getMenu() : mobileMainMenuConfig.getMenu();
     }
+    
+    @Override
+    public Optional<String> checksum(final String resourceURI) {
+        return ofNullable(checksums.get(resourceURI));
+    }
+    
 }

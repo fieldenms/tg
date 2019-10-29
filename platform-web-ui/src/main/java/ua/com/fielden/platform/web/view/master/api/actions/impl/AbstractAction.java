@@ -30,6 +30,7 @@ public abstract class AbstractAction implements IImportable {
     private String longDesc;
     private String shortcut;
     private String focusingCallback;
+    private boolean closeAfterExecution = true;
     private final String actionComponentName;
     private final String actionComponentPath;
     private final String indent = "                    ";
@@ -111,6 +112,14 @@ public abstract class AbstractAction implements IImportable {
         return focusingCallback;
     }
 
+    public boolean isCloseAfterExecution() {
+        return closeAfterExecution;
+    }
+
+    public void setCloseAfterExecution(final boolean closeAfterExecution) {
+        this.closeAfterExecution = closeAfterExecution;
+    }
+
     protected String enabledStatesString() {
         return EnabledState.ANY.equals(this.enabledState) ? "'EDIT', 'VIEW'" :
                 EnabledState.EDIT.equals(this.enabledState) ? "'EDIT'" :
@@ -139,6 +148,7 @@ public abstract class AbstractAction implements IImportable {
         attrs.put("enabled-states", "[[" + actionSelector + ".enabledStates]]");
         attrs.put("short-desc", "[[" + actionSelector + ".shortDesc]]");
         attrs.put("long-desc", "[[" + actionSelector + ".longDesc]]");
+        attrs.put("close-after-execution", closeAfterExecution);
         attrs.put("current-state", "[[currentState]]");
 
         if (shortcut != null) {

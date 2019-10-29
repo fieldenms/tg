@@ -18,6 +18,7 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.DateIntervalUnit
 import static ua.com.fielden.platform.entity.query.fluent.enums.DateIntervalUnit.SECOND;
 import static ua.com.fielden.platform.entity.query.fluent.enums.DateIntervalUnit.YEAR;
 import static ua.com.fielden.platform.entity.query.fluent.enums.Functions.ABS;
+import static ua.com.fielden.platform.entity.query.fluent.enums.Functions.ADD_DATE_INTERVAL;
 import static ua.com.fielden.platform.entity.query.fluent.enums.Functions.AVERAGE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.Functions.AVERAGE_DISTINCT;
 import static ua.com.fielden.platform.entity.query.fluent.enums.Functions.CASE_WHEN;
@@ -71,6 +72,7 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.CO
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.COMPARISON_OPERATOR;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.COND_START;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.COND_TOKENS;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.CRIT_COND_OPERATOR;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.END_COND;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.END_EXPR;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.END_FUNCTION;
@@ -81,7 +83,6 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EX
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EXT_PROP;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.FUNCTION;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.FUNCTION_INTERVAL;
-import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ILIKE_OPERATOR;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.IN_OPERATOR;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.IPARAM;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.IVAL;
@@ -90,6 +91,7 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.LI
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.LOGICAL_OPERATOR;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.NEGATED_COND_TOKENS;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.NULL_OPERATOR;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ORDER_TOKENS;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.PARAM;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.PROP;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.QRY_MODELS_AS_QRY_SOURCE;
@@ -102,8 +104,12 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.SE
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.SET_OF_VALUES;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.SORT_ORDER;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.VAL;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.VALUES_AS_QRY_SOURCE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ZERO_ARG_FUNCTION;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -113,12 +119,14 @@ import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.enums.Functions;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
@@ -171,11 +179,7 @@ final class Tokens {
     }
 
     private <E extends Object> List<E> getListFromArray(final E... items) {
-        final List<E> result = new ArrayList<E>();
-        if (items != null) {
-            result.addAll(Arrays.asList(items));
-        }
-        return result;
+        return listOf(items);
     }
 
     public Tokens and() {
@@ -214,6 +218,14 @@ final class Tokens {
         return add(EXISTS_OPERATOR, negated, ALL_OF_EQUERY_TOKENS, getListFromArray(subQueries));
     }
 
+    public Tokens critCondition(final String propName, final String critPropName) {
+        return add(CRIT_COND_OPERATOR, pair(propName, critPropName));
+    }
+
+    public Tokens critCondition(final ICompoundCondition0<?> collectionQueryStart, final String propName, final String critPropName) {
+        return add(CRIT_COND_OPERATOR, pair(t2(collectionQueryStart, propName), critPropName));
+    }
+
     public Tokens isNull(final boolean negated) {
         return add(NULL_OPERATOR, negated);
     }
@@ -242,12 +254,8 @@ final class Tokens {
         return add(COMPARISON_OPERATOR, NE);
     }
 
-    public Tokens like(final boolean negated) {
-        return add(LIKE_OPERATOR, negated);
-    }
-
-    public Tokens iLike(final boolean negated) {
-        return add(ILIKE_OPERATOR, negated);
+    public Tokens like(final LikeOptions options) {
+        return add(LIKE_OPERATOR, options);
     }
 
     public Tokens in(final boolean negated) {
@@ -398,6 +406,10 @@ final class Tokens {
         return add(SET_OF_EXPR_TOKENS, getListFromArray(expressions));
     }
 
+    public Tokens addDateInterval() {
+        return add(FUNCTION, ADD_DATE_INTERVAL);
+    }
+
     public Tokens countDateIntervalFunction() {
         return add(FUNCTION, COUNT_DATE_INTERVAL);
     }
@@ -482,6 +494,10 @@ final class Tokens {
         return add(FUNCTION, Functions.YEAR);
     }
 
+    public Tokens dayOfWeekOf() {
+        return add(FUNCTION, Functions.DAY_OF_WEEK);
+    }
+
     public Tokens dateOf() {
         return add(FUNCTION, DATE);
     }
@@ -546,6 +562,10 @@ final class Tokens {
         return add(ARITHMETICAL_OPERATOR, MOD);
     }
 
+    public Tokens order(OrderingModel order) {
+        return add(ORDER_TOKENS, order);
+    }
+    
     public Tokens asc() {
         return add(SORT_ORDER, ASC);
     }
@@ -596,6 +616,11 @@ final class Tokens {
         return add(QRY_SOURCE_ALIAS, alias);
     }
 
+    public <E extends AbstractEntity<?>> Tokens from() {
+        this.mainSourceType = EntityAggregates.class;
+        return add(QUERY_TOKEN, FROM, VALUES_AS_QRY_SOURCE, EntityAggregates.class);
+    }
+    
     public <E extends AbstractEntity<?>> Tokens from(final Class<E> entityType) {
         if (entityType == null) {
             throw new IllegalArgumentException("Missing entity type in query: " + this.values);

@@ -13,13 +13,14 @@ import org.restlet.representation.Representation;
 import org.restlet.representation.Variant;
 import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
-import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.file_reports.IReport;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
+import ua.com.fielden.platform.web.resources.webui.AbstractWebResource;
 
 /**
  * Resource for handling report requests.
@@ -27,13 +28,13 @@ import ua.com.fielden.platform.file_reports.IReport;
  * @author TG Team
  * 
  */
-public class ReportResource extends ServerResource {
+public class ReportResource extends AbstractWebResource {
 
     private final RestServerUtil restUtil;
     private final IReport dao;
 
-    public ReportResource(final IReport dao, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
-        init(context, request, response);
+    public ReportResource(final IReport dao, final RestServerUtil restUtil, final IDeviceProvider deviceProvider, final Context context, final Request request, final Response response) {
+        super(context, request, response, deviceProvider);
         setNegotiated(true);
         getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
         this.dao = dao;
@@ -46,7 +47,7 @@ public class ReportResource extends ServerResource {
      */
     @Post
     @Override
-    public Representation post(final Representation envelope) throws ResourceException {
+    public Representation post(final Representation envelope) {
         try {
             final List<?> list = restUtil.restoreList(envelope);
             final String reportName = (String) list.get(0);

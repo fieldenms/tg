@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.test.server;
 
+import static java.lang.String.format;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -15,10 +17,14 @@ import java.util.Properties;
 import java.util.SortedSet;
 
 import org.apache.log4j.Logger;
+import org.apache.log4j.xml.DOMConfigurator;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.H2Dialect;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 
+import fielden.test_app.close_leave.TgCloseLeaveExample;
 import ua.com.fielden.platform.algorithm.search.ISearchAlgorithm;
 import ua.com.fielden.platform.algorithm.search.bfs.BreadthFirstSearch;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
@@ -26,6 +32,7 @@ import ua.com.fielden.platform.devdb_support.DomainDrivenDataPopulation;
 import ua.com.fielden.platform.devdb_support.SecurityTokenAssociator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.sample.domain.ITgPerson;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationChild;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParent;
@@ -52,6 +59,7 @@ import ua.com.fielden.platform.sample.domain.TgPersistentStatus;
 import ua.com.fielden.platform.sample.domain.TgPerson;
 import ua.com.fielden.platform.sample.domain.TgPolygon;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
+import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntity;
 import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
@@ -68,6 +76,7 @@ import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.utils.DbUtils;
 import ua.com.fielden.platform.web.test.config.ApplicationDomain;
 
 /**
@@ -84,7 +93,8 @@ import ua.com.fielden.platform.web.test.config.ApplicationDomain;
  *
  */
 public class PopulateDb extends DomainDrivenDataPopulation {
-    private final Logger logger = Logger.getLogger(getClass());
+    private static final Logger LOGGER = Logger.getLogger(PopulateDb.class);
+    
     private final ApplicationDomain applicationDomainProvider = new ApplicationDomain();
 
     private PopulateDb(final IDomainDrivenTestCaseConfiguration config, final Properties props) {
@@ -92,26 +102,37 @@ public class PopulateDb extends DomainDrivenDataPopulation {
     }
 
     public static void main(final String[] args) throws Exception {
+        LOGGER.info("Initialising...");
         final String configFileName = args.length == 1 ? args[0] : "src/main/resources/application.properties";
-        final FileInputStream in = new FileInputStream(configFileName);
         final Properties props = new Properties();
-        props.load(in);
-        in.close();
+        try (final FileInputStream in = new FileInputStream(configFileName)) {
+            props.load(in);
+        }
 
-        // override/set some of the Hibernate properties in order to ensure (re-)creation of the target database
-        props.put("hibernate.show_sql", "false");
-        props.put("hibernate.format_sql", "true");
-        props.put("hibernate.hbm2ddl.auto", "create");
+        DOMConfigurator.configure(props.getProperty("log4j"));
 
-        final IDomainDrivenTestCaseConfiguration config = new DataPopulationConfig(props);
-
+        LOGGER.info("Obtaining Hibernate dialect...");
+        final Class<?> dialectType = Class.forName(props.getProperty("hibernate.dialect"));
+        final Dialect dialect = (Dialect) dialectType.newInstance();
+        LOGGER.info(format("Running with dialect %s...", dialect));
+        final DataPopulationConfig config = new DataPopulationConfig(props);
+        LOGGER.info("Generating DDL and running it against the target DB...");
+        
+        // use TG DDL generation or 
+        // Hibernate DDL generation final List<String> createDdl = DbUtils.generateSchemaByHibernate()
+        final List<String> createDdl = config.getDomainMetadata().generateDatabaseDdl(dialect);
+        final List<String> ddl = dialect instanceof H2Dialect ? 
+                                 DbUtils.prependDropDdlForH2(createDdl) : 
+                                 DbUtils.prependDropDdlForSqlServer(createDdl);
+        DbUtils.execSql(ddl, config.getInstance(HibernateUtil.class).getSessionFactory().getCurrentSession());
+        
         final PopulateDb popDb = new PopulateDb(config, props);
-        popDb.createAndPopulate();
+        popDb.populateDomain();
     }
 
     @Override
     protected void populateDomain() {
-        logger.info("Creating and populating the development database...");
+        LOGGER.info("Creating and populating the development database...");
 
         // VIRTUAL_USER is a virtual user (cannot be persisted) and has full access to all security tokens
         // It should always be used as the current user for data population activities
@@ -121,18 +142,17 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         up.setUser(u);
 
         final User _su = coUser.save(new_(User.class, User.system_users.SU.name()).setBase(true).setEmail("SU@demoapp.com").setActive(true));
-        final User su = coUser.resetPasswd(_su, _su.getKey());
+        final User su = coUser.resetPasswd(_su, _su.getKey()).getKey();
         final User _demo = co$(User.class).save(new_(User.class, "DEMO").setBasedOnUser(su).setEmail("DEMO@demoapp.com").setActive(true));
-        final User demo = coUser.resetPasswd(_demo, _demo.getKey());
+        final User demo = coUser.resetPasswd(_demo, _demo.getKey()).getKey();
 
         final ITgPerson aoPerson = (ITgPerson) co$(TgPerson.class);
         aoPerson.populateNew("Super", "User", "Super User", User.system_users.SU.name());
-        aoPerson.populateNew("Demo", "User", "Demo User", "DEMO");
 
         final UserRole admin = save(new_(UserRole.class, "ADMINISTRATION", "A role, which has a full access to the the system and should be used only for users who need administrative previligies.").setActive(true));
         save(new_composite(UserAndRoleAssociation.class, su, admin));
 
-        logger.info("\tPopulate testing entities...");
+        LOGGER.info("\tPopulate testing entities...");
         final TgPersistentEntityWithProperties ent1 = save(new_(TgPersistentEntityWithProperties.class, "KEY1").setIntegerProp(43).setRequiredValidatedProp(30)
                 .setDesc("Description for entity with key 1. This is a relatively long description to demonstrate how well does is behave during value autocompletion."));
         final TgPersistentEntityWithProperties ent2 = save(new_(TgPersistentEntityWithProperties.class, "KEY2").setIntegerProp(14).setDesc("Description for entity with key 2.").setRequiredValidatedProp(30));
@@ -163,7 +183,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
 
         save(new_(TgFetchProviderTestEntity.class, "FETCH1").setProperty(exampleEnt1).setAdditionalProperty(su));
 
-        logger.info("\tPopulate demo entities...");
+        LOGGER.info("\tPopulate demo entities...");
         createDemoDomain(ent1, ent3, compositeEnt1);
 
         final TgEntityForColourMaster colourEntity = new_(TgEntityForColourMaster.class, "KEY12").setStringProp("ok").setBooleanProp(true).setColourProp(new Colour("aaacdc"));
@@ -204,8 +224,20 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         save(new_(TgGeneratedEntity.class).setEntityKey("KEY1").setCreatedBy(su));
 
         save(new_(TgPersistentEntityWithProperties.class, "FILTERED").setIntegerProp(43).setRequiredValidatedProp(30).setDesc("Description for filtered entity.").setStatus(co$(TgPersistentStatus.class).findByKey("DR")));
-
-        logger.info("\tPopulating messages...");
+        
+        save(new_(TgCloseLeaveExample.class, "KEY1").setDesc("desc 1"));
+        save(new_(TgCloseLeaveExample.class, "KEY2").setDesc("desc 2"));
+        save(new_(TgCloseLeaveExample.class, "KEY3").setDesc("desc 3"));
+        save(new_(TgCloseLeaveExample.class, "KEY4").setDesc("desc 4"));
+        save(new_(TgCloseLeaveExample.class, "KEY5").setDesc("desc 5"));
+        
+        save(new_(TgCompoundEntity.class, "KEY1").setActive(true).setDesc("desc 1"));
+        save(new_(TgCompoundEntity.class, "KEY2").setActive(true).setDesc("desc 2"));
+        save(new_(TgCompoundEntity.class, "KEY3").setActive(true).setDesc("desc 3"));
+        save(new_(TgCompoundEntity.class, "KEY4").setActive(true).setDesc("desc 4"));
+        save(new_(TgCompoundEntity.class, "KEY5").setActive(true).setDesc("desc 5"));
+        
+        LOGGER.info("\tPopulating messages...");
         final Map<String, TgMachine> machines = new HashMap<>();
         try {
             final ClassLoader classLoader = getClass().getClassLoader();
@@ -241,7 +273,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
             throw new IllegalStateException(ex);
         }
 
-        logger.info("\tPopulating machines...");
+        LOGGER.info("\tPopulating machines...");
         try {
             final ClassLoader classLoader = getClass().getClassLoader();
             final File file = new File(classLoader.getResource("gis/realtimeMonitorEntities.js").getFile());
@@ -294,7 +326,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
             throw new IllegalStateException(ex);
         }
 
-        logger.info("\tPopulating geozones...");
+        LOGGER.info("\tPopulating geozones...");
         try {
             final ClassLoader classLoader = getClass().getClassLoader();
             final File file = new File(classLoader.getResource("gis/polygonEntities.js").getFile());
@@ -336,12 +368,12 @@ public class PopulateDb extends DomainDrivenDataPopulation {
             final SecurityTokenProvider provider = new SecurityTokenProvider(settings.pathToSecurityTokens(), settings.securityTokensPackageName()); //  IDomainDrivenTestCaseConfiguration.hbc.getProperty("tokens.path"), IDomainDrivenTestCaseConfiguration.hbc.getProperty("tokens.package")
             final SortedSet<SecurityTokenNode> topNodes = provider.getTopLevelSecurityTokenNodes();
             final SecurityTokenAssociator predicate = new SecurityTokenAssociator(admin, co$(SecurityRoleAssociation.class));
-            final ISearchAlgorithm<Class<? extends ISecurityToken>, SecurityTokenNode> alg = new BreadthFirstSearch<Class<? extends ISecurityToken>, SecurityTokenNode>();
+            final ISearchAlgorithm<Class<? extends ISecurityToken>, SecurityTokenNode> alg = new BreadthFirstSearch<>();
             for (final SecurityTokenNode securityNode : topNodes) {
                 alg.search(securityNode, predicate);
             }
 
-            logger.info("Completed database creation and population.");
+            LOGGER.info("Completed database creation and population.");
         } catch (final Exception e) {
             throw new IllegalStateException(e);
         }

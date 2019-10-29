@@ -1,9 +1,8 @@
 package ua.com.fielden.platform.security.provider;
 
-import static ua.com.fielden.platform.security.SecurityTokenInfo.isSuperTokenOf;
-import static ua.com.fielden.platform.security.SecurityTokenInfo.isTopLevel;
+import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.isSuperTokenOf;
+import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.isTopLevel;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -12,12 +11,15 @@ import java.util.TreeSet;
 
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.security.ISecurityToken;
-import ua.com.fielden.platform.security.tokens.user.UserDeleteToken;
-import ua.com.fielden.platform.security.tokens.user.UserReviewToken;
-import ua.com.fielden.platform.security.tokens.user.UserRoleDeleteToken;
-import ua.com.fielden.platform.security.tokens.user.UserRoleReviewToken;
-import ua.com.fielden.platform.security.tokens.user.UserRoleSaveToken;
-import ua.com.fielden.platform.security.tokens.user.UserSaveToken;
+import ua.com.fielden.platform.security.tokens.attachment.AttachmentDownload_CanExecute_Token;
+import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanDelete_Token;
+import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanSave_Token;
+import ua.com.fielden.platform.security.tokens.user.UserRoleTokensUpdater_CanExecute_Token;
+import ua.com.fielden.platform.security.tokens.user.UserRole_CanDelete_Token;
+import ua.com.fielden.platform.security.tokens.user.UserRole_CanSave_Token;
+import ua.com.fielden.platform.security.tokens.user.UserRolesUpdater_CanExecute_Token;
+import ua.com.fielden.platform.security.tokens.user.User_CanDelete_Token;
+import ua.com.fielden.platform.security.tokens.user.User_CanSave_Token;
 
 /**
  * Searches for all available security tokens in the application based on the provided path and package name. The result is presented as as a tree-like structure containing all
@@ -43,22 +45,26 @@ public class SecurityTokenProvider {
      * @throws Exception
      */
     public SecurityTokenProvider(final String path, final String packageName) {
-        final List<Class<?>> allTokens = ClassesRetriever.getAllClassesInPackageDerivedFrom(path, packageName, ISecurityToken.class);
-        allTokens.add(UserReviewToken.class);
-        allTokens.add(UserSaveToken.class);
-        allTokens.add(UserDeleteToken.class);
-        allTokens.add(UserRoleReviewToken.class);
-        allTokens.add(UserRoleSaveToken.class);
-        allTokens.add(UserRoleDeleteToken.class);
+        final List<Class<? extends ISecurityToken>> allTokens = ClassesRetriever.getAllClassesInPackageDerivedFrom(path, packageName, ISecurityToken.class);
+        allTokens.add(User_CanSave_Token.class);
+        allTokens.add(User_CanDelete_Token.class);
+        allTokens.add(UserRole_CanSave_Token.class);
+        allTokens.add(UserRole_CanDelete_Token.class);
+        allTokens.add(UserRolesUpdater_CanExecute_Token.class);
+        allTokens.add(UserRoleTokensUpdater_CanExecute_Token.class);
+        allTokens.add(Attachment_CanSave_Token.class);
+        allTokens.add(Attachment_CanDelete_Token.class);
+        allTokens.add(AttachmentDownload_CanExecute_Token.class);
+
         topLevelSecurityTokenNodes = buildTokenNodes(allTokens);
     }
 
-    private SortedSet<SecurityTokenNode> buildTokenNodes(final List<Class<?>> allTokens) {
-        final SortedSet<SecurityTokenNode> topTokenNodes = new TreeSet<SecurityTokenNode>();
+    private SortedSet<SecurityTokenNode> buildTokenNodes(final List<Class<? extends ISecurityToken>> allTokens) {
+        final SortedSet<SecurityTokenNode> topTokenNodes = new TreeSet<>();
         // iterate over all tokens and determine top level tokens
         // add them to a separate list and remove from a list over which iteration occurs
-        for (final Iterator<Class<?>> iter = allTokens.iterator(); iter.hasNext();) {
-            final Class<ISecurityToken> token = (Class<ISecurityToken>) iter.next();
+        for (final Iterator<Class<? extends ISecurityToken>> iter = allTokens.iterator(); iter.hasNext();) {
+            final Class<? extends ISecurityToken> token = iter.next();
             if (isTopLevel(token)) {
                 topTokenNodes.add(new SecurityTokenNode(token));
                 iter.remove();
@@ -80,20 +86,18 @@ public class SecurityTokenProvider {
      * @param remainingTokens
      *            -- a list of remaining tokens used for search; all found sub tokens are removed from this list.
      */
-    @SuppressWarnings("unchecked")
-    private void digg(final SecurityTokenNode superTokenNode, final List<Class<?>> remainingTokens) {
-        final List<SecurityTokenNode> toBeRemoved = new ArrayList<SecurityTokenNode>();
+    private void digg(final SecurityTokenNode superTokenNode, final List<Class<? extends ISecurityToken>> remainingTokens) {
+        final SortedSet<SecurityTokenNode> toBeRemoved = new TreeSet<>();
         // find all direct sub tokens of the current super token
-        for (final Iterator<Class<?>> iter = remainingTokens.iterator(); iter.hasNext();) {
-            final Class<ISecurityToken> token = (Class<ISecurityToken>) iter.next();
+        for (final Iterator<Class<? extends ISecurityToken>> iter = remainingTokens.iterator(); iter.hasNext();) {
+            final Class<? extends ISecurityToken> token = iter.next();
             if (isSuperTokenOf(superTokenNode.getToken(), token)) {
                 toBeRemoved.add(new SecurityTokenNode(token, superTokenNode));
+                // remove the found sub-token from the list of remaining tokens to reduce the number of items used further in the search
+                iter.remove();
             }
         }
-        // remove all found sub tokens from the list of remaining tokens -- this reduces the number of items used in the search
-        for (final SecurityTokenNode node : toBeRemoved) {
-            remainingTokens.remove(node.getToken());
-        }
+
         // recursively find all sub tokens of just found sub tokens
         for (final SecurityTokenNode node : toBeRemoved) {
             digg(node, remainingTokens);

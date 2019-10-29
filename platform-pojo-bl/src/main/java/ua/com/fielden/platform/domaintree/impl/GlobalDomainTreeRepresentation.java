@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.domaintree.impl;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 
 import java.util.HashSet;
 
@@ -18,6 +19,7 @@ import ua.com.fielden.platform.ui.config.EntityLocatorConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityMasterConfig;
+import ua.com.fielden.platform.utils.CollectionUtil;
 
 /**
  * A global domain tree implementation.
@@ -53,19 +55,14 @@ public class GlobalDomainTreeRepresentation extends AbstractDomainTree implement
             try {
                 return versionMaintainer.maintainLocatorVersion(elc); // getSerialiser().deserialise(elc.getConfigBody(), ILocatorDomainTreeManagerAndEnhancer.class);
             } catch (final Exception e) {
-                e.printStackTrace();
                 final String message = "Unable to deserialise a default locator instance for type [" + propertyType.getSimpleName() + "] for base user [" + baseOfTheCurrentUser
                         + "] of current user [" + currentUser + "].";
-                logger.error(message);
+                logger.error(message, e);
                 throw new IllegalStateException(message);
             }
         } else { // there is no default locator for "propertyType" -- return a brand new empty instance
             // configure a brand new instance with custom default logic if needed
-            return new LocatorDomainTreeManagerAndEnhancer(getSerialiser(), new HashSet<Class<?>>() {
-                {
-                    add(propertyType);
-                }
-            });
+            return new LocatorDomainTreeManagerAndEnhancer(getSerialiser(), setOf(propertyType));
         }
     }
 

@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.ui.menu;
 
-
 /**
  * A factory for convenient instantiation of {@link MiType} annotations.
  *
@@ -8,22 +7,21 @@ package ua.com.fielden.platform.ui.menu;
  *
  */
 public class MiTypeAnnotation {
-
-    public MiTypeAnnotation() {
-    }
-
+    
     public MiType newInstance(final Class<? extends MiWithConfigurationSupport<?>> miType) {
         return new MiType() {
-
+            
             @Override
             public Class<MiType> annotationType() {
                 return MiType.class;
             }
-
+            
             @Override
             public Class<? extends MiWithConfigurationSupport<?>> value() {
                 return miType;
             }
+            
         };
     }
+    
 }
