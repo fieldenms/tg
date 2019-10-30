@@ -965,22 +965,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 propActionsObject.append(prefix + createActionObject(column.getAction().get()));
             }
             egiColumns.add(column.render());
-            column.widget().ifPresent(widget -> {
-                final DomElement widgetDom = widget.render().attr("slot", "egi-editor");
-                if (!widget.action().isPresent()) {
-                    egiEditors.add(widgetDom);
-                } else {
-                    final ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig config = widget.action().get();
-                    if (!config.isNoAction()) {
-                        final FunctionalActionElement el = FunctionalActionElement.newPropertyActionForMaster(config, funcActionSeq++, widget.propertyName);
-                        importPaths.add(el.importPath());
-                        egiEditors.add(widget.widget().render()
-                                .add(el.render().attr("slot", "property-action").clazz("property-action-icon")));
-                        primaryActionObjects.append(prefix + el.createActionObject());
-                    }
-                }
-
-            });
+            column.renderWidget().ifPresent(widget -> egiEditors.add(widget));
         });
 
         logger.debug("Initiating top-level actions...");

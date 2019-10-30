@@ -3,11 +3,11 @@ package ua.com.fielden.platform.web.centre.api.resultset;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.Pair;
 
-public interface IResultSetAutocompleterConfigAdditionalProps<T extends AbstractEntity<?>> extends IResultSetPropertyActionConfig<T>{
+public interface IResultSetAutocompleterConfigAdditionalProps<T extends AbstractEntity<?>> extends IResultSetBuilder3Ordering<T>{
 
     /** Indicates whether description should also be used to highlighting the matched parts.
      *  This method does not effect whether or not the search actually involves matching by description. */
-    IResultSetPropertyActionConfig<T> lightDesc();
+    IResultSetBuilder3Ordering<T> lightDesc();
 
     /**
      * Method to specify a complete set of properties to be displayed as part of the autocompled list of matcahed values.
@@ -22,5 +22,5 @@ public interface IResultSetAutocompleterConfigAdditionalProps<T extends Abstract
      * @return
      */
     @SuppressWarnings("unchecked")
-    IResultSetPropertyActionConfig<T> withProps(final Pair<String, Boolean> propNameAndLightOption, final Pair<String, Boolean>... morePropNameAndLightOption);
+    IResultSetBuilder3Ordering<T> withProps(final Pair<String, Boolean> propNameAndLightOption, final Pair<String, Boolean>... morePropNameAndLightOption);
 }

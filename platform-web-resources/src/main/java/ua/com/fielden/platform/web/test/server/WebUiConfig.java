@@ -1726,28 +1726,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
         IResultSetBuilder2Properties<TgPersistentEntityWithProperties> beforeAddProp = afterSummary.
                 withAction(EDIT_ACTION.mkAction(TgPersistentEntityWithProperties.class))
                 .also()
-                .addEditableProp("desc").withEditorAction(action(TgExportFunctionalEntity.class)
-                        .withContext(context().withMasterEntity().build())
-                        .postActionSuccess(new PostActionSuccess(""
-                                + "self.setEditorValue4Property('requiredValidatedProp', functionalEntity, 'value');\n"
-                                + "self.setEditorValue4Property('entityProp', functionalEntity, 'parentEntity');\n"
-                                )) // self.retrieve()
-                        .postActionError(new PostActionError(""))
-                        .icon("trending-up")
-                        .shortDesc("Export")
-                        .longDesc("Export action")
-                        .build()).
-                        order(1).asc().
-                        minWidth(200).
-                        withAction(action(TgFunctionalEntityWithCentreContext.class).
-                        withContext(context().withSelectedEntities().build()).
-                        icon("assignment-turned-in").
-                        shortDesc("Function 5").
-                        longDesc("Functional context-dependent action 5 (TgFunctionalEntityWithCentreContext)").
-                        build())
-
+                .addEditableProp("desc")
                 .also();
-
                 if (withCalculatedAndCustomProperties) {
                 beforeAddProp = beforeAddProp.addProp(mkProp("DR", "Defect Radio", String.class)).width(26).
                         withAction(action(TgStatusActivationFunctionalEntity.class).

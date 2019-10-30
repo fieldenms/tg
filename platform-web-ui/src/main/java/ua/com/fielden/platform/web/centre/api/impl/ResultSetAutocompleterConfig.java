@@ -7,12 +7,10 @@ import java.util.List;
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.Pair;
-import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetAutocompleterConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetAutocompleterConfigAdditionalProps;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetAutocompleterWithMatcher;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder3Ordering;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetPropertyActionConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.EntityAutocompletionWidget;
 
 public class ResultSetAutocompleterConfig<T extends AbstractEntity<?>> extends ResultSetBuilderWrapperForEditors<T> implements IResultSetAutocompleterConfig<T> {
@@ -38,24 +36,18 @@ public class ResultSetAutocompleterConfig<T extends AbstractEntity<?>> extends R
     }
 
     @Override
-    public IResultSetPropertyActionConfig<T> lightDesc() {
+    public IResultSetBuilder3Ordering<T> lightDesc() {
         widget.setLightDesc(true);
         return this;
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public IResultSetPropertyActionConfig<T> withProps(final Pair<String, Boolean> propNameAndLightOption, final Pair<String, Boolean>... morePropNameAndLightOption) {
+    public IResultSetBuilder3Ordering<T> withProps(final Pair<String, Boolean> propNameAndLightOption, final Pair<String, Boolean>... morePropNameAndLightOption) {
         final List<Pair<String, Boolean>> pairs = new ArrayList<>();
         pairs.add(propNameAndLightOption);
         pairs.addAll(Arrays.asList(morePropNameAndLightOption));
         widget.setAdditionalProps(pairs);
         return this;
-    }
-
-    @Override
-    public IResultSetBuilder3Ordering<T> withEditorAction(final EntityActionConfig actionConfig) {
-        widget.withAction(actionConfig);
-        return builder;
     }
 }

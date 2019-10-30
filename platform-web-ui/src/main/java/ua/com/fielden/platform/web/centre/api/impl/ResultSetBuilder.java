@@ -68,7 +68,6 @@ import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder7Second
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder9RenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilderAlsoDynamicProps;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilderWidgetSelector;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetPropertyActionConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.centre.api.resultset.layout.ICollapsedCardLayoutConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.layout.IExpandedCardLayoutConfig;
@@ -598,14 +597,8 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IResultSetPropertyActionConfig<T> skipValidation() {
+    public IResultSetBuilder3Ordering<T> skipValidation() {
         this.widget.ifPresent(widget -> widget.skipValidation());
-        return this;
-    }
-
-    @Override
-    public IResultSetBuilder3Ordering<T> withEditorAction(final EntityActionConfig actionConfig) {
-        this.widget.ifPresent(widget -> widget.withAction(actionConfig));
         return this;
     }
 }
