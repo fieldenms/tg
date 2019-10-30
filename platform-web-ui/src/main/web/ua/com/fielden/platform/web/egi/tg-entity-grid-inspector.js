@@ -878,7 +878,9 @@ Polymer({
 
         //Initiate entity master for inline editing
         this.master = this.$.egi_master.assignedNodes()[0];
-        this.master.egi = this;
+        if (this.master) {
+            this.master.egi = this;
+        }
         this._makeRowEditable = this._makeRowEditable.bind(this);
         this._acceptValuesFromMaster = this._acceptValuesFromMaster.bind(this);
         this._closeMaster = this._closeMaster.bind(this);
@@ -907,9 +909,11 @@ Polymer({
         }).bind(this);
         this.async(function () {
             this.keyEventTarget = this._getKeyEventTarget();
-            this._initMasterEditors();
-            this.appendChild(this.master.saveButton);
-            this.appendChild(this.master.cancelButton);
+            if (this.master) {
+                this._initMasterEditors();
+                this.appendChild(this.master.saveButton);
+                this.appendChild(this.master.cancelButton);
+            }
         }, 1);
     },
 
@@ -1140,11 +1144,11 @@ Polymer({
     },
 
     tap: function (entityIndex, entity, index, column) {
-        if (this.master.editors.length > 0 && this._tapOnce && this.canOpenMaster()) {
+        if (this.master && this.master.editors.length > 0 && this._tapOnce && this.canOpenMaster()) {
             delete this._tapOnce;
             this.master._lastFocusedEditor = this.master.editors.find(editor => editor.propertyName === column.property);
             this._makeRowEditable(entityIndex);
-        } else if (this.master.editors.length > 0 && this.canOpenMaster()) {
+        } else if (this.master && this.master.editors.length > 0 && this.canOpenMaster()) {
             this._tapOnce = true;
             this.async(() => {
                 if (this._tapOnce) {
