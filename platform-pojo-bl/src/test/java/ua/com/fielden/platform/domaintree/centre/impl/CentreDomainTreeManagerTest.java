@@ -17,7 +17,6 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import ua.com.fielden.platform.domaintree.IDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
@@ -58,7 +57,7 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
     }
 
     public static Object createDtm_for_CentreDomainTreeManagerTest() {
-        return new CentreDomainTreeManager(serialiser(), createRootTypes_for_CentreDomainTreeManagerTest());
+        return new CentreDomainTreeManager(factory(), createRootTypes_for_CentreDomainTreeManagerTest());
     }
 
     public static Object createIrrelevantDtm_for_CentreDomainTreeManagerTest() {
@@ -161,7 +160,6 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
         allLevels(new IAction() {
             @Override
             public void action(final String name) {
-                illegalAllLocatorActions(dtm().getFirstTick(), message, name);
 
                 // get / set / isEmpty value 1 / 2
                 try {
@@ -308,17 +306,6 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
                 }
             }
         }, "uncheckedProp");
-    }
-
-    @Test
-    public void test_that_locator_actions_cause_exceptions_for_NON_ENTITY_types_of_properties() {
-        final String message = "Non-AE property should cause IllegalArgument exception for locator-related logic.";
-        allLevels(new IAction() {
-            @Override
-            public void action(final String name) {
-                illegalAllLocatorActions(dtm().getFirstTick(), message, name);
-            }
-        }, "integerProp", "moneyProp", "booleanProp");
     }
 
     @Test
@@ -819,10 +806,6 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
 
         // next -- lightweight operation -- no loading will be performed
         assertEquals("The checked properties are incorrect.", Arrays.asList(), dtm().getFirstTick().checkedProperties(rootForCheckedPropsTesting));
-        // serialise and deserialise and then check the order of "checked properties"
-        final byte[] array = serialiser().serialise(dtm());
-        final IDomainTreeManager copy = serialiser().deserialise(array, IDomainTreeManager.class);
-        assertEquals("The checked properties are incorrect.", Arrays.asList(), copy.getFirstTick().checkedProperties(rootForCheckedPropsTesting));
         // simple lightweight example
         assertEquals("The checked properties are incorrect.", Arrays.asList(), dtm().getFirstTick().checkedProperties(MasterEntityForIncludedPropertiesLogic.class));
     }
@@ -866,11 +849,6 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
 
         dtm().getFirstTick().check(rootForCheckedPropsTesting, "booleanProp", false);
         assertEquals("The checked properties are incorrect.", Arrays.asList("bigDecimalProp", "0-placeholder-origin-1-1", "1-placeholder-origin-1-2"), dtm().getFirstTick().checkedProperties(rootForCheckedPropsTesting));
-
-        // serialise and deserialise and then check the order of "checked properties"
-        final byte[] array = serialiser().serialise(dtm());
-        final IDomainTreeManager copy = serialiser().deserialise(array, IDomainTreeManager.class);
-        assertEquals("The checked properties are incorrect.", Arrays.asList("bigDecimalProp", "0-placeholder-origin-1-1", "1-placeholder-origin-1-2"), copy.getFirstTick().checkedProperties(rootForCheckedPropsTesting));
     }
 
     @Test
@@ -976,11 +954,6 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
             fail("MoveToTheEnd operation should be unsupported.");
         } catch (final UnsupportedOperationException e) {
         }
-
-        // serialise and deserialise and then check the order of "checked properties"
-        final byte[] array = serialiser().serialise(dtm());
-        final IDomainTreeManager copy = serialiser().deserialise(array, IDomainTreeManager.class);
-        assertEquals("The checked properties are incorrect.", Arrays.asList("bigDecimalProp", "moneyProp", "booleanProp"), copy.getFirstTick().checkedProperties(rootForCheckedPropsTesting));
     }
 
     @Override

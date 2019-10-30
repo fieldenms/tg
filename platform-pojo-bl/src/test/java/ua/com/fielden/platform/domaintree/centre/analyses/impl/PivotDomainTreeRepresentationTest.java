@@ -74,15 +74,15 @@ public class PivotDomainTreeRepresentationTest extends AbstractAnalysisDomainTre
     }
 
     public static Object createDtm_for_PivotDomainTreeRepresentationTest() {
-        return new PivotDomainTreeRepresentation(serialiser(), createRootTypes_for_PivotDomainTreeRepresentationTest());
+        return new PivotDomainTreeRepresentation(factory(), createRootTypes_for_PivotDomainTreeRepresentationTest());
     }
 
     public static Object createIrrelevantDtm_for_PivotDomainTreeRepresentationTest() {
-        return new CentreDomainTreeManagerAndEnhancer(serialiser(), createRootTypes_for_PivotDomainTreeRepresentationTest());
+        return new CentreDomainTreeManagerAndEnhancer(factory(), createRootTypes_for_PivotDomainTreeRepresentationTest());
     }
 
     protected static Set<Class<?>> createRootTypes_for_PivotDomainTreeRepresentationTest() {
-        final Set<Class<?>> rootTypes = new HashSet<Class<?>>(createRootTypes_for_AbstractAnalysisDomainTreeRepresentationTest());
+        final Set<Class<?>> rootTypes = new HashSet<>(createRootTypes_for_AbstractAnalysisDomainTreeRepresentationTest());
         return rootTypes;
     }
 

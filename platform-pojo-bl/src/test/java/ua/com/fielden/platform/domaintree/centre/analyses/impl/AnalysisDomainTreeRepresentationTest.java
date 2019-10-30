@@ -29,15 +29,15 @@ public class AnalysisDomainTreeRepresentationTest extends AbstractAnalysisDomain
     }
 
     public static Object createDtm_for_AnalysisDomainTreeRepresentationTest() {
-        return new AnalysisDomainTreeRepresentation(serialiser(), createRootTypes_for_AnalysisDomainTreeRepresentationTest());
+        return new AnalysisDomainTreeRepresentation(factory(), createRootTypes_for_AnalysisDomainTreeRepresentationTest());
     }
 
     public static Object createIrrelevantDtm_for_AnalysisDomainTreeRepresentationTest() {
-        return new CentreDomainTreeManagerAndEnhancer(serialiser(), createRootTypes_for_AnalysisDomainTreeRepresentationTest());
+        return new CentreDomainTreeManagerAndEnhancer(factory(), createRootTypes_for_AnalysisDomainTreeRepresentationTest());
     }
 
     protected static Set<Class<?>> createRootTypes_for_AnalysisDomainTreeRepresentationTest() {
-        final Set<Class<?>> rootTypes = new HashSet<Class<?>>(createRootTypes_for_AbstractAnalysisDomainTreeRepresentationTest());
+        final Set<Class<?>> rootTypes = new HashSet<>(createRootTypes_for_AbstractAnalysisDomainTreeRepresentationTest());
         return rootTypes;
     }
 

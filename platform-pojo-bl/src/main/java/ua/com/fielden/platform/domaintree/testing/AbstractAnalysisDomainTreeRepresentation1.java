@@ -1,13 +1,10 @@
 package ua.com.fielden.platform.domaintree.testing;
 
-import java.nio.ByteBuffer;
 import java.util.Set;
 
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AbstractAnalysisDomainTreeRepresentation;
-import ua.com.fielden.platform.domaintree.impl.EnhancementLinkedRootsSet;
-import ua.com.fielden.platform.domaintree.impl.EnhancementSet;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -20,18 +17,18 @@ public class AbstractAnalysisDomainTreeRepresentation1 extends AbstractAnalysisD
     /**
      * A <i>representation</i> constructor for the first time instantiation.
      * 
-     * @param serialiser
+     * @param entityFactory
      * @param rootTypes
      */
-    public AbstractAnalysisDomainTreeRepresentation1(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-        this(serialiser, rootTypes, createSet(), new AbstractAnalysisAddToDistributionTickRepresentation1(), new AbstractAnalysisAddToAggregationTickRepresentation1());
+    public AbstractAnalysisDomainTreeRepresentation1(final EntityFactory entityFactory, final Set<Class<?>> rootTypes) {
+        this(entityFactory, rootTypes, createSet(), new AbstractAnalysisAddToDistributionTickRepresentation1(), new AbstractAnalysisAddToAggregationTickRepresentation1());
     }
 
     /**
      * A <i>representation</i> constructor. Initialises also children references on itself.
      */
-    protected AbstractAnalysisDomainTreeRepresentation1(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final AbstractAnalysisAddToDistributionTickRepresentation firstTick, final AbstractAnalysisAddToAggregationTickRepresentation secondTick) {
-        super(serialiser, rootTypes, excludedProperties, firstTick, secondTick);
+    protected AbstractAnalysisDomainTreeRepresentation1(final EntityFactory entityFactory, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final AbstractAnalysisAddToDistributionTickRepresentation firstTick, final AbstractAnalysisAddToAggregationTickRepresentation secondTick) {
+        super(entityFactory, rootTypes, excludedProperties, firstTick, secondTick);
     }
 
     @Override
@@ -59,27 +56,6 @@ public class AbstractAnalysisDomainTreeRepresentation1 extends AbstractAnalysisD
          * field.
          */
         public AbstractAnalysisAddToAggregationTickRepresentation1() {
-        }
-    }
-
-    /**
-     * A specific Kryo serialiser for {@link AbstractAnalysisDomainTreeRepresentation1}.
-     * 
-     * @author TG Team
-     * 
-     */
-    public static class AbstractAnalysisDomainTreeRepresentation1Serialiser extends AbstractDomainTreeRepresentationSerialiser<AbstractAnalysisDomainTreeRepresentation1> {
-        public AbstractAnalysisDomainTreeRepresentation1Serialiser(final ISerialiser serialiser) {
-            super(serialiser);
-        }
-
-        @Override
-        public AbstractAnalysisDomainTreeRepresentation1 read(final ByteBuffer buffer) {
-            final EnhancementLinkedRootsSet rootTypes = readValue(buffer, EnhancementLinkedRootsSet.class);
-            final EnhancementSet excludedProperties = readValue(buffer, EnhancementSet.class);
-            final AbstractAnalysisAddToDistributionTickRepresentation1 firstTick = readValue(buffer, AbstractAnalysisAddToDistributionTickRepresentation1.class);
-            final AbstractAnalysisAddToAggregationTickRepresentation1 secondTick = readValue(buffer, AbstractAnalysisAddToAggregationTickRepresentation1.class);
-            return new AbstractAnalysisDomainTreeRepresentation1(serialiser(), rootTypes, excludedProperties, firstTick, secondTick);
         }
     }
 }

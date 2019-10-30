@@ -10,22 +10,18 @@ import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.inject.Injector;
+import com.google.inject.Module;
+
 import ua.com.fielden.platform.associations.one2many.MasterEntityWithOneToManyAssociation;
 import ua.com.fielden.platform.associations.one2one.MasterEntityWithOneToOneAssociation;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
-import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancerCache;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.api.impl.ProvidedSerialisationClassProvider;
-import ua.com.fielden.platform.serialisation.api.impl.Serialiser;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
-
-import com.google.inject.Injector;
-import com.google.inject.Module;
 
 /**
  * Test case for {@link Finder}'s functionality for finding <code>linkProperty</code> and determining association type in generated types.
@@ -39,8 +35,6 @@ public class FindLinkPropertyInGeneratedTypeTest {
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
 
-    private final ISerialiser serialiser = new Serialiser(factory, new ProvidedSerialisationClassProvider(new Class[] { MasterEntityWithOneToOneAssociation.class,
-            MasterEntityWithOneToManyAssociation.class }), DomainTreeEnhancerCache.CACHE);
     private final Set<Class<?>> rootTypes = new HashSet<Class<?>>() {
         {
             add(MasterEntityWithOneToOneAssociation.class);
@@ -56,7 +50,7 @@ public class FindLinkPropertyInGeneratedTypeTest {
 
     @Before
     public void setUp() {
-        dtm = new DomainTreeEnhancer(serialiser, rootTypes);
+        dtm = new DomainTreeEnhancer(factory, rootTypes);
 
         // calc4One2One
         dtm.addCalculatedProperty(MasterEntityWithOneToOneAssociation.class, "", "2 * intProp", "Calculated property", "desc", NO_ATTR, "intProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
