@@ -20,10 +20,10 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.CalculatedPropertyInfo;
 import ua.com.fielden.platform.domaintree.impl.CustomProperty;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
@@ -66,14 +66,14 @@ public class CentreUpdaterUtils extends CentreUpdater {
      * Creates empty centre manager with calculated and custom properties.
      * 
      * @param root
-     * @param serialiser
+     * @param entityFactory
      * @param domainTreeEnhancerCache
      * @param calculatedAndCustomProperties
      * @param miType
      * @return
      */
-    public static ICentreDomainTreeManagerAndEnhancer createEmptyCentre(final Class<?> root, final ISerialiser serialiser, final IDomainTreeEnhancerCache domainTreeEnhancerCache, final T2<Map<Class<?>, Set<CalculatedPropertyInfo>>, Map<Class<?>, List<CustomProperty>>> calculatedAndCustomProperties, final Class<? extends MiWithConfigurationSupport<?>> miType) {
-        final CentreDomainTreeManagerAndEnhancer centre = new CentreDomainTreeManagerAndEnhancer(serialiser, domainTreeEnhancerCache, setOf(root), calculatedAndCustomProperties, miType);
+    public static ICentreDomainTreeManagerAndEnhancer createEmptyCentre(final Class<?> root, final EntityFactory entityFactory, final IDomainTreeEnhancerCache domainTreeEnhancerCache, final T2<Map<Class<?>, Set<CalculatedPropertyInfo>>, Map<Class<?>, List<CustomProperty>>> calculatedAndCustomProperties, final Class<? extends MiWithConfigurationSupport<?>> miType) {
+        final CentreDomainTreeManagerAndEnhancer centre = new CentreDomainTreeManagerAndEnhancer(entityFactory, domainTreeEnhancerCache, setOf(root), calculatedAndCustomProperties, miType);
         // initialise checkedProperties tree to make it more predictable in getting meta-info from "checkedProperties"
         centre.getFirstTick().checkedProperties(root);
         centre.getSecondTick().checkedProperties(root);

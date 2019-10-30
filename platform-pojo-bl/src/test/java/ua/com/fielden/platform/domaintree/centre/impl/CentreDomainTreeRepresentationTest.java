@@ -50,7 +50,7 @@ public class CentreDomainTreeRepresentationTest extends AbstractDomainTreeRepres
     }
 
     public static Object createDtm_for_CentreDomainTreeRepresentationTest() {
-        return new CentreDomainTreeRepresentation(serialiser(), createRootTypes_for_CentreDomainTreeRepresentationTest());
+        return new CentreDomainTreeRepresentation(factory(), createRootTypes_for_CentreDomainTreeRepresentationTest());
     }
 
     public static Object createIrrelevantDtm_for_CentreDomainTreeRepresentationTest() {
@@ -58,7 +58,7 @@ public class CentreDomainTreeRepresentationTest extends AbstractDomainTreeRepres
     }
 
     protected static Set<Class<?>> createRootTypes_for_CentreDomainTreeRepresentationTest() {
-        final Set<Class<?>> rootTypes = new HashSet<Class<?>>(createRootTypes_for_AbstractDomainTreeRepresentationTest());
+        final Set<Class<?>> rootTypes = new HashSet<>(createRootTypes_for_AbstractDomainTreeRepresentationTest());
         rootTypes.add(EntityWithCompositeKey.class);
         rootTypes.add(EntityWithKeyTitleAndWithAEKeyType.class);
         rootTypes.add(MasterSyntheticEntity.class);
@@ -456,13 +456,13 @@ public class CentreDomainTreeRepresentationTest extends AbstractDomainTreeRepres
     public void test_that_orderings_by_default_for_second_tick_are_desired_and_can_be_altered() {
         // DEFAULT CONTRACT //
         // entities with simple key should have ASC ordering on that key
-        assertEquals("Default value is incorrect.", Arrays.asList(new Pair<String, Ordering>("", Ordering.ASCENDING)), dtm().getSecondTick().orderedPropertiesByDefault(MasterEntity.class));
+        assertEquals("Default value is incorrect.", Arrays.asList(new Pair<>("", Ordering.ASCENDING)), dtm().getSecondTick().orderedPropertiesByDefault(MasterEntity.class));
         // entities with composite and other complicated key should have no ordering applied
         assertEquals("Default value is incorrect.", Arrays.asList(), dtm().getSecondTick().orderedPropertiesByDefault(EntityWithCompositeKey.class));
         assertEquals("Default value is incorrect.", Arrays.asList(), dtm().getSecondTick().orderedPropertiesByDefault(EntityWithKeyTitleAndWithAEKeyType.class));
 
         // Alter DEFAULT and check //
-        final List<Pair<String, Ordering>> ordering = Arrays.asList(new Pair<String, Ordering>("integerProp", Ordering.ASCENDING), new Pair<String, Ordering>("moneyProp", Ordering.DESCENDING));
+        final List<Pair<String, Ordering>> ordering = Arrays.asList(new Pair<>("integerProp", Ordering.ASCENDING), new Pair<>("moneyProp", Ordering.DESCENDING));
         dtm().getSecondTick().setOrderedPropertiesByDefault(MasterEntity.class, ordering);
         assertEquals("Default value is incorrect.", ordering, dtm().getSecondTick().orderedPropertiesByDefault(MasterEntity.class));
     }

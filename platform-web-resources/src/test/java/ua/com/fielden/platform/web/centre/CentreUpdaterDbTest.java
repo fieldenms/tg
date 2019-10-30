@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.web.centre;
 
-import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.VALUE;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.ID_PREFIX;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.VALUE;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterTestMixin.ROOT;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterTestMixin.expectedDiffWithValue;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterTestMixin.testDiffCreationAndApplication;

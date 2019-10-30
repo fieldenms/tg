@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.domaintree.centre.analyses.impl;
 
-import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -10,7 +9,7 @@ import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeMan
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeRepresentation.AnalysisAddToAggregationTickRepresentation;
 import ua.com.fielden.platform.domaintree.centre.analyses.impl.AnalysisDomainTreeRepresentation.AnalysisAddToDistributionTickRepresentation;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 
 /**
  * A domain tree manager for analyses.
@@ -24,23 +23,23 @@ public class AnalysisDomainTreeManager extends AbstractAnalysisDomainTreeManager
     /**
      * A <i>manager</i> constructor for the first time instantiation.
      *
-     * @param serialiser
+     * @param entityFactory
      * @param rootTypes
      */
-    public AnalysisDomainTreeManager(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-        this(serialiser, new AnalysisDomainTreeRepresentation(serialiser, rootTypes), null, new AnalysisAddToDistributionTickManager(), new AnalysisAddToAggregationTickManager(), null);
+    public AnalysisDomainTreeManager(final EntityFactory entityFactory, final Set<Class<?>> rootTypes) {
+        this(entityFactory, new AnalysisDomainTreeRepresentation(entityFactory, rootTypes), null, new AnalysisAddToDistributionTickManager(), new AnalysisAddToAggregationTickManager(), null);
     }
 
     /**
      * A <i>manager</i> constructor.
      *
-     * @param serialiser
+     * @param entityFactory
      * @param dtr
      * @param firstTick
      * @param secondTick
      */
-    protected AnalysisDomainTreeManager(final ISerialiser serialiser, final AnalysisDomainTreeRepresentation dtr, final Boolean visible, final AnalysisAddToDistributionTickManager firstTick, final AnalysisAddToAggregationTickManager secondTick, final Integer visibleDistributedValuesNumber) {
-        super(serialiser, dtr, visible, firstTick, secondTick);
+    protected AnalysisDomainTreeManager(final EntityFactory entityFactory, final AnalysisDomainTreeRepresentation dtr, final Boolean visible, final AnalysisAddToDistributionTickManager firstTick, final AnalysisAddToAggregationTickManager secondTick, final Integer visibleDistributedValuesNumber) {
+        super(entityFactory, dtr, visible, firstTick, secondTick);
 
         this.visibleDistributedValuesNumber = visibleDistributedValuesNumber;
     }
@@ -97,34 +96,6 @@ public class AnalysisDomainTreeManager extends AbstractAnalysisDomainTreeManager
         @Override
         protected AnalysisAddToAggregationTickRepresentation tr() {
             return (AnalysisAddToAggregationTickRepresentation) super.tr();
-        }
-    }
-
-    /**
-     * A specific Kryo serialiser for {@link AnalysisDomainTreeManager}.
-     *
-     * @author TG Team
-     *
-     */
-    public static class AnalysisDomainTreeManagerSerialiser extends AbstractAnalysisDomainTreeManagerSerialiser<AnalysisDomainTreeManager> {
-        public AnalysisDomainTreeManagerSerialiser(final ISerialiser serialiser) {
-            super(serialiser);
-        }
-
-        @Override
-        public AnalysisDomainTreeManager read(final ByteBuffer buffer) {
-            final AnalysisDomainTreeRepresentation dtr = readValue(buffer, AnalysisDomainTreeRepresentation.class);
-            final AnalysisAddToDistributionTickManager firstTick = readValue(buffer, AnalysisAddToDistributionTickManager.class);
-            final AnalysisAddToAggregationTickManager secondTick = readValue(buffer, AnalysisAddToAggregationTickManager.class);
-            final Boolean visible = readValue(buffer, Boolean.class);
-            final Integer visibleDistributedValuesNumber = readValue(buffer, Integer.class);
-            return new AnalysisDomainTreeManager(serialiser(), dtr, visible, firstTick, secondTick, visibleDistributedValuesNumber);
-        }
-
-        @Override
-        public void write(final ByteBuffer buffer, final AnalysisDomainTreeManager manager) {
-            super.write(buffer, manager);
-            writeValue(buffer, manager.visibleDistributedValuesNumber);
         }
     }
 

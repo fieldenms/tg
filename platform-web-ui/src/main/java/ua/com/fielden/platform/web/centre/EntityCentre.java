@@ -76,6 +76,7 @@ import ua.com.fielden.platform.domaintree.impl.CustomProperty;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
@@ -222,7 +223,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private Optional<JsCode> customCodeOnAttach = Optional.empty();
 
     private final IUserProvider userProvider;
-    private final ISerialiser serialiser;
     private final IDomainTreeEnhancerCache domainTreeEnhancerCache;
     private final IWebUiConfig webUiConfig;
     private final IEntityCentreConfig eccCompanion;
@@ -252,7 +252,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         this.postCentreCreated = postCentreCreated;
 
         userProvider = injector.getInstance(IUserProvider.class);
-        serialiser = injector.getInstance(ISerialiser.class);
         domainTreeEnhancerCache = injector.getInstance(IDomainTreeEnhancerCache.class);
         webUiConfig = injector.getInstance(IWebUiConfig.class);
         eccCompanion = companionFinder.find(ua.com.fielden.platform.ui.config.EntityCentreConfig.class);
@@ -283,8 +282,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      * @param postCentreCreated
      * @return
      */
-    private ICentreDomainTreeManagerAndEnhancer createUserUnspecificDefaultCentre(final EntityCentreConfig<T> dslDefaultConfig, final ISerialiser serialiser, final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated) {
-        return createDefaultCentre0(dslDefaultConfig, serialiser, postCentreCreated, false);
+    private ICentreDomainTreeManagerAndEnhancer createUserUnspecificDefaultCentre(final EntityCentreConfig<T> dslDefaultConfig, final EntityFactory entityFactory, final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated) {
+        return createDefaultCentre0(dslDefaultConfig, entityFactory, postCentreCreated, false);
     }
 
     /**
@@ -294,8 +293,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      * @param postCentreCreated
      * @return
      */
-    private ICentreDomainTreeManagerAndEnhancer createDefaultCentre(final EntityCentreConfig<T> dslDefaultConfig, final ISerialiser serialiser, final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated) {
-        return createDefaultCentre0(dslDefaultConfig, serialiser, postCentreCreated, true);
+    private ICentreDomainTreeManagerAndEnhancer createDefaultCentre(final EntityCentreConfig<T> dslDefaultConfig, final EntityFactory entityFactory, final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated) {
+        return createDefaultCentre0(dslDefaultConfig, entityFactory, postCentreCreated, true);
     }
 
     /**
@@ -352,7 +351,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      */
     public static <T extends AbstractEntity<?>> ICentreDomainTreeManagerAndEnhancer createDefaultCentreFrom(
         final EntityCentreConfig<T> dslDefaultConfig,
-        final ISerialiser serialiser,
+        final EntityFactory entityFactory,
         final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated,
         final boolean userSpecific,
         final Class<T> entityType,
@@ -363,7 +362,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final Optional<List<ResultSetProp<T>>> resultSetProps = dslDefaultConfig.getResultSetProperties();
         final ListMultimap<String, SummaryPropDef> summaryExpressions = dslDefaultConfig.getSummaryExpressions();
 
-        final ICentreDomainTreeManagerAndEnhancer cdtmae = createEmptyCentre(entityType, serialiser, domainTreeEnhancerCache, createCalculatedAndCustomProperties(entityType, resultSetProps, summaryExpressions), miType);
+        final ICentreDomainTreeManagerAndEnhancer cdtmae = createEmptyCentre(entityType, entityFactory, domainTreeEnhancerCache, createCalculatedAndCustomProperties(entityType, resultSetProps, summaryExpressions), miType);
 
         final Optional<List<String>> selectionCriteria = dslDefaultConfig.getSelectionCriteria();
         if (selectionCriteria.isPresent()) {
@@ -422,13 +421,13 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      * Creates default centre from Centre DSL configuration by adding calculated / custom props, applying selection crit defaults, EGI column widths / ordering etc.
      *
      * @param dslDefaultConfig
-     * @param serialiser
+     * @param entityFactory
      * @param postCentreCreated
      * @param userSpecific
      * @return
      */
-    private ICentreDomainTreeManagerAndEnhancer createDefaultCentre0(final EntityCentreConfig<T> dslDefaultConfig, final ISerialiser serialiser, final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated, final boolean userSpecific) {
-        return createDefaultCentreFrom(dslDefaultConfig, serialiser, postCentreCreated, userSpecific, entityType, domainTreeEnhancerCache, miType, injector);
+    private ICentreDomainTreeManagerAndEnhancer createDefaultCentre0(final EntityCentreConfig<T> dslDefaultConfig, final EntityFactory entityFactory, final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated, final boolean userSpecific) {
+        return createDefaultCentreFrom(dslDefaultConfig, entityFactory, postCentreCreated, userSpecific, entityType, domainTreeEnhancerCache, miType, injector);
     }
 
     /**
@@ -853,7 +852,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private final ICentreDomainTreeManagerAndEnhancer getAssociatedEntityCentreManager() {
         final User user = getUser();
         if (user == null) {
-            return createUserUnspecificDefaultCentre(dslDefaultConfig, injector.getInstance(ISerialiser.class), postCentreCreated);
+            return createUserUnspecificDefaultCentre(dslDefaultConfig, injector.getInstance(EntityFactory.class), postCentreCreated);
         } else {
             return updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, empty(), DESKTOP, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
         }
@@ -875,7 +874,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      * @return
      */
     public ICentreDomainTreeManagerAndEnhancer createDefaultCentre() {
-        return createDefaultCentre(dslDefaultConfig, injector.getInstance(ISerialiser.class), postCentreCreated);
+        return createDefaultCentre(dslDefaultConfig, injector.getInstance(EntityFactory.class), postCentreCreated);
     }
 
     private IRenderable createRenderableRepresentation(final ICentreDomainTreeManagerAndEnhancer centre) {

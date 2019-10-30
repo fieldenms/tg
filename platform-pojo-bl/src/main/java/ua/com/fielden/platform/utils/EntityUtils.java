@@ -797,8 +797,8 @@ public class EntityUtils {
      * Returns a deep copy of an object (all hierarchy of properties will be copied).<br>
      * <br>
      *
-     * <b>Important</b> : Depending on {@link ISerialiser} implementation, all classes that are used in passed object hierarchy should correspond some contract. For e.g. Kryo based
-     * serialiser requires all the classes to be registered and to have default constructor, simple java serialiser requires all the classes to implement {@link Serializable} etc.
+     * <b>Important</b> : Depending on {@link ISerialiser} implementation, all classes that are used in passed object hierarchy should correspond some contract.
+     * For e.g. simple java serialiser requires all the classes to implement {@link Serializable} etc.
      *
      * @param oldObj
      * @param serialiser

@@ -1,14 +1,10 @@
 package ua.com.fielden.platform.serialisation;
 
-import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.serialisation.api.impl.TgJackson.ERR_RESTRICTED_TYPE_SERIALISATION;
-import static ua.com.fielden.platform.serialisation.jackson.serialisers.EntityJsonSerialiser.ERR_RESTRICTED_TYPE_SERIALISATION_DUE_TO_PROP_TYPE;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -65,14 +61,10 @@ import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithPolymorp
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithSameEntity;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithSetOfEntities;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithString;
-import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithUserSecret;
 import ua.com.fielden.platform.serialisation.jackson.entities.FactoryForTestingEntities;
 import ua.com.fielden.platform.serialisation.jackson.entities.OtherEntity;
 import ua.com.fielden.platform.serialisation.jackson.entities.SubBaseEntity1;
 import ua.com.fielden.platform.serialisation.jackson.entities.SubBaseEntity2;
-import ua.com.fielden.platform.serialisation.jackson.exceptions.EntityDeserialisationException;
-import ua.com.fielden.platform.serialisation.jackson.exceptions.EntitySerialisationException;
-import ua.com.fielden.platform.serialisation.jackson.serialisers.EntityJsonSerialiser;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -91,8 +83,8 @@ public class EntitySerialisationWithJacksonTest {
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final Date testingDate = new Date();
     private final FactoryForTestingEntities factory = new FactoryForTestingEntities(injector.getInstance(EntityFactory.class), testingDate);
-    private final ISerialiserEngine jacksonSerialiser = Serialiser.createSerialiserWithKryoAndJackson(factory.getFactory(), createClassProvider(), createSerialisationTypeEncoder(), createIdOnlyProxiedEntityTypeCache()).getEngine(SerialiserEngines.JACKSON);
-    private final ISerialiserEngine jacksonDeserialiser = Serialiser.createSerialiserWithKryoAndJackson(factory.getFactory(), createClassProvider(), createSerialisationTypeEncoder(), createIdOnlyProxiedEntityTypeCache()).getEngine(SerialiserEngines.JACKSON);
+    private final ISerialiserEngine jacksonSerialiser = Serialiser.createSerialiserWithJackson(factory.getFactory(), createClassProvider(), createSerialisationTypeEncoder(), createIdOnlyProxiedEntityTypeCache()).getEngine(SerialiserEngines.JACKSON);
+    private final ISerialiserEngine jacksonDeserialiser = Serialiser.createSerialiserWithJackson(factory.getFactory(), createClassProvider(), createSerialisationTypeEncoder(), createIdOnlyProxiedEntityTypeCache()).getEngine(SerialiserEngines.JACKSON);
     
     private IIdOnlyProxiedEntityTypeCache createIdOnlyProxiedEntityTypeCache() {
         return new IdOnlyProxiedEntityTypeCacheForTests();

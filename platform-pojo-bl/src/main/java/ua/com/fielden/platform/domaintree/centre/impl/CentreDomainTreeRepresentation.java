@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.domaintree.centre.impl;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -13,7 +12,6 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation;
 import ua.com.fielden.platform.domaintree.centre.IWidthRepresentation;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
-import ua.com.fielden.platform.domaintree.impl.EnhancementLinkedRootsSet;
 import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
 import ua.com.fielden.platform.domaintree.impl.EnhancementRootsMap;
 import ua.com.fielden.platform.domaintree.impl.EnhancementSet;
@@ -23,10 +21,10 @@ import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.ResultOnly;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -42,15 +40,15 @@ public class CentreDomainTreeRepresentation extends AbstractDomainTreeRepresenta
     /**
      * A <i>representation</i> constructor for the first time instantiation. Initialises also children references on itself.
      */
-    public CentreDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-        this(serialiser, rootTypes, createSet(), new AddToCriteriaTick(), new AddToResultSetTick());
+    public CentreDomainTreeRepresentation(final EntityFactory entityFactory, final Set<Class<?>> rootTypes) {
+        this(entityFactory, rootTypes, createSet(), new AddToCriteriaTick(), new AddToResultSetTick());
     }
 
     /**
      * A <i>representation</i> constructor. Initialises also children references on itself.
      */
-    protected CentreDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final AddToCriteriaTick firstTick, final AddToResultSetTick secondTick) {
-        super(serialiser, rootTypes, excludedProperties, firstTick, secondTick);
+    protected CentreDomainTreeRepresentation(final EntityFactory entityFactory, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final AddToCriteriaTick firstTick, final AddToResultSetTick secondTick) {
+        super(entityFactory, rootTypes, excludedProperties, firstTick, secondTick);
     }
 
     @Override
@@ -307,9 +305,9 @@ public class CentreDomainTreeRepresentation extends AbstractDomainTreeRepresenta
                 return rootsListsOfOrderings.get(root);
             }
             final Class<?> keyType = PropertyTypeDeterminator.determinePropertyType(root, AbstractEntity.KEY);
-            final List<Pair<String, Ordering>> pairs = new ArrayList<Pair<String, Ordering>>();
+            final List<Pair<String, Ordering>> pairs = new ArrayList<>();
             if (!EntityUtils.isEntityType(keyType) && !DynamicEntityKey.class.isAssignableFrom(keyType)) {
-                pairs.add(new Pair<String, Ordering>("", Ordering.ASCENDING));
+                pairs.add(new Pair<>("", Ordering.ASCENDING));
             }
             return pairs;
         }
@@ -317,7 +315,7 @@ public class CentreDomainTreeRepresentation extends AbstractDomainTreeRepresenta
         @Override
         public IOrderingRepresentation setOrderedPropertiesByDefault(final Class<?> root, final List<Pair<String, Ordering>> orderedPropertiesByDefault) {
             illegalExcludedProperties(getDtr(), root, "", "Could not set an 'ordering by default' for already 'excluded' type [" + root.getSimpleName() + "].");
-            rootsListsOfOrderings.put(root, new ArrayList<Pair<String, Ordering>>(orderedPropertiesByDefault));
+            rootsListsOfOrderings.put(root, new ArrayList<>(orderedPropertiesByDefault));
             return this;
         }
 
@@ -380,27 +378,6 @@ public class CentreDomainTreeRepresentation extends AbstractDomainTreeRepresenta
                 return false;
             }
             return true;
-        }
-    }
-
-    /**
-     * A specific Kryo serialiser for {@link CentreDomainTreeRepresentation}.
-     *
-     * @author TG Team
-     *
-     */
-    public static class CentreDomainTreeRepresentationSerialiser extends AbstractDomainTreeRepresentationSerialiser<CentreDomainTreeRepresentation> {
-        public CentreDomainTreeRepresentationSerialiser(final ISerialiser serialiser) {
-            super(serialiser);
-        }
-
-        @Override
-        public CentreDomainTreeRepresentation read(final ByteBuffer buffer) {
-            final EnhancementLinkedRootsSet rootTypes = readValue(buffer, EnhancementLinkedRootsSet.class);
-            final EnhancementSet excludedProperties = readValue(buffer, EnhancementSet.class);
-            final AddToCriteriaTick firstTick = readValue(buffer, AddToCriteriaTick.class);
-            final AddToResultSetTick secondTick = readValue(buffer, AddToResultSetTick.class);
-            return new CentreDomainTreeRepresentation(serialiser(), rootTypes, excludedProperties, firstTick, secondTick);
         }
     }
 }

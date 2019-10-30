@@ -62,6 +62,7 @@ import ua.com.fielden.platform.sample.domain.ITgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.ITgBogie;
 import ua.com.fielden.platform.sample.domain.ITgBogieLocation;
 import ua.com.fielden.platform.sample.domain.ITgEntityWithComplexSummaries;
+import ua.com.fielden.platform.sample.domain.ITgFuelType;
 import ua.com.fielden.platform.sample.domain.ITgFuelUsage;
 import ua.com.fielden.platform.sample.domain.ITgMakeCount;
 import ua.com.fielden.platform.sample.domain.ITgOrgUnit5;
@@ -119,6 +120,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     private final ITgVehicleMake vehicleMakeDao = getInstance(ITgVehicleMake.class);
     private final ITgVehicle coVehicle = getInstance(ITgVehicle.class);
     private final ITgFuelUsage fuelUsageDao = getInstance(ITgFuelUsage.class);
+    private final ITgFuelType coFuelType = getInstance(ITgFuelType.class);
     private final IUser userDao = getInstance(IUser.class);
     private final IUserRole userRoleDao = getInstance(IUserRole.class);
     private final IUserAndRoleAssociation userAndRoleAssociationDao = getInstance(IUserAndRoleAssociation.class);
@@ -491,7 +493,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void test_query_with_union_entity_id_property() {
+    public void can_query_union_entity_common_subprop_id() {
         final Long workshopId = workshopDao.findByKey("WSHOP1").getId();
         final EntityResultQueryModel<TgBogie> qry = select(TgBogie.class).where().prop("location.id").eq().val(workshopId).model();
         final EntityResultQueryModel<TgBogie> expQry = select(TgBogie.class).where().prop("location.workshop.id").eq().val(workshopId).model();
@@ -499,11 +501,38 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void test_query_with_union_entity_key_property() {
+    public void can_query_union_entity_common_subprop_key() {
         final String workshopKey = "WSHOP1";
         final EntityResultQueryModel<TgBogie> qry = select(TgBogie.class).where().prop("location.key").eq().val(workshopKey).model();
         final EntityResultQueryModel<TgBogie> expQry = select(TgBogie.class).where().prop("location.workshop.key").eq().val(workshopKey).model();
         assertEquals(bogieDao.getEntity(from(expQry).model()), bogieDao.getEntity(from(qry).model()));
+    }
+
+    @Test
+    public void can_query_union_entity_common_subprop_desc() {
+        final String workshopDesc = "Workshop 1";
+        final EntityResultQueryModel<TgBogie> qry = select(TgBogie.class).where().prop("location.desc").eq().val(workshopDesc).model();
+        final EntityResultQueryModel<TgBogie> expQry = select(TgBogie.class).where().prop("location.workshop.desc").eq().val(workshopDesc).model();
+        assertEquals(bogieDao.getEntity(from(expQry).model()), bogieDao.getEntity(from(qry).model()));
+    }
+    
+    @Test
+    public void can_query_union_entity_common_subprop_fuel_type() {
+        final TgFuelType fuelType = coFuelType.findByKey("P");
+        final EntityResultQueryModel<TgBogie> qry = select(TgBogie.class).where().prop("location.fuelType").eq().val(fuelType).model();
+        final EntityResultQueryModel<TgBogie> expQry = select(TgBogie.class).where().prop("location.wagonSlot.fuelType").eq().val(fuelType).model();
+        assertEquals(bogieDao.getEntity(from(expQry).model()), bogieDao.getEntity(from(qry).model()));
+    }
+
+    @Test
+    public void cannot_query_union_entity_common_subprop_fuel_type_key() {
+        final String fuelTypeKey = "P";
+        try {
+            bogieDao.getEntity(from(select(TgBogie.class).where().prop("location.fuelType.key").eq().val(fuelTypeKey).model()).model());
+            fail("Should have failed while trying to query union prop common prop subprop.");
+            //TODO remove such limitation in EQL3.
+        } catch (final Exception e) {
+        }   
     }
 
     @Test
@@ -1880,7 +1909,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         save(new_composite(TgWagonSlot.class, wagon2, 1).setBogie(bogie5));
         save(new_composite(TgWagonSlot.class, wagon2, 2).setBogie(bogie6));
         
-        final TgWagonSlot wagonSlot = save(new_composite(TgWagonSlot.class, wagon2, 3).setBogie(bogie7));
+        final TgWagonSlot wagonSlot = save(new_composite(TgWagonSlot.class, wagon2, 3).setBogie(bogie7).setFuelType(petrolFuelType));
         final TgBogieLocation slotLocation = co$(TgBogieLocation.class).new_();
         slotLocation.setWagonSlot(wagonSlot);
         save(bogie7.setLocation(slotLocation));

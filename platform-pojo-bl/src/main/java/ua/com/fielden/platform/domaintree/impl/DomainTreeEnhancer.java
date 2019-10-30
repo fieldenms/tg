@@ -14,7 +14,6 @@ import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -50,7 +49,6 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -133,12 +131,11 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
      * However, no calculated properties have been added -- the resultant types will be enhanced. They will use a marker property (for more information see
      * {@link #generateHierarchy(Set, Map)} method).
      *
-     * @param rootTypes
-     *            -- root types
+     * @param rootTypes -- root types
      *
      */
-    public DomainTreeEnhancer(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-        this(serialiser, rootTypes, createEmptyCalculatedPropsFromRootTypes(rootTypes), createEmptyCustomPropsFromRootTypes(rootTypes));
+    public DomainTreeEnhancer(final EntityFactory entityFactory, final Set<Class<?>> rootTypes) {
+        this(entityFactory, rootTypes, createEmptyCalculatedPropsFromRootTypes(rootTypes), createEmptyCustomPropsFromRootTypes(rootTypes));
     }
 
     /**
@@ -147,8 +144,8 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
      * discarded) before serialisation.
      *
      */
-    private DomainTreeEnhancer(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Map<Class<?>, Set<CalculatedPropertyInfo>> calculatedPropertiesInfo, final Map<Class<?>, List<CustomProperty>> customProperties) {
-        super(serialiser);
+    private DomainTreeEnhancer(final EntityFactory entityFactory, final Set<Class<?>> rootTypes, final Map<Class<?>, Set<CalculatedPropertyInfo>> calculatedPropertiesInfo, final Map<Class<?>, List<CustomProperty>> customProperties) {
+        super(entityFactory);
 
         this.originalAndEnhancedRootTypesAndArrays = new LinkedHashMap<>();
         // init a map with NOT enhanced types and empty byte arrays.
@@ -181,7 +178,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
      * @param enhancer
      */
     private DomainTreeEnhancer(final DomainTreeEnhancer enhancer) {
-        super(enhancer.getSerialiser());
+        super(enhancer.getFactory());
         
         this.rootAnnotations.addAll(enhancer.rootAnnotations);
         this.rootNameSuffix = enhancer.rootNameSuffix;
@@ -226,12 +223,12 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
     /**
      * A constructor <b>strictly</b> for version maintenance.
      *
-     * @param serialiser
+     * @param entityFactory
      * @param originalAndEnhancedRootTypesAndArrays
      * @param calculatedProperties
      */
-    public DomainTreeEnhancer(final ISerialiser serialiser, final Map<Class<?>, Pair<Class<?>, Map<String, ByteArray>>> originalAndEnhancedRootTypesAndArrays, final Map<Class<?>, List<CalculatedProperty>> calculatedProperties, final Map<Class<?>, List<CustomProperty>> customProperties) {
-        super(serialiser);
+    public DomainTreeEnhancer(final EntityFactory entityFactory, final Map<Class<?>, Pair<Class<?>, Map<String, ByteArray>>> originalAndEnhancedRootTypesAndArrays, final Map<Class<?>, List<CalculatedProperty>> calculatedProperties, final Map<Class<?>, List<CustomProperty>> customProperties) {
+        super(entityFactory);
         this.originalAndEnhancedRootTypesAndArrays = originalAndEnhancedRootTypesAndArrays;
         this.calculatedProperties = calculatedProperties;
         this.customProperties = customProperties;
@@ -257,7 +254,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
      * @return
      */
     public static DomainTreeEnhancer createFrom(
-            final ISerialiser serialiser,
+            final EntityFactory entityFactory,
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final Set<Class<?>> rootTypes,
             final Map<Class<?>, Set<CalculatedPropertyInfo>> calculatedPropertiesInfo,
@@ -267,7 +264,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         if (cachedInstance != null) {
             return new DomainTreeEnhancer(cachedInstance);
         } else {
-            final DomainTreeEnhancer newInstance = new DomainTreeEnhancer(serialiser, rootTypes, calculatedPropertiesInfo, customProperties);
+            final DomainTreeEnhancer newInstance = new DomainTreeEnhancer(entityFactory, rootTypes, calculatedPropertiesInfo, customProperties);
             
             if (miType.isPresent()) {
                 for (final Class<?> root: rootTypes) {
@@ -303,7 +300,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
      * @return
      */
     private static final Map<Class<?>, Set<CalculatedPropertyInfo>> createEmptyCalculatedPropsFromRootTypes(final Set<Class<?>> rootTypes) {
-        final Map<Class<?>, Set<CalculatedPropertyInfo>> map = new LinkedHashMap<Class<?>, Set<CalculatedPropertyInfo>>();
+        final Map<Class<?>, Set<CalculatedPropertyInfo>> map = new LinkedHashMap<>();
         for (final Class<?> rootType : rootTypes) {
             map.put(rootType, new HashSet<CalculatedPropertyInfo>());
         }
@@ -331,7 +328,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
      * @return
      */
     private static Map<Class<?>, Pair<Class<?>, Map<String, ByteArray>>> createOriginalAndEnhancedRootTypesAndArraysFromRootTypes(final Set<Class<?>> rootTypes) {
-        final Map<Class<?>, Pair<Class<?>, Map<String, ByteArray>>> originalAndEnhancedRootTypesAndArrays = new LinkedHashMap<Class<?>, Pair<Class<?>, Map<String, ByteArray>>>();
+        final Map<Class<?>, Pair<Class<?>, Map<String, ByteArray>>> originalAndEnhancedRootTypesAndArrays = new LinkedHashMap<>();
         for (final Class<?> rootType : rootTypes) {
             originalAndEnhancedRootTypesAndArrays.put(rootType, new Pair<Class<?>, Map<String, ByteArray>>(rootType, new LinkedHashMap<String, ByteArray>()));
         }
@@ -889,45 +886,11 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         for (final Entry<Class<?>, Set<CalculatedPropertyInfo>> entry : calculatedPropertiesInfo.entrySet()) {
             final List<CalculatedProperty> list = new ArrayList<>();
             for (final CalculatedPropertyInfo cpInfo : entry.getValue()) {
-                list.add(CalculatedProperty.createCorrect(dte.getSerialiser().factory(), cpInfo.getRoot(), cpInfo.getContextPath(), cpInfo.getCustomPropertyName(), cpInfo.getContextualExpression(), cpInfo.getTitle(), cpInfo.getDesc(), cpInfo.getAttribute(), cpInfo.getOriginationProperty(), cpInfo.getPrecision(), cpInfo.getScale(), dte, true));
+                list.add(CalculatedProperty.createCorrect(dte.getFactory(), cpInfo.getRoot(), cpInfo.getContextPath(), cpInfo.getCustomPropertyName(), cpInfo.getContextualExpression(), cpInfo.getTitle(), cpInfo.getDesc(), cpInfo.getAttribute(), cpInfo.getOriginationProperty(), cpInfo.getPrecision(), cpInfo.getScale(), dte, true));
             }
             map.put(entry.getKey(), list);
         }
         return map;
-    }
-
-    /**
-     * A specific Kryo serialiser for {@link DomainTreeEnhancer}.
-     *
-     * @author TG Team
-     *
-     */
-    public static class DomainTreeEnhancerSerialiser extends AbstractDomainTreeSerialiser<DomainTreeEnhancer> {
-        private final IDomainTreeEnhancerCache domainTreeEnhancerCache;
-        
-        public DomainTreeEnhancerSerialiser(final ISerialiser serialiser, final IDomainTreeEnhancerCache domainTreeEnhancerCache) {
-            super(serialiser);
-            this.domainTreeEnhancerCache = domainTreeEnhancerCache;
-        }
-        
-        @Override
-        public DomainTreeEnhancer read(final ByteBuffer buffer) {
-            // IMPORTANT : rootTypes() and calculatedPropertiesInfo() are the mirror for "calculatedProperties".
-            // So they should be used for serialisation, comparison and hashCode() implementation.
-            final Set<Class<?>> rootTypes = readValue(buffer, LinkedHashSet.class);
-            final Map<Class<?>, Set<CalculatedPropertyInfo>> calculatedPropertiesInfo = readValue(buffer, LinkedHashMap.class);
-            final Map<Class<?>, List<CustomProperty>> customProperties = readValue(buffer, LinkedHashMap.class);
-            return createFrom(serialiser(), domainTreeEnhancerCache, rootTypes, calculatedPropertiesInfo, customProperties, empty());
-        }
-        
-        @Override
-        public void write(final ByteBuffer buffer, final DomainTreeEnhancer domainTreeEnhancer) {
-            // IMPORTANT : rootTypes() and calculatedPropertiesInfo() are the mirror for "calculatedProperties".
-            // So they should be used for serialisation, comparison and hashCode() implementation.
-            writeValue(buffer, domainTreeEnhancer.rootTypes());
-            writeValue(buffer, domainTreeEnhancer.calculatedPropertiesInfo());
-            writeValue(buffer, domainTreeEnhancer.customProperties());
-        }
     }
 
     @Override

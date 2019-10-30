@@ -1,8 +1,5 @@
 package ua.com.fielden.platform.serialisation.jackson;
 
-import static com.esotericsoftware.minlog.Log.TRACE;
-import static com.esotericsoftware.minlog.Log.trace;
-
 import java.util.HashMap;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -72,10 +69,6 @@ public class JacksonContext {
             }
             
             map.clear();
-        }
-
-        if (TRACE) {
-            trace("Jackson", "Context reset.");
         }
     }
     
