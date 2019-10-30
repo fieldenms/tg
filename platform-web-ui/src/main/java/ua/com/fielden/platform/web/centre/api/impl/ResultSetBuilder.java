@@ -68,7 +68,6 @@ import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder7Second
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder9RenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilderAlsoDynamicProps;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilderWidgetSelector;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetEditorConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetPropertyActionConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.centre.api.resultset.layout.ICollapsedCardLayoutConfig;
@@ -90,7 +89,6 @@ import ua.com.fielden.platform.web.view.master.api.widgets.decimal.impl.DecimalW
 import ua.com.fielden.platform.web.view.master.api.widgets.hyperlink.impl.HyperlinkWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.money.impl.MoneyWidget;
-import ua.com.fielden.platform.web.view.master.api.widgets.multilinetext.impl.MultilineTextWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.singlelinetext.impl.SinglelineTextWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.spinner.impl.SpinnerWidget;
 
@@ -593,20 +591,6 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         final EntityAutocompletionWidget editor = new EntityAutocompletionWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(widgetPropName, root).getValue()), widgetPropName, (Class<AbstractEntity<?>>)propertyType);
         this.widget = Optional.of(editor);
         return new ResultSetAutocompleterConfig<>(this, editor);
-    }
-
-    @Override
-    public IResultSetEditorConfig<T> asSinglelineText() {
-        final SinglelineTextWidget editor = new SinglelineTextWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(this.propName.get(), this.builder.getEntityType()).getValue()), this.propName.get());
-        this.widget = Optional.of(editor);
-        return new ResultSetEditorConfig<>(this, editor);
-    }
-
-    @Override
-    public IResultSetEditorConfig<T> asMultilineText() {
-        final MultilineTextWidget editor = new MultilineTextWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(this.propName.get(), this.builder.getEntityType()).getValue()), this.builder.getEntityType(), this.propName.get());
-        this.widget = Optional.of(editor);
-        return new ResultSetEditorConfig<>(this, editor);
     }
 
     public void assignMatcher(final String propName, final Class<? extends IValueMatcherWithContext<T, ?>> matcher) {

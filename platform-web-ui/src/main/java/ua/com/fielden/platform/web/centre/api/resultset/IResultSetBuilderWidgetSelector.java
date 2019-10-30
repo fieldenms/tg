@@ -5,6 +5,4 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 public interface IResultSetBuilderWidgetSelector<T extends AbstractEntity<?>> extends IResultSetEditorConfig<T>{
 
     IResultSetAutocompleterConfig<T> asAutocompleter();
-    IResultSetEditorConfig<T> asSinglelineText();
-    IResultSetEditorConfig<T> asMultilineText();
 }

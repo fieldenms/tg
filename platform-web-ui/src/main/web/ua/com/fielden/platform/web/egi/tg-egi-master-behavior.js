@@ -18,7 +18,7 @@ const TgEgiMasterBehaviorImpl = {
         _lastFocusedEditor: Object,
         _shouldEditNextRow: {
             type: Boolean,
-            value :false
+            value: false
         },
         _shouldEditPreviousRow: {
             type: Boolean,
@@ -75,7 +75,7 @@ const TgEgiMasterBehaviorImpl = {
         const focusableElemnts = this._lastFocusedEditor ? [this._lastFocusedEditor] : 
                                 [...this.egi.$.left_egi_master.querySelectorAll("slot"), ...this.egi.$.centre_egi_master.querySelectorAll("slot")]
                                 .filter(slot => slot.assignedNodes().length > 0)
-                                .map(slot => slot.assignedNodes()[0]).filter(element => element.hasAttribute("tg-editor"));
+                                .map(slot => slot.assignedNodes()[0]).filter(element => element.nodeType !== Node.TEXT_NODE && element.hasAttribute("tg-editor"));
         if (this._focusLastOnRetrieve) {
             return focusableElemnts.reverse();
         }
@@ -201,7 +201,6 @@ const TgEgiMasterBehaviorImpl = {
             if (this.egi.filteredEntities.length <= this.editableRow + 1) {
                 this._focusNextEgiElementTo(event, true, activeElement);
             }
-
         }
     },
 

@@ -74,8 +74,8 @@ public class PropertyColumnElement implements IRenderable, IImportable {
         this.summary = new ArrayList<>();
     }
 
-    public Optional<DomElement> renderWidget() {
-        return widget.map(widget -> widget.render().attr("slot", "egi-editor"));
+    public Optional<AbstractWidget> widget() {
+        return widget;
     }
 
     public Optional<String> widgetImportPath() {

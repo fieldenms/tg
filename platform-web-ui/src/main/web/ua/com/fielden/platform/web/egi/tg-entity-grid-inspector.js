@@ -141,7 +141,6 @@ const template = html`
         }
         .table-data-row {
             z-index: 0;
-            position: relative;
             font-size: 1rem;
             font-weight: 400;
             color: #212121;
@@ -177,9 +176,7 @@ const template = html`
             @apply --layout-horizontal;
         }
         .egi-master {
-            position: relative;
             height: 4.1rem;
-            z-index: 1;
             font-size: 1rem;
             font-weight: 400;
             color: #212121;
@@ -401,7 +398,7 @@ const template = html`
     <!--EGI template-->
     <div id="paperMaterial" class="grid-container" style$="[[_calcMaterialStyle(showMarginAround)]]" fit-to-height$="[[fitToHeight]]">
         <!--Table toolbar-->
-        <tg-responsive-toolbar show-top-shadow$="[[_toolbarShadowVisible(_showTopShadow, headerFixed)]]" style$="[[_calcToolbarStyle(canDragFrom)]]">
+        <tg-responsive-toolbar id="egiToolbar" show-top-shadow$="[[_toolbarShadowVisible(_showTopShadow, headerFixed)]]" style$="[[_calcToolbarStyle(canDragFrom)]]">
             <paper-progress id="progressBar" hidden$="[[!_showProgress]]"></paper-progress>
             <slot id="top_action_selctor" slot="entity-specific-action" name="entity-specific-action"></slot>
             <slot slot="standart-action" name="standart-action"></slot>
@@ -631,22 +628,6 @@ function _insertMaster (container, egiMaster, entityIndex) {
     container.insertBefore(egiMaster, row.nextSibling);
     egiMaster.style.display = null;
 };
-
-function isBehindOtherElement(element, parent) {
-    const boundingRect = element.getBoundingClientRect()
-    // adjust coordinates to get more accurate results
-    const left = boundingRect.left + 1
-    const right = boundingRect.right - 1
-    const top = boundingRect.top + 1
-    const bottom = boundingRect.bottom - 1
-  
-    if(parent.shadowRoot.elementFromPoint(left, top) !== element) return true
-    if(parent.shadowRoot.elementFromPoint(right, top) !== element) return true
-    if(parent.shadowRoot.elementFromPoint(left, bottom) !== element) return true
-    if(parent.shadowRoot.elementFromPoint(right, bottom) !== element) return true
-  
-    return false;
-  };
 
 Polymer({
 
@@ -903,7 +884,6 @@ Polymer({
         this._closeMaster = this._closeMaster.bind(this);
         this.$.left_egi_master.addEventListener('focusin', this._scrollToVisibleLeftMaster.bind(this));
         this.$.centre_egi_master.addEventListener('focusin', this._scrollToVisibleCentreMaster.bind(this));
-        //this.master._cancelValues = this._cancelAndCloseMaster.bind(this);
     },
 
     attached: function () {
@@ -2071,8 +2051,7 @@ Polymer({
                 _insertMaster(this.$.centre_egi, this.$.centre_egi_master, entityIndex);
                 _insertMaster(this.$.right_egi, this.$.right_egi_master, entityIndex);
                 const rowOffset = this.$.centre_egi.querySelectorAll(".table-data-row")[entityIndex].offsetTop;
-                const topEgiOffset = this.$.top_egi.offsetTop;
-                this.$.master_actions.style.top = (rowOffset + topEgiOffset - this.$.scrollableContainer.scrollTop - 35/*The desired offset of master actions above the row*/) + "px";
+                this.$.master_actions.style.top = (rowOffset - 35/*The desired offset of master actions above the row*/) + "px";
                 this.$.master_actions.style.left = this.$.scrollableContainer.scrollLeft + 16/*Desired distance from left border of egi */ + "px";
                 this.$.master_actions.style.display = 'flex';
                 this.master.editableRow = entityIndex;
@@ -2095,11 +2074,6 @@ Polymer({
         this.$.centre_egi_master.style.display = 'none';
         this.$.right_egi_master.style.display = 'none';
     },
-
-    // _cancelAndCloseMaster: function () {
-    //     this._cancelMasterValues();
-    //     this._closeMaster();
-    // },
 
     _initMasterEditors: function () {
         if (this.master) {
