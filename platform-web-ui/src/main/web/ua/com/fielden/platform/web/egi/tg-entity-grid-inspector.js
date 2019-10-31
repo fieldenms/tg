@@ -894,6 +894,11 @@ Polymer({
         if (this.customShortcuts) {
             this._ownKeyBindings[this.customShortcuts] = '_shortcutPressed';
         }
+        //Initialise egi master shortcuts
+        this._ownKeyBindings["enter"] = '_editNextRow';
+        this._ownKeyBindings["alt+down"] = '_editNextRow';
+        this._ownKeyBindings["alt+up"] = '_editPreviousRow';
+        this._ownKeyBindings["esc"] = '_cancelMaster';
         //Initialising property column mappings
         this.columnPropertiesMapper = (function (entity) {
             const result = [];
@@ -915,6 +920,24 @@ Polymer({
                 this.appendChild(this.master.cancelButton);
             }
         }, 1);
+    },
+
+    _editNextRow: function () {
+        if (this.isEditing()) {
+            this.master._saveAndEditNextRow();
+        }
+    },
+
+    _editPreviousRow: function () {
+        if (this.isEditing()) {
+            this.master._saveAndEditPreviousRow();
+        }
+    },
+
+    _cancelMaster: function () {
+        if (this.isEditing()) {
+            this.master._cancelMaster();
+        }
     },
 
     //API functions to update entity and rendering hints

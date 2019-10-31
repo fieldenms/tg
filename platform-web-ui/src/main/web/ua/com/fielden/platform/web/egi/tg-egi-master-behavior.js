@@ -1,9 +1,9 @@
 import '/resources/components/postal-lib.js';
 
-import { TgEntityMasterBehavior } from '/resources/master/tg-entity-master-behavior.js';
+import { TgEntityMasterBehavior, selectEnabledEditor} from '/resources/master/tg-entity-master-behavior.js';
 import { queryElements } from '/resources/components/tg-element-selector-behavior.js';
 import { IronA11yKeysBehavior } from '/resources/polymer/@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
-import { tearDownEvent, deepestActiveElement, getActiveParentAnd, FOCUSABLE_ELEMENTS_SELECTOR } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, deepestActiveElement, getParentAnd, getActiveParentAnd, FOCUSABLE_ELEMENTS_SELECTOR } from '/resources/reflection/tg-polymer-utils.js';
 
 const TgEgiMasterBehaviorImpl = {
 
@@ -71,6 +71,35 @@ const TgEgiMasterBehaviorImpl = {
         this._postClose();
     },
 
+    /**
+     * Looks for the first input that is not hidden and not disabled to focus it.
+     */
+    _focusFirstInput: function () {
+        const editors = this.getEditors();
+        let editorIndex, firstInput, selectedElement;
+        for (editorIndex = 0; editorIndex < editors.length; editorIndex++) {
+            if (editors[editorIndex].offsetParent !== null) {
+                selectedElement = selectEnabledEditor(editors[editorIndex]);
+                firstInput = firstInput || selectedElement;
+                if (editors[editorIndex]._error && !editors[editorIndex].isInWarning()) {
+                    if (selectedElement) {
+                        selectedElement.focus();
+                        return;
+                    }
+                }
+            }
+        }
+        // if the input has been identified then focus it, otherwise do nothing
+        if (firstInput) {
+            firstInput.focus();
+        } else {
+            const focusableParent = getParentAnd(this, parent => parent.matches(FOCUSABLE_ELEMENTS_SELECTOR));
+            if (focusableParent) {
+                focusableParent.focus();
+            }
+        }
+    },
+
     getEditors: function () {
         const focusableElemnts = this._lastFocusedEditor ? [this._lastFocusedEditor] : 
                                 [...this.egi.$.left_egi_master.querySelectorAll("slot"), ...this.egi.$.centre_egi_master.querySelectorAll("slot")]
@@ -136,14 +165,18 @@ const TgEgiMasterBehaviorImpl = {
         if (IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'alt+up')) {
             this._lastFocusedEditor = getActiveParentAnd(element => element.hasAttribute('tg-editor'));
             this._saveAndEditPreviousRow();
+            tearDownEvent(event);
         } else if (IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'alt+down')) {
             this._lastFocusedEditor = getActiveParentAnd(element => element.hasAttribute('tg-editor'));
             this._saveAndEditNextRow();
+            tearDownEvent(event);
         } else if (IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'esc')) {
-            this.egi._closeMaster();
+            this.egi._cancelMaster();
+            tearDownEvent(event);
         } else if (IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'enter')) {
             this._lastFocusedEditor = getActiveParentAnd(element => element.hasAttribute('tg-editor'));
             this._saveAndEditNextRow();
+            tearDownEvent(event);
         }
     },
 
@@ -157,26 +190,42 @@ const TgEgiMasterBehaviorImpl = {
         }
     },
 
+    _cancelMaster: function() {
+        const activeElement = deepestActiveElement();
+        this.egi._closeMaster();
+        this._focusNextEgiElementTo(event, true, activeElement);
+    },
+
     _saveAndEditNextRow: function () {
+        const activeElement = deepestActiveElement();
+        if (this.egi.filteredEntities.length <= this.editableRow + 1) {
+            this._focusNextEgiElementTo(event, true, activeElement);
+        }
         if (!this.saveButton._disabled) {
             this._shouldEditNextRow = true;
             const editorToCommit = getActiveParentAnd(element => element.hasAttribute('tg-editor'));
-            editorToCommit.commit();
+            if (editorToCommit) {
+                editorToCommit.commit();
+            }
             this.saveButton._asyncRun();
         } else {
-            this.egi._acceptValuesFromMaster();
             this.egi._makeRowEditable(this.editableRow + 1);
         }
     },
 
     _saveAndEditPreviousRow: function () {
+        const activeElement = deepestActiveElement();
+        if (this.editableRow - 1 < 0) {
+            this._focusNextEgiElementTo(event, false, activeElement);
+        }
         if (!this.saveButton._disabled) {
             this._shouldEditPreviousRow = true;
             const editorToCommit = getActiveParentAnd(element => element.hasAttribute('tg-editor'));
-            editorToCommit.commit();
+            if (editorToCommit) {
+                editorToCommit.commit();
+            }
             this.saveButton._asyncRun();
         } else {
-            this.egi._acceptValuesFromMaster();
             this.egi._makeRowEditable(this.editableRow - 1);
         }
     },
@@ -198,9 +247,6 @@ const TgEgiMasterBehaviorImpl = {
                     || (indexOfFixedEditor >= 0 && indexOfFixedEditor === fixedEditors.length - 1 && scrollableEditors.length === 0)) {
             tearDownEvent(event);
             this._saveAndEditNextRow();
-            if (this.egi.filteredEntities.length <= this.editableRow + 1) {
-                this._focusNextEgiElementTo(event, true, activeElement);
-            }
         }
     },
 
@@ -222,9 +268,6 @@ const TgEgiMasterBehaviorImpl = {
             tearDownEvent(event);
             this._focusLastOnRetrieve = true;
             this._saveAndEditPreviousRow();
-            if (this.editableRow - 1 < 0) {
-                this._focusNextEgiElementTo(event, false, activeElement);
-            }
         }
     },
 

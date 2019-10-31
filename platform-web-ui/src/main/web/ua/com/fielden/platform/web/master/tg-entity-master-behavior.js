@@ -8,7 +8,7 @@ import { TgElementSelectorBehavior } from '/resources/components/tg-element-sele
 import { TgRequiredPropertiesFocusTraversalBehavior } from '/resources/components/tg-required-properties-focus-traversal-behavior.js';
 import { queryElements } from '/resources/components/tg-element-selector-behavior.js';
 
-const selectEnabledEditor = function (editor) {
+export const selectEnabledEditor = function (editor) {
     const selectedElement = editor.shadowRoot.querySelector('.custom-input:not([hidden]):not([disabled])');
     return (selectedElement && selectedElement.shadowRoot && selectedElement.shadowRoot.querySelector('textarea')) || selectedElement;
 }
