@@ -6,6 +6,7 @@ import static graphql.schema.GraphQLInputObjectType.newInputObject;
 import static graphql.schema.GraphQLObjectType.newObject;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -290,7 +291,8 @@ public class GraphQLService implements IGraphQLService {
                 int.class.isAssignableFrom(type) || 
                 AbstractEntity.class == type || // CentreContextHolder.selectedEntities => List<AbstractEntity>, masterEntity => AbstractEntity
                 AbstractView.class == type || 
-                PropertyDescriptor.class == type
+                PropertyDescriptor.class == type ||
+                Modifier.isAbstract(type.getModifiers())
         ) {
             return Optional.empty();
         } else if (EntityUtils.isDate(type)) {
@@ -336,7 +338,8 @@ public class GraphQLService implements IGraphQLService {
                 int.class.isAssignableFrom(type) || 
                 AbstractEntity.class == type || // CentreContextHolder.selectedEntities => List<AbstractEntity>, masterEntity => AbstractEntity
                 AbstractView.class == type || 
-                PropertyDescriptor.class == type
+                PropertyDescriptor.class == type ||
+                Modifier.isAbstract(type.getModifiers())
         ) {
             return Optional.empty();
         } else if (EntityUtils.isDate(type)) {
