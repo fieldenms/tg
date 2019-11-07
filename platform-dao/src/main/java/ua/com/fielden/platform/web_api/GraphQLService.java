@@ -33,6 +33,7 @@ import graphql.schema.GraphQLTypeReference;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.IContinuationData;
 import ua.com.fielden.platform.entity.NoKey;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -305,6 +306,8 @@ public class GraphQLService implements IGraphQLService {
             return Optional.of(new GraphQLTypeReference(type.getSimpleName()));
         } else if (NoKey.class.isAssignableFrom(type)) {
             return Optional.empty();
+        } else if (DynamicEntityKey.class.isAssignableFrom(type)) { // this is for the weird cases where DynamicEntityKey is used but no @CompositeKeyMember exists
+            return Optional.empty();
         } else {
             throw new UnsupportedOperationException(String.format("Field: type [%s] is unknown (type = %s, name = %s).", type.getSimpleName(), entityType.getSimpleName(), name));
         }
@@ -348,6 +351,8 @@ public class GraphQLService implements IGraphQLService {
         } else if (EntityUtils.isEntityType(type)) {
             return Optional.of(Scalars.GraphQLString);
         } else if (NoKey.class.isAssignableFrom(type)) {
+            return Optional.empty();
+        } else if (DynamicEntityKey.class.isAssignableFrom(type)) { // this is for the weird cases where DynamicEntityKey is used but no @CompositeKeyMember exists
             return Optional.empty();
         } else {
             throw new UnsupportedOperationException(String.format("Mutation input argument field: type [%s] is unknown (type = %s, name = %s).", type.getSimpleName(), entityType.getSimpleName(), name));
