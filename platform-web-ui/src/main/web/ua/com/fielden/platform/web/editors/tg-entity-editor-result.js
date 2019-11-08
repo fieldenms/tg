@@ -369,7 +369,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                     '',
                     '',
                     v.key,
-                    function () { return this._propValueByName(v, 'desc'); }.bind(this),
+                    () => this._propValueByName(v, 'desc'),
                     withDesc === true
                 );
 
@@ -385,7 +385,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                             'class="additional-prop" ',
                             '<span class="prop-name"><span>' + this._propTitleByName(v, propName) + '</span>:</span>',
                             this._propValueByName(v, propName),
-                            function () { return this._propValueByName(v, propName + '.desc'); }.bind(this),
+                            () => this._propValueByName(v, propName + '.desc'),
                             this.reflector.isEntity(v.get(propName)) && typeof v.get(propName)['desc'] !== 'undefined'
                         );
                     }

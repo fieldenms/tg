@@ -17,7 +17,6 @@ import static ua.com.fielden.platform.utils.EntityUtils.fetchWithKeyAndDesc;
 
 import org.junit.Test;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.TgAuthorRoyalty;
