@@ -69,9 +69,7 @@ import ua.com.fielden.platform.security.user.UserDao;
 import ua.com.fielden.platform.security.user.UserSecretDao;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.api.ISerialiser0;
 import ua.com.fielden.platform.serialisation.api.impl.Serialiser;
-import ua.com.fielden.platform.serialisation.api.impl.Serialiser0;
 import ua.com.fielden.platform.test.UserProviderForTesting;
 import ua.com.fielden.platform.test.domain.entities.daos.BogieDao;
 import ua.com.fielden.platform.test.domain.entities.daos.IBogieDao;
@@ -165,7 +163,6 @@ public class DaoTestHibernateModule extends CommonFactoryModule {
                 return new ArrayList<>();
             }
         });
-        bind(ISerialiser0.class).to(Serialiser0.class).in(Scopes.SINGLETON);
         bind(ISerialiser.class).to(Serialiser.class).in(Scopes.SINGLETON);
 
         bind(IUserSession.class).to(UserSessionDao.class);
