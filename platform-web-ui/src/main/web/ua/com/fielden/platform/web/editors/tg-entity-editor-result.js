@@ -438,9 +438,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
             if (parts.length === 0) {
                 return propValueAsString;
             } else {
-                return parts.reduce(function (html, part) {
-                    return html + (part.matched === true ? '<span class="value-highlighted">' + part.part + '</span>' : part.part);
-                }, '');
+                return parts.reduce((html, part) => html + (part.matched === true ? '<span class="value-highlighted">' + part.part + '</span>' : part.part), '');
             }
         }
     }
