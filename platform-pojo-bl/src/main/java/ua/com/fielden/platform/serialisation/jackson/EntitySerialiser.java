@@ -4,6 +4,7 @@ import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntit
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getTimeZone;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isCompositeKeySeparatorDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isCritOnlyDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isDisplayAsDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isDisplayDescDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isEntityDescDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isEntityTitleDefault;
@@ -13,6 +14,7 @@ import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isResultOnlyDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isScaleDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isSecreteDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isTrailingZerosDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isUpperCaseDefault;
 
 import java.lang.reflect.Field;
@@ -186,8 +188,12 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
                         entityTypeProp.set_scale(scale);
                     }
                     final boolean trailingZeros = isPropertyAnnotation.trailingZeros();
-                    if (DefaultValueContract.isTrailingZerosDefault(trailingZeros)) {
+                    if (!isTrailingZerosDefault(trailingZeros)) {
                         entityTypeProp.set_trailingZeros(trailingZeros);
+                    }
+                    final String displayAs = isPropertyAnnotation.displayAs();
+                    if (!isDisplayAsDefault(displayAs)) {
+                        entityTypeProp.set_displayAs(displayAs);
                     }
                 }
                 final String timeZone = getTimeZone(type, name);

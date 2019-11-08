@@ -19,6 +19,8 @@ const DEFAULT_LENGTH = 0;
  */
 const DEFAULT_TRAILING_ZEROS = true;
 
+const DEFAULT_DISPLAY_AS = "";
+
 const _UNDEFINED_CONFIG_TITLE = '_______________________undefined';
 const _LINK_CONFIG_TITLE = '_______________________link';
 const KEY_NOT_ASSIGNED = "[key is not assigned]"; // closely resembles AbstractEntity.KEY_NOT_ASSIGNED
@@ -189,7 +191,7 @@ var _createEntityInstancePropPrototype = function () {
     var EntityInstanceProp = function () {
         Object.call(this);
     };
-    EntityInstanceProp.prototype = Object.create(Object.prototype);
+    EntityInstanceProp.prototype = Object.create(Object.prototype);Expression
     EntityInstanceProp.prototype.constructor = EntityInstanceProp;
 
     /**
