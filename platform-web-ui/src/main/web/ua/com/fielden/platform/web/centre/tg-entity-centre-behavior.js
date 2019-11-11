@@ -99,6 +99,8 @@ const createColumnAction = function (entityCentre) {
     return actionModel;
 };
 
+const MSG_SAVE_OR_CANCEL = "Please save or cancel changes.";
+
 const TgEntityCentreBehaviorImpl = {
     properties: {
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -820,13 +822,12 @@ const TgEntityCentreBehaviorImpl = {
     },
 
     _showSaveOrCancelToast: function () {
-        const msg = "Please save or cancel changes";
-        this.$.selection_criteria._openToastWithoutEntity(msg, false, msg, false);
+        this.$.selection_criteria._openToastWithoutEntity(MSG_SAVE_OR_CANCEL, false, MSG_SAVE_OR_CANCEL, false);
     },
 
     _saveOrCancelPromise: function () {
         this._showSaveOrCancelToast();
-        return Promise.reject("Egi is editing right now, please save or cancel changes to continue");
+        return Promise.reject(MSG_SAVE_OR_CANCEL);
     },
 
     _focusView: function (e, forward) {
@@ -936,7 +937,6 @@ const TgEntityCentreBehaviorImpl = {
             self.persistActiveElement();
             return this.$.selection_criteria.currentPage()
                 .then(function () {
-                    console.log("current page invocation");
                     self.runInsertionPointActions();
                     self.restoreActiveElement();
                 });
@@ -1073,7 +1073,7 @@ const TgEntityCentreBehaviorImpl = {
         //insertion points can be left.
         if (this.$.egi.isEditing()) {
             return {
-                msg: "Please save or cancel changes."
+                msg: MSG_SAVE_OR_CANCEL
             };
         }
         // Check whether all insertion points can be left.
