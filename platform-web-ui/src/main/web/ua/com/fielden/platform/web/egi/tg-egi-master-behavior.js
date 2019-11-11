@@ -62,6 +62,7 @@ const TgEgiMasterBehaviorImpl = {
                 });
             } else {
                 this._resetEgiMasterState();
+                this.focusView();
             }
         }
     },
@@ -202,12 +203,17 @@ const TgEgiMasterBehaviorImpl = {
             this._focusNextEgiElementTo(event, true, activeElement);
         }
         if (!this.saveButton._disabled) {
-            this._shouldEditNextRow = true;
-            const editorToCommit = getActiveParentAnd(element => element.hasAttribute('tg-editor'));
-            if (editorToCommit) {
-                editorToCommit.commit();
+            if (this.editors.some(editor => editor._invalid)) {
+                this._resetEgiMasterState();
+                this.focusView();
+            } else {
+                this._shouldEditNextRow = true;
+                const editorToCommit = getActiveParentAnd(element => element.hasAttribute('tg-editor'));
+                if (editorToCommit) {
+                    editorToCommit.commit();
+                }
+                this.saveButton._asyncRun();
             }
-            this.saveButton._asyncRun();
         } else {
             this.egi._makeRowEditable(this.editableRow + 1);
         }

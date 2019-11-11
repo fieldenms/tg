@@ -173,7 +173,7 @@ const egiMasterTemplate = html`
         _saver-loading="{{_saverLoading}}">
             <!--@egi_editors-->
             <tg-action slot="cancel-button" class="master-cancel-action" is-icon icon="clear" enabled-states='[[_actions.REFRESH.enabledStates]]' short-desc='Cancel' long-desc='Cancel changes' current-state='[[currentState]]' action='[[closeMaster]]' post-action='{{_postClose}}'></tg-action>
-            <tg-action slot="save-button" class="master-save-action" is-icon icon="check" enabled-states='[[_actions.SAVE.enabledStates]]' short-desc='Save' long-desc='Save changes' current-state='[[currentState]]' id='_saveAction' focusing-callback='[[focusViewBound]]' action='[[_actions.SAVE.action]]' post-action='{{_postSavedDefault}}' post-action-error='{{_postSavedDefaultError}}'></tg-action>
+            <tg-action slot="save-button" class="master-save-action" is-icon icon="check" enabled-states='[[_actions.SAVE.enabledStates]]' short-desc='Save' long-desc='Save changes' current-state='[[currentState]]' id='_saveAction' action='[[_actions.SAVE.action]]' post-action='{{_postSavedDefault}}' post-action-error='{{_postSavedDefaultError}}'></tg-action>
     </tg-entity-master>`;
 
 Polymer({
