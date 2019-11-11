@@ -203,7 +203,7 @@ const template = html`
             --paper-fab-background: white;
             --paper-fab-keyboard-focus-background: var(--paper-grey-500);
         } 
-        .master-actions ::slotted(.master-save-action) {
+        .master-actions ::slotted(.master-cancel-action) {
             margin-right:2px;
             --paper-fab: { 
                 border-radius: 50% 0 0 50%;
@@ -211,7 +211,7 @@ const template = html`
                 
             };
         }
-        .master-actions ::slotted(.master-cancel-action) {
+        .master-actions ::slotted(.master-save-action) {
             --paper-fab: { 
                 border-radius: 0 50% 50% 0;
                 color: black;
@@ -446,8 +446,8 @@ const template = html`
                     </div>
                 </div>
                 <div id="master_actions" class="master-actions">
-                    <slot name="save-button"></slot>
                     <slot name="cancel-button"></slot>
+                    <slot name="save-button"></slot>
                 </div>
                 <div id="left_egi" show-left-shadow$="[[_leftShadowVisible(_showLeftShadow, dragAnchorFixed)]]" class="grid-layout-container sticky-container z-index-1" style$="[[_calcLeftContainerStyle(dragAnchorFixed)]]">
                     <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex" on-dom-change="_scrollContainerEntitiesStamped">
