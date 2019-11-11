@@ -34,6 +34,7 @@ import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDescriptor;
 import ua.com.fielden.platform.sample.domain.TgEntityWithTimeZoneDates;
 import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
+import ua.com.fielden.platform.sample.domain.TgFuelType;
 import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.sample.domain.TgGeneratedEntity;
 import ua.com.fielden.platform.sample.domain.TgGeneratedEntityForTrippleDecAnalysis;
@@ -165,6 +166,7 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgCompoundEntityMaster_OpenMain_MenuItem.class);
         add(TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem.class);
         add(TgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem.class);
+        add(TgFuelType.class);
     }
 
     @Override

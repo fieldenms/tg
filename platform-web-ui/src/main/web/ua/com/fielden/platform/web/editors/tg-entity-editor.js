@@ -16,6 +16,7 @@ import {microTask} from '/resources/polymer/@polymer/polymer/lib/utils/async.js'
 
 import { TgEditor, createEditorTemplate} from '/resources/editors/tg-editor.js';
 import { tearDownEvent, allDefined } from '/resources/reflection/tg-polymer-utils.js'
+import { composeEntityValue } from '/resources/editors/tg-entity-formatter.js'; 
 
 const additionalTemplate = html`
     <style>
@@ -78,6 +79,7 @@ const inputLayerTemplate = html`
         <template is="dom-repeat" items="[[_customPropTitle]]">
             <span hidden$="[[!item.title]]" style="color:#737373; font-size:0.8rem; padding-right:2px;"><span>[[item.title]]</span>:  </span>
             <span style$="[[_valueStyle(item, index)]]">[[item.value]]</span>
+            <span hidden$="[[!item.separator]]" style="white-space: pre;">[[item.separator]]</span>
         </template>
         <span style="color:#737373" hidden$="[[!_hasDesc(entity)]]">&nbsp;&ndash;&nbsp;<i>[[_formatDesc(entity)]]</i></span>
     </div>`;
@@ -896,7 +898,7 @@ export class TgEntityEditor extends TgEditor {
 
     _valueStyle (item, index) {
         if (this._customPropTitle && this._customPropTitle.length > 1) {
-            if (index < this._customPropTitle.length - 1) {
+            if (index < this._customPropTitle.length - 1 && item.title && !item.separator) {
                 return "padding-right: 5px";
             }
         }
@@ -905,9 +907,10 @@ export class TgEntityEditor extends TgEditor {
 
     _createTitleObject (entity) {
         if (entity !== null) {
-            var entityValue = this.reflector()._getValueFor(entity, this.propertyName);
+            const entityValue = this.reflector()._getValueFor(entity, this.propertyName);
+            const metaProp = this.reflector().getEntityTypeProp(entity, this.propertyName);
             if (entityValue !== null && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription()) {
-                return this._createEntityTitleObject(entityValue);
+                return composeEntityValue(entityValue, metaProp.displayAs());
             }
         }
         return [{value: ""}];

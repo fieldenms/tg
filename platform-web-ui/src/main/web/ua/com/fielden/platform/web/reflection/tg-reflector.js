@@ -180,6 +180,13 @@ var _createEntityTypePropPrototype = function () {
         return typeof this._trailingZeros === 'undefined' ? DEFAULT_TRAILING_ZEROS : this._trailingZeros;
     }
 
+    /** 
+     * Returns entity type prop scale.
+     */
+    EntityTypeProp.prototype.displayAs = function () {
+        return typeof this._displayAs === 'undefined' ? DEFAULT_DISPLAY_AS : this._displayAs;
+    }
+
     return EntityTypeProp;
 };
 
@@ -191,7 +198,7 @@ var _createEntityInstancePropPrototype = function () {
     var EntityInstanceProp = function () {
         Object.call(this);
     };
-    EntityInstanceProp.prototype = Object.create(Object.prototype);Expression
+    EntityInstanceProp.prototype = Object.create(Object.prototype);
     EntityInstanceProp.prototype.constructor = EntityInstanceProp;
 
     /**

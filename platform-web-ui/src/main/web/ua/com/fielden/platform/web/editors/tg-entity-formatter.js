@@ -91,9 +91,10 @@ function parseNumberSignAndReturnState (template, idx, state) {
 function parseNumberAndReturnState (entity, template, idx, reflector, titles, state){
     const keyNumberIdx = +template[idx];
     if (!isNaN(keyNumberIdx)) {
+        const entityType = entity.type();
         const keyName = entityType.compositeKeyNames()[keyNumberIdx - 1];
         if (keyName) {
-            titles.push[{keyName: keyName}];
+            titles.push({keyName: keyName});
             return state;
         } else {
             throw {msg: `Key with index: ${keyNumberIdx} specified at ${idx} does not exist in the ${entity.type().fullClassName()} entity`};
@@ -112,7 +113,14 @@ export function composeEntityValue (entity, template) {
 }
 
 function createCompositeTitle (entity, template, reflector) {
-    //todo
+    const titles = [];
+    let idx = 0;
+    let state = states['s0'](entity, template, idx, reflector, titles);
+    while(state) {
+        idx += 1;
+        state = states[state](entity, template, idx, reflector, titles);
+    }
+    return titles;
 }
 
 function composeDefaultValueObject(entity, reflector, titles) {
