@@ -150,6 +150,11 @@ public class QrySource2BasedOnSubqueries extends AbstractElement2 implements IQr
     }
 
     @Override
+    public int contextId() {
+        return contextId;
+    }
+
+    @Override
     public TransformationResult<QrySource3BasedOnSubqueries> transform(final TransformationContext context) {
         
         final List<EntQuery3> transformedQueries = new ArrayList<>();

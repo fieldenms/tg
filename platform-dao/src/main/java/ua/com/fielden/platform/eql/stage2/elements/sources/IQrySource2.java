@@ -17,4 +17,6 @@ public interface IQrySource2<S3 extends IQrySource3> extends ITransformableToS3<
     EntityInfo<?> entityInfo();
     
     String alias();
+    
+    int contextId();
 }

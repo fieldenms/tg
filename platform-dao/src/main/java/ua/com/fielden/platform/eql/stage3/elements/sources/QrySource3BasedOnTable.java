@@ -14,7 +14,7 @@ public class QrySource3BasedOnTable implements IQrySource3 {
     public final String subcontextId;
     
     public QrySource3BasedOnTable(final Table table, final int contextId) {
-        this(table, contextId, "");
+        this(table, contextId, null);
     }
 
     public QrySource3BasedOnTable(final Table table, final int contextId, final String subcontextId) {

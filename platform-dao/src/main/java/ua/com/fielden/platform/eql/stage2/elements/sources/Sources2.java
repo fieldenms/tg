@@ -15,7 +15,6 @@ import java.util.Set;
 
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
-import ua.com.fielden.platform.eql.stage3.elements.Table;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.ComparisonTest3;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.EntProp3;
@@ -81,8 +80,8 @@ public class Sources2 {
     }
     
     private T2<IQrySources3, Map<String, T2<IQrySource3, String>>> attachChild(final IQrySources3 mainSources, final IQrySource3 rootSource, final Child child, final TransformationContext context, final Map<String, T2<IQrySource3, String>> cumulativeResolutions) {
-        final Table tbl = context.getTable(child.main.javaType().getName());
-        final QrySource3BasedOnTable addedSource = new QrySource3BasedOnTable(tbl, rootSource.contextId(), child.context);
+        //final Table tbl = context.getTable(child.main.javaType().getName());
+        final QrySource3BasedOnTable addedSource = child.source.transform(context).item;//new QrySource3BasedOnTable(tbl, rootSource.contextId(), child.context);
         final EntProp3 lo = new EntProp3(child.main.getName(), rootSource);
         final EntProp3 ro = new EntProp3(ID, addedSource);
         final ComparisonTest3 ct = new ComparisonTest3(lo, EQ, ro);

@@ -13,7 +13,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  * @param <PARENT>
  */
 public class EntityTypePropInfo<T extends AbstractEntity<?>> extends AbstractPropInfo<T> {
-    private final EntityInfo<T> propEntityInfo;
+    public final EntityInfo<T> propEntityInfo;
     public final boolean required;
 
     /**
