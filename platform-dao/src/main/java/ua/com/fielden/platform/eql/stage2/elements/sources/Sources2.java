@@ -66,7 +66,7 @@ public class Sources2 {
 
         for (final Child fc : children) {
             if (fc.fullPath != null) {
-                resolutions.put(fc.fullPath, t2(source, fc.main.getName()));
+                resolutions.put(fc.fullPath, t2(source, fc.main.name));
             }
 
             if (!fc.items.isEmpty()) {
@@ -82,7 +82,7 @@ public class Sources2 {
     private T2<IQrySources3, Map<String, T2<IQrySource3, String>>> attachChild(final IQrySources3 mainSources, final IQrySource3 rootSource, final Child child, final TransformationContext context, final Map<String, T2<IQrySource3, String>> cumulativeResolutions) {
         //final Table tbl = context.getTable(child.main.javaType().getName());
         final QrySource3BasedOnTable addedSource = child.source.transform(context).item;//new QrySource3BasedOnTable(tbl, rootSource.contextId(), child.context);
-        final EntProp3 lo = new EntProp3(child.main.getName(), rootSource);
+        final EntProp3 lo = new EntProp3(child.main.name, rootSource);
         final EntProp3 ro = new EntProp3(ID, addedSource);
         final ComparisonTest3 ct = new ComparisonTest3(lo, EQ, ro);
         final Conditions3 jc = new Conditions3(false, asList(asList(ct)));

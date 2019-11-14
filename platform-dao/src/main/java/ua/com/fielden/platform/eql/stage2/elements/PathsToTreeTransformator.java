@@ -77,7 +77,7 @@ public class PathsToTreeTransformator {
     
     private static Child generateChild(final AbstractPropInfo<?> propInfo, final Map<String, List<AbstractPropInfo<?>>> subprops, final List<String> context, final int contextId) {
         final List<String> newContext = new ArrayList<>(context);
-        newContext.add(propInfo.getName());
+        newContext.add(propInfo.name);
 
         final boolean required = propInfo instanceof EntityTypePropInfo ? ((EntityTypePropInfo) propInfo).required : false;
         final String childContext = newContext.stream().collect(joining("_"));

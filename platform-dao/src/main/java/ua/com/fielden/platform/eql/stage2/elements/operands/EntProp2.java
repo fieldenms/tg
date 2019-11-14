@@ -25,7 +25,7 @@ public class EntProp2 extends AbstractElement2 implements ISingleOperand2<EntPro
         super(contextId);
         this.source = source;
         this.path = path;
-        this.name = path.stream().map(k -> k.getName()).collect(Collectors.joining("."));
+        this.name = path.stream().map(k -> k.name).collect(Collectors.joining("."));
         this.type = path.stream().reduce((first, second) -> second).orElse(null).javaType();
     }
 
