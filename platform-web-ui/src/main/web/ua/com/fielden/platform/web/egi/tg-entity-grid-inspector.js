@@ -2073,6 +2073,7 @@ Polymer({
                 this.set("egiModel." + this.master.editableRow + ".editing", false);
             }
             if (entityIndex >= 0 && entityIndex < this.filteredEntities.length) {
+                this.master.resetMasterForNextEntity();
                 this.set("egiModel." + entityIndex + ".editing", true);
                 _insertMaster(this.$.left_egi, this.$.left_egi_master, entityIndex);
                 _insertMaster(this.$.centre_egi, this.$.centre_egi_master, entityIndex);
@@ -2083,7 +2084,7 @@ Polymer({
                 this.$.master_actions.style.display = 'flex';
                 this.master.editableRow = entityIndex;
                 this.master.entityId = this.filteredEntities[entityIndex].get("id");
-                this.master.entityType = this.filteredEntities[entityIndex].type().notEnhancedFullClassName()
+                this.master.entityType = this.filteredEntities[entityIndex].type().notEnhancedFullClassName();
                 this.master.retrieve();
             } else {
                 this._closeMaster();

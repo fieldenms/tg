@@ -3,7 +3,7 @@ import '/resources/components/postal-lib.js';
 import { TgEntityMasterBehavior, selectEnabledEditor} from '/resources/master/tg-entity-master-behavior.js';
 import { queryElements } from '/resources/components/tg-element-selector-behavior.js';
 import { IronA11yKeysBehavior } from '/resources/polymer/@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
-import { tearDownEvent, deepestActiveElement, getParentAnd, getActiveParentAnd, FOCUSABLE_ELEMENTS_SELECTOR } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, deepestActiveElement, getParentAnd, getActiveParentAnd, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
 
 const TgEgiMasterBehaviorImpl = {
 
@@ -23,6 +23,10 @@ const TgEgiMasterBehaviorImpl = {
         _shouldEditPreviousRow: {
             type: Boolean,
             value: false
+        },
+        _initialisingNextMaster: {
+            type: Boolean,
+            value:false
         }
     },
 
@@ -70,6 +74,22 @@ const TgEgiMasterBehaviorImpl = {
     closeMaster: function () {
         this.egi._closeMaster();
         this._postClose();
+    },
+
+    focusView: function () {
+        this.async(() => {
+            if (!isMobileApp()) {
+                this._focusFirstInput();
+            }
+        }, 1)
+    },
+
+    resetMasterForNextEntity: function () {
+        this._initialisingNextMaster = true;
+        this._bindingEntityModified = false;
+        this._bindingEntityNotPersistentOrNotPersistedOrModified = false;
+        this._editedPropsExist = false;
+        this._resetState();
     },
 
     /**
@@ -133,6 +153,7 @@ const TgEgiMasterBehaviorImpl = {
         if (focusedElement && typeof focusedElement.select === "function") {
             focusedElement.select();
         }
+        this._initialisingNextMaster = false;
         this._resetEgiMasterState();
     },
 
@@ -163,30 +184,32 @@ const TgEgiMasterBehaviorImpl = {
     },
 
     _onAlternateSwitching: function (event) {
-        if (IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'alt+up')) {
-            this._lastFocusedEditor = getActiveParentAnd(element => element.hasAttribute('tg-editor'));
-            this._saveAndEditPreviousRow();
-            tearDownEvent(event);
-        } else if (IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'alt+down')) {
-            this._lastFocusedEditor = getActiveParentAnd(element => element.hasAttribute('tg-editor'));
-            this._saveAndEditNextRow();
-            tearDownEvent(event);
-        } else if (IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'esc')) {
-            this.egi._cancelMaster();
-            tearDownEvent(event);
-        } else if (IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'enter')) {
-            this._lastFocusedEditor = getActiveParentAnd(element => element.hasAttribute('tg-editor'));
-            this._saveAndEditNextRow();
+        if (!this._initialisingNextMaster) {
+            if (IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'alt+up')) {
+                this._lastFocusedEditor = getActiveParentAnd(element => element.hasAttribute('tg-editor'));
+                this._saveAndEditPreviousRow();
+                tearDownEvent(event);
+            } else if (IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'esc')) {
+                this.egi._cancelMaster();
+                tearDownEvent(event);
+            } else if (IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'enter') || IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'alt+down')) {
+                this._lastFocusedEditor = getActiveParentAnd(element => element.hasAttribute('tg-editor'));
+                this._saveAndEditNextRow();
+                tearDownEvent(event);
+            }
+        } else {
             tearDownEvent(event);
         }
     },
 
     _onCaptureKeyDown: function(event) {
-        if (IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'tab')) {
-            if (event.shiftKey) {
-                this._onShiftTabDown(event);
-            } else {
-                this._onTabDown(event);
+        if (!this._initialisingNextMaster) {
+            if (IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'tab')) {
+                if (event.shiftKey) {
+                    this._onShiftTabDown(event);
+                } else {
+                    this._onTabDown(event);
+                }
             }
         }
     },
@@ -212,6 +235,7 @@ const TgEgiMasterBehaviorImpl = {
                 if (editorToCommit) {
                     editorToCommit.commit();
                 }
+                activeElement.blur();
                 this.saveButton._asyncRun();
             }
         } else {
@@ -230,6 +254,7 @@ const TgEgiMasterBehaviorImpl = {
             if (editorToCommit) {
                 editorToCommit.commit();
             }
+            activeElement.blur();
             this.saveButton._asyncRun();
         } else {
             this.egi._makeRowEditable(this.editableRow - 1);

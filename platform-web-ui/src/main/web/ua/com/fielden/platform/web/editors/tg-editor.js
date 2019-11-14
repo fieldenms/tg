@@ -702,6 +702,8 @@ export class TgEditor extends PolymerElement {
         } else {
             // console.debug("_entityChanged: Not yet initialised _currBindingEntity, from which to get binding value!");
             this._updateMessagesForEntity(newValue);
+            this._editingValue = this._defaultEditingValue();
+            this.commit();
         }
         this._tryFireErrorMsg(this._error);
     }
