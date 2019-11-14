@@ -95,10 +95,8 @@ const TgEgiMasterBehaviorImpl = {
     },
 
     _documentFocusingListner: function (event) {
-        if (this._initialisingNextMaster) {
-            if (IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'tab')) {
-                tearDownEvent(event);
-            }
+        if (IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'tab')) {
+            tearDownEvent(event);
         }
     },
 
