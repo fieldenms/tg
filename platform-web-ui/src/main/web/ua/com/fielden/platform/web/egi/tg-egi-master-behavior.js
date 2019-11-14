@@ -44,6 +44,7 @@ const TgEgiMasterBehaviorImpl = {
 
         this.closeMaster = this.closeMaster.bind(this);
         this._egiRefreshed = this._egiRefreshed.bind(this);
+        this._documentFocusingListner = this._documentFocusingListner.bind(this);
 
         this.editors.forEach(editor => editor.decorator().noLabelFloat = true);
         this.addEventListener('data-loaded-and-focused', this._selectLastFocusedEditor.bind(this));
@@ -86,10 +87,19 @@ const TgEgiMasterBehaviorImpl = {
 
     resetMasterForNextEntity: function () {
         this._initialisingNextMaster = true;
+        document.addEventListener("keydown", this._documentFocusingListner, true);
         this._bindingEntityModified = false;
         this._bindingEntityNotPersistentOrNotPersistedOrModified = false;
         this._editedPropsExist = false;
         this._resetState();
+    },
+
+    _documentFocusingListner: function (event) {
+        if (this._initialisingNextMaster) {
+            if (IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'tab')) {
+                tearDownEvent(event);
+            }
+        }
     },
 
     /**
@@ -154,6 +164,7 @@ const TgEgiMasterBehaviorImpl = {
             focusedElement.select();
         }
         this._initialisingNextMaster = false;
+        document.removeEventListener("keydown", this._documentFocusingListner, true);
         this._resetEgiMasterState();
     },
 
@@ -249,13 +260,18 @@ const TgEgiMasterBehaviorImpl = {
             this._focusNextEgiElementTo(event, false, activeElement);
         }
         if (!this.saveButton._disabled) {
-            this._shouldEditPreviousRow = true;
-            const editorToCommit = getActiveParentAnd(element => element.hasAttribute('tg-editor'));
-            if (editorToCommit) {
-                editorToCommit.commit();
+            if (this.editors.some(editor => editor._invalid)) {
+                this._resetEgiMasterState();
+                this.focusView();
+            } else {
+                this._shouldEditPreviousRow = true;
+                const editorToCommit = getActiveParentAnd(element => element.hasAttribute('tg-editor'));
+                if (editorToCommit) {
+                    editorToCommit.commit();
+                }
+                activeElement.blur();
+                this.saveButton._asyncRun();
             }
-            activeElement.blur();
-            this.saveButton._asyncRun();
         } else {
             this.egi._makeRowEditable(this.editableRow - 1);
         }
