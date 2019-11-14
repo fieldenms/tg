@@ -23,7 +23,7 @@ public class TransformationContext {
 
     public TransformationContext(final Map<String, Table> tables, final PropsResolutionContext context) {
         this.tables.putAll(tables);
-        this.sourceChildren.putAll(transform(context.getResolvedProps()));
+        this.sourceChildren.putAll(transform(context.getResolvedProps(), context.getDomainInfo()));
     }
     
     private TransformationContext() {

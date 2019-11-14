@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.eql.stage2.elements;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.joining;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
@@ -13,9 +15,15 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
+import ua.com.fielden.platform.eql.meta.EntityInfo;
 import ua.com.fielden.platform.eql.meta.EntityTypePropInfo;
+import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
+import ua.com.fielden.platform.eql.stage1.elements.TransformationResult;
+import ua.com.fielden.platform.eql.stage1.elements.operands.Expression1;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.Expression2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.Child;
 import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.QrySource2BasedOnPersistentType;
@@ -23,11 +31,11 @@ import ua.com.fielden.platform.types.tuples.T2;
 
 public class PathsToTreeTransformator {
 
-    static final Map<IQrySource2<?>, SortedSet<Child>> transform(final Set<EntProp2> props) {
+    static final Map<IQrySource2<?>, SortedSet<Child>> transform(final Set<EntProp2> props, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
         final Map<IQrySource2<?>, SortedSet<Child>> sourceChildren = new HashMap<>();
 
         for (final Entry<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>> sourceProps : groupBySource(props).entrySet()) {
-            sourceChildren.put(sourceProps.getKey(), generateChildren(sourceProps.getKey().contextId(), sourceProps.getValue(), emptyList()));
+            sourceChildren.put(sourceProps.getKey(), generateChildren(sourceProps.getKey(), sourceProps.getKey().contextId(), sourceProps.getValue(), emptyList(), domainInfo));
         }
 
         return sourceChildren;
@@ -65,26 +73,31 @@ public class PathsToTreeTransformator {
         return result;
     }
 
-    private static SortedSet<Child> generateChildren(final int contextId, final Map<String, List<AbstractPropInfo<?>>> props, final List<String> context) {
+    private static SortedSet<Child> generateChildren(final IQrySource2<?> contextSource, final int contextId, final Map<String, List<AbstractPropInfo<?>>> props, final List<String> context, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
         final SortedSet<Child> result = new TreeSet<>();
         
         for (final Entry<AbstractPropInfo<?>, Map<String, List<AbstractPropInfo<?>>>> propEntry : groupByFirstProp(props).entrySet()) {
-            result.add(generateChild(propEntry.getKey(), propEntry.getValue(), context, contextId));
+            result.add(generateChild(contextSource, propEntry.getKey(), propEntry.getValue(), context, contextId, domainInfo));
         }
 
         return result;
     }
     
-    private static Child generateChild(final AbstractPropInfo<?> propInfo, final Map<String, List<AbstractPropInfo<?>>> subprops, final List<String> context, final int contextId) {
+    private static Child generateChild(final IQrySource2<?> contextSource, final AbstractPropInfo<?> propInfo, final Map<String, List<AbstractPropInfo<?>>> subprops, final List<String> context, final int contextId, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
         final List<String> newContext = new ArrayList<>(context);
         newContext.add(propInfo.name);
 
+        if (propInfo.expression != null) {
+            final TransformationResult<Expression2> tr = expressionToS2(contextSource, propInfo.expression, domainInfo);
+            final Map<IQrySource2<?>, SortedSet<Child>> dependants = transform(tr.updatedContext.getResolvedProps(), domainInfo);
+        }
+        
         final boolean required = propInfo instanceof EntityTypePropInfo ? ((EntityTypePropInfo) propInfo).required : false;
         final String childContext = newContext.stream().collect(joining("_"));
         final QrySource2BasedOnPersistentType source = propInfo instanceof EntityTypePropInfo ? new QrySource2BasedOnPersistentType(((EntityTypePropInfo) propInfo).javaType(), ((EntityTypePropInfo) propInfo).propEntityInfo, contextId, childContext) 
                  : null;
         final T2<String, Map<String, List<AbstractPropInfo<?>>>> next = getPathAndNextProps(subprops);
-        final SortedSet<Child> children = generateChildren(contextId, next._2, newContext);
+        final SortedSet<Child> children = generateChildren(source, contextId, next._2, newContext, domainInfo);
         return new Child(propInfo, children, next._1, childContext, required, source);
     }    
     
@@ -100,5 +113,10 @@ public class PathsToTreeTransformator {
             }
         }
         return t2(path, nextProps);
+    }
+    
+    private static TransformationResult<Expression2> expressionToS2(final IQrySource2<?> contextSource, final Expression1 expression, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
+        final PropsResolutionContext prc = new PropsResolutionContext(domainInfo, asList(asList(contextSource)), emptySet());
+        return expression.transform(prc);
     }
 }
