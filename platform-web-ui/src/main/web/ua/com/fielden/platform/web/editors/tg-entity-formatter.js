@@ -100,7 +100,7 @@ function parseNumberAndReturnState (entity, template, idx, reflector, titles, st
             throw {msg: `Key with index: ${keyNumberIdx} specified at ${idx} does not exist in the ${entity.type().fullClassName()} entity`};
         }
     } else {
-        throw {msg: `${template[idx]} at ${idx} should be a number.`};
+        throw {msg: `${template[idx]} at ${idx} should be a number in ${template}.`};
     }
 }
 

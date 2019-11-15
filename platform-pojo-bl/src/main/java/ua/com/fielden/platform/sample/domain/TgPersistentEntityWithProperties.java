@@ -111,7 +111,7 @@ public class TgPersistentEntityWithProperties extends AbstractPersistentEntity<S
     @Title(value = "Conflicting prop", desc = "Conflicting prop desc")
     private String conflictingProp;
 
-    @IsProperty(displayAs="#1vs#2v")
+    @IsProperty(displayAs="#2vs#1v")
     @MapTo
     @Title(value = "Composite prop", desc = "Composite prop desc")
     private TgPersistentCompositeEntity compositeProp;

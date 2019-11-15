@@ -188,7 +188,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
                         entityTypeProp.set_scale(scale);
                     }
                     final boolean trailingZeros = isPropertyAnnotation.trailingZeros();
-                    if (!isTrailingZerosDefault(trailingZeros)) {
+                    if (isTrailingZerosDefault(trailingZeros)) {
                         entityTypeProp.set_trailingZeros(trailingZeros);
                     }
                     final String displayAs = isPropertyAnnotation.displayAs();
