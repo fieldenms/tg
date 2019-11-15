@@ -51,7 +51,7 @@ public abstract class AbstractWidget implements IRenderable, IImportable {
      *
      * @return
      */
-    protected String propertyName() {
+    public String propertyName() {
         return propertyName;
     }
 
@@ -114,7 +114,7 @@ public abstract class AbstractWidget implements IRenderable, IImportable {
     public void withAction(final EntityActionConfig action) {
         this.action = Optional.of(action);
     }
-    
+
     public Optional<EntityActionConfig> action() {
         return action;
     }
