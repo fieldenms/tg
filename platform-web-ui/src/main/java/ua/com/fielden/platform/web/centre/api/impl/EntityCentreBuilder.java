@@ -14,6 +14,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
+import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.utils.Pair;
@@ -57,6 +58,8 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     protected final List<Pair<EntityActionConfig, Optional<String>>> topLevelActions = new ArrayList<>();
     protected final List<EntityActionConfig> frontActions = new ArrayList<>();
     protected final List<InsertionPointConfig> insertionPointConfigs = new ArrayList<>();
+
+    private final Map<String, Class<? extends IValueMatcherWithContext<T, ?>>> valueMatcherForProps = new HashMap<>();
 
     protected boolean draggable = false;
     protected boolean hideCheckboxes = false;
@@ -226,5 +229,4 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     public Class<T> getEntityType() {
         return entityType;
     }
-
 }

@@ -1,6 +1,7 @@
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
+import '/resources/polymer/@polymer/paper-fab/paper-fab.js';
 import '/resources/polymer/@polymer/paper-button/paper-button.js';
 import '/resources/polymer/@polymer/paper-spinner/paper-spinner.js';
 import '/resources/polymer/@polymer/paper-styles/color.js';
@@ -15,9 +16,14 @@ import { allDefined } from '/resources/reflection/tg-polymer-utils.js';
 
 const template = html`
     <style>
+        :host {
+           position: relative; 
+        }
         #spinner {
             position: absolute;
-            top: 0px;
+            top: 50%;/*position Y halfway in*/
+            left: 50%;/*position X halfway in*/
+            transform: translate(-50%,-50%);/*move it halfway back(x,y)*/
             padding: 2px;
             margin: 0px;
             width: 24px;
@@ -27,12 +33,16 @@ const template = html`
             --paper-spinner-layer-3-color: var(--paper-blue-500);
             --paper-spinner-layer-4-color: var(--paper-blue-500);
         }
+
+        [hidden] {
+            display: none !important;
+        }
     </style>
-    <paper-button id="actionButton" raised roll="button" on-tap="_asyncRun" style="width:100%" disabled$="[[_disabled]]" tooltip-text$="[[longDesc]]">
-        <paper-spinner id="spinner" active="[[_working]]" class="blue" style="visibility: hidden;" alt="in progress">
-        </paper-spinner>
+    <paper-button id="actionButton" hidden$="[[isIcon]]" raised roll="button" on-tap="_asyncRun" style="width:100%" disabled$="[[_disabled]]" tooltip-text$="[[longDesc]]">
         <span>[[shortDesc]]</span>
     </paper-button>
+    <paper-fab id="fabButton" mini icon="[[icon]]" on-tap="_asyncRun" hidden$="[[!isIcon]]" disabled$="[[_disabled]]" tooltip-text$="[[longDesc]]"></paper-fab>
+    <paper-spinner id="spinner" active="[[_working]]" class="blue" style="display: none;" alt="in progress"></paper-spinner>
 `;
 
 Polymer({
@@ -43,6 +53,13 @@ Polymer({
     behaviors: [ TgFocusRestorationBehavior, TgElementSelectorBehavior ],
 
     properties: {
+        /**
+         * The elevation value forfab button
+         */
+        elevation: {
+            type: Number,
+            value: 0
+        },
         /**
          * A list of the states in which the action can be enabled.
          */
@@ -76,6 +93,11 @@ Polymer({
          */
         icon: {
             type: String
+        },
+
+        isIcon: {
+            type: Boolean,
+            value: false,
         },
 
         /**
@@ -197,6 +219,12 @@ Polymer({
         }
     },
 
+    ready: function () {
+        this.$.fabButton._calculateElevation = function () {
+            return this.elevation;
+        };
+    },    
+
     created: function () {
         this.run = this._createRun();
         this._working = false;
@@ -251,10 +279,7 @@ Polymer({
 
     /* Timer callback that performs spinner activation. */
     _startSpinnerCallback: function () {
-        // Position and make spinner visible
-        this.$.spinner.style.left = (this.offsetWidth / 2 - this.$.spinner.offsetWidth / 2) + 'px';
-        this.$.spinner.style.top = (this.offsetHeight / 2 - this.$.spinner.offsetHeight / 2) + 'px';
-        this.$.spinner.style.visibility = 'visible';
+        this.$.spinner.style.display = null;
     },
 
     _postActionChanged: function (newValue, oldValue) {
@@ -301,7 +326,7 @@ Polymer({
         this.restoreActiveElement();
 
         // Make spinner invisible
-        this.$.spinner.style.visibility = 'hidden';
+        this.$.spinner.style.display = 'none';
 
         this.restoreActiveElement();
     },

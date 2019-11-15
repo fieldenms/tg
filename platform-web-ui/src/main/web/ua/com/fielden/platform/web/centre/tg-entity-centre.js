@@ -481,13 +481,15 @@ Polymer({
             }
         } else if (!isMobileApp() && this._selectedView === 1) {
             const egi = this.$.customEgiSlot.assignedNodes({ flatten: true })[0];
-            const elementToFocus = this._getVisibleFocusableElementIn(egi);
-            // Element to focus is present only for grid representation of EGI. The card representation doesn't support focusing.
-            if (elementToFocus) {
-                elementToFocus.focus();
-                this.$.views.scrollTop = 0; // scrolls EGI to the top when changing selectionCrit -> EGI views or going to this centre from another centre / module
-            } else {
-                egi.keyEventTarget.focus();
+            if (!egi.isEditing()) {
+                const elementToFocus = this._getVisibleFocusableElementIn(egi);
+                // Element to focus is present only for grid representation of EGI. The card representation doesn't support focusing.
+                if (elementToFocus) {
+                    elementToFocus.focus();
+                    this.$.views.scrollTop = 0; // scrolls EGI to the top when changing selectionCrit -> EGI views or going to this centre from another centre / module
+                } else {
+                    egi.keyEventTarget.focus();
+                }
             }
         }
     },

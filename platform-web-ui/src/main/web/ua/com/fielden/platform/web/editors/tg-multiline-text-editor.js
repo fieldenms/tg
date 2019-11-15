@@ -3,8 +3,6 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/resources/polymer/@polymer/iron-autogrow-textarea/iron-autogrow-textarea.js';
 
 import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
-import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
-
 import { TgEditor,  createEditorTemplate} from '/resources/editors/tg-editor.js';
 
 const additionalTemplate = html`
