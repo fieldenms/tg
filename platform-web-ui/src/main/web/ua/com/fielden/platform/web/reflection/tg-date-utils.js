@@ -1,5 +1,7 @@
 import '/resources/components/moment-lib.js';
 
+moment.tz.setDefault('Australia/Melbourne');
+
 export const timeZoneFormats = {
     "UTC": {
         "L": "YYYY-MM-DD",
