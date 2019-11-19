@@ -16,7 +16,7 @@ import {microTask} from '/resources/polymer/@polymer/polymer/lib/utils/async.js'
 
 import { TgEditor, createEditorTemplate} from '/resources/editors/tg-editor.js';
 import { tearDownEvent, allDefined } from '/resources/reflection/tg-polymer-utils.js'
-import { composeEntityValue } from '/resources/editors/tg-entity-formatter.js'; 
+import { composeEntityValue, composeDefaultEntityValue } from '/resources/editors/tg-entity-formatter.js'; 
 
 const additionalTemplate = html`
     <style>
@@ -910,7 +910,12 @@ export class TgEntityEditor extends TgEditor {
             const entityValue = this.reflector()._getValueFor(entity, this.propertyName);
             const metaProp = this.reflector().getEntityTypeProp(entity["@@origin"], this.propertyName);
             if (entityValue !== null && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription()) {
-                return composeEntityValue(entityValue, metaProp.displayAs());
+                try {
+                    return composeEntityValue(entityValue, metaProp.displayAs());
+                } catch (e) {
+                    console.error(e.msg);
+                    return composeDefaultEntityValue(entityValue);
+                }
             }
         }
         return [{value: ""}];

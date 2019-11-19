@@ -112,6 +112,16 @@ export function composeEntityValue (entity, template) {
     return createSimpleTitle(entity, reflector);
 }
 
+export function composeDefaultEntityValue(entity) {
+    const reflector = new TgReflector();
+    if (entity.type().isCompositeEntity()) {
+        const titles = [];
+        createCompositeTitleWithoutTemplate(entity, reflector, titles);
+        return titles;
+    }
+    return createSimpleTitle(entity, reflector);
+}
+
 function createCompositeTitle (entity, template, reflector) {
     const titles = [];
     let idx = 0;
