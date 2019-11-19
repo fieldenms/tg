@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.dao;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.util.stream.Stream;
 
@@ -19,7 +18,7 @@ import ua.com.fielden.platform.utils.Pair;
 /**
  * A DAO for {@link EntityWithMoney} used for testing.
  * 
- * @author 01es
+ * @author TG Team
  * 
  */
 @EntityType(EntityWithMoney.class)
