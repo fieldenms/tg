@@ -51,7 +51,7 @@ public class EntityCentreConfigPersistenceTest extends AbstractDaoTestCase {
         EntityCentreConfig config = new_composite(EntityCentreConfig.class, userDao.findByKey("USER"), "CONFIG 1", menuDao.findByKey("type"));
         config.setConfigBody(new byte[] { 1, 2, 3 });
         config.setDesc("desc");
-        dao.saveWithConflicts(config);
+        config = saveWithConflicts(config);
         
         assertEquals("Incorrect version.", Long.valueOf("0"), config.getVersion());
         config.setConfigBody(new byte[] { 1, 2, 3, 4 });
