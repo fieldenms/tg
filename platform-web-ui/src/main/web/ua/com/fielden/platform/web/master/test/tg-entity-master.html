@@ -983,7 +983,7 @@
                 };
                 
                 master.postSaved = function (potentiallySavedOrNewEntity, bindingEntity) {
-                    assert.isNotNull(potentiallySavedOrNewEntity.get('id'), 'Entity id should be not null.');
+                    assert.isNull(potentiallySavedOrNewEntity.get('id'), 'Entity id should be null for new entity with failed save attempt.');
                     assert.strictEqual(potentiallySavedOrNewEntity.version, 0, 'Entity version should be the same.');
                     
                     assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccured(), 'Entity\'s exceptionOccured should exist.');

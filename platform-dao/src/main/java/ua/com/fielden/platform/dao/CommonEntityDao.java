@@ -91,9 +91,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Inject
     private IUserProvider up;
 
-    /** A marker to skip re-fetching an entity during save. */
-    private boolean skipRefetching = false;
-    
     /** A guard against an accidental use of quick save to prevent its use for companions with overridden method <code>save</code>.
      *  Refer issue <a href='https://github.com/fieldenms/tg/issues/421'>#421</a> for more details. */
     private Boolean hasSaveOverridden;
@@ -137,7 +134,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 keyType,
                 this::getUser,
                 () -> getUniversalConstants().now(),
-                () -> skipRefetching,
                 this::isFilterable,
                 this::getCoFinder,
                 this::newQueryExecutionContext,
@@ -232,7 +228,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     @Override
     @SessionRequired
-    public final long quickSave(final T entity) {
+    public long quickSave(final T entity) {
         if (hasSaveOverridden == null) {
             hasSaveOverridden = isMethodOverriddenOrDeclared(CommonEntityDao.class, getClass(), "save", getEntityType());
         }
@@ -242,13 +238,17 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                             getEntityType().getName(), 
                             getEntityType().getAnnotation(CompanionObject.class).value().getName()));
         }
-        
-        
-        try {
-            skipRefetching = true;
-            return save(entity).getId();
-        } finally {
-            skipRefetching = false;
+
+        if (entity == null) {
+            throw new EntityCompanionException(format("Null entity of type [%s] cannot be saved.", entityType.getName()));
+        } else if (!entity.isPersistent()) {
+            throw new EntityCompanionException(format("Quick save is not supported for non-persistent entity [%s].", entityType.getName()));
+        } else {
+            final Long id = entitySaver.coreSave(entity, true)._1;
+            if (id == null) {
+                throw new EntityCompanionException(format("Saving of entity [%s] did not return its ID.", entityType.getName()));
+            }
+            return id;
         }
     }
     
