@@ -85,7 +85,6 @@ import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -930,6 +929,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 final PropertyColumnElement el = new PropertyColumnElement(resultPropName,
                         resultProp.widget,
                         resultProp.dynamicColBuilderType.isPresent(),
+                        resultProp.propDef.isPresent(),
                         resultProp.width,
                         centre.getSecondTick().getGrowFactor(root, resultPropName),
                         resultProp.isFlexible,

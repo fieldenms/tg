@@ -25,7 +25,19 @@ Polymer({
         growFactor: Number,
         columnTitle: String,
         columnDesc: String,
-        customAction: Object
+        customAction: Object,
+        sortable: {
+            type: Boolean,
+            value: false
+        },
+        editable: {
+            type: Boolean,
+            value: false
+        },
+        hasAction: {
+            type: Boolean,
+            value: false
+        }
     },
 
     hostAttributes: {
