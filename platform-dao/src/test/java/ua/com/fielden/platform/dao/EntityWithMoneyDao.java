@@ -23,6 +23,7 @@ import ua.com.fielden.platform.utils.Pair;
  */
 @EntityType(EntityWithMoney.class)
 public class EntityWithMoneyDao extends CommonEntityDao<EntityWithMoney> implements IEntityWithMoney {
+    public static final String ERR_PURPOSEFUL_EXCEPTION = "Purposeful exception.";
 
     @Inject
     protected EntityWithMoneyDao(final IFilter filter) {
@@ -32,7 +33,7 @@ public class EntityWithMoneyDao extends CommonEntityDao<EntityWithMoney> impleme
     @SessionRequired
     public EntityWithMoney saveWithException(final EntityWithMoney entity) {
         super.save(entity);
-        throw new RuntimeException("Purposeful exception.");
+        throw new RuntimeException(ERR_PURPOSEFUL_EXCEPTION);
     }
 
     @SessionRequired
