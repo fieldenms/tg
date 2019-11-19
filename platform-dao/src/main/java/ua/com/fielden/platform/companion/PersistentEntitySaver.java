@@ -139,7 +139,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
      * returned instance contains the object graph of the passed in entity as its subgraph (i.e. it can be wider, but not narrower).
      * <p>
      * New or already persisted entity instances should not be reused after successful saving.
-     * There is no guarantee as to what their properties may get muted or not muted as part of the saving logic.
+     * There is no guarantee as to what properties may or may not get mutated as part of the saving logic.
      * For example, saving new entities does not result in assigning their {@code ID} values to the passed in instances.
      * Instead, the returned instances should be used.
      * The future direction is complete immutability where setting any property value would not modify that entity, but return a new instance with the new property value assigned. 
