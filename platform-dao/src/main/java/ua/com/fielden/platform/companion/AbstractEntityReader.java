@@ -326,6 +326,9 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
      * @return
      */
     private T fetchOneEntityInstance(final Long id, final fetch<T> fetchModel) {
+        if (id == null) {
+            throw new EntityCompanionException(format("Argument [id] must have a value to find an instance of [%s].", getEntityType().getName()));
+        }
         try {
             final EntityResultQueryModel<T> query = select(getEntityType()).where().prop(AbstractEntity.ID).eq().val(id).model();
             query.setFilterable(isFilterable());
