@@ -12,6 +12,7 @@ import org.restlet.security.Authenticator;
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.factories.webui.AppIndexResourceFactory;
@@ -53,6 +54,7 @@ public abstract class AbstractWebUiResources extends Application {
     private final IWebResourceLoader webResourceLoader;
     protected final IUserProvider userProvider;
     protected final IDeviceProvider deviceProvider;
+    protected final IUniversalConstants universalConstants;
 
     /**
      * Creates an instance of {@link AbstractWebUiResources} with custom application name, description, author, owner and resource paths.
@@ -88,6 +90,7 @@ public abstract class AbstractWebUiResources extends Application {
         this.webResourceLoader = injector.getInstance(IWebResourceLoader.class);
         this.userProvider = injector.getInstance(IUserProvider.class);
         this.deviceProvider = injector.getInstance(IDeviceProvider.class);
+        this.universalConstants = injector.getInstance(IUniversalConstants.class);
 
         setName(appName);
         setDescription(desc);
@@ -117,12 +120,12 @@ public abstract class AbstractWebUiResources extends Application {
         final RestServerUtil restUtil = injector.getInstance(RestServerUtil.class);
 
         // Attach main application resource.
-        router.attach("/", new AppIndexResourceFactory(webResourceLoader, webApp, userProvider, deviceProvider));
-        router.attach("/app/tg-app-config.js", new WebUiPreferencesResourceFactory(webResourceLoader, deviceProvider));
-        router.attach("/app/tg-app.js", new MainWebUiComponentResourceFactory(webResourceLoader, deviceProvider));
+        router.attach("/", new AppIndexResourceFactory(webResourceLoader, webApp, userProvider, deviceProvider, universalConstants));
+        router.attach("/app/tg-app-config.js", new WebUiPreferencesResourceFactory(webResourceLoader, deviceProvider, universalConstants));
+        router.attach("/app/tg-app.js", new MainWebUiComponentResourceFactory(webResourceLoader, deviceProvider, universalConstants));
         // type meta info resource
-        router.attach("/app/tg-reflector.js", new TgReflectorComponentResourceFactory(webResourceLoader, deviceProvider));
-        router.attach("/app/application-startup-resources.js", new ApplicationStartupResourcesComponentResourceFactory(webResourceLoader, deviceProvider));
+        router.attach("/app/tg-reflector.js", new TgReflectorComponentResourceFactory(webResourceLoader, deviceProvider, universalConstants));
+        router.attach("/app/application-startup-resources.js", new ApplicationStartupResourcesComponentResourceFactory(webResourceLoader, deviceProvider, universalConstants));
 
         // serialisation testing resource
         router.attach("/test/serialisation", new SerialisationTestResourceFactory(injector));
@@ -158,7 +161,7 @@ public abstract class AbstractWebUiResources extends Application {
         // standard Polymer components and other resources should not be guarded
         // Register resources those are in resource paths.
         attachResources(mainRouter);
-        mainRouter.attach("/service-worker.js", new ServiceWorkerResourceFactory(webResourceLoader, deviceProvider));
+        mainRouter.attach("/service-worker.js", new ServiceWorkerResourceFactory(webResourceLoader, deviceProvider, universalConstants));
 
         mainRouter.attach(guard);
 
@@ -176,11 +179,11 @@ public abstract class AbstractWebUiResources extends Application {
         router.attach("/entity/{entityType}/{entity-id}", new EntityResourceFactory(webUiConfig, injector));
         router.attach("/validation/{entityType}", new EntityValidationResourceFactory(webUiConfig, injector));
         router.attach("/master_ui/Test_TgPersistentEntityWithProperties", new MasterTestsComponentResourceFactory(injector));
-        router.attach("/master_ui/{entityType}", new MasterComponentResourceFactory(webResourceLoader, restUtil, deviceProvider));
+        router.attach("/master_ui/{entityType}", new MasterComponentResourceFactory(webResourceLoader, restUtil, deviceProvider, universalConstants));
     }
 
     private void attachCustomViewResources(final Router router, final RestServerUtil restUtil) {
-        router.attach("/custom_view/{viewName}", new CustomViewResourceFactory(webResourceLoader, restUtil, deviceProvider));
+        router.attach("/custom_view/{viewName}", new CustomViewResourceFactory(webResourceLoader, restUtil, deviceProvider, universalConstants));
     }
 
     /**
@@ -204,7 +207,7 @@ public abstract class AbstractWebUiResources extends Application {
         logger.info("\t\tCentre resources attaching...");
         router.attach("/criteria/{mitype}/{saveAsName}", new CriteriaResourceFactory(webUiConfig, injector));
         router.attach("/centre/{mitype}/{saveAsName}", new CentreResourceFactory(webUiConfig, injector));
-        router.attach("/centre_ui/{mitype}", new CentreComponentResourceFactory(webResourceLoader, restUtil, deviceProvider));
+        router.attach("/centre_ui/{mitype}", new CentreComponentResourceFactory(webResourceLoader, restUtil, deviceProvider, universalConstants));
     }
 
     /**
@@ -214,6 +217,6 @@ public abstract class AbstractWebUiResources extends Application {
      */
     private void attachResources(final Router router) {
         logger.info("\t\tResources attaching for following resource paths:" + "\n\t\t|" + StringUtils.join(webApp.resourcePaths(), "|\n\t\t|") + "|\n");
-        router.attach("/resources/", new FileResourceFactory(webResourceLoader, webApp.resourcePaths(), deviceProvider), Template.MODE_STARTS_WITH);
+        router.attach("/resources/", new FileResourceFactory(webResourceLoader, webApp.resourcePaths(), deviceProvider, universalConstants), Template.MODE_STARTS_WITH);
     }
 }

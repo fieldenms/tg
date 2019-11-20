@@ -19,6 +19,7 @@ import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.file_reports.IReport;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.webui.AbstractWebResource;
 
@@ -33,8 +34,8 @@ public class ReportResource extends AbstractWebResource {
     private final RestServerUtil restUtil;
     private final IReport dao;
 
-    public ReportResource(final IReport dao, final RestServerUtil restUtil, final IDeviceProvider deviceProvider, final Context context, final Request request, final Response response) {
-        super(context, request, response, deviceProvider);
+    public ReportResource(final IReport dao, final RestServerUtil restUtil, final IDeviceProvider deviceProvider, final IUniversalConstants universalConstants, final Context context, final Request request, final Response response) {
+        super(context, request, response, deviceProvider, universalConstants);
         setNegotiated(true);
         getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
         this.dao = dao;

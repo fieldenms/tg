@@ -24,6 +24,7 @@ import ua.com.fielden.platform.entity.IEntityProducer;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.utils.EntityRestorationUtils;
@@ -54,11 +55,12 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
             final ICompanionObjectFinder companionFinder,
             final RestServerUtil restUtil,
             final IDeviceProvider deviceProvider,
+            final IUniversalConstants universalConstants,
             final EntityMaster<CONTEXT> master,
             final Context context,
             final Request request,
             final Response response) {
-        super(context, request, response, deviceProvider);
+        super(context, request, response, deviceProvider, universalConstants);
 
         this.entityType = entityType;
         this.propertyName = propertyName;

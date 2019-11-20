@@ -10,6 +10,7 @@ import org.restlet.Response;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 
+import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -37,11 +38,12 @@ public class CustomViewResource extends AbstractWebResource {
             final IWebResourceLoader webResourceLoader,
             final RestServerUtil restUtil,
             final IDeviceProvider deviceProvider,
+            final IUniversalConstants universalConstants,
             final Context context,
             final Request request,
             final Response response
     ) {
-        super(context, request, response, deviceProvider);
+        super(context, request, response, deviceProvider, universalConstants);
         this.viewName = (String) request.getAttributes().get("viewName");
         this.webResourceLoader = webResourceLoader;
         this.restUtil = restUtil;

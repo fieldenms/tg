@@ -15,6 +15,7 @@ import org.restlet.Response;
 import org.restlet.resource.Get;
 import org.restlet.resource.ResourceException;
 
+import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.application.RequestInfo;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.webui.AbstractWebResource;
@@ -36,10 +37,11 @@ public class EventSourcingResource extends AbstractWebResource {
     public EventSourcingResource(
             final IEventSource eventSource,
             final IDeviceProvider deviceProvider,
+            final IUniversalConstants universalConstants,
             final Context context,
             final Request request,
             final Response response) {
-        super(context, request, response, deviceProvider);
+        super(context, request, response, deviceProvider, universalConstants);
         this.eventSource = eventSource;
     }
 

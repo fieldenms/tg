@@ -5,6 +5,7 @@ import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
 
+import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -22,15 +23,17 @@ public class CustomViewResourceFactory extends Restlet {
     private final IWebResourceLoader webResourceLoader;
     private final RestServerUtil restUtil;
     private final IDeviceProvider deviceProvider;
+    private final IUniversalConstants universalConstants;
 
     /**
      * Creates the {@link CustomViewResourceFactory} instance.
      *
      */
-    public CustomViewResourceFactory(final IWebResourceLoader webResourceLoader, final RestServerUtil restUtil, final IDeviceProvider deviceProvider) {
+    public CustomViewResourceFactory(final IWebResourceLoader webResourceLoader, final RestServerUtil restUtil, final IDeviceProvider deviceProvider, final IUniversalConstants universalConstants) {
         this.webResourceLoader = webResourceLoader;
         this.restUtil = restUtil;
         this.deviceProvider = deviceProvider;
+        this.universalConstants = universalConstants;
     }
 
     @Override
@@ -42,6 +45,7 @@ public class CustomViewResourceFactory extends Restlet {
                     webResourceLoader,
                     restUtil,
                     deviceProvider,
+                    universalConstants,
                     getContext(),
                     request,
                     response //

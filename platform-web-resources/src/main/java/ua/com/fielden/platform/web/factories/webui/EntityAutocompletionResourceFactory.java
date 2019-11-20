@@ -21,6 +21,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
@@ -46,6 +47,7 @@ public class EntityAutocompletionResourceFactory extends Restlet {
     private final ICompanionObjectFinder companionFinder;
     private final IUserProvider userProvider;
     private final IDeviceProvider deviceProvider;
+    private final IUniversalConstants universalConstants;
     
     /**
      * Instantiates a factory for entity autocompletion resources (for centres and masters).
@@ -62,6 +64,7 @@ public class EntityAutocompletionResourceFactory extends Restlet {
         this.companionFinder = injector.getInstance(ICompanionObjectFinder.class);
         this.userProvider = injector.getInstance(IUserProvider.class);
         this.deviceProvider = injector.getInstance(IDeviceProvider.class);
+        this.universalConstants = injector.getInstance(IUniversalConstants.class);
     }
 
     @Override
@@ -87,6 +90,7 @@ public class EntityAutocompletionResourceFactory extends Restlet {
                         companionFinder,
                         userProvider,
                         deviceProvider,
+                        universalConstants,
                         critGenerator, 
                         factory, 
                         miType,
@@ -120,6 +124,7 @@ public class EntityAutocompletionResourceFactory extends Restlet {
                         companionFinder,
                         restUtil,
                         deviceProvider,
+                        universalConstants,
                         master,
                         getContext(),
                         request,

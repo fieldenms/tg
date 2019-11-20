@@ -9,6 +9,7 @@ import org.restlet.Response;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 
+import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 
@@ -21,8 +22,8 @@ import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 public class ApplicationStartupResourcesComponentResource extends AbstractWebResource {
     private final IWebResourceLoader webResourceLoader;
 
-    public ApplicationStartupResourcesComponentResource(final IWebResourceLoader webResourceLoader, final IDeviceProvider deviceProvider, final Context context, final Request request, final Response response) {
-        super(context, request, response, deviceProvider);
+    public ApplicationStartupResourcesComponentResource(final IWebResourceLoader webResourceLoader, final IDeviceProvider deviceProvider, final IUniversalConstants universalConstants, final Context context, final Request request, final Response response) {
+        super(context, request, response, deviceProvider, universalConstants);
         this.webResourceLoader = webResourceLoader;
     }
 
