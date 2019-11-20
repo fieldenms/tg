@@ -12,6 +12,8 @@ import org.joda.time.DateTime;
  * 
  */
 public interface IUniversalConstants {
+    static final String TIME_ZONE_NOT_SUPPORTED = "Time-zone is not supported.";
+    
     /**
      * Returns a value indicating the current date/time.
      * 
@@ -53,4 +55,23 @@ public interface IUniversalConstants {
      * @return
      */
     String fromEmailAddress();
+    
+    /**
+     * Returns time-zone for current user.
+     * 
+     * @return
+     */
+    default String timeZone() {
+        throw new UnsupportedOperationException(TIME_ZONE_NOT_SUPPORTED);
+    }
+    
+    /**
+     * Sets time-zone for current user.
+     * 
+     * @param timeZone
+     */
+    default void setTimeZone(final String timeZone) {
+        throw new UnsupportedOperationException(TIME_ZONE_NOT_SUPPORTED);
+    }
+    
 }
