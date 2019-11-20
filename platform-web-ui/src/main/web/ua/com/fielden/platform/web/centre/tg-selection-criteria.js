@@ -7,6 +7,7 @@ import '/resources/polymer/@polymer/iron-ajax/iron-ajax.js';
 import '/resources/centre/tg-criteria-validator.js';
 import '/resources/binding/tg-entity-binder.js';
 import { TgReflector } from '/app/tg-reflector.js';
+import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 
 const template = html`
     <style>
@@ -19,8 +20,8 @@ const template = html`
     
     <tg-criteria-validator id="validator" mi-type="[[miType]]" save-as-name="[[saveAsName]]" post-validated-default="[[_postValidatedDefault]]" post-validated-default-error="[[_postValidatedDefaultError]]" process-response="[[_processResponse]]" process-error="[[_processError]]"></tg-criteria-validator>
     
-    <iron-ajax id="ajaxRetriever" url="[[_computeRetrieverUrl(_url, queryPart)]]" method="GET" handle-as="json" on-response="_processRetrieverResponse" on-error="_processRetrieverError"></iron-ajax>
-    <iron-ajax id="ajaxRunner" loading="{{_isLoading}}" url="[[_url]]" method="PUT" handle-as="json" on-response="_processRunnerResponse" on-error="_processRunnerError"></iron-ajax>
+    <iron-ajax id="ajaxRetriever" headers="[[_headers]]" url="[[_computeRetrieverUrl(_url, queryPart)]]" method="GET" handle-as="json" on-response="_processRetrieverResponse" on-error="_processRetrieverError"></iron-ajax>
+    <iron-ajax id="ajaxRunner" headers="[[_headers]]" loading="{{_isLoading}}" url="[[_url]]" method="PUT" handle-as="json" on-response="_processRunnerResponse" on-error="_processRunnerError"></iron-ajax>
     
     <slot></slot>
 `;
@@ -91,6 +92,17 @@ Polymer({
         _url: {
             type: String,
             computed: '_computeUrl(miType, saveAsName)'
+        },
+
+        /**
+         * Additional headers for every 'iron-ajax' client-side requests. These only contain 
+         * our custom 'Time-Zone' header that indicates real time-zone for the client application.
+         * The time-zone then is to be assigned to threadlocal 'IUniversalConstants.timeZone' to be able
+         * to compute 'Now' moment properly.
+         */
+        _headers: {
+            type: String,
+            value: _timeZoneHeader
         }
     },
 
