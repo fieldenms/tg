@@ -33,10 +33,6 @@ Polymer({
         editable: {
             type: Boolean,
             value: false
-        },
-        hasAction: {
-            type: Boolean,
-            value: false
         }
     },
 

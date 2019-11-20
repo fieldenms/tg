@@ -154,7 +154,6 @@ public class PropertyColumnElement implements IRenderable, IImportable {
         attrs.put("column-desc", descBinding());
         attrs.put("sortable", isSortable);
         attrs.put("editable", widget.isPresent());
-        attrs.put("has-action", action.isPresent());
         return attrs;
     }
 

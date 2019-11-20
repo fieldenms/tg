@@ -416,7 +416,10 @@ const template = html`
                         </div>
                         <template is="dom-repeat" items="[[fixedColumns]]">
                             <div class="table-cell cell" fixed style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, 'true')]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
-                                <div class="truncate" style="width:100%">[[item.columnTitle]]</div>
+                                <div class="truncate flex" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
+                                <iron-icon hidden="[[!_headerHasAction(item)]]" icon="icons:create"></iron-icon>
+                                <iron-icon hidden="[[!item.editable]]" icon="icons:touch-app"></iron-icon>
+                                <iron-icon></iron-icon>
                                 <div class="resizing-box"></div>
                             </div>
                         </template>
@@ -432,7 +435,10 @@ const template = html`
                         </div>
                         <template is="dom-repeat" items="[[columns]]">
                             <div class="table-cell cell" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, 'false')]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
-                                <div class="truncate" style="width:100%">[[item.columnTitle]]</div>
+                                <div class="truncate flex" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
+                                <iron-icon hidden="[[!_headerHasAction(item)]]" icon="icons:create"></iron-icon>
+                                <iron-icon hidden="[[!item.editable]]" icon="icons:touch-app"></iron-icon>
+                                <iron-icon></iron-icon>
                                 <div class="resizing-box"></div>
                             </div>
                         </template>
@@ -1641,6 +1647,10 @@ Polymer({
         return entitySelected ? "true" : "false";
     },
 
+    _headerHasAction: function (column) {
+        return column.customAction;
+    },
+
     _calcColumnHeaderStyle: function (item, itemWidth, columnGrowFactor, fixed) {
         let colStyle = "min-width: " + itemWidth + "px;" + "width: " + itemWidth + "px;"
         if (columnGrowFactor === 0 || fixed === 'true') {
@@ -1651,14 +1661,22 @@ Polymer({
         if (itemWidth === 0) {
             colStyle += "display: none;";
         }
+        return colStyle;
+    },
+
+    _calcColumnHeaderTextStyle: function (item) {
+        if (item.type === 'Integer' || item.type === 'BigDecimal' || item.type === 'Money') {
+            return "text-align: right;"
+        }
+        return "";
+    },
+
+    _calcColumnStyle: function (item, itemWidth, columnGrowFactor, fixed) {
+        let colStyle = this._calcColumnHeaderStyle(item, itemWidth, columnGrowFactor, fixed);
         if (item.type === 'Integer' || item.type === 'BigDecimal' || item.type === 'Money') {
             colStyle += "text-align: right;"
         }
         return colStyle;
-    },
-
-    _calcColumnStyle: function (item, itemWidth, columnGrowFactor, fixed) {
-        return this._calcColumnHeaderStyle(item, itemWidth, columnGrowFactor, fixed);
     },
 
     // Observers
