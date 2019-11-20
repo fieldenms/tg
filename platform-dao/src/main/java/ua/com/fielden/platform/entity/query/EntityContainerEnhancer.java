@@ -50,11 +50,11 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
             return entities;
         }
 
-        final Map<String, EntityRetrievalModel<? extends AbstractEntity<?>>> propertiesFetchModels = fetchModel.getRetrievalModels();
+        final Map<String, IRetrievalModel<? extends AbstractEntity<?>>> propertiesFetchModels = fetchModel.getRetrievalModels();
 
-        for (final Map.Entry<String, EntityRetrievalModel<?>> entry : propertiesFetchModels.entrySet()) {
+        for (final Map.Entry<String, IRetrievalModel<?>> entry : propertiesFetchModels.entrySet()) {
             final String propName = entry.getKey();
-            final EntityRetrievalModel<? extends AbstractEntity<?>> propFetchModel = entry.getValue();
+            final IRetrievalModel<? extends AbstractEntity<?>> propFetchModel = entry.getValue();
 
             if (propFetchModel.isFetchIdOnly()) {
                 assignIdOnlyProxiedResultTypeToIdOnlyEntityProperty(entities, propName, propFetchModel.getEntityType());
@@ -170,12 +170,7 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
         return propValues;
     }
 
-    private <T extends AbstractEntity<?>> IRetrievalModel<T> produceRetrievalModel(final fetch<T> fetchModel) {
-        return EntityAggregates.class.equals(fetchModel.getEntityType()) ? new EntityAggregatesRetrievalModel<>(fetchModel, domainMetadataAnalyser) : //
-                new EntityRetrievalModel<>(fetchModel, domainMetadataAnalyser);
-    }
-
-    private <T extends AbstractEntity<?>> List<EntityContainer<E>> enhancePropertyWithLinkToParent(final List<EntityContainer<E>> entities, final String propertyName, final EntityRetrievalModel<T> fetchModel, final String linkPropName, final Map<String, Object> paramValues)
+    private <T extends AbstractEntity<?>> List<EntityContainer<E>> enhancePropertyWithLinkToParent(final List<EntityContainer<E>> entities, final String propertyName, final IRetrievalModel<T> fetchModel, final String linkPropName, final Map<String, Object> paramValues)
             throws Exception {
         // Obtaining map between property id and list of entities where this property occurs
         final Map<Long, List<EntityContainer<E>>> propertyValuesIds = getEntityPropertyIds(entities, propertyName);
@@ -205,7 +200,7 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
         return entities;
     }
 
-    private <T extends AbstractEntity<?>> List<EntityContainer<E>> enhanceProperty(final List<EntityContainer<E>> entities, final String propertyName, final EntityRetrievalModel<T> fetchModel, final Map<String, Object> paramValues) {
+    private <T extends AbstractEntity<?>> List<EntityContainer<E>> enhanceProperty(final List<EntityContainer<E>> entities, final String propertyName, final IRetrievalModel<T> fetchModel, final Map<String, Object> paramValues) {
         // Obtaining map between property id and list of entities where this property occurs
         final Map<Long, List<EntityContainer<E>>> propertyValuesIds = getEntityPropertyIds(entities, propertyName);
 
@@ -230,7 +225,7 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
         return entities;
     }
 
-    private <T extends AbstractEntity<?>> List<EntityContainer<T>> getDataInBatches(final List<Long> ids, final EntityRetrievalModel<T> fetchModel) {
+    private <T extends AbstractEntity<?>> List<EntityContainer<T>> getDataInBatches(final List<Long> ids, final IRetrievalModel<T> fetchModel) {
         final List<EntityContainer<T>> result = new ArrayList<EntityContainer<T>>();
         final Long[] allParentIds = new ArrayList<Long>(ids).toArray(new Long[] {});
 
@@ -255,7 +250,7 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
         return result;
     }
 
-    private <T extends AbstractEntity<?>> List<EntityContainer<E>> enhanceCollectional(final List<EntityContainer<E>> entitiesToBeEnhanced, final String propertyName, final Class propType, final String parentPropName, final EntityRetrievalModel<T> fetchModel, final Map<String, Object> paramValues) {
+    private <T extends AbstractEntity<?>> List<EntityContainer<E>> enhanceCollectional(final List<EntityContainer<E>> entitiesToBeEnhanced, final String propertyName, final Class propType, final String parentPropName, final IRetrievalModel<T> fetchModel, final Map<String, Object> paramValues) {
         // collect parental ids
         final Map<Long, EntityContainer<E>> parentIds = new HashMap<Long, EntityContainer<E>>();
         for (final EntityContainer<E> parentEntity : entitiesToBeEnhanced) {
@@ -289,7 +284,7 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
         return entitiesToBeEnhanced;
     }
 
-    private <T extends AbstractEntity<?>> List<EntityContainer<T>> getCollectionalDataInBatches(final Set<Long> parentIds, final String parentPropName, final EntityRetrievalModel<T> fetchModel, final Map<String, Object> paramValues) {
+    private <T extends AbstractEntity<?>> List<EntityContainer<T>> getCollectionalDataInBatches(final Set<Long> parentIds, final String parentPropName, final IRetrievalModel<T> fetchModel, final Map<String, Object> paramValues) {
         final List<EntityContainer<T>> result = new ArrayList<EntityContainer<T>>();
         final String idProp = parentPropName;
         final Long[] allParentIds = new ArrayList<Long>(parentIds).toArray(new Long[] {});

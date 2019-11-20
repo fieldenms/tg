@@ -22,7 +22,7 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> implem
     protected final fetch<T> originalFetch;
     private DomainMetadataAnalyser domainMetadataAnalyser;
 
-    private final Map<String, EntityRetrievalModel<? extends AbstractEntity<?>>> entityProps = new HashMap<>();
+    private final Map<String, IRetrievalModel<? extends AbstractEntity<?>>> entityProps = new HashMap<>();
     private final Set<String> primProps = new HashSet<String>();
     private final Set<String> proxiedProps = new HashSet<String>();
 
@@ -70,7 +70,7 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> implem
     }
 
     @Override
-    public Map<String, EntityRetrievalModel<? extends AbstractEntity<?>>> getRetrievalModels() {
+    public Map<String, IRetrievalModel<? extends AbstractEntity<?>>> getRetrievalModels() {
         return unmodifiableMap(entityProps);
     }
     
@@ -90,7 +90,7 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> implem
         sb.append(primProps);
         if (entityProps.size() > 0) {
             sb.append("\n------------------------------------------------");
-            for (final Entry<String, EntityRetrievalModel<? extends AbstractEntity<?>>> fetchEntry : entityProps.entrySet()) {
+            for (final Entry<String, IRetrievalModel<? extends AbstractEntity<?>>> fetchEntry : entityProps.entrySet()) {
                 sb.append("\n" + fetchEntry.getKey() + " <<< " + fetchEntry.getValue());
                 sb.append("\n------------------------------------------------");
             }

@@ -49,7 +49,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
         super(originalFetch, domainMetadataAnalyser);
         this.propsMetadata = domainMetadataAnalyser.getPropertyMetadatasForEntity(getEntityType());
         entityTypeInfo = new EntityTypeInfo<>(getEntityType());
-        
+
         switch (originalFetch.getFetchCategory()) {
         case ALL_INCL_CALC:
             includeAllFirstLevelPropsInclCalc();
@@ -227,12 +227,8 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
             }
         }
         
-        final EntityRetrievalModel<?> existingFetch = getRetrievalModels().get(propName);
-        fetch<?> finalFetch = existingFetch != null ? existingFetch.originalFetch.unionWith(fetchModel) : fetchModel;
+        final IRetrievalModel<?> existingFetch = getRetrievalModels().get(propName);
+        fetch<?> finalFetch = existingFetch != null ? existingFetch.getOriginalFetch().unionWith(fetchModel) : fetchModel;
         addEntityPropFetchModel(propName, new EntityRetrievalModel<>(finalFetch, getDomainMetadataAnalyser()));
-    }
-    
-    public boolean isFetchIdOnly() {
-        return getPrimProps().size() == 1 && getRetrievalModels().size() == 0 && containsProp(ID);
     }
 }
