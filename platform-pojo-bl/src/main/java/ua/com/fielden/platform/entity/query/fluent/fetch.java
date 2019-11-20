@@ -5,11 +5,6 @@ import static java.util.Collections.unmodifiableMap;
 import static java.util.Collections.unmodifiableSet;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
-import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.ALL;
-import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.DEFAULT;
-import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.ID_AND_VERSION;
-import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.ID_ONLY;
-import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.KEY_AND_DESC;
 import static ua.com.fielden.platform.reflection.Finder.isPropertyPresent;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 
@@ -26,7 +21,7 @@ import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 public class fetch<T extends AbstractEntity<?>> {
     public static final String MSG_MISMATCH_BETWEEN_PROPERTY_AND_FETCH_MODEL_TYPES = "Mismatch between actual type [%s] of property [%s] in entity type [%s] and its fetch model type [%s]!";
 
-    public enum FetchCategory {
+    public enum FetchCategory { // IMPORTANT: Should be declared in descending order of properties data population fullness.
         ALL_INCL_CALC,
         ALL, 
         DEFAULT, 
@@ -252,23 +247,7 @@ public class fetch<T extends AbstractEntity<?>> {
     }
 
     private FetchCategory getMergedFetchCategory(final fetch<?> second) {
-        if (fetchCategory == ALL || second.fetchCategory == ALL) {
-            return ALL;
-        }
-
-        if (fetchCategory == DEFAULT || second.fetchCategory == DEFAULT) {
-            return DEFAULT;
-        }
-
-        if (fetchCategory == KEY_AND_DESC || second.fetchCategory == KEY_AND_DESC) {
-            return KEY_AND_DESC;
-        }
-
-        if (fetchCategory == ID_AND_VERSION || second.fetchCategory == ID_AND_VERSION) {
-            return ID_AND_VERSION;
-        }
-
-        return ID_ONLY;
+        return second.fetchCategory.compareTo(fetchCategory) > 0 ? fetchCategory : second.fetchCategory;
     }
 
     public fetch<?> unionWith(final fetch<?> second) {
