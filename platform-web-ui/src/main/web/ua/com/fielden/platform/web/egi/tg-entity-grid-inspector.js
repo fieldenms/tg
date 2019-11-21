@@ -139,6 +139,22 @@ const template = html`
             flex-shrink: 0;
             @apply --layout-horizontal;
         }
+        .table-header-column-content {
+            width: 100%;
+            @apply --layout-horizontal;
+            @apply --layout-center;
+        }
+        .table-header-column-title {
+            margin-right: 8px;
+            @apply --layout-flex;
+        }
+        .header-icon {
+            flex-grow: 0;
+            flex-shrink: 0;
+        }
+        .sorting-group {
+            @apply --layout-horizontal;
+        }
         .table-data-row {
             z-index: 0;
             font-size: 1rem;
@@ -416,10 +432,17 @@ const template = html`
                         </div>
                         <template is="dom-repeat" items="[[fixedColumns]]">
                             <div class="table-cell cell" fixed style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, 'true')]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
-                                <div class="truncate flex" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
-                                <iron-icon hidden="[[!_headerHasAction(item)]]" icon="icons:create"></iron-icon>
-                                <iron-icon hidden="[[!item.editable]]" icon="icons:touch-app"></iron-icon>
-                                <iron-icon></iron-icon>
+                                <div class="table-header-column-content">
+                                    <div class="truncate table-header-column-title" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
+                                    <iron-icon class="header-icon" hidden$="[[!_headerHasAction(item)]]" icon="icons:touch-app"></iron-icon>
+                                    <iron-icon class="header-icon" hidden$="[[!item.editable]]" icon="icons:create"></iron-icon>
+                                    <div class="header-icon sorting-group" hidden$="[[!item.sortable]]">
+                                        <iron-icon icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_computeSortingIconStyle(item.sorting)]]"></iron-icon>
+                                        <span class="ordering-number self-center">[[_calculateOrder(item.sortingNumber)]]</span>
+                                    </div>
+                                    
+                                    <iron-icon class="header-icon" ></iron-icon>
+                                </div>
                                 <div class="resizing-box"></div>
                             </div>
                         </template>
@@ -435,10 +458,12 @@ const template = html`
                         </div>
                         <template is="dom-repeat" items="[[columns]]">
                             <div class="table-cell cell" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, 'false')]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
-                                <div class="truncate flex" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
-                                <iron-icon hidden="[[!_headerHasAction(item)]]" icon="icons:create"></iron-icon>
-                                <iron-icon hidden="[[!item.editable]]" icon="icons:touch-app"></iron-icon>
-                                <iron-icon></iron-icon>
+                                <div class="table-header-column-content">
+                                    <div class="truncate table-header-column-title" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
+                                    <iron-icon class="header-icon" hidden="[[!_headerHasAction(item)]]" icon="icons:touch-app"></iron-icon>
+                                    <iron-icon class="header-icon" hidden="[[!item.editable]]" icon="icons:create"></iron-icon>
+                                    <iron-icon class="header-icon"></iron-icon>
+                                </div>
                                 <div class="resizing-box"></div>
                             </div>
                         </template>

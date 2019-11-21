@@ -492,7 +492,7 @@ const TgEntityCentreBehaviorImpl = {
         const insertionPoints = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point');
         this.$.egi.showMarginAround = insertionPoints.length > 0;
 
-        self._postRun = (function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, visibleColumnsWithOrder) {
+        self._postRun = (function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, resultConfig) {
             if (criteriaEntity === null || criteriaEntity.isValidWithoutException()) {
                 if (typeof summary !== 'undefined') {
                     this.retrievedTotals = summary;
@@ -502,7 +502,7 @@ const TgEntityCentreBehaviorImpl = {
                 this.selectionCriteriaEntity = criteriaEntity;
                 this.$.egi.renderingHints = renderingHints;
                 this.$.egi.adjustColumnWidths(columnWidths);
-                this.$.egi.adjustColumnsVisibility(visibleColumnsWithOrder.map(column => column === "this" ? "" : column));
+                this.$.egi.adjustColumnsVisibility(resultConfig.visibleColumnsWithOrder.map(column => column === "this" ? "" : column));
                 if (this._triggerRun) {
                     if (this._selectedView === 0) {
                         this.async(function () {
