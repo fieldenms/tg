@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.dao;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.util.stream.Stream;
 
@@ -19,11 +18,12 @@ import ua.com.fielden.platform.utils.Pair;
 /**
  * A DAO for {@link EntityWithMoney} used for testing.
  * 
- * @author 01es
+ * @author TG Team
  * 
  */
 @EntityType(EntityWithMoney.class)
 public class EntityWithMoneyDao extends CommonEntityDao<EntityWithMoney> implements IEntityWithMoney {
+    public static final String ERR_PURPOSEFUL_EXCEPTION = "Purposeful exception.";
 
     @Inject
     protected EntityWithMoneyDao(final IFilter filter) {
@@ -33,7 +33,7 @@ public class EntityWithMoneyDao extends CommonEntityDao<EntityWithMoney> impleme
     @SessionRequired
     public EntityWithMoney saveWithException(final EntityWithMoney entity) {
         super.save(entity);
-        throw new RuntimeException("Purposeful exception.");
+        throw new RuntimeException(ERR_PURPOSEFUL_EXCEPTION);
     }
 
     @SessionRequired
