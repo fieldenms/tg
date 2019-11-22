@@ -19,6 +19,8 @@ const DEFAULT_LENGTH = 0;
  */
 const DEFAULT_TRAILING_ZEROS = true;
 
+const DEFAULT_DISPLAY_AS = "";
+
 const _UNDEFINED_CONFIG_TITLE = '_______________________undefined';
 const _LINK_CONFIG_TITLE = '_______________________link';
 const KEY_NOT_ASSIGNED = "[key is not assigned]"; // closely resembles AbstractEntity.KEY_NOT_ASSIGNED
@@ -176,6 +178,13 @@ var _createEntityTypePropPrototype = function () {
      */
     EntityTypeProp.prototype.trailingZeros = function () {
         return typeof this._trailingZeros === 'undefined' ? DEFAULT_TRAILING_ZEROS : this._trailingZeros;
+    }
+
+    /** 
+     * Returns entity type prop scale.
+     */
+    EntityTypeProp.prototype.displayAs = function () {
+        return typeof this._displayAs === 'undefined' ? DEFAULT_DISPLAY_AS : this._displayAs;
     }
 
     return EntityTypeProp;
