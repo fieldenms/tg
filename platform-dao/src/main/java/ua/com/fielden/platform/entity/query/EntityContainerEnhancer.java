@@ -50,11 +50,11 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
             return entities;
         }
 
-        final Map<String, IRetrievalModel<? extends AbstractEntity<?>>> propertiesFetchModels = fetchModel.getRetrievalModels();
+        final Map<String, fetch<? extends AbstractEntity<?>>> propertiesFetchModels = fetchModel.getRetrievalModels();
 
-        for (final Map.Entry<String, IRetrievalModel<?>> entry : propertiesFetchModels.entrySet()) {
+        for (final Map.Entry<String, fetch<?>> entry : propertiesFetchModels.entrySet()) {
             final String propName = entry.getKey();
-            final IRetrievalModel<? extends AbstractEntity<?>> propFetchModel = entry.getValue();
+            final IRetrievalModel<? extends AbstractEntity<?>> propFetchModel = produceRetrievalModel(entry.getValue());
 
             if (propFetchModel.isFetchIdOnly()) {
                 assignIdOnlyProxiedResultTypeToIdOnlyEntityProperty(entities, propName, propFetchModel.getEntityType());
@@ -99,6 +99,11 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
         assignInstrumentationSetting(entities, fetchModel);
 
         return entities;
+    }
+    
+    private <T extends AbstractEntity<?>> IRetrievalModel<T> produceRetrievalModel(final fetch<T> fetchModel) {
+        return EntityAggregates.class.equals(fetchModel.getEntityType()) ? new EntityAggregatesRetrievalModel<>(fetchModel, domainMetadataAnalyser) : //
+                new EntityRetrievalModel<>(fetchModel, domainMetadataAnalyser);
     }
 
     private void assignInstrumentationSetting(final List<EntityContainer<E>> entities, final IRetrievalModel<E> fetchModel) {

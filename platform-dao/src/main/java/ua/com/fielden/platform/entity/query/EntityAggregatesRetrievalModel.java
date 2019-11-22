@@ -26,22 +26,27 @@ public class EntityAggregatesRetrievalModel<T extends AbstractEntity<?>> extends
     }
 
     private void validateModel() {
-        if (NONE != getOriginalFetch().getFetchCategory()) {
+        if (NONE != originalFetch.getFetchCategory()) {
             throw new EqlException("The only acceptable category for EntityAggregates entity type fetch model creation is NONE. Use EntityQueryUtils.fetchAggregates(..) method for obtaining correct fetch model.");
         }
 
-        if (getOriginalFetch().getExcludedProps().size() > 0) {
+        if (originalFetch.getExcludedProps().size() > 0) {
             throw new EqlException("The possibility to exclude certain properties can't be applied for EntityAggregates entity type fetch model!");
         }
 
-        if (getOriginalFetch().getIncludedPropsWithModels().size() + getOriginalFetch().getIncludedProps().size() == 0) {
+        if (originalFetch.getIncludedPropsWithModels().size() + originalFetch.getIncludedProps().size() == 0) {
             throw new EqlException("Can't accept empty fetch model for EntityAggregates entity type fetching!");
         }
     }
 
     private void addEntityPropsModel(final String propName, final fetch<? extends AbstractEntity<?>> fetchModel) {
-        final IRetrievalModel<?> existingFetch = getRetrievalModels().get(propName);
-        fetch<?> finalFetch = existingFetch != null ? existingFetch.getOriginalFetch().unionWith(fetchModel) : fetchModel;
-        addEntityPropFetchModel(propName, new EntityRetrievalModel<>(finalFetch, getDomainMetadataAnalyser()));
+        final fetch<?> existingFetch = getRetrievalModels().get(propName);
+        fetch<?> finalFetch = existingFetch != null ? existingFetch.unionWith(fetchModel) : fetchModel;
+        addEntityPropFetchModel(propName, finalFetch);
+    }
+
+    @Override
+    public boolean isFetchIdOnly() {
+        return false;
     }
 }

@@ -22,17 +22,13 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> implem
     protected final fetch<T> originalFetch;
     private DomainMetadataAnalyser domainMetadataAnalyser;
 
-    private final Map<String, IRetrievalModel<? extends AbstractEntity<?>>> entityProps = new HashMap<>();
+    private final Map<String, fetch<? extends AbstractEntity<?>>> entityProps = new HashMap<>();
     private final Set<String> primProps = new HashSet<String>();
     private final Set<String> proxiedProps = new HashSet<String>();
 
     public AbstractRetrievalModel(final fetch<T> originalFetch, final DomainMetadataAnalyser domainMetadataAnalyser) {
         this.originalFetch = originalFetch;
         this.domainMetadataAnalyser = domainMetadataAnalyser;
-    }
-
-    public fetch<T> getOriginalFetch() {
-        return originalFetch;
     }
 
     @Override
@@ -50,11 +46,6 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> implem
     }
 
     @Override
-    public boolean containsProxy(final String propName) {
-        return proxiedProps.contains(propName);
-    }
-
-    @Override
     public Class<T> getEntityType() {
         return originalFetch.getEntityType();
     }
@@ -64,13 +55,12 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> implem
         return originalFetch.isInstrumented();
     }
 
-    @Override
-    public Set<String> getPrimProps() {
+    protected Set<String> getPrimProps() {
         return unmodifiableSet(primProps);
     }
 
     @Override
-    public Map<String, IRetrievalModel<? extends AbstractEntity<?>>> getRetrievalModels() {
+    public Map<String, fetch<? extends AbstractEntity<?>>> getRetrievalModels() {
         return unmodifiableMap(entityProps);
     }
     
@@ -78,7 +68,7 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> implem
         primProps.add(name);
     }
 
-    protected void addEntityPropFetchModel(final String propName, final EntityRetrievalModel<? extends AbstractEntity<?>> fetchModel) {
+    protected void addEntityPropFetchModel(final String propName, final fetch<? extends AbstractEntity<?>> fetchModel) {
         entityProps.put(propName, fetchModel);
     }
 
@@ -90,7 +80,7 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> implem
         sb.append(primProps);
         if (entityProps.size() > 0) {
             sb.append("\n------------------------------------------------");
-            for (final Entry<String, IRetrievalModel<? extends AbstractEntity<?>>> fetchEntry : entityProps.entrySet()) {
+            for (final Entry<String, fetch<? extends AbstractEntity<?>>> fetchEntry : entityProps.entrySet()) {
                 sb.append("\n" + fetchEntry.getKey() + " <<< " + fetchEntry.getValue());
                 sb.append("\n------------------------------------------------");
             }

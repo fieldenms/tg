@@ -227,8 +227,13 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
             }
         }
         
-        final IRetrievalModel<?> existingFetch = getRetrievalModels().get(propName);
-        fetch<?> finalFetch = existingFetch != null ? existingFetch.getOriginalFetch().unionWith(fetchModel) : fetchModel;
-        addEntityPropFetchModel(propName, new EntityRetrievalModel<>(finalFetch, getDomainMetadataAnalyser()));
+        final fetch<?> existingFetch = getRetrievalModels().get(propName);
+        fetch<?> finalFetch = existingFetch != null ? existingFetch.unionWith(fetchModel) : fetchModel;
+        addEntityPropFetchModel(propName, finalFetch);
+    }
+
+    @Override
+    public boolean isFetchIdOnly() {
+        return getPrimProps().size() == 1 && getRetrievalModels().size() == 0 && containsProp(ID);
     }
 }
