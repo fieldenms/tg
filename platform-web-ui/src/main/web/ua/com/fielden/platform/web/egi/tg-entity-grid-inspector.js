@@ -149,9 +149,12 @@ const template = html`
             @apply --layout-flex;
         }
         .header-icon {
-            width: 16px;
             flex-grow: 0;
             flex-shrink: 0;
+        }
+        .indicator-icon {
+            --iron-icon-width: 16px;
+            --iron-icon-height: 16px;
         }
         .sorting-group {
             @apply --layout-horizontal;
@@ -440,10 +443,10 @@ const template = html`
                             <div class="table-cell cell" fixed style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, 'true')]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                                 <div class="table-header-column-content">
                                     <div class="truncate table-header-column-title" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
-                                    <iron-icon class="header-icon" hidden$="[[!_headerHasAction(item)]]" icon="icons:touch-app"></iron-icon>
-                                    <iron-icon class="header-icon" hidden$="[[!item.editable]]" icon="icons:create"></iron-icon>
-                                    <div class="header-icon sorting-group" hidden$="[[!item.sortable]]">
-                                        <iron-icon icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_computeSortingIconStyle(item.sorting)]]"></iron-icon>
+                                    <iron-icon class="header-icon indicator-icon" hidden$="[[!_headerHasAction(item)]]" icon="tg-icons:cursor-pointer"></iron-icon>
+                                    <iron-icon class="header-icon indicator-icon" hidden$="[[!item.editable]]" icon="icons:create"></iron-icon>
+                                    <div class="header-icon sorting-group" hidden$="[[!_isSortingVisible(item.sortable, item.sorting)]]">
+                                        <iron-icon class="indicator-icon" icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_computeSortingIconStyle(item.sorting)]]"></iron-icon>
                                         <span class="ordering-number">[[_calculateOrder(item.sortingNumber)]]</span>
                                     </div>
                                 </div>
@@ -464,10 +467,10 @@ const template = html`
                             <div class="table-cell cell" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, 'false')]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                                 <div class="table-header-column-content">
                                     <div class="truncate table-header-column-title" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
-                                    <iron-icon class="header-icon" hidden="[[!_headerHasAction(item)]]" icon="icons:touch-app"></iron-icon>
-                                    <iron-icon class="header-icon" hidden="[[!item.editable]]" icon="icons:create"></iron-icon>
-                                    <div class="header-icon sorting-group" hidden$="[[!item.sortable]]">
-                                        <iron-icon icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_computeSortingIconStyle(item.sorting)]]"></iron-icon>
+                                    <iron-icon class="header-icon indicator-icon" hidden="[[!_headerHasAction(item)]]" icon="tg-icons:cursor-pointer"></iron-icon>
+                                    <iron-icon class="header-icon indicator-icon" hidden="[[!item.editable]]" icon="icons:create"></iron-icon>
+                                    <div class="header-icon sorting-group" hidden$="[[!_isSortingVisible(item.sortable, item.sorting)]]">
+                                        <iron-icon class="indicator-icon" icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_computeSortingIconStyle(item.sorting)]]"></iron-icon>
                                         <span class="ordering-number">[[_calculateOrder(item.sortingNumber)]]</span>
                                     </div>
                                 </div>
@@ -1725,14 +1728,16 @@ Polymer({
         return "";
     },
 
+    _isSortingVisible: function (sortable, sorting) {
+        return sortable && typeof sorting !== 'undefined' && sorting !== null;
+    },
+
     _sortingIconForItem: function (sorting) {
         return sorting === true ? 'arrow-drop-up' : (sorting === false ? 'arrow-drop-down' : 'arrow-drop-up');
     },
 
     _computeSortingIconStyle: function (sorting) {
-        let style = sorting !== null ? 'color: black;' : 'color: grey;';
-        style += sorting === true ? 'align-self:flex-start' : (sorting === false ? 'align-self:flex-end' : 'align-self:flex-start');
-        return style;
+        return sorting === true ? 'align-self:flex-start' : (sorting === false ? 'align-self:flex-end' : 'align-self:flex-start');
     },
 
     _calculateOrder: function (sortingNumber) {
