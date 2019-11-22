@@ -107,7 +107,11 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
 
     private void includeAllCompositeKeyMembers() {
         for (final T2<String, Class<?>> compositeKeyMember : entityTypeInfo.compositeKeyMembers) {
-            with(compositeKeyMember._1, !isEntityType(compositeKeyMember._2));
+            if (isEntityType(compositeKeyMember._2)) {
+                with(compositeKeyMember._1, fetch((Class<? extends AbstractEntity<?>>) compositeKeyMember._2));
+            } else {
+                with(compositeKeyMember._1, false);
+            }
         }
     }
 
