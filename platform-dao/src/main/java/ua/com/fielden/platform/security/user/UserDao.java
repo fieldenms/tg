@@ -223,6 +223,9 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
      * @return
      */
     private UserSecret findOrCreateNewSecret(final User user, final IUserSecret coUserSecret) {
+        if (!user.isPersisted()) {
+            throw new SecurityException("User must be persisted.");
+        }
         return coUserSecret.findByIdOptional(user.getId(), coUserSecret.getFetchProvider().fetchModel()).orElseGet(() -> coUserSecret.new_().setKey(user));
     }
 
@@ -245,11 +248,10 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     @Override
     @SessionRequired
     @Authorise(AlwaysAccessibleToken.class)
-    public UserSecret resetPasswd(final User user, final String passwd) {
+    public UserSecret resetPasswd(final User forUser, final String passwd) {
         try {
-            if (user.isInstrumented() && user.isDirty()) {
-                save(user);
-            }
+            final User user = forUser.isInstrumented() && forUser.isDirty() ? save(forUser) : forUser;
+            
             final IUserSecret co$UserSecret = co$(UserSecret.class);
             final UserSecret secret = findOrCreateNewSecret(user, co$UserSecret);
             // salt needs to be unique... at least amongst the users
