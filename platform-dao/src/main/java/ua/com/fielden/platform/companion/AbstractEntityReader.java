@@ -51,6 +51,7 @@ import ua.com.fielden.platform.utils.Pair;
  * @param <T>
  */
 public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implements IEntityReader<T> {
+    public static final String ERR_MISSING_ID_VALUE = "Argument [id] must have a value to find an instance of [%s].";
     
     ///////////////////////////////////////////////////////////
     ////////////// infrastructural methods ////////////////////
@@ -326,6 +327,9 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
      * @return
      */
     private T fetchOneEntityInstance(final Long id, final fetch<T> fetchModel) {
+        if (id == null) {
+            throw new EntityCompanionException(format(ERR_MISSING_ID_VALUE, getEntityType().getName()));
+        }
         try {
             final EntityResultQueryModel<T> query = select(getEntityType()).where().prop(AbstractEntity.ID).eq().val(id).model();
             query.setFilterable(isFilterable());
