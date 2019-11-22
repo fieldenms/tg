@@ -75,6 +75,20 @@ public class EntityTypeProp extends AbstractEntity<String> {
     @Title(value = "Show Trailing Zeros?", desc = "Should display trailing zeros?")
     private boolean _trailingZeros;
 
+    @IsProperty
+    @Title(value = "Display  pattern", desc = "Pattern that is used to display value for entity type property")
+    private String _displayAs;
+
+    @Observable
+    public EntityTypeProp set_displayAs(final String _displayAs) {
+        this._displayAs = _displayAs;
+        return this;
+    }
+
+    public String get_displayAs() {
+        return _displayAs;
+    }
+
     @Observable
     public EntityTypeProp set_trailingZeros(final boolean _trailingZeros) {
         this._trailingZeros = _trailingZeros;

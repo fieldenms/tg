@@ -1,9 +1,11 @@
 package ua.com.fielden.platform.entity.annotation.factory;
 
+import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_DISPLAY_AS;
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_LENGTH;
+import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_LINK_PROPERTY;
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_PRECISION;
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_SCALE;
-import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_LINK_PROPERTY;
+import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_TRAILING_ZEROS;
 
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 
@@ -22,15 +24,17 @@ public class IsPropertyAnnotation {
     private final int precision;
     private final int scale;
     private final boolean trailingZeros;
+    private final String displayAs;
 
     public IsPropertyAnnotation(
-            final Class<?> value, 
-            final String linkProperty, 
+            final Class<?> value,
+            final String linkProperty,
             final boolean assignBeforeSave,
             final int length,
             final int precision,
             final int scale,
-            final boolean trailingZeros) {
+            final boolean trailingZeros,
+            final String displayAs) {
         this.value = value;
         this.linkProperty = linkProperty;
         this.assignBeforeSave = assignBeforeSave;
@@ -38,14 +42,15 @@ public class IsPropertyAnnotation {
         this.precision = precision;
         this.scale = scale;
         this.trailingZeros = trailingZeros;
+        this.displayAs = displayAs;
     }
 
     public IsPropertyAnnotation(final Class<?> value, final String linkProperty, final boolean assignBeforeSave) {
-        this(value, linkProperty, assignBeforeSave, DEFAULT_LENGTH, DEFAULT_PRECISION, DEFAULT_SCALE, IsProperty.DEFAULT_TRAILING_ZEROS);
+        this(value, linkProperty, assignBeforeSave, DEFAULT_LENGTH, DEFAULT_PRECISION, DEFAULT_SCALE, DEFAULT_TRAILING_ZEROS, DEFAULT_DISPLAY_AS);
     }
 
     public IsPropertyAnnotation(final int precision, final int scale) {
-        this(Void.class, DEFAULT_LINK_PROPERTY, false, DEFAULT_LENGTH, precision, scale, IsProperty.DEFAULT_TRAILING_ZEROS);
+        this(Void.class, DEFAULT_LINK_PROPERTY, false, DEFAULT_LENGTH, precision, scale, DEFAULT_TRAILING_ZEROS, DEFAULT_DISPLAY_AS);
     }
 
     public IsPropertyAnnotation(final Class<?> value, final String linkProperty) {
@@ -102,10 +107,15 @@ public class IsPropertyAnnotation {
             public int scale() {
                 return scale;
             }
-            
+
             @Override
             public boolean trailingZeros() {
                 return trailingZeros;
+            }
+
+            @Override
+            public String displayAs() {
+                return displayAs;
             }
         };
     }
@@ -151,6 +161,11 @@ public class IsPropertyAnnotation {
             @Override
             public boolean trailingZeros() {
                 return original.trailingZeros();
+            }
+
+            @Override
+            public String displayAs() {
+                return original.displayAs();
             }
         };
     }

@@ -191,7 +191,8 @@ export class EntityStub {
             prop: (prop) => {
                 return {
                     scale: () => 0,
-                    trailingZeros: () => true
+                    trailingZeros: () => true,
+                    displayAs: () => ""
                 }
             }
         }
