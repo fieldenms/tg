@@ -429,9 +429,9 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     }
 
     @Observable
-    public AbstractEntity<K> setDesc(final String desc) {
+    public <ET extends AbstractEntity<K>> ET setDesc(final String desc) {
         this.desc = desc;
-        return this;
+        return (ET) this;
     }
 
     public K getKey() {

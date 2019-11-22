@@ -1,16 +1,19 @@
 package ua.com.fielden.platform.dao;
 
+import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.companion.AbstractEntityReader.ERR_MISSING_ID_VALUE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllInclCalc;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithoutCritOnly;
+import static ua.com.fielden.platform.utils.EntityUtils.fetch;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -21,6 +24,7 @@ import java.util.stream.Stream;
 import org.joda.time.DateTime;
 import org.junit.Test;
 
+import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.pagination.IPage;
@@ -56,6 +60,38 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
         assertEquals("Incorrect number of found entities.", 4, dao.getPage(from(model1).model(), 0, 25).data().size());
         final EntityResultQueryModel<EntityWithMoney> model2 = select(EntityWithMoney.class).where().prop("key").like().val("e%").model();
         assertEquals("Incorrect number of found entities.", 0, dao.getPage(from(model2).model(), 0, 25).data().size());
+    }
+
+    @Test
+    public void attempts_to_find_entities_by_passing_null_as_id_value_throws_exception() {
+        final IEntityWithMoney co = co$(EntityWithMoney.class);
+
+        final Long idNull = null;
+        final String errMsg = format(ERR_MISSING_ID_VALUE, EntityWithMoney.class.getName());
+
+        try {
+            co.findById(idNull);
+        } catch (final EntityCompanionException ex) {
+            assertEquals(errMsg, ex.getMessage());
+        }
+
+        try {
+            co.findByIdOptional(idNull);
+        } catch (final EntityCompanionException ex) {
+            assertEquals(errMsg, ex.getMessage());
+        }
+
+        try {
+            co.findById(idNull, fetch(EntityWithMoney.class).fetchModel());
+        } catch (final EntityCompanionException ex) {
+            assertEquals(errMsg, ex.getMessage());
+        }
+
+        try {
+            co.findByIdOptional(idNull, fetch(EntityWithMoney.class).fetchModel());
+        } catch (final EntityCompanionException ex) {
+            assertEquals(errMsg, ex.getMessage());
+        }
     }
 
     @Test
