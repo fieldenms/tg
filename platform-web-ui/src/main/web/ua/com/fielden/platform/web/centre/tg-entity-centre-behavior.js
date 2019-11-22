@@ -503,6 +503,12 @@ const TgEntityCentreBehaviorImpl = {
                 this.$.egi.renderingHints = renderingHints;
                 this.$.egi.adjustColumnWidths(columnWidths);
                 this.$.egi.adjustColumnsVisibility(resultConfig.visibleColumnsWithOrder.map(column => column === "this" ? "" : column));
+                this.$.egi.adjustColumnsSorting(resultConfig.orderingConfig.map(propOrder => {
+                   if (propOrder.property === "this") {
+                       propOrder.property = "";
+                   }
+                   return propOrder;
+                }))
                 if (this._triggerRun) {
                     if (this._selectedView === 0) {
                         this.async(function () {

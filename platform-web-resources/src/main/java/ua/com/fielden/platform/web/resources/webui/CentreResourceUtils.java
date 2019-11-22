@@ -284,7 +284,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     private static List<Map<String, String>> createOrderingProperties(final List<Pair<String, Ordering>> orderedProperties) {
         return orderedProperties.stream().map(pair -> {
             final Map<String, String> prop = new HashMap<>();
-            prop.put(pair.getKey(), pair.getValue().name());
+            prop.put("property", pair.getKey());
+            prop.put("sorting", pair.getValue().name());
             return prop;
         }).collect(Collectors.toList());
     }

@@ -149,11 +149,17 @@ const template = html`
             @apply --layout-flex;
         }
         .header-icon {
+            width: 16px;
             flex-grow: 0;
             flex-shrink: 0;
         }
         .sorting-group {
             @apply --layout-horizontal;
+        }
+        .ordering-number {
+            font-size: 8pt;
+            width: 1rem;
+            @apply --layout-self-center;
         }
         .table-data-row {
             z-index: 0;
@@ -438,10 +444,8 @@ const template = html`
                                     <iron-icon class="header-icon" hidden$="[[!item.editable]]" icon="icons:create"></iron-icon>
                                     <div class="header-icon sorting-group" hidden$="[[!item.sortable]]">
                                         <iron-icon icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_computeSortingIconStyle(item.sorting)]]"></iron-icon>
-                                        <span class="ordering-number self-center">[[_calculateOrder(item.sortingNumber)]]</span>
+                                        <span class="ordering-number">[[_calculateOrder(item.sortingNumber)]]</span>
                                     </div>
-                                    
-                                    <iron-icon class="header-icon" ></iron-icon>
                                 </div>
                                 <div class="resizing-box"></div>
                             </div>
@@ -462,7 +466,10 @@ const template = html`
                                     <div class="truncate table-header-column-title" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
                                     <iron-icon class="header-icon" hidden="[[!_headerHasAction(item)]]" icon="icons:touch-app"></iron-icon>
                                     <iron-icon class="header-icon" hidden="[[!item.editable]]" icon="icons:create"></iron-icon>
-                                    <iron-icon class="header-icon"></iron-icon>
+                                    <div class="header-icon sorting-group" hidden$="[[!item.sortable]]">
+                                        <iron-icon icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_computeSortingIconStyle(item.sorting)]]"></iron-icon>
+                                        <span class="ordering-number">[[_calculateOrder(item.sortingNumber)]]</span>
+                                    </div>
                                 </div>
                                 <div class="resizing-box"></div>
                             </div>
@@ -1197,6 +1204,27 @@ Polymer({
         this._updateColumns(resultantColumns);
     },
 
+    /**
+     * Updates the sorting order for available columns
+     */
+    adjustColumnsSorting: function (sortingConfig) {
+        this._setSortingFor(sortingConfig, this.fixedColumns, "fixedColumns");
+        this._setSortingFor(sortingConfig, this.columns, "columns");
+    },
+
+    _setSortingFor(sortingConfig, columns, modelName) {
+        columns.forEach((col, idx) => {
+            const configIdx = sortingConfig.findIndex(config => config.property === col.property);
+            if (configIdx >= 0) {
+                this.set(modelName + "." + idx + ".sorting", sortingConfig[configIdx].sorting === 'ASCENDING' ? true : false);
+                this.set(modelName + "." + idx + ".sortingNumber", configIdx);
+            } else {
+                this.set(modelName + "." + idx + ".sorting", null);
+                this.set(modelName + "." + idx + ".sortingNumber", -1);
+            }
+        });
+    },
+
     tap: function (entityIndex, entity, index, column) {
         if (this.master && this.master.editors.length > 0 && this._tapOnce && this.canOpenMaster()) {
             delete this._tapOnce;
@@ -1425,6 +1453,7 @@ Polymer({
             otherColumnWidth: calculateColumnWidthExcept(this, e.currentTarget.hasAttribute("fixed") ? e.model.index : this.fixedColumns.length + e.model.index, columnElements, this.columns.length + this.fixedColumns.length, () => true, () => true, () => true, () => true),
             otherFixedColumnWidth :  calculateColumnWidthExcept(this, e.currentTarget.hasAttribute("fixed") ? e.model.index : -1, columnElements, this.fixedColumns.length, () => this.dragAnchorFixed, () => this.checkboxesFixed, () => this.checkboxesWithPrimaryActionsFixed, () => this.secondaryActionsFixed),
             widthCorrection: e.currentTarget.offsetWidth - e.currentTarget.firstElementChild.offsetWidth,
+            indicatorsWidth: [...e.currentTarget.firstElementChild.querySelectorAll(".header-icon:not([hidden])")].reduce((prev, curr) => prev + curr.offsetWidth, 0),
             hasAnyFlex: this.columns.some((column, index) => index !== e.model.index && column.growFactor !== 0)
         };
     },
@@ -1435,8 +1464,8 @@ Polymer({
             let newWidth = columnWidth + e.detail.ddx;
 
             //Correct size if EGI is less then min width.
-            if (newWidth < e.model.item.minWidth) {
-                newWidth = e.model.item.minWidth;
+            if (newWidth < e.model.item.minWidth + this._columnResizingObject.indicatorsWidth) {
+                newWidth = e.model.item.minWidth + this._columnResizingObject.indicatorsWidth;
             }
 
             //Correct width if fixed container has become bigger then scrollabel conatiner
@@ -1486,8 +1515,8 @@ Polymer({
             }
 
             //Correct size if EGI is less then min width.
-            if (newWidth < e.model.item.minWidth) {
-                newWidth = e.model.item.minWidth;
+            if (newWidth < e.model.item.minWidth + this._columnResizingObject.indicatorsWidth) {
+                newWidth = e.model.item.minWidth + this._columnResizingObject.indicatorsWidth;
             }
             
             //Change the column width if it is needed
@@ -1694,6 +1723,20 @@ Polymer({
             return "text-align: right;"
         }
         return "";
+    },
+
+    _sortingIconForItem: function (sorting) {
+        return sorting === true ? 'arrow-drop-up' : (sorting === false ? 'arrow-drop-down' : 'arrow-drop-up');
+    },
+
+    _computeSortingIconStyle: function (sorting) {
+        let style = sorting !== null ? 'color: black;' : 'color: grey;';
+        style += sorting === true ? 'align-self:flex-start' : (sorting === false ? 'align-self:flex-end' : 'align-self:flex-start');
+        return style;
+    },
+
+    _calculateOrder: function (sortingNumber) {
+        return sortingNumber >= 0 ? sortingNumber + 1 + "" : "";
     },
 
     _calcColumnStyle: function (item, itemWidth, columnGrowFactor, fixed) {

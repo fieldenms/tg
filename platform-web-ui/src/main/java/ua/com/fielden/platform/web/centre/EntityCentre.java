@@ -929,7 +929,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 final PropertyColumnElement el = new PropertyColumnElement(resultPropName,
                         resultProp.widget,
                         resultProp.dynamicColBuilderType.isPresent(),
-                        resultProp.propDef.isPresent(),
+                        !resultProp.propDef.isPresent(),
                         resultProp.width,
                         centre.getSecondTick().getGrowFactor(root, resultPropName),
                         resultProp.isFlexible,
