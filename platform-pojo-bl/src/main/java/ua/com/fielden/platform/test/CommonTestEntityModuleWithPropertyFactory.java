@@ -7,6 +7,8 @@ import ua.com.fielden.platform.entity.factory.DefaultCompanionObjectFinderImpl;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.ioc.EntityModule;
+import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.test.config.ApplicationDomain;
 
 /**
@@ -25,6 +27,7 @@ public final class CommonTestEntityModuleWithPropertyFactory extends EntityModul
         
         bind(IApplicationDomainProvider.class).to(ApplicationDomain.class);
         bind(ICompanionObjectFinder.class).to(DefaultCompanionObjectFinderImpl.class).in(Scopes.SINGLETON);
+        bind(IUniversalConstants.class).to(UniversalConstantsForTesting.class).in(Scopes.SINGLETON);
     }
     
 }

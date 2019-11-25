@@ -14,6 +14,8 @@ import ua.com.fielden.platform.sample.domain.ITgSystem;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.test.config.ApplicationDomain;
 
 public class CriteriaGeneratorTestModule extends EntityModuleWithPropertyFactory {
@@ -32,6 +34,7 @@ public class CriteriaGeneratorTestModule extends EntityModuleWithPropertyFactory
         bind(ISerialiser.class).to(StubSerialiser.class).in(Scopes.SINGLETON);
         bind(ISerialisationClassProvider.class).to(StubSerialisationClassProvider.class).in(Scopes.SINGLETON);
         bind(ITgSystem.class).to(TgSystemDaoStub.class);
+        bind(IUniversalConstants.class).to(UniversalConstantsForTesting.class).in(Scopes.SINGLETON);
     }
 
 }
