@@ -64,7 +64,9 @@ import ua.com.fielden.platform.sample.domain.ITgBogieLocation;
 import ua.com.fielden.platform.sample.domain.ITgEntityWithComplexSummaries;
 import ua.com.fielden.platform.sample.domain.ITgFuelType;
 import ua.com.fielden.platform.sample.domain.ITgFuelUsage;
+import ua.com.fielden.platform.sample.domain.ITgLocation;
 import ua.com.fielden.platform.sample.domain.ITgMakeCount;
+import ua.com.fielden.platform.sample.domain.ITgMovement;
 import ua.com.fielden.platform.sample.domain.ITgOrgUnit5;
 import ua.com.fielden.platform.sample.domain.ITgPersonName;
 import ua.com.fielden.platform.sample.domain.ITgPublishedYearly;
@@ -82,7 +84,9 @@ import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 import ua.com.fielden.platform.sample.domain.TgEntityWithComplexSummaries;
 import ua.com.fielden.platform.sample.domain.TgFuelType;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
+import ua.com.fielden.platform.sample.domain.TgLocation;
 import ua.com.fielden.platform.sample.domain.TgMakeCount;
+import ua.com.fielden.platform.sample.domain.TgMovement;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
@@ -133,6 +137,8 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     private final ITgEntityWithComplexSummaries coEntityWithComplexSummaries = getInstance(ITgEntityWithComplexSummaries.class);
     private final ICompoundCondition0<TgVehicle> singleResultQueryStub = select(TgVehicle.class).where().prop("key").eq().val("CAR1");
     private final ITgPublishedYearly coPublishedYearly = getInstance(ITgPublishedYearly.class);
+    private final ITgLocation coLocation = getInstance(ITgLocation.class);
+    private final ITgMovement coMovement = getInstance(ITgMovement.class);
 
     /////////////////////////////////////// WITHOUT ASSERTIONS /////////////////////////////////////////
 
@@ -1864,6 +1870,23 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         final TgFuelUsage fuelUsage = fuelUsageDao.getEntity(from(qry).with(fetch).model());
         assertTrue(isEntityInstrumented(fuelUsage.getVehicle()));
     }
+    
+    @Test
+    public void entity_with_recursion_in_key_definition_is_fetched_correctly() {
+        final EntityResultQueryModel<TgLocation> qry = select(TgLocation.class).where().prop("name").eq().val("loc1_3_3").model();
+        final fetch<TgLocation> fetch = fetchKeyAndDescOnly(TgLocation.class);
+        final TgLocation location = coLocation.getEntity(from(qry).with(fetch).model());
+        assertEquals("Incorrect key", "loc1 loc1_3 loc1_3_3", location.getKey().toString());
+        assertEquals("Incorrect level", "2", location.getParent().getLevel().toString());
+    }
+
+    @Test
+    public void entity_with_composite_key_containing_two_entities_with_recursion_in_key_definition_is_fetched_correctly() {
+        final EntityResultQueryModel<TgMovement> qry = select(TgMovement.class).where().prop("date").eq().val(new DateTime(2003, 01, 01, 0, 0).toDate()).model();
+        final fetch<TgMovement> fetch = fetchKeyAndDescOnly(TgMovement.class);
+        final TgMovement movement = coMovement.getEntity(from(qry).with(fetch).model());
+        assertEquals("Incorrect key", "loc1 loc1_3 loc1_3_3 --> loc1 loc1_1 loc1_1_1", movement.getKey().toString());
+    }
 
     public static boolean isPropertyInstrumented(final AbstractEntity<?> entity, final String propName) {
         final Object value = entity.get(propName);
@@ -1979,6 +2002,24 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         save(new_(TgEntityWithComplexSummaries.class, "veh2").setKms(0).setCost(100));
         save(new_(TgEntityWithComplexSummaries.class, "veh3").setKms(300).setCost(100));
         save(new_(TgEntityWithComplexSummaries.class, "veh4").setKms(0).setCost(200));
+        
+        final TgLocation loc1 = save(new_composite(TgLocation.class, null, "loc1").setLevel(1));
+        final TgLocation loc1_1 = save(new_composite(TgLocation.class, loc1, "loc1_1").setLevel(2));
+        final TgLocation loc1_2 = save(new_composite(TgLocation.class, loc1, "loc1_2").setLevel(2));
+        final TgLocation loc1_3 = save(new_composite(TgLocation.class, loc1, "loc1_3").setLevel(2));
+        final TgLocation loc1_1_1 = save(new_composite(TgLocation.class, loc1_1, "loc1_1_1").setLevel(3));
+        final TgLocation loc1_1_2 = save(new_composite(TgLocation.class, loc1_1, "loc1_1_2").setLevel(3));
+        final TgLocation loc1_1_3 = save(new_composite(TgLocation.class, loc1_1, "loc1_1_3").setLevel(3));
+        final TgLocation loc1_2_1 = save(new_composite(TgLocation.class, loc1_2, "loc1_2_1").setLevel(3));
+        final TgLocation loc1_2_2 = save(new_composite(TgLocation.class, loc1_2, "loc1_2_2").setLevel(3));
+        final TgLocation loc1_2_3 = save(new_composite(TgLocation.class, loc1_2, "loc1_2_3").setLevel(3));
+        final TgLocation loc1_3_1 = save(new_composite(TgLocation.class, loc1_3, "loc1_3_1").setLevel(3));
+        final TgLocation loc1_3_2 = save(new_composite(TgLocation.class, loc1_3, "loc1_3_2").setLevel(3));
+        final TgLocation loc1_3_3 = save(new_composite(TgLocation.class, loc1_3, "loc1_3_3").setLevel(3));
+        
+        save(new_composite(TgMovement.class, loc1_1_1, loc1_2_2).setDate(date("2001-01-01 00:00:00")));
+        save(new_composite(TgMovement.class, loc1_2_2, loc1_3_3).setDate(date("2002-01-01 00:00:00")));
+        save(new_composite(TgMovement.class, loc1_3_3, loc1_1_1).setDate(date("2003-01-01 00:00:00")));
     }
 
 }
