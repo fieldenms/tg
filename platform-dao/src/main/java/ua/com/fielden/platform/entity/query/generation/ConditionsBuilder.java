@@ -9,12 +9,13 @@ import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.CompoundCondition;
 import ua.com.fielden.platform.entity.query.generation.elements.Conditions;
 import ua.com.fielden.platform.entity.query.generation.elements.ICondition;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.Pair;
 
 public class ConditionsBuilder extends AbstractTokensBuilder {
 
-    protected ConditionsBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
-        super(parent, queryBuilder, paramValues);
+    protected ConditionsBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final IUniversalConstants universalConstants) {
+        super(parent, queryBuilder, paramValues, universalConstants);
         //	setChild(new ConditionBuilder(this, queryBuilder, paramValues));
     }
 
@@ -37,7 +38,7 @@ public class ConditionsBuilder extends AbstractTokensBuilder {
             return new Conditions(null);
         } else {
             final ICondition firstCondition = (ICondition) iterator.next().getValue();
-            final List<CompoundCondition> otherConditions = new ArrayList<CompoundCondition>();
+            final List<CompoundCondition> otherConditions = new ArrayList<>();
             for (; iterator.hasNext();) {
                 final CompoundCondition subsequentCompoundCondition = (CompoundCondition) iterator.next().getValue();
                 otherConditions.add(subsequentCompoundCondition);

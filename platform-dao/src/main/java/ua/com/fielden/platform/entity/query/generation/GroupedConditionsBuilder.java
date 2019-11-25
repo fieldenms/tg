@@ -9,16 +9,17 @@ import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.CompoundCondition;
 import ua.com.fielden.platform.entity.query.generation.elements.GroupedConditions;
 import ua.com.fielden.platform.entity.query.generation.elements.ICondition;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.Pair;
 
 public class GroupedConditionsBuilder extends AbstractTokensBuilder {
 
     private final boolean negated;
 
-    protected GroupedConditionsBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final boolean negated) {
-        super(parent, queryBuilder, paramValues);
+    protected GroupedConditionsBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final boolean negated, final IUniversalConstants universalConstants) {
+        super(parent, queryBuilder, paramValues, universalConstants);
         this.negated = negated;
-        setChild(new ConditionBuilder(this, queryBuilder, paramValues));
+        setChild(new ConditionBuilder(this, queryBuilder, paramValues, universalConstants));
     }
 
     @Override
@@ -33,12 +34,12 @@ public class GroupedConditionsBuilder extends AbstractTokensBuilder {
         }
         final Iterator<Pair<TokenCategory, Object>> iterator = getTokens().iterator();
         final ICondition firstCondition = (ICondition) iterator.next().getValue();
-        final List<CompoundCondition> otherConditions = new ArrayList<CompoundCondition>();
+        final List<CompoundCondition> otherConditions = new ArrayList<>();
         for (; iterator.hasNext();) {
             final CompoundCondition subsequentCompoundCondition = (CompoundCondition) iterator.next().getValue();
             otherConditions.add(subsequentCompoundCondition);
         }
-        return new Pair<TokenCategory, Object>(TokenCategory.GROUPED_CONDITIONS, new GroupedConditions(negated, firstCondition, otherConditions));
+        return new Pair<>(TokenCategory.GROUPED_CONDITIONS, new GroupedConditions(negated, firstCondition, otherConditions));
     }
 
     @Override

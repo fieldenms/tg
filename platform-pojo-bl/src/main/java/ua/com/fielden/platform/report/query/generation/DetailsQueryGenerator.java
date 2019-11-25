@@ -8,15 +8,16 @@ import org.apache.commons.lang.StringUtils;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.Pair;
 
 public class DetailsQueryGenerator<T extends AbstractEntity<?>, CDTME extends ICentreDomainTreeManagerAndEnhancer> extends GridAnalysisQueryGenerator<T, CDTME> {
 
     private final List<Pair<String, Object>> conditions;
 
-    public DetailsQueryGenerator(final Class<T> root, final CDTME cdtme, final List<Pair<String, Object>> conditions) {
-        super(root, cdtme);
-        this.conditions = conditions == null ? new ArrayList<Pair<String, Object>>() : conditions;
+    public DetailsQueryGenerator(final Class<T> root, final CDTME cdtme, final List<Pair<String, Object>> conditions, final IUniversalConstants universalConstants) {
+        super(root, cdtme, universalConstants);
+        this.conditions = conditions == null ? new ArrayList<>() : conditions;
     }
 
     @Override

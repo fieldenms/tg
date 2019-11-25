@@ -66,6 +66,7 @@ import ua.com.fielden.platform.entity.query.generation.elements.QuantifiedTest;
 import ua.com.fielden.platform.entity.query.generation.elements.Quantifier;
 import ua.com.fielden.platform.entity.query.generation.elements.SetTest;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.Pair;
 
 public class ConditionBuilder extends AbstractTokensBuilder {
@@ -82,8 +83,8 @@ public class ConditionBuilder extends AbstractTokensBuilder {
         mutlipleOperands.addAll(mutlipleAnyOperands);
     }
 
-    protected ConditionBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
-        super(parent, queryBuilder, paramValues);
+    protected ConditionBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final IUniversalConstants universalConstants) {
+        super(parent, queryBuilder, paramValues, universalConstants);
     }
 
     private boolean isPlainExistenceTest() {
@@ -210,7 +211,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 
     @Override
     public Pair<TokenCategory, Object> getResult() {
-        return new Pair<TokenCategory, Object>(CONDITION, getResultantCondition());
+        return new Pair<>(CONDITION, getResultantCondition());
     }
 
     private ICondition getPlainQuantifiedTest() {

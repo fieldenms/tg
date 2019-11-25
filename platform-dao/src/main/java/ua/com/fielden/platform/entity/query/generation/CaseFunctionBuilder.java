@@ -10,20 +10,21 @@ import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.CaseWhen;
 import ua.com.fielden.platform.entity.query.generation.elements.ICondition;
 import ua.com.fielden.platform.entity.query.generation.elements.ISingleOperand;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.Pair;
 
 public class CaseFunctionBuilder extends AbstractTokensBuilder {
 
-    protected CaseFunctionBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
-        super(parent, queryBuilder, paramValues);
-        setChild(new ConditionBuilder(this, queryBuilder, paramValues));
+    protected CaseFunctionBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final IUniversalConstants universalConstants) {
+        super(parent, queryBuilder, paramValues, universalConstants);
+        setChild(new ConditionBuilder(this, queryBuilder, paramValues, universalConstants));
     }
 
     @Override
     public void add(final TokenCategory cat, final Object value) {
         switch (cat) {
         case COND_START: //eats token
-            setChild(new ConditionBuilder(this, getQueryBuilder(), getParamValues()));
+            setChild(new ConditionBuilder(this, getQueryBuilder(), getParamValues(), universalConstants));
             break;
         default:
             super.add(cat, value);
@@ -48,7 +49,7 @@ public class CaseFunctionBuilder extends AbstractTokensBuilder {
             getTokens().remove(getSize() - 1);
         }
 
-        final List<Pair<ICondition, ISingleOperand>> whenThens = new ArrayList<Pair<ICondition, ISingleOperand>>();
+        final List<Pair<ICondition, ISingleOperand>> whenThens = new ArrayList<>();
         ISingleOperand elseOperand = null;
 
         for (final Iterator<Pair<TokenCategory, Object>> iterator = getTokens().iterator(); iterator.hasNext();) {
@@ -56,7 +57,7 @@ public class CaseFunctionBuilder extends AbstractTokensBuilder {
             final Pair<TokenCategory, Object> secondTokenPair = iterator.hasNext() ? iterator.next() : null;
 
             if (secondTokenPair != null) {
-                whenThens.add(new Pair<ICondition, ISingleOperand>((ICondition) firstTokenPair.getValue(), getModelForSingleOperand(secondTokenPair)));
+                whenThens.add(new Pair<>((ICondition) firstTokenPair.getValue(), getModelForSingleOperand(secondTokenPair)));
             } else {
                 elseOperand = getModelForSingleOperand(firstTokenPair);
             }
@@ -67,6 +68,6 @@ public class CaseFunctionBuilder extends AbstractTokensBuilder {
 
     @Override
     public Pair<TokenCategory, Object> getResult() {
-        return new Pair<TokenCategory, Object>(TokenCategory.FUNCTION_MODEL, getModel());
+        return new Pair<>(TokenCategory.FUNCTION_MODEL, getModel());
     }
 }

@@ -8,12 +8,13 @@ import java.util.Map;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.Concat;
 import ua.com.fielden.platform.entity.query.generation.elements.ISingleOperand;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.Pair;
 
 public class ConcatFunctionBuilder extends AbstractTokensBuilder {
 
-    protected ConcatFunctionBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
-        super(parent, queryBuilder, paramValues);
+    protected ConcatFunctionBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final IUniversalConstants universalConstants) {
+        super(parent, queryBuilder, paramValues, universalConstants);
     }
 
     @Override
@@ -27,7 +28,7 @@ public class ConcatFunctionBuilder extends AbstractTokensBuilder {
             getTokens().remove(getSize() - 1);
         }
         final Iterator<Pair<TokenCategory, Object>> iterator = getTokens().iterator();
-        final List<ISingleOperand> items = new ArrayList<ISingleOperand>();
+        final List<ISingleOperand> items = new ArrayList<>();
         final Pair<TokenCategory, Object> firstOperandPair = iterator.next();
         items.add(getModelForSingleOperand(firstOperandPair.getKey(), firstOperandPair.getValue()));
 
@@ -37,6 +38,6 @@ public class ConcatFunctionBuilder extends AbstractTokensBuilder {
             items.add(subsequentOperand);
         }
 
-        return new Pair<TokenCategory, Object>(TokenCategory.FUNCTION_MODEL, new Concat(items, getDbVersion()));
+        return new Pair<>(TokenCategory.FUNCTION_MODEL, new Concat(items, getDbVersion()));
     }
 }

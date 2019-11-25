@@ -10,15 +10,16 @@ import ua.com.fielden.platform.entity.query.generation.elements.CompoundConditio
 import ua.com.fielden.platform.entity.query.generation.elements.GroupedConditions;
 import ua.com.fielden.platform.entity.query.generation.elements.ICondition;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.Pair;
 
 public class StandAloneConditionBuilder extends AbstractTokensBuilder {
     private final boolean negated;
 
-    public StandAloneConditionBuilder(final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final ConditionModel exprModel, final boolean negated) {
-        super(null, queryBuilder, paramValues);
+    public StandAloneConditionBuilder(final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final ConditionModel exprModel, final boolean negated, final IUniversalConstants universalConstants) {
+        super(null, queryBuilder, paramValues, universalConstants);
         this.negated = negated;
-        setChild(new ConditionBuilder(this, queryBuilder, paramValues));
+        setChild(new ConditionBuilder(this, queryBuilder, paramValues, universalConstants));
 
         for (final Pair<TokenCategory, Object> tokenPair : exprModel.getTokens()) {
             add(tokenPair.getKey(), tokenPair.getValue());
@@ -42,7 +43,7 @@ public class StandAloneConditionBuilder extends AbstractTokensBuilder {
 
         final Iterator<Pair<TokenCategory, Object>> iterator = getTokens().iterator();
         final ICondition firstCondition = (ICondition) iterator.next().getValue();
-        final List<CompoundCondition> otherConditions = new ArrayList<CompoundCondition>();
+        final List<CompoundCondition> otherConditions = new ArrayList<>();
         for (; iterator.hasNext();) {
             final CompoundCondition subsequentCompoundCondition = (CompoundCondition) iterator.next().getValue();
             otherConditions.add(subsequentCompoundCondition);

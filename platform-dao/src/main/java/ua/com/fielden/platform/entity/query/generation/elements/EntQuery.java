@@ -27,8 +27,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -52,6 +52,7 @@ import ua.com.fielden.platform.entity.query.metadata.PersistedEntityMetadata;
 import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.Pair;
 
 public class EntQuery implements ISingleOperand {
@@ -70,6 +71,7 @@ public class EntQuery implements ISingleOperand {
     private final DomainMetadataAnalyser domainMetadataAnalyser;
     private final Map<String, Object> paramValues;
     private final boolean yieldAll;
+    private final IUniversalConstants universalConstants;
 
     private EntQuery master;
 
@@ -305,7 +307,7 @@ public class EntQuery implements ISingleOperand {
         final List<OrderBy> toBeAdded = new ArrayList<>();
         
         if (orderBy.getYieldName().equals(KEY) && isCompositeEntity(resultType)) {
-            final List<String> keyOrderProps = keyPaths((Class<? extends AbstractEntity<DynamicEntityKey>>) resultType);
+            final List<String> keyOrderProps = keyPaths(resultType);
             for (final String keyMemberProp : keyOrderProps) {
                 toBeAdded.add(new OrderBy(new EntProp(keyMemberProp), orderBy.isDesc()));
             }
@@ -329,7 +331,7 @@ public class EntQuery implements ISingleOperand {
         final List<OrderBy> toBeAdded = new ArrayList<>();
         
         if (orderBy.getOperand() instanceof EntProp && ((EntProp) orderBy.getOperand()).getName().equals(KEY) && isCompositeEntity(resultType)) {
-            final List<String> keyOrderProps = keyPaths((Class<? extends AbstractEntity<DynamicEntityKey>>) resultType);
+            final List<String> keyOrderProps = keyPaths(resultType);
             for (final String keyMemberProp : keyOrderProps) {
                 toBeAdded.add(new OrderBy(new EntProp(keyMemberProp), orderBy.isDesc()));
             }
@@ -457,7 +459,7 @@ public class EntQuery implements ISingleOperand {
             final ConditionModel filteringCondition = filter.enhance(mainSource.sourceType(), mainSource.getAlias(), username);
             if (filteringCondition != null) {
                 // LOGGER.debug("\nApplied user-driven-filter to query main source type [" + mainSource.sourceType().getSimpleName() + "]");
-                final GroupedConditions userDateFilteringCondition = new StandAloneConditionBuilder(generator, paramValues, filteringCondition, false).getModel();
+                final GroupedConditions userDateFilteringCondition = new StandAloneConditionBuilder(generator, paramValues, filteringCondition, false, universalConstants).getModel();
                 return originalConditions.ignore()
                        ? new Conditions(userDateFilteringCondition)
                        : new Conditions(userDateFilteringCondition, listOf(new CompoundCondition(AND, new GroupedConditions(false, originalConditions.getFirstCondition(), originalConditions.getOtherConditions()))));
@@ -469,7 +471,7 @@ public class EntQuery implements ISingleOperand {
 
     public EntQuery(final boolean filterable, final EntQueryBlocks queryBlocks, final Class resultType, final QueryCategory category,
             final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username,
-            final EntQueryGenerator generator, final IRetrievalModel fetchModel, final Map<String, Object> paramValues) {
+            final EntQueryGenerator generator, final IRetrievalModel fetchModel, final Map<String, Object> paramValues, final IUniversalConstants universalConstants) {
         this.category = category;
         this.domainMetadataAnalyser = domainMetadataAnalyser;
         this.sources = queryBlocks.getSources();
@@ -488,6 +490,7 @@ public class EntQuery implements ISingleOperand {
                 : (domainMetadataAnalyser.getEntityMetadata(this.resultType) instanceof PersistedEntityMetadata);
 
         this.paramValues = paramValues;
+        this.universalConstants = universalConstants;
 
         enhanceToFinalState(generator, fetchModel);
 
@@ -614,7 +617,7 @@ public class EntQuery implements ISingleOperand {
                     final PropResolutionInfo pri = propResolutionResult.getKey();
                     propResolutionResult.getValue().addReferencingProp(pri);
                     if (pri.getProp().getExpressionModel() != null && !pri.getEntProp().isExpression()) {
-                        pri.getEntProp().setExpression((Expression) new StandAloneExpressionBuilder(generator, paramValues, pri.getProp().getExpressionModel()).getResult().getValue());
+                        pri.getEntProp().setExpression((Expression) new StandAloneExpressionBuilder(generator, paramValues, pri.getProp().getExpressionModel(), universalConstants).getResult().getValue());
                     }
                 }
 

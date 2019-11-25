@@ -35,17 +35,22 @@ import ua.com.fielden.platform.report.query.generation.ChartAnalysisQueryGenerat
 import ua.com.fielden.platform.report.query.generation.IReportQueryGenerator;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 
 @SuppressWarnings("unchecked")
 public class ChartAnalysisQueryGenerationTest {
 
     private static final String ALIAS = "alias_for_main_criteria_type";
 
-    private final EntityFactory factory = createFactory();
-
-    private EntityFactory createFactory() {
+    private final Injector injector = createInjector();
+    private final EntityFactory factory = createFactory(injector);
+    
+    private Injector createInjector() {
         final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
-        final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
+        return new ApplicationInjectorFactory().add(module).getInjector();
+    }
+
+    private EntityFactory createFactory(final Injector injector) {
         return injector.getInstance(EntityFactory.class);
     }
 
@@ -91,7 +96,7 @@ public class ChartAnalysisQueryGenerationTest {
 
         cdtme.acceptAnalysisManager("simple analysis");
 
-        queryGenerator = new ChartAnalysisQueryGenerator<>(MasterDomainEntity.class, cdtme, analysis);
+        queryGenerator = new ChartAnalysisQueryGenerator<>(MasterDomainEntity.class, cdtme, analysis, injector.getInstance(IUniversalConstants.class));
 
         masterKlass = (Class<AbstractEntity<?>>) dte.getManagedType(MasterDomainEntity.class);
         stringKeyKlass = (Class<AbstractEntity<?>>) PropertyTypeDeterminator.determinePropertyType(masterKlass, "entityProp.entityProp.simpleEntityProp");

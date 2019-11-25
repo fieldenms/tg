@@ -5,12 +5,13 @@ import java.util.Map;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.ISingleOperand;
 import ua.com.fielden.platform.entity.query.generation.elements.Yield;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.Pair;
 
 public class YieldBuilder extends AbstractTokensBuilder {
 
-    protected YieldBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
-        super(parent, queryBuilder, paramValues);
+    protected YieldBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final IUniversalConstants universalConstants) {
+        super(parent, queryBuilder, paramValues, universalConstants);
     }
 
     @Override
@@ -23,6 +24,6 @@ public class YieldBuilder extends AbstractTokensBuilder {
         final ISingleOperand operand = getModelForSingleOperand(firstCat(), firstValue());
         final String alias = (String) secondValue();
         final boolean requiredHint = (secondCat() == TokenCategory.AS_ALIAS_REQUIRED);
-        return new Pair<TokenCategory, Object>(TokenCategory.QRY_YIELD, new Yield(operand, alias == null ? "" : alias, requiredHint));
+        return new Pair<>(TokenCategory.QRY_YIELD, new Yield(operand, alias == null ? "" : alias, requiredHint));
     }
 }

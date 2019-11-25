@@ -5,12 +5,13 @@ import java.util.Map;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.Yield;
 import ua.com.fielden.platform.entity.query.generation.elements.Yields;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.Pair;
 
 public class QryYieldsBuilder extends AbstractTokensBuilder {
 
-    protected QryYieldsBuilder(final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
-        super(null, queryBuilder, paramValues);
+    protected QryYieldsBuilder(final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final IUniversalConstants universalConstants) {
+        super(null, queryBuilder, paramValues, universalConstants);
     }
 
     @Override

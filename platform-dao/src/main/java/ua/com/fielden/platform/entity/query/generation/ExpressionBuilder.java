@@ -10,12 +10,13 @@ import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.CompoundSingleOperand;
 import ua.com.fielden.platform.entity.query.generation.elements.Expression;
 import ua.com.fielden.platform.entity.query.generation.elements.ISingleOperand;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.Pair;
 
 public class ExpressionBuilder extends AbstractTokensBuilder {
 
-    protected ExpressionBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
-        super(parent, queryBuilder, paramValues);
+    protected ExpressionBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final IUniversalConstants universalConstants) {
+        super(parent, queryBuilder, paramValues, universalConstants);
     }
 
     @Override
@@ -31,7 +32,7 @@ public class ExpressionBuilder extends AbstractTokensBuilder {
         final Iterator<Pair<TokenCategory, Object>> iterator = getTokens().iterator();
         final Pair<TokenCategory, Object> firstOperandPair = iterator.next();
         final ISingleOperand firstOperand = getModelForSingleOperand(firstOperandPair.getKey(), firstOperandPair.getValue());
-        final List<CompoundSingleOperand> items = new ArrayList<CompoundSingleOperand>();
+        final List<CompoundSingleOperand> items = new ArrayList<>();
         for (; iterator.hasNext();) {
             final ArithmeticalOperator operator = (ArithmeticalOperator) iterator.next().getValue();
             final Pair<TokenCategory, Object> subsequentOperandPair = iterator.next();
@@ -40,6 +41,6 @@ public class ExpressionBuilder extends AbstractTokensBuilder {
             items.add(new CompoundSingleOperand(subsequentOperand, operator));
         }
 
-        return new Pair<TokenCategory, Object>(TokenCategory.EXPR, new Expression(firstOperand, items));
+        return new Pair<>(TokenCategory.EXPR, new Expression(firstOperand, items));
     }
 }

@@ -23,6 +23,7 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddTo
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.reflection.Reflector;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -42,8 +43,8 @@ public class EntityQueryCriteriaUtils {
      * @return
      */
     public static Pair<Set<String>, Set<String>> separateFetchAndTotalProperties(final Class<?> root, final IAddToResultTickManager tickManager, final IDomainTreeEnhancer enhancer) {
-        final Set<String> fetchProperties = new LinkedHashSet<String>();
-        final Set<String> totalProperties = new LinkedHashSet<String>();
+        final Set<String> fetchProperties = new LinkedHashSet<>();
+        final Set<String> totalProperties = new LinkedHashSet<>();
         final Pair<List<Pair<String, Integer>>, Map<String, List<String>>> totalFetchProps = getMappedFetchAndTotals(root, tickManager, enhancer);
         for (final Pair<String, Integer> fetchProp : totalFetchProps.getKey()) {
             fetchProperties.add(fetchProp.getKey());
@@ -51,7 +52,7 @@ public class EntityQueryCriteriaUtils {
         for (final List<String> totalProps : totalFetchProps.getValue().values()) {
             totalProperties.addAll(totalProps);
         }
-        return new Pair<Set<String>, Set<String>>(fetchProperties, totalProperties);
+        return new Pair<>(fetchProperties, totalProperties);
     }
 
     /**
@@ -62,8 +63,8 @@ public class EntityQueryCriteriaUtils {
      * @return
      */
     public static Pair<List<Pair<String, Integer>>, Map<String, List<String>>> getMappedFetchAndTotals(final Class<?> root, final IAddToResultTickManager tickManager, final IDomainTreeEnhancer enhancer) {
-        final List<Pair<String, Integer>> columns = new ArrayList<Pair<String, Integer>>();
-        final Map<String, List<String>> totals = new HashMap<String, List<String>>();
+        final List<Pair<String, Integer>> columns = new ArrayList<>();
+        final Map<String, List<String>> totals = new HashMap<>();
         final List<String> checkedProperties = tickManager.checkedProperties(root);
         for (final String property : checkedProperties) {
             try {
@@ -73,19 +74,19 @@ public class EntityQueryCriteriaUtils {
                     if (checkedProperties.contains(originProperty)) {
                         List<String> totalList = totals.get(originProperty);
                         if (totalList == null) {
-                            totalList = new ArrayList<String>();
+                            totalList = new ArrayList<>();
                             totals.put(originProperty, totalList);
                         }
                         totalList.add(property);
                     }
                 } else {
-                    columns.add(new Pair<String, Integer>(property, Integer.valueOf(tickManager.getWidth(root, property))));
+                    columns.add(new Pair<>(property, Integer.valueOf(tickManager.getWidth(root, property))));
                 }
             } catch (final IncorrectCalcPropertyException ex) {
-                columns.add(new Pair<String, Integer>(property, Integer.valueOf(tickManager.getWidth(root, property))));
+                columns.add(new Pair<>(property, Integer.valueOf(tickManager.getWidth(root, property))));
             }
         }
-        return new Pair<List<Pair<String, Integer>>, Map<String, List<String>>>(columns, totals);
+        return new Pair<>(columns, totals);
     }
 
     /**
@@ -96,20 +97,20 @@ public class EntityQueryCriteriaUtils {
      * @param tickManager
      * @return
      */
-    public static Map<String, Pair<Object, Object>> createParamValuesMap(final Class<?> root, final Class<?> managedType, final IAddToCriteriaTickManager tickManager) {
+    public static Map<String, Pair<Object, Object>> createParamValuesMap(final Class<?> root, final Class<?> managedType, final IAddToCriteriaTickManager tickManager, final IUniversalConstants universalConstants) {
         final Map<String, Pair<Object, Object>> paramValues = new HashMap<>();
         for (final String propertyName : tickManager.checkedProperties(root)) {
             if (!isPlaceholder(propertyName)) {
                 if (isDoubleCriterion(managedType, propertyName)) {
                     if (isDate(determinePropertyType(managedType, propertyName)) && tickManager.getDatePrefix(root, propertyName) != null
                             && tickManager.getDateMnemonic(root, propertyName) != null) {
-                        final Pair<Date, Date> fromAndTo = getDateValuesFrom(tickManager.getDatePrefix(root, propertyName), tickManager.getDateMnemonic(root, propertyName), tickManager.getAndBefore(root, propertyName));
+                        final Pair<Date, Date> fromAndTo = getDateValuesFrom(tickManager.getDatePrefix(root, propertyName), tickManager.getDateMnemonic(root, propertyName), tickManager.getAndBefore(root, propertyName), universalConstants);
                         paramValues.put(propertyName, new Pair<Object, Object>(fromAndTo.getKey(), fromAndTo.getValue()));
                     } else {
-                        paramValues.put(propertyName, new Pair<Object, Object>(tickManager.getValue(root, propertyName), tickManager.getValue2(root, propertyName)));
+                        paramValues.put(propertyName, new Pair<>(tickManager.getValue(root, propertyName), tickManager.getValue2(root, propertyName)));
                     }
                 } else {
-                    paramValues.put(propertyName, new Pair<Object, Object>(tickManager.getValue(root, propertyName), null));
+                    paramValues.put(propertyName, new Pair<>(tickManager.getValue(root, propertyName), null));
                 }
             }
         }

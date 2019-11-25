@@ -7,12 +7,13 @@ import java.util.Map;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.GroupBy;
 import ua.com.fielden.platform.entity.query.generation.elements.GroupBys;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.Pair;
 
 public class QryGroupsBuilder extends AbstractTokensBuilder {
 
-    protected QryGroupsBuilder(final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
-        super(null, queryBuilder, paramValues);
+    protected QryGroupsBuilder(final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final IUniversalConstants universalConstants) {
+        super(null, queryBuilder, paramValues, universalConstants);
     }
 
     @Override
@@ -24,7 +25,7 @@ public class QryGroupsBuilder extends AbstractTokensBuilder {
         if (getChild() != null && getSize() == 0) {
             throw new RuntimeException("Unable to produce result - unfinished model state!");
         }
-        final List<GroupBy> groups = new ArrayList<GroupBy>();
+        final List<GroupBy> groups = new ArrayList<>();
         for (final Pair<TokenCategory, Object> pair : getTokens()) {
             groups.add((GroupBy) pair.getValue());
         }

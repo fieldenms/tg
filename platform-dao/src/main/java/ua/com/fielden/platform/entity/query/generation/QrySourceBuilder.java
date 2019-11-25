@@ -22,12 +22,13 @@ import ua.com.fielden.platform.entity.query.metadata.AbstractEntityMetadata;
 import ua.com.fielden.platform.entity.query.metadata.ModelledEntityMetadata;
 import ua.com.fielden.platform.entity.query.metadata.PersistedEntityMetadata;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.Pair;
 
 public class QrySourceBuilder extends AbstractTokensBuilder {
 
-    protected QrySourceBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
-        super(parent, queryBuilder, paramValues);
+    protected QrySourceBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final IUniversalConstants universalConstants) {
+        super(parent, queryBuilder, paramValues, universalConstants);
     }
 
     private boolean isEntityTypeAsSource() {

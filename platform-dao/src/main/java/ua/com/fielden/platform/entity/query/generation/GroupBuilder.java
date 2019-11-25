@@ -5,12 +5,13 @@ import java.util.Map;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.GroupBy;
 import ua.com.fielden.platform.entity.query.generation.elements.ISingleOperand;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.Pair;
 
 public class GroupBuilder extends AbstractTokensBuilder {
 
-    protected GroupBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
-        super(parent, queryBuilder, paramValues);
+    protected GroupBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final IUniversalConstants universalConstants) {
+        super(parent, queryBuilder, paramValues, universalConstants);
     }
 
     @Override
@@ -21,6 +22,6 @@ public class GroupBuilder extends AbstractTokensBuilder {
     @Override
     public Pair<TokenCategory, Object> getResult() {
         final ISingleOperand operand = getModelForSingleOperand(firstCat(), firstValue());
-        return new Pair<TokenCategory, Object>(TokenCategory.QRY_GROUP, new GroupBy(operand));
+        return new Pair<>(TokenCategory.QRY_GROUP, new GroupBy(operand));
     }
 }

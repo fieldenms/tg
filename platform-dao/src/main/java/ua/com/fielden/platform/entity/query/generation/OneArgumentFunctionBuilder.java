@@ -3,12 +3,13 @@ package ua.com.fielden.platform.entity.query.generation;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.Pair;
 
 abstract class OneArgumentFunctionBuilder extends AbstractTokensBuilder {
 
-    protected OneArgumentFunctionBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
-        super(parent, queryBuilder, paramValues);
+    protected OneArgumentFunctionBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final IUniversalConstants universalConstants) {
+        super(parent, queryBuilder, paramValues, universalConstants);
     }
 
     @Override
@@ -20,7 +21,7 @@ abstract class OneArgumentFunctionBuilder extends AbstractTokensBuilder {
 
     @Override
     public Pair<TokenCategory, Object> getResult() {
-        return new Pair<TokenCategory, Object>(TokenCategory.FUNCTION_MODEL, getModel());
+        return new Pair<>(TokenCategory.FUNCTION_MODEL, getModel());
     }
 
 }

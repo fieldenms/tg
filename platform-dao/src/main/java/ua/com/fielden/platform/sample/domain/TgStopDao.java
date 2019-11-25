@@ -38,6 +38,7 @@ import ua.com.fielden.platform.entity_centre.review.DynamicOrderingBuilder;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.gis.MapUtils;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -61,14 +62,14 @@ public class TgStopDao extends CommonEntityDao<TgStop> implements ITgStop {
     @Override
     @SessionRequired
     public List<TgStop> getEntitiesOnPage(final QueryExecutionModel<TgStop, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) {
-        return retrieveStops(queryModel.getParamValues(), messageCompanion, getEntityFactory());
+        return retrieveStops(queryModel.getParamValues(), messageCompanion, getEntityFactory(), getUniversalConstants());
     }
 
-    public static List<TgStop> retrieveStops(final Map<String, Object> paramValues, final ITgMessage messageCompanion, final EntityFactory factory) {
-        return retrieveStops(retrieveMessages(paramValues, messageCompanion), paramValues, factory);
+    public static List<TgStop> retrieveStops(final Map<String, Object> paramValues, final ITgMessage messageCompanion, final EntityFactory factory, final IUniversalConstants universalConstants) {
+        return retrieveStops(retrieveMessages(paramValues, messageCompanion, universalConstants), paramValues, factory);
     }
 
-    protected static List<TgMessage> retrieveMessages(final Map<String, Object> paramValues, final ITgMessage messageCompanion) {
+    protected static List<TgMessage> retrieveMessages(final Map<String, Object> paramValues, final ITgMessage messageCompanion, final IUniversalConstants universalConstants) {
         logger.info("'Messages' retrieval started at " + new DateTime() + ".");
         final List<QueryProperty> qProperties = new ArrayList<>();
 
@@ -97,9 +98,9 @@ public class TgStopDao extends CommonEntityDao<TgStop> implements ITgStop {
 
         final List<Pair<String, Ordering>> orderingProps = Arrays.asList(new Pair<>(TgMessage.MACHINE_PROP_ALIAS + ".orgUnit", Ordering.ASCENDING), new Pair<>(TgMessage.MACHINE_PROP_ALIAS, Ordering.ASCENDING), new Pair<>("gpsTime", Ordering.ASCENDING));
 
-        final QueryExecutionModel<TgMessage, EntityResultQueryModel<TgMessage>> resultQuery = from(DynamicQueryBuilder.createQuery(TgMessage.class, qProperties).model()) //
+        final QueryExecutionModel<TgMessage, EntityResultQueryModel<TgMessage>> resultQuery = from(DynamicQueryBuilder.createQuery(TgMessage.class, qProperties, universalConstants).model()) //
         .with(DynamicOrderingBuilder.createOrderingModel(TgMessage.class, orderingProps))//
-        .with(DynamicFetchBuilder.createFetchOnlyModel(TgMessage.class, new LinkedHashSet<String>(Arrays.asList(TgMessage.MACHINE_PROP_ALIAS, TgMessage.MACHINE_PROP_ALIAS + ".orgUnit", "gpsTime", "x", "y", "vectorSpeed", "vectorAngle", "altitude", "travelledDistance", "din1"))))//
+        .with(DynamicFetchBuilder.createFetchOnlyModel(TgMessage.class, new LinkedHashSet<>(Arrays.asList(TgMessage.MACHINE_PROP_ALIAS, TgMessage.MACHINE_PROP_ALIAS + ".orgUnit", "gpsTime", "x", "y", "vectorSpeed", "vectorAngle", "altitude", "travelledDistance", "din1"))))//
         .lightweight()
         // TODO .with(DynamicParamBuilder.buildParametersMap(enhancedType(), paramMap)).model();
         .model();
@@ -156,7 +157,7 @@ public class TgStopDao extends CommonEntityDao<TgStop> implements ITgStop {
                     this.messages.add(0, lastPotentialPrefix);
                     lastHardStopIndex = this.messages.size() - 1;
 
-                    extendByPrefixes(lastPotentialPrefix, new ArrayList<TgMessage>(potentialPrefixes.subList(0, size - 1)), radiusThreshould);
+                    extendByPrefixes(lastPotentialPrefix, new ArrayList<>(potentialPrefixes.subList(0, size - 1)), radiusThreshould);
                 }
             }
         }
@@ -285,7 +286,7 @@ public class TgStopDao extends CommonEntityDao<TgStop> implements ITgStop {
             final int maxToIndex = lastHardStopIndex + 1 + SOFT_MESSAGE_COUNT_THRESHOLD;
             final int toIndexFinal = toIndex > maxToIndex ? maxToIndex : toIndex;
 
-            final List<TgMessage> newMessages = new ArrayList<TgMessage>(messages.subList(0, toIndexFinal));
+            final List<TgMessage> newMessages = new ArrayList<>(messages.subList(0, toIndexFinal));
             messages.clear();
             messages.addAll(newMessages);
             // update a distance in this stop
@@ -406,7 +407,7 @@ public class TgStopDao extends CommonEntityDao<TgStop> implements ITgStop {
             stop.setBaryCentreX(new BigDecimal(stopGroup.baryCentreX()));
             stop.setBaryCentreY(new BigDecimal(stopGroup.baryCentreY()));
 
-            stop.setMessages(new LinkedHashSet<TgMessage>(stopGroup.messages));
+            stop.setMessages(new LinkedHashSet<>(stopGroup.messages));
             stop.setMessagesString(convertToString(stopGroup.messages));
 
             stops.add(stop);
@@ -543,7 +544,7 @@ public class TgStopDao extends CommonEntityDao<TgStop> implements ITgStop {
     }
 
     public static <T extends AbstractEntity> List<T> filter(final List<T> entities, final Map<String, Object> paramValues, final List<String> properties) {
-        final List<T> filtered = new ArrayList<T>();
+        final List<T> filtered = new ArrayList<>();
         for (final T entity : entities) {
             if (predicate(entity, paramValues, properties)) {
                 filtered.add(entity);

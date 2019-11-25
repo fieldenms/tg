@@ -39,6 +39,7 @@ import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -50,92 +51,94 @@ import ua.com.fielden.platform.utils.Pair;
 public abstract class AbstractTokensBuilder implements ITokensBuilder {
     private final ITokensBuilder parent;
     private ITokensBuilder child;
-    private final List<Pair<TokenCategory, Object>> tokens = new ArrayList<Pair<TokenCategory, Object>>();
+    private final List<Pair<TokenCategory, Object>> tokens = new ArrayList<>();
     private final Map<String, Object> paramValues;
     private final EntQueryGenerator queryBuilder;
+    protected final IUniversalConstants universalConstants;
 
-    protected AbstractTokensBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
+    protected AbstractTokensBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final IUniversalConstants universalConstants) {
         this.parent = parent;
         this.queryBuilder = queryBuilder;
         this.paramValues = paramValues;
+        this.universalConstants = universalConstants;
     }
 
     private void add(final Functions function) {
         switch (function) {
         case SUM:
-            setChild(new SumOfBuilder(this, queryBuilder, getParamValues(), false));
+            setChild(new SumOfBuilder(this, queryBuilder, getParamValues(), false, universalConstants));
             break;
         case COUNT:
-            setChild(new CountOfBuilder(this, queryBuilder, getParamValues(), false));
+            setChild(new CountOfBuilder(this, queryBuilder, getParamValues(), false, universalConstants));
             break;
         case AVERAGE:
-            setChild(new AverageOfBuilder(this, queryBuilder, getParamValues(), false));
+            setChild(new AverageOfBuilder(this, queryBuilder, getParamValues(), false, universalConstants));
             break;
         case MIN:
-            setChild(new MinOfBuilder(this, queryBuilder, getParamValues()));
+            setChild(new MinOfBuilder(this, queryBuilder, getParamValues(), universalConstants));
             break;
         case MAX:
-            setChild(new MaxOfBuilder(this, queryBuilder, getParamValues()));
+            setChild(new MaxOfBuilder(this, queryBuilder, getParamValues(), universalConstants));
             break;
         case SECOND:
-            setChild(new SecondOfBuilder(this, queryBuilder, getParamValues()));
+            setChild(new SecondOfBuilder(this, queryBuilder, getParamValues(), universalConstants));
             break;
         case MINUTE:
-            setChild(new MinuteOfBuilder(this, queryBuilder, getParamValues()));
+            setChild(new MinuteOfBuilder(this, queryBuilder, getParamValues(), universalConstants));
             break;
         case HOUR:
-            setChild(new HourOfBuilder(this, queryBuilder, getParamValues()));
+            setChild(new HourOfBuilder(this, queryBuilder, getParamValues(), universalConstants));
             break;
         case DAY:
-            setChild(new DayOfBuilder(this, queryBuilder, getParamValues()));
+            setChild(new DayOfBuilder(this, queryBuilder, getParamValues(), universalConstants));
             break;
         case MONTH:
-            setChild(new MonthOfBuilder(this, queryBuilder, getParamValues()));
+            setChild(new MonthOfBuilder(this, queryBuilder, getParamValues(), universalConstants));
             break;
         case YEAR:
-            setChild(new YearOfBuilder(this, queryBuilder, getParamValues()));
+            setChild(new YearOfBuilder(this, queryBuilder, getParamValues(), universalConstants));
             break;
         case DAY_OF_WEEK:
-            setChild(new DayOfWeekOfBuilder(this, queryBuilder, getParamValues()));
+            setChild(new DayOfWeekOfBuilder(this, queryBuilder, getParamValues(), universalConstants));
             break;
         case DATE:
-            setChild(new DateOfBuilder(this, queryBuilder, getParamValues()));
+            setChild(new DateOfBuilder(this, queryBuilder, getParamValues(), universalConstants));
             break;
         case ABS:
-            setChild(new AbsOfBuilder(this, queryBuilder, getParamValues()));
+            setChild(new AbsOfBuilder(this, queryBuilder, getParamValues(), universalConstants));
             break;
         case SUM_DISTINCT:
-            setChild(new SumOfBuilder(this, queryBuilder, getParamValues(), true));
+            setChild(new SumOfBuilder(this, queryBuilder, getParamValues(), true, universalConstants));
             break;
         case COUNT_DISTINCT:
-            setChild(new CountOfBuilder(this, queryBuilder, getParamValues(), true));
+            setChild(new CountOfBuilder(this, queryBuilder, getParamValues(), true, universalConstants));
             break;
         case AVERAGE_DISTINCT:
-            setChild(new AverageOfBuilder(this, queryBuilder, getParamValues(), true));
+            setChild(new AverageOfBuilder(this, queryBuilder, getParamValues(), true, universalConstants));
             break;
         case UPPERCASE:
-            setChild(new UpperCaseOfBuilder(this, queryBuilder, getParamValues()));
+            setChild(new UpperCaseOfBuilder(this, queryBuilder, getParamValues(), universalConstants));
             break;
         case LOWERCASE:
-            setChild(new LowerCaseOfBuilder(this, queryBuilder, getParamValues()));
+            setChild(new LowerCaseOfBuilder(this, queryBuilder, getParamValues(), universalConstants));
             break;
         case IF_NULL:
-            setChild(new IfNullBuilder(this, queryBuilder, getParamValues()));
+            setChild(new IfNullBuilder(this, queryBuilder, getParamValues(), universalConstants));
             break;
         case ADD_DATE_INTERVAL:
-            setChild(new AddDateIntervalBuilder(this, queryBuilder, getParamValues()));
+            setChild(new AddDateIntervalBuilder(this, queryBuilder, getParamValues(), universalConstants));
             break;
         case COUNT_DATE_INTERVAL:
-            setChild(new CountDateIntervalBuilder(this, queryBuilder, getParamValues()));
+            setChild(new CountDateIntervalBuilder(this, queryBuilder, getParamValues(), universalConstants));
             break;
         case CASE_WHEN:
-            setChild(new CaseFunctionBuilder(this, queryBuilder, getParamValues()));
+            setChild(new CaseFunctionBuilder(this, queryBuilder, getParamValues(), universalConstants));
             break;
         case ROUND:
-            setChild(new RoundToBuilder(this, queryBuilder, getParamValues()));
+            setChild(new RoundToBuilder(this, queryBuilder, getParamValues(), universalConstants));
             break;
         case CONCAT:
-            setChild(new ConcatFunctionBuilder(this, queryBuilder, getParamValues()));
+            setChild(new ConcatFunctionBuilder(this, queryBuilder, getParamValues(), universalConstants));
             break;
         default:
             throw new RuntimeException("Unrecognised function token: " + function);
@@ -149,26 +152,26 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         } else {
             switch (cat) {
             case BEGIN_EXPR: //eats token
-                setChild(new ExpressionBuilder(this, queryBuilder, getParamValues()));
+                setChild(new ExpressionBuilder(this, queryBuilder, getParamValues(), universalConstants));
                 break;
             case FUNCTION: //eats token
             case COLLECTIONAL_FUNCTION: //eats token
                 add((Functions) value);
                 break;
             case BEGIN_COND: //eats token
-                setChild(new GroupedConditionsBuilder(this, queryBuilder, getParamValues(), (Boolean) value));
+                setChild(new GroupedConditionsBuilder(this, queryBuilder, getParamValues(), (Boolean) value, universalConstants));
                 break;
             case CRIT_COND_OPERATOR: //
-                tokens.add(pair(GROUPED_CONDITIONS, new StandAloneConditionBuilder(queryBuilder, getParamValues(), critConditionOperatorModel((Pair<Object, String>) value), false).getModel()));
+                tokens.add(pair(GROUPED_CONDITIONS, new StandAloneConditionBuilder(queryBuilder, getParamValues(), critConditionOperatorModel((Pair<Object, String>) value), false, universalConstants).getModel()));
                 break;
             case COND_TOKENS: //
-                tokens.add(pair(GROUPED_CONDITIONS, new StandAloneConditionBuilder(queryBuilder, getParamValues(), (ConditionModel) value, false).getModel()));
+                tokens.add(pair(GROUPED_CONDITIONS, new StandAloneConditionBuilder(queryBuilder, getParamValues(), (ConditionModel) value, false, universalConstants).getModel()));
                 break;
             case NEGATED_COND_TOKENS: //
-                tokens.add(pair(GROUPED_CONDITIONS, new StandAloneConditionBuilder(queryBuilder, getParamValues(), (ConditionModel) value, true).getModel()));
+                tokens.add(pair(GROUPED_CONDITIONS, new StandAloneConditionBuilder(queryBuilder, getParamValues(), (ConditionModel) value, true, universalConstants).getModel()));
                 break;
             case LOGICAL_OPERATOR:
-                setChild(new CompoundConditionBuilder(this, queryBuilder, getParamValues(), cat, value));
+                setChild(new CompoundConditionBuilder(this, queryBuilder, getParamValues(), cat, value, universalConstants));
                 break;
             default:
                 tokens.add(pair(cat, value));
@@ -188,7 +191,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         if (qp == null || qp.isEmptyWithoutMnemonics()) {
             return emptyCondition();
         } else if (props.getKey() instanceof String) {
-            return buildCondition(qp, (String) props.getKey(), false);
+            return buildCondition(qp, (String) props.getKey(), false, universalConstants);
         } else {
             final T2<ICompoundCondition0<?>, String> args =  (T2<ICompoundCondition0<?>, String>) props.getKey();
             return collectionalCritConditionOperatorModel(args._1, args._2, qp);
@@ -201,7 +204,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         final Boolean originalNot = qp.getNot();
         qp.setOrNull(null);
         qp.setNot(null);
-        final ConditionModel result = qp == null || qp.isEmptyWithoutMnemonics() ? emptyCondition() : buildCondition(qp, propName, false);
+        final ConditionModel result = qp == null || qp.isEmptyWithoutMnemonics() ? emptyCondition() : buildCondition(qp, propName, false, universalConstants);
         qp.setOrNull(originalOrNull);
         qp.setNot(originalNot);
         return result;
@@ -338,7 +341,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         case FUNCTION_MODEL:
             return (ISingleOperand) value;
         case EXPR_TOKENS:
-            return (ISingleOperand) new StandAloneExpressionBuilder(queryBuilder, getParamValues(), (ExpressionModel) value).getResult().getValue();
+            return (ISingleOperand) new StandAloneExpressionBuilder(queryBuilder, getParamValues(), (ExpressionModel) value, universalConstants).getResult().getValue();
         case EQUERY_TOKENS:
         case ALL_OPERATOR:
         case ANY_OPERATOR:
@@ -349,7 +352,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
     }
 
     protected List<ISingleOperand> getModelForArrayParam(final TokenCategory cat, final Object value) {
-        final List<ISingleOperand> result = new ArrayList<ISingleOperand>();
+        final List<ISingleOperand> result = new ArrayList<>();
         final Object paramValue = getParamValue((String) value);
 
         if (!(paramValue instanceof List)) {
@@ -422,7 +425,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
             throw new RuntimeException("Unrecognised token category for SingleOperand: " + cat);
         }
 
-        final List<ISingleOperand> result = new ArrayList<ISingleOperand>();
+        final List<ISingleOperand> result = new ArrayList<>();
 
         for (final Object singleValue : (List<Object>) value) {
             if (singleCat == PARAM || singleCat == IPARAM) {
@@ -440,7 +443,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
     }
 
     protected List<ISingleOperand> getModelForMultipleOperands(final TokenCategory cat, final Object value) {
-        final List<ISingleOperand> result = new ArrayList<ISingleOperand>();
+        final List<ISingleOperand> result = new ArrayList<>();
 
         TokenCategory singleCat;
 

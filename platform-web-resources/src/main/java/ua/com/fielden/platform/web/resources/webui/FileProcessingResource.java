@@ -24,7 +24,6 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.Put;
 import org.restlet.routing.Router;
 
-import sun.rmi.server.UnicastRef;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntityWithInputStream;
 import ua.com.fielden.platform.entity.factory.EntityFactory;

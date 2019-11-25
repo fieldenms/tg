@@ -10,11 +10,11 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddTo
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToResultTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IJoin;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity_centre.review.DynamicFetchBuilder;
@@ -22,6 +22,7 @@ import ua.com.fielden.platform.entity_centre.review.DynamicOrderingBuilder;
 import ua.com.fielden.platform.entity_centre.review.DynamicParamBuilder;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -36,10 +37,12 @@ public class GridAnalysisQueryGenerator<T extends AbstractEntity<?>, CDTME exten
 
     private final Class<T> root;
     private final CDTME cdtme;
+    private final IUniversalConstants universalConstants;
 
-    public GridAnalysisQueryGenerator(final Class<T> root, final CDTME cdtme) {
+    public GridAnalysisQueryGenerator(final Class<T> root, final CDTME cdtme, final IUniversalConstants universalConstants) {
         this.root = root;
         this.cdtme = cdtme;
+        this.universalConstants = universalConstants;
     }
 
     @Override
@@ -83,7 +86,7 @@ public class GridAnalysisQueryGenerator<T extends AbstractEntity<?>, CDTME exten
      * @return
      */
     public ICompleted<T> createQuery() {
-        return DynamicQueryBuilder.createQuery(enhancedType(), ReportQueryGenerationUtils.createQueryProperties(root, cdtme));
+        return DynamicQueryBuilder.createQuery(enhancedType(), ReportQueryGenerationUtils.createQueryProperties(root, cdtme), universalConstants);
     }
 
     /**
@@ -127,7 +130,7 @@ public class GridAnalysisQueryGenerator<T extends AbstractEntity<?>, CDTME exten
      */
     public Map<String, Object> createParamValues() {
         final IAddToCriteriaTickManager criteriaTickManager = cdtme.getFirstTick();
-        final Map<String, Pair<Object, Object>> paramMap = EntityQueryCriteriaUtils.createParamValuesMap(entityClass(), enhancedType(), criteriaTickManager);
+        final Map<String, Pair<Object, Object>> paramMap = EntityQueryCriteriaUtils.createParamValuesMap(entityClass(), enhancedType(), criteriaTickManager, universalConstants);
         return DynamicParamBuilder.buildParametersMap(enhancedType(), paramMap);
     }
 
