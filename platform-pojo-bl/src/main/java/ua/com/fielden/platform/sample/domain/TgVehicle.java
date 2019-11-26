@@ -36,6 +36,22 @@ import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
 public class TgVehicle extends AbstractEntity<String> {
 
     @IsProperty
+    @Calculated
+    @Title(value = "Title", desc = "Desc")
+    private String makeKey;
+    protected static final ExpressionModel makeKey_ = expr().prop("model.make.key").model();
+
+    @Observable
+    protected TgVehicle setMakeKey(final String makeKey) {
+        this.makeKey = makeKey;
+        return this;
+    }
+
+    public String getMakeKey() {
+        return makeKey;
+    }
+    
+    @IsProperty
     @MapTo
     private Date initDate;
 

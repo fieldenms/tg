@@ -60,6 +60,12 @@ public class QrySource2BasedOnPersistentType extends AbstractElement2 implements
     public int contextId() {
         return contextId;
     }
+    
+    @Override
+    public String toString() {
+        // TODO Auto-generated method stub
+        return "QrySource2BasedOnPersistentType: [" + sourceType.getSimpleName() + "]";
+    }
 
     @Override
     public int hashCode() {

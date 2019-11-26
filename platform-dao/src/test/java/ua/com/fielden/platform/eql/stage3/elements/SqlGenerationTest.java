@@ -24,6 +24,54 @@ import ua.com.fielden.platform.eql.stage3.elements.sources.QrySource3BasedOnTabl
 
 public class SqlGenerationTest extends EqlStage3TestCase {
 
+    @Test
+    public void dot_notated_props_are_correctly_transformed_00_1() {
+        // select(VEHICLE).
+        // where().anyOfProps("makeKey", "replacedBy.key").isNotNull().model();
+        
+        final QrySource1BasedOnPersistentType veh1 = source(WORK_ORDER);
+        final Sources1 sources1 = sources(veh1);
+        final Conditions1 conditions1 = conditions(isNotNull(prop("vehicle.makeKey")), //
+                or(isNotNull(prop("vehicle.replacedBy.key"))) //
+        );
+
+        final EntQuery3 actQry = query(sources1, conditions1, VEHICLE);
+        
+        final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
+        final QrySource3BasedOnTable repVeh = source(VEHICLE, veh1, "replacedBy");
+        
+        final IQrySources3 sources = lj(veh, repVeh, cond(eq(prop("replacedBy", veh), prop(ID, repVeh))));
+        final Conditions3 conditions = or(isNotNull(expr(prop("key", veh))), isNotNull(expr(prop("key", repVeh))));
+        final EntQuery3 expQry = qry(sources, conditions);
+        
+        assertEquals(expQry, actQry);
+        System.out.println(expQry.sql(H2));
+    }
+    
+    @Test
+    public void dot_notated_props_are_correctly_transformed_00() {
+        // select(VEHICLE).
+        // where().anyOfProps("makeKey", "replacedBy.key").isNotNull().model();
+        
+        final QrySource1BasedOnPersistentType veh1 = source(VEHICLE);
+        final Sources1 sources1 = sources(veh1);
+        final Conditions1 conditions1 = conditions(isNotNull(prop("makeKey")), //
+                or(isNotNull(prop("replacedBy.key"))) //
+        );
+
+        final EntQuery3 actQry = query(sources1, conditions1, VEHICLE);
+        
+        final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
+        final QrySource3BasedOnTable repVeh = source(VEHICLE, veh1, "replacedBy");
+        
+        final IQrySources3 sources = lj(veh, repVeh, cond(eq(prop("replacedBy", veh), prop(ID, repVeh))));
+        final Conditions3 conditions = or(isNotNull(expr(prop("key", veh))), isNotNull(expr(prop("key", repVeh))));
+        final EntQuery3 expQry = qry(sources, conditions);
+        
+        assertEquals(expQry, actQry);
+        System.out.println(expQry.sql(H2));
+    }
+
     
     @Test
     public void dot_notated_props_are_correctly_transformed_01() {
@@ -42,7 +90,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final QrySource3BasedOnTable repVeh = source(VEHICLE, veh1, "replacedBy");
         
         final IQrySources3 sources = lj(veh, repVeh, cond(eq(prop("replacedBy", veh), prop(ID, repVeh))));
-        final Conditions3 conditions = or(isNotNull(prop("key", veh)), isNotNull(prop("key", repVeh)));
+        final Conditions3 conditions = or(isNotNull(expr(prop("key", veh))), isNotNull(expr(prop("key", repVeh))));
         final EntQuery3 expQry = qry(sources, conditions);
         
         assertEquals(expQry, actQry);
@@ -75,7 +123,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                 ij(
                         org5, org4, cond(eq(prop("parent", org5), prop(ID, org4)))), 
                 cond(eq(prop("station", veh), prop(ID, org5))));
-        final Conditions3 conditions = or(isNotNull(prop("initDate", veh)), isNotNull(prop("name", org5)), isNotNull(prop("name", org4)), isNotNull(prop("initDate", repVeh)));
+        final Conditions3 conditions = or(isNotNull(expr(prop("initDate", veh))), isNotNull(expr(prop("name", org5))), isNotNull(expr(prop("name", org4))), isNotNull(expr(prop("initDate", repVeh))));
         final EntQuery3 expQry = qry(sources, conditions);
         
         assertEquals(expQry, actQry);
@@ -105,8 +153,8 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                 lj(
                         veh, repVeh, cond(eq(prop("replacedBy", veh), prop(ID, repVeh)))),
                 ou5e,
-                cond(eq(prop("station", veh), prop(ID, ou5e))));
-        final Conditions3 conditions = or(isNotNull(prop("key", veh)), isNotNull(prop("key", repVeh)));
+                cond(eq(expr(prop("station", veh)), expr(prop(ID, ou5e)))));
+        final Conditions3 conditions = or(isNotNull(expr(prop("key", veh))), isNotNull(expr(prop("key", repVeh))));
         final EntQuery3 expQry = qry(sources, conditions);
 
         assertEquals(expQry, actQry);
@@ -149,14 +197,14 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                         cond(eq(prop("station", veh), prop(ID, ou5)))),
                 ij(
                         ou5e, ou5eou4, cond(eq(prop("parent", ou5e), prop(ID, ou5eou4)))),
-                cond(eq(prop("station", veh), prop(ID, ou5e))));
+                cond(eq(expr(prop("station", veh)), expr(prop(ID, ou5e)))));
         final Conditions3 conditions = or(
-                isNotNull(prop("key", veh)),
-                isNotNull(prop("key", repVeh)), 
-                isNotNull(prop("initDate", veh)), 
-                isNotNull(prop("name", ou5)), 
-                isNotNull(prop("name", ou4)),
-                isNotNull(prop("name", ou5eou4)));
+                isNotNull(expr(prop("key", veh))),
+                isNotNull(expr(prop("key", repVeh))), 
+                isNotNull(expr(prop("initDate", veh))), 
+                isNotNull(expr(prop("name", ou5))), 
+                isNotNull(expr(prop("name", ou4))),
+                isNotNull(expr(prop("name", ou5eou4))));
         final EntQuery3 expQry = qry(sources, conditions);
 
         assertEquals(expQry, actQry);
@@ -203,13 +251,13 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                         cond(eq(prop("station", veh), prop(ID, ou5)))),
                 ij(
                         ou2e, ou2eou1, cond(eq(prop("parent", ou2e), prop(ID, ou2eou1)))),
-                cond(eq(prop("parent", ou3), prop(ID, ou2e))));
+                cond(eq(expr(prop("parent", ou3)), expr(prop(ID, ou2e)))));
         final Conditions3 conditions = or(
-                isNotNull(prop("initDate", veh)),
-                isNotNull(prop("initDate", repVeh)), 
-                isNotNull(prop("name", ou5)), 
-                isNotNull(prop("name", ou4)),
-                isNotNull(prop("key", ou2eou1)));
+                isNotNull(expr(prop("initDate", veh))),
+                isNotNull(expr(prop("initDate", repVeh))), 
+                isNotNull(expr(prop("name", ou5))), 
+                isNotNull(expr(prop("name", ou4))),
+                isNotNull(expr(prop("key", ou2eou1))));
         final EntQuery3 expQry = qry(sources, conditions);
 
         assertEquals(expQry, actQry);

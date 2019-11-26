@@ -21,6 +21,7 @@ import ua.com.fielden.platform.eql.meta.EntityInfo;
 import ua.com.fielden.platform.eql.meta.EntityTypePropInfo;
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage1.elements.TransformationResult;
+import ua.com.fielden.platform.eql.stage1.elements.operands.EntProp1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.Expression1;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.Expression2;
@@ -77,19 +78,24 @@ public class PathsToTreeTransformator {
         final SortedSet<Child> result = new TreeSet<>();
         
         for (final Entry<AbstractPropInfo<?>, Map<String, List<AbstractPropInfo<?>>>> propEntry : groupByFirstProp(props).entrySet()) {
-            result.add(generateChild(contextSource, propEntry.getKey(), propEntry.getValue(), context, contextId, domainInfo));
+            result.addAll(generateChild(contextSource, propEntry.getKey(), propEntry.getValue(), context, contextId, domainInfo));
         }
 
         return result;
     }
     
-    private static Child generateChild(final IQrySource2<?> contextSource, final AbstractPropInfo<?> propInfo, final Map<String, List<AbstractPropInfo<?>>> subprops, final List<String> context, final int contextId, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
+    private static List<Child> generateChild(final IQrySource2<?> contextSource, final AbstractPropInfo<?> propInfo, final Map<String, List<AbstractPropInfo<?>>> subprops, final List<String> context, final int contextId, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
+        final List<Child> result = new ArrayList<>();
         final List<String> newContext = new ArrayList<>(context);
         newContext.add(propInfo.name);
 
+        Expression2 expr2 = null;
         if (propInfo.expression != null) {
             final TransformationResult<Expression2> tr = expressionToS2(contextSource, propInfo.expression, domainInfo);
+            expr2 = tr.item;
             final Map<IQrySource2<?>, SortedSet<Child>> dependants = transform(tr.updatedContext.getResolvedProps(), domainInfo);
+            System.out.println(dependants.size());
+            result.addAll(dependants.get(contextSource));
         }
         
         final boolean required = propInfo instanceof EntityTypePropInfo ? ((EntityTypePropInfo) propInfo).required : false;
@@ -98,7 +104,10 @@ public class PathsToTreeTransformator {
                  : null;
         final T2<String, Map<String, List<AbstractPropInfo<?>>>> next = getPathAndNextProps(subprops);
         final SortedSet<Child> children = generateChildren(source, contextId, next._2, newContext, domainInfo);
-        return new Child(propInfo, children, next._1, childContext, required, source);
+        
+        result.add(new Child(propInfo, children, next._1, childContext, required, source, expr2));
+        
+        return result; 
     }    
     
     private static T2<String, Map<String, List<AbstractPropInfo<?>>>> getPathAndNextProps(final Map<String, List<AbstractPropInfo<?>>> subprops) {

@@ -10,6 +10,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.entity.query.metadata.CompositeKeyEqlExpressionGenerator.generateCompositeKeyEqlExpression;
+import static ua.com.fielden.platform.entity.query.metadata.DomainMetadataUtils.extractExpressionModelFromCalculatedProperty;
 import static ua.com.fielden.platform.eql.meta.EntityCategory.PERSISTED;
 import static ua.com.fielden.platform.eql.meta.EntityCategory.PURE;
 import static ua.com.fielden.platform.eql.meta.EntityCategory.QUERY_BASED;
@@ -47,6 +48,8 @@ import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator;
 import ua.com.fielden.platform.eql.stage1.builders.StandAloneExpressionBuilder;
 import ua.com.fielden.platform.eql.stage1.elements.operands.Expression1;
+import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
+import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.elements.Column;
 import ua.com.fielden.platform.eql.stage3.elements.Table;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -164,12 +167,22 @@ public class MetadataGenerator {
         .filter(f -> f.isAnnotationPresent(MapTo.class) || f.isAnnotationPresent(Calculated.class)).forEach(field -> {
             final Class<?> javaType = determinePropertyType(entityInfo.javaType(), field.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
 
+            Expression1 expr = null;
+            if (field.isAnnotationPresent(Calculated.class)) {
+                try {
+                    ExpressionModel expressionModel = extractExpressionModelFromCalculatedProperty(entityInfo.javaType(), field);
+                    expr = (Expression1) (new StandAloneExpressionBuilder(qb, expressionModel)).getResult().getValue();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            
             if (AbstractEntity.class.isAssignableFrom(javaType)) {
                 final boolean required = PropertyTypeDeterminator.isRequiredByDefinition(field, javaType);
 
-                entityInfo.addProp(new EntityTypePropInfo(field.getName(), allEntitiesInfo.get(javaType), required));
+                entityInfo.addProp(new EntityTypePropInfo(field.getName(), allEntitiesInfo.get(javaType), required, expr));
             } else {
-                entityInfo.addProp(new PrimTypePropInfo(field.getName(), javaType));
+                entityInfo.addProp(new PrimTypePropInfo(field.getName(), javaType, expr));
             }
 
         });

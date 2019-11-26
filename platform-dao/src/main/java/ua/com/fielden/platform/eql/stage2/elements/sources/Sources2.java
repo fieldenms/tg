@@ -38,13 +38,13 @@ public class Sources2 {
     public TransformationResult<IQrySources3> transform(final TransformationContext context) {
         final TransformationResult<? extends IQrySource3> mainTr = main.transform(context);    
         TransformationContext currentContext = mainTr.updatedContext;
-        final T2<IQrySources3, Map<String, T2<IQrySource3, String>>> mainEnhancement = enhance(main, mainTr.item, context);
+        final T2<IQrySources3, Map<String, T2<IQrySource3, Object>>> mainEnhancement = enhance(main, mainTr.item, context);
         IQrySources3 currentSourceTree = mainEnhancement._1;
         currentContext = currentContext.cloneWithResolutions(main, mainEnhancement._2);
         
         for (final CompoundSource2 compoundSource : compounds) {
             final TransformationResult<? extends IQrySource3> compoundSourceTr = compoundSource.source.transform(currentContext);
-            final T2<IQrySources3,Map<String, T2<IQrySource3,String>>> compoundEnhancement = enhance(compoundSource.source, compoundSourceTr.item, context);
+            final T2<IQrySources3,Map<String, T2<IQrySource3, Object>>> compoundEnhancement = enhance(compoundSource.source, compoundSourceTr.item, context);
             final IQrySources3 coumpoundSourceTree = compoundEnhancement._1;
             currentContext = compoundSourceTr.updatedContext.cloneWithResolutions(compoundSource.source, compoundEnhancement._2);
             final TransformationResult<Conditions3> compConditionsTr = compoundSource.joinConditions.transform(currentContext);
@@ -55,22 +55,28 @@ public class Sources2 {
         return new TransformationResult<>(currentSourceTree, currentContext);
     }
     
-    private T2<IQrySources3, Map<String, T2<IQrySource3, String>>> enhance(final IQrySource2<?> source2, final IQrySource3 source, final TransformationContext context) {
+    private T2<IQrySources3, Map<String, T2<IQrySource3, Object>>> enhance(final IQrySource2<?> source2, final IQrySource3 source, final TransformationContext context) {
         return attachChildren(source, context.getSourceChildren(source2), context, new HashMap<>());
     }
     
-    private T2<IQrySources3, Map<String, T2<IQrySource3, String>>> attachChildren(final IQrySource3 source, final Set<Child> children, final TransformationContext context, final Map<String, T2<IQrySource3, String>> cumulativeResolutions) {
+    private T2<IQrySources3, Map<String, T2<IQrySource3, Object>>> attachChildren(final IQrySource3 source, final Set<Child> children, final TransformationContext context, final Map<String, T2<IQrySource3, Object>> cumulativeResolutions) {
         IQrySources3 currMainSources = new SingleQrySource3(source);
-        final Map<String, T2<IQrySource3, String>> resolutions = new HashMap<>();
+        final Map<String, T2<IQrySource3, Object>> resolutions = new HashMap<>();
         resolutions.putAll(cumulativeResolutions);
 
         for (final Child fc : children) {
             if (fc.fullPath != null) {
-                resolutions.put(fc.fullPath, t2(source, fc.main.name));
+                
+                if (fc.expr == null) {
+                    resolutions.put(fc.fullPath, t2(source, fc.main.name));
+                    
+                } else {
+                    resolutions.put(fc.fullPath, t2(source, fc.expr));
+                }
             }
 
             if (!fc.items.isEmpty()) {
-                final T2<IQrySources3, Map<String, T2<IQrySource3, String>>> res = attachChild(currMainSources, source, fc, context, resolutions);
+                final T2<IQrySources3, Map<String, T2<IQrySource3, Object>>> res = attachChild(currMainSources, source, fc, context, resolutions);
                 currMainSources = res._1;
                 resolutions.putAll(res._2);
             }
@@ -79,14 +85,14 @@ public class Sources2 {
         return t2(currMainSources, resolutions);
     }
     
-    private T2<IQrySources3, Map<String, T2<IQrySource3, String>>> attachChild(final IQrySources3 mainSources, final IQrySource3 rootSource, final Child child, final TransformationContext context, final Map<String, T2<IQrySource3, String>> cumulativeResolutions) {
+    private T2<IQrySources3, Map<String, T2<IQrySource3, Object>>> attachChild(final IQrySources3 mainSources, final IQrySource3 rootSource, final Child child, final TransformationContext context, final Map<String, T2<IQrySource3, Object>> cumulativeResolutions) {
         //final Table tbl = context.getTable(child.main.javaType().getName());
         final QrySource3BasedOnTable addedSource = child.source.transform(context).item;//new QrySource3BasedOnTable(tbl, rootSource.contextId(), child.context);
         final EntProp3 lo = new EntProp3(child.main.name, rootSource);
         final EntProp3 ro = new EntProp3(ID, addedSource);
         final ComparisonTest3 ct = new ComparisonTest3(lo, EQ, ro);
         final Conditions3 jc = new Conditions3(false, asList(asList(ct)));
-        final T2<IQrySources3, Map<String, T2<IQrySource3, String>>> res = attachChildren(addedSource, child.items, context, cumulativeResolutions);
+        final T2<IQrySources3, Map<String, T2<IQrySource3, Object>>> res = attachChildren(addedSource, child.items, context, cumulativeResolutions);
         return t2(new JoinedQrySource3(mainSources, res._1, (child.required ? IJ : LJ), jc), res._2);
     }
     

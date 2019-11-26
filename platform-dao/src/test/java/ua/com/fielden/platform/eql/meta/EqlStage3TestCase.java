@@ -36,6 +36,8 @@ import ua.com.fielden.platform.eql.stage3.elements.conditions.ICondition3;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.NullTest3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.EntProp3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.EntQuery3;
+import ua.com.fielden.platform.eql.stage3.elements.operands.Expression3;
+import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySource3;
 import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySources3;
 import ua.com.fielden.platform.eql.stage3.elements.sources.JoinedQrySource3;
@@ -56,24 +58,28 @@ public class EqlStage3TestCase extends EqlStage1TestCase {
         final EntQueryBlocks1 parts1 = qb1(sources, conditions);
         return entResultQry3(new EntQuery1(parts1, resultType, RESULT_QUERY, nextId()), new PropsResolutionContext(metadata), tables).item;
     }
-    
-    protected static EntProp3 prop(final String name, final IQrySource3 source) {
+
+    protected static Expression3 expr(final ISingleOperand3 op1) {
+        return new Expression3(op1);
+    }
+
+    protected static ISingleOperand3 prop(final String name, final IQrySource3 source) {
         return new EntProp3(name, source);
     }
     
-    protected static ComparisonTest3 eq(final EntProp3 op1, final EntProp3 op2) {
+    protected static ComparisonTest3 eq(final ISingleOperand3 op1, final ISingleOperand3 op2) {
         return new ComparisonTest3(op1, EQ, op2);
     }
     
-    protected static ComparisonTest3 ne(final EntProp3 op1, final EntProp3 op2) {
+    protected static ComparisonTest3 ne(final ISingleOperand3 op1, final ISingleOperand3 op2) {
         return new ComparisonTest3(op1, NE, op2);
     }
         
-    protected static NullTest3 isNotNull(final EntProp3 op1) {
+    protected static NullTest3 isNotNull(final ISingleOperand3 op1) {
         return new NullTest3(op1, true);
     }
 
-    protected static NullTest3 isNull(final EntProp3 op1) {
+    protected static NullTest3 isNull(final ISingleOperand3 op1) {
         return new NullTest3(op1, false);
     }
 

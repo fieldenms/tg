@@ -2,11 +2,18 @@ package ua.com.fielden.platform.eql.meta;
 
 import java.util.Objects;
 
+import ua.com.fielden.platform.eql.stage1.elements.operands.Expression1;
+
 public class PrimTypePropInfo<T> extends AbstractPropInfo<T> {
     private final Class<T> propType;
 
     public PrimTypePropInfo(final String name, final Class<T> propType) {
         super(name);
+        this.propType = propType;
+    }
+    
+    public PrimTypePropInfo(final String name, final Class<T> propType, final Expression1 expression) {
+        super(name, expression);
         this.propType = propType;
     }
 

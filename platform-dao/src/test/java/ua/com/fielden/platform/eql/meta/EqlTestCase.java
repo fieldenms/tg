@@ -71,7 +71,7 @@ public class EqlTestCase {
 
     public static final Map<Class, Class> hibTypeDefaults = new HashMap<>();
     public static final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> metadata = new HashMap<>();
-    public static final MetadataGenerator mdg = new MetadataGenerator(null);
+    public static final MetadataGenerator mdg = new MetadataGenerator(new EntQueryGenerator());
     public static final Map<String, Table> tables = new HashMap<>();
 
     protected static final DomainMetadata DOMAIN_METADATA = new DomainMetadata(hibTypeDefaults, 

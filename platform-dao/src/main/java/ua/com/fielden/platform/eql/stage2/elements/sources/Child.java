@@ -4,9 +4,11 @@ import java.util.Objects;
 import java.util.Set;
 
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
+import ua.com.fielden.platform.eql.stage2.elements.operands.Expression2;
 
 public class Child implements Comparable<Child> {
     final AbstractPropInfo<?> main;
+    final Expression2 expr;
     final boolean required;
     final Set<Child> items;
     final String fullPath; //not null if given child represents explicit prop that needs resolution 
@@ -14,12 +16,17 @@ public class Child implements Comparable<Child> {
     final QrySource2BasedOnPersistentType source;
     
     public Child(final AbstractPropInfo<?> main, final Set<Child> items, final String fullPath, final String context, final boolean required, final QrySource2BasedOnPersistentType source) {
+        this(main, items, fullPath, context, required, source, null);
+    }
+    
+    public Child(final AbstractPropInfo<?> main, final Set<Child> items, final String fullPath, final String context, final boolean required, final QrySource2BasedOnPersistentType source, final Expression2 expr) {
         this.main = main;
         this.items = items;
         this.fullPath = fullPath;
         this.context = context;
         this.required = required;
         this.source = source;
+        this.expr = expr;
     }
     
     @Override

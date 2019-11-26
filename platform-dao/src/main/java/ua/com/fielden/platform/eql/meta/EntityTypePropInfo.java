@@ -3,6 +3,7 @@ package ua.com.fielden.platform.eql.meta;
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.eql.stage1.elements.operands.Expression1;
 
 /**
  * A structure that captures a query source yield-able entity-typed-property resolution related info within a query source of type <code>PARENT</code>.
@@ -29,6 +30,13 @@ public class EntityTypePropInfo<T extends AbstractEntity<?>> extends AbstractPro
         this.required = required;
     }
 
+    public EntityTypePropInfo(final String name, final EntityInfo<T> propEntityInfo, final boolean required, final Expression1 expression) {
+        super(name, expression);
+        this.propEntityInfo = propEntityInfo;
+        this.required = required;
+    }
+
+    
     @Override
     public ResolutionContext resolve(final ResolutionContext context) {
         return context.isSuccessful() ? context : propEntityInfo.resolve(context);
