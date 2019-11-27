@@ -3,6 +3,7 @@ package ua.com.fielden.platform.utils;
 import java.util.Locale;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 /**
  * Contains a set of methods providing values of the universal constants such as <b>now</b>. This abstraction is required in order to flexibly support both unit testing and
@@ -61,7 +62,7 @@ public interface IUniversalConstants {
      * 
      * @return
      */
-    default String timeZone() {
+    default DateTimeZone timeZone() {
         throw new UnsupportedOperationException(TIME_ZONE_NOT_SUPPORTED);
     }
     
