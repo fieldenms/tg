@@ -142,4 +142,6 @@ public interface IWebUiConfig extends IMenuRetriever {
      * @return
      */
     Optional<String> checksum(final String resourceURI);
+    
+    boolean independentTimeZone();
 }

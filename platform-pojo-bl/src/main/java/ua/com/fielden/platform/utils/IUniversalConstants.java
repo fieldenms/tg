@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.utils;
 
+import java.util.Date;
 import java.util.Locale;
 
 import org.joda.time.DateTime;
@@ -72,6 +73,14 @@ public interface IUniversalConstants {
      * @param timeZone
      */
     default void setTimeZone(final String timeZone) {
+        throw new UnsupportedOperationException(TIME_ZONE_NOT_SUPPORTED);
+    }
+    
+    default boolean independentTimeZone() {
+        throw new UnsupportedOperationException(TIME_ZONE_NOT_SUPPORTED);
+    }
+    
+    default DateTime dt(final Date date) {
         throw new UnsupportedOperationException(TIME_ZONE_NOT_SUPPORTED);
     }
     

@@ -71,6 +71,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     private final List<String> resourcePaths;
     private final Workflows workflow;
     private final Map<String, String> checksums;
+    private final boolean independentTimeZone;
 
     /**
      * Creates abstract {@link IWebUiConfig}.
@@ -79,8 +80,9 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
      * @param externalResourcePaths
      * - additional root paths for file resources. (see {@link #resourcePaths} for more information).
      */
-    public AbstractWebUiConfig(final String title, final Workflows workflow, final String[] externalResourcePaths) {
+    public AbstractWebUiConfig(final String title, final Workflows workflow, final String[] externalResourcePaths, final boolean independentTimeZone) {
         this.title = title;
+        this.independentTimeZone = independentTimeZone;
         this.webUiBuilder = new WebUiBuilder(this);
         this.desktopMainMenuConfig = new MainMenuBuilder(this);
         this.mobileMainMenuConfig = new MainMenuBuilder(this);
@@ -240,6 +242,11 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     @Override
     public Optional<String> checksum(final String resourceURI) {
         return ofNullable(checksums.get(resourceURI));
+    }
+    
+    @Override
+    public boolean independentTimeZone() {
+        return independentTimeZone;
     }
     
 }

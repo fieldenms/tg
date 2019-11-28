@@ -5,8 +5,8 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.joda.time.DateTimeZone.forID;
 import static org.joda.time.DateTimeZone.getDefault;
 
+import java.util.Date;
 import java.util.Locale;
-import java.util.stream.Stream;
 
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
@@ -21,16 +21,19 @@ public class DefaultUniversalConstants implements IUniversalConstants {
     private final String appName;
     private final String smtpServer;
     private final String fromEmailAddress;
+    private final boolean independentTimeZone;
     private final ThreadLocal<DateTimeZone> timeZone = new ThreadLocal<>();
     
     @Inject
     public DefaultUniversalConstants(
             final @Named("app.name") String appName,
             final @Named("email.smtp") String smtpServer,
-            final @Named("email.fromAddress") String fromEmailAddress) {
+            final @Named("email.fromAddress") String fromEmailAddress,
+            final @Named("independent.time.zone") boolean independentTimeZone) {
         this.appName = appName;
         this.smtpServer = smtpServer;
         this.fromEmailAddress = fromEmailAddress;
+        this.independentTimeZone = independentTimeZone;
     }
     
     /**
@@ -40,7 +43,7 @@ public class DefaultUniversalConstants implements IUniversalConstants {
     public DateTime now() {
         if (timeZone.get() != null) {
             final DateTime nowInClientTimeZone = new DateTime(timeZone.get());
-            return nowInClientTimeZone.withZoneRetainFields(getDefault());
+            return independentTimeZone ? nowInClientTimeZone.withZoneRetainFields(getDefault()) : nowInClientTimeZone;
         } else {
 //            final Exception ex = new Exception();
 //            if (Stream.of(ex.getStackTrace()).allMatch(ste -> 
@@ -53,6 +56,11 @@ public class DefaultUniversalConstants implements IUniversalConstants {
 //            }
             return new DateTime(); // now in server time-zone; used as a fallback where no time-zone was used.
         }
+    }
+    
+    @Override
+    public DateTime dt(final Date date) {
+        return independentTimeZone() ? new DateTime(date) : new DateTime(date, timeZone());
     }
 
     /**
@@ -106,6 +114,11 @@ public class DefaultUniversalConstants implements IUniversalConstants {
         } else {
             logger.debug(format("Empty client time-zone string is returned from client application. %s", SERVER_TIME_ZONE_APPLIED));
         }
+    }
+    
+    @Override
+    public boolean independentTimeZone() {
+        return independentTimeZone;
     }
     
 }

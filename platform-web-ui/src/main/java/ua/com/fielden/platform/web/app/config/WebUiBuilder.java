@@ -215,7 +215,7 @@ public class WebUiBuilder implements IWebUiBuilder {
                 replace("@minDesktopWidth", Integer.toString(this.minDesktopWidth)).
                 replace("@minTabletWidth", Integer.toString(this.minTabletWidth)).
                 replace("@locale", "\"" + this.locale + "\"").
-                replace("@independentTimeZoneSetting", format("moment.tz.setDefault('%s');", TimeZone.getDefault().getID())).
+                replace("@independentTimeZoneSetting", webUiConfig.independentTimeZone() ? format("moment.tz.setDefault('%s');", TimeZone.getDefault().getID()) : "").
                 replace("@dateFormat", "\"" + this.dateFormat + "\"").
                 replace("@timeFormat", "\"" + this.timeFormat + "\"").
                 replace("@timeWithMillisFormat", "\"" + this.timeWithMillisFormat + "\"");
