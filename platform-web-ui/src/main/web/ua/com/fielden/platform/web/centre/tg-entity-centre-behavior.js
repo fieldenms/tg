@@ -733,7 +733,7 @@ const TgEntityCentreBehaviorImpl = {
         //Add event listener that indicates whne the layout has finished
         self.addEventListener("layout-finished", e => {
             const target = e.composedPath()[0];
-            if (target === e.detail) {
+            if (target === self.$.selection_criteria.$.masterDom.firstElementChild) {
                 tearDownEvent(e);
                 self.isSelectionCriteriaEmpty = !e.detail.componentsToLayout || e.detail.componentsToLayout.length === 0;
                 self._viewLoaded = true;
