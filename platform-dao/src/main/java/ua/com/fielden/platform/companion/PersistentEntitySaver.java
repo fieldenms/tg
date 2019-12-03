@@ -19,6 +19,7 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.DbUtils.nextIdValue;
 import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+import static ua.com.fielden.platform.utils.EntityUtils.isOneToOne;
 import static ua.com.fielden.platform.utils.Validators.findActiveDeactivatableDependencies;
 
 import java.lang.reflect.Field;
@@ -520,13 +521,17 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         // let's now assign a new ID and attempt to save the entity
         // this may result in a runtime exception, e.g. some text values were too long
         // in case of an exception, ID needs to be reset to null, otherwise the entity would be recognisable as persisted
-        final Long newId = nextIdValue(ID_SEQUENCE_NAME, session.get());
+        final boolean needNextId = !AbstractEntity.class.isAssignableFrom(entity.getKeyType());
+        final Long newId = needNextId ? nextIdValue(ID_SEQUENCE_NAME, session.get()) : ((AbstractEntity<?>) entity.getKey()).getId();
         try {
-            session.get().save(entity.set(ID, newId));
+            final AbstractEntity<?> entityWithId = needNextId ? entity.set(ID, newId) : entity;
+            session.get().save(entityWithId);
             session.get().flush(); // force saving to DB
             session.get().clear();
         } finally {
-            entity.set(ID, null);
+            if (needNextId) {
+                entity.set(ID, null);
+            }
         }
         
         return t2(newId, entityFetchOption.map(fetch -> findById.apply(newId, fetch)).orElse(entity));
