@@ -72,6 +72,50 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
         assertTrue(Files.deleteIfExists(uploadedFile));
     }
 
+    @Test
+    public void uploading_the_same_attachment_in_different_transactions_multiple_times_succeeds_without_any_data_duplication() throws IOException {
+        Path uploadedFile = null;
+        try {
+            final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
+
+            final AttachmentUploader newUpload1 = (AttachmentUploader) new_(AttachmentUploader.class)
+                    .setOrigFileName("readme.txt")
+                    .setMime("text/plain")
+                    .setInputStream(new ByteArrayInputStream("some data".getBytes()));
+            final Attachment attachment1 = coAttachmentUploader.save(newUpload1).getKey();
+
+            final AttachmentUploader newUpload2 = (AttachmentUploader) new_(AttachmentUploader.class)
+                    .setOrigFileName("readme.txt")
+                    .setMime("text/plain")
+                    .setInputStream(new ByteArrayInputStream("some data".getBytes()));
+            final Attachment attachment2 = coAttachmentUploader.save(newUpload2).getKey();
+
+            final AttachmentUploader newUpload3 = (AttachmentUploader) new_(AttachmentUploader.class)
+                    .setOrigFileName("readme.txt")
+                    .setMime("text/plain")
+                    .setInputStream(new ByteArrayInputStream("some data".getBytes()));
+            final Attachment attachment3 = coAttachmentUploader.save(newUpload3).getKey();
+
+            assertNotNull(attachment1);
+            assertNotNull(attachment2);
+            assertNotNull(attachment3);
+            assertTrue(attachment1.isPersisted());
+            assertTrue(attachment2.isPersisted());
+            assertTrue(attachment3.isPersisted());
+            assertEquals(attachment1.getId(), attachment2.getId());
+            assertEquals(attachment2.getId(), attachment3.getId());
+
+            uploadedFile = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + attachment1.getSha1());
+            assertTrue(uploadedFile.toFile().exists());
+            assertTrue(uploadedFile.toFile().canRead());
+        } finally {
+            // let's do clean up by deleting just uploaded file
+            if (uploadedFile != null) {
+                assertTrue(Files.deleteIfExists(uploadedFile));
+            }
+        }
+    }
+
     @Override
     public boolean saveDataPopulationScriptToFile() {
         return false;
