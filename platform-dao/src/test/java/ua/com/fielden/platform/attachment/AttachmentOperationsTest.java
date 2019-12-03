@@ -140,7 +140,7 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
                     .setMime("text/plain")
                     .setInputStream(new ByteArrayInputStream("some data".getBytes()));
             coAttachmentUploader.save(newUpload2).getKey();
-            fail("Attempts to save a duplicate attachment in the same transaction should faile due to a transaction rollback.");
+            fail("Attempts to save a duplicate attachment in the same transaction should have failed due to the transaction rollback.");
         } catch (final Exception ex) {
             System.out.println(ex);
         } finally {
