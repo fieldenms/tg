@@ -7,6 +7,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -48,6 +49,37 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
 
         // let's do clean up by deleting just uploaded file
         assertTrue(Files.deleteIfExists(uploadedFile));
+    }
+
+    @Test
+    public void attachment_instance_is_created_as_the_result_of_successful_stream_upload() throws IOException {
+        final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
+
+        final Attachment attachment = coAttachmentUploader.save((AttachmentUploader) new_(AttachmentUploader.class)
+                .setOrigFileName("readme.txt")
+                .setMime("text/plain")
+                .setInputStream(new ByteArrayInputStream("some data".getBytes()))).getKey();
+
+        assertNotNull(attachment);
+        assertTrue(attachment.isPersisted());
+        assertNotNull(attachment.getSha1());
+
+        final Path uploadedFile = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + attachment.getSha1());
+        assertTrue(uploadedFile.toFile().exists());
+        assertTrue(uploadedFile.toFile().canRead());
+
+        // let's do clean up by deleting just uploaded file
+        assertTrue(Files.deleteIfExists(uploadedFile));
+    }
+
+    @Override
+    public boolean saveDataPopulationScriptToFile() {
+        return false;
+    }
+
+    @Override
+    public boolean useSavedDataPopulationScript() {
+        return false;
     }
 
     @Test
