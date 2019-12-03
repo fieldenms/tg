@@ -309,6 +309,17 @@ const template = html`
             --tg-ui-action-spinner-padding: 0px;
             --tg-ui-action-spinner-margin-left: 0;
         }
+        /* tg-responsive-toolbar ::slotted(.entity-specific-action),
+        tg-responsive-toolbar ::slotted(.standart-action) {
+            --tg-ui-action-spinner-width: 1.5rem;
+            --tg-ui-action-spinner-height: 1.5rem;
+            --tg-ui-action-spinner-min-width: 1rem;
+            --tg-ui-action-spinner-min-height: 1rem;
+            --tg-ui-action-spinner-max-width: 1.5rem;
+            --tg-ui-action-spinner-max-height: 1.5rem;
+            --tg-ui-action-spinner-padding: 0px;
+            --tg-ui-action-spinner-margin-left: 0;
+        } */
         /*miscellanea styles*/
         .lock-layer {
             z-index: 1;
