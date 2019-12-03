@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 
 import java.io.ByteArrayInputStream;
@@ -18,6 +19,7 @@ import java.nio.file.Paths;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
 /**
@@ -114,6 +116,40 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
                 assertTrue(Files.deleteIfExists(uploadedFile));
             }
         }
+    }
+
+    @Test
+    @SessionRequired
+    public void uploading_the_same_attachment_in_a_single_transactions_multiple_times_failes_due_to_transaction_rollback() throws IOException {
+        Path uploadedFile = null;
+        Attachment attachment1 = null;
+        try {
+            final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
+
+            final AttachmentUploader newUpload1 = (AttachmentUploader) new_(AttachmentUploader.class)
+                    .setOrigFileName("readme.txt")
+                    .setMime("text/plain")
+                    .setInputStream(new ByteArrayInputStream("some data".getBytes()));
+            attachment1 = coAttachmentUploader.save(newUpload1).getKey();
+            uploadedFile = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + attachment1.getSha1());
+            assertTrue(uploadedFile.toFile().exists());
+            assertTrue(uploadedFile.toFile().canRead());
+
+            final AttachmentUploader newUpload2 = (AttachmentUploader) new_(AttachmentUploader.class)
+                    .setOrigFileName("readme.txt")
+                    .setMime("text/plain")
+                    .setInputStream(new ByteArrayInputStream("some data".getBytes()));
+            coAttachmentUploader.save(newUpload2).getKey();
+            fail("Attempts to save a duplicate attachment in the same transaction should faile due to a transaction rollback.");
+        } catch (final Exception ex) {
+            System.out.println(ex);
+        } finally {
+            // let's do clean up by deleting just uploaded file
+            if (uploadedFile != null) {
+                assertTrue(Files.deleteIfExists(uploadedFile));
+            }
+        }
+        assertFalse("Attachment should have been rolled back.", co(Attachment.class).entityExists(attachment1));
     }
 
     @Override
