@@ -9,6 +9,7 @@ import org.junit.runner.RunWith;
 import ua.com.fielden.platform.algorithm.search.ISearchAlgorithm;
 import ua.com.fielden.platform.algorithm.search.bfs.BreadthFirstSearch;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
+import ua.com.fielden.platform.dao.IUserRole;
 import ua.com.fielden.platform.devdb_support.SecurityTokenAssociator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.TgPerson;
@@ -61,25 +62,30 @@ public abstract class AbstractDaoTestCase extends AbstractDomainDrivenTestCase {
         final IUserProvider up = getInstance(IUserProvider.class);
         up.setUser(vu);
         
-        // some tests require current person, thus, need to persist a person who would be a user at the same time
-        final User testUser = coUser.save(new_(User.class, UNIT_TEST_USER).setBase(true).setEmail(UNIT_TEST_USER + "@unit-test.software").setActive(true));
-        save(new_(TgPerson.class, "Person who is a user").setUser(testUser));
+        final User testUser;
+        if (useSavedDataPopulationScript()) {
+           testUser = coUser.findUser(UNIT_TEST_USER);
+        } else {
+            // some tests require current person, thus, need to persist a person who would be a user at the same time
+            testUser = coUser.save(new_(User.class, UNIT_TEST_USER).setBase(true).setEmail(UNIT_TEST_USER + "@unit-test.software").setActive(true));
+            save(new_(TgPerson.class, "Person who is a user").setUser(testUser));
+    
+            // add a test user role
+            final UserRole admin = save(new_(UserRole.class, UNIT_TEST_ROLE, "Test role with access to all security tokens.").setActive(true));
+            // associate the test role with the test user
+            save(new_composite(UserAndRoleAssociation.class, testUser, admin));
 
-        // add a test user role
-        final UserRole admin = save(new_(UserRole.class, UNIT_TEST_ROLE, "Test role with access to all security tokens.").setActive(true));
-        // associate the test role with the test user
-        save(new_composite(UserAndRoleAssociation.class, testUser, admin));
-        
-        // provide access to all security tokens for the test role
-        final IApplicationSettings settings = getInstance(IApplicationSettings.class);
-        final SecurityTokenProvider provider = new SecurityTokenProvider(settings.pathToSecurityTokens(), settings.securityTokensPackageName());
-        final SortedSet<SecurityTokenNode> topNodes = provider.getTopLevelSecurityTokenNodes();
-        final SecurityTokenAssociator predicate = new SecurityTokenAssociator(admin, co$(SecurityRoleAssociation.class));
-        final ISearchAlgorithm<Class<? extends ISecurityToken>, SecurityTokenNode> alg = new BreadthFirstSearch<Class<? extends ISecurityToken>, SecurityTokenNode>();
-        for (final SecurityTokenNode securityNode : topNodes) {
-            alg.search(securityNode, predicate);
+            // provide access to all security tokens for the test role
+            final IApplicationSettings settings = getInstance(IApplicationSettings.class);
+            final SecurityTokenProvider provider = new SecurityTokenProvider(settings.pathToSecurityTokens(), settings.securityTokensPackageName());
+            final SortedSet<SecurityTokenNode> topNodes = provider.getTopLevelSecurityTokenNodes();
+            final SecurityTokenAssociator predicate = new SecurityTokenAssociator(admin, co$(SecurityRoleAssociation.class));
+            final ISearchAlgorithm<Class<? extends ISecurityToken>, SecurityTokenNode> alg = new BreadthFirstSearch<Class<? extends ISecurityToken>, SecurityTokenNode>();
+            for (final SecurityTokenNode securityNode : topNodes) {
+                alg.search(securityNode, predicate);
+            }
         }
-        
+
         up.setUsername(testUser.getKey(), getInstance(IUser.class));
     }
 }
