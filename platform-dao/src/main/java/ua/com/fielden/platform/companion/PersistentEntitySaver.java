@@ -518,7 +518,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         }
 
         // depending on whether the current entity represents a one-2-one association or not, it may require a new ID
-        // in case of one-2-one association the value of ID is derived from it's key's ID adn does not need to be generated
+        // in case of one-2-one association the value of ID is derived from its key's ID and does not need to be generated
         final boolean isOne2OneAssociation = AbstractEntity.class.isAssignableFrom(entity.getKeyType());
         final Long newEntityId = isOne2OneAssociation ? ((AbstractEntity<?>) entity.getKey()).getId() : nextIdValue(ID_SEQUENCE_NAME, session.get());
         try {
