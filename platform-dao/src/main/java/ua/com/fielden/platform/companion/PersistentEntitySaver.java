@@ -19,7 +19,6 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.DbUtils.nextIdValue;
 import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
-import static ua.com.fielden.platform.utils.EntityUtils.isOneToOne;
 import static ua.com.fielden.platform.utils.Validators.findActiveDeactivatableDependencies;
 
 import java.lang.reflect.Field;
@@ -518,23 +517,22 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             }
         }
 
-        // let's now assign a new ID and attempt to save the entity
-        // this may result in a runtime exception, e.g. some text values were too long
-        // in case of an exception, ID needs to be reset to null, otherwise the entity would be recognisable as persisted
-        final boolean needNextId = !AbstractEntity.class.isAssignableFrom(entity.getKeyType());
-        final Long newId = needNextId ? nextIdValue(ID_SEQUENCE_NAME, session.get()) : ((AbstractEntity<?>) entity.getKey()).getId();
+        // depending on whether the current entity represents a one-2-one association or not, it may require a new ID
+        // in case of one-2-one association the value of ID is derived from it's key's ID adn does not need to be generated
+        final boolean isOne2OneAssociation = AbstractEntity.class.isAssignableFrom(entity.getKeyType());
+        final Long newEntityId = isOne2OneAssociation ? ((AbstractEntity<?>) entity.getKey()).getId() : nextIdValue(ID_SEQUENCE_NAME, session.get());
         try {
-            final AbstractEntity<?> entityWithId = needNextId ? entity.set(ID, newId) : entity;
-            session.get().save(entityWithId);
+            final AbstractEntity<?> entityToSave = isOne2OneAssociation ? entity : entity.set(ID, newEntityId);
+            session.get().save(entityToSave);
             session.get().flush(); // force saving to DB
             session.get().clear();
         } finally {
-            if (needNextId) {
-                entity.set(ID, null);
-            }
+            // reset the value of ID to null for the passed-in entity to avoid any possible confusion stemming from the fact that entity became "persisted"
+            // this is relevant for all entities, including one-2-one associations
+            entity.set(ID, null);
         }
         
-        return t2(newId, entityFetchOption.map(fetch -> findById.apply(newId, fetch)).orElse(entity));
+        return t2(newEntityId, entityFetchOption.map(fetch -> findById.apply(newEntityId, fetch)).orElse(entity));
     }
 
     /**
