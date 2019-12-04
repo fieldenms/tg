@@ -517,19 +517,22 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             }
         }
 
-        // let's now assign a new ID and attempt to save the entity
-        // this may result in a runtime exception, e.g. some text values were too long
-        // in case of an exception, ID needs to be reset to null, otherwise the entity would be recognisable as persisted
-        final Long newId = nextIdValue(ID_SEQUENCE_NAME, session.get());
+        // depending on whether the current entity represents a one-2-one association or not, it may require a new ID
+        // in case of one-2-one association the value of ID is derived from its key's ID and does not need to be generated
+        final boolean isOne2OneAssociation = AbstractEntity.class.isAssignableFrom(entity.getKeyType());
+        final Long newEntityId = isOne2OneAssociation ? ((AbstractEntity<?>) entity.getKey()).getId() : nextIdValue(ID_SEQUENCE_NAME, session.get());
         try {
-            session.get().save(entity.set(ID, newId));
+            final AbstractEntity<?> entityToSave = isOne2OneAssociation ? entity : entity.set(ID, newEntityId);
+            session.get().save(entityToSave);
             session.get().flush(); // force saving to DB
             session.get().clear();
         } finally {
+            // reset the value of ID to null for the passed-in entity to avoid any possible confusion stemming from the fact that entity became "persisted"
+            // this is relevant for all entities, including one-2-one associations
             entity.set(ID, null);
         }
         
-        return t2(newId, entityFetchOption.map(fetch -> findById.apply(newId, fetch)).orElse(entity));
+        return t2(newEntityId, entityFetchOption.map(fetch -> findById.apply(newEntityId, fetch)).orElse(entity));
     }
 
     /**
