@@ -37,6 +37,13 @@ const template = html`
         :host {
             @apply --layout-vertical;
         }
+        :host([fit-to-height]) {
+            position: absolute;
+            top:0;
+            bottom:0;
+            right: 0;
+            left: 0;
+        }
         .grid-container {
             z-index: 0;
             background-color: white;
@@ -46,7 +53,7 @@ const template = html`
             @apply --shadow-elevation-2dp;
         }
         .grid-container[fit-to-height] {
-            @apply --layout-flex;
+            max-height: 100%;
         }
         tg-responsive-toolbar {
             flex-grow: 0;
@@ -84,16 +91,20 @@ const template = html`
             min-height: 0;
             overflow:auto;
             @apply --layout-vertical;
-            @apply --layout-flex-auto;
+            @apply --layout-flex;
             @apply --layout-relative;
         }
         #baseContainer {
             display: grid;
             grid-template-columns: min-content auto min-content;
-            grid-template-rows: auto auto auto;
+            grid-template-rows: min-content min-content auto;
             min-width: fit-content;
             min-height: fit-content;
             z-index: 0;
+            @apply --layout-flex;
+        }
+        #bottom_left_egi, #bottom_egi, #bottom_right_egi {
+            align-self: end;
         }
         .noselect {
             -webkit-touch-callout: none;
@@ -309,17 +320,6 @@ const template = html`
             --tg-ui-action-spinner-padding: 0px;
             --tg-ui-action-spinner-margin-left: 0;
         }
-        /* tg-responsive-toolbar ::slotted(.entity-specific-action),
-        tg-responsive-toolbar ::slotted(.standart-action) {
-            --tg-ui-action-spinner-width: 1.5rem;
-            --tg-ui-action-spinner-height: 1.5rem;
-            --tg-ui-action-spinner-min-width: 1rem;
-            --tg-ui-action-spinner-min-height: 1rem;
-            --tg-ui-action-spinner-max-width: 1.5rem;
-            --tg-ui-action-spinner-max-height: 1.5rem;
-            --tg-ui-action-spinner-padding: 0px;
-            --tg-ui-action-spinner-margin-left: 0;
-        } */
         /*miscellanea styles*/
         .lock-layer {
             z-index: 1;
