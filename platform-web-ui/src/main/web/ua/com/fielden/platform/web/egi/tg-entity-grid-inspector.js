@@ -51,6 +51,7 @@ const template = html`
             @apply --layout-vertical;
             @apply --layout-relative;
             @apply --shadow-elevation-2dp;
+            @apply --tg-grid-container;
         }
         .grid-container[fit-to-height] {
             max-height: 100%;
