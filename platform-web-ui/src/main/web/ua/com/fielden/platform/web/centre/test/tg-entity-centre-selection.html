@@ -46,8 +46,8 @@
                     done();
                 });
 
-                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, visibleColumnsWithOrder) {
-                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, visibleColumnsWithOrder);
+                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, resultConfig) {
+                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, resultConfig);
                     centre.$.egi.selectEntity(resultEntities[0], true);
                 };
 
@@ -60,8 +60,8 @@
 
             test('select all entity', function (done) {
                 const old_postRun = centre._postRun;
-                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, visibleColumnsWithOrder) {
-                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, visibleColumnsWithOrder);
+                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, resultConfig) {
+                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, resultConfig);
                     centre.$.egi.selectEntity(resultEntities[0], true);
                     centre.addEventListener("tg-entity-selected", (e) => {
                         const selectionDetails = e.detail;
@@ -101,8 +101,8 @@
                     done();
                 });
 
-                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, visibleColumnsWithOrder) {
-                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, visibleColumnsWithOrder);
+                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, resultConfig) {
+                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, resultConfig);
                     const checkbox = centre.$.egi.shadowRoot.querySelector(".all-checkbox");
                     checkbox.checked = true;
                     centre.$.egi._allSelectionChanged({target: checkbox});
@@ -118,8 +118,8 @@
             test('unselect first entity after select all', function (done) {
                 const old_postRun = centre._postRun;
 
-                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, visibleColumnsWithOrder) {
-                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, visibleColumnsWithOrder);
+                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, resultConfig) {
+                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, resultConfig);
                     centre.$.egi.selectAll(true);
                     centre.addEventListener("tg-entity-selected", (e) => {
                         const selectionDetails = e.detail;
@@ -143,8 +143,8 @@
 
             test('clear page selection', function (done) {
                 const old_postRun = centre._postRun;
-                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, visibleColumnsWithOrder) {
-                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, visibleColumnsWithOrder);
+                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, resultConfig) {
+                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, resultConfig);
                     centre.$.egi.selectAll(true);
                     centre.addEventListener("tg-entity-selected", (e) => {
                         assert.strictEqual(e.detail.entities.length, centre.$.egi.entities.length, "The number of selected entities is incorrect.");
@@ -170,8 +170,8 @@
             test('clear selection', function (done) {
                 const old_postRun = centre._postRun;
 
-                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, visibleColumnsWithOrder) {
-                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, visibleColumnsWithOrder);
+                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, resultConfig) {
+                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, resultConfig);
                     centre.$.egi.selectAll(true);
                     centre.addEventListener("tg-entity-selected", (e) => {
                         const selectionDetails = e.detail;

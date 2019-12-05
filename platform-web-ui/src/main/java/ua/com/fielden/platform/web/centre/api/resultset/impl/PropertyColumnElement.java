@@ -38,6 +38,7 @@ public class PropertyColumnElement implements IRenderable, IImportable {
 
     private final String propertyName;
     private final boolean isDynamic;
+    private final boolean isSortable;
     private final Optional<String> tooltipProp;
     private final String widgetName;
     private final String widgetPath;
@@ -58,12 +59,13 @@ public class PropertyColumnElement implements IRenderable, IImportable {
      * @param criteriaType
      * @param propertyName
      */
-    public PropertyColumnElement(final String propertyName, final Optional<AbstractWidget> widget, final boolean isDynamic, final int width, final int growFactor, final boolean isFlexible, final String tooltipProp, final Object propertyType, final Pair<String, String> titleDesc, final Optional<FunctionalActionElement> action) {
+    public PropertyColumnElement(final String propertyName, final Optional<AbstractWidget> widget, final boolean isDynamic, final boolean isSortable, final int width, final int growFactor, final boolean isFlexible, final String tooltipProp, final Object propertyType, final Pair<String, String> titleDesc, final Optional<FunctionalActionElement> action) {
         this.widgetName = AbstractCriterionWidget.extractNameFrom("egi/tg-property-column");
         this.widgetPath = "egi/tg-property-column";
         this.propertyName = propertyName;
         this.widget = widget;
         this.isDynamic = isDynamic;
+        this.isSortable = isSortable;
         this.tooltipProp = Optional.ofNullable(tooltipProp);
         this.width = width;
         this.growFactor = growFactor;
@@ -150,6 +152,8 @@ public class PropertyColumnElement implements IRenderable, IImportable {
         attrs.put("type", propertyTypeBinding());
         attrs.put("column-title", titleBinding());
         attrs.put("column-desc", descBinding());
+        attrs.put("sortable", isSortable);
+        attrs.put("editable", widget.isPresent());
         return attrs;
     }
 

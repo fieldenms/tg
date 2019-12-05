@@ -34,8 +34,8 @@ public class GuardCentreRegenerationPostAction implements IPostAction {
     public JsCode build() {
         final JsCode jsCode = new JsCode(String.format(""
                 + "const old_postRun = self._postRun;\n"
-                + "self._postRun = (function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, visibleColumnsWithOrder) {\n"
-                + "    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, visibleColumnsWithOrder);\n"
+                + "self._postRun = (function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, resultConfig) {\n"
+                + "    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, resultConfig);\n"
                 + "    \n"
                 + "    if (criteriaEntity !== null && !criteriaEntity.isValidWithoutException() && criteriaEntity.exceptionOccured() !== null && criteriaEntity.exceptionOccured().message === '%s') {\n"
                 + "        self.confirm('%s', [{name:'Yes', confirm:true, autofocus:true}, {name:'No'}]).then(function () {\n"
