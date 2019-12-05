@@ -14,6 +14,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithoutCritOnly;
 import static ua.com.fielden.platform.utils.EntityUtils.fetch;
+import static ua.com.fielden.platform.utils.EntityUtils.isOneToOne;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -30,6 +31,10 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
+import ua.com.fielden.platform.sample.domain.TgVehicle;
+import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
+import ua.com.fielden.platform.sample.domain.TgVehicleMake;
+import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
@@ -521,14 +526,37 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void new_entities_become_not_dirty_once_saved() {
+    public void new_non_one_2_one_entities_become_persisted_and_not_dirty_once_saved() {
         final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
 
         final EntityWithMoney newEntity = new_(EntityWithMoney.class, "some key")
                                           .setDateTimeProperty(new Date());
         final EntityWithMoney savedEntity = dao.save(newEntity);
         assertFalse("New entity should not be dirty after save", savedEntity.isDirty());
+        assertTrue(savedEntity.isPersisted());
         assertTrue("But the original new entiti instance remains dirty...", newEntity.isDirty());
+        assertFalse(newEntity.isPersisted());
+    }
+
+    @Test
+    public void new_one_2_one_entities_become_persisted_and_not_dirty_once_saved() {
+        assertTrue("Expecting a one-2-one association for this test.", isOneToOne(TgVehicleFinDetails.class));
+
+        final TgVehicleMake audi = save(new_(TgVehicleMake.class, "AUDI", "Audi"));
+        final TgVehicleModel m318 = save(new_(TgVehicleModel.class, "318", "318").setMake(audi));
+        final TgVehicle car1 = save(new_(TgVehicle.class, "CAR1", "CAR1 DESC")
+                .setInitDate(date("2001-01-01 00:00:00"))
+                .setModel(m318).setPrice(new Money("20"))
+                .setPurchasePrice(new Money("10"))
+                .setActive(true)
+                .setLeased(false));
+
+        final TgVehicleFinDetails newOne2One = new_(TgVehicleFinDetails.class, car1).setCapitalWorksNo("CAP_NO1");
+        final TgVehicleFinDetails savedOne2One = save(newOne2One);
+        assertTrue(savedOne2One.isPersisted());
+        assertFalse(savedOne2One.isDirty());
+        assertFalse(newOne2One.isPersisted());
+        assertTrue(newOne2One.isDirty());
     }
 
     @Test
