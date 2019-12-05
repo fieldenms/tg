@@ -1,11 +1,14 @@
 package ua.com.fielden.platform.sample.domain;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+
 import java.math.BigDecimal;
 import java.util.Date;
 
 import org.junit.Ignore;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
@@ -18,6 +21,7 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.types.Money;
 
 @KeyType(String.class)
@@ -33,6 +37,22 @@ public class TgWorkOrder extends AbstractEntity<String> {
     @Title(value = "Vehicle", desc = "Vehicle under repair")
     @MapTo
     private TgVehicle vehicle;
+    
+    @IsProperty
+    @Calculated
+    private TgVehicleModel vehicleModel;
+    protected static final ExpressionModel vehicleModel_ = expr().prop("vehicle.model").model();
+
+    @Observable
+    protected TgWorkOrder setVehicleModel(final TgVehicleModel vehicleModel) {
+        this.vehicleModel = vehicleModel;
+        return this;
+    }
+
+    public TgVehicleModel getVehicleModel() {
+        return vehicleModel;
+    }
+
 
     @IsProperty
     @MapTo

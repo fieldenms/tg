@@ -14,18 +14,20 @@ public class Child implements Comparable<Child> {
     final String fullPath; //not null if given child represents explicit prop that needs resolution 
     final String context; //indicates context for table being joined within main (explicit) table (aka dot.notation being resolved by joining this table)
     final QrySource2BasedOnPersistentType source;
+    final IQrySource2<?> parentSource;
     
     public Child(final AbstractPropInfo<?> main, final Set<Child> items, final String fullPath, final String context, final boolean required, final QrySource2BasedOnPersistentType source) {
-        this(main, items, fullPath, context, required, source, null);
+        this(main, items, fullPath, context, required, source, null, null);
     }
     
-    public Child(final AbstractPropInfo<?> main, final Set<Child> items, final String fullPath, final String context, final boolean required, final QrySource2BasedOnPersistentType source, final Expression2 expr) {
+    public Child(final AbstractPropInfo<?> main, final Set<Child> items, final String fullPath, final String context, final boolean required, final QrySource2BasedOnPersistentType source, final Expression2 expr, final IQrySource2<?> parentSource) {
         this.main = main;
         this.items = items;
         this.fullPath = fullPath;
         this.context = context;
         this.required = required;
         this.source = source;
+        this.parentSource = parentSource;
         this.expr = expr;
     }
     
@@ -37,6 +39,7 @@ public class Child implements Comparable<Child> {
         result = prime * result + main.hashCode();
         result = prime * result + ((fullPath == null) ? 0 : fullPath.hashCode());
         result = prime * result + ((source == null) ? 0 : source.hashCode());
+        result = prime * result + ((parentSource == null) ? 0 : parentSource.hashCode());
         return result;
     }
 
@@ -52,7 +55,7 @@ public class Child implements Comparable<Child> {
 
         final Child other = (Child) obj;
         
-        return Objects.equals(main, other.main) && Objects.equals(items, other.items) && Objects.equals(fullPath, other.fullPath) && Objects.equals(source, other.source);
+        return Objects.equals(main, other.main) && Objects.equals(items, other.items) && Objects.equals(fullPath, other.fullPath) && Objects.equals(source, other.source) && Objects.equals(parentSource, other.parentSource);
     }
 
     @Override

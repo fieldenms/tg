@@ -25,51 +25,123 @@ import ua.com.fielden.platform.eql.stage3.elements.sources.QrySource3BasedOnTabl
 public class SqlGenerationTest extends EqlStage3TestCase {
 
     @Test
-    public void dot_notated_props_are_correctly_transformed_00_1() {
-        // select(VEHICLE).
-        // where().anyOfProps("makeKey", "replacedBy.key").isNotNull().model();
+    public void calc_prop_is_correctly_transformed_04() {
+        // select(WORK_ORDER).
+        // where().anyOfProps("vehicleModel.makeKey").isNotNull().model();
         
-        final QrySource1BasedOnPersistentType veh1 = source(WORK_ORDER);
-        final Sources1 sources1 = sources(veh1);
-        final Conditions1 conditions1 = conditions(isNotNull(prop("vehicle.makeKey")), //
-                or(isNotNull(prop("vehicle.replacedBy.key"))) //
-        );
+        final QrySource1BasedOnPersistentType wo1 = source(WORK_ORDER);
+        final Sources1 sources1 = sources(wo1);
+        final Conditions1 conditions1 = conditions(isNotNull(prop("vehicleModel.makeKey")));
 
-        final EntQuery3 actQry = query(sources1, conditions1, VEHICLE);
+        final EntQuery3 actQry = query(sources1, conditions1, WORK_ORDER);
         
-        final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
-        final QrySource3BasedOnTable repVeh = source(VEHICLE, veh1, "replacedBy");
+        final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
+        final QrySource3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
+        final QrySource3BasedOnTable model = source(MODEL, wo1, "vehicleModel");
+        final QrySource3BasedOnTable make = source(MAKE, wo1, "make");
         
-        final IQrySources3 sources = lj(veh, repVeh, cond(eq(prop("replacedBy", veh), prop(ID, repVeh))));
-        final Conditions3 conditions = or(isNotNull(expr(prop("key", veh))), isNotNull(expr(prop("key", repVeh))));
+        final IQrySources3 sources = lj(
+                lj(wo, veh, cond(eq(prop("vehicle", wo), prop(ID, veh)))),  
+                ij(model, make, cond(eq(prop("make", model), prop(ID, make)))), 
+                cond(eq(expr(expr(prop("model", veh))), prop(ID, model)))                
+                );
+        final Conditions3 conditions = or(isNotNull(expr(expr(prop("key", make)))));
         final EntQuery3 expQry = qry(sources, conditions);
         
         assertEquals(expQry, actQry);
-        System.out.println(expQry.sql(H2));
+        System.out.println(expQry.sql(H2));   
+    }
+
+    @Test
+    public void calc_prop_is_correctly_transformed_03() {
+        // select(WORK_ORDER).
+        // where().anyOfProps("vehicle.makeKey2").isNotNull().model();
+        
+        final QrySource1BasedOnPersistentType wo1 = source(WORK_ORDER);
+        final Sources1 sources1 = sources(wo1);
+        final Conditions1 conditions1 = conditions(isNotNull(prop("vehicle.makeKey2")));
+
+        final EntQuery3 actQry = query(sources1, conditions1, WORK_ORDER);
+        
+        final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
+        final QrySource3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
+        final QrySource3BasedOnTable model = source(MODEL, wo1, "model");
+        final QrySource3BasedOnTable make = source(MAKE, wo1, "make");
+        
+        final IQrySources3 sources = lj(
+                wo,
+                ij(
+                        veh,  
+                ij(
+                        model, make, cond(eq(prop("make", model), prop(ID, make)))), 
+                cond(eq(prop("model", veh), prop(ID, model)))),
+                
+                cond(eq(prop("vehicle", wo), prop(ID, veh))));
+        final Conditions3 conditions = or(isNotNull(expr(expr(expr(prop("key", make))))));
+        final EntQuery3 expQry = qry(sources, conditions);
+        
+        assertEquals(expQry, actQry);
+        System.out.println(expQry.sql(H2));   
+    }
+
+    
+    @Test
+    public void calc_prop_is_correctly_transformed_02() {
+        // select(WORK_ORDER).
+        // where().anyOfProps("vehicle.makeKey").isNotNull().model();
+        
+        final QrySource1BasedOnPersistentType wo1 = source(WORK_ORDER);
+        final Sources1 sources1 = sources(wo1);
+        final Conditions1 conditions1 = conditions(isNotNull(prop("vehicle.makeKey")));
+
+        final EntQuery3 actQry = query(sources1, conditions1, WORK_ORDER);
+        
+        final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
+        final QrySource3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
+        final QrySource3BasedOnTable model = source(MODEL, wo1, "model");
+        final QrySource3BasedOnTable make = source(MAKE, wo1, "model_make");
+        
+        final IQrySources3 sources = lj(
+                wo,
+                ij(
+                        veh,  
+                ij(
+                        model, make, cond(eq(prop("make", model), prop(ID, make)))), 
+                cond(eq(prop("model", veh), prop(ID, model)))),
+                
+                cond(eq(prop("vehicle", wo), prop(ID, veh))));
+        final Conditions3 conditions = or(isNotNull(expr(expr(prop("key", make)))));
+        final EntQuery3 expQry = qry(sources, conditions);
+        
+        assertEquals(expQry, actQry);
+        System.out.println(expQry.sql(H2));    
     }
     
     @Test
-    public void dot_notated_props_are_correctly_transformed_00() {
+    public void calc_prop_is_correctly_transformed_01() {
         // select(VEHICLE).
-        // where().anyOfProps("makeKey", "replacedBy.key").isNotNull().model();
+        // where().anyOfProps("makeKey").isNotNull().model();
         
         final QrySource1BasedOnPersistentType veh1 = source(VEHICLE);
         final Sources1 sources1 = sources(veh1);
-        final Conditions1 conditions1 = conditions(isNotNull(prop("makeKey")), //
-                or(isNotNull(prop("replacedBy.key"))) //
-        );
+        final Conditions1 conditions1 = conditions(isNotNull(prop("makeKey")));
 
         final EntQuery3 actQry = query(sources1, conditions1, VEHICLE);
         
         final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
-        final QrySource3BasedOnTable repVeh = source(VEHICLE, veh1, "replacedBy");
+        final QrySource3BasedOnTable model = source(MODEL, veh1, "model");
+        final QrySource3BasedOnTable make = source(MAKE, veh1, "model_make");
         
-        final IQrySources3 sources = lj(veh, repVeh, cond(eq(prop("replacedBy", veh), prop(ID, repVeh))));
-        final Conditions3 conditions = or(isNotNull(expr(prop("key", veh))), isNotNull(expr(prop("key", repVeh))));
+        final IQrySources3 sources = ij(
+                        veh,  
+                ij(
+                        model, make, cond(eq(prop("make", model), prop(ID, make)))), 
+                cond(eq(prop("model", veh), prop(ID, model))));
+        final Conditions3 conditions = or(isNotNull(expr(expr(prop("key", make)))));
         final EntQuery3 expQry = qry(sources, conditions);
         
         assertEquals(expQry, actQry);
-        System.out.println(expQry.sql(H2));
+        System.out.println(expQry.sql(H2));    
     }
 
     

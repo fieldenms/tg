@@ -37,7 +37,6 @@ public class TgVehicle extends AbstractEntity<String> {
 
     @IsProperty
     @Calculated
-    @Title(value = "Title", desc = "Desc")
     private String makeKey;
     protected static final ExpressionModel makeKey_ = expr().prop("model.make.key").model();
 
@@ -51,6 +50,21 @@ public class TgVehicle extends AbstractEntity<String> {
         return makeKey;
     }
     
+    @IsProperty
+    @Calculated
+    private String makeKey2;
+    protected static final ExpressionModel makeKey2_ = expr().prop("model.makeKey").model();
+
+    @Observable
+    protected TgVehicle setMakeKey2(final String makeKey2) {
+        this.makeKey2 = makeKey2;
+        return this;
+    }
+
+    public String getMakeKey2() {
+        return makeKey2;
+    }
+
     @IsProperty
     @MapTo
     private Date initDate;
