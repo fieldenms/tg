@@ -443,7 +443,7 @@ const template = html`
                             <div class="table-cell cell" fixed style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, 'true')]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                                 <div class="table-header-column-content">
                                     <div class="truncate table-header-column-title" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
-                                    <iron-icon class="header-icon indicator-icon" hidden$="[[!_headerHasAction(item)]]" tooltip-text="This column has action" icon="icons:touch-app"></iron-icon>
+                                    <iron-icon class="header-icon indicator-icon" hidden$="[[!_headerHasAction(item)]]" tooltip-text="This column has an action" icon="icons:touch-app"></iron-icon>
                                     <iron-icon class="header-icon indicator-icon" hidden$="[[!item.editable]]" tooltip-text="This column is editable" icon="icons:create"></iron-icon>
                                     <div class="header-icon sorting-group" hidden$="[[!_isSortingVisible(item.sortable, item.sorting)]]">
                                         <iron-icon class="indicator-icon" icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_computeSortingIconStyle(item.sorting)]]"></iron-icon>
@@ -467,7 +467,7 @@ const template = html`
                             <div class="table-cell cell" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, 'false')]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                                 <div class="table-header-column-content">
                                     <div class="truncate table-header-column-title" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
-                                    <iron-icon class="header-icon indicator-icon" hidden="[[!_headerHasAction(item)]]" tooltip-text="This column has action" icon="icons:touch-app"></iron-icon>
+                                    <iron-icon class="header-icon indicator-icon" hidden="[[!_headerHasAction(item)]]" tooltip-text="This column has an action" icon="icons:touch-app"></iron-icon>
                                     <iron-icon class="header-icon indicator-icon" hidden="[[!item.editable]]" tooltip-text="This column is editable" icon="icons:create"></iron-icon>
                                     <div class="header-icon sorting-group" hidden$="[[!_isSortingVisible(item.sortable, item.sorting)]]">
                                         <iron-icon class="indicator-icon" icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_computeSortingIconStyle(item.sorting)]]"></iron-icon>
