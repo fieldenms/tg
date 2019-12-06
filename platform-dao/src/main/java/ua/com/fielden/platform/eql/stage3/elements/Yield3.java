@@ -2,6 +2,8 @@ package ua.com.fielden.platform.eql.stage3.elements;
 
 import java.util.Objects;
 
+import org.apache.commons.lang.StringUtils;
+
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 
@@ -13,11 +15,11 @@ public class Yield3 {
     public Yield3(final ISingleOperand3 operand, final String alias) {
         this.operand = operand;
         this.alias = alias;
-        this.column = new Column(alias.toUpperCase() + "_");
+        this.column = StringUtils.isEmpty(alias) ? null : new Column(alias.toUpperCase() + "_");
     }
 
     public String sql(final DbVersion dbVersion) {
-        return operand.sql(dbVersion) + " AS " + column.name;
+        return operand.sql(dbVersion) + (column == null ? "" : " AS " + column.name);
     }
     
     @Override
