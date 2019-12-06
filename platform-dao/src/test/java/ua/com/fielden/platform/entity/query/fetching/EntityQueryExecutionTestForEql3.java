@@ -20,6 +20,7 @@ import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
+import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
 
@@ -152,6 +153,27 @@ public class EntityQueryExecutionTestForEql3 extends AbstractDaoTestCase {
         assertEquals("AUDI", vehicles.get(0).get("makeKey"));
     }
 
+    @Test
+    public void eql3_query_executes_correctly8() {
+        final AggregatedResultQueryModel qry = select(TgWorkOrder.class).where().prop("zMakeKey").isNotNull().yield().countAll().as("KOUNT").
+                modelAsAggregate();
+        
+        final List<EntityAggregates> vehicles = aggregateDao.getAllEntities(from(qry).with("EQL3", null).model());
+        
+        assertEquals("1", vehicles.get(0).get("KOUNT").toString());
+    }
+
+    @Test
+    public void eql3_query_executes_correctly9() {
+        final AggregatedResultQueryModel qry = select(TgWorkOrder.class).where().prop("zMake.key").isNotNull().yield().countAll().as("KOUNT").
+                modelAsAggregate();
+        
+        final List<EntityAggregates> vehicles = aggregateDao.getAllEntities(from(qry).with("EQL3", null).model());
+        
+        assertEquals("1", vehicles.get(0).get("KOUNT").toString());
+    }
+
+    
     @Override
     protected void populateDomain() {
         super.populateDomain();
@@ -178,5 +200,8 @@ public class EntityQueryExecutionTestForEql3 extends AbstractDaoTestCase {
         final TgVehicle car1 = save(new_(TgVehicle.class, "CAR1", "CAR1 DESC").setInitDate(date("2001-01-01 00:00:00")).setModel(m318).setPrice(new Money("20")).setPurchasePrice(new Money("10")).setActive(true).setLeased(false));
         final TgVehicle car2 = save(new_(TgVehicle.class, "CAR2", "CAR2 DESC").setInitDate(date("2007-01-01 00:00:00")).setModel(m316).setPrice(new Money("200")).setPurchasePrice(new Money("100")).setActive(false).setLeased(true).setLastMeterReading(new BigDecimal("105")).setStation(orgUnit5).setReplacedBy(car1));
 
+        final TgWorkOrder wo1 = save(new_(TgWorkOrder.class, "wo0001", "wo0001 desc").setVehicle(car2));
+
+        
     }
 }

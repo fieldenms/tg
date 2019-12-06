@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.sample.domain;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -52,6 +53,38 @@ public class TgWorkOrder extends AbstractEntity<String> {
     public TgVehicleModel getVehicleModel() {
         return vehicleModel;
     }
+
+    @IsProperty
+    @Calculated
+    private String zMakeKey;
+    protected static final ExpressionModel zMakeKey_ = expr().model(select(TgVehicle.class).where().prop("id").eq().extProp("vehicle").yield().prop("model.make.key").modelAsPrimitive()).model();
+
+    @Observable
+    protected TgWorkOrder setZMakeKey(final String makeKey) {
+        this.zMakeKey = makeKey;
+        return this;
+    }
+
+    public String getZMakeKey() {
+        return zMakeKey;
+    }
+
+
+    @IsProperty
+    @Calculated
+    private TgVehicleMake zMake;
+    protected static final ExpressionModel zMake_ = expr().model(select(TgVehicle.class).where().prop("id").eq().extProp("vehicle").yield().prop("model.make").modelAsEntity(TgVehicleMake.class)).model();
+
+    @Observable
+    protected TgWorkOrder setZMake(final TgVehicleMake make) {
+        this.zMake = make;
+        return this;
+    }
+
+    public TgVehicleMake getZMake() {
+        return zMake;
+    }
+
 
 
     @IsProperty
@@ -283,7 +316,8 @@ public class TgWorkOrder extends AbstractEntity<String> {
     }
 
     @Observable
-    public void setVehicle(final TgVehicle vehicle) {
+    public TgWorkOrder setVehicle(final TgVehicle vehicle) {
         this.vehicle = vehicle;
+        return this;
     }
 }
