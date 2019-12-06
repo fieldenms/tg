@@ -188,15 +188,15 @@ public class EqlStage3TestCase extends EqlStage1TestCase {
     }
     
     protected static EntQuery3 qry(final IQrySources3 sources) {
-        return new EntQuery3(new EntQueryBlocks3(sources, new Conditions3(), yields(), groups(), orders()));
+        return new EntQuery3(new EntQueryBlocks3(sources, new Conditions3(), yields(), groups(), orders()), RESULT_QUERY);
     }
 
     protected static EntQuery3 qry(final IQrySources3 sources, final Conditions3 conditions) {
-        return new EntQuery3(new EntQueryBlocks3(sources, conditions, yields(), groups(), orders()));
+        return new EntQuery3(new EntQueryBlocks3(sources, conditions, yields(), groups(), orders()), RESULT_QUERY);
     }
 
     protected static EntQuery3 qry(final IQrySources3 sources, final Yields3 yields) {
-        return new EntQuery3(new EntQueryBlocks3(sources, new Conditions3(), yields, groups(), orders()));
+        return new EntQuery3(new EntQueryBlocks3(sources, new Conditions3(), yields, groups(), orders()), RESULT_QUERY);
     }
 
     protected static Yields3 yields(final Yield3 ... yields) {

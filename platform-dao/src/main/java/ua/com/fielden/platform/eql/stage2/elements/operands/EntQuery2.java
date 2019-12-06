@@ -50,7 +50,7 @@ public class EntQuery2 implements ISingleOperand2<EntQuery3> {
 
         final EntQueryBlocks3 entQueryBlocks = new EntQueryBlocks3(sourcesTr.item, conditionsTr.item, yieldsTr.item, groupsTr.item, orderingsTr.item);
 
-        return new TransformationResult<EntQuery3>(new EntQuery3(entQueryBlocks), orderingsTr.updatedContext);
+        return new TransformationResult<EntQuery3>(new EntQuery3(entQueryBlocks, category), orderingsTr.updatedContext);
     }
 
     @Override

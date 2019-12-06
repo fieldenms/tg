@@ -1,10 +1,12 @@
 package ua.com.fielden.platform.eql.stage3.elements.operands;
 
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import static ua.com.fielden.platform.eql.meta.QueryCategory.RESULT_QUERY;
 
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.eql.meta.QueryCategory;
 import ua.com.fielden.platform.eql.stage3.elements.EntQueryBlocks3;
 import ua.com.fielden.platform.eql.stage3.elements.GroupBys3;
 import ua.com.fielden.platform.eql.stage3.elements.OrderBys3;
@@ -19,13 +21,15 @@ public class EntQuery3 implements ISingleOperand3 {
     public final Yields3 yields;
     public final GroupBys3 groups;
     public final OrderBys3 orderings;
+    public final QueryCategory category;
 
-    public EntQuery3(final EntQueryBlocks3 queryBlocks) {
+    public EntQuery3(final EntQueryBlocks3 queryBlocks, final QueryCategory category) {
         this.sources = queryBlocks.sources;
         this.conditions = queryBlocks.conditions;
         this.yields = queryBlocks.yields;
         this.groups = queryBlocks.groups;
         this.orderings = queryBlocks.orderings;
+        this.category = category;
     }
 
     @Override
@@ -43,7 +47,7 @@ public class EntQuery3 implements ISingleOperand3 {
         }        
         sb.append(groups.sql(dbVersion));
         sb.append(orderings.sql(dbVersion));
-        return sb.toString();
+        return category == RESULT_QUERY ? sb.toString() : "(" + sb.toString() + ")";
     }
 
     @Override
@@ -60,6 +64,7 @@ public class EntQuery3 implements ISingleOperand3 {
         result = prime * result + sources.hashCode();
         result = prime * result + groups.hashCode();
         result = prime * result + orderings.hashCode();
+        result = prime * result + category.hashCode();
         return result;
     }
 
@@ -79,6 +84,7 @@ public class EntQuery3 implements ISingleOperand3 {
                 Objects.equals(yields, other.yields) &&
                 Objects.equals(conditions, other.conditions) &&
                 Objects.equals(groups, other.groups) &&
-                Objects.equals(orderings, other.orderings);
+                Objects.equals(orderings, other.orderings) &&
+                Objects.equals(category, other.category);
     }
 }
