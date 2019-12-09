@@ -193,6 +193,7 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgCompoundEntityMaster_OpenMain_MenuItem.class);
         add(TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem.class);
         add(TgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem.class);
+        add(TgFuelType.class);
     }
 
     @Override

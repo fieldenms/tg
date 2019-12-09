@@ -5,8 +5,10 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -17,6 +19,7 @@ import java.nio.file.Paths;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
 /**
@@ -48,6 +51,115 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
 
         // let's do clean up by deleting just uploaded file
         assertTrue(Files.deleteIfExists(uploadedFile));
+    }
+
+    @Test
+    public void attachment_instance_is_created_as_the_result_of_successful_stream_upload() throws IOException {
+        final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
+
+        final Attachment attachment = coAttachmentUploader.save((AttachmentUploader) new_(AttachmentUploader.class)
+                .setOrigFileName("readme.txt")
+                .setMime("text/plain")
+                .setInputStream(new ByteArrayInputStream("some data".getBytes()))).getKey();
+
+        assertNotNull(attachment);
+        assertTrue(attachment.isPersisted());
+        assertNotNull(attachment.getSha1());
+
+        final Path uploadedFile = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + attachment.getSha1());
+        assertTrue(uploadedFile.toFile().exists());
+        assertTrue(uploadedFile.toFile().canRead());
+
+        // let's do clean up by deleting just uploaded file
+        assertTrue(Files.deleteIfExists(uploadedFile));
+    }
+
+    @Test
+    public void uploading_the_same_attachment_in_different_transactions_multiple_times_succeeds_without_any_data_duplication() throws IOException {
+        Path uploadedFile = null;
+        try {
+            final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
+
+            final AttachmentUploader newUpload1 = (AttachmentUploader) new_(AttachmentUploader.class)
+                    .setOrigFileName("readme.txt")
+                    .setMime("text/plain")
+                    .setInputStream(new ByteArrayInputStream("some data".getBytes()));
+            final Attachment attachment1 = coAttachmentUploader.save(newUpload1).getKey();
+
+            final AttachmentUploader newUpload2 = (AttachmentUploader) new_(AttachmentUploader.class)
+                    .setOrigFileName("readme.txt")
+                    .setMime("text/plain")
+                    .setInputStream(new ByteArrayInputStream("some data".getBytes()));
+            final Attachment attachment2 = coAttachmentUploader.save(newUpload2).getKey();
+
+            final AttachmentUploader newUpload3 = (AttachmentUploader) new_(AttachmentUploader.class)
+                    .setOrigFileName("readme.txt")
+                    .setMime("text/plain")
+                    .setInputStream(new ByteArrayInputStream("some data".getBytes()));
+            final Attachment attachment3 = coAttachmentUploader.save(newUpload3).getKey();
+
+            assertNotNull(attachment1);
+            assertNotNull(attachment2);
+            assertNotNull(attachment3);
+            assertTrue(attachment1.isPersisted());
+            assertTrue(attachment2.isPersisted());
+            assertTrue(attachment3.isPersisted());
+            assertEquals(attachment1.getId(), attachment2.getId());
+            assertEquals(attachment2.getId(), attachment3.getId());
+
+            uploadedFile = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + attachment1.getSha1());
+            assertTrue(uploadedFile.toFile().exists());
+            assertTrue(uploadedFile.toFile().canRead());
+        } finally {
+            // let's do clean up by deleting just uploaded file
+            if (uploadedFile != null) {
+                assertTrue(Files.deleteIfExists(uploadedFile));
+            }
+        }
+    }
+
+    @Test
+    @SessionRequired
+    public void uploading_the_same_attachment_in_a_single_transactions_multiple_times_failes_due_to_transaction_rollback() throws IOException {
+        Path uploadedFile = null;
+        Attachment attachment1 = null;
+        try {
+            final AttachmentUploaderDao coAttachmentUploader = co(AttachmentUploader.class);
+
+            final AttachmentUploader newUpload1 = (AttachmentUploader) new_(AttachmentUploader.class)
+                    .setOrigFileName("readme.txt")
+                    .setMime("text/plain")
+                    .setInputStream(new ByteArrayInputStream("some data".getBytes()));
+            attachment1 = coAttachmentUploader.save(newUpload1).getKey();
+            uploadedFile = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + attachment1.getSha1());
+            assertTrue(uploadedFile.toFile().exists());
+            assertTrue(uploadedFile.toFile().canRead());
+
+            final AttachmentUploader newUpload2 = (AttachmentUploader) new_(AttachmentUploader.class)
+                    .setOrigFileName("readme.txt")
+                    .setMime("text/plain")
+                    .setInputStream(new ByteArrayInputStream("some data".getBytes()));
+            coAttachmentUploader.save(newUpload2).getKey();
+            fail("Attempts to save a duplicate attachment in the same transaction should have failed due to the transaction rollback.");
+        } catch (final Exception ex) {
+            System.out.println(ex);
+        } finally {
+            // let's do clean up by deleting just uploaded file
+            if (uploadedFile != null) {
+                assertTrue(Files.deleteIfExists(uploadedFile));
+            }
+        }
+        assertFalse("Attachment should have been rolled back.", co(Attachment.class).entityExists(attachment1));
+    }
+
+    @Override
+    public boolean saveDataPopulationScriptToFile() {
+        return false;
+    }
+
+    @Override
+    public boolean useSavedDataPopulationScript() {
+        return false;
     }
 
     @Test

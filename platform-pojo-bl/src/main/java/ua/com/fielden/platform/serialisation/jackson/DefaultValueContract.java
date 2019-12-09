@@ -3,6 +3,7 @@ package ua.com.fielden.platform.serialisation.jackson;
 import static java.lang.Boolean.FALSE;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_DISPLAY_AS;
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_LENGTH;
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_PRECISION;
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_SCALE;
@@ -35,7 +36,7 @@ import ua.com.fielden.snappy.MnemonicEnum;
 public class DefaultValueContract {
     private DefaultValueContract() {
     }
-    
+
     ///////////////////////////////////////////////// prevValue /////////////////////////////////////////////////
     /**
      * Returns <code>true</code> if the value of <code>prevValue</code> property is default, <code>false</code> otherwise.
@@ -73,7 +74,7 @@ public class DefaultValueContract {
     public static int getValueChangeCountDefault() {
         return 0;
     }
-    
+
     /**
      * Returns <code>true</code> if the value of <code>valueChangeCount</code> property is default, <code>false</code> otherwise.
      *
@@ -164,7 +165,7 @@ public class DefaultValueContract {
         }
         return t2(equalsEx(metaProperty.isChangedFromOriginal(), isChangedFromOriginalDefault()), empty());
     }
-    
+
     private static boolean isIdOnlyProxiedEntity(final Object value) {
         return value != null && ((AbstractEntity<?>) value).isIdOnlyProxy();
     }
@@ -328,6 +329,16 @@ public class DefaultValueContract {
     }
 
     /**
+     * Returns the value that indicates whether displayAs property has default value or not.
+     *
+     * @param displayAs
+     * @return
+     */
+    public static final boolean isDisplayAsDefault(final String displayAs) {
+        return equalsEx(displayAs, DEFAULT_DISPLAY_AS);
+    }
+
+    /**
      * Returns <code>true</code> if the value of <code>ignore</code> property is default, <code>false</code> otherwise.
      *
      * @return
@@ -416,7 +427,7 @@ public class DefaultValueContract {
     public static boolean isNotDefault(final Boolean not) {
         return not == null || FALSE.equals(not);
     }
-    
+
     /**
      * Returns <code>true</code> if the criterion value of <code>orGroup</code> is default, <code>false</code> otherwise.
      *

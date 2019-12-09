@@ -67,7 +67,10 @@ const TgEntityCentreTemplateBehaviorImpl = {
     },
 
     confirm: function (message, buttons) {
-        return this._dom()._confirmationDialog().showConfirmationDialog(message, buttons);
+        if (!this.$.egi.isEditing()) {
+            return this._dom()._confirmationDialog().showConfirmationDialog(message, buttons);
+        }
+        return this._saveOrCancelPromise();
     },
 
     _dom: function () {

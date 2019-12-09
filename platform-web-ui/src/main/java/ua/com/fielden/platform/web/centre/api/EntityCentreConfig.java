@@ -47,6 +47,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKin
 import ua.com.fielden.platform.web.centre.api.resultset.scrolling.IScrollConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 import ua.com.fielden.platform.web.layout.FlexLayout;
+import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
 
 /**
  *
@@ -224,19 +225,20 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         public final Optional<CentreContextConfig> contextConfig;
         public final Optional<BiConsumer> entityPreProcessor;
         public final Supplier<Optional<EntityActionConfig>> propAction;
+        public final Optional<AbstractWidget> widget;
         public final int width;
         public final boolean isFlexible;
 
-         public static <T extends AbstractEntity<?>> ResultSetProp<T> propByName(final String propName, final int width, final boolean isFlexible, final String tooltipProp, final Supplier<Optional<EntityActionConfig>> propAction) {
-            return new ResultSetProp<T>(propName, empty(), empty(), empty(), width, isFlexible, tooltipProp, null, propAction);
+         public static <T extends AbstractEntity<?>> ResultSetProp<T> propByName(final String propName, final int width, final boolean isFlexible, final Optional<AbstractWidget> widget, final String tooltipProp, final Supplier<Optional<EntityActionConfig>> propAction) {
+            return new ResultSetProp<T>(propName, empty(), empty(), empty(), width, isFlexible, widget, tooltipProp, null, propAction);
         }
 
         public static <T extends AbstractEntity<?>> ResultSetProp<T> propByDef(final PropDef<?> propDef, final int width, final boolean isFlexible, final String tooltipProp, final Supplier<Optional<EntityActionConfig>> propAction) {
-            return new ResultSetProp<T>(null, empty(), empty(), empty(), width, isFlexible, tooltipProp, propDef, propAction);
+            return new ResultSetProp<T>(null, empty(), empty(), empty(), width, isFlexible, Optional.empty(), tooltipProp, propDef, propAction);
         }
 
         public static <T extends AbstractEntity<?>> ResultSetProp<T> dynamicProps(final String collectionalPropertyName, final Class<? extends IDynamicColumnBuilder<T>> dynamicPropDefinerClass, final BiConsumer<? extends AbstractEntity<?>, Optional<CentreContext<T, ?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
-            return new ResultSetProp<T>(collectionalPropertyName, of(dynamicPropDefinerClass), of(contextConfig), of(entityPreProcessor), 0, false, null, null, () -> Optional.empty());
+            return new ResultSetProp<T>(collectionalPropertyName, of(dynamicPropDefinerClass), of(contextConfig), of(entityPreProcessor), 0, false, Optional.empty(), null, null, () -> Optional.empty());
         }
 
         private ResultSetProp(
@@ -246,6 +248,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
                 final Optional<BiConsumer> entityPreProcessor,
                 final int width,
                 final boolean isFlexible,
+                final Optional<AbstractWidget> widget,
                 final String tooltipProp,
                 final PropDef<?> propDef,
                 final Supplier<Optional<EntityActionConfig>> propAction) {
@@ -265,6 +268,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             this.propName = Optional.ofNullable(propName);
             this.width = width;
             this.isFlexible = isFlexible;
+            this.widget = widget;
             this.tooltipProp = Optional.ofNullable(tooltipProp);
             this.propDef = Optional.ofNullable(propDef);
             this.propAction = propAction;
@@ -272,7 +276,6 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             this.contextConfig = contextConfig;
             this.entityPreProcessor = entityPreProcessor;
         }
-
     }
 
     /**

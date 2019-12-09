@@ -85,7 +85,6 @@ import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -184,6 +183,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private static final String EGI_SECONDARY_ACTIONS = "//generatedSecondaryActions";
     private static final String EGI_PROPERTY_ACTIONS = "//generatedPropActions";
     private static final String EGI_DOM = "<!--@egi_columns-->";
+    private static final String EGI_EDITORS = "<!--@egi_editors-->";
     private static final String EGI_FUNCTIONAL_ACTION_DOM = "<!--@functional_actions-->";
     private static final String EGI_PRIMARY_ACTION_DOM = "<!--@primary_action-->";
     private static final String EGI_SECONDARY_ACTIONS_DOM = "<!--@secondary_actions-->";
@@ -906,6 +906,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
         final List<PropertyColumnElement> propertyColumns = new ArrayList<>();
         final Optional<List<ResultSetProp<T>>> resultProps = dslDefaultConfig.getResultSetProperties();
+        final List<DomElement> widgets = new ArrayList<>();
         final ListMultimap<String, SummaryPropDef> summaryProps = dslDefaultConfig.getSummaryExpressions();
         final Class<?> managedType = centre.getEnhancer().getManagedType(root);
         if (resultProps.isPresent()) {
@@ -926,7 +927,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 }
 
                 final PropertyColumnElement el = new PropertyColumnElement(resultPropName,
+                        resultProp.widget,
                         resultProp.dynamicColBuilderType.isPresent(),
+                        !resultProp.propDef.isPresent(),
                         resultProp.width,
                         centre.getSecondTick().getGrowFactor(root, resultPropName),
                         resultProp.isFlexible,
@@ -948,9 +951,11 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         logger.debug("Initiating prop actions...");
 
         final DomContainer egiColumns = new DomContainer();
+        final DomContainer egiEditors = new DomContainer();
         final StringBuilder propActionsObject = new StringBuilder();
         propertyColumns.forEach(column -> {
             importPaths.add(column.importPath());
+            column.widgetImportPath().ifPresent(path -> importPaths.add(path));
             if (column.hasSummary()) {
                 importPaths.add(column.getSummary(0).importPath());
             }
@@ -959,6 +964,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 propActionsObject.append(prefix + createActionObject(column.getAction().get()));
             }
             egiColumns.add(column.render());
+            column.renderWidget().ifPresent(widget -> egiEditors.add(widget));
         });
 
         logger.debug("Initiating top-level actions...");
@@ -1139,6 +1145,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace(QUERY_ENHANCER_CONFIG, queryEnhancerContextConfigString()).
                 replace(CRITERIA_DOM, editorContainer.toString()).
                 replace(EGI_DOM, egiColumns.toString()).
+                replace(EGI_EDITORS, egiEditors.toString()).
                 replace(FRONT_ACTIONS_DOM, frontActionsDom.toString()).
                 replace(FRONT_ACTIONS, frontActionString.length() > prefixLength ? frontActionString.substring(prefixLength): frontActionString).
                 replace(EGI_ACTIONS, funcActionString.length() > prefixLength ? funcActionString.substring(prefixLength) : funcActionString).
@@ -1401,9 +1408,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      */
     public static <V extends AbstractEntity<?>> fetch<V> createFetchModelForAutocompleterFrom(final Class<V> propType, final Set<String> additionalProperties) {
         final IFetchProvider<V> fetchProvider = fetchNone(propType).with(additionalProperties);
-        fetchProvider.addKeysTo(""); // adding deep keys for entity itself
+        fetchProvider.addKeysTo("", false); // adding deep keys for entity itself (no 'desc' property is required, it should be explicitly added by withProps() API or otherwise it will be in default additional properties)
         for (final String additionalProperty: additionalProperties) {
-            fetchProvider.addKeysTo(additionalProperty); // adding deep keys for additional property (possibly, dot-notated)
+            fetchProvider.addKeysTo(additionalProperty, true); // adding deep keys [and first-level 'desc' property, if exists] for additional [dot-notated] property
         }
         return fetchProvider.fetchModel();
     }

@@ -91,6 +91,18 @@ export function isInHierarchy (parent, descendant) {
     return !!current;
 };
 
+export function getParentAnd(element, predicate) {
+    let current = element;
+    while (current && !predicate(current)) {
+        current = current.parentElement || current.getRootNode().host;
+    }
+    return current;
+}
+
+export function getActiveParentAnd(predicate) {
+    return getParentAnd(deepestActiveElement(), predicate);
+}
+
 /**
  * Converts short collectional property with string value
  */
@@ -179,7 +191,8 @@ export class EntityStub {
             prop: (prop) => {
                 return {
                     scale: () => 0,
-                    trailingZeros: () => true
+                    trailingZeros: () => true,
+                    displayAs: () => ""
                 }
             }
         }

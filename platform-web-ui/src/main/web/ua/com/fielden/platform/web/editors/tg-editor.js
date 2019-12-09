@@ -27,6 +27,7 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
             .custom-input-wrapper, .custom-input {
                 @apply --paper-input-container-shared-input-style;
                 font-weight: 500;
+                text-align: left;
             }
 
             .input-layer {
@@ -423,6 +424,9 @@ export class TgEditor extends PolymerElement {
                         // console.debug("_onKeydown:", event);
                         if (event.keyCode === 13) { // 'Enter' has been pressed
                             this.commitIfChanged();
+                        } else if ((event.keyCode === 38 || event.keyCode === 40) 
+                                    && (event.altKey || event.ctlKey || event.metaKey || event.shiftKey)) {
+                            tearDownEvent(event);
                         }
                     }).bind(this);
                 }
@@ -698,6 +702,8 @@ export class TgEditor extends PolymerElement {
         } else {
             // console.debug("_entityChanged: Not yet initialised _currBindingEntity, from which to get binding value!");
             this._updateMessagesForEntity(newValue);
+            this._editingValue = this._defaultEditingValue();
+            this.commit();
         }
         this._tryFireErrorMsg(this._error);
     }
