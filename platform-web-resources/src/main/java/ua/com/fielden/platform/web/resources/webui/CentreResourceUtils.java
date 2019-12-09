@@ -11,8 +11,8 @@ import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isExclusive2Default;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isExclusiveDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isNotDefault;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isOrNullDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isOrGroupDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isOrNullDefault;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.APPLIED_CRITERIA_ENTITY_NAME;
@@ -45,6 +45,7 @@ import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToResultTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
@@ -267,10 +268,26 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         }
         resultantCustomObject.put("resultEntities", data);
         resultantCustomObject.put("columnWidths", createColumnWidths(criteriaEntity.getCentreDomainTreeMangerAndEnhancer().getSecondTick(), criteriaEntity.getEntityClass()));
-        resultantCustomObject.put("visibleColumnsWithOrder", criteriaEntity.getCentreDomainTreeMangerAndEnhancer().getSecondTick().usedProperties(criteriaEntity.getEntityClass()));
+        resultantCustomObject.put("resultConfig", createResultConfigObject(criteriaEntity));
         resultantCustomObject.put("pageNumber", page == null ? 0 /* TODO ? */: page.no());
         resultantCustomObject.put("pageCount", page == null ? 0 /* TODO ? */: page.numberOfPages());
         return new Pair<>(resultantCustomObject, data);
+    }
+
+    private static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Map<String, Object> createResultConfigObject(final M criteriaEntity) {
+        final Map<String, Object> resultConfigObject = new LinkedHashMap<>();
+        resultConfigObject.put("visibleColumnsWithOrder", criteriaEntity.getCentreDomainTreeMangerAndEnhancer().getSecondTick().usedProperties(criteriaEntity.getEntityClass()));
+        resultConfigObject.put("orderingConfig", createOrderingProperties(criteriaEntity.getCentreDomainTreeMangerAndEnhancer().getSecondTick().orderedProperties(criteriaEntity.getEntityClass())));
+        return resultConfigObject;
+    }
+
+    private static List<Map<String, String>> createOrderingProperties(final List<Pair<String, Ordering>> orderedProperties) {
+        return orderedProperties.stream().map(pair -> {
+            final Map<String, String> prop = new HashMap<>();
+            prop.put("property", pair.getKey());
+            prop.put("sorting", pair.getValue().name());
+            return prop;
+        }).collect(Collectors.toList());
     }
 
     /**
