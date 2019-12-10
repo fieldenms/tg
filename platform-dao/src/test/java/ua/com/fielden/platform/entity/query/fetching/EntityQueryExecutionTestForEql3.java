@@ -155,7 +155,7 @@ public class EntityQueryExecutionTestForEql3 extends AbstractDaoTestCase {
 
     @Test
     public void eql3_query_executes_correctly8() {
-        final AggregatedResultQueryModel qry = select(TgWorkOrder.class).where().prop("zMakeKey").isNotNull().yield().countAll().as("KOUNT").
+        final AggregatedResultQueryModel qry = select(TgWorkOrder.class).where().prop("makeKey").isNotNull().yield().countAll().as("KOUNT").
                 modelAsAggregate();
         
         final List<EntityAggregates> vehicles = aggregateDao.getAllEntities(from(qry).with("EQL3", null).model());
@@ -165,7 +165,7 @@ public class EntityQueryExecutionTestForEql3 extends AbstractDaoTestCase {
 
     @Test
     public void eql3_query_executes_correctly9() {
-        final AggregatedResultQueryModel qry = select(TgWorkOrder.class).where().prop("zMake.key").isNotNull().yield().countAll().as("KOUNT").
+        final AggregatedResultQueryModel qry = select(TgWorkOrder.class).where().prop("make.key").isNotNull().yield().countAll().as("KOUNT").
                 modelAsAggregate();
         
         final List<EntityAggregates> vehicles = aggregateDao.getAllEntities(from(qry).with("EQL3", null).model());
@@ -173,7 +173,26 @@ public class EntityQueryExecutionTestForEql3 extends AbstractDaoTestCase {
         assertEquals("1", vehicles.get(0).get("KOUNT").toString());
     }
 
+    @Test
+    public void eql3_query_executes_correctly10() {
+        final AggregatedResultQueryModel qry = select(TgWorkOrder.class).where().anyOfProps("vehicle.makeKey").isNotNull().yield().countAll().as("KOUNT").
+                modelAsAggregate();
+        
+        final List<EntityAggregates> vehicles = aggregateDao.getAllEntities(from(qry).with("EQL3", null).model());
+        
+        assertEquals("1", vehicles.get(0).get("KOUNT").toString());
+    }
     
+    @Test
+    public void eql3_query_executes_correctly11() {
+        final AggregatedResultQueryModel qry = select(TgWorkOrder.class).where().anyOfProps("vehicle.makeKey2").isNotNull().yield().countAll().as("KOUNT").
+                modelAsAggregate();
+        
+        final List<EntityAggregates> vehicles = aggregateDao.getAllEntities(from(qry).with("EQL3", null).model());
+        
+        assertEquals("1", vehicles.get(0).get("KOUNT").toString());
+    }
+
     @Override
     protected void populateDomain() {
         super.populateDomain();

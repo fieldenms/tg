@@ -8,6 +8,7 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -95,18 +96,20 @@ public class PathsToTreeTransformator {
         newContext.add(propInfo.name);
 
         Expression2 expr2 = null;
+        final Set<Child> dependencies = new HashSet<>();
         if (propInfo.expression != null) {
             final TransformationResult<Expression2> tr = expressionToS2(contextSource, propInfo.expression, domainInfo);
             expr2 = tr.item;
-            final Map<IQrySource2<?>, SortedSet<Child>> dependants = transform(tr.updatedContext.getResolvedProps(), domainInfo);
+            final Map<IQrySource2<?>, SortedSet<Child>> dependenciesResult = transform(tr.updatedContext.getResolvedProps(), domainInfo);
 
-            for (final Entry<IQrySource2<?>, SortedSet<Child>> dependant : dependants.entrySet()) {
-                if (!dependant.getKey().equals(contextSource)) {
-                    other.put(dependant.getKey(), dependant.getValue());
+            for (final Entry<IQrySource2<?>, SortedSet<Child>> drEntry : dependenciesResult.entrySet()) {
+                if (!drEntry.getKey().equals(contextSource)) {
+                    other.put(drEntry.getKey(), drEntry.getValue());
                 }
             }
             
-            result.addAll(dependants.get(contextSource));
+            dependencies.addAll(dependenciesResult.get(contextSource));
+            result.addAll(dependenciesResult.get(contextSource));
         }
         
         final boolean required = propInfo instanceof EntityTypePropInfo ? ((EntityTypePropInfo) propInfo).required : false;
@@ -118,7 +121,7 @@ public class PathsToTreeTransformator {
         final SortedSet<Child> children = genRes._1;
         other.putAll(genRes._2);
         
-        result.add(new Child(propInfo, children, next._1, childContext, required, source, expr2, contextParentSource));
+        result.add(new Child(propInfo, children, next._1, childContext, required, source, expr2, contextParentSource, dependencies));
         
         return t2(result, other); 
     }    

@@ -56,36 +56,35 @@ public class TgWorkOrder extends AbstractEntity<String> {
 
     @IsProperty
     @Calculated
-    private String zMakeKey;
-    protected static final ExpressionModel zMakeKey_ = expr().model(select(TgVehicle.class).where().prop("id").eq().extProp("vehicle").yield().prop("model.make.key").modelAsPrimitive()).model();
+    private String makeKey;
+    protected static final ExpressionModel makeKey_ = expr().model(select(TgVehicle.class).where().prop("id").eq().extProp("vehicle").yield().prop("model.make.key").modelAsPrimitive()).model();
 
     @Observable
-    protected TgWorkOrder setZMakeKey(final String makeKey) {
-        this.zMakeKey = makeKey;
+    protected TgWorkOrder setMakeKey(final String makeKey) {
+        this.makeKey = makeKey;
         return this;
     }
 
-    public String getZMakeKey() {
-        return zMakeKey;
+    public String getMakeKey() {
+        return makeKey;
     }
-
 
     @IsProperty
     @Calculated
-    private TgVehicleMake zMake;
-    protected static final ExpressionModel zMake_ = expr().model(select(TgVehicle.class).where().prop("id").eq().extProp("vehicle").yield().prop("model.make").modelAsEntity(TgVehicleMake.class)).model();
+    private TgVehicleMake make;
+    protected static final ExpressionModel make_ = expr().model(select(TgVehicle.class).where().prop("id").eq().extProp("vehicle").yield().prop("model.make").modelAsEntity(TgVehicleMake.class)).model();
 
     @Observable
-    protected TgWorkOrder setZMake(final TgVehicleMake make) {
-        this.zMake = make;
+    protected TgWorkOrder setMake(final TgVehicleMake make) {
+        this.make = make;
         return this;
     }
 
-    public TgVehicleMake getZMake() {
-        return zMake;
+    public TgVehicleMake getMake() {
+        return make;
     }
-
-
+    
+    
 
     @IsProperty
     @MapTo

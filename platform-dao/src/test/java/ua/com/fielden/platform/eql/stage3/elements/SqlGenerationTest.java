@@ -24,6 +24,99 @@ import ua.com.fielden.platform.eql.stage3.elements.sources.QrySource3BasedOnTabl
 
 public class SqlGenerationTest extends EqlStage3TestCase {
 
+    
+    @Test
+    public void calc_prop_is_correctly_transformed_06() {
+        // select(WORK_ORDER).
+        // where().anyOfProps("vehicle.makeKey2").isNotNull().model();
+        
+        final QrySource1BasedOnPersistentType wo1 = source(WORK_ORDER);
+        final Sources1 sources1 = sources(wo1);
+        final Conditions1 conditions1 = conditions(isNotNull(prop("make.key")));
+
+        final EntQuery3 actQry = query(sources1, conditions1, WORK_ORDER);
+        
+        final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
+        final QrySource3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
+        final QrySource3BasedOnTable model = source(MODEL, wo1, "model");
+        final QrySource3BasedOnTable make = source(MAKE, wo1, "make");
+        
+        final IQrySources3 sources = lj(
+                wo,
+                ij(
+                        veh,  
+                ij(
+                        model, make, cond(eq(prop("make", model), prop(ID, make)))), 
+                cond(eq(prop("model", veh), prop(ID, model)))),
+                
+                cond(eq(prop("vehicle", wo), prop(ID, veh))));
+        final Conditions3 conditions = or(isNotNull(expr(expr(expr(prop("key", make))))));
+        final EntQuery3 expQry = qry(sources, conditions);
+        
+        assertEquals(expQry, actQry);
+        System.out.println(expQry.sql(H2));   
+    }
+    
+    @Test
+    public void calc_prop_is_correctly_transformed_05() {
+        // select(WORK_ORDER).
+        // where().anyOfProps("vehicle.makeKey2").isNotNull().model();
+        
+        final QrySource1BasedOnPersistentType wo1 = source(WORK_ORDER);
+        final Sources1 sources1 = sources(wo1);
+        final Conditions1 conditions1 = conditions(isNotNull(prop("makeKey")));
+
+        final EntQuery3 actQry = query(sources1, conditions1, WORK_ORDER);
+        
+        final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
+        final QrySource3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
+        final QrySource3BasedOnTable model = source(MODEL, wo1, "model");
+        final QrySource3BasedOnTable make = source(MAKE, wo1, "make");
+        
+        final IQrySources3 sources = lj(
+                wo,
+                ij(
+                        veh,  
+                ij(
+                        model, make, cond(eq(prop("make", model), prop(ID, make)))), 
+                cond(eq(prop("model", veh), prop(ID, model)))),
+                
+                cond(eq(prop("vehicle", wo), prop(ID, veh))));
+        final Conditions3 conditions = or(isNotNull(expr(expr(expr(prop("key", make))))));
+        final EntQuery3 expQry = qry(sources, conditions);
+        
+        assertEquals(expQry, actQry);
+        System.out.println(expQry.sql(H2));   
+    }
+    
+    @Test
+    public void calc_prop_is_correctly_transformed_04_1() {
+        // select(WORK_ORDER).
+        // where().anyOfProps("vehicleModel.makeKey").isNotNull().model();
+        
+        final QrySource1BasedOnPersistentType wo1 = source(WORK_ORDER);
+        final Sources1 sources1 = sources(wo1);
+        final Conditions1 conditions1 = conditions(isNotNull(prop("vehicleModel.key")));
+
+        final EntQuery3 actQry = query(sources1, conditions1, WORK_ORDER);
+        
+        final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
+        final QrySource3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
+        final QrySource3BasedOnTable model = source(MODEL, wo1, "vehicleModel");
+        final QrySource3BasedOnTable make = source(MAKE, wo1, "make");
+        
+        final IQrySources3 sources = lj(
+                lj(wo, veh, cond(eq(prop("vehicle", wo), prop(ID, veh)))),  
+                ij(model, make, cond(eq(prop("make", model), prop(ID, make)))), 
+                cond(eq(expr(expr(prop("model", veh))), prop(ID, model)))                
+                );
+        final Conditions3 conditions = or(isNotNull(expr(expr(prop("key", make)))));
+        final EntQuery3 expQry = qry(sources, conditions);
+        
+        assertEquals(expQry, actQry);
+        System.out.println(expQry.sql(H2));   
+    }
+
     @Test
     public void calc_prop_is_correctly_transformed_04() {
         // select(WORK_ORDER).
@@ -49,7 +142,6 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final EntQuery3 expQry = qry(sources, conditions);
         
         assertEquals(expQry, actQry);
-        System.out.println(expQry.sql(H2));   
     }
 
     @Test
@@ -81,7 +173,6 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final EntQuery3 expQry = qry(sources, conditions);
         
         assertEquals(expQry, actQry);
-        System.out.println(expQry.sql(H2));   
     }
 
     
@@ -114,7 +205,6 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final EntQuery3 expQry = qry(sources, conditions);
         
         assertEquals(expQry, actQry);
-        System.out.println(expQry.sql(H2));    
     }
     
     @Test
@@ -141,7 +231,6 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final EntQuery3 expQry = qry(sources, conditions);
         
         assertEquals(expQry, actQry);
-        System.out.println(expQry.sql(H2));    
     }
 
     
@@ -199,7 +288,6 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final EntQuery3 expQry = qry(sources, conditions);
         
         assertEquals(expQry, actQry);
-        System.out.println(expQry.sql(H2));
     }
     
     @Test
@@ -230,7 +318,6 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final EntQuery3 expQry = qry(sources, conditions);
 
         assertEquals(expQry, actQry);
-        System.out.println(expQry.sql(H2));
     }
     
     @Test
@@ -280,7 +367,6 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final EntQuery3 expQry = qry(sources, conditions);
 
         assertEquals(expQry, actQry);
-        System.out.println(expQry.sql(H2));
     }
 
     @Test
@@ -333,8 +419,6 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final EntQuery3 expQry = qry(sources, conditions);
 
         assertEquals(expQry, actQry);
-        System.out.println(expQry.sql(H2));
-        
     }
     
     @Test
