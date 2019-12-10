@@ -37,6 +37,13 @@ const template = html`
         :host {
             @apply --layout-vertical;
         }
+        :host([fit-to-height]) {
+            position: absolute;
+            top:0;
+            bottom:0;
+            right: 0;
+            left: 0;
+        }
         .grid-container {
             z-index: 0;
             background-color: white;
@@ -44,9 +51,10 @@ const template = html`
             @apply --layout-vertical;
             @apply --layout-relative;
             @apply --shadow-elevation-2dp;
+            @apply --tg-grid-container;
         }
         .grid-container[fit-to-height] {
-            @apply --layout-flex;
+            max-height: 100%;
         }
         tg-responsive-toolbar {
             flex-grow: 0;
@@ -84,16 +92,20 @@ const template = html`
             min-height: 0;
             overflow:auto;
             @apply --layout-vertical;
-            @apply --layout-flex-auto;
+            @apply --layout-flex;
             @apply --layout-relative;
         }
         #baseContainer {
             display: grid;
             grid-template-columns: min-content auto min-content;
-            grid-template-rows: auto auto auto;
+            grid-template-rows: min-content min-content auto;
             min-width: fit-content;
             min-height: fit-content;
             z-index: 0;
+            @apply --layout-flex;
+        }
+        #bottom_left_egi, #bottom_egi, #bottom_right_egi {
+            align-self: end;
         }
         .noselect {
             -webkit-touch-callout: none;
@@ -138,6 +150,31 @@ const template = html`
             flex-grow: 0;
             flex-shrink: 0;
             @apply --layout-horizontal;
+        }
+        .table-header-column-content {
+            width: 100%;
+            @apply --layout-horizontal;
+            @apply --layout-center;
+        }
+        .table-header-column-title {
+            margin-right: 8px;
+            @apply --layout-flex;
+        }
+        .header-icon {
+            flex-grow: 0;
+            flex-shrink: 0;
+        }
+        .indicator-icon {
+            --iron-icon-width: 16px;
+            --iron-icon-height: 16px;
+        }
+        .sorting-group {
+            @apply --layout-horizontal;
+        }
+        .ordering-number {
+            font-size: 8pt;
+            width: 1rem;
+            @apply --layout-self-center;
         }
         .table-data-row {
             z-index: 0;
@@ -416,7 +453,15 @@ const template = html`
                         </div>
                         <template is="dom-repeat" items="[[fixedColumns]]">
                             <div class="table-cell cell" fixed style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, 'true')]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
-                                <div class="truncate" style="width:100%">[[item.columnTitle]]</div>
+                                <div class="table-header-column-content">
+                                    <div class="truncate table-header-column-title" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
+                                    <iron-icon class="header-icon indicator-icon" hidden$="[[!_headerHasAction(item)]]" tooltip-text="This column has an action" icon="icons:touch-app"></iron-icon>
+                                    <iron-icon class="header-icon indicator-icon" hidden$="[[!item.editable]]" tooltip-text="This column is editable" icon="icons:create"></iron-icon>
+                                    <div class="header-icon sorting-group" hidden$="[[!_isSortingVisible(item.sortable, item.sorting)]]">
+                                        <iron-icon class="indicator-icon" icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_computeSortingIconStyle(item.sorting)]]"></iron-icon>
+                                        <span class="ordering-number">[[_calculateOrder(item.sortingNumber)]]</span>
+                                    </div>
+                                </div>
                                 <div class="resizing-box"></div>
                             </div>
                         </template>
@@ -432,7 +477,15 @@ const template = html`
                         </div>
                         <template is="dom-repeat" items="[[columns]]">
                             <div class="table-cell cell" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, 'false')]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
-                                <div class="truncate" style="width:100%">[[item.columnTitle]]</div>
+                                <div class="table-header-column-content">
+                                    <div class="truncate table-header-column-title" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
+                                    <iron-icon class="header-icon indicator-icon" hidden="[[!_headerHasAction(item)]]" tooltip-text="This column has an action" icon="icons:touch-app"></iron-icon>
+                                    <iron-icon class="header-icon indicator-icon" hidden="[[!item.editable]]" tooltip-text="This column is editable" icon="icons:create"></iron-icon>
+                                    <div class="header-icon sorting-group" hidden$="[[!_isSortingVisible(item.sortable, item.sorting)]]">
+                                        <iron-icon class="indicator-icon" icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_computeSortingIconStyle(item.sorting)]]"></iron-icon>
+                                        <span class="ordering-number">[[_calculateOrder(item.sortingNumber)]]</span>
+                                    </div>
+                                </div>
                                 <div class="resizing-box"></div>
                             </div>
                         </template>
@@ -1166,6 +1219,27 @@ Polymer({
         this._updateColumns(resultantColumns);
     },
 
+    /**
+     * Updates the sorting order for available columns
+     */
+    adjustColumnsSorting: function (sortingConfig) {
+        this._setSortingFor(sortingConfig, this.fixedColumns, "fixedColumns");
+        this._setSortingFor(sortingConfig, this.columns, "columns");
+    },
+
+    _setSortingFor(sortingConfig, columns, modelName) {
+        columns.forEach((col, idx) => {
+            const configIdx = sortingConfig.findIndex(config => config.property === col.property);
+            if (configIdx >= 0) {
+                this.set(modelName + "." + idx + ".sorting", sortingConfig[configIdx].sorting === 'ASCENDING' ? true : false);
+                this.set(modelName + "." + idx + ".sortingNumber", configIdx);
+            } else {
+                this.set(modelName + "." + idx + ".sorting", null);
+                this.set(modelName + "." + idx + ".sortingNumber", -1);
+            }
+        });
+    },
+
     tap: function (entityIndex, entity, index, column) {
         if (this.master && this.master.editors.length > 0 && this._tapOnce && this.canOpenMaster()) {
             delete this._tapOnce;
@@ -1394,6 +1468,7 @@ Polymer({
             otherColumnWidth: calculateColumnWidthExcept(this, e.currentTarget.hasAttribute("fixed") ? e.model.index : this.fixedColumns.length + e.model.index, columnElements, this.columns.length + this.fixedColumns.length, () => true, () => true, () => true, () => true),
             otherFixedColumnWidth :  calculateColumnWidthExcept(this, e.currentTarget.hasAttribute("fixed") ? e.model.index : -1, columnElements, this.fixedColumns.length, () => this.dragAnchorFixed, () => this.checkboxesFixed, () => this.checkboxesWithPrimaryActionsFixed, () => this.secondaryActionsFixed),
             widthCorrection: e.currentTarget.offsetWidth - e.currentTarget.firstElementChild.offsetWidth,
+            indicatorsWidth: [...e.currentTarget.firstElementChild.querySelectorAll(".header-icon:not([hidden])")].reduce((prev, curr) => prev + curr.offsetWidth, 0),
             hasAnyFlex: this.columns.some((column, index) => index !== e.model.index && column.growFactor !== 0)
         };
     },
@@ -1404,8 +1479,8 @@ Polymer({
             let newWidth = columnWidth + e.detail.ddx;
 
             //Correct size if EGI is less then min width.
-            if (newWidth < e.model.item.minWidth) {
-                newWidth = e.model.item.minWidth;
+            if (newWidth < e.model.item.minWidth + this._columnResizingObject.indicatorsWidth) {
+                newWidth = e.model.item.minWidth + this._columnResizingObject.indicatorsWidth;
             }
 
             //Correct width if fixed container has become bigger then scrollabel conatiner
@@ -1455,8 +1530,8 @@ Polymer({
             }
 
             //Correct size if EGI is less then min width.
-            if (newWidth < e.model.item.minWidth) {
-                newWidth = e.model.item.minWidth;
+            if (newWidth < e.model.item.minWidth + this._columnResizingObject.indicatorsWidth) {
+                newWidth = e.model.item.minWidth + this._columnResizingObject.indicatorsWidth;
             }
             
             //Change the column width if it is needed
@@ -1641,6 +1716,10 @@ Polymer({
         return entitySelected ? "true" : "false";
     },
 
+    _headerHasAction: function (column) {
+        return column.customAction;
+    },
+
     _calcColumnHeaderStyle: function (item, itemWidth, columnGrowFactor, fixed) {
         let colStyle = "min-width: " + itemWidth + "px;" + "width: " + itemWidth + "px;"
         if (columnGrowFactor === 0 || fixed === 'true') {
@@ -1651,14 +1730,38 @@ Polymer({
         if (itemWidth === 0) {
             colStyle += "display: none;";
         }
+        return colStyle;
+    },
+
+    _calcColumnHeaderTextStyle: function (item) {
+        if (item.type === 'Integer' || item.type === 'BigDecimal' || item.type === 'Money') {
+            return "text-align: right;"
+        }
+        return "";
+    },
+
+    _isSortingVisible: function (sortable, sorting) {
+        return sortable && typeof sorting !== 'undefined' && sorting !== null;
+    },
+
+    _sortingIconForItem: function (sorting) {
+        return sorting === true ? 'arrow-drop-up' : (sorting === false ? 'arrow-drop-down' : 'arrow-drop-up');
+    },
+
+    _computeSortingIconStyle: function (sorting) {
+        return sorting === true ? 'align-self:flex-start' : (sorting === false ? 'align-self:flex-end' : 'align-self:flex-start');
+    },
+
+    _calculateOrder: function (sortingNumber) {
+        return sortingNumber >= 0 ? sortingNumber + 1 + "" : "";
+    },
+
+    _calcColumnStyle: function (item, itemWidth, columnGrowFactor, fixed) {
+        let colStyle = this._calcColumnHeaderStyle(item, itemWidth, columnGrowFactor, fixed);
         if (item.type === 'Integer' || item.type === 'BigDecimal' || item.type === 'Money') {
             colStyle += "text-align: right;"
         }
         return colStyle;
-    },
-
-    _calcColumnStyle: function (item, itemWidth, columnGrowFactor, fixed) {
-        return this._calcColumnHeaderStyle(item, itemWidth, columnGrowFactor, fixed);
     },
 
     // Observers

@@ -1710,8 +1710,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //.draggable()
                 .setPageCapacity(20)
                 //.setHeight("100%")
-                .setVisibleRowsCount(10)
-                //.fitToHeight()
+                //.setVisibleRowsCount(10)
+                .fitToHeight()
                 .addProp("this")
                     .order(2).asc()
                     .width(60);

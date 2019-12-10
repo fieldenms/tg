@@ -492,7 +492,7 @@ const TgEntityCentreBehaviorImpl = {
         const insertionPoints = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point');
         this.$.egi.showMarginAround = insertionPoints.length > 0;
 
-        self._postRun = (function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, visibleColumnsWithOrder) {
+        self._postRun = (function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, resultConfig) {
             if (criteriaEntity === null || criteriaEntity.isValidWithoutException()) {
                 if (typeof summary !== 'undefined') {
                     this.retrievedTotals = summary;
@@ -502,7 +502,13 @@ const TgEntityCentreBehaviorImpl = {
                 this.selectionCriteriaEntity = criteriaEntity;
                 this.$.egi.renderingHints = renderingHints;
                 this.$.egi.adjustColumnWidths(columnWidths);
-                this.$.egi.adjustColumnsVisibility(visibleColumnsWithOrder.map(column => column === "this" ? "" : column));
+                this.$.egi.adjustColumnsVisibility(resultConfig.visibleColumnsWithOrder.map(column => column === "this" ? "" : column));
+                this.$.egi.adjustColumnsSorting(resultConfig.orderingConfig.map(propOrder => {
+                   if (propOrder.property === "this") {
+                       propOrder.property = "";
+                   }
+                   return propOrder;
+                }))
                 if (this._triggerRun) {
                     if (this._selectedView === 0) {
                         this.async(function () {
@@ -733,7 +739,7 @@ const TgEntityCentreBehaviorImpl = {
         //Add event listener that indicates whne the layout has finished
         self.addEventListener("layout-finished", e => {
             const target = e.composedPath()[0];
-            if (target === e.detail) {
+            if (target === self.$.selection_criteria.$.masterDom.firstElementChild) {
                 tearDownEvent(e);
                 self.isSelectionCriteriaEmpty = !e.detail.componentsToLayout || e.detail.componentsToLayout.length === 0;
                 self._viewLoaded = true;
