@@ -324,8 +324,8 @@ public class DynamicQueryBuilderSqlTest {
         property.setDateMnemonic(MnemonicEnum.QRT2);
 
         final Date currentDate = new Date();
-        final Date from = DateUtilities.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.BEGINNING, property.getDatePrefix(), property.getDateMnemonic()), //
-        /*         */to = DateUtilities.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.ENDING, property.getDatePrefix(), property.getDateMnemonic());
+        final Date from = DateUtilities.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.BEGINNING, property.getDatePrefix(), property.getDateMnemonic(), universalConstants), //
+        /*         */to = DateUtilities.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.ENDING, property.getDatePrefix(), property.getDateMnemonic(), universalConstants);
 
         final String cbn = property.getConditionBuildingName();
 
@@ -355,7 +355,7 @@ public class DynamicQueryBuilderSqlTest {
         property.setAndBefore(true);
 
         final Date currentDate = new Date();
-        final Date to = DateUtilities.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.ENDING, property.getDatePrefix(), property.getDateMnemonic());
+        final Date to = DateUtilities.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.ENDING, property.getDatePrefix(), property.getDateMnemonic(), universalConstants);
 
         final String cbn = property.getConditionBuildingName();
 
@@ -385,7 +385,7 @@ public class DynamicQueryBuilderSqlTest {
         property.setAndBefore(false);
 
         final Date currentDate = new Date();
-        final Date from = DateUtilities.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.BEGINNING, property.getDatePrefix(), property.getDateMnemonic()); //
+        final Date from = DateUtilities.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.BEGINNING, property.getDatePrefix(), property.getDateMnemonic(), universalConstants); //
 
         final String cbn = property.getConditionBuildingName();
 

@@ -729,8 +729,8 @@ public class DynamicQueryBuilder {
      */
     public static Pair<Date, Date> getDateValuesFrom(final DateRangePrefixEnum datePrefix, final MnemonicEnum dateMnemonic, final Boolean andBefore, final IUniversalConstants universalConstants) {
         final Date now = universalConstants.now().toDate();
-        final Date from = Boolean.TRUE.equals(andBefore) ? null : dateOfRangeThatIncludes(now, DateRangeSelectorEnum.BEGINNING, datePrefix, dateMnemonic);
-        final Date to = Boolean.FALSE.equals(andBefore) ? null : dateOfRangeThatIncludes(now, DateRangeSelectorEnum.ENDING, datePrefix, dateMnemonic);
+        final Date from = Boolean.TRUE.equals(andBefore) ? null : dateOfRangeThatIncludes(now, DateRangeSelectorEnum.BEGINNING, datePrefix, dateMnemonic, universalConstants);
+        final Date to = Boolean.FALSE.equals(andBefore) ? null : dateOfRangeThatIncludes(now, DateRangeSelectorEnum.ENDING, datePrefix, dateMnemonic, universalConstants);
         // left boundary should be inclusive and right -- exclusive!
         return pair(from, to);
     }

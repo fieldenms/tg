@@ -10,6 +10,8 @@ import java.util.Date;
 
 import org.joda.time.DateTime;
 
+import ua.com.fielden.platform.utils.IUniversalConstants;
+
 /**
  * Provides an utilities to work with "BEG_PREV_MONTH", "MID_CURR_YEAR" or "END_NEXT_DAY" etc. dates, which are related to "current" date.
  * 
@@ -41,15 +43,15 @@ public class DateUtilities {
      * @param rangeWidth
      * @return
      */
-    public static Date dateOfRangeThatIncludes(final Date date, final DateRangeSelectorEnum begMidEnd, final DateRangePrefixEnum prevCurrNext, final MnemonicEnum rangeWidth) {
+    public static Date dateOfRangeThatIncludes(final Date date, final DateRangeSelectorEnum begMidEnd, final DateRangePrefixEnum prevCurrNext, final MnemonicEnum rangeWidth, final IUniversalConstants universalConstants) {
         // Prev or Next quarters (quarter 1, ... quarter 4) are related to Prev or Next year, not to "neighbour" quarter. So we should use YEAR rolling for Prev/Next Quarter:
         final MnemonicEnum rollingWidth = isQuarter(rangeWidth) ? MnemonicEnum.YEAR : rangeWidth;
-        final Date relativeDate = DateRangePrefixEnum.PREV == prevCurrNext ? roll(date, rollingWidth, false) : //
+        final Date relativeDate = DateRangePrefixEnum.PREV == prevCurrNext ? roll(date, rollingWidth, false, universalConstants) : //
                 (DateRangePrefixEnum.CURR == prevCurrNext ? date : //
-                        (DateRangePrefixEnum.NEXT == prevCurrNext ? roll(date, rollingWidth, true) : null));
-        return DateRangeSelectorEnum.BEGINNING == begMidEnd ? startOfDateRangeThatIncludes(relativeDate, rangeWidth) : //
-                (DateRangeSelectorEnum.MIDDLE == begMidEnd ? middleOfDateRangeThatIncludes(relativeDate, rangeWidth) : //
-                        (DateRangeSelectorEnum.ENDING == begMidEnd ? endOfDateRangeThatIncludes(relativeDate, rangeWidth) : null));
+                        (DateRangePrefixEnum.NEXT == prevCurrNext ? roll(date, rollingWidth, true, universalConstants) : null));
+        return DateRangeSelectorEnum.BEGINNING == begMidEnd ? startOfDateRangeThatIncludes(relativeDate, rangeWidth, universalConstants) : //
+                (DateRangeSelectorEnum.MIDDLE == begMidEnd ? middleOfDateRangeThatIncludes(relativeDate, rangeWidth, universalConstants) : //
+                        (DateRangeSelectorEnum.ENDING == begMidEnd ? endOfDateRangeThatIncludes(relativeDate, rangeWidth, universalConstants) : null));
     }
 
     /**
@@ -60,8 +62,8 @@ public class DateUtilities {
      * @param rangeWidth
      * @return
      */
-    public static Date startOfDateRangeThatIncludes(final Date date, final MnemonicEnum rangeWidth) {
-        final DateTime adjustedDate = new DateTime(date).withTimeAtStartOfDay();
+    public static Date startOfDateRangeThatIncludes(final Date date, final MnemonicEnum rangeWidth, final IUniversalConstants universalConstants) {
+        final DateTime adjustedDate = universalConstants.dt(date).withTimeAtStartOfDay();
 
         if (rangeWidth == MnemonicEnum.DAY) {
             // time portion is already removed.
@@ -78,7 +80,7 @@ public class DateUtilities {
         } else if (rangeWidth == MnemonicEnum.YEAR) {
             return adjustedDate.withDayOfYear(1).toDate();// set first day of year as 1-st.
         } else if (rangeWidth == MnemonicEnum.OZ_FIN_YEAR) {
-            final DateTime newDate = (adjustedDate.getMonthOfYear() < JULY) ? new DateTime(roll(adjustedDate.toDate(), MnemonicEnum.YEAR, false)) : adjustedDate;
+            final DateTime newDate = (adjustedDate.getMonthOfYear() < JULY) ? universalConstants.dt(roll(adjustedDate.toDate(), MnemonicEnum.YEAR, false, universalConstants)) : adjustedDate;
             return newDate.withMonthOfYear(JULY).withDayOfMonth(1).toDate();// set first day of month as 1-st.
         } else if (rangeWidth == MnemonicEnum.QRT1) { // first quarter
             return adjustedDate.withMonthOfYear(JANUARY).withDayOfMonth(1).toDate();// set first day of month as 1-st.
@@ -101,8 +103,8 @@ public class DateUtilities {
      * @param up
      * @return
      */
-    private static Date roll(final Date date, final MnemonicEnum width, final boolean up) {
-        final DateTime old = new DateTime(date);
+    private static Date roll(final Date date, final MnemonicEnum width, final boolean up, final IUniversalConstants universalConstants) {
+        final DateTime old = universalConstants.dt(date);
         final DateTime neew = width == MnemonicEnum.DAY ? old.plusDays(up ? 1 : -1) : //
                 width == MnemonicEnum.DAY_AND_BEFORE ? old.plusDays(up ? 1 : -1) : //
                         width == MnemonicEnum.DAY_AND_AFTER ? old.plusDays(up ? 1 : -1) : //
@@ -128,11 +130,11 @@ public class DateUtilities {
      * @param rangeWidth
      * @return
      */
-    public static Date endOfDateRangeThatIncludes(final Date date, final MnemonicEnum rangeWidth) {
+    public static Date endOfDateRangeThatIncludes(final Date date, final MnemonicEnum rangeWidth, final IUniversalConstants universalConstants) {
         return (MnemonicEnum.DAY_AND_AFTER == rangeWidth) ? null : //
-                (MnemonicEnum.DAY_AND_BEFORE == rangeWidth) ? startOfDateRangeThatIncludes(roll(date, MnemonicEnum.DAY, true), MnemonicEnum.DAY) : //
-                        (isQuarter(rangeWidth) ? roll(startOfDateRangeThatIncludes(date, rangeWidth), rangeWidth, true) : //
-                                startOfDateRangeThatIncludes(roll(date, rangeWidth, true), rangeWidth));
+                (MnemonicEnum.DAY_AND_BEFORE == rangeWidth) ? startOfDateRangeThatIncludes(roll(date, MnemonicEnum.DAY, true, universalConstants), MnemonicEnum.DAY, universalConstants) : //
+                        (isQuarter(rangeWidth) ? roll(startOfDateRangeThatIncludes(date, rangeWidth, universalConstants), rangeWidth, true, universalConstants) : //
+                                startOfDateRangeThatIncludes(roll(date, rangeWidth, true, universalConstants), rangeWidth, universalConstants));
     }
 
     /**
@@ -143,8 +145,8 @@ public class DateUtilities {
      * @param rangeWidth
      * @return
      */
-    public static Date middleOfDateRangeThatIncludes(final Date date, final MnemonicEnum rangeWidth) {
-        return new Date((startOfDateRangeThatIncludes(date, rangeWidth).getTime() + endOfDateRangeThatIncludes(date, rangeWidth).getTime()) / 2);
+    public static Date middleOfDateRangeThatIncludes(final Date date, final MnemonicEnum rangeWidth, final IUniversalConstants universalConstants) {
+        return new Date((startOfDateRangeThatIncludes(date, rangeWidth, universalConstants).getTime() + endOfDateRangeThatIncludes(date, rangeWidth, universalConstants).getTime()) / 2);
     }
 
     /**
@@ -153,8 +155,8 @@ public class DateUtilities {
      * @param date
      * @return
      */
-    public static DateTime convert(final Date date) {
-        return date == null ? null : new DateTime(date);
+    public static DateTime convert(final Date date, final IUniversalConstants universalConstants) {
+        return date == null ? null : universalConstants.dt(date);
     }
 
     /**
