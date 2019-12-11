@@ -50,6 +50,7 @@ import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.StringConverter;
 
 /**
@@ -81,6 +82,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
 
     protected final DomainValidationConfig domainConfig;
     protected final DomainMetaPropertyConfig domainMetaConfig;
+    private IUniversalConstants universalConstants;
 
     public AbstractMetaPropertyFactory(final DomainValidationConfig domainConfig, final DomainMetaPropertyConfig domainMetaConfig) {
         this.domainConfig = domainConfig;
@@ -117,9 +119,9 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
         case GREATER_OR_EQUAL:
             return new IBeforeChangeEventHandler[] { createGreaterOrEqualValidator(((GreaterOrEqual) annotation).value()) };
         case LE_PROPETY:
-            return new IBeforeChangeEventHandler[] { createLePropertyValidator(entity, propertyName, ((LeProperty) annotation).value()) };
+            initUniversalConstants(); return new IBeforeChangeEventHandler[] { createLePropertyValidator(entity, propertyName, ((LeProperty) annotation).value(), universalConstants) };
         case GE_PROPETY:
-            return new IBeforeChangeEventHandler[] { createGePropertyValidator(entity, ((GeProperty) annotation).value(), propertyName) };
+            initUniversalConstants(); return new IBeforeChangeEventHandler[] { createGePropertyValidator(entity, ((GeProperty) annotation).value(), propertyName, universalConstants) };
         case MAX:
             if (Number.class.isAssignableFrom(propertyType) || double.class == propertyType || int.class == propertyType) {
                 return new IBeforeChangeEventHandler[] { createMaxValueValidator(((Max) annotation).value()) };
@@ -307,6 +309,15 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
     }
 
     /**
+     * Initialise constants lazily as it is only needed for Date/DateTime ACE/BCE parameters. 
+     */
+    private void initUniversalConstants() {
+        if (universalConstants == null) {
+            universalConstants = injector.getInstance(IUniversalConstants.class);
+        }
+    }
+
+    /**
      * Initialises {@link Date} handler parameters as provided in {@link Handler#date()}.
      *
      * @param entity
@@ -314,11 +325,12 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
      * @param handler
      */
     private void initDateHandlerParameters(final AbstractEntity<?> entity, final DateParam[] params, final Object handler) {
+        initUniversalConstants();
         for (final DateParam param : params) {
             final Field paramField = Finder.getFieldByName(handler.getClass(), param.name());
             paramField.setAccessible(true);
             try {
-                paramField.set(handler, StringConverter.toDate(param.value()));
+                paramField.set(handler, StringConverter.toDate(param.value(), universalConstants));
             } catch (final Exception ex) {
                 throw new IllegalStateException("Could not initialise parameter " + param.name() + "@" + handler.getClass().getName(), ex);
             }
@@ -333,11 +345,12 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
      * @param handler
      */
     private void initDateTimeHandlerParameters(final AbstractEntity<?> entity, final DateTimeParam[] params, final Object handler) {
+        initUniversalConstants();
         for (final DateTimeParam param : params) {
             final Field paramField = Finder.getFieldByName(handler.getClass(), param.name());
             paramField.setAccessible(true);
             try {
-                paramField.set(handler, StringConverter.toDateTime(param.value()));
+                paramField.set(handler, StringConverter.toDateTime(param.value(), universalConstants));
             } catch (final Exception ex) {
                 throw new IllegalStateException("Could not initialise parameter " + param.name() + "@" + handler.getClass().getName(), ex);
             }
@@ -393,16 +406,16 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
     }
 
 
-    private IBeforeChangeEventHandler<?> createGePropertyValidator(final AbstractEntity<?> entity, final String[] lowerBoundaryProperties, final String upperBoundaryProperty) {
+    private IBeforeChangeEventHandler<?> createGePropertyValidator(final AbstractEntity<?> entity, final String[] lowerBoundaryProperties, final String upperBoundaryProperty, final IUniversalConstants universalConstants) {
         return geRangeValidators
-                .computeIfAbsent(entity.getType(), key -> new ConcurrentHashMap<String, RangePropertyValidator>())
-                .computeIfAbsent(upperBoundaryProperty, key -> new RangePropertyValidator(lowerBoundaryProperties, true));
+                .computeIfAbsent(entity.getType(), key -> new ConcurrentHashMap<>())
+                .computeIfAbsent(upperBoundaryProperty, key -> new RangePropertyValidator(lowerBoundaryProperties, true, universalConstants));
     }
 
-    private IBeforeChangeEventHandler<?> createLePropertyValidator(final AbstractEntity<?> entity, final String lowerBoundaryProperty, final String[] upperBoundaryProperties) {
+    private IBeforeChangeEventHandler<?> createLePropertyValidator(final AbstractEntity<?> entity, final String lowerBoundaryProperty, final String[] upperBoundaryProperties, final IUniversalConstants universalConstants) {
         return leRangeValidators
-                .computeIfAbsent(entity.getType(), key -> new ConcurrentHashMap<String, RangePropertyValidator>())
-                .computeIfAbsent(lowerBoundaryProperty, key -> new RangePropertyValidator(upperBoundaryProperties, false));
+                .computeIfAbsent(entity.getType(), key -> new ConcurrentHashMap<>())
+                .computeIfAbsent(lowerBoundaryProperty, key -> new RangePropertyValidator(upperBoundaryProperties, false, universalConstants));
 
     }
 

@@ -5,6 +5,7 @@ import java.util.Locale;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import static org.joda.time.DateTimeZone.getDefault;
 
 /**
  * Contains a set of methods providing values of the universal constants such as <b>now</b>. This abstraction is required in order to flexibly support both unit testing and
@@ -14,7 +15,6 @@ import org.joda.time.DateTimeZone;
  * 
  */
 public interface IUniversalConstants {
-    static final String TIME_ZONE_NOT_SUPPORTED = "Time-zone is not supported.";
     
     /**
      * Returns a value indicating the current date/time.
@@ -59,29 +59,24 @@ public interface IUniversalConstants {
     String fromEmailAddress();
     
     /**
-     * Returns time-zone for current user.
+     * Returns time-zone context for current user.
      * 
      * @return
      */
     default DateTimeZone timeZone() {
-        throw new UnsupportedOperationException(TIME_ZONE_NOT_SUPPORTED);
-    }
-    
-    /**
-     * Sets time-zone for current user.
-     * 
-     * @param timeZone
-     */
-    default void setTimeZone(final String timeZone) {
-        throw new UnsupportedOperationException(TIME_ZONE_NOT_SUPPORTED);
-    }
-    
-    default boolean independentTimeZone() {
-        throw new UnsupportedOperationException(TIME_ZONE_NOT_SUPPORTED);
+        return getDefault();
     }
     
     default DateTime dt(final Date date) {
-        throw new UnsupportedOperationException(TIME_ZONE_NOT_SUPPORTED);
+        return new DateTime(date);
+    }
+    
+    default String toString(final Date date) {
+        return EntityUtils.toString(date);
+    }
+    
+    default String toString(final DateTime dateTime) {
+        return EntityUtils.toString(dateTime);
     }
     
 }

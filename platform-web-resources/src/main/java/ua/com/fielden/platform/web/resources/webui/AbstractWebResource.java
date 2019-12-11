@@ -8,6 +8,7 @@ import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.resource.ServerResource;
 
+import ua.com.fielden.platform.utils.DefaultUniversalConstants;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
@@ -25,7 +26,9 @@ public abstract class AbstractWebResource extends ServerResource {
     public AbstractWebResource(final Context context, final Request request, final Response response, final IDeviceProvider deviceProvider, final IUniversalConstants universalConstants) {
         init(context, request, response);
         deviceProvider.setDeviceProfile(deviceProfile = calculateDeviceProfile(request));
-        universalConstants.setTimeZone(request.getHeaders().getValues("Time-Zone"));
+        if (universalConstants instanceof DefaultUniversalConstants) {
+            ((DefaultUniversalConstants) universalConstants).setClientTimeZone(request.getHeaders().getValues("Time-Zone"));
+        }
     }
 
     /**

@@ -21,6 +21,7 @@ import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.StringConverter;
 
 import com.google.inject.Injector;
@@ -59,8 +60,9 @@ public class BeforeChangeTest {
         assertEquals("Incorrect parameter value.", 1, handler.getIntParam1());
         assertEquals("Incorrect parameter value.", 12, handler.getIntParam2());
         assertEquals("Incorrect parameter value.", 0.65, handler.getDblParam(), 0);
-        assertEquals("Incorrect parameter value.", StringConverter.toDate("2011-12-01 00:00:00"), handler.getDateParam());
-        assertEquals("Incorrect parameter value.", StringConverter.toDateTime("2011-12-01 00:00:00"), handler.getDateTimeParam());
+        final IUniversalConstants universalConstants = injector.getInstance(IUniversalConstants.class);
+        assertEquals("Incorrect parameter value.", StringConverter.toDate("2011-12-01 00:00:00", universalConstants), handler.getDateParam());
+        assertEquals("Incorrect parameter value.", StringConverter.toDateTime("2011-12-01 00:00:00", universalConstants), handler.getDateTimeParam());
         assertEquals("Incorrect parameter value.", StringConverter.toMoney("12.36"), handler.getMoneyParam());
         assertEquals("Incorrect parameter value.", String.class, handler.getClassParam());
         assertEquals("Incorrect parameter value.", EnumForParams.ONE, handler.getEnumParam());
