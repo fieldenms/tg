@@ -44,7 +44,7 @@ import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
 import ua.com.fielden.platform.ui.menu.sample.MiEmptyEntity;
 import ua.com.fielden.platform.ui.menu.sample.MiEntityWithOtherEntity;
 import ua.com.fielden.platform.utils.EntityUtils;
-import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
@@ -60,14 +60,14 @@ public class SerialisationTestResource extends AbstractWebResource {
     private final RestServerUtil restUtil;
     private final List<AbstractEntity<?>> entities = new ArrayList<>();
 
-    public SerialisationTestResource(final RestServerUtil restUtil, final IDeviceProvider deviceProvider, final IUniversalConstants universalConstants, final Context context, final Request request, final Response response, final FactoryForTestingEntities testingEntitiesFactory, final List<AbstractEntity<?>> entities) {
-        super(context, request, response, deviceProvider, universalConstants);
+    public SerialisationTestResource(final RestServerUtil restUtil, final IDeviceProvider deviceProvider, final IDates dates, final Context context, final Request request, final Response response, final FactoryForTestingEntities testingEntitiesFactory, final List<AbstractEntity<?>> entities) {
+        super(context, request, response, deviceProvider, dates);
         this.restUtil = restUtil;
         this.entities.addAll(entities);
     }
     
-    public SerialisationTestResource(final RestServerUtil restUtil, final IDeviceProvider deviceProvider, final IUniversalConstants universalConstants, final Context context, final Request request, final Response response, final FactoryForTestingEntities testingEntitiesFactory) {
-        this(restUtil, deviceProvider, universalConstants, context, request, response, testingEntitiesFactory, createEntities(restUtil, testingEntitiesFactory));
+    public SerialisationTestResource(final RestServerUtil restUtil, final IDeviceProvider deviceProvider, final IDates dates, final Context context, final Request request, final Response response, final FactoryForTestingEntities testingEntitiesFactory) {
+        this(restUtil, deviceProvider, dates, context, request, response, testingEntitiesFactory, createEntities(restUtil, testingEntitiesFactory));
     }
 
     /**

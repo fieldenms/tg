@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.factories.webui;
 
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+
 import java.util.Optional;
 
 import org.restlet.Request;
@@ -21,7 +22,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
-import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
@@ -47,7 +48,7 @@ public class EntityAutocompletionResourceFactory extends Restlet {
     private final ICompanionObjectFinder companionFinder;
     private final IUserProvider userProvider;
     private final IDeviceProvider deviceProvider;
-    private final IUniversalConstants universalConstants;
+    private final IDates dates;
     
     /**
      * Instantiates a factory for entity autocompletion resources (for centres and masters).
@@ -64,7 +65,7 @@ public class EntityAutocompletionResourceFactory extends Restlet {
         this.companionFinder = injector.getInstance(ICompanionObjectFinder.class);
         this.userProvider = injector.getInstance(IUserProvider.class);
         this.deviceProvider = injector.getInstance(IDeviceProvider.class);
-        this.universalConstants = injector.getInstance(IUniversalConstants.class);
+        this.dates = injector.getInstance(IDates.class);
     }
 
     @Override
@@ -90,7 +91,7 @@ public class EntityAutocompletionResourceFactory extends Restlet {
                         companionFinder,
                         userProvider,
                         deviceProvider,
-                        universalConstants,
+                        dates,
                         critGenerator, 
                         factory, 
                         miType,
@@ -124,7 +125,7 @@ public class EntityAutocompletionResourceFactory extends Restlet {
                         companionFinder,
                         restUtil,
                         deviceProvider,
-                        universalConstants,
+                        dates,
                         master,
                         getContext(),
                         request,

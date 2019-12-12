@@ -14,7 +14,7 @@ import org.restlet.resource.Get;
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
@@ -44,11 +44,11 @@ public class AppIndexResource extends AbstractWebResource {
             final IWebUiConfig webUiConfig,
             final IUserProvider userProvider,
             final IDeviceProvider deviceProvider,
-            final IUniversalConstants universalConstants,
+            final IDates dates,
             final Context context, 
             final Request request, 
             final Response response) {
-        super(context, request, response, deviceProvider, universalConstants);
+        super(context, request, response, deviceProvider, dates);
         this.webUiConfig = webUiConfig;
         this.userProvider = userProvider;
         this.webResourceLoader = webResourceLoader;

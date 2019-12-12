@@ -9,17 +9,17 @@ import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.CompoundCondition;
 import ua.com.fielden.platform.entity.query.generation.elements.GroupedConditions;
 import ua.com.fielden.platform.entity.query.generation.elements.ICondition;
-import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
 
 public class GroupedConditionsBuilder extends AbstractTokensBuilder {
 
     private final boolean negated;
 
-    protected GroupedConditionsBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final boolean negated, final IUniversalConstants universalConstants) {
-        super(parent, queryBuilder, paramValues, universalConstants);
+    protected GroupedConditionsBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final boolean negated, final IDates dates) {
+        super(parent, queryBuilder, paramValues, dates);
         this.negated = negated;
-        setChild(new ConditionBuilder(this, queryBuilder, paramValues, universalConstants));
+        setChild(new ConditionBuilder(this, queryBuilder, paramValues, dates));
     }
 
     @Override

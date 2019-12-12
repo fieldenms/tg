@@ -23,7 +23,7 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddTo
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.reflection.Reflector;
-import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -97,14 +97,14 @@ public class EntityQueryCriteriaUtils {
      * @param tickManager
      * @return
      */
-    public static Map<String, Pair<Object, Object>> createParamValuesMap(final Class<?> root, final Class<?> managedType, final IAddToCriteriaTickManager tickManager, final IUniversalConstants universalConstants) {
+    public static Map<String, Pair<Object, Object>> createParamValuesMap(final Class<?> root, final Class<?> managedType, final IAddToCriteriaTickManager tickManager, final IDates dates) {
         final Map<String, Pair<Object, Object>> paramValues = new HashMap<>();
         for (final String propertyName : tickManager.checkedProperties(root)) {
             if (!isPlaceholder(propertyName)) {
                 if (isDoubleCriterion(managedType, propertyName)) {
                     if (isDate(determinePropertyType(managedType, propertyName)) && tickManager.getDatePrefix(root, propertyName) != null
                             && tickManager.getDateMnemonic(root, propertyName) != null) {
-                        final Pair<Date, Date> fromAndTo = getDateValuesFrom(tickManager.getDatePrefix(root, propertyName), tickManager.getDateMnemonic(root, propertyName), tickManager.getAndBefore(root, propertyName), universalConstants);
+                        final Pair<Date, Date> fromAndTo = getDateValuesFrom(tickManager.getDatePrefix(root, propertyName), tickManager.getDateMnemonic(root, propertyName), tickManager.getAndBefore(root, propertyName), dates);
                         paramValues.put(propertyName, new Pair<Object, Object>(fromAndTo.getKey(), fromAndTo.getValue()));
                     } else {
                         paramValues.put(propertyName, new Pair<>(tickManager.getValue(root, propertyName), tickManager.getValue2(root, propertyName)));

@@ -14,7 +14,7 @@ import ua.com.fielden.platform.entity.IEntityProducer;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -38,7 +38,7 @@ public class EntityResourceFactory extends Restlet {
     private final ICompanionObjectFinder coFinder;
     private final IUserProvider userProvider;
     private final IDeviceProvider deviceProvider;
-    private final IUniversalConstants universalConstants;
+    private final IDates dates;
     
     /**
      * Instantiates a factory for entity resources.
@@ -56,7 +56,7 @@ public class EntityResourceFactory extends Restlet {
         this.coFinder = injector.getInstance(ICompanionObjectFinder.class);
         this.userProvider = injector.getInstance(IUserProvider.class);
         this.deviceProvider = injector.getInstance(IDeviceProvider.class);
-        this.universalConstants = injector.getInstance(IUniversalConstants.class);
+        this.dates = injector.getInstance(IDates.class);
     }
 
     @Override
@@ -77,7 +77,7 @@ public class EntityResourceFactory extends Restlet {
                     webUiConfig,
                     userProvider,
                     deviceProvider,
-                    universalConstants,
+                    dates,
                     getContext(),
                     request,
                     response //

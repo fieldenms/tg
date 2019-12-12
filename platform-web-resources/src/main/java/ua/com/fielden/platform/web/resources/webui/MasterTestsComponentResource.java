@@ -15,7 +15,7 @@ import org.restlet.resource.Get;
 import com.google.common.base.Charsets;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
@@ -39,12 +39,12 @@ public class MasterTestsComponentResource extends AbstractWebResource {
     public MasterTestsComponentResource(
             final EntityMaster<? extends AbstractEntity<?>> master,
             final IDeviceProvider deviceProvider,
-            final IUniversalConstants universalConstants,
+            final IDates dates,
             final Context context,
             final Request request,
             final Response response //
     ) {
-        super(context, request, response, deviceProvider, universalConstants);
+        super(context, request, response, deviceProvider, dates);
         this.master = master;
     }
 

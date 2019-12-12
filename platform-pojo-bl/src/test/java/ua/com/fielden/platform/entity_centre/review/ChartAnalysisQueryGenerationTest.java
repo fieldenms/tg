@@ -35,7 +35,7 @@ import ua.com.fielden.platform.report.query.generation.ChartAnalysisQueryGenerat
 import ua.com.fielden.platform.report.query.generation.IReportQueryGenerator;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
-import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.utils.IDates;
 
 @SuppressWarnings("unchecked")
 public class ChartAnalysisQueryGenerationTest {
@@ -96,7 +96,7 @@ public class ChartAnalysisQueryGenerationTest {
 
         cdtme.acceptAnalysisManager("simple analysis");
 
-        queryGenerator = new ChartAnalysisQueryGenerator<>(MasterDomainEntity.class, cdtme, analysis, injector.getInstance(IUniversalConstants.class));
+        queryGenerator = new ChartAnalysisQueryGenerator<>(MasterDomainEntity.class, cdtme, analysis, injector.getInstance(IDates.class));
 
         masterKlass = (Class<AbstractEntity<?>>) dte.getManagedType(MasterDomainEntity.class);
         stringKeyKlass = (Class<AbstractEntity<?>>) PropertyTypeDeterminator.determinePropertyType(masterKlass, "entityProp.entityProp.simpleEntityProp");

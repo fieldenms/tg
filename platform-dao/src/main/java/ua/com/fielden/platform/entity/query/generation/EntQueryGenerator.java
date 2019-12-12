@@ -21,7 +21,7 @@ import ua.com.fielden.platform.entity.query.generation.elements.QueryCategory;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
-import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
 
 public class EntQueryGenerator {
@@ -29,24 +29,24 @@ public class EntQueryGenerator {
 
     private final DbVersion dbVersion;
     private final DomainMetadataAnalyser domainMetadataAnalyser;
-    private final IUniversalConstants universalConstants;
+    private final IDates dates;
     private final IFilter filter;
     private final String username;
 
-    public EntQueryGenerator(final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username, final IUniversalConstants universalConstants) {
+    public EntQueryGenerator(final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username, final IDates dates) {
         dbVersion = domainMetadataAnalyser.getDbVersion();
         this.domainMetadataAnalyser = domainMetadataAnalyser;
         this.filter = filter;
         this.username = username;
-        this.universalConstants = universalConstants;
+        this.dates = dates;
     }
 
     public <T extends AbstractEntity<?>, Q extends QueryModel<T>> EntQuery generateEntQueryAsResultQuery(final Q query, final OrderingModel orderModel, final Class<T> resultType, final IRetrievalModel<T> fetchModel, final Map<String, Object> paramValues) {
         final Map<String, Object> localParamValues = new HashMap<>();
         localParamValues.putAll(paramValues);
 
-        if (universalConstants.now() != null) {
-            localParamValues.put(NOW, universalConstants.now().toDate());
+        if (dates.now() != null) {
+            localParamValues.put(NOW, dates.now().toDate());
         }
 
         return generateEntQuery(query, orderModel, resultType, fetchModel, localParamValues, QueryCategory.RESULT_QUERY, filter, username);
@@ -63,10 +63,10 @@ public class EntQueryGenerator {
     public EntQueryBlocks parseTokensIntoComponents(final QueryModel<?> qryModel, //
             final OrderingModel orderModel, //
             final Map<String, Object> paramValues) {
-        final QrySourcesBuilder from = new QrySourcesBuilder(this, paramValues, universalConstants);
-        final ConditionsBuilder where = new ConditionsBuilder(null, this, paramValues, universalConstants);
-        final QryYieldsBuilder select = new QryYieldsBuilder(this, paramValues, universalConstants);
-        final QryGroupsBuilder groupBy = new QryGroupsBuilder(this, paramValues, universalConstants);
+        final QrySourcesBuilder from = new QrySourcesBuilder(this, paramValues, dates);
+        final ConditionsBuilder where = new ConditionsBuilder(null, this, paramValues, dates);
+        final QryYieldsBuilder select = new QryYieldsBuilder(this, paramValues, dates);
+        final QryGroupsBuilder groupBy = new QryGroupsBuilder(this, paramValues, dates);
 
         ITokensBuilder active = null;
 
@@ -79,18 +79,18 @@ public class EntQueryGenerator {
                 switch ((QueryTokens) pair.getValue()) {
                 case WHERE:
                     active = where;
-                    where.setChild(new ConditionBuilder(where, this, paramValues, universalConstants));
+                    where.setChild(new ConditionBuilder(where, this, paramValues, dates));
                     break;
                 case FROM:
                     active = from;
                     break;
                 case YIELD:
                     active = select;
-                    select.setChild(new YieldBuilder(select, this, paramValues, universalConstants));
+                    select.setChild(new YieldBuilder(select, this, paramValues, dates));
                     break;
                 case GROUP_BY:
                     active = groupBy;
-                    groupBy.setChild(new GroupBuilder(groupBy, this, paramValues, universalConstants));
+                    groupBy.setChild(new GroupBuilder(groupBy, this, paramValues, dates));
                     break;
                 default:
                     break;
@@ -125,7 +125,7 @@ public class EntQueryGenerator {
         this, //
         fetchModel,
         paramValues,
-        universalConstants);
+        dates);
     }
 
 
@@ -144,7 +144,7 @@ public class EntQueryGenerator {
     }
 
     private OrderBys produceOrderBys(final OrderingModel orderModel, final Map<String, Object> paramValues) {
-        final QryOrderingsBuilder orderBy = new QryOrderingsBuilder(null, this, paramValues, universalConstants);
+        final QryOrderingsBuilder orderBy = new QryOrderingsBuilder(null, this, paramValues, dates);
 
         if (orderModel != null) {
         	final List<Pair<TokenCategory, Object>> linearizedTokens = linearizeTokens(orderModel.getTokens());
@@ -153,11 +153,11 @@ public class EntQueryGenerator {
                 if (SORT_ORDER.equals(pair.getKey())) {
                     orderBy.add(pair.getKey(), pair.getValue());
                     if (iterator.hasNext()) {
-                    	orderBy.setChild(new OrderByBuilder(orderBy, this, paramValues, universalConstants));
+                    	orderBy.setChild(new OrderByBuilder(orderBy, this, paramValues, dates));
                     }
                 } else {
                     if (orderBy.getChild() == null) {
-                    	orderBy.setChild(new OrderByBuilder(orderBy, this, paramValues, universalConstants));
+                    	orderBy.setChild(new OrderByBuilder(orderBy, this, paramValues, dates));
                     }
                     orderBy.add(pair.getKey(), pair.getValue());
                 }

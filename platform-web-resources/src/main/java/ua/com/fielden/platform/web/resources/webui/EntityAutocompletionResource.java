@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import static java.lang.String.format;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.utils.MiscUtilities.prepare;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
@@ -24,7 +23,7 @@ import ua.com.fielden.platform.entity.IEntityProducer;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.utils.EntityRestorationUtils;
@@ -55,12 +54,12 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
             final ICompanionObjectFinder companionFinder,
             final RestServerUtil restUtil,
             final IDeviceProvider deviceProvider,
-            final IUniversalConstants universalConstants,
+            final IDates dates,
             final EntityMaster<CONTEXT> master,
             final Context context,
             final Request request,
             final Response response) {
-        super(context, request, response, deviceProvider, universalConstants);
+        super(context, request, response, deviceProvider, dates);
 
         this.entityType = entityType;
         this.propertyName = propertyName;

@@ -52,7 +52,7 @@ import ua.com.fielden.platform.entity.query.metadata.PersistedEntityMetadata;
 import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
 
 public class EntQuery implements ISingleOperand {
@@ -71,7 +71,7 @@ public class EntQuery implements ISingleOperand {
     private final DomainMetadataAnalyser domainMetadataAnalyser;
     private final Map<String, Object> paramValues;
     private final boolean yieldAll;
-    private final IUniversalConstants universalConstants;
+    private final IDates dates;
 
     private EntQuery master;
 
@@ -459,7 +459,7 @@ public class EntQuery implements ISingleOperand {
             final ConditionModel filteringCondition = filter.enhance(mainSource.sourceType(), mainSource.getAlias(), username);
             if (filteringCondition != null) {
                 // LOGGER.debug("\nApplied user-driven-filter to query main source type [" + mainSource.sourceType().getSimpleName() + "]");
-                final GroupedConditions userDateFilteringCondition = new StandAloneConditionBuilder(generator, paramValues, filteringCondition, false, universalConstants).getModel();
+                final GroupedConditions userDateFilteringCondition = new StandAloneConditionBuilder(generator, paramValues, filteringCondition, false, dates).getModel();
                 return originalConditions.ignore()
                        ? new Conditions(userDateFilteringCondition)
                        : new Conditions(userDateFilteringCondition, listOf(new CompoundCondition(AND, new GroupedConditions(false, originalConditions.getFirstCondition(), originalConditions.getOtherConditions()))));
@@ -471,7 +471,7 @@ public class EntQuery implements ISingleOperand {
 
     public EntQuery(final boolean filterable, final EntQueryBlocks queryBlocks, final Class resultType, final QueryCategory category,
             final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username,
-            final EntQueryGenerator generator, final IRetrievalModel fetchModel, final Map<String, Object> paramValues, final IUniversalConstants universalConstants) {
+            final EntQueryGenerator generator, final IRetrievalModel fetchModel, final Map<String, Object> paramValues, final IDates dates) {
         this.category = category;
         this.domainMetadataAnalyser = domainMetadataAnalyser;
         this.sources = queryBlocks.getSources();
@@ -490,7 +490,7 @@ public class EntQuery implements ISingleOperand {
                 : (domainMetadataAnalyser.getEntityMetadata(this.resultType) instanceof PersistedEntityMetadata);
 
         this.paramValues = paramValues;
-        this.universalConstants = universalConstants;
+        this.dates = dates;
 
         enhanceToFinalState(generator, fetchModel);
 
@@ -617,7 +617,7 @@ public class EntQuery implements ISingleOperand {
                     final PropResolutionInfo pri = propResolutionResult.getKey();
                     propResolutionResult.getValue().addReferencingProp(pri);
                     if (pri.getProp().getExpressionModel() != null && !pri.getEntProp().isExpression()) {
-                        pri.getEntProp().setExpression((Expression) new StandAloneExpressionBuilder(generator, paramValues, pri.getProp().getExpressionModel(), universalConstants).getResult().getValue());
+                        pri.getEntProp().setExpression((Expression) new StandAloneExpressionBuilder(generator, paramValues, pri.getProp().getExpressionModel(), dates).getResult().getValue());
                     }
                 }
 

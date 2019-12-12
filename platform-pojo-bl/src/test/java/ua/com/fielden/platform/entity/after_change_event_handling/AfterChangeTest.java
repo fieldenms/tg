@@ -8,6 +8,8 @@ import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.entity.before_change_event_handling.Entity;
 import ua.com.fielden.platform.entity.before_change_event_handling.EnumForParams;
@@ -15,10 +17,8 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
-import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.StringConverter;
-
-import com.google.inject.Injector;
 
 /**
  * A test case to ensure correct construction and invocation of {@link AfterChange} declarations.
@@ -54,9 +54,9 @@ public class AfterChangeTest {
         assertEquals("Incorrect parameter value.", 1, handler.getIntParam1());
         assertEquals("Incorrect parameter value.", 12, handler.getIntParam2());
         assertEquals("Incorrect parameter value.", 0.65, handler.getDblParam(), 0);
-        final IUniversalConstants universalConstants = injector.getInstance(IUniversalConstants.class);
-        assertEquals("Incorrect parameter value.", StringConverter.toDate("2011-12-01 00:00:00", universalConstants), handler.getDateParam());
-        assertEquals("Incorrect parameter value.", StringConverter.toDateTime("2011-12-01 00:00:00", universalConstants), handler.getDateTimeParam());
+        final IDates dates = injector.getInstance(IDates.class);
+        assertEquals("Incorrect parameter value.", StringConverter.toDate("2011-12-01 00:00:00", dates), handler.getDateParam());
+        assertEquals("Incorrect parameter value.", StringConverter.toDateTime("2011-12-01 00:00:00", dates), handler.getDateTimeParam());
         assertEquals("Incorrect parameter value.", StringConverter.toMoney("12.36"), handler.getMoneyParam());
         assertEquals("Incorrect parameter value.", String.class, handler.getClassParam());
         assertEquals("Incorrect parameter value.", EnumForParams.TWO, handler.getEnumParam());

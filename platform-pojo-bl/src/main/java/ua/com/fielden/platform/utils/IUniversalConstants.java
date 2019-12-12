@@ -1,11 +1,8 @@
 package ua.com.fielden.platform.utils;
 
-import java.util.Date;
 import java.util.Locale;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import static org.joda.time.DateTimeZone.getDefault;
 
 /**
  * Contains a set of methods providing values of the universal constants such as <b>now</b>. This abstraction is required in order to flexibly support both unit testing and
@@ -29,7 +26,7 @@ public interface IUniversalConstants {
     default DateTime today() {
         return now().withMillisOfDay(0);
     }
-
+    
     /**
      * Returns a value indicating the current locale.
      * 
@@ -57,26 +54,5 @@ public interface IUniversalConstants {
      * @return
      */
     String fromEmailAddress();
-    
-    /**
-     * Returns time-zone context for current user.
-     * 
-     * @return
-     */
-    default DateTimeZone timeZone() {
-        return getDefault();
-    }
-    
-    default DateTime dt(final Date date) {
-        return new DateTime(date);
-    }
-    
-    default String toString(final Date date) {
-        return EntityUtils.toString(date);
-    }
-    
-    default String toString(final DateTime dateTime) {
-        return EntityUtils.toString(dateTime);
-    }
     
 }

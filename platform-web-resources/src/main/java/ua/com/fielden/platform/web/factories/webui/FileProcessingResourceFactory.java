@@ -17,7 +17,7 @@ import com.google.inject.Injector;
 import ua.com.fielden.platform.entity.AbstractEntityWithInputStream;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.FileProcessingResource;
@@ -38,7 +38,7 @@ public class FileProcessingResourceFactory<T extends AbstractEntityWithInputStre
     private final long fileSizeLimitBytes;
     private final Set<MediaType> types = new HashSet<>();
     private final IDeviceProvider deviceProvider;
-    private final IUniversalConstants universalConstants;
+    private final IDates dates;
 
     public FileProcessingResourceFactory(
             final Router router,
@@ -46,7 +46,7 @@ public class FileProcessingResourceFactory<T extends AbstractEntityWithInputStre
             final Class<T> entityType,
             final Function<EntityFactory, T> entityCreator,
             final IDeviceProvider deviceProvider,
-            final IUniversalConstants universalConstants,
+            final IDates dates,
             final long fileSizeLimitKb,
             final MediaType type, // at least one type is required 
             final MediaType... types) {
@@ -59,7 +59,7 @@ public class FileProcessingResourceFactory<T extends AbstractEntityWithInputStre
         this.types.add(type);
         Arrays.stream(types).forEach(this.types::add);
         this.deviceProvider = deviceProvider;
-        this.universalConstants = universalConstants;
+        this.dates = dates;
     }
 
     @Override
@@ -76,7 +76,7 @@ public class FileProcessingResourceFactory<T extends AbstractEntityWithInputStre
                     fileSizeLimitBytes, 
                     types, 
                     deviceProvider,
-                    universalConstants,
+                    dates,
                     getContext(), request, response).handle();
         }
     }

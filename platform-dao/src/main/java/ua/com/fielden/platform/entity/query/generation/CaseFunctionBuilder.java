@@ -10,21 +10,21 @@ import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.CaseWhen;
 import ua.com.fielden.platform.entity.query.generation.elements.ICondition;
 import ua.com.fielden.platform.entity.query.generation.elements.ISingleOperand;
-import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
 
 public class CaseFunctionBuilder extends AbstractTokensBuilder {
 
-    protected CaseFunctionBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final IUniversalConstants universalConstants) {
-        super(parent, queryBuilder, paramValues, universalConstants);
-        setChild(new ConditionBuilder(this, queryBuilder, paramValues, universalConstants));
+    protected CaseFunctionBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final IDates dates) {
+        super(parent, queryBuilder, paramValues, dates);
+        setChild(new ConditionBuilder(this, queryBuilder, paramValues, dates));
     }
 
     @Override
     public void add(final TokenCategory cat, final Object value) {
         switch (cat) {
         case COND_START: //eats token
-            setChild(new ConditionBuilder(this, getQueryBuilder(), getParamValues(), universalConstants));
+            setChild(new ConditionBuilder(this, getQueryBuilder(), getParamValues(), dates));
             break;
         default:
             super.add(cat, value);

@@ -6,12 +6,12 @@ import java.util.List;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.IMultipleDecDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.utils.IDates;
 
 public class MultipleDecAnalysisQueryGenerator<T extends AbstractEntity<?>> extends GroupAnalysisQueryGenerator<T> {
 
-    public MultipleDecAnalysisQueryGenerator(final Class<T> root, final ICentreDomainTreeManagerAndEnhancer cdtme, final IMultipleDecDomainTreeManager adtm, final IUniversalConstants universalConstants) {
-        super(root, cdtme, adtm, universalConstants);
+    public MultipleDecAnalysisQueryGenerator(final Class<T> root, final ICentreDomainTreeManagerAndEnhancer cdtme, final IMultipleDecDomainTreeManager adtm, final IDates dates) {
+        super(root, cdtme, adtm, dates);
     }
 
     @SuppressWarnings("unchecked")

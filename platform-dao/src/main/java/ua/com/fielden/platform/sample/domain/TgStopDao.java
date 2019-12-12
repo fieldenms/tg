@@ -38,7 +38,7 @@ import ua.com.fielden.platform.entity_centre.review.DynamicOrderingBuilder;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.gis.MapUtils;
-import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -62,14 +62,14 @@ public class TgStopDao extends CommonEntityDao<TgStop> implements ITgStop {
     @Override
     @SessionRequired
     public List<TgStop> getEntitiesOnPage(final QueryExecutionModel<TgStop, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) {
-        return retrieveStops(queryModel.getParamValues(), messageCompanion, getEntityFactory(), getUniversalConstants());
+        return retrieveStops(queryModel.getParamValues(), messageCompanion, getEntityFactory(), dates());
     }
 
-    public static List<TgStop> retrieveStops(final Map<String, Object> paramValues, final ITgMessage messageCompanion, final EntityFactory factory, final IUniversalConstants universalConstants) {
-        return retrieveStops(retrieveMessages(paramValues, messageCompanion, universalConstants), paramValues, factory);
+    public static List<TgStop> retrieveStops(final Map<String, Object> paramValues, final ITgMessage messageCompanion, final EntityFactory factory, final IDates dates) {
+        return retrieveStops(retrieveMessages(paramValues, messageCompanion, dates), paramValues, factory);
     }
 
-    protected static List<TgMessage> retrieveMessages(final Map<String, Object> paramValues, final ITgMessage messageCompanion, final IUniversalConstants universalConstants) {
+    protected static List<TgMessage> retrieveMessages(final Map<String, Object> paramValues, final ITgMessage messageCompanion, final IDates dates) {
         logger.info("'Messages' retrieval started at " + new DateTime() + ".");
         final List<QueryProperty> qProperties = new ArrayList<>();
 
@@ -98,7 +98,7 @@ public class TgStopDao extends CommonEntityDao<TgStop> implements ITgStop {
 
         final List<Pair<String, Ordering>> orderingProps = Arrays.asList(new Pair<>(TgMessage.MACHINE_PROP_ALIAS + ".orgUnit", Ordering.ASCENDING), new Pair<>(TgMessage.MACHINE_PROP_ALIAS, Ordering.ASCENDING), new Pair<>("gpsTime", Ordering.ASCENDING));
 
-        final QueryExecutionModel<TgMessage, EntityResultQueryModel<TgMessage>> resultQuery = from(DynamicQueryBuilder.createQuery(TgMessage.class, qProperties, universalConstants).model()) //
+        final QueryExecutionModel<TgMessage, EntityResultQueryModel<TgMessage>> resultQuery = from(DynamicQueryBuilder.createQuery(TgMessage.class, qProperties, dates).model()) //
         .with(DynamicOrderingBuilder.createOrderingModel(TgMessage.class, orderingProps))//
         .with(DynamicFetchBuilder.createFetchOnlyModel(TgMessage.class, new LinkedHashSet<>(Arrays.asList(TgMessage.MACHINE_PROP_ALIAS, TgMessage.MACHINE_PROP_ALIAS + ".orgUnit", "gpsTime", "x", "y", "vectorSpeed", "vectorAngle", "altitude", "travelledDistance", "din1"))))//
         .lightweight()

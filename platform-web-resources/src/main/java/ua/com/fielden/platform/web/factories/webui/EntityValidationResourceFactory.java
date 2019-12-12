@@ -13,7 +13,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -37,7 +37,7 @@ public class EntityValidationResourceFactory extends Restlet {
     private final ICriteriaGenerator critGenerator;
     private final IUserProvider userProvider;
     private final IDeviceProvider deviceProvider;
-    private final IUniversalConstants universalConstants;
+    private final IDates dates;
 
     /**
      * Instantiates a factory for entity validation resources.
@@ -55,7 +55,7 @@ public class EntityValidationResourceFactory extends Restlet {
         this.critGenerator = injector.getInstance(ICriteriaGenerator.class);
         this.userProvider = injector.getInstance(IUserProvider.class);
         this.deviceProvider = injector.getInstance(IDeviceProvider.class);
-        this.universalConstants = injector.getInstance(IUniversalConstants.class);
+        this.dates = injector.getInstance(IDates.class);
     }
 
     @Override
@@ -75,7 +75,7 @@ public class EntityValidationResourceFactory extends Restlet {
                     webUiConfig,
                     userProvider,
                     deviceProvider,
-                    universalConstants,
+                    dates,
                     getContext(),
                     request,
                     response //

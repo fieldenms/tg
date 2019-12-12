@@ -20,12 +20,12 @@ public final class StringConverter {
 
     private static final DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
 
-    public static final Date toDate(final String dateTime, final IUniversalConstants universalConstants) {
-        return toDateTime(dateTime, universalConstants).toDate();
+    public static final Date toDate(final String dateTime, final IDates dates) {
+        return toDateTime(dateTime, dates).toDate();
     }
 
-    public static final DateTime toDateTime(final String dateTime, final IUniversalConstants universalConstants) {
-        return formatter.withZone(universalConstants.timeZone()).parseDateTime(dateTime);
+    public static final DateTime toDateTime(final String dateTime, final IDates dates) {
+        return formatter.withZone(dates.timeZone()).parseDateTime(dateTime);
     }
 
     public static final String toDayOfWeek(final DateTime dateTime) {

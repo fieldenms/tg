@@ -10,13 +10,13 @@ import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.CompoundSingleOperand;
 import ua.com.fielden.platform.entity.query.generation.elements.Expression;
 import ua.com.fielden.platform.entity.query.generation.elements.ISingleOperand;
-import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
 
 public class ExpressionBuilder extends AbstractTokensBuilder {
 
-    protected ExpressionBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final IUniversalConstants universalConstants) {
-        super(parent, queryBuilder, paramValues, universalConstants);
+    protected ExpressionBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final IDates dates) {
+        super(parent, queryBuilder, paramValues, dates);
     }
 
     @Override

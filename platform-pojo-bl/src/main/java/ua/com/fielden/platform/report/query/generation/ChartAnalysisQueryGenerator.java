@@ -6,12 +6,12 @@ import java.util.List;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAnalysisDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.utils.IDates;
 
 public class ChartAnalysisQueryGenerator<T extends AbstractEntity<?>> extends GroupAnalysisQueryGenerator<T> {
 
-    public ChartAnalysisQueryGenerator(final Class<T> root, final ICentreDomainTreeManagerAndEnhancer cdtme, final IAnalysisDomainTreeManager adtm, final IUniversalConstants universalConstants) {
-        super(root, cdtme, adtm, universalConstants);
+    public ChartAnalysisQueryGenerator(final Class<T> root, final ICentreDomainTreeManagerAndEnhancer cdtme, final IAnalysisDomainTreeManager adtm, final IDates dates) {
+        super(root, cdtme, adtm, dates);
     }
 
     @SuppressWarnings("unchecked")

@@ -51,7 +51,7 @@ import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
-import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.CentreContext;
@@ -119,12 +119,12 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
             final IWebUiConfig webUiConfig,
             final IUserProvider userProvider,
             final IDeviceProvider deviceProvider,
-            final IUniversalConstants universalConstants,
+            final IDates dates,
             
             final Context context,
             final Request request,
             final Response response) {
-        super(context, request, response, deviceProvider, universalConstants);
+        super(context, request, response, deviceProvider, dates);
 
         this.companionFinder = companionFinder;
         this.critGenerator = critGenerator;

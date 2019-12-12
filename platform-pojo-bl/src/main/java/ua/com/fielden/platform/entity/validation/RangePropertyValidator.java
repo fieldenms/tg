@@ -14,7 +14,7 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
-import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.utils.IDates;
 
 /**
  * This validator implements a check that a value of the property representing upper boundary is greater or equal to the value of the property representing the lower boundary.
@@ -25,7 +25,7 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
 public class RangePropertyValidator implements IBeforeChangeEventHandler<Object> {
     private final String[] opositeRangeProperties;
     private final boolean upperBoundaryRangePropery;
-    private final IUniversalConstants universalConstants;
+    private final IDates dates;
 
     /**
      * Constructs range property validator for a property with <code>opositeRangeProperty</code> representing a property of the opposite side of the range.
@@ -35,10 +35,10 @@ public class RangePropertyValidator implements IBeforeChangeEventHandler<Object>
      * @param opositeRangeProperty
      * @param upperBoundaryRangePropery
      */
-    public RangePropertyValidator(final String[] opositeRangeProperties, final boolean upperBoundaryRangePropery, final IUniversalConstants universalConstants) {
+    public RangePropertyValidator(final String[] opositeRangeProperties, final boolean upperBoundaryRangePropery, final IDates dates) {
         this.opositeRangeProperties = opositeRangeProperties;
         this.upperBoundaryRangePropery = upperBoundaryRangePropery;
-        this.universalConstants = universalConstants;
+        this.dates = dates;
     }
 
     @Override
@@ -102,14 +102,14 @@ public class RangePropertyValidator implements IBeforeChangeEventHandler<Object>
             return valid;
         } else if (Date.class.isAssignableFrom(property.getType())) {
             try {
-                EntityUtils.validateDateRange((Date) lowerBoundaryPropertyValue, (Date) upperBoundaryPropertyValue, startProperty, finishProperty, upperBoundaryRangePropery, universalConstants);
+                EntityUtils.validateDateRange((Date) lowerBoundaryPropertyValue, (Date) upperBoundaryPropertyValue, startProperty, finishProperty, upperBoundaryRangePropery, dates);
             } catch (final Result res) {
                 return res;
             }
             return valid;
         } else if (property.getType() == DateTime.class) {
             try {
-                EntityUtils.validateDateTimeRange((DateTime) lowerBoundaryPropertyValue, (DateTime) upperBoundaryPropertyValue, startProperty, finishProperty, upperBoundaryRangePropery, universalConstants);
+                EntityUtils.validateDateTimeRange((DateTime) lowerBoundaryPropertyValue, (DateTime) upperBoundaryPropertyValue, startProperty, finishProperty, upperBoundaryRangePropery, dates);
             } catch (final Result res) {
                 return res;
             }

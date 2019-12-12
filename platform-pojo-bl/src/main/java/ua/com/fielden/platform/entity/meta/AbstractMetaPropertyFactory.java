@@ -50,7 +50,7 @@ import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.StringConverter;
 
 /**
@@ -82,7 +82,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
 
     protected final DomainValidationConfig domainConfig;
     protected final DomainMetaPropertyConfig domainMetaConfig;
-    private IUniversalConstants universalConstants;
+    private IDates dates;
 
     public AbstractMetaPropertyFactory(final DomainValidationConfig domainConfig, final DomainMetaPropertyConfig domainMetaConfig) {
         this.domainConfig = domainConfig;
@@ -119,9 +119,9 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
         case GREATER_OR_EQUAL:
             return new IBeforeChangeEventHandler[] { createGreaterOrEqualValidator(((GreaterOrEqual) annotation).value()) };
         case LE_PROPETY:
-            initUniversalConstants(); return new IBeforeChangeEventHandler[] { createLePropertyValidator(entity, propertyName, ((LeProperty) annotation).value(), universalConstants) };
+            initUniversalConstants(); return new IBeforeChangeEventHandler[] { createLePropertyValidator(entity, propertyName, ((LeProperty) annotation).value(), dates) };
         case GE_PROPETY:
-            initUniversalConstants(); return new IBeforeChangeEventHandler[] { createGePropertyValidator(entity, ((GeProperty) annotation).value(), propertyName, universalConstants) };
+            initUniversalConstants(); return new IBeforeChangeEventHandler[] { createGePropertyValidator(entity, ((GeProperty) annotation).value(), propertyName, dates) };
         case MAX:
             if (Number.class.isAssignableFrom(propertyType) || double.class == propertyType || int.class == propertyType) {
                 return new IBeforeChangeEventHandler[] { createMaxValueValidator(((Max) annotation).value()) };
@@ -312,8 +312,8 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
      * Initialise constants lazily as it is only needed for Date/DateTime ACE/BCE parameters. 
      */
     private void initUniversalConstants() {
-        if (universalConstants == null) {
-            universalConstants = injector.getInstance(IUniversalConstants.class);
+        if (dates == null) {
+            dates = injector.getInstance(IDates.class);
         }
     }
 
@@ -330,7 +330,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
             final Field paramField = Finder.getFieldByName(handler.getClass(), param.name());
             paramField.setAccessible(true);
             try {
-                paramField.set(handler, StringConverter.toDate(param.value(), universalConstants));
+                paramField.set(handler, StringConverter.toDate(param.value(), dates));
             } catch (final Exception ex) {
                 throw new IllegalStateException("Could not initialise parameter " + param.name() + "@" + handler.getClass().getName(), ex);
             }
@@ -350,7 +350,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
             final Field paramField = Finder.getFieldByName(handler.getClass(), param.name());
             paramField.setAccessible(true);
             try {
-                paramField.set(handler, StringConverter.toDateTime(param.value(), universalConstants));
+                paramField.set(handler, StringConverter.toDateTime(param.value(), dates));
             } catch (final Exception ex) {
                 throw new IllegalStateException("Could not initialise parameter " + param.name() + "@" + handler.getClass().getName(), ex);
             }
@@ -406,16 +406,16 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
     }
 
 
-    private IBeforeChangeEventHandler<?> createGePropertyValidator(final AbstractEntity<?> entity, final String[] lowerBoundaryProperties, final String upperBoundaryProperty, final IUniversalConstants universalConstants) {
+    private IBeforeChangeEventHandler<?> createGePropertyValidator(final AbstractEntity<?> entity, final String[] lowerBoundaryProperties, final String upperBoundaryProperty, final IDates dates) {
         return geRangeValidators
                 .computeIfAbsent(entity.getType(), key -> new ConcurrentHashMap<>())
-                .computeIfAbsent(upperBoundaryProperty, key -> new RangePropertyValidator(lowerBoundaryProperties, true, universalConstants));
+                .computeIfAbsent(upperBoundaryProperty, key -> new RangePropertyValidator(lowerBoundaryProperties, true, dates));
     }
 
-    private IBeforeChangeEventHandler<?> createLePropertyValidator(final AbstractEntity<?> entity, final String lowerBoundaryProperty, final String[] upperBoundaryProperties, final IUniversalConstants universalConstants) {
+    private IBeforeChangeEventHandler<?> createLePropertyValidator(final AbstractEntity<?> entity, final String lowerBoundaryProperty, final String[] upperBoundaryProperties, final IDates dates) {
         return leRangeValidators
                 .computeIfAbsent(entity.getType(), key -> new ConcurrentHashMap<>())
-                .computeIfAbsent(lowerBoundaryProperty, key -> new RangePropertyValidator(upperBoundaryProperties, false, universalConstants));
+                .computeIfAbsent(lowerBoundaryProperty, key -> new RangePropertyValidator(upperBoundaryProperties, false, dates));
 
     }
 

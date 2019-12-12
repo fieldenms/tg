@@ -28,7 +28,7 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntityWithInputStream;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.rx.observables.ProcessingProgressSubject;
-import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.rx.eventsources.ProcessingProgressEventSource;
@@ -54,7 +54,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
     private final Date fileLastModified;
     private final String mimeAsProvided;
     private final IDeviceProvider deviceProvider;
-    private final IUniversalConstants universalConstants;
+    private final IDates dates;
 
     public FileProcessingResource(
             final Router router, 
@@ -65,11 +65,11 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
             final long fileSizeLimitBytes, 
             final Set<MediaType> types, 
             final IDeviceProvider deviceProvider,
-            final IUniversalConstants universalConstants,
+            final IDates dates,
             final Context context, 
             final Request request, 
             final Response response) {
-        super(context, request, response, deviceProvider, universalConstants);
+        super(context, request, response, deviceProvider, dates);
         this.router = router;
         this.companion = companion;
         this.factory = factory;
@@ -77,7 +77,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
         this.restUtil = restUtil;
         this.sizeLimitBytes = fileSizeLimitBytes;
         this.deviceProvider = deviceProvider;
-        this.universalConstants = universalConstants;
+        this.dates = dates;
         this.types = types;
         
         this.jobUid = request.getHeaders().getFirstValue("jobUid", /*ignore case*/ true);
@@ -158,7 +158,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
      */
     private Representation tryToProcess(final InputStream stream, final String mime) {
         final ProcessingProgressSubject subject = new ProcessingProgressSubject();
-        final EventSourcingResourceFactory eventSource = new EventSourcingResourceFactory(new ProcessingProgressEventSource(subject), deviceProvider, universalConstants);
+        final EventSourcingResourceFactory eventSource = new EventSourcingResourceFactory(new ProcessingProgressEventSource(subject), deviceProvider, dates);
         final String baseUri = getRequest().getResourceRef().getPath(true);
         router.attach(baseUri + "/sse/" + jobUid, eventSource);
         
