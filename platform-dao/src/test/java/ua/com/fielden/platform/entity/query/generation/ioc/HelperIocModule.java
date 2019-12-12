@@ -4,7 +4,9 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 import com.google.inject.name.Names;
 
+import ua.com.fielden.platform.utils.DefaultDates;
 import ua.com.fielden.platform.utils.DefaultUniversalConstants;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
 /**
@@ -21,6 +23,7 @@ public class HelperIocModule extends AbstractModule {
         bindConstant().annotatedWith(Names.named("email.smtp")).to("non-existing-server");
         bindConstant().annotatedWith(Names.named("email.fromAddress")).to("tg@fielden.com.au");
         bind(IUniversalConstants.class).to(DefaultUniversalConstants.class).in(Scopes.SINGLETON);
+        bind(IDates.class).to(DefaultDates.class).in(Scopes.SINGLETON);
     }
 
 }
