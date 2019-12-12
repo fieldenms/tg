@@ -45,39 +45,27 @@ public class DefaultDates implements IDates {
             final String timeZoneId = timeZoneString.contains(",") ? timeZoneString.split(",")[0] : timeZoneString.trim(); // ',' is not a special character in reg expressions, no need to escape it
             try {
                 clientTimeZone.set(forID(timeZoneId));
-                logger.info("timeZoneId = " + timeZoneId);
             } catch (final IllegalArgumentException ex) {
                 logger.error(format("Unknown client time-zone [%s]. %s", timeZoneId, SERVER_TIME_ZONE_APPLIED), ex);
             }
-        } else {
-            logger.debug(format("Empty client time-zone string is returned from client application. %s", SERVER_TIME_ZONE_APPLIED));
         }
+        // else {
+        //     logger.debug(format("Empty client time-zone string is returned from client application. %s", SERVER_TIME_ZONE_APPLIED));
+        // }
     }
     
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public DateTime now() {
         if (clientTimeZone.get() != null) {
             final DateTime nowInClientTimeZone = new DateTime(clientTimeZone.get());
             return independentTimeZone ? nowInClientTimeZone.withZoneRetainFields(getDefault()) : nowInClientTimeZone;
         } else {
-//            final Exception ex = new Exception();
-//            if (Stream.of(ex.getStackTrace()).allMatch(ste -> 
-//                !ste.getClassName().equals("ua.com.fielden.platform.web.resources.webui.LoginResource")
-//                && !ste.getClassName().equals("ua.com.fielden.platform.web.security.AbstractWebResourceGuard")
-//                && !ste.getClassName().equals("ua.com.fielden.platform.web.resources.webui.AppIndexResource")
-//                && !ste.getClassName().equals("ua.com.fielden.platform.web.resources.webui.CentreComponentResource")
-//                && !ste.getClassName().equals("fielden.web.AccessAuditEventProcessor"))) {
-//                logger.warn("now() was used, but no client-specific time-zone assigned. Explore the stack trace of this call and consider adding of 'Time-Zone' header to request.", new Exception());
-//            }
             return new DateTime(); // now in server time-zone; used as a fallback where no time-zone was used.
         }
     }
     
     @Override
-    public DateTime dt(final Date date) {
+    public DateTime zoned(final Date date) {
         return new DateTime(date, timeZone());
     }
     
@@ -88,7 +76,7 @@ public class DefaultDates implements IDates {
     
     @Override
     public String toString(final Date date) {
-        return toString(dt(date));
+        return toString(zoned(date));
     }
     
 }

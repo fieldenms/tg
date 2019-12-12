@@ -63,7 +63,7 @@ public class DateUtilities {
      * @return
      */
     public static Date startOfDateRangeThatIncludes(final Date date, final MnemonicEnum rangeWidth, final IDates dates) {
-        final DateTime adjustedDate = dates.dt(date).withTimeAtStartOfDay();
+        final DateTime adjustedDate = dates.zoned(date).withTimeAtStartOfDay();
 
         if (rangeWidth == MnemonicEnum.DAY) {
             // time portion is already removed.
@@ -80,7 +80,7 @@ public class DateUtilities {
         } else if (rangeWidth == MnemonicEnum.YEAR) {
             return adjustedDate.withDayOfYear(1).toDate();// set first day of year as 1-st.
         } else if (rangeWidth == MnemonicEnum.OZ_FIN_YEAR) {
-            final DateTime newDate = (adjustedDate.getMonthOfYear() < JULY) ? dates.dt(roll(adjustedDate.toDate(), MnemonicEnum.YEAR, false, dates)) : adjustedDate;
+            final DateTime newDate = (adjustedDate.getMonthOfYear() < JULY) ? dates.zoned(roll(adjustedDate.toDate(), MnemonicEnum.YEAR, false, dates)) : adjustedDate;
             return newDate.withMonthOfYear(JULY).withDayOfMonth(1).toDate();// set first day of month as 1-st.
         } else if (rangeWidth == MnemonicEnum.QRT1) { // first quarter
             return adjustedDate.withMonthOfYear(JANUARY).withDayOfMonth(1).toDate();// set first day of month as 1-st.
@@ -104,7 +104,7 @@ public class DateUtilities {
      * @return
      */
     private static Date roll(final Date date, final MnemonicEnum width, final boolean up, final IDates dates) {
-        final DateTime old = dates.dt(date);
+        final DateTime old = dates.zoned(date);
         final DateTime neew = width == MnemonicEnum.DAY ? old.plusDays(up ? 1 : -1) : //
                 width == MnemonicEnum.DAY_AND_BEFORE ? old.plusDays(up ? 1 : -1) : //
                         width == MnemonicEnum.DAY_AND_AFTER ? old.plusDays(up ? 1 : -1) : //
@@ -156,7 +156,7 @@ public class DateUtilities {
      * @return
      */
     public static DateTime convert(final Date date, final IDates dates) {
-        return date == null ? null : dates.dt(date);
+        return date == null ? null : dates.zoned(date);
     }
 
     /**

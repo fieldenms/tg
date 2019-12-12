@@ -427,20 +427,13 @@ export class TgDatetimePicker extends TgEditor {
 
     _tryLiterals (editingValue) {
         const upperCasedValue = editingValue[0].toUpperCase();
-        console.error('realTimeZone = ', moment.tz.guess(true));
-        console.error('_momentTz(this.timeZone) = ', _momentTz(this.timeZone));
-        console.error('_momentTz(this.timeZone).format() = ', _momentTz(this.timeZone).format());
-        console.error('_momentTz(this.timeZone).tz(moment.tz.guess(true)) = ', _momentTz(this.timeZone).tz(moment.tz.guess(true)));
-        console.error('_momentTz(this.timeZone).tz(moment.tz.guess(true)).format(YYYY-MM-DD HH:mm:ss.SSS) = ', _momentTz(this.timeZone).tz(moment.tz.guess(true)).format('YYYY-MM-DD HH:mm:ss.SSS'));
-        console.error('_momentTz(_momentTz(this.timeZone).tz(moment.tz.guess(true)).format(YYYY-MM-DD HH:mm:ss.SSS), this.timeZone).format() = ', _momentTz(_momentTz(this.timeZone).tz(moment.tz.guess(true)).format('YYYY-MM-DD HH:mm:ss.SSS'), this.timeZone).format());
-
-        const australianMoment = _momentTz(_momentTz(this.timeZone).tz(moment.tz.guess(true)).format('YYYY-MM-DD HH:mm:ss.SSS'), this.timeZone);
+        const convertedMoment = _momentTz(_momentTz(this.timeZone).tz(moment.tz.guess(true)).format('YYYY-MM-DD HH:mm:ss.SSS'), this.timeZone);
 
         if ('T' === upperCasedValue) {
-            const todayMoment = /*_momentTz(this.timeZone)*/australianMoment.startOf("day");
+            const todayMoment = convertedMoment.startOf("day");
             return this.timePortionToBecomeEndOfDay === true ? todayMoment.add(1, 'days').subtract(1, 'milliseconds') : todayMoment;
         } else if ('N' === upperCasedValue) {
-            return /*_momentTz(this.timeZone)*/australianMoment.startOf('minute');
+            return convertedMoment.startOf('minute');
         }
         return null;
     }

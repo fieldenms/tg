@@ -33,14 +33,32 @@ public interface IDates {
         return getDefault();
     }
     
-    default DateTime dt(final Date date) {
+    /**
+     * Creates zoned representation for <code>date</code> moment in time in user's time-zone.
+     * 
+     * @param date
+     * @return
+     */
+    default DateTime zoned(final Date date) {
         return new DateTime(date);
     }
     
+    /**
+     * Converts moment in time to string in user's time-zone.
+     * 
+     * @param date
+     * @return
+     */
     default String toString(final Date date) {
         return EntityUtils.toString(date);
     }
     
+    /**
+     * Converts zoned representation of moment in time to string.
+     * 
+     * @param dateTime
+     * @return
+     */
     default String toString(final DateTime dateTime) {
         return EntityUtils.toString(dateTime);
     }
