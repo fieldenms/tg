@@ -25,11 +25,12 @@ import ua.com.fielden.platform.security.annotations.TrustedDeviceSessionDuration
 import ua.com.fielden.platform.security.annotations.UntrustedDeviceSessionDuration;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.IAuthenticationModel;
-import ua.com.fielden.platform.security.user.INewUserNotifier;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.security.user.NewUserNotifierByEmail;
 import ua.com.fielden.platform.security.user.impl.ThreadLocalUserProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
+import ua.com.fielden.platform.utils.DefaultDates;
+import ua.com.fielden.platform.utils.DefaultUniversalConstants;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.annotations.AppUri;
 
@@ -98,8 +99,11 @@ public class TgTestApplicationServerModule extends BasicWebServerModule {
         // bind authentication model
         bind(IAuthenticationModel.class).to(TgTestAppAuthenticationModel.class);
 
+        bind(IDates.class).to(DefaultDates.class).in(Scopes.SINGLETON);
         if (universalConstantsType != null) {
             bind(IUniversalConstants.class).to(universalConstantsType).in(Scopes.SINGLETON);
+        } else {
+            bind(IUniversalConstants.class).to(DefaultUniversalConstants.class).in(Scopes.SINGLETON);
         }
 
         // dynamically bind DAO implementations for all companion objects

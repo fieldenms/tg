@@ -427,7 +427,14 @@ export class TgDatetimePicker extends TgEditor {
 
     _tryLiterals (editingValue) {
         const upperCasedValue = editingValue[0].toUpperCase();
-        const convertedMoment = _momentTz(_momentTz(this.timeZone).tz(moment.tz.guess(true)).format('YYYY-MM-DD HH:mm:ss.SSS'), this.timeZone);
+        // in concrete time-zone (e.g. UTC) just use standard method _momentTz for creating 'now' in that time-zone;
+        // otherwise in independent time-zone mode we do the following trick:
+        // 1. create 'now' moment in current surrogate (equal to server one) time-zone
+        // 2. convert it to real time-zone to be able to format it into our 'real' string
+        // 3. convert it to string that defines moment in our 'real' time-zone
+        // 4. than use that string to create moment in surrogate time-zone;
+        // in dependent time-zone mode this trick will return the same moment object as just moment().
+        const convertedMoment = this.timeZone ? _momentTz(this.timeZone) : moment(moment().tz(moment.tz.guess(true)).format('YYYY-MM-DD HH:mm:ss.SSS'));
 
         if ('T' === upperCasedValue) {
             const todayMoment = convertedMoment.startOf("day");
