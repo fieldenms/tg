@@ -4,6 +4,8 @@ import java.util.Locale;
 
 import org.joda.time.DateTime;
 
+import com.google.inject.Inject;
+
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
@@ -20,6 +22,7 @@ public class UniversalConstantsForTesting implements IUniversalConstants {
     private String appName;
     private final DatesForTesting dates;
 
+    @Inject
     public UniversalConstantsForTesting(final IDates dates) {
         this.dates = (DatesForTesting) dates;
     }
