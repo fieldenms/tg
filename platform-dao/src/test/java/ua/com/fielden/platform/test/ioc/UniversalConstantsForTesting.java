@@ -4,6 +4,9 @@ import java.util.Locale;
 
 import org.joda.time.DateTime;
 
+import com.google.inject.Inject;
+
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
 /**
@@ -14,27 +17,28 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
  */
 public class UniversalConstantsForTesting implements IUniversalConstants {
 
-    private DateTime now;
     private String smtpServer;
     private String fromEmailAddress;
     private String appName;
+    private final DatesForTesting dates;
+
+    @Inject
+    public UniversalConstantsForTesting(final IDates dates) {
+        this.dates = (DatesForTesting) dates;
+    }
 
     @Override
     public DateTime now() {
-        return now != null ? now : new DateTime();
+        return dates.now();
+    }
+
+    public void setNow(final DateTime now) {
+        dates.setNow(now);
     }
 
     @Override
     public Locale locale() {
         return Locale.getDefault();
-    }
-
-    public DateTime getNow() {
-        return now;
-    }
-
-    public void setNow(final DateTime now) {
-        this.now = now;
     }
 
     @Override
@@ -47,11 +51,11 @@ public class UniversalConstantsForTesting implements IUniversalConstants {
         return fromEmailAddress != null ? fromEmailAddress : "tg@fielden.com.au";
     }
 
-    public void setSmtpServer(String smtpServer) {
+    public void setSmtpServer(final String smtpServer) {
         this.smtpServer = smtpServer;
     }
 
-    public void setFromEmailAddress(String fromEmailAddress) {
+    public void setFromEmailAddress(final String fromEmailAddress) {
         this.fromEmailAddress = fromEmailAddress;
     }
 
@@ -60,7 +64,7 @@ public class UniversalConstantsForTesting implements IUniversalConstants {
         return appName != null ? appName : "TG Test";
     }
 
-    public void setAppName(String appName) {
+    public void setAppName(final String appName) {
         this.appName = appName;
     }
 

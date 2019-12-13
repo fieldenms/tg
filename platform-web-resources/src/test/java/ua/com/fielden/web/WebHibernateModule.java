@@ -54,6 +54,7 @@ import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.impl.Serialiser;
 import ua.com.fielden.platform.test.UserProviderForTesting;
+import ua.com.fielden.platform.test.ioc.DatesForTesting;
 import ua.com.fielden.platform.test.ioc.PlatformTestServerModule.TestSessionCacheBuilder;
 import ua.com.fielden.platform.test.ioc.TickerForSessionCache;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
@@ -149,8 +150,8 @@ public class WebHibernateModule extends CommonFactoryModule {
         bindConstant().annotatedWith(UntrustedDeviceSessionDuration.class).to(5); // 5 minutes
 
         bind(Ticker.class).to(TickerForSessionCache.class).in(Scopes.SINGLETON);
+        bind(IDates.class).to(DatesForTesting.class).in(Scopes.SINGLETON);
         bind(IUniversalConstants.class).to(UniversalConstantsForTesting.class).in(Scopes.SINGLETON);
-        bind(IDates.class).toInstance(new IDates() {});
         bind(new TypeLiteral<Cache<String, UserSession>>(){}).annotatedWith(SessionCache.class).toProvider(TestSessionCacheBuilder.class).in(Scopes.SINGLETON);
         
         // bind ICriteriaEntityRestorer to its implementation as singleton -- it is dependent on IWebUiConfig, IServerGlobalDomainTreeManager, IUserProvider and other Web UI infrastructure

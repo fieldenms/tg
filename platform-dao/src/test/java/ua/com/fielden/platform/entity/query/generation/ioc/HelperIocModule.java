@@ -22,8 +22,9 @@ public class HelperIocModule extends AbstractModule {
         bindConstant().annotatedWith(Names.named("app.name")).to("Test");
         bindConstant().annotatedWith(Names.named("email.smtp")).to("non-existing-server");
         bindConstant().annotatedWith(Names.named("email.fromAddress")).to("tg@fielden.com.au");
-        bind(IUniversalConstants.class).to(DefaultUniversalConstants.class).in(Scopes.SINGLETON);
+        bindConstant().annotatedWith(Names.named("independent.time.zone")).to(false);
         bind(IDates.class).to(DefaultDates.class).in(Scopes.SINGLETON);
+        bind(IUniversalConstants.class).to(DefaultUniversalConstants.class).in(Scopes.SINGLETON);
     }
 
 }
