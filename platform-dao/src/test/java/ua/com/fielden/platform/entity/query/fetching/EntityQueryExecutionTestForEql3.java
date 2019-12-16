@@ -215,6 +215,28 @@ public class EntityQueryExecutionTestForEql3 extends AbstractDaoTestCase {
         assertEquals("1", vehicles.get(0).get("KOUNT").toString());
     }
 
+    @Test
+    @Ignore    
+    public void eql3_query_executes_correctly14() {
+        System.out.println("\n\n\nSTART\n\n\n");
+        final AggregatedResultQueryModel qry = select(TgVehicle.class).where().anyOfProps("calcModel").isNotNull().yield().countAll().as("KOUNT").
+                modelAsAggregate();
+        
+        final List<EntityAggregates> vehicles = aggregateDao.getAllEntities(from(qry).with("EQL3", null).model());
+        
+        assertEquals("1", vehicles.get(0).get("KOUNT").toString());
+    }
+    
+    @Test
+    public void eql3_query_executes_correctly15() {
+        System.out.println("\n\n\nSTART\n\n\n");
+        final AggregatedResultQueryModel qry = select(TgVehicleMake.class).where().anyOfProps("c7").isNotNull().yield().countAll().as("KOUNT").
+                modelAsAggregate();
+        
+        final List<EntityAggregates> vehicles = aggregateDao.getAllEntities(from(qry).with("EQL3", null).model());
+        
+        assertEquals("4", vehicles.get(0).get("KOUNT").toString());
+    }
     
     @Override
     protected void populateDomain() {
