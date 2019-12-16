@@ -22,11 +22,21 @@ import ua.com.fielden.platform.eql.stage1.elements.operands.EntQuery1;
 import ua.com.fielden.platform.utils.Pair;
 
 public class EntQueryGenerator {
+
+    private final int increment;
+    
+    public EntQueryGenerator() {
+        this(false);
+    }
+    
+    public EntQueryGenerator(final boolean forCalcExpression) {
+        increment = forCalcExpression ? -1 : 1;
+    }
     
     private int contextId = 0;
     
     public int nextCondtextId() {
-        contextId = contextId + 1;
+        contextId = contextId + increment;
         return contextId;
     }
 
@@ -46,7 +56,7 @@ public class EntQueryGenerator {
         return generateEntQuery(qryModel, null, Optional.empty(), SUB_QUERY);
     }
 
-    public EntQueryBlocks1 parseTokensIntoComponents(final QueryModel<?> qryModel, final OrderingModel orderModel) {
+    private EntQueryBlocks1 parseTokensIntoComponents(final QueryModel<?> qryModel, final OrderingModel orderModel) {
         final QrySourcesBuilder from = new QrySourcesBuilder(this);
         final ConditionsBuilder where = new ConditionsBuilder(null, this);
         final QryYieldsBuilder select = new QryYieldsBuilder(this);

@@ -29,7 +29,7 @@ import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
 
 public class EqlStage1TestCase extends EqlTestCase {
 
-    static int contextId = 0;
+    static int contextId = mdg.qb.nextCondtextId();
     
     protected static int nextId() {
         contextId = contextId + 1;
