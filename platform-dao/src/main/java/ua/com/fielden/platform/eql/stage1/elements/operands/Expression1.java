@@ -12,7 +12,7 @@ import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 
 public class Expression1 implements ISingleOperand1<Expression2> {
 
-    private final ISingleOperand1<? extends ISingleOperand2<?>> first;
+    public final ISingleOperand1<? extends ISingleOperand2<?>> first;
     private final List<CompoundSingleOperand1> items;
 
     public Expression1(final ISingleOperand1<? extends ISingleOperand2<?>> first, final List<CompoundSingleOperand1> items) {

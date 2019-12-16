@@ -64,6 +64,22 @@ public class TgVehicle extends AbstractEntity<String> {
     public String getMakeKey2() {
         return makeKey2;
     }
+    
+//    @IsProperty
+//    @Calculated
+//    private String makeKey3;
+//    protected static final ExpressionModel makeKey3_ = expr().model(select(TgVehicleModel.class).where().prop("id").eq().extProp("model").yield().prop("model.makeKey2").modelAsPrimitive()).model();
+//
+//    @Observable
+//    protected TgVehicle setMakeKey3(final String makeKey3) {
+//        this.makeKey3 = makeKey3;
+//        return this;
+//    }
+//
+//    public String getMakeKey3() {
+//        return makeKey3;
+//    }
+    
 
     @IsProperty
     @MapTo

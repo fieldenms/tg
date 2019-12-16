@@ -7,6 +7,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import java.math.BigDecimal;
 import java.util.List;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.dao.IEntityAggregatesOperations;
@@ -192,7 +193,29 @@ public class EntityQueryExecutionTestForEql3 extends AbstractDaoTestCase {
         
         assertEquals("1", vehicles.get(0).get("KOUNT").toString());
     }
+    
+    @Test
+    public void eql3_query_executes_correctly12() {
+        final AggregatedResultQueryModel qry = select(TgWorkOrder.class).where().anyOfProps("model.makeKey2").isNotNull().yield().countAll().as("KOUNT").
+                modelAsAggregate();
+        
+        final List<EntityAggregates> vehicles = aggregateDao.getAllEntities(from(qry).with("EQL3", null).model());
+        
+        assertEquals("1", vehicles.get(0).get("KOUNT").toString());
+    }
 
+    @Test
+    @Ignore
+    public void eql3_query_executes_correctly13() {
+        final AggregatedResultQueryModel qry = select(TgWorkOrder.class).where().anyOfProps("makeKey2").isNotNull().yield().countAll().as("KOUNT").
+                modelAsAggregate();
+        
+        final List<EntityAggregates> vehicles = aggregateDao.getAllEntities(from(qry).with("EQL3", null).model());
+        
+        assertEquals("1", vehicles.get(0).get("KOUNT").toString());
+    }
+
+    
     @Override
     protected void populateDomain() {
         super.populateDomain();

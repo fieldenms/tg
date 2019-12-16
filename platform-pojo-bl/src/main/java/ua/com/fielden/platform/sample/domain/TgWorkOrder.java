@@ -69,6 +69,22 @@ public class TgWorkOrder extends AbstractEntity<String> {
         return makeKey;
     }
 
+//    @IsProperty
+//    @Calculated
+//    private String makeKey2;
+//    protected static final ExpressionModel makeKey2_ = expr().model(select(TgVehicle.class).where().prop("id").eq().extProp("vehicle").yield().prop("makeKey3").modelAsPrimitive()).model();
+//
+//    @Observable
+//    protected TgWorkOrder setMakeKey2(final String makeKey2) {
+//        this.makeKey2 = makeKey2;
+//        return this;
+//    }
+//
+//    public String getMakeKey2() {
+//        return makeKey2;
+//    }
+
+    
     @IsProperty
     @Calculated
     private TgVehicleMake make;
@@ -84,7 +100,22 @@ public class TgWorkOrder extends AbstractEntity<String> {
         return make;
     }
     
-    
+
+    @IsProperty
+    @Calculated
+    private TgVehicleModel model;
+    protected static final ExpressionModel model_ = expr().model(select(TgVehicle.class).where().prop("id").eq().extProp("vehicle").yield().prop("model").modelAsEntity(TgVehicleModel.class)).model();
+
+    @Observable
+    protected TgWorkOrder setModel(final TgVehicleModel model) {
+        this.model = model;
+        return this;
+    }
+
+    public TgVehicleModel getModel() {
+        return model;
+    }
+
 
     @IsProperty
     @MapTo

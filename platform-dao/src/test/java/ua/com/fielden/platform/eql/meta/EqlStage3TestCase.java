@@ -240,8 +240,16 @@ public class EqlStage3TestCase extends EqlStage1TestCase {
         return new Yields3(asList(yields));
     }
 
+    protected static Yield3 yieldExpr(final String propName, final IQrySource3 source, final String alias) {
+        return new Yield3(expr(prop(propName, source)), alias);
+    }
+
     protected static Yield3 yieldProp(final String propName, final IQrySource3 source, final String alias) {
         return new Yield3(prop(propName, source), alias);
+    }
+
+    protected static Yield3 yieldSingleExpr(final String propName, final IQrySource3 source) {
+        return yieldExpr(propName, source, "");
     }
 
     protected static Yield3 yieldSingleProp(final String propName, final IQrySource3 source) {

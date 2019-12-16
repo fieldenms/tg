@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.sample.domain;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import org.junit.Ignore;
 
@@ -49,6 +50,22 @@ public class TgVehicleModel extends AbstractEntity<String> {
     public String getMakeKey() {
         return makeKey;
     }
+    
+    @IsProperty
+    @Calculated
+    private String makeKey2;
+    protected static final ExpressionModel makeKey2_ = expr().model(select(TgVehicleMake.class).where().prop("id").eq().extProp("make").yield().prop("key").modelAsPrimitive()).model();
+
+    @Observable
+    protected TgVehicleModel setMakeKey2(final String makeKey2) {
+        this.makeKey2 = makeKey2;
+        return this;
+    }
+
+    public String getMakeKey2() {
+        return makeKey2;
+    }
+
 
     
     @Observable
