@@ -24,7 +24,7 @@ public class Concat1 extends AbstractFunction1<Concat2> {
         final List<ISingleOperand2<? extends ISingleOperand3>> transformed = new ArrayList<>();
         PropsResolutionContext currentResolutionContext = context;
         for (final ISingleOperand1<? extends ISingleOperand2<? extends ISingleOperand3>> operand : operands) {
-            final TransformationResult<? extends ISingleOperand2<? extends ISingleOperand3>> operandTr = operand.transform(context);
+            final TransformationResult<? extends ISingleOperand2<? extends ISingleOperand3>> operandTr = operand.transform(currentResolutionContext);
             transformed.add(operandTr.item);
             currentResolutionContext = operandTr.updatedContext;
         }

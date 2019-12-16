@@ -21,7 +21,7 @@ public class OperandsBasedSet2 implements ISetOperand2<OperandsBasedSet3> {
         final List<ISingleOperand3> transformedOperands = new ArrayList<>();
         TransformationContext currentContext = context;
         for (final ISingleOperand2<? extends ISingleOperand3> singleOperand : operands) {
-            final TransformationResult<? extends ISingleOperand3> operandTr = singleOperand.transform(context);
+            final TransformationResult<? extends ISingleOperand3> operandTr = singleOperand.transform(currentContext);
             transformedOperands.add(operandTr.item);
             currentContext = operandTr.updatedContext;
         }

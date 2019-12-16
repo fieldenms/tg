@@ -28,7 +28,7 @@ public class Concat2 extends AbstractFunction2<Concat3> {
         final List<ISingleOperand3> transformed = new ArrayList<>();
         TransformationContext currentContext = context;
         for (final ISingleOperand2<? extends ISingleOperand3> operand : operands) {
-            final TransformationResult<? extends ISingleOperand3> operandTr = operand.transform(context);
+            final TransformationResult<? extends ISingleOperand3> operandTr = operand.transform(currentContext);
             transformed.add(operandTr.item);
             currentContext = operandTr.updatedContext;
         }
