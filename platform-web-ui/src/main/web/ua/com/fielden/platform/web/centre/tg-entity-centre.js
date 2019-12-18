@@ -124,7 +124,10 @@ const template = html`
             /* Internet Explorer/Edge */
             user-select: none;
             /* Non-prefixed version, currently
-                                  supported by Chrome and Opera */
+               supported by Chrome and Opera */
+        }
+        tg-centre-result-view {
+            position: relative;
         }
     </style>
     <style include="paper-material-styles iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
