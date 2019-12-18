@@ -49,7 +49,68 @@ public class TgVehicle extends AbstractEntity<String> {
     public String getMakeKey() {
         return makeKey;
     }
+
+    @IsProperty
+    @Calculated
+    private String modelKey;
+    protected static final ExpressionModel modelKey_ = expr().prop("model.key").model();
+
+    @Observable
+    protected TgVehicle setModelKey(final String modelKey) {
+        this.modelKey = modelKey;
+        return this;
+    }
+
+    public String getModelKey() {
+        return modelKey;
+    }
+
+    @IsProperty
+    @Calculated
+    private String modelDesc;
+    protected static final ExpressionModel modelDesc_ = expr().prop("model.desc").model();
+
+    @Observable
+    protected TgVehicle setModelDesc(final String modelDesc) {
+        this.modelDesc = modelDesc;
+        return this;
+    }
+
+    public String getModelDesc() {
+        return modelDesc;
+    }
+
     
+    @IsProperty
+    @Calculated
+    private String stationKey;
+    protected static final ExpressionModel stationKey_ = expr().prop("station.key").model();
+
+    @Observable
+    protected TgVehicle setStationKey(final String stationKey) {
+        this.stationKey = stationKey;
+        return this;
+    }
+
+    public String getStationKey() {
+        return stationKey;
+    }
+
+    @IsProperty
+    @Calculated
+    private String makeDesc;
+    protected static final ExpressionModel makeDesc_ = expr().prop("model.make.desc").model();
+
+    @Observable
+    protected TgVehicle setMakeDesc(final String makeDesc) {
+        this.makeDesc = makeDesc;
+        return this;
+    }
+
+    public String getMakeDesc() {
+        return makeDesc;
+    }
+
     @IsProperty
     @Calculated
     private String makeKey2;
@@ -65,20 +126,20 @@ public class TgVehicle extends AbstractEntity<String> {
         return makeKey2;
     }
     
-//    @IsProperty
-//    @Calculated
-//    private String makeKey3;
-//    protected static final ExpressionModel makeKey3_ = expr().model(select(TgVehicleModel.class).where().prop("id").eq().extProp("model").yield().prop("model.makeKey2").modelAsPrimitive()).model();
-//
-//    @Observable
-//    protected TgVehicle setMakeKey3(final String makeKey3) {
-//        this.makeKey3 = makeKey3;
-//        return this;
-//    }
-//
-//    public String getMakeKey3() {
-//        return makeKey3;
-//    }
+    @IsProperty
+    @Calculated
+    private String makeKey3;
+    protected static final ExpressionModel makeKey3_ = expr().model(select(TgVehicleModel.class).where().prop("id").eq().extProp("model").yield().prop("model.makeKey2").modelAsPrimitive()).model();
+
+    @Observable
+    protected TgVehicle setMakeKey3(final String makeKey3) {
+        this.makeKey3 = makeKey3;
+        return this;
+    }
+
+    public String getMakeKey3() {
+        return makeKey3;
+    }
     
 
     @IsProperty

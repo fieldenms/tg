@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.elements.sources;
 
+import static java.lang.String.format;
+
 import java.util.Objects;
 import java.util.Set;
 
@@ -8,13 +10,14 @@ import ua.com.fielden.platform.eql.stage2.elements.operands.Expression2;
 
 public class Child implements Comparable<Child> {
     final AbstractPropInfo<?> main;
-    final Expression2 expr;
+    final QrySource2BasedOnPersistentType source;
     final boolean required;
-    final Set<Child> items;
-    final Set<Child> dependencies;
+    public final Set<Child> items;
     final String fullPath; //not null if given child represents explicit prop that needs resolution 
     final String context; //indicates context for table being joined within main (explicit) table (aka dot.notation being resolved by joining this table)
-    final QrySource2BasedOnPersistentType source;
+
+    final Expression2 expr;
+    final Set<Child> dependencies;
     final IQrySource2<?> parentSource;
     
     public Child(final AbstractPropInfo<?> main, final Set<Child> items, final String fullPath, final String context, final boolean required, final QrySource2BasedOnPersistentType source, final Expression2 expr, final IQrySource2<?> parentSource, final Set<Child> dependencies) {
@@ -40,6 +43,12 @@ public class Child implements Comparable<Child> {
         result = prime * result + ((parentSource == null) ? 0 : parentSource.hashCode());
         result = prime * result + dependencies.hashCode();
         return result;
+    }
+    
+    @Override
+    public String toString() {
+        return format("| %30s | %15s | %25s | %50s | %50s |", main, context, fullPath, parentSource, source) + 
+                (items.isEmpty() ? "" : "\n+child\n" + items.iterator().next());
     }
 
     @Override

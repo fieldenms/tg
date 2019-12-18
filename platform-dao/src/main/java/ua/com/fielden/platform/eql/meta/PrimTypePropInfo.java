@@ -29,7 +29,8 @@ public class PrimTypePropInfo<T> extends AbstractPropInfo<T> {
     
     @Override
     public String toString() {
-        return super.toString() + ": " + propType.getSimpleName();
+        return String.format("%20s %20s", name, propType.getSimpleName());
+
     }
 
     @Override

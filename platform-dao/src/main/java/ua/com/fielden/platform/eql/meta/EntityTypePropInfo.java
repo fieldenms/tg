@@ -49,7 +49,7 @@ public class EntityTypePropInfo<T extends AbstractEntity<?>> extends AbstractPro
 
     @Override
     public String toString() {
-        return super.toString() + ": " + propEntityInfo.javaType().getSimpleName();
+        return String.format("%20s %20s", name, propEntityInfo.javaType().getSimpleName());
     }
 
     @Override

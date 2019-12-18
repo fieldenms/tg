@@ -69,21 +69,20 @@ public class TgWorkOrder extends AbstractEntity<String> {
         return makeKey;
     }
 
-//    @IsProperty
-//    @Calculated
-//    private String makeKey2;
-//    protected static final ExpressionModel makeKey2_ = expr().model(select(TgVehicle.class).where().prop("id").eq().extProp("vehicle").yield().prop("makeKey3").modelAsPrimitive()).model();
-//
-//    @Observable
-//    protected TgWorkOrder setMakeKey2(final String makeKey2) {
-//        this.makeKey2 = makeKey2;
-//        return this;
-//    }
-//
-//    public String getMakeKey2() {
-//        return makeKey2;
-//    }
+    @IsProperty
+    @Calculated
+    private String makeKey2;
+    protected static final ExpressionModel makeKey2_ = expr().model(select(TgVehicle.class).where().prop("id").eq().extProp("vehicle").yield().prop("makeKey3").modelAsPrimitive()).model();
 
+    @Observable
+    protected TgWorkOrder setMakeKey2(final String makeKey2) {
+        this.makeKey2 = makeKey2;
+        return this;
+    }
+
+    public String getMakeKey2() {
+        return makeKey2;
+    }
     
     @IsProperty
     @Calculated
@@ -99,7 +98,6 @@ public class TgWorkOrder extends AbstractEntity<String> {
     public TgVehicleMake getMake() {
         return make;
     }
-    
 
     @IsProperty
     @Calculated
@@ -115,7 +113,6 @@ public class TgWorkOrder extends AbstractEntity<String> {
     public TgVehicleModel getModel() {
         return model;
     }
-
 
     @IsProperty
     @MapTo
@@ -165,7 +162,6 @@ public class TgWorkOrder extends AbstractEntity<String> {
     @CritOnly(Type.SINGLE)
     @Title(value = "Boolean Single", desc = "A single crit only property of type boolean")
     private boolean boolSingle = false;
-
 
     @IsProperty
     @CritOnly(Type.SINGLE)
@@ -218,9 +214,6 @@ public class TgWorkOrder extends AbstractEntity<String> {
         return moneySingle;
     }
 
-
-
-
     @Observable
     public TgWorkOrder setStringSingle(final String stringSingle) {
         this.stringSingle = stringSingle;
@@ -230,9 +223,6 @@ public class TgWorkOrder extends AbstractEntity<String> {
     public String getStringSingle() {
         return stringSingle;
     }
-
-
-
 
     @Observable
     public TgWorkOrder setBoolSingle(final boolean boolSingle) {
@@ -254,9 +244,6 @@ public class TgWorkOrder extends AbstractEntity<String> {
         return intRange;
     }
 
-
-
-
     @Observable
     public TgWorkOrder setIntSingle(final Integer intSingle) {
         this.intSingle = intSingle;
@@ -266,9 +253,6 @@ public class TgWorkOrder extends AbstractEntity<String> {
     public Integer getIntSingle() {
         return intSingle;
     }
-
-
-
 
     @Observable
     public TgWorkOrder setOrgunitCritOnlySingle(final TgOrgUnit1 orgunitCritOnlySingle) {
@@ -289,7 +273,6 @@ public class TgWorkOrder extends AbstractEntity<String> {
     public TgOrgUnit1 getOrgunitCritOnly() {
         return orgunitCritOnly;
     }
-
 
     @Observable
     public TgWorkOrder setOrgUnit1(final TgOrgUnit1 orgUnit1) {

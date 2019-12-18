@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.elements.sources;
 
+import static java.lang.String.format;
+
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -63,8 +65,7 @@ public class QrySource2BasedOnPersistentType extends AbstractElement2 implements
     
     @Override
     public String toString() {
-        // TODO Auto-generated method stub
-        return "QrySource2BasedOnPersistentType: [" + sourceType.getSimpleName() + "]";
+        return format("%20s %5s %25s", sourceType.getSimpleName(), contextId, subcontextId);
     }
 
     @Override
