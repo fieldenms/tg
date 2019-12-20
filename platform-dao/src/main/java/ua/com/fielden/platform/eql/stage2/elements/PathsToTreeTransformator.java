@@ -31,6 +31,13 @@ import ua.com.fielden.platform.eql.stage2.elements.sources.QrySource2BasedOnPers
 import ua.com.fielden.platform.types.tuples.T2;
 
 public class PathsToTreeTransformator {
+    
+    static int id = 0;
+    
+    static int next() {
+        id = id + 1;
+        return id;
+    }
 
     static final Map<IQrySource2<?>, SortedSet<Child>> transform(final Set<EntProp2> props, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
         final Map<IQrySource2<?>, SortedSet<Child>> sourceChildren = new HashMap<>();
@@ -120,8 +127,23 @@ public class PathsToTreeTransformator {
         final T2<SortedSet<Child>, Map<IQrySource2<?>, SortedSet<Child>>> genRes = generateChildren(source, contextId, next._2, newContext, domainInfo, contextParentSource);
         final SortedSet<Child> children = genRes._1;
         other.putAll(genRes._2);
-        final Child child = new Child(propInfo, children, next._1, childContext, required, source, expr2, contextParentSource, dependencies); 
-        System.out.println(child);
+        final Child child = new Child(propInfo, children, next._1, childContext, required, source, expr2, contextParentSource, dependencies, next()); 
+        System.out.println("\n--------------------\n" + child);
+        if (!child.dependencies.isEmpty()) {
+            System.out.println(" +deps:");
+            for (final Child d : child.dependencies) {
+                System.out.println(d);
+            }
+            
+        }
+        if (!child.items.isEmpty()) {
+            System.out.println(" +children:");
+            for (final Child c : child.items) {
+                System.out.println(c);
+            }
+            
+        }
+
         result.add(child);
         return t2(result, other); 
     }    

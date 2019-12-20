@@ -155,4 +155,19 @@ public class TgVehicleMake extends AbstractEntity<String> {
         return c7;
     }
 
+    @IsProperty
+    @Calculated
+    private String c8;
+    protected static final ExpressionModel c8_ = expr().concat().prop("c6").with().prop("c3").end().model();
+
+    @Observable
+    protected TgVehicleMake setC8(final String c8) {
+        this.c8 = c8;
+        return this;
+    }
+
+    public String getC8() {
+        return c8;
+    }
+
 }

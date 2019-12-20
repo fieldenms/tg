@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import java.util.Objects;
 import java.util.Set;
+import java.util.SortedSet;
 
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.stage2.elements.operands.Expression2;
@@ -12,15 +13,16 @@ public class Child implements Comparable<Child> {
     final AbstractPropInfo<?> main;
     final QrySource2BasedOnPersistentType source;
     final boolean required;
-    public final Set<Child> items;
+    public final SortedSet<Child> items;
     final String fullPath; //not null if given child represents explicit prop that needs resolution 
     final String context; //indicates context for table being joined within main (explicit) table (aka dot.notation being resolved by joining this table)
 
     final Expression2 expr;
-    final Set<Child> dependencies;
+    public final Set<Child> dependencies;
     final IQrySource2<?> parentSource;
+    final int id;
     
-    public Child(final AbstractPropInfo<?> main, final Set<Child> items, final String fullPath, final String context, final boolean required, final QrySource2BasedOnPersistentType source, final Expression2 expr, final IQrySource2<?> parentSource, final Set<Child> dependencies) {
+    public Child(final AbstractPropInfo<?> main, final SortedSet<Child> items, final String fullPath, final String context, final boolean required, final QrySource2BasedOnPersistentType source, final Expression2 expr, final IQrySource2<?> parentSource, final Set<Child> dependencies, final int id) {
         this.main = main;
         this.items = items;
         this.fullPath = fullPath;
@@ -30,6 +32,7 @@ public class Child implements Comparable<Child> {
         this.parentSource = parentSource;
         this.expr = expr;
         this.dependencies = dependencies;
+        this.id = id;
     }
     
     @Override
@@ -47,8 +50,7 @@ public class Child implements Comparable<Child> {
     
     @Override
     public String toString() {
-        return format("| %30s | %15s | %25s | %50s | %50s |", main, context, fullPath, parentSource, source) + 
-                (items.isEmpty() ? "" : "\n+child\n" + items.iterator().next());
+        return format("%3s| %30s | c=%20s | fp=%25s | %50s | %50s |", id, main, context, fullPath, parentSource, (source != null ? source : "none"));
     }
 
     @Override

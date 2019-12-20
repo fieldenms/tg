@@ -65,7 +65,7 @@ public class QrySource2BasedOnPersistentType extends AbstractElement2 implements
     
     @Override
     public String toString() {
-        return format("%20s %5s %25s", sourceType.getSimpleName(), contextId, subcontextId);
+        return format("%20s %5s %20s", sourceType.getSimpleName(), contextId, subcontextId);
     }
 
     @Override
