@@ -27,7 +27,7 @@ public abstract class AbstractWebResource extends ServerResource {
         init(context, request, response);
         deviceProvider.setDeviceProfile(deviceProfile = calculateDeviceProfile(request));
         if (dates instanceof DefaultDates) {
-            ((DefaultDates) dates).setClientTimeZone(request.getHeaders().getValues("Time-Zone"));
+            ((DefaultDates) dates).setRequestTimeZone(request.getHeaders().getValues("Time-Zone"));
         }
     }
 

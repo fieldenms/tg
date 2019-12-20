@@ -27,7 +27,7 @@ public class DefaultDates implements IDates {
     private static final String SERVER_TIME_ZONE_APPLIED = "Server time-zone will be used.";
     private final Logger logger = Logger.getLogger(getClass());
     private final boolean independentTimeZone;
-    private final ThreadLocal<DateTimeZone> clientTimeZone = new ThreadLocal<>();
+    private final ThreadLocal<DateTimeZone> requestTimeZone = new ThreadLocal<>();
     
     @Inject
     public DefaultDates(final @Named("independent.time.zone") boolean independentTimeZone) {
@@ -36,15 +36,15 @@ public class DefaultDates implements IDates {
     
     @Override
     public DateTimeZone timeZone() {
-        return independentTimeZone ? getDefault() : clientTimeZone.get() == null ? getDefault() : clientTimeZone.get();
+        return independentTimeZone ? getDefault() : requestTimeZone.get() == null ? getDefault() : requestTimeZone.get();
     }
     
-    public void setClientTimeZone(final String timeZoneString) {
+    public void setRequestTimeZone(final String timeZoneString) {
         if (!isEmpty(timeZoneString)) {
             // in case where multiple 'Time-Zone' headers have been returned, just use the first one; this is for additional safety if official 'Time-Zone' header will appear in future
-            final String timeZoneId = timeZoneString.contains(",") ? timeZoneString.split(",")[0] : timeZoneString.trim(); // ',' is not a special character in reg expressions, no need to escape it
+            final String timeZoneId = timeZoneString.contains(",") ? timeZoneString.trim().split(",")[0] : timeZoneString.trim(); // ',' is not a special character in reg expressions, no need to escape it
             try {
-                clientTimeZone.set(forID(timeZoneId));
+                requestTimeZone.set(forID(timeZoneId));
             } catch (final IllegalArgumentException ex) {
                 logger.error(format("Unknown client time-zone [%s]. %s", timeZoneId, SERVER_TIME_ZONE_APPLIED), ex);
             }
@@ -56,8 +56,8 @@ public class DefaultDates implements IDates {
     
     @Override
     public DateTime now() {
-        if (clientTimeZone.get() != null) {
-            final DateTime nowInClientTimeZone = new DateTime(clientTimeZone.get());
+        if (requestTimeZone.get() != null) {
+            final DateTime nowInClientTimeZone = new DateTime(requestTimeZone.get());
             return independentTimeZone ? nowInClientTimeZone.withZoneRetainFields(getDefault()) : nowInClientTimeZone;
         } else {
             return new DateTime(); // now in server time-zone; used as a fallback where no time-zone was used.
@@ -77,6 +77,10 @@ public class DefaultDates implements IDates {
     @Override
     public String toString(final Date date) {
         return toString(zoned(date));
+    }
+    
+    DateTimeZone requestTimeZone() {
+        return requestTimeZone.get();
     }
     
 }

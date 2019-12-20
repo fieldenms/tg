@@ -34,7 +34,7 @@ public interface IDates {
     }
     
     /**
-     * Creates zoned representation for <code>date</code> moment in time in user's time-zone.
+     * Creates zoned representation for <code>date</code> moment in user's time-zone.
      * 
      * @param date
      * @return
