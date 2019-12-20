@@ -32,6 +32,16 @@ public final class StringConverter {
         return dateTime.dayOfWeek().getAsText();
     }
 
+    /**
+     * Converts integer number representing a day of week to a string representation.
+     *
+     * @param dayOfWeek -- one of the DateTimeConstants constants
+     * @return a string representation of the day of week
+     */
+    public static final String toDayOfWeek(final int dayOfWeek) {
+        return toDayOfWeek(new DateTime().dayOfWeek().setCopy(dayOfWeek));
+    }
+
     public static final Money toMoney(final String amount) {
         return new Money(amount);
     }
