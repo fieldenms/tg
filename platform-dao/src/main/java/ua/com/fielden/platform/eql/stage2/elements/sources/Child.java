@@ -14,19 +14,22 @@ public class Child implements Comparable<Child> {
     final QrySource2BasedOnPersistentType source;
     final boolean required;
     public final SortedSet<Child> items;
+    
     final String fullPath; //not null if given child represents explicit prop that needs resolution 
-    final String context; //indicates context for table being joined within main (explicit) table (aka dot.notation being resolved by joining this table)
+    final IQrySource2<?> parentSource;
+
+    //final String context; //indicates context for table being joined within main (explicit) table (aka dot.notation being resolved by joining this table)
+    
 
     final Expression2 expr;
     public final Set<Child> dependencies;
-    final IQrySource2<?> parentSource;
+
     final int id;
     
-    public Child(final AbstractPropInfo<?> main, final SortedSet<Child> items, final String fullPath, final String context, final boolean required, final QrySource2BasedOnPersistentType source, final Expression2 expr, final IQrySource2<?> parentSource, final Set<Child> dependencies, final int id) {
+    public Child(final AbstractPropInfo<?> main, final SortedSet<Child> items, final String fullPath, final boolean required, final QrySource2BasedOnPersistentType source, final Expression2 expr, final IQrySource2<?> parentSource, final Set<Child> dependencies, final int id) {
         this.main = main;
         this.items = items;
         this.fullPath = fullPath;
-        this.context = context;
         this.required = required;
         this.source = source;
         this.parentSource = parentSource;
@@ -50,7 +53,7 @@ public class Child implements Comparable<Child> {
     
     @Override
     public String toString() {
-        return format("%3s| %30s | c=%20s | fp=%25s | %50s | %50s |", id, main, context, fullPath, parentSource, (source != null ? source : "none"));
+        return format("%3s| %30s | fp=%25s | %50s | %50s |", id, main, /*context, */fullPath, parentSource, (source != null ? source : "none"));
     }
 
     @Override
@@ -67,13 +70,18 @@ public class Child implements Comparable<Child> {
         
         return Objects.equals(main, other.main) && Objects.equals(items, other.items) && Objects.equals(fullPath, other.fullPath) && Objects.equals(source, other.source) && Objects.equals(parentSource, other.parentSource) && Objects.equals(dependencies, other.dependencies);
     }
-
+    
     private boolean dependsOn(final Child child) {
         return dependencies.contains(child) || dependencies.stream().anyMatch(c -> c.dependsOn(child));
     }
     
     @Override
     public int compareTo(final Child o) {
-        return dependsOn(o) ? 1 : context.compareTo(o.context);
+        return dependsOn(o) ? 1 : (o.dependsOn(this) ? -1 : main.name.equals(o.main.name) ? (id > o.id ? 1 : -1) : (expr != null && o.expr != null || expr == null && o.expr == null ? main.name.compareTo(o.main.name) : (expr != null && o.expr == null ? 1 : -1)));
+    }
+    
+    public static void main(String[] args) {
+        System.out.println("key".compareTo("desc"));
+        System.out.println("desc".compareTo("key"));
     }
 }

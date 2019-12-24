@@ -127,7 +127,7 @@ public class PathsToTreeTransformator {
         final T2<SortedSet<Child>, Map<IQrySource2<?>, SortedSet<Child>>> genRes = generateChildren(source, contextId, next._2, newContext, domainInfo, contextParentSource);
         final SortedSet<Child> children = genRes._1;
         other.putAll(genRes._2);
-        final Child child = new Child(propInfo, children, next._1, childContext, required, source, expr2, contextParentSource, dependencies, next()); 
+        final Child child = new Child(propInfo, children, next._1, required, source, expr2, contextParentSource, dependencies, next()); 
         System.out.println("\n--------------------\n" + child);
         if (!child.dependencies.isEmpty()) {
             System.out.println(" +deps:");

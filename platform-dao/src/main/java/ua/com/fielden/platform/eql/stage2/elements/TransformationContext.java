@@ -26,6 +26,41 @@ public class TransformationContext {
     public TransformationContext(final Map<String, Table> tables, final PropsResolutionContext context) {
         this.tables.putAll(tables);
         this.sourceChildren.putAll(transform(context.getResolvedProps(), context.getDomainInfo()));
+        System.out.println("-======================================");
+        for (final Entry<IQrySource2<?>, SortedSet<Child>> el : sourceChildren.entrySet()) {
+            System.out.println("\n source: " + el.getKey() + "\n");
+            for (final Child c : el.getValue()) {
+                System.out.println("++++++++++++++++");
+                System.out.println(c);
+                if (!c.dependencies.isEmpty()) {
+                    System.out.println(" +deps:");
+                    for (final Child d : c.dependencies) {
+                        System.out.println(d);
+                    }
+                    
+                }
+                if (!c.items.isEmpty()) {
+                    System.out.println(" +children:");
+                    for (final Child c1 : c.items) {
+                        System.out.println(c1);
+                        if (!c1.dependencies.isEmpty()) {
+                            System.out.println(" ++deps:");
+                            for (final Child d : c1.dependencies) {
+                                System.out.println(d);
+                            }
+                            
+                        }
+                        
+                        
+                        
+                        
+                        
+                        
+                    }
+                    
+                }
+            }
+        }
     }
 
     private TransformationContext() {
