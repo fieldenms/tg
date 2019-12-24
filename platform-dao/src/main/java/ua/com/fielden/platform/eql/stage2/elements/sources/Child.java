@@ -10,18 +10,18 @@ import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.stage2.elements.operands.Expression2;
 
 public class Child implements Comparable<Child> {
-    final AbstractPropInfo<?> main;
-    final QrySource2BasedOnPersistentType source;
-    final boolean required;
+    public final AbstractPropInfo<?> main;
+    public final QrySource2BasedOnPersistentType source;
+    public final boolean required;
     public final SortedSet<Child> items;
     
-    final String fullPath; //not null if given child represents explicit prop that needs resolution 
-    final IQrySource2<?> parentSource;
+    public final String fullPath; //not null if given child represents explicit prop that needs resolution 
+    public final IQrySource2<?> parentSource;
 
     //final String context; //indicates context for table being joined within main (explicit) table (aka dot.notation being resolved by joining this table)
     
 
-    final Expression2 expr;
+    public final Expression2 expr;
     public final Set<Child> dependencies;
 
     final int id;
@@ -80,7 +80,7 @@ public class Child implements Comparable<Child> {
         return dependsOn(o) ? 1 : (o.dependsOn(this) ? -1 : main.name.equals(o.main.name) ? (id > o.id ? 1 : -1) : (expr != null && o.expr != null || expr == null && o.expr == null ? main.name.compareTo(o.main.name) : (expr != null && o.expr == null ? 1 : -1)));
     }
     
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         System.out.println("key".compareTo("desc"));
         System.out.println("desc".compareTo("key"));
     }

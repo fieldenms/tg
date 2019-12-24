@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage2.elements.sources;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -11,13 +12,13 @@ public class ChildGroup {
     final AbstractPropInfo<?> main;
     final QrySource2BasedOnPersistentType source;
     final boolean required;
-    final Set<ChildGroup> items;
+    final List<ChildGroup> items;
     
     final Set<T2<String, IQrySource2<?>>> paths;
     
     final Expression2 expr;
     
-    public ChildGroup(final AbstractPropInfo<?> main, final Set<ChildGroup> items, final Set<T2<String, IQrySource2<?>>> paths, final boolean required, final QrySource2BasedOnPersistentType source, final Expression2 expr) {
+    public ChildGroup(final AbstractPropInfo<?> main, final List<ChildGroup> items, final Set<T2<String, IQrySource2<?>>> paths, final boolean required, final QrySource2BasedOnPersistentType source, final Expression2 expr) {
         this.main = main;
         this.items = items;
         this.required = required;

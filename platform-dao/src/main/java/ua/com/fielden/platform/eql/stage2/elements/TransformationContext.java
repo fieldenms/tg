@@ -1,17 +1,24 @@
 package ua.com.fielden.platform.eql.stage2.elements;
 
 import static java.lang.String.format;
-import static java.util.Collections.emptySet;
+import static java.util.Collections.emptyList;
 import static ua.com.fielden.platform.eql.stage2.elements.PathsToTreeTransformator.transform;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.TreeSet;
 
+import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.elements.sources.Child;
+import ua.com.fielden.platform.eql.stage2.elements.sources.ChildGroup;
 import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
 import ua.com.fielden.platform.eql.stage3.elements.Table;
 import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySource3;
@@ -20,47 +27,88 @@ import ua.com.fielden.platform.types.tuples.T2;
 public class TransformationContext {
 
     private final Map<String, Table> tables = new HashMap<>();
-    private final Map<IQrySource2<?>, SortedSet<Child>> sourceChildren = new HashMap<>();
+    //private final Map<IQrySource2<?>, SortedSet<Child>> sourceChildren = new HashMap<>();
+    private final Map<IQrySource2<?>, List<ChildGroup>> sourceChildren = new HashMap<>();
     private final Map<IQrySource2<?>, Map<String, T2<IQrySource3, Object>>> resolutions = new HashMap<>();
 
-    public TransformationContext(final Map<String, Table> tables, final PropsResolutionContext context) {
-        this.tables.putAll(tables);
-        this.sourceChildren.putAll(transform(context.getResolvedProps(), context.getDomainInfo()));
-        System.out.println("-======================================");
-        for (final Entry<IQrySource2<?>, SortedSet<Child>> el : sourceChildren.entrySet()) {
-            System.out.println("\n source: " + el.getKey() + "\n");
-            for (final Child c : el.getValue()) {
-                System.out.println("++++++++++++++++");
-                System.out.println(c);
-                if (!c.dependencies.isEmpty()) {
-                    System.out.println(" +deps:");
-                    for (final Child d : c.dependencies) {
-                        System.out.println(d);
-                    }
-                    
-                }
-                if (!c.items.isEmpty()) {
-                    System.out.println(" +children:");
-                    for (final Child c1 : c.items) {
-                        System.out.println(c1);
-                        if (!c1.dependencies.isEmpty()) {
-                            System.out.println(" ++deps:");
-                            for (final Child d : c1.dependencies) {
-                                System.out.println(d);
-                            }
-                            
-                        }
-                        
-                        
-                        
-                        
-                        
-                        
-                    }
-                    
-                }
+    private List<ChildGroup> convertToGroup(final SortedSet<Child> children) {
+        final List<ChildGroup> result = new ArrayList<>();
+        final List<AbstractPropInfo<?>> items = new ArrayList<>();
+        final Map<AbstractPropInfo<?>, Set<Child>> map = new HashMap<>();
+        
+        for (final Child child : children) {
+            if (items.contains(child.main)) {
+                map.get(child.main).add(child);
+            } else {
+                items.add(child.main);
+                final Set<Child> itemChildren = new HashSet<>();
+                itemChildren.add(child);
+                map.put(child.main, itemChildren);
             }
         }
+        
+        for (final AbstractPropInfo<?> item : items) {
+            final Child first = map.get(item).iterator().next();
+            final SortedSet<Child> mergedItems = new TreeSet<>();
+            
+            final Set<T2<String, IQrySource2<?>>> groupPaths = new HashSet<>();
+            
+            for (final Child c : map.get(item)) {
+                mergedItems.addAll(c.items);
+                if (c.fullPath != null) {
+                    groupPaths.add(t2(c.fullPath, c.parentSource));    
+                }
+                
+            }
+            final List<ChildGroup> groupItems = convertToGroup(mergedItems);
+            result.add(new ChildGroup(item, groupItems, groupPaths, first.required, first.source, first.expr));
+        }   
+        
+        
+        return result;
+    }
+    
+    public TransformationContext(final Map<String, Table> tables, final PropsResolutionContext context) {
+        this.tables.putAll(tables);
+        for (final Entry<IQrySource2<?>, SortedSet<Child>> el : transform(context.getResolvedProps(), context.getDomainInfo()).entrySet()) {
+            this.sourceChildren.put(el.getKey(), convertToGroup(el.getValue()));
+        }
+//        this.sourceChildren.putAll(transform(context.getResolvedProps(), context.getDomainInfo()));
+//        System.out.println("-======================================");
+//        for (final Entry<IQrySource2<?>, SortedSet<Child>> el : sourceChildren.entrySet()) {
+//            System.out.println("\n source: " + el.getKey() + "\n");
+//            for (final Child c : el.getValue()) {
+//                System.out.println("++++++++++++++++");
+//                System.out.println(c);
+//                if (!c.dependencies.isEmpty()) {
+//                    System.out.println(" +deps:");
+//                    for (final Child d : c.dependencies) {
+//                        System.out.println(d);
+//                    }
+//                    
+//                }
+//                if (!c.items.isEmpty()) {
+//                    System.out.println(" +children:");
+//                    for (final Child c1 : c.items) {
+//                        System.out.println(c1);
+//                        if (!c1.dependencies.isEmpty()) {
+//                            System.out.println(" ++deps:");
+//                            for (final Child d : c1.dependencies) {
+//                                System.out.println(d);
+//                            }
+//                            
+//                        }
+//                        
+//                        
+//                        
+//                        
+//                        
+//                        
+//                    }
+//                    
+//                }
+//            }
+//        }
     }
 
     private TransformationContext() {
@@ -70,9 +118,9 @@ public class TransformationContext {
         return tables.get(sourceFullClassName);
     }
 
-    public Set<Child> getSourceChildren(final IQrySource2<?> source) {
-        final Set<Child> result = sourceChildren.get(source);
-        return result != null ? result : emptySet();
+    public List<ChildGroup> getSourceChildren(final IQrySource2<?> source) {
+        final List<ChildGroup> result = sourceChildren.get(source);
+        return result != null ? result : emptyList();
     }
 
     public TransformationContext cloneWithResolutions(final T2<String, IQrySource2<?>> sr1, final T2<IQrySource3, Object> sr2) {

@@ -9,7 +9,6 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
@@ -58,13 +57,19 @@ public class Sources2 {
         return attachChildren(source, context.getSourceChildren(source2), context);
     }
     
-    private T2<IQrySources3, TransformationContext> attachChildren(final IQrySource3 source, final Set<Child> children, final TransformationContext context) {
+    private T2<IQrySources3, TransformationContext> attachChildren(final IQrySource3 source, final List<ChildGroup> children, final TransformationContext context) {
         IQrySources3 currMainSources = new SingleQrySource3(source);
         TransformationContext currentContext = context;
-        for (final Child fc : children) {
-            if (fc.fullPath != null) {
-                currentContext = currentContext.cloneWithResolutions(t2(fc.fullPath, fc.parentSource), t2(source, fc.expr == null ? fc.main.name : fc.expr));
+        for (final ChildGroup fc : children) {
+            if (!fc.paths.isEmpty()) {
+                for (final T2<String, IQrySource2<?>> el : fc.paths) {
+                    currentContext = currentContext.cloneWithResolutions(t2(el._1, el._2), t2(source, fc.expr == null ? fc.main.name : fc.expr));
+                }
             }
+//            
+//            if (fc.fullPath != null) {
+//                currentContext = currentContext.cloneWithResolutions(t2(fc.fullPath, fc.parentSource), t2(source, fc.expr == null ? fc.main.name : fc.expr));
+//            }
 
             if (!fc.items.isEmpty()) {
                 final T2<IQrySources3, TransformationContext> res = attachChild(currMainSources, source, fc, currentContext);
@@ -76,7 +81,7 @@ public class Sources2 {
         return t2(currMainSources, currentContext);
     }
     
-    private T2<IQrySources3, TransformationContext> attachChild(final IQrySources3 mainSources, final IQrySource3 rootSource, final Child child, final TransformationContext context) {
+    private T2<IQrySources3, TransformationContext> attachChild(final IQrySources3 mainSources, final IQrySource3 rootSource, final ChildGroup child, final TransformationContext context) {
         final TransformationContext currentContext = context;
         //final Table tbl = context.getTable(child.main.javaType().getName());
         final QrySource3BasedOnTable addedSource = child.source.transform(currentContext).item;//new QrySource3BasedOnTable(tbl, rootSource.contextId(), child.context);
