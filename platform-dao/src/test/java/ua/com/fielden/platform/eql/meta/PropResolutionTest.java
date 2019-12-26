@@ -52,6 +52,9 @@ import ua.com.fielden.platform.eql.stage2.elements.sources.CompoundSource2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.QrySource2BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage2.elements.sources.Sources2;
 import ua.com.fielden.platform.eql.stage3.elements.operands.EntQuery3;
+import ua.com.fielden.platform.sample.domain.TeVehicle;
+import ua.com.fielden.platform.sample.domain.TeVehicleMake;
+import ua.com.fielden.platform.sample.domain.TeVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.TgAuthorRoyalty;
 import ua.com.fielden.platform.sample.domain.TgAuthorship;
@@ -59,13 +62,9 @@ import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgEntityWithLoopedCalcProps;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
 import ua.com.fielden.platform.sample.domain.TgPersonName;
-import ua.com.fielden.platform.sample.domain.TgVehicle;
-import ua.com.fielden.platform.sample.domain.TgVehicleMake;
-import ua.com.fielden.platform.sample.domain.TgVehicleModel;
-import ua.com.fielden.platform.sample.domain.TgVehicleModelWithCalc;
 import ua.com.fielden.platform.sample.domain.TgWorkshop;
 
-public class PropResolutionTest extends BaseEntQueryTCase1 {
+public class PropResolutionTest extends EqlTestCase {
     
     private static final GroupBys2 emptyGroupBys2 = new GroupBys2(emptyList());
     private static final OrderBys2 emptyOrderBys2 = new OrderBys2(emptyList());
@@ -100,7 +99,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     
     @Test
     public void prop_paths_are_correctly_resolved() {
-        final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).where().
+        final EntityResultQueryModel<TeVehicle> qry = select(VEHICLE).where().
                 anyOfProps("initDate", "station.name", "station.parent.name", "replacedBy.initDate").isNotNull().model();
         
         final TransformationResult<EntQuery2> a = transform(qry);
@@ -118,7 +117,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     
     @Test
     public void prop_paths_without_aliases_with_aliased_source_are_correctly_resolved() {
-        final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).as("v").where().
+        final EntityResultQueryModel<TeVehicle> qry = select(VEHICLE).as("v").where().
                 anyOfProps("initDate", "station.name", "station.parent.name", "replacedBy.initDate").isNotNull().model();
         
         final TransformationResult<EntQuery2> a = transform(qry);
@@ -136,7 +135,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
 
     @Test
     public void prop_paths_with_some_aliases_with_aliased_source_are_correctly_resolved() {
-        final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).as("v").where().
+        final EntityResultQueryModel<TeVehicle> qry = select(VEHICLE).as("v").where().
                 anyOfProps("v.initDate", "station.name", "station.parent.name", "v.replacedBy.initDate").isNotNull().model();
         
         final TransformationResult<EntQuery2> a = transform(qry);
@@ -154,7 +153,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
     
     @Test
     public void prop_paths_in_qry_with_two_sources_are_correctly_resolved() {
-        final EntityResultQueryModel<TgVehicle> qry = select(VEHICLE).as("v").join(VEHICLE).as("rv").on().prop("v.replacedBy").eq().prop("rv.id").
+        final EntityResultQueryModel<TeVehicle> qry = select(VEHICLE).as("v").join(VEHICLE).as("rv").on().prop("v.replacedBy").eq().prop("rv.id").
                 where().anyOfProps("v.initDate", "rv.station.name", "v.station.parent.name", "rv.replacedBy.initDate").isNotNull().model();
         
         final TransformationResult<EntQuery2> a = transform(qry);
@@ -172,7 +171,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
 
     @Test
     public void test_q21_s1s2_() {
-        final EntityResultQueryModel<TgVehicleModel> qry = select(MODEL).where().prop("make.key").isNotNull().model();
+        final EntityResultQueryModel<TeVehicleModel> qry = select(MODEL).where().prop("make.key").isNotNull().model();
         
         
         final Sources1 sources1 = new Sources1(new QrySource1BasedOnPersistentType(MODEL, 1), emptyList());
@@ -187,7 +186,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
         final Sources2 sources = new Sources2(source, emptyList());
         final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
         final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
-        final EntProp2 makeProp2 = new EntProp2(source, 2, asList(pi(MODEL, "make"), pi(TgVehicleMake.class, "key")));
+        final EntProp2 makeProp2 = new EntProp2(source, 2, asList(pi(MODEL, "make"), pi(TeVehicleMake.class, "key")));
         firstAndConditionsGroup.add(new NullTest2(makeProp2, true));
         allConditions.add(firstAndConditionsGroup);
         final Conditions2 conditions = new Conditions2(false, allConditions);
@@ -202,7 +201,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
 
     @Test
     public void test_q21_s1s2() {
-        final EntityResultQueryModel<TgVehicleModel> qry = select(MODEL).where().prop("make").isNotNull().model();
+        final EntityResultQueryModel<TeVehicleModel> qry = select(MODEL).where().prop("make").isNotNull().model();
         
         
         final Sources1 sources1 = new Sources1(new QrySource1BasedOnPersistentType(MODEL, 1), emptyList());
@@ -388,7 +387,7 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
 
 //    @Test
 //    public void test_q212() {
-//        final EntityResultQueryModel<TgVehicleModelWithCalc> qry = select(TgVehicleModelWithCalc.class).where().prop("make").isNotNull().model();
+//        final EntityResultQueryModel<TeVehicleModelWithCalc> qry = select(TeVehicleModelWithCalc.class).where().prop("make").isNotNull().model();
 //        final EntQuery2 qry2 = entResultQry2(qry, new TransformatorToS2(metadata));
 //
 //
@@ -400,20 +399,20 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
 ////        final Conditions2 conditions = new Conditions2(false, allConditions);
 //
 ////        final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, new Yields2(), new GroupBys2(Collections.<GroupBy2> emptyList()), new OrderBys2(Collections.<OrderBy2> emptyList()));
-////        final EntQuery2 exp = new EntQuery2(parts, TgVehicleModelWithCalc.class, RESULT_QUERY, null);
+////        final EntQuery2 exp = new EntQuery2(parts, TeVehicleModelWithCalc.class, RESULT_QUERY, null);
 //
-//        final EntQuery2 vehicleModelSourceQry = entSourceQry(MetadataGenerator.createYieldAllQueryModel(TgVehicleModelWithCalc.class), new TransformatorToS2(metadata));
+//        final EntQuery2 vehicleModelSourceQry = entSourceQry(MetadataGenerator.createYieldAllQueryModel(TeVehicleModelWithCalc.class), new TransformatorToS2(metadata));
 //
-//        final QrySource2BasedOnPersistentTypeWithCalcProps source = new QrySource2BasedOnPersistentTypeWithCalcProps(TgVehicleModelWithCalc.class, vehicleModelSourceQry);
+//        final QrySource2BasedOnPersistentTypeWithCalcProps source = new QrySource2BasedOnPersistentTypeWithCalcProps(TeVehicleModelWithCalc.class, vehicleModelSourceQry);
 //        final Sources2 sources = new Sources2(source);
 //        final List<List<? extends ICondition2>> allConditions = new ArrayList<>();
 //        final List<ICondition2> firstAndConditionsGroup = new ArrayList<>();
-//        firstAndConditionsGroup.add(new NullTest2(new EntProp2("make", source, TgVehicleMake.class), true));
+//        firstAndConditionsGroup.add(new NullTest2(new EntProp2("make", source, TeVehicleMake.class), true));
 //        allConditions.add(firstAndConditionsGroup);
 //        final Conditions2 conditions = new Conditions2(false, allConditions);
 //
 //        final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, new GroupBys2(Collections.<GroupBy2> emptyList()), new OrderBys2(Collections.<OrderBy2> emptyList()));
-//        final EntQuery2 exp = new EntQuery2(parts, TgVehicleModelWithCalc.class, RESULT_QUERY, null);
+//        final EntQuery2 exp = new EntQuery2(parts, TeVehicleModelWithCalc.class, RESULT_QUERY, null);
 //        System.out.println(qry2.getSources().getMain().sourceType().equals(exp.getSources().getMain().sourceType()));
 //        System.out.println(qry2.getConditions().equals(exp.getConditions()));
 //        System.out.println(qry2.getGroups().equals(exp.getGroups()));
@@ -424,31 +423,6 @@ public class PropResolutionTest extends BaseEntQueryTCase1 {
 //    }
     
     
-    @Test
-    @Ignore
-    public void test_q212_copy() {
-        final EntityResultQueryModel<TgVehicleModelWithCalc> qry = select(TgVehicleModelWithCalc.class).where().prop("make").isNotNull().model();
-        final TransformationResult<EntQuery2> qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
-
-        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(TgVehicleModelWithCalc.class, metadata.get(TgVehicleModelWithCalc.class), null, 0);
-        final Sources2 sources = new Sources2(source, emptyList());
-        final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
-        final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
-        firstAndConditionsGroup.add(new NullTest2(new EntProp2(source, 1, asList(pi(TgVehicleModelWithCalc.class, "make"))), true));
-        allConditions.add(firstAndConditionsGroup);
-        final Conditions2 conditions = new Conditions2(false, allConditions);
-
-        final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
-        final EntQuery2 exp = new EntQuery2(parts, TgVehicleModelWithCalc.class, RESULT_QUERY);
-
-        System.out.println(qry2.item.conditions.equals(exp.conditions));
-        System.out.println(qry2.item.groups.equals(exp.groups));
-        System.out.println(qry2.item.yields.equals(exp.yields));
-        System.out.println(qry2.item.sources.equals(exp.sources));
-        System.out.println(qry2.item.orderings.equals(exp.orderings));
-        assertEquals(qry2.item, exp);
-    }
-
     @Test
     @Ignore
     public void test_q3() {

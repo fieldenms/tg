@@ -5,10 +5,10 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.eql.meta.BaseEntQueryTCase1;
-import ua.com.fielden.platform.sample.domain.TgVehicleModel;
+import ua.com.fielden.platform.eql.meta.EqlTestCase;
+import ua.com.fielden.platform.sample.domain.TeVehicleModel;
 
-public class QueryShortcutsTest extends BaseEntQueryTCase1 {
+public class QueryShortcutsTest extends EqlTestCase {
 
     //////////////////////////////////////////////////// ANY/ALL shortcuts ///////////////////////////////////////////
     @Test
@@ -64,7 +64,7 @@ public class QueryShortcutsTest extends BaseEntQueryTCase1 {
 
     @Test
     public void test_multiple_quantified_test() {
-        final EntityResultQueryModel<TgVehicleModel> vehModels = select(MODEL).model();
+        final EntityResultQueryModel<TeVehicleModel> vehModels = select(MODEL).model();
         assertModelsEquals(//
         select(VEHICLE).where().anyOfProps("key", "desc").eq().any(vehModels).model(), //
 

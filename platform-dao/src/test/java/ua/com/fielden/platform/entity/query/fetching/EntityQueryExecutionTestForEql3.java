@@ -7,10 +7,10 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.dao.IEntityAggregatesOperations;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
+import ua.com.fielden.platform.sample.domain.TeVehicle;
+import ua.com.fielden.platform.sample.domain.TeVehicleMake;
+import ua.com.fielden.platform.sample.domain.TeWorkOrder;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
-import ua.com.fielden.platform.sample.domain.TgVehicle;
-import ua.com.fielden.platform.sample.domain.TgVehicleMake;
-import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
 public class EntityQueryExecutionTestForEql3 extends AbstractDaoTestCase {
@@ -22,10 +22,10 @@ public class EntityQueryExecutionTestForEql3 extends AbstractDaoTestCase {
     
     @Test
     public void eql3_query_executes_correctly() {
-        final AggregatedResultQueryModel qry = select(TgVehicle.class).as("veh").leftJoin(TgVehicle.class).as("rbv").
+        final AggregatedResultQueryModel qry = select(TeVehicle.class).as("veh").leftJoin(TeVehicle.class).as("rbv").
                 on().prop("veh.replacedBy").eq().prop("rbv.id")./*or().prop("veh.replacedBy").ne().prop("rbv.id").*/
                 where().prop("veh.replacedBy").isNotNull().and().notExists(
-                        select(TgVehicle.class).where().prop("replacedBy").eq().extProp("veh.id").model()).
+                        select(TeVehicle.class).where().prop("replacedBy").eq().extProp("veh.id").model()).
                 yield().prop("veh.key").as("vehiclekey").
                 yield().prop("rbv.key").as("replacedByVehiclekey").
                 yield().caseWhen().prop("veh.key").eq().prop("rbv.key").then().prop("veh.key").otherwise().prop("rbv.key").endAsStr(5).as("cwts").
@@ -35,9 +35,9 @@ public class EntityQueryExecutionTestForEql3 extends AbstractDaoTestCase {
     
     @Test
     public void eql3_query_executes_correctly2() {
-        final AggregatedResultQueryModel qry = select(TgVehicle.class).as("veh").
+        final AggregatedResultQueryModel qry = select(TeVehicle.class).as("veh").
                 where().prop("veh.replacedBy").isNotNull().and().notExists(
-                        select(TgVehicle.class).where().prop("replacedBy").eq().extProp("veh.id").model()).
+                        select(TeVehicle.class).where().prop("replacedBy").eq().extProp("veh.id").model()).
                 yield().prop("veh.key").as("vehiclekey").
                 yield().prop("veh.replacedBy.key").as("replacedByVehiclekey").
                 yield().caseWhen().prop("veh.key").eq().prop("veh.replacedBy.key").then().prop("veh.key").otherwise().prop("veh.replacedBy.key").endAsStr(5).as("cwts").
@@ -48,7 +48,7 @@ public class EntityQueryExecutionTestForEql3 extends AbstractDaoTestCase {
     
     @Test
     public void eql3_query_executes_correctly3() {
-        final AggregatedResultQueryModel qry = select(TgVehicle.class).as("veh").
+        final AggregatedResultQueryModel qry = select(TeVehicle.class).as("veh").
                 join(TgOrgUnit1.class).as("st").on().prop("station.parent.parent.parent.parent").eq().prop("st.id").
                 where().anyOfProps("veh.key", "replacedBy.key", "initDate", "station.name", "station.parent.name", "st.key", "st.id", "model.make.key", "replacedBy.model.make.key").isNotNull().
                 yield().prop("veh.key").as("vehiclekey").
@@ -61,7 +61,7 @@ public class EntityQueryExecutionTestForEql3 extends AbstractDaoTestCase {
     
     @Test
     public void eql3_query_executes_correctly4() {
-        final AggregatedResultQueryModel qry = select(TgVehicle.class).as("veh").
+        final AggregatedResultQueryModel qry = select(TeVehicle.class).as("veh").
                 join(TgOrgUnit1.class).as("st").on().prop("station.parent.parent.parent.parent").eq().prop("st.id").
                 where().anyOfProps("veh.key", "replacedBy.key", "initDate", "station.name", "station.parent.name", "st.key", "st.id", "model.make.key", "replacedBy.model.make.key").isNotNull().
                 yield().prop("veh.key").as("vehicleKey").
@@ -76,7 +76,7 @@ public class EntityQueryExecutionTestForEql3 extends AbstractDaoTestCase {
 
     @Test
     public void eql3_query_executes_correctly5() {
-        final AggregatedResultQueryModel qry = select(TgVehicle.class).as("veh").
+        final AggregatedResultQueryModel qry = select(TeVehicle.class).as("veh").
                 join(TgOrgUnit1.class).as("st").on().prop("station.parent.parent.parent.parent").eq().prop("st.id").
                 where().anyOfProps("veh.key", "replacedBy.key", "initDate", "station.name", "station.parent.name", "st.key", "st.id", "model.make.key", "replacedBy.model.make.key").isNotNull().
                 yield().prop("veh.replacedBy").as("vehicle").
@@ -91,9 +91,9 @@ public class EntityQueryExecutionTestForEql3 extends AbstractDaoTestCase {
 
     @Test
     public void eql3_query_executes_correctly6() {
-        final AggregatedResultQueryModel qry = select(TgVehicle.class).as("veh").
+        final AggregatedResultQueryModel qry = select(TeVehicle.class).as("veh").
                 where().prop("veh.replacedBy").isNotNull().and().notExists(
-                        select(TgVehicle.class).where().prop("replacedBy").eq().extProp("veh.id").model()).
+                        select(TeVehicle.class).where().prop("replacedBy").eq().extProp("veh.id").model()).
                 yield().prop("veh.replacedBy").as("vehicle").
                 modelAsAggregate();
         
@@ -104,9 +104,9 @@ public class EntityQueryExecutionTestForEql3 extends AbstractDaoTestCase {
 
     @Test
     public void eql3_query_executes_correctly7() {
-        final AggregatedResultQueryModel qry = select(TgVehicle.class).as("veh").
+        final AggregatedResultQueryModel qry = select(TeVehicle.class).as("veh").
                 where().prop("veh.replacedBy").isNotNull().and().notExists(
-                        select(TgVehicle.class).where().prop("replacedBy").eq().extProp("veh.id").model()).
+                        select(TeVehicle.class).where().prop("replacedBy").eq().extProp("veh.id").model()).
                 yield().prop("veh.replacedBy").as("vehicle").
                 modelAsAggregate();
         
@@ -119,72 +119,72 @@ public class EntityQueryExecutionTestForEql3 extends AbstractDaoTestCase {
 
     @Test
     public void eql3_query_executes_correctly8() {
-        run(select(TgWorkOrder.class).where().prop("makeKey").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+        run(select(TeWorkOrder.class).where().prop("makeKey").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
     }
 
     @Test
     public void eql3_query_executes_correctly9() {
-        run(select(TgWorkOrder.class).where().prop("make.key").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+        run(select(TeWorkOrder.class).where().prop("make.key").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
     }
 
     @Test
     public void eql3_query_executes_correctly10() {
-        run(select(TgWorkOrder.class).where().anyOfProps("vehicle.makeKey").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+        run(select(TeWorkOrder.class).where().anyOfProps("vehicle.makeKey").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
     }
     
     @Test
     public void eql3_query_executes_correctly11() {
-        run(select(TgWorkOrder.class).where().anyOfProps("vehicle.makeKey2").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+        run(select(TeWorkOrder.class).where().anyOfProps("vehicle.makeKey2").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
     }
     
     @Test
     public void eql3_query_executes_correctly12() {
-        run(select(TgWorkOrder.class).where().anyOfProps("model.makeKey2").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+        run(select(TeWorkOrder.class).where().anyOfProps("model.makeKey2").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
     }
 
     @Test
     public void eql3_query_executes_correctly13() {
-        run(select(TgWorkOrder.class).where().anyOfProps("makeKey2").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+        run(select(TeWorkOrder.class).where().anyOfProps("makeKey2").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
     }
 
     @Test
     public void eql3_query_executes_correctly14() {
-        run(select(TgVehicle.class).where().anyOfProps("calcModel").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+        run(select(TeVehicle.class).where().anyOfProps("calcModel").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
     }
     
     @Test
     public void eql3_query_executes_correctly15() {
-        run(select(TgVehicleMake.class).where().anyOfProps("c7").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+        run(select(TeVehicleMake.class).where().anyOfProps("c7").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
     }
 
     @Test
     public void eql3_query_executes_correctly16() {
-        run(select(TgVehicleMake.class).where().anyOfProps("c6").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+        run(select(TeVehicleMake.class).where().anyOfProps("c6").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
     }
 
     @Test
     public void eql3_query_executes_correctly17() {
-        run(select(TgVehicleMake.class).where().anyOfProps("c3").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+        run(select(TeVehicleMake.class).where().anyOfProps("c3").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
     }
     
     @Test
     public void eql3_query_executes_correctly18() {
-        run(select(TgVehicleMake.class).where().anyOfProps("c8").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+        run(select(TeVehicleMake.class).where().anyOfProps("c8").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
     }
 
     @Test
     public void eql3_query_executes_correctly19() {
-        run(select(TgWorkOrder.class).where().anyOfProps("vehicle.makeKey", "vehicle.model.make.key").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+        run(select(TeWorkOrder.class).where().anyOfProps("vehicle.makeKey", "vehicle.model.make.key").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
     }
     
     @Test
     public void eql3_query_executes_correctly20() {
-        run(select(TgWorkOrder.class).where().anyOfProps("vehicle.modelKey", "vehicle.model.key").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+        run(select(TeWorkOrder.class).where().anyOfProps("vehicle.modelKey", "vehicle.model.key").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
     }
     
     @Test
     public void eql3_query_executes_correctly21() {
-        run(select(TgVehicle.class).where().anyOfProps("modelKey", "modelDesc").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+        run(select(TeVehicle.class).where().anyOfProps("modelKey", "modelDesc").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
     }
 }
 
