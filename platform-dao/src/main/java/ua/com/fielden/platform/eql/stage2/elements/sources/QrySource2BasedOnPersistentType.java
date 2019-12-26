@@ -15,7 +15,7 @@ public class QrySource2BasedOnPersistentType extends AbstractElement2 implements
     private final Class<? extends AbstractEntity<?>> sourceType;
     private final EntityInfo entityInfo;
     private final String alias;
-    private final String subcontextId;
+    public final String subcontextId;
 
     public QrySource2BasedOnPersistentType(final Class<? extends AbstractEntity<?>> sourceType, final EntityInfo entityInfo, final String alias, final int contextId, final String subcontextId) {
         super(contextId);

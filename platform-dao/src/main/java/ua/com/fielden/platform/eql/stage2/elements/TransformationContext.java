@@ -12,7 +12,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.SortedMap;
 import java.util.SortedSet;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
@@ -20,6 +22,7 @@ import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.elements.sources.Child;
 import ua.com.fielden.platform.eql.stage2.elements.sources.ChildGroup;
 import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
+import ua.com.fielden.platform.eql.stage2.elements.sources.QrySource2BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage3.elements.Table;
 import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySource3;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -35,15 +38,28 @@ public class TransformationContext {
         final List<ChildGroup> result = new ArrayList<>();
         final List<AbstractPropInfo<?>> items = new ArrayList<>();
         final Map<AbstractPropInfo<?>, Set<Child>> map = new HashMap<>();
+        final Map<AbstractPropInfo<?>, SortedMap<String, QrySource2BasedOnPersistentType>> mapSources = new HashMap<>();
         
         for (final Child child : children) {
             if (items.contains(child.main)) {
                 map.get(child.main).add(child);
+                if (child.source != null) {
+                    mapSources.get(child.main).put(child.source.subcontextId !=null ? child.source.subcontextId : "", child.source);
+                    //System.out.println(child.fullPath + " " + child.main.name + " " + mapSources.get(child.main).size());
+                }
+                
             } else {
                 items.add(child.main);
                 final Set<Child> itemChildren = new HashSet<>();
+                final SortedMap<String, QrySource2BasedOnPersistentType> itemSources = new TreeMap<>();
+
                 itemChildren.add(child);
+                if (child.source != null) {
+                    itemSources.put(child.source.subcontextId !=null ? child.source.subcontextId : "", child.source);    
+                }
+                
                 map.put(child.main, itemChildren);
+                mapSources.put(child.main, itemSources);
             }
         }
         
@@ -60,8 +76,9 @@ public class TransformationContext {
                 }
                 
             }
+            
             final List<ChildGroup> groupItems = convertToGroup(mergedItems);
-            result.add(new ChildGroup(item, groupItems, groupPaths, first.required, first.source, first.expr));
+            result.add(new ChildGroup(item, groupItems, groupPaths, first.required, mapSources.get(item).isEmpty() ? first.source : mapSources.get(item).entrySet().iterator().next().getValue(), first.expr));
         }   
         
         

@@ -129,7 +129,7 @@ public class TgVehicle extends AbstractEntity<String> {
     @IsProperty
     @Calculated
     private String makeKey3;
-    protected static final ExpressionModel makeKey3_ = expr().model(select(TgVehicleModel.class).where().prop("id").eq().extProp("model").yield().prop("model.makeKey2").modelAsPrimitive()).model();
+    protected static final ExpressionModel makeKey3_ = expr().model(select(TgVehicleModel.class).where().prop("id").eq().extProp("model").yield().prop("makeKey2").modelAsPrimitive()).model();
 
     @Observable
     protected TgVehicle setMakeKey3(final String makeKey3) {
