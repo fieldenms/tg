@@ -17,6 +17,7 @@ import graphql.language.BooleanValue;
 import graphql.language.Field;
 import graphql.language.FragmentDefinition;
 import graphql.language.FragmentSpread;
+import graphql.language.InlineFragment;
 import graphql.language.Selection;
 import graphql.language.SelectionSet;
 import graphql.language.Value;
@@ -125,6 +126,9 @@ public class RootEntityMixin {
                     final FragmentSpread fragmentSpread = (FragmentSpread) selection;
                     final FragmentDefinition fragmentDefinition = fragmentDefinitions.get(fragmentSpread.getName());
                     selectionFields.addAll(toFields(fragmentDefinition.getSelectionSet(), fragmentDefinitions));
+                } if (selection instanceof InlineFragment) {
+                    final InlineFragment inlineFragment = (InlineFragment) selection;
+                    selectionFields.addAll(toFields(inlineFragment.getSelectionSet(), fragmentDefinitions));
                 } else {
                     // TODO investigate what needs to be done here
                 }
