@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web_api;
 
 import java.util.List;
 import java.util.Map;
+
 import org.apache.log4j.Logger;
 
 import graphql.language.Field;
@@ -34,10 +35,10 @@ public class RootEntityFetcher implements DataFetcher {
             logger.error(String.format("\tSource [%s]", environment.getSource()));
             
             final List<Field> fields = environment.getFields();
-            // Source was defined in GraphQLQueryResource as "variables". So we can use it here to resolve variables
-            final Map<String, Object> variables = (Map<String, Object>) environment.getSource();
+            // Source was defined in GraphQLQueryResource as "variablesAndFragments".
+            final Map<String, Object> variablesAndFragments = (Map<String, Object>) environment.getSource();
             
-            final QueryExecutionModel queryModel = RootEntityMixin.generateQueryModelFrom(fields, variables, entityType);
+            final QueryExecutionModel queryModel = RootEntityMixin.generateQueryModelFrom(fields, variablesAndFragments, entityType);
             
             final IEntityDao<? extends AbstractEntity> co = coFinder.find(entityType);
             final List entities = co.getAllEntities(queryModel); // TODO fetch order etc.

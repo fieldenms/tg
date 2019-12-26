@@ -15,14 +15,16 @@ import org.apache.log4j.Logger;
 import graphql.language.Argument;
 import graphql.language.BooleanValue;
 import graphql.language.Field;
+import graphql.language.FragmentDefinition;
+import graphql.language.FragmentSpread;
 import graphql.language.Selection;
 import graphql.language.SelectionSet;
 import graphql.language.Value;
 import graphql.language.VariableReference;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -30,14 +32,16 @@ import ua.com.fielden.platform.utils.EntityUtils;
 public class RootEntityMixin {
     private static final Logger LOGGER = Logger.getLogger(RootEntityMixin.class);
     
-    public static QueryExecutionModel generateQueryModelFrom(final List<Field> fields, final Map<String, Object> variables, final Class<? extends AbstractEntity<?>> entityType, final QueryProperty... additionalQueryProperties) {
-        final List<Field> innerFieldsForEntityQuery = RootEntityMixin.toFields(fields.get(0).getSelectionSet()); // TODO fields could be empty? could contain more than one?
-        final LinkedHashMap<String, List<Argument>> properties = RootEntityMixin.properties(null, innerFieldsForEntityQuery);
+    public static QueryExecutionModel generateQueryModelFrom(final List<Field> fields, final Map<String, Object> variablesAndFragments, final Class<? extends AbstractEntity<?>> entityType, final QueryProperty... additionalQueryProperties) {
+        final Map<String, FragmentDefinition> fragmentDefinitions = (Map<String, FragmentDefinition>) variablesAndFragments.get("fragments");
+        final List<Field> innerFieldsForEntityQuery = RootEntityMixin.toFields(fields.get(0).getSelectionSet(), fragmentDefinitions); // TODO fields could be empty? could contain more than one?
+        final LinkedHashMap<String, List<Argument>> properties = RootEntityMixin.properties(null, innerFieldsForEntityQuery, fragmentDefinitions);
         
         final Map<String, QueryProperty> queryProperties = new LinkedHashMap<>();
         Arrays.asList(additionalQueryProperties).stream().forEach(queryProperty -> {
             queryProperties.put(queryProperty.getPropertyName(), queryProperty);
         });
+        final Map<String, Object> variables = (Map<String, Object>) variablesAndFragments.get("variables");
         for (final Map.Entry<String, List<Argument>> propertyAndArguments: properties.entrySet()) {
             final String propertyName = propertyAndArguments.getKey();
             final List<Argument> propertyArguments = propertyAndArguments.getValue();
@@ -69,7 +73,7 @@ public class RootEntityMixin {
             }
         }
         
-        final ICompleted<? extends AbstractEntity<?>> query = createQuery(entityType, new ArrayList<QueryProperty>(queryProperties.values()));
+        final ICompleted<? extends AbstractEntity<?>> query = createQuery(entityType, new ArrayList<>(queryProperties.values()));
         final EntityResultQueryModel eqlQuery = query.model();
         
         final fetch<? extends AbstractEntity> fetchModel = EntityUtils.fetchNotInstrumented(entityType).with(properties.keySet()).fetchModel();
@@ -97,26 +101,30 @@ public class RootEntityMixin {
         }
     }
     
-    private static LinkedHashMap<String, List<Argument>> properties(final String prefix, final List<Field> graphQLFields) {
+    private static LinkedHashMap<String, List<Argument>> properties(final String prefix, final List<Field> graphQLFields, final Map<String, FragmentDefinition> fragmentDefinitions) {
         final LinkedHashMap<String, List<Argument>> properties = new LinkedHashMap<>();
         for (final Field graphQLField: graphQLFields) {
             final List<Argument> args = graphQLField.getArguments();
             final String property = prefix == null ? graphQLField.getName() : prefix + "." + graphQLField.getName();
             properties.put(property, args);
             
-            properties.putAll(properties(property, toFields(graphQLField.getSelectionSet())));
+            properties.putAll(properties(property, toFields(graphQLField.getSelectionSet(), fragmentDefinitions), fragmentDefinitions));
         }
         LOGGER.error(String.format("\tFetching props [%s]", properties));
         return properties;
     }
 
-    private static List<Field> toFields(final SelectionSet selectionSet) {
+    private static List<Field> toFields(final SelectionSet selectionSet, final Map<String, FragmentDefinition> fragmentDefinitions) {
         final List<Field> selectionFields = new ArrayList<>();
         if (selectionSet != null) {
             final List<Selection> selections = selectionSet.getSelections();
             for (final Selection selection: selections) {
                 if (selection instanceof Field) {
                     selectionFields.add((Field) selection);
+                } if (selection instanceof FragmentSpread) {
+                    final FragmentSpread fragmentSpread = (FragmentSpread) selection;
+                    final FragmentDefinition fragmentDefinition = fragmentDefinitions.get(fragmentSpread.getName());
+                    selectionFields.addAll(toFields(fragmentDefinition.getSelectionSet(), fragmentDefinitions));
                 } else {
                     // TODO investigate what needs to be done here
                 }

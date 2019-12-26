@@ -1,9 +1,11 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.apache.log4j.Logger;
 import org.restlet.Context;
 import org.restlet.Request;
@@ -14,6 +16,10 @@ import org.restlet.resource.ServerResource;
 
 import graphql.ExecutionResult;
 import graphql.GraphQLError;
+import graphql.language.Definition;
+import graphql.language.Document;
+import graphql.language.FragmentDefinition;
+import graphql.parser.Parser;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web_api.GraphQLService;
 import ua.com.fielden.platform.web_api.Prettyfier;
@@ -58,7 +64,19 @@ public class GraphQLQueryResource extends ServerResource {
         logger.error("============ GraphQL Variables: ============");
         logger.error(variables);
         logger.error("============ GraphQL query+variables execute... ============");
-        final ExecutionResult execResult = graphQLService.graphQL.execute(queryString, operationName, variables /* this is our custom context = variables! */, variables);
+        
+        final Parser parser = new Parser();
+        Document document = null;
+        try {
+            document = parser.parseDocument(queryString);
+        } catch (final ParseCancellationException e) {
+        }
+        
+        final Map<String, Object> variablesAndFragments = new LinkedHashMap<>();
+        variablesAndFragments.put("variables", variables);
+        variablesAndFragments.put("fragments", createFragmentDefinitionsMap(document));
+        
+        final ExecutionResult execResult = graphQLService.graphQL.execute(queryString, operationName, variablesAndFragments /* this is our custom context = variables+fragments! */, variables);
         if (!execResult.getErrors().isEmpty()) {
             logger.error("============ GraphQL Errors: ============");
             for (final GraphQLError error: execResult.getErrors()) {
@@ -71,4 +89,18 @@ public class GraphQLQueryResource extends ServerResource {
         
         return restUtil.graphQLResultRepresentation(data, execResult.getErrors());
     }
+    
+    private static Map<String, FragmentDefinition> createFragmentDefinitionsMap(final Document document) {
+        final Map<String, FragmentDefinition> fragmentDefinitions = new LinkedHashMap<>();
+        if (document != null) {
+            for (final Definition definition: document.getDefinitions()) {
+                if (definition instanceof FragmentDefinition) {
+                    final FragmentDefinition fragmentDefinition = (FragmentDefinition) definition;
+                    fragmentDefinitions.put(fragmentDefinition.getName(), fragmentDefinition);
+                }
+            }
+        }
+        return fragmentDefinitions;
+    }
+    
 }
