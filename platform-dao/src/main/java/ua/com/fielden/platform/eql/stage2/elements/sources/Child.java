@@ -79,9 +79,4 @@ public class Child implements Comparable<Child> {
     public int compareTo(final Child o) {
         return dependsOn(o) ? 1 : (o.dependsOn(this) ? -1 : main.name.equals(o.main.name) ? (id > o.id ? 1 : -1) : (expr != null && o.expr != null || expr == null && o.expr == null ? main.name.compareTo(o.main.name) : (expr != null && o.expr == null ? 1 : -1)));
     }
-    
-    public static void main(final String[] args) {
-        System.out.println("key".compareTo("desc"));
-        System.out.println("desc".compareTo("key"));
-    }
 }

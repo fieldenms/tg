@@ -32,10 +32,8 @@ import ua.com.fielden.platform.types.Money;
 @Ignore
 @CompanionObject(ITeWorkOrder.class)
 public class TeWorkOrder extends AbstractEntity<String> {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty
-    @Title(value = "Vehicle", desc = "Vehicle under repair")
     @MapTo
     private TeVehicle vehicle;
     
@@ -44,75 +42,25 @@ public class TeWorkOrder extends AbstractEntity<String> {
     private TeVehicleModel vehicleModel;
     protected static final ExpressionModel vehicleModel_ = expr().prop("vehicle.model").model();
 
-    @Observable
-    protected TeWorkOrder setVehicleModel(final TeVehicleModel vehicleModel) {
-        this.vehicleModel = vehicleModel;
-        return this;
-    }
-
-    public TeVehicleModel getVehicleModel() {
-        return vehicleModel;
-    }
-
     @IsProperty
     @Calculated
     private String makeKey;
     protected static final ExpressionModel makeKey_ = expr().model(select(TeVehicle.class).where().prop("id").eq().extProp("vehicle").yield().prop("model.make.key").modelAsPrimitive()).model();
-
-    @Observable
-    protected TeWorkOrder setMakeKey(final String makeKey) {
-        this.makeKey = makeKey;
-        return this;
-    }
-
-    public String getMakeKey() {
-        return makeKey;
-    }
 
     @IsProperty
     @Calculated
     private String makeKey2;
     protected static final ExpressionModel makeKey2_ = expr().model(select(TeVehicle.class).where().prop("id").eq().extProp("vehicle").yield().prop("makeKey3").modelAsPrimitive()).model();
 
-    @Observable
-    protected TeWorkOrder setMakeKey2(final String makeKey2) {
-        this.makeKey2 = makeKey2;
-        return this;
-    }
-
-    public String getMakeKey2() {
-        return makeKey2;
-    }
-    
     @IsProperty
     @Calculated
     private TeVehicleMake make;
     protected static final ExpressionModel make_ = expr().model(select(TeVehicle.class).where().prop("id").eq().extProp("vehicle").yield().prop("model.make").modelAsEntity(TeVehicleMake.class)).model();
 
-    @Observable
-    protected TeWorkOrder setMake(final TeVehicleMake make) {
-        this.make = make;
-        return this;
-    }
-
-    public TeVehicleMake getMake() {
-        return make;
-    }
-
     @IsProperty
     @Calculated
     private TeVehicleModel model;
     protected static final ExpressionModel model_ = expr().model(select(TeVehicle.class).where().prop("id").eq().extProp("vehicle").yield().prop("model").modelAsEntity(TeVehicleModel.class)).model();
-
-    @Observable
-    protected TeWorkOrder setModel(final TeVehicleModel model) {
-        this.model = model;
-        return this;
-    }
-
-    public TeVehicleModel getModel() {
-        return model;
-    }
 
     @IsProperty
     @MapTo
@@ -332,5 +280,55 @@ public class TeWorkOrder extends AbstractEntity<String> {
     public TeWorkOrder setVehicle(final TeVehicle vehicle) {
         this.vehicle = vehicle;
         return this;
+    }
+    
+    @Observable
+    protected TeWorkOrder setVehicleModel(final TeVehicleModel vehicleModel) {
+        this.vehicleModel = vehicleModel;
+        return this;
+    }
+
+    public TeVehicleModel getVehicleModel() {
+        return vehicleModel;
+    }
+
+    @Observable
+    protected TeWorkOrder setMakeKey(final String makeKey) {
+        this.makeKey = makeKey;
+        return this;
+    }
+
+    public String getMakeKey() {
+        return makeKey;
+    }
+
+    @Observable
+    protected TeWorkOrder setMakeKey2(final String makeKey2) {
+        this.makeKey2 = makeKey2;
+        return this;
+    }
+
+    public String getMakeKey2() {
+        return makeKey2;
+    }
+    
+    @Observable
+    protected TeWorkOrder setMake(final TeVehicleMake make) {
+        this.make = make;
+        return this;
+    }
+
+    public TeVehicleMake getMake() {
+        return make;
+    }
+
+    @Observable
+    protected TeWorkOrder setModel(final TeVehicleModel model) {
+        this.model = model;
+        return this;
+    }
+
+    public TeVehicleModel getModel() {
+        return model;
     }
 }

@@ -15,7 +15,6 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Required;
-import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 
 @KeyType(String.class)
@@ -28,29 +27,13 @@ public class TeVehicleModel extends AbstractEntity<String> {
     @IsProperty
     @Required
     @MapTo
-    @Title(value = "Test vehicle model", desc = "Test vehicle model")
     private TeVehicleMake make;
     
     @IsProperty
-    @Title("Ordinary property")
-    private Integer ordinaryIntProp;
-
-    @IsProperty
     @Calculated
-    @Title(value = "Title", desc = "Desc")
     private String makeKey;
     protected static final ExpressionModel makeKey_ = expr().prop("make.key").model();
 
-    @Observable
-    protected TeVehicleModel setMakeKey(final String makeKey) {
-        this.makeKey = makeKey;
-        return this;
-    }
-
-    public String getMakeKey() {
-        return makeKey;
-    }
-    
     @IsProperty
     @Calculated
     private String makeKey2;
@@ -65,19 +48,7 @@ public class TeVehicleModel extends AbstractEntity<String> {
     public String getMakeKey2() {
         return makeKey2;
     }
-
-
     
-    @Observable
-    public TeVehicleModel setOrdinaryIntProp(final Integer ordinaryIntProp) {
-        this.ordinaryIntProp = ordinaryIntProp;
-        return this;
-    }
-
-    public Integer getOrdinaryIntProp() {
-        return ordinaryIntProp;
-    }
-
     @Observable
     public TeVehicleModel setMake(final TeVehicleMake make) {
         this.make = make;
@@ -88,9 +59,13 @@ public class TeVehicleModel extends AbstractEntity<String> {
         return make;
     }
 
-    /**
-     * Constructor for (@link EntityFactory}.
-     */
-    protected TeVehicleModel() {
+    @Observable
+    protected TeVehicleModel setMakeKey(final String makeKey) {
+        this.makeKey = makeKey;
+        return this;
+    }
+
+    public String getMakeKey() {
+        return makeKey;
     }
 }

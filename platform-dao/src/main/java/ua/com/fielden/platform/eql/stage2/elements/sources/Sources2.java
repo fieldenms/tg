@@ -66,10 +66,6 @@ public class Sources2 {
                     currentContext = currentContext.cloneWithResolutions(t2(el._1, el._2), t2(source, fc.expr == null ? fc.main.name : fc.expr));
                 }
             }
-//            
-//            if (fc.fullPath != null) {
-//                currentContext = currentContext.cloneWithResolutions(t2(fc.fullPath, fc.parentSource), t2(source, fc.expr == null ? fc.main.name : fc.expr));
-//            }
 
             if (!fc.items.isEmpty()) {
                 final T2<IQrySources3, TransformationContext> res = attachChild(currMainSources, source, fc, currentContext);

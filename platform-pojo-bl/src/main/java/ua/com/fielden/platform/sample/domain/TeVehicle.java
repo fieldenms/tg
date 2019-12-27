@@ -40,107 +40,35 @@ public class TeVehicle extends AbstractEntity<String> {
     private String makeKey;
     protected static final ExpressionModel makeKey_ = expr().prop("model.make.key").model();
 
-    @Observable
-    protected TeVehicle setMakeKey(final String makeKey) {
-        this.makeKey = makeKey;
-        return this;
-    }
-
-    public String getMakeKey() {
-        return makeKey;
-    }
-
+    @IsProperty
+    @Calculated
+    private String makeDesc;
+    protected static final ExpressionModel makeDesc_ = expr().prop("model.make.desc").model();
+    
     @IsProperty
     @Calculated
     private String modelKey;
     protected static final ExpressionModel modelKey_ = expr().prop("model.key").model();
-
-    @Observable
-    protected TeVehicle setModelKey(final String modelKey) {
-        this.modelKey = modelKey;
-        return this;
-    }
-
-    public String getModelKey() {
-        return modelKey;
-    }
 
     @IsProperty
     @Calculated
     private String modelDesc;
     protected static final ExpressionModel modelDesc_ = expr().prop("model.desc").model();
 
-    @Observable
-    protected TeVehicle setModelDesc(final String modelDesc) {
-        this.modelDesc = modelDesc;
-        return this;
-    }
-
-    public String getModelDesc() {
-        return modelDesc;
-    }
-
-    
     @IsProperty
     @Calculated
     private String stationKey;
     protected static final ExpressionModel stationKey_ = expr().prop("station.key").model();
-
-    @Observable
-    protected TeVehicle setStationKey(final String stationKey) {
-        this.stationKey = stationKey;
-        return this;
-    }
-
-    public String getStationKey() {
-        return stationKey;
-    }
-
-    @IsProperty
-    @Calculated
-    private String makeDesc;
-    protected static final ExpressionModel makeDesc_ = expr().prop("model.make.desc").model();
-
-    @Observable
-    protected TeVehicle setMakeDesc(final String makeDesc) {
-        this.makeDesc = makeDesc;
-        return this;
-    }
-
-    public String getMakeDesc() {
-        return makeDesc;
-    }
 
     @IsProperty
     @Calculated
     private String makeKey2;
     protected static final ExpressionModel makeKey2_ = expr().prop("model.makeKey").model();
 
-    @Observable
-    protected TeVehicle setMakeKey2(final String makeKey2) {
-        this.makeKey2 = makeKey2;
-        return this;
-    }
-
-    public String getMakeKey2() {
-        return makeKey2;
-    }
-    
     @IsProperty
     @Calculated
     private String makeKey3;
     protected static final ExpressionModel makeKey3_ = expr().model(select(TeVehicleModel.class).where().prop("id").eq().extProp("model").yield().prop("makeKey2").modelAsPrimitive()).model();
-
-    @Observable
-    protected TeVehicle setMakeKey3(final String makeKey3) {
-        this.makeKey3 = makeKey3;
-        return this;
-    }
-
-    public String getMakeKey3() {
-        return makeKey3;
-    }
-    
 
     @IsProperty
     @MapTo
@@ -267,19 +195,6 @@ public class TeVehicle extends AbstractEntity<String> {
     @IsProperty
     @Title(value = "Financial details", desc = "Fin Details")
     private TgVehicleFinDetails finDetails;
-
-    //   FIXME
-    //    @IsProperty @Calculated @Title("Calc Make")
-    //    private TgVehicleMake calcMake;
-    //    private static final ExpressionModel calcMake_ = expr().prop("model.make").model();
-
-    //    @IsProperty @Calculated(category = CalculatedPropertyCategory.AGGREGATED_EXPRESSION) @Title("Aggregated prop")
-    //    private BigDecimal aggregated;
-    //    private static final ExpressionModel aggregated_ = expr().sumOf().prop("purchasePrice.amount").model();
-    //  public BigDecimal getAggregated() {
-    //  return aggregated;
-    //  }
-
     
     @IsProperty
     @CritOnly
@@ -347,10 +262,6 @@ public class TeVehicle extends AbstractEntity<String> {
     public TeVehicleModel getCalcModel() {
         return calcModel;
     }
-
-    //    public TgVehicleMake getCalcMake() {
-    //  return calcMake;
-    //    }
 
     public Money getSumOfPrices() {
         return sumOfPrices;
@@ -536,5 +447,75 @@ public class TeVehicle extends AbstractEntity<String> {
     public TeVehicle setCalc6(final BigDecimal calc6) {
         this.calc6 = calc6;
         return this;
+    }
+    
+    @Observable
+    protected TeVehicle setMakeKey(final String makeKey) {
+        this.makeKey = makeKey;
+        return this;
+    }
+
+    public String getMakeKey() {
+        return makeKey;
+    }
+
+    @Observable
+    protected TeVehicle setModelKey(final String modelKey) {
+        this.modelKey = modelKey;
+        return this;
+    }
+
+    public String getModelKey() {
+        return modelKey;
+    }
+
+    @Observable
+    protected TeVehicle setModelDesc(final String modelDesc) {
+        this.modelDesc = modelDesc;
+        return this;
+    }
+
+    public String getModelDesc() {
+        return modelDesc;
+    }
+
+    @Observable
+    protected TeVehicle setStationKey(final String stationKey) {
+        this.stationKey = stationKey;
+        return this;
+    }
+
+    public String getStationKey() {
+        return stationKey;
+    }
+
+    @Observable
+    protected TeVehicle setMakeDesc(final String makeDesc) {
+        this.makeDesc = makeDesc;
+        return this;
+    }
+
+    public String getMakeDesc() {
+        return makeDesc;
+    }
+    
+    @Observable
+    protected TeVehicle setMakeKey2(final String makeKey2) {
+        this.makeKey2 = makeKey2;
+        return this;
+    }
+
+    public String getMakeKey2() {
+        return makeKey2;
+    }
+
+    @Observable
+    protected TeVehicle setMakeKey3(final String makeKey3) {
+        this.makeKey3 = makeKey3;
+        return this;
+    }
+
+    public String getMakeKey3() {
+        return makeKey3;
     }
 }

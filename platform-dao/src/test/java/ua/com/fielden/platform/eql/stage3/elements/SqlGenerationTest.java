@@ -149,7 +149,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
     @Test
     public void calc_prop_is_correctly_transformed_09() {
         // select(WORK_ORDER).
-        // where().anyOfProps("vehicleModel.key").isNotNull().model();
+        // where().anyOfProps("makeKey2").isNotNull().model();
         
         final QrySource1BasedOnPersistentType wo1 = source(WORK_ORDER);
         final Sources1 sources1 = sources(wo1);

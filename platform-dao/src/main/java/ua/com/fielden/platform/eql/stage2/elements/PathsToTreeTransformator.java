@@ -128,21 +128,21 @@ public class PathsToTreeTransformator {
         final SortedSet<Child> children = genRes._1;
         other.putAll(genRes._2);
         final Child child = new Child(propInfo, children, next._1, required, source, expr2, contextParentSource, dependencies, next()); 
-        System.out.println("\n--------------------\n" + child);
-        if (!child.dependencies.isEmpty()) {
-            System.out.println(" +deps:");
-            for (final Child d : child.dependencies) {
-                System.out.println(d);
-            }
-            
-        }
-        if (!child.items.isEmpty()) {
-            System.out.println(" +children:");
-            for (final Child c : child.items) {
-                System.out.println(c);
-            }
-            
-        }
+//        System.out.println("\n--------------------\n" + child);
+//        if (!child.dependencies.isEmpty()) {
+//            System.out.println(" +deps:");
+//            for (final Child d : child.dependencies) {
+//                System.out.println(d);
+//            }
+//            
+//        }
+//        if (!child.items.isEmpty()) {
+//            System.out.println(" +children:");
+//            for (final Child c : child.items) {
+//                System.out.println(c);
+//            }
+//            
+//        }
 
         result.add(child);
         return t2(result, other); 
