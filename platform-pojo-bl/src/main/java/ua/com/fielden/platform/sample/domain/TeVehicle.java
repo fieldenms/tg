@@ -68,7 +68,17 @@ public class TeVehicle extends AbstractEntity<String> {
     @IsProperty
     @Calculated
     private String makeKey3;
-    protected static final ExpressionModel makeKey3_ = expr().model(select(TeVehicleModel.class).where().prop("id").eq().extProp("model").yield().prop("makeKey2").modelAsPrimitive()).model();
+    protected static final ExpressionModel makeKey3_ = expr().model(select(TeVehicleModel.class).where().prop("id").eq().extProp("model").yield().prop("make.key").modelAsPrimitive()).model();
+
+    @IsProperty
+    @Calculated
+    private String makeKey4;
+    protected static final ExpressionModel makeKey4_ = expr().model(select(TeVehicleModel.class).where().prop("id").eq().extProp("model").yield().prop("makeKey").modelAsPrimitive()).model();
+
+    @IsProperty
+    @Calculated
+    private String makeKey5;
+    protected static final ExpressionModel makeKey5_ = expr().model(select(TeVehicleModel.class).where().prop("id").eq().extProp("model").yield().prop("makeKey2").modelAsPrimitive()).model();
 
     @IsProperty
     @MapTo
@@ -518,4 +528,25 @@ public class TeVehicle extends AbstractEntity<String> {
     public String getMakeKey3() {
         return makeKey3;
     }
+    
+    @Observable
+    protected TeVehicle setMakeKey4(final String makeKey4) {
+        this.makeKey4 = makeKey4;
+        return this;
+    }
+
+    public String getMakeKey4() {
+        return makeKey4;
+    }
+
+    @Observable
+    protected TeVehicle setMakeKey5(final String makeKey5) {
+        this.makeKey5 = makeKey5;
+        return this;
+    }
+
+    public String getMakeKey5() {
+        return makeKey5;
+    }
+
 }
