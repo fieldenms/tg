@@ -77,6 +77,15 @@ public class TransformationContext {
                 
             }
             
+            if (!mapSources.get(item).isEmpty() && mapSources.get(item).entrySet().size() > 1) {
+                System.out.println("----------------------- 1 -----------");
+                for (final Entry<String, QrySource2BasedOnPersistentType> t2 : mapSources.get(item).entrySet()) {
+                    System.out.println("--- " + t2.getKey());
+                }
+                
+                System.out.println("----------------------- 2 -----------");
+            }
+            
             final List<ChildGroup> groupItems = convertToGroup(mergedItems);
             result.add(new ChildGroup(item, groupItems, groupPaths, first.required, mapSources.get(item).isEmpty() ? first.source : mapSources.get(item).entrySet().iterator().next().getValue(), first.expr));
         }   
