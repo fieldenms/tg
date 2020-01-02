@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.stage3.elements;
 
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.DbVersion.H2;
@@ -28,10 +29,9 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         // where().anyOfProps("vehicle.makeKey", "vehicle.model.make.key").isNotNull().model();
         
         final QrySource1BasedOnPersistentType wo1 = source(WORK_ORDER);
-        final Sources1 sources1 = sources(wo1);
         final Conditions1 conditions1 = conditions(isNotNull(prop("vehicle.makeKey")), or(isNotNull(prop("vehicle.model.make.key"))));
 
-        final EntQuery3 actQry = query(sources1, conditions1, WORK_ORDER);
+        final EntQuery3 actQry = query(sources(wo1), conditions1, WORK_ORDER);
         
         final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
         final QrySource3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
@@ -65,10 +65,9 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         // where().anyOfProps("vehicle.modelKey", "vehicle.model.key").isNotNull().model();
         
         final QrySource1BasedOnPersistentType wo1 = source(WORK_ORDER);
-        final Sources1 sources1 = sources(wo1);
         final Conditions1 conditions1 = conditions(isNotNull(prop("vehicle.modelKey")), or(isNotNull(prop("vehicle.model.key"))));
 
-        final EntQuery3 actQry = query(sources1, conditions1, WORK_ORDER);
+        final EntQuery3 actQry = query(sources(wo1), conditions1, WORK_ORDER);
         
         final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
         final QrySource3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
@@ -97,7 +96,6 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         // where().anyOfProps("makeKey2").isNotNull().model();
         
         final QrySource1BasedOnPersistentType wo1 = source(WORK_ORDER);
-        final Sources1 sources1 = sources(wo1);
         final Conditions1 conditions1 = conditions(isNotNull(prop("makeKey2")));
         
         //protected static final ExpressionModel TgWorkOrder.makeKey2_ = expr().model(select(TgVehicle.class).where().prop("id").eq().extProp("vehicle").yield().prop("makeKey3").modelAsPrimitive()).model();
@@ -105,7 +103,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         //protected static final ExpressionModel makeKey2_ = expr().model(select(TgVehicleMake.class).where().prop("id").eq().extProp("make").yield().prop(KEY).modelAsPrimitive()).model();
 
 
-        final EntQuery3 actQry = query(sources1, conditions1, WORK_ORDER);
+        final EntQuery3 actQry = query(sources(wo1), conditions1, WORK_ORDER);
         
         final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
         final QrySource3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
@@ -136,10 +134,9 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         
         final QrySource1BasedOnPersistentType wo1 = source(WORK_ORDER);
         final QrySource1BasedOnPersistentType veh1 = (QrySource1BasedOnPersistentType) calcPropSubqry1.sources.main;//source(VEHICLE);
-        final Sources1 sources1 = sources(wo1);
         final Conditions1 conditions1 = conditions(isNotNull(prop("make.key")));
 
-        final EntQuery3 actQry = query(sources1, conditions1, WORK_ORDER);
+        final EntQuery3 actQry = query(sources(wo1), conditions1, WORK_ORDER);
 
         final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
 
@@ -180,10 +177,9 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         
         final QrySource1BasedOnPersistentType wo1 = source(WORK_ORDER);
         final QrySource1BasedOnPersistentType veh1 = (QrySource1BasedOnPersistentType) calcPropSubqry1.sources.main;//source(VEHICLE);
-        final Sources1 sources1 = sources(wo1);
         final Conditions1 conditions1 = conditions(isNotNull(prop("make")));
 
-        final EntQuery3 actQry = query(sources1, conditions1, WORK_ORDER);
+        final EntQuery3 actQry = query(sources(wo1), conditions1, WORK_ORDER);
 
         final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
 
@@ -218,10 +214,9 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         
         final QrySource1BasedOnPersistentType wo1 = source(WORK_ORDER);
         final QrySource1BasedOnPersistentType veh1 = (QrySource1BasedOnPersistentType) calcPropSubqry1.sources.main;//source(VEHICLE);
-        final Sources1 sources1 = sources(wo1);
         final Conditions1 conditions1 = conditions(isNotNull(prop("makeKey")));
 
-        final EntQuery3 actQry = query(sources1, conditions1, WORK_ORDER);
+        final EntQuery3 actQry = query(sources(wo1), conditions1, WORK_ORDER);
 
         final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
 
@@ -257,10 +252,9 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         // where().anyOfProps("vehicleModel.key").isNotNull().model();
         
         final QrySource1BasedOnPersistentType wo1 = source(WORK_ORDER);
-        final Sources1 sources1 = sources(wo1);
         final Conditions1 conditions1 = conditions(isNotNull(prop("vehicleModel.key")));
 
-        final EntQuery3 actQry = query(sources1, conditions1, WORK_ORDER);
+        final EntQuery3 actQry = query(sources(wo1), conditions1, WORK_ORDER);
         
         final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
         final QrySource3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
@@ -288,10 +282,9 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         // where().anyOfProps("vehicleModel.makeKey").isNotNull().model();
         
         final QrySource1BasedOnPersistentType wo1 = source(WORK_ORDER);
-        final Sources1 sources1 = sources(wo1);
         final Conditions1 conditions1 = conditions(isNotNull(prop("vehicleModel.makeKey")));
 
-        final EntQuery3 actQry = query(sources1, conditions1, WORK_ORDER);
+        final EntQuery3 actQry = query(sources(wo1), conditions1, WORK_ORDER);
         
         final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
         final QrySource3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
@@ -324,10 +317,9 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         // where().anyOfProps("vehicle.makeKey2").isNotNull().model();
         
         final QrySource1BasedOnPersistentType wo1 = source(WORK_ORDER);
-        final Sources1 sources1 = sources(wo1);
         final Conditions1 conditions1 = conditions(isNotNull(prop("vehicle.makeKey2")));
 
-        final EntQuery3 actQry = query(sources1, conditions1, WORK_ORDER);
+        final EntQuery3 actQry = query(sources(wo1), conditions1, WORK_ORDER);
         
         final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
         final QrySource3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
@@ -360,10 +352,9 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         // where().anyOfProps("vehicle.makeKey").isNotNull().model();
         
         final QrySource1BasedOnPersistentType wo1 = source(WORK_ORDER);
-        final Sources1 sources1 = sources(wo1);
         final Conditions1 conditions1 = conditions(isNotNull(prop("vehicle.makeKey")));
 
-        final EntQuery3 actQry = query(sources1, conditions1, WORK_ORDER);
+        final EntQuery3 actQry = query(sources(wo1), conditions1, WORK_ORDER);
         
         final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
         final QrySource3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
@@ -390,19 +381,121 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         assertEquals(expQry, actQry);
     }
     
+    // select(VEHICLE).
+    // where().anyOfProps(("model.make.key", "makeKey", "make.key").isNotNull().model();
+
+    // select(VEHICLE).
+    // where().anyOfProps("makeKey", "make.key").isNotNull().model();
+    
+    @Test
+    public void veh_calc_prop_is_correctly_transformed_08() {
+
+        // select(VEHICLE).
+        // where().anyOfProps("makeKey2", "make.key", "model.make.key").isNotNull().model();
+        
+        final QrySource1BasedOnPersistentType veh1 = source(VEHICLE);
+        final Conditions1 conditions1 = conditions(isNotNull(prop("makeKey2")), or(isNotNull(prop("make.key"))), or(isNotNull(prop("model.make.key"))));
+        final EntQuery3 actQry = query(sources(veh1), conditions1, VEHICLE);
+        
+        final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
+        final QrySource3BasedOnTable model = source(MODEL, veh1, "model");
+        //final QrySource3BasedOnTable make = source(MAKE, veh1, "model_make");
+        final QrySource3BasedOnTable makeA = source(MAKE, veh1, "make");
+        final QrySource3BasedOnTable make = source(MAKE, veh1, "make");
+        
+        final IQrySources3 sources =
+                ij(
+                        lj(
+                                veh,
+                                makeA,
+                                eq(prop("make", veh), prop(ID, makeA))
+                          ),
+                        ij(
+                                model,
+                                make,
+                                eq(prop("make", model), prop(ID, make))
+                          ),
+                        eq(prop("model", veh), prop(ID, model))
+                  );
+        final Conditions3 conditions = or(isNotNull(expr(expr(expr(prop(KEY, make))))), isNotNull(expr(prop(KEY, makeA))), isNotNull(expr(prop(KEY, make))));
+        final EntQuery3 expQry = qry(sources, conditions);
+        
+        assertEquals(expQry, actQry);   
+        System.out.println(actQry.sql(H2));
+    }
+
 
     @Test
     public void veh_calc_prop_is_correctly_transformed_07() {
-        // select(VEHICLE).
-        // where().anyOfProps(("model.make.key", "makeKey", "make.key").isNotNull().model();
-        
-    }
 
+        // select(VEHICLE).
+        // where().anyOfProps("makeKey2", "make.key").isNotNull().model();
+        
+        final QrySource1BasedOnPersistentType veh1 = source(VEHICLE);
+        final Conditions1 conditions1 = conditions(isNotNull(prop("makeKey2")), or(isNotNull(prop("make.key"))));
+        final EntQuery3 actQry = query(sources(veh1), conditions1, VEHICLE);
+        
+        final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
+        final QrySource3BasedOnTable model = source(MODEL, veh1, "model");
+        //final QrySource3BasedOnTable make = source(MAKE, veh1, "model_make");
+        final QrySource3BasedOnTable makeA = source(MAKE, veh1, "make");
+        final QrySource3BasedOnTable make = source(MAKE, veh1, "make");
+        
+        final IQrySources3 sources =
+                ij(
+                        lj(
+                                veh,
+                                makeA,
+                                eq(prop("make", veh), prop(ID, makeA))
+                          ),
+                        ij(
+                                model,
+                                make,
+                                eq(prop("make", model), prop(ID, make))
+                          ),
+                        eq(prop("model", veh), prop(ID, model))
+                  );
+        final Conditions3 conditions = or(isNotNull(expr(expr(expr(prop(KEY, make))))), isNotNull(expr(prop(KEY, make))));
+        final EntQuery3 expQry = qry(sources, conditions);
+        
+        assertNotEquals(expQry, actQry);
+    }
+    
     @Test
     public void veh_calc_prop_is_correctly_transformed_06() {
+
         // select(VEHICLE).
-        // where().anyOfProps("makeKey", "make.key").isNotNull().model();
+        // where().anyOfProps("makeKey2", "make.key").isNotNull().model();
         
+        final QrySource1BasedOnPersistentType veh1 = source(VEHICLE);
+        final Conditions1 conditions1 = conditions(isNotNull(prop("makeKey2")), or(isNotNull(prop("make.key"))));
+        final EntQuery3 actQry = query(sources(veh1), conditions1, VEHICLE);
+        
+        final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
+        final QrySource3BasedOnTable model = source(MODEL, veh1, "model");
+        //final QrySource3BasedOnTable make = source(MAKE, veh1, "model_make");
+        final QrySource3BasedOnTable makeA = source(MAKE, veh1, "make");
+        final QrySource3BasedOnTable make = source(MAKE, veh1, "make");
+        
+        final IQrySources3 sources =
+                ij(
+                        lj(
+                                veh,
+                                makeA,
+                                eq(prop("make", veh), prop(ID, makeA))
+                          ),
+                        ij(
+                                model,
+                                make,
+                                eq(prop("make", model), prop(ID, make))
+                          ),
+                        eq(prop("model", veh), prop(ID, model))
+                  );
+        final Conditions3 conditions = or(isNotNull(expr(expr(expr(prop(KEY, make))))), isNotNull(expr(prop(KEY, makeA))));
+        final EntQuery3 expQry = qry(sources, conditions);
+        
+        assertEquals(expQry, actQry);
+        System.out.println(actQry.sql(H2));
     }
     
     @Test
@@ -411,10 +504,9 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         // where().anyOfProps("model.make.key", "make.key").isNotNull().model();
         
         final QrySource1BasedOnPersistentType veh1 = source(VEHICLE);
-        final Sources1 sources1 = sources(veh1);
         final Conditions1 conditions1 = conditions(isNotNull(prop("model.make.key")), or(isNotNull(prop("make.key"))));
 
-        final EntQuery3 actQry = query(sources1, conditions1, VEHICLE);
+        final EntQuery3 actQry = query(sources(veh1), conditions1, VEHICLE);
         
         final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
         final QrySource3BasedOnTable model = source(MODEL, veh1, "model");
@@ -444,13 +536,11 @@ public class SqlGenerationTest extends EqlStage3TestCase {
     @Test
     public void veh_calc_prop_is_correctly_transformed_04() {
         // select(VEHICLE).
-        // where().anyOfProps("makeKey", "model.make.key").isNotNull().model();
+        // where().anyOfProps("makeKey2", "model.make.key").isNotNull().model();
         
         final QrySource1BasedOnPersistentType veh1 = source(VEHICLE);
-        final Sources1 sources1 = sources(veh1);
         final Conditions1 conditions1 = conditions(isNotNull(prop("makeKey2")), or(isNotNull(prop("model.make.key"))));
-
-        final EntQuery3 actQry = query(sources1, conditions1, VEHICLE);
+        final EntQuery3 actQry = query(sources(veh1), conditions1, VEHICLE);
         
         final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
         final QrySource3BasedOnTable model = source(MODEL, veh1, "model");
@@ -514,9 +604,8 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         // modelDesc_ = expr().prop("model.desc").model(); 
         
         final QrySource1BasedOnPersistentType veh1 = source(VEHICLE);
-        final Sources1 sources1 = sources(veh1);
         final Conditions1 conditions1 = conditions(isNotNull(prop("modelKey")), or(isNotNull(prop("modelDesc"))));
-        final EntQuery3 actQry = query(sources1, conditions1, VEHICLE);
+        final EntQuery3 actQry = query(sources(veh1), conditions1, VEHICLE);
         
         final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
         final QrySource3BasedOnTable model = source(MODEL, veh1, "model");
@@ -539,10 +628,8 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         // where().anyOfProps("makeKey").isNotNull().model();
         
         final QrySource1BasedOnPersistentType veh1 = source(VEHICLE);
-        final Sources1 sources1 = sources(veh1);
         final Conditions1 conditions1 = conditions(isNotNull(prop("makeKey")));
-
-        final EntQuery3 actQry = query(sources1, conditions1, VEHICLE);
+        final EntQuery3 actQry = query(sources(veh1), conditions1, VEHICLE);
         
         final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
         final QrySource3BasedOnTable model = source(MODEL, veh1, "model");
@@ -573,10 +660,9 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final QrySource1BasedOnPersistentType model1 = source(MODEL);
         final EntQuery1 calcPropSubqry1 = (EntQuery1)metadata.get(MODEL).getProps().get("makeKey2").expression.first;
         final QrySource1BasedOnPersistentType make1 = (QrySource1BasedOnPersistentType) calcPropSubqry1.sources.main;//source(MAKE);
-        final Sources1 sources1 = sources(model1);
         final Conditions1 conditions1 = conditions(isNotNull(prop("makeKey")), or(isNotNull(prop("makeKey2"))), or(isNotNull(prop("make.key"))));
 
-        final EntQuery3 actQry = query(sources1, conditions1, MODEL);
+        final EntQuery3 actQry = query(sources(model1), conditions1, MODEL);
         
         final QrySource3BasedOnTable model = source(MODEL, model1);
         final QrySource3BasedOnTable make = source(MAKE, model1, "make");
@@ -610,10 +696,9 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final QrySource1BasedOnPersistentType model1 = source(MODEL);
         final EntQuery1 calcPropSubqry1 = (EntQuery1)metadata.get(MODEL).getProps().get("makeKey2").expression.first;
         final QrySource1BasedOnPersistentType make1 = (QrySource1BasedOnPersistentType) calcPropSubqry1.sources.main;//source(MAKE);
-        final Sources1 sources1 = sources(model1);
         final Conditions1 conditions1 = conditions(isNotNull(prop("makeKey")), or(isNotNull(prop("makeKey2"))));
 
-        final EntQuery3 actQry = query(sources1, conditions1, MODEL);
+        final EntQuery3 actQry = query(sources(model1), conditions1, MODEL);
         
         final QrySource3BasedOnTable model = source(MODEL, model1);
         final QrySource3BasedOnTable make = source(MAKE, model1, "make");
@@ -645,10 +730,9 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         // where().anyOfProps("makeKey, make.key").isNotNull().model();
         
         final QrySource1BasedOnPersistentType model1 = source(MODEL);
-        final Sources1 sources1 = sources(model1);
         final Conditions1 conditions1 = conditions(isNotNull(prop("makeKey")), or(isNotNull(prop("make.key"))));
 
-        final EntQuery3 actQry = query(sources1, conditions1, MODEL);
+        final EntQuery3 actQry = query(sources(model1), conditions1, MODEL);
         
         final QrySource3BasedOnTable model = source(MODEL, model1);
         final QrySource3BasedOnTable make = source(MAKE, model1, "make");
@@ -676,10 +760,9 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         
         final QrySource1BasedOnPersistentType model1 = source(MODEL);
         final QrySource1BasedOnPersistentType make1 = (QrySource1BasedOnPersistentType) calcPropSubqry1.sources.main;//source(MAKE);
-        final Sources1 sources1 = sources(model1);
         final Conditions1 conditions1 = conditions(isNotNull(prop("makeKey2")));
 
-        final EntQuery3 actQry = query(sources1, conditions1, MODEL);
+        final EntQuery3 actQry = query(sources(model1), conditions1, MODEL);
 
         final QrySource3BasedOnTable model = source(MODEL, model1);
 
@@ -704,10 +787,9 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         // where().anyOfProps("makeKey").isNotNull().model();
         
         final QrySource1BasedOnPersistentType model1 = source(MODEL);
-        final Sources1 sources1 = sources(model1);
         final Conditions1 conditions1 = conditions(isNotNull(prop("makeKey")));
 
-        final EntQuery3 actQry = query(sources1, conditions1, MODEL);
+        final EntQuery3 actQry = query(sources(model1), conditions1, MODEL);
         
         final QrySource3BasedOnTable model = source(MODEL, model1);
         final QrySource3BasedOnTable make = source(MAKE, model1, "make");
@@ -730,12 +812,11 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         // where().anyOfProps(KEY, "replacedBy.key").isNotNull().model();
         
         final QrySource1BasedOnPersistentType veh1 = source(VEHICLE);
-        final Sources1 sources1 = sources(veh1);
         final Conditions1 conditions1 = conditions(isNotNull(prop(KEY)), //
                 or(isNotNull(prop("replacedBy.key"))) //
         );
 
-        final EntQuery3 actQry = query(sources1, conditions1, VEHICLE);
+        final EntQuery3 actQry = query(sources(veh1), conditions1, VEHICLE);
         
         final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
         final QrySource3BasedOnTable repVeh = source(VEHICLE, veh1, "replacedBy");
@@ -758,14 +839,13 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         // where().anyOfProps("initDate", "station.name", "station.parent.name", "replacedBy.initDate").isNotNull().model();
         
         final QrySource1BasedOnPersistentType veh1 = source(VEHICLE);
-        final Sources1 sources1 = sources(veh1);
         final Conditions1 conditions1 = conditions(isNotNull(prop("initDate")), //
                 or(isNotNull(prop("station.name"))), //
                 or(isNotNull(prop("station.parent.name"))), //
                 or(isNotNull(prop("replacedBy.initDate"))) //
         );
 
-        final EntQuery3 actQry = query(sources1, conditions1, VEHICLE);
+        final EntQuery3 actQry = query(sources(veh1), conditions1, VEHICLE);
         
         final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
         final QrySource3BasedOnTable repVeh = source(VEHICLE, veh1, "replacedBy");
