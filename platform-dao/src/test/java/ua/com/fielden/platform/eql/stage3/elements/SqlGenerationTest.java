@@ -392,31 +392,82 @@ public class SqlGenerationTest extends EqlStage3TestCase {
     
 
     @Test
+    public void veh_calc_prop_is_correctly_transformed_07() {
+        // select(VEHICLE).
+        // where().anyOfProps(("model.make.key", "makeKey", "make.key").isNotNull().model();
+        
+    }
+
+    @Test
+    public void veh_calc_prop_is_correctly_transformed_06() {
+        // select(VEHICLE).
+        // where().anyOfProps("makeKey", "make.key").isNotNull().model();
+        
+    }
+    
+    @Test
+    public void veh_calc_prop_is_correctly_transformed_05() {
+        // select(VEHICLE).
+        // where().anyOfProps("model.make.key", "make.key").isNotNull().model();
+        
+        final QrySource1BasedOnPersistentType veh1 = source(VEHICLE);
+        final Sources1 sources1 = sources(veh1);
+        final Conditions1 conditions1 = conditions(isNotNull(prop("model.make.key")), or(isNotNull(prop("make.key"))));
+
+        final EntQuery3 actQry = query(sources1, conditions1, VEHICLE);
+        
+        final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
+        final QrySource3BasedOnTable model = source(MODEL, veh1, "model");
+        final QrySource3BasedOnTable make = source(MAKE, veh1, "model_make");
+        final QrySource3BasedOnTable makeA = source(MAKE, veh1, "make");
+        
+        final IQrySources3 sources = 
+                ij(
+                        lj(
+                                veh,
+                                makeA,
+                                eq(prop("make", veh), prop(ID, makeA))
+                          ),
+                        ij(
+                                model,
+                                make,
+                                eq(prop("make", model), prop(ID, make))
+                          ),
+                        eq(prop("model", veh), prop(ID, model))
+                  );
+        final Conditions3 conditions = or(isNotNull(expr(prop(KEY, make))), isNotNull(expr(prop(KEY, makeA))));
+        final EntQuery3 expQry = qry(sources, conditions);
+        
+        assertEquals(expQry, actQry);    
+    }
+    
+    @Test
     public void veh_calc_prop_is_correctly_transformed_04() {
         // select(VEHICLE).
         // where().anyOfProps("makeKey", "model.make.key").isNotNull().model();
         
-        final QrySource1BasedOnPersistentType wo1 = source(VEHICLE);
-        final Sources1 sources1 = sources(wo1);
+        final QrySource1BasedOnPersistentType veh1 = source(VEHICLE);
+        final Sources1 sources1 = sources(veh1);
         final Conditions1 conditions1 = conditions(isNotNull(prop("makeKey2")), or(isNotNull(prop("model.make.key"))));
 
         final EntQuery3 actQry = query(sources1, conditions1, VEHICLE);
         
-        final QrySource3BasedOnTable wo = source(VEHICLE, wo1);
-        final QrySource3BasedOnTable model = source(MODEL, wo1, "model");
-        final QrySource3BasedOnTable make = source(MAKE, wo1, "model_make");
+        final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
+        final QrySource3BasedOnTable model = source(MODEL, veh1, "model");
+        //final QrySource3BasedOnTable make = source(MAKE, veh1, "model_make");
+        final QrySource3BasedOnTable make = source(MAKE, veh1, "make");
         
-        final IQrySources3 sources = 
+        final IQrySources3 sources =
+                ij(
+                        veh,
                         ij(
-                                wo,
-                                ij(
-                                        model,
-                                        make,
-                                        eq(prop("make", model), prop(ID, make))
-                                  ),
-                                eq(prop("model", wo), prop(ID, model))
-                          );
-        final Conditions3 conditions = or(isNotNull(expr(expr(prop(KEY, make)))), isNotNull(expr(prop(KEY, make))));
+                                model,
+                                make,
+                                eq(prop("make", model), prop(ID, make))
+                          ),
+                        eq(prop("model", veh), prop(ID, model))
+                  );
+        final Conditions3 conditions = or(isNotNull(expr(expr(expr(prop(KEY, make))))), isNotNull(expr(prop(KEY, make))));
         final EntQuery3 expQry = qry(sources, conditions);
         
         assertEquals(expQry, actQry);    

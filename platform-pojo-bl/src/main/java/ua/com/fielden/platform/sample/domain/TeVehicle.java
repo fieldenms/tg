@@ -82,6 +82,10 @@ public class TeVehicle extends AbstractEntity<String> {
 
     @IsProperty
     @MapTo
+    private TeVehicleMake make;
+
+    @IsProperty
+    @MapTo
     private Date initDate;
 
     @IsProperty
@@ -549,4 +553,13 @@ public class TeVehicle extends AbstractEntity<String> {
         return makeKey5;
     }
 
+    @Observable
+    protected TeVehicle setMake(final TeVehicleMake make) {
+        this.make = make;
+        return this;
+    }
+
+    public TeVehicleMake getMake() {
+        return make;
+    }
 }
