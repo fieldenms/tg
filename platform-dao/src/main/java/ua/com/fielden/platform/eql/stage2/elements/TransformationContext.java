@@ -77,14 +77,14 @@ public class TransformationContext {
                 
             }
             
-            if (!mapSources.get(item).isEmpty() && mapSources.get(item).entrySet().size() > 1) {
-                System.out.println("----------------------- 1 -----------");
-                for (final Entry<String, QrySource2BasedOnPersistentType> t2 : mapSources.get(item).entrySet()) {
-                    System.out.println("--- " + t2.getKey());
-                }
-                
-                System.out.println("----------------------- 2 -----------");
-            }
+//            if (!mapSources.get(item).isEmpty() && mapSources.get(item).entrySet().size() > 1) {
+//                System.out.println("----------------------- 1 -----------");
+//                for (final Entry<String, QrySource2BasedOnPersistentType> t2 : mapSources.get(item).entrySet()) {
+//                    System.out.println("--- " + t2.getKey());
+//                }
+//                
+//                System.out.println("----------------------- 2 -----------");
+//            }
             
             final List<ChildGroup> groupItems = convertToGroup(mergedItems);
             result.add(new ChildGroup(item, groupItems, groupPaths, first.required, mapSources.get(item).isEmpty() ? first.source : mapSources.get(item).entrySet().iterator().next().getValue(), first.expr));
@@ -96,7 +96,7 @@ public class TransformationContext {
     
     public TransformationContext(final Map<String, Table> tables, final PropsResolutionContext context) {
         this.tables.putAll(tables);
-        for (final Entry<IQrySource2<?>, SortedSet<Child>> el : transform(context.getResolvedProps(), context.getDomainInfo()).entrySet()) {
+        for (final Entry<IQrySource2<?>, SortedSet<Child>> el : transform(context.getResolvedProps(), context.getDomainInfo(), emptyList()).entrySet()) {
             this.sourceChildren.put(el.getKey(), convertToGroup(el.getValue()));
         }
 //        this.sourceChildren.putAll(transform(context.getResolvedProps(), context.getDomainInfo()));

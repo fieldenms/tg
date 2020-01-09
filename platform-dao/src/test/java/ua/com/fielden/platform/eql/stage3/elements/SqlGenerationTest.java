@@ -5,7 +5,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static ua.com.fielden.platform.entity.query.DbVersion.H2;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -35,8 +34,8 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         
         final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
         final QrySource3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
-        final QrySource3BasedOnTable model = source(MODEL, wo1, "model");
-        final QrySource3BasedOnTable make = source(MAKE, wo1, "model_make");
+        final QrySource3BasedOnTable model = source(MODEL, wo1, "vehicle_makeKey_model");
+        final QrySource3BasedOnTable make = source(MAKE, wo1, "vehicle_makeKey_model_make");
         
         final IQrySources3 sources = 
                 lj(
@@ -56,12 +55,11 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final EntQuery3 expQry = qry(sources, conditions);
         
         assertEquals(expQry, actQry);    
-        System.out.println(actQry.sql(H2));
     }
 
     @Test
     public void calc_prop_is_correctly_transformed_13() {
-        // select(VEHICLE).
+        // select(WORK_ORDER).
         // where().anyOfProps("vehicle.modelKey", "vehicle.model.key").isNotNull().model();
         
         final QrySource1BasedOnPersistentType wo1 = source(WORK_ORDER);
@@ -71,7 +69,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         
         final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
         final QrySource3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
-        final QrySource3BasedOnTable model = source(MODEL, wo1, "model");
+        final QrySource3BasedOnTable model = source(MODEL, wo1, "vehicle_model");
         
         final IQrySources3 sources = 
                 lj(
@@ -121,7 +119,6 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                   );
         final Conditions3 conditions = or(isNotNull(expr(prop(KEY, model))));
         final EntQuery3 expQry = qry(sources, conditions);
-        System.out.println(actQry.sql(H2));
         assertEquals(expQry, actQry);
     }
     
@@ -141,7 +138,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
 
         final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
-        final QrySource3BasedOnTable model = source(MODEL, veh1, "model");
+        final QrySource3BasedOnTable model = source(MODEL, veh1, "make_model");
         final QrySource3BasedOnTable make = source(MAKE, wo1, "make");
         
         final IQrySources3 subQrySources = 
@@ -184,7 +181,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
 
         final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
-        final QrySource3BasedOnTable model = source(MODEL, veh1, "model");
+        final QrySource3BasedOnTable model = source(MODEL, veh1, "make_model");
         
         final IQrySources3 subQrySources = 
                 ij(
@@ -221,8 +218,8 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
 
         final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
-        final QrySource3BasedOnTable model = source(MODEL, veh1, "model");
-        final QrySource3BasedOnTable make = source(MAKE, veh1, "model_make");
+        final QrySource3BasedOnTable model = source(MODEL, veh1, "makeKey_model");
+        final QrySource3BasedOnTable make = source(MAKE, veh1, "makeKey_model_make");
         
         final IQrySources3 subQrySources = 
                 ij(
@@ -257,7 +254,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final EntQuery3 actQry = query(sources(wo1), conditions1, WORK_ORDER);
         
         final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
-        final QrySource3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
+        final QrySource3BasedOnTable veh = source(VEHICLE, wo1, "vehicleModel_vehicle");
         final QrySource3BasedOnTable model = source(MODEL, wo1, "vehicleModel");
         
         final IQrySources3 sources = 
@@ -287,9 +284,9 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final EntQuery3 actQry = query(sources(wo1), conditions1, WORK_ORDER);
         
         final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
-        final QrySource3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
+        final QrySource3BasedOnTable veh = source(VEHICLE, wo1, "vehicleModel_vehicle");
         final QrySource3BasedOnTable model = source(MODEL, wo1, "vehicleModel");
-        final QrySource3BasedOnTable make = source(MAKE, wo1, "make");
+        final QrySource3BasedOnTable make = source(MAKE, wo1, "vehicleModel_makeKey_make");
         
         final IQrySources3 sources = 
                 lj(
@@ -323,8 +320,8 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         
         final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
         final QrySource3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
-        final QrySource3BasedOnTable model = source(MODEL, wo1, "model");
-        final QrySource3BasedOnTable make = source(MAKE, wo1, "make");
+        final QrySource3BasedOnTable model = source(MODEL, wo1, "vehicle_makeKey2_model");
+        final QrySource3BasedOnTable make = source(MAKE, wo1, "vehicle_makeKey2_model_makeKey_make");
         
         final IQrySources3 sources = 
                 lj(
@@ -358,8 +355,8 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         
         final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
         final QrySource3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
-        final QrySource3BasedOnTable model = source(MODEL, wo1, "model");
-        final QrySource3BasedOnTable make = source(MAKE, wo1, "model_make");
+        final QrySource3BasedOnTable model = source(MODEL, wo1, "vehicle_makeKey_model");
+        final QrySource3BasedOnTable make = source(MAKE, wo1, "vehicle_makeKey_model_make");
         
         final IQrySources3 sources = 
                 lj(
@@ -398,10 +395,10 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final EntQuery3 actQry = query(sources(veh1), conditions1, VEHICLE);
         
         final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
-        final QrySource3BasedOnTable model = source(MODEL, veh1, "model");
+        final QrySource3BasedOnTable model = source(MODEL, veh1, "makeKey2_model");
         //final QrySource3BasedOnTable make = source(MAKE, veh1, "model_make");
         final QrySource3BasedOnTable makeA = source(MAKE, veh1, "make");
-        final QrySource3BasedOnTable make = source(MAKE, veh1, "make");
+        final QrySource3BasedOnTable make = source(MAKE, veh1, "makeKey2_model_makeKey_make");
         
         final IQrySources3 sources =
                 ij(
@@ -421,7 +418,6 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final EntQuery3 expQry = qry(sources, conditions);
         
         assertEquals(expQry, actQry);   
-        System.out.println(actQry.sql(H2));
     }
 
 
@@ -472,10 +468,10 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final EntQuery3 actQry = query(sources(veh1), conditions1, VEHICLE);
         
         final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
-        final QrySource3BasedOnTable model = source(MODEL, veh1, "model");
+        final QrySource3BasedOnTable model = source(MODEL, veh1, "makeKey2_model");
         //final QrySource3BasedOnTable make = source(MAKE, veh1, "model_make");
         final QrySource3BasedOnTable makeA = source(MAKE, veh1, "make");
-        final QrySource3BasedOnTable make = source(MAKE, veh1, "make");
+        final QrySource3BasedOnTable make = source(MAKE, veh1, "makeKey2_model_makeKey_make");
         
         final IQrySources3 sources =
                 ij(
@@ -495,7 +491,6 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final EntQuery3 expQry = qry(sources, conditions);
         
         assertEquals(expQry, actQry);
-        System.out.println(actQry.sql(H2));
     }
     
     @Test
@@ -543,9 +538,9 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final EntQuery3 actQry = query(sources(veh1), conditions1, VEHICLE);
         
         final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
-        final QrySource3BasedOnTable model = source(MODEL, veh1, "model");
-        //final QrySource3BasedOnTable make = source(MAKE, veh1, "model_make");
-        final QrySource3BasedOnTable make = source(MAKE, veh1, "make");
+        final QrySource3BasedOnTable model = source(MODEL, veh1, "makeKey2_model");
+        final QrySource3BasedOnTable make = source(MAKE, veh1, "makeKey2_model_makeKey_make");
+        //final QrySource3BasedOnTable make = source(MAKE, veh1, "make");
         
         final IQrySources3 sources =
                 ij(
@@ -577,8 +572,8 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final EntQuery3 actQry = query(sources1, conditions1, VEHICLE);
         
         final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
-        final QrySource3BasedOnTable model = source(MODEL, veh1, "model");
-        final QrySource3BasedOnTable make = source(MAKE, veh1, "model_make");
+        final QrySource3BasedOnTable model = source(MODEL, veh1, "makeDesc_model");
+        final QrySource3BasedOnTable make = source(MAKE, veh1, "makeDesc_model_make");
         
         final IQrySources3 sources = 
                 ij(
@@ -608,7 +603,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final EntQuery3 actQry = query(sources(veh1), conditions1, VEHICLE);
         
         final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
-        final QrySource3BasedOnTable model = source(MODEL, veh1, "model");
+        final QrySource3BasedOnTable model = source(MODEL, veh1, "modelDesc_model");
         
         final IQrySources3 sources = 
                 ij(
@@ -632,8 +627,8 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final EntQuery3 actQry = query(sources(veh1), conditions1, VEHICLE);
         
         final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
-        final QrySource3BasedOnTable model = source(MODEL, veh1, "model");
-        final QrySource3BasedOnTable make = source(MAKE, veh1, "model_make");
+        final QrySource3BasedOnTable model = source(MODEL, veh1, "makeKey_model");
+        final QrySource3BasedOnTable make = source(MAKE, veh1, "makeKey_model_make");
         
         final IQrySources3 sources = 
                 ij(
@@ -701,7 +696,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final EntQuery3 actQry = query(sources(model1), conditions1, MODEL);
         
         final QrySource3BasedOnTable model = source(MODEL, model1);
-        final QrySource3BasedOnTable make = source(MAKE, model1, "make");
+        final QrySource3BasedOnTable make = source(MAKE, model1, "makeKey2_make");
         
         final QrySource3BasedOnTable subQryMake = source(MAKE, make1);
         
@@ -792,7 +787,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final EntQuery3 actQry = query(sources(model1), conditions1, MODEL);
         
         final QrySource3BasedOnTable model = source(MODEL, model1);
-        final QrySource3BasedOnTable make = source(MAKE, model1, "make");
+        final QrySource3BasedOnTable make = source(MAKE, model1, "makeKey_make");
         
         final IQrySources3 sources = 
                 ij(

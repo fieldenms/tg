@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.eql.stage2.elements;
 
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.joining;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
@@ -39,11 +38,11 @@ public class PathsToTreeTransformator {
         return id;
     }
 
-    static final Map<IQrySource2<?>, SortedSet<Child>> transform(final Set<EntProp2> props, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
+    static final Map<IQrySource2<?>, SortedSet<Child>> transform(final Set<EntProp2> props, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo, final List<String> context) {
         final Map<IQrySource2<?>, SortedSet<Child>> sourceChildren = new HashMap<>();
 
         for (final Entry<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>> sourceProps : groupBySource(props).entrySet()) {
-            final T2<SortedSet<Child>, Map<IQrySource2<?>, SortedSet<Child>>> genRes = generateChildren(sourceProps.getKey(), sourceProps.getKey().contextId(), sourceProps.getValue(), emptyList(), domainInfo, sourceProps.getKey());
+            final T2<SortedSet<Child>, Map<IQrySource2<?>, SortedSet<Child>>> genRes = generateChildren(sourceProps.getKey(), sourceProps.getKey().contextId(), sourceProps.getValue(), context, domainInfo, sourceProps.getKey());
             sourceChildren.put(sourceProps.getKey(), genRes._1);
             sourceChildren.putAll(genRes._2);
         }
@@ -105,9 +104,10 @@ public class PathsToTreeTransformator {
         Expression2 expr2 = null;
         final Set<Child> dependencies = new HashSet<>();
         if (propInfo.expression != null) {
+            //System.out.println("newContext = " + newContext);
             final TransformationResult<Expression2> tr = expressionToS2(contextSource, propInfo.expression, domainInfo);
             expr2 = tr.item;
-            final Map<IQrySource2<?>, SortedSet<Child>> dependenciesResult = transform(tr.updatedContext.getResolvedProps(), domainInfo);
+            final Map<IQrySource2<?>, SortedSet<Child>> dependenciesResult = transform(tr.updatedContext.getResolvedProps(), domainInfo, newContext);
 
             for (final Entry<IQrySource2<?>, SortedSet<Child>> drEntry : dependenciesResult.entrySet()) {
                 if (!drEntry.getKey().equals(contextSource)) {
