@@ -13,10 +13,10 @@ import ua.com.fielden.platform.eql.stage3.elements.operands.EntQuery3;
 
 public class QrySource3BasedOnSubqueries implements IQrySource3 {
     private final List<EntQuery3> models = new ArrayList<>();
-    public final int contextId;
+    public final String contextId;
     private final Map<String, Column> columns = new HashMap<>();
     
-    public QrySource3BasedOnSubqueries(final List<EntQuery3> models, final int contextId) {
+    public QrySource3BasedOnSubqueries(final List<EntQuery3> models, final String contextId) {
         this.models.addAll(models);
         this.contextId = contextId;
         for (final Yield3 entry : models.get(0).yields.getYields()) {
@@ -40,7 +40,7 @@ public class QrySource3BasedOnSubqueries implements IQrySource3 {
     }
 
     @Override
-    public int contextId() {
+    public String contextId() {
         return contextId;
     }
     
@@ -48,7 +48,7 @@ public class QrySource3BasedOnSubqueries implements IQrySource3 {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + contextId;
+        result = prime * result + contextId.hashCode();
         result = prime * result + models.hashCode();
         return result;
     }

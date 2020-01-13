@@ -13,8 +13,8 @@ public class MinuteOf1 extends SingleOperandFunction1<MinuteOf2> {
     }
 
     @Override
-    public TransformationResult<MinuteOf2> transform(final PropsResolutionContext context) {
-        final TransformationResult<? extends ISingleOperand2<?>> operandTransformationResult = operand.transform(context);
+    public TransformationResult<MinuteOf2> transform(final PropsResolutionContext context, final String sourceId) {
+        final TransformationResult<? extends ISingleOperand2<?>> operandTransformationResult = operand.transform(context, sourceId);
         return new TransformationResult<MinuteOf2>(new MinuteOf2(operandTransformationResult.item), operandTransformationResult.updatedContext);
     }
     

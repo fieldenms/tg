@@ -48,11 +48,15 @@ import ua.com.fielden.platform.eql.stage3.elements.sources.SingleQrySource3;
 public class EqlStage3TestCase extends EqlStage1TestCase {
     
     protected static QrySource3BasedOnTable source(final Class<? extends AbstractEntity<?>> sourceType, final QrySource1BasedOnPersistentType sourceForContextId) {
-        return new QrySource3BasedOnTable(tables.get(sourceType.getName()), sourceForContextId.contextId);
+        return new QrySource3BasedOnTable(tables.get(sourceType.getName()), Integer.toString(sourceForContextId.contextId));
     }
 
     protected static QrySource3BasedOnTable source(final Class<? extends AbstractEntity<?>> sourceType, final QrySource1BasedOnPersistentType sourceForContextId, final String subcontextId) {
-        return new QrySource3BasedOnTable(tables.get(sourceType.getName()), sourceForContextId.contextId, subcontextId);
+        return new QrySource3BasedOnTable(tables.get(sourceType.getName()), Integer.toString(sourceForContextId.contextId) + "_" + subcontextId);
+    }
+    
+    protected static QrySource3BasedOnTable source(final Class<? extends AbstractEntity<?>> sourceType, final QrySource3BasedOnTable sourceForContextId, final String subcontextId) {
+        return new QrySource3BasedOnTable(tables.get(sourceType.getName()), sourceForContextId.contextId + "_" + subcontextId);
     }
     
     protected static EntQuery3 query(final Sources1 sources, final Conditions1 conditions, final Class<? extends AbstractEntity<?>> resultType) {
@@ -281,7 +285,7 @@ public class EqlStage3TestCase extends EqlStage1TestCase {
     }
     
     protected static ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> entResultQry3(final EntQuery1 qryModel, final PropsResolutionContext transformator, final Map<String, Table> tables) {
-        final TransformationResult<EntQuery2> s1r = qryModel.transform(transformator);
+        final TransformationResult<EntQuery2> s1r = qryModel.transform(transformator, null);
         final TransformationContext context = new TransformationContext(tables, s1r.updatedContext);
         return s1r.item.transform(context);
     }

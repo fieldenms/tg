@@ -21,12 +21,12 @@ public class Expression1 implements ISingleOperand1<Expression2> {
     }
 
     @Override
-    public TransformationResult<Expression2> transform(final PropsResolutionContext context) {
+    public TransformationResult<Expression2> transform(final PropsResolutionContext context, final String sourceId) {
         final List<CompoundSingleOperand2> transformed = new ArrayList<>();
-        final TransformationResult<? extends ISingleOperand2<?>> firstTr = first.transform(context);
+        final TransformationResult<? extends ISingleOperand2<?>> firstTr = first.transform(context, sourceId);
         PropsResolutionContext currentResolutionContext = firstTr.updatedContext;
         for (final CompoundSingleOperand1 item : items) {
-            final TransformationResult<? extends ISingleOperand2<?>> itemTr = item.operand.transform(currentResolutionContext);
+            final TransformationResult<? extends ISingleOperand2<?>> itemTr = item.operand.transform(currentResolutionContext, sourceId);
             transformed.add(new CompoundSingleOperand2(itemTr.item, item.operator));
             currentResolutionContext = itemTr.updatedContext;
         }

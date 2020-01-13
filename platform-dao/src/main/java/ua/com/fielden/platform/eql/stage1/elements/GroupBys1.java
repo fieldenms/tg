@@ -14,11 +14,11 @@ public class GroupBys1 {
         this.groups = groups;
     }
 
-    public TransformationResult<GroupBys2> transform(final PropsResolutionContext context) {
+    public TransformationResult<GroupBys2> transform(final PropsResolutionContext context, final String sourceId) {
         final List<GroupBy2> transformed = new ArrayList<>();
         PropsResolutionContext currentResolutionContext = context;
         for (final GroupBy1 groupBy : groups) {
-            final TransformationResult<GroupBy2> groupByTr = groupBy.transform(currentResolutionContext);
+            final TransformationResult<GroupBy2> groupByTr = groupBy.transform(currentResolutionContext, sourceId);
             transformed.add(groupByTr.item);
             currentResolutionContext = groupByTr.updatedContext;
         }

@@ -19,14 +19,14 @@ public class Sources1  {
         this.compounds = compounds;
     }
 
-    public TransformationResult<Sources2> transform(final PropsResolutionContext context) {
-        final TransformationResult<? extends IQrySource2<?>> mainTransformationResult = main.transform(context);    
+    public TransformationResult<Sources2> transform(final PropsResolutionContext context, final String sourceId) {
+        final TransformationResult<? extends IQrySource2<?>> mainTransformationResult = main.transform(context, sourceId);    
                 
         final List<CompoundSource2> transformed = new ArrayList<>();
         PropsResolutionContext currentResolutionContext = mainTransformationResult.updatedContext;
         
         for (final CompoundSource1 compoundSource : compounds) {
-            final TransformationResult<CompoundSource2> compoundSourceTransformationResult = compoundSource.transform(currentResolutionContext);
+            final TransformationResult<CompoundSource2> compoundSourceTransformationResult = compoundSource.transform(currentResolutionContext, sourceId);
             transformed.add(compoundSourceTransformationResult.item);
             currentResolutionContext = compoundSourceTransformationResult.updatedContext;
         }

@@ -44,7 +44,7 @@ public class TransformationContext {
             if (items.contains(child.main)) {
                 map.get(child.main).add(child);
                 if (child.source != null) {
-                    mapSources.get(child.main).put(child.source.subcontextId !=null ? child.source.subcontextId : "", child.source);
+                    mapSources.get(child.main).put(child.source.contextId, child.source);
                     //System.out.println(child.fullPath + " " + child.main.name + " " + mapSources.get(child.main).size());
                 }
                 
@@ -55,7 +55,7 @@ public class TransformationContext {
 
                 itemChildren.add(child);
                 if (child.source != null) {
-                    itemSources.put(child.source.subcontextId !=null ? child.source.subcontextId : "", child.source);    
+                    itemSources.put(child.source.contextId, child.source);    
                 }
                 
                 map.put(child.main, itemChildren);
@@ -96,7 +96,7 @@ public class TransformationContext {
     
     public TransformationContext(final Map<String, Table> tables, final PropsResolutionContext context) {
         this.tables.putAll(tables);
-        for (final Entry<IQrySource2<?>, SortedSet<Child>> el : transform(context.getResolvedProps(), context.getDomainInfo(), emptyList()).entrySet()) {
+        for (final Entry<IQrySource2<?>, SortedSet<Child>> el : transform(context.getResolvedProps(), context.getDomainInfo()).entrySet()) {
             this.sourceChildren.put(el.getKey(), convertToGroup(el.getValue()));
         }
 //        this.sourceChildren.putAll(transform(context.getResolvedProps(), context.getDomainInfo()));

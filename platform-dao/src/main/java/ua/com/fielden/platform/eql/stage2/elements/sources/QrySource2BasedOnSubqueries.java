@@ -29,7 +29,7 @@ public class QrySource2BasedOnSubqueries extends AbstractElement2 implements IQr
     private final EntityInfo<?> entityInfo;
     private final String alias;
 
-    public QrySource2BasedOnSubqueries(final List<EntQuery2> models, final String alias, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo, final int contextId) {
+    public QrySource2BasedOnSubqueries(final List<EntQuery2> models, final String alias, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo, final String contextId) {
         super(contextId);
         if (models == null || models.isEmpty()) {
             throw new EqlStage1ProcessingException("Couldn't produce instance of QueryBasedSource due to zero models passed to constructor!");
@@ -150,7 +150,7 @@ public class QrySource2BasedOnSubqueries extends AbstractElement2 implements IQr
     }
 
     @Override
-    public int contextId() {
+    public String contextId() {
         return contextId;
     }
 

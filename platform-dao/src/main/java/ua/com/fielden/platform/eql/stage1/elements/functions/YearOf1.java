@@ -13,8 +13,8 @@ public class YearOf1 extends SingleOperandFunction1<YearOf2> {
     }
 
     @Override
-    public TransformationResult<YearOf2> transform(final PropsResolutionContext context) {
-        final TransformationResult<? extends ISingleOperand2<?>> operandTransformationResult = operand.transform(context);
+    public TransformationResult<YearOf2> transform(final PropsResolutionContext context, final String sourceId) {
+        final TransformationResult<? extends ISingleOperand2<?>> operandTransformationResult = operand.transform(context, sourceId);
         return new TransformationResult<YearOf2>(new YearOf2(operandTransformationResult.item), operandTransformationResult.updatedContext);
     }
     

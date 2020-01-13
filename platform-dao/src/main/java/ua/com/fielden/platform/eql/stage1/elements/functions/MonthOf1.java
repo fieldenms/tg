@@ -13,8 +13,8 @@ public class MonthOf1 extends SingleOperandFunction1<MonthOf2> {
     }
 
     @Override
-    public TransformationResult<MonthOf2> transform(final PropsResolutionContext context) {
-        final TransformationResult<? extends ISingleOperand2<?>> operandTransformationResult = operand.transform(context);
+    public TransformationResult<MonthOf2> transform(final PropsResolutionContext context, final String sourceId) {
+        final TransformationResult<? extends ISingleOperand2<?>> operandTransformationResult = operand.transform(context, sourceId);
         return new TransformationResult<MonthOf2>(new MonthOf2(operandTransformationResult.item), operandTransformationResult.updatedContext);
     }
 

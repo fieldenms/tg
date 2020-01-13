@@ -23,7 +23,7 @@ public class EntProp2 extends AbstractElement2 implements ISingleOperand2<Expres
     public final String name;
     public final Class<?> type;
 
-    public EntProp2(final IQrySource2<? extends IQrySource3> source, final int contextId, final List<AbstractPropInfo<?>> path) {
+    public EntProp2(final IQrySource2<? extends IQrySource3> source, final String contextId, final List<AbstractPropInfo<?>> path) {
         super(contextId);
         this.source = source;
         this.path = path;

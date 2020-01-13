@@ -31,17 +31,17 @@ public class CaseWhen1 extends AbstractFunction1<CaseWhen2> {
     }
 
     @Override
-    public TransformationResult<CaseWhen2> transform(final PropsResolutionContext context) {
+    public TransformationResult<CaseWhen2> transform(final PropsResolutionContext context, final String sourceId) {
         final List<T2<ICondition2<? extends ICondition3>, ISingleOperand2<? extends ISingleOperand3>>> transformedWhenThenPairs = new ArrayList<>();
         PropsResolutionContext currentResolutionContext = context;
         for (final T2<ICondition1<? extends ICondition2<?>>, ISingleOperand1<? extends ISingleOperand2<?>>> pair : whenThenPairs) {
-            final TransformationResult<? extends ICondition2<? extends ICondition3>> conditionTr = pair._1.transform(currentResolutionContext);
+            final TransformationResult<? extends ICondition2<? extends ICondition3>> conditionTr = pair._1.transform(currentResolutionContext, sourceId);
             currentResolutionContext = conditionTr.updatedContext;
-            final TransformationResult<? extends ISingleOperand2<? extends ISingleOperand3>> operandTr = pair._2.transform(currentResolutionContext);
+            final TransformationResult<? extends ISingleOperand2<? extends ISingleOperand3>> operandTr = pair._2.transform(currentResolutionContext, sourceId);
             currentResolutionContext = operandTr.updatedContext;
             transformedWhenThenPairs.add(t2(conditionTr.item, operandTr.item));
         }
-        final TransformationResult<? extends ISingleOperand2<? extends ISingleOperand3>> elseOperandTr = elseOperand.transform(currentResolutionContext);
+        final TransformationResult<? extends ISingleOperand2<? extends ISingleOperand3>> elseOperandTr = elseOperand.transform(currentResolutionContext, sourceId);
         
         return new TransformationResult<CaseWhen2>(new CaseWhen2(transformedWhenThenPairs, elseOperandTr.item, typeCast), elseOperandTr.updatedContext);
     }

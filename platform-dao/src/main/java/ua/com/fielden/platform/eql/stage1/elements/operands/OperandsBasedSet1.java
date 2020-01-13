@@ -18,11 +18,11 @@ public class OperandsBasedSet1 implements ISetOperand1<OperandsBasedSet2> {
     }
 
     @Override
-    public TransformationResult<OperandsBasedSet2> transform(final PropsResolutionContext context) {
+    public TransformationResult<OperandsBasedSet2> transform(final PropsResolutionContext context, final String sourceId) {
         final List<ISingleOperand2<? extends ISingleOperand3>> transformedOperands = new ArrayList<>();
         PropsResolutionContext currentResolutionContext = context;
         for (final ISingleOperand1<? extends ISingleOperand2<?>> singleOperand : operands) {
-            final TransformationResult<? extends ISingleOperand2<?>> operandTr = singleOperand.transform(currentResolutionContext);
+            final TransformationResult<? extends ISingleOperand2<?>> operandTr = singleOperand.transform(currentResolutionContext, sourceId);
             transformedOperands.add(operandTr.item);
             currentResolutionContext = operandTr.updatedContext;
         }

@@ -14,11 +14,11 @@ public class OrderBys1 {
         this.models = models;
     }
 
-    public TransformationResult<OrderBys2> transform(final PropsResolutionContext context) {
+    public TransformationResult<OrderBys2> transform(final PropsResolutionContext context, final String sourceId) {
         final List<OrderBy2> transformed = new ArrayList<>();
         PropsResolutionContext currentResolutionContext = context;
         for (final OrderBy1 orderBy : models) {
-            final TransformationResult<OrderBy2> orderByTr = orderBy.transform(currentResolutionContext);
+            final TransformationResult<OrderBy2> orderByTr = orderBy.transform(currentResolutionContext, sourceId);
             transformed.add(orderByTr.item);
             currentResolutionContext = orderByTr.updatedContext;
         }

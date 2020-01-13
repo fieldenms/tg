@@ -18,8 +18,8 @@ public class NullTest1 implements ICondition1<NullTest2> {
     }
 
     @Override
-    public TransformationResult<NullTest2> transform(final PropsResolutionContext context) {
-        final TransformationResult<? extends ISingleOperand2<?>> operandTr = operand.transform(context);
+    public TransformationResult<NullTest2> transform(final PropsResolutionContext context, final String sourceId) {
+        final TransformationResult<? extends ISingleOperand2<?>> operandTr = operand.transform(context, sourceId);
         return new TransformationResult<NullTest2>(new NullTest2(operandTr.item, negated), operandTr.updatedContext);
     }
 

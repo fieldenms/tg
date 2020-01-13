@@ -21,9 +21,9 @@ public class ComparisonTest1 implements ICondition1<ComparisonTest2> {
     }
 
     @Override
-    public TransformationResult<ComparisonTest2> transform(final PropsResolutionContext context) {
-        final TransformationResult<? extends ISingleOperand2<?>> leftOperandTr = leftOperand.transform(context);
-        final TransformationResult<? extends ISingleOperand2<?>> rightOperandTr = rightOperand.transform(leftOperandTr.updatedContext);
+    public TransformationResult<ComparisonTest2> transform(final PropsResolutionContext context, final String sourceId) {
+        final TransformationResult<? extends ISingleOperand2<?>> leftOperandTr = leftOperand.transform(context, sourceId);
+        final TransformationResult<? extends ISingleOperand2<?>> rightOperandTr = rightOperand.transform(leftOperandTr.updatedContext, sourceId);
         return new TransformationResult<ComparisonTest2>(new ComparisonTest2(leftOperandTr.item, operator, rightOperandTr.item), rightOperandTr.updatedContext);
     }
 

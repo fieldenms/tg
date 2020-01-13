@@ -15,8 +15,8 @@ public class OrderBy1 {
         this.isDesc = isDesc;
     }
 
-    public TransformationResult<OrderBy2> transform(final PropsResolutionContext context) {
-        final TransformationResult<? extends ISingleOperand2<?>> operandTr = operand.transform(context);
+    public TransformationResult<OrderBy2> transform(final PropsResolutionContext context, final String sourceId) {
+        final TransformationResult<? extends ISingleOperand2<?>> operandTr = operand.transform(context, sourceId);
         return new TransformationResult<OrderBy2>(new OrderBy2(operandTr.item, isDesc), operandTr.updatedContext);
     }
 

@@ -12,8 +12,8 @@ public class UpperCaseOf1 extends SingleOperandFunction1<UpperCaseOf2> {
     }
 
     @Override
-    public TransformationResult<UpperCaseOf2> transform(final PropsResolutionContext context) {
-        final TransformationResult<? extends ISingleOperand2<?>> operandTransformationResult = operand.transform(context);
+    public TransformationResult<UpperCaseOf2> transform(final PropsResolutionContext context, final String sourceId) {
+        final TransformationResult<? extends ISingleOperand2<?>> operandTransformationResult = operand.transform(context, sourceId);
         return new TransformationResult<UpperCaseOf2>(new UpperCaseOf2(operandTransformationResult.item), operandTransformationResult.updatedContext);
     }
     

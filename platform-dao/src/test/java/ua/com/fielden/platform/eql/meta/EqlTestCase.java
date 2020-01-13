@@ -120,9 +120,9 @@ public class EqlTestCase {
 
     protected static TransformationResult<EntQuery2> entResultQry2(final QueryModel qryModel, final PropsResolutionContext transformator) {
         if (qryModel instanceof EntityResultQueryModel) {
-            return qb().generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).model()).transform(transformator);
+            return qb().generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).model()).transform(transformator, null);
         } else if (qryModel instanceof AggregatedResultQueryModel) {
-            return qb().generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).model()).transform(transformator);
+            return qb().generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).model()).transform(transformator, null);
         }
         throw new IllegalStateException("Not implemented yet");
     }
@@ -130,9 +130,9 @@ public class EqlTestCase {
     protected static ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> entResultQry3(final QueryModel qryModel, final PropsResolutionContext transformator, final Map<String, Table> tables) {
         final TransformationResult<EntQuery2> s1r;
         if (qryModel instanceof EntityResultQueryModel) {
-            s1r = qb().generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).model()).transform(transformator);
+            s1r = qb().generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).model()).transform(transformator, null);
         } else if (qryModel instanceof AggregatedResultQueryModel) {
-            s1r = qb().generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).model()).transform(transformator); 
+            s1r = qb().generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).model()).transform(transformator, null); 
         } else {
             throw new IllegalStateException("Not implemented yet");
         }

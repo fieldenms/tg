@@ -182,11 +182,11 @@ public class PropResolutionTest extends EqlTestCase {
 
         assertEquals(expQry1, entResultQry(qry));
         
-        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(MODEL, metadata.get(MODEL), 1);
+        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(MODEL, metadata.get(MODEL), "1");
         final Sources2 sources = new Sources2(source, emptyList());
         final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
         final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
-        final EntProp2 makeProp2 = new EntProp2(source, 2, asList(pi(MODEL, "make"), pi(TeVehicleMake.class, "key")));
+        final EntProp2 makeProp2 = new EntProp2(source, "2", asList(pi(MODEL, "make"), pi(TeVehicleMake.class, "key")));
         firstAndConditionsGroup.add(new NullTest2(makeProp2, true));
         allConditions.add(firstAndConditionsGroup);
         final Conditions2 conditions = new Conditions2(false, allConditions);
@@ -194,7 +194,7 @@ public class PropResolutionTest extends EqlTestCase {
         final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
         final EntQuery2 expQry2 = new EntQuery2(parts, MODEL, RESULT_QUERY);
 
-        final TransformationResult<EntQuery2> trQry2 = expQry1.transform(new PropsResolutionContext(metadata));
+        final TransformationResult<EntQuery2> trQry2 = expQry1.transform(new PropsResolutionContext(metadata), null);
         assertEquals(expQry2, trQry2.item);
         assertEquals(setOf(makeProp2), trQry2.updatedContext.getResolvedProps());
     }
@@ -212,11 +212,11 @@ public class PropResolutionTest extends EqlTestCase {
 
         assertEquals(expQry1, entResultQry(qry));
         
-        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(MODEL, metadata.get(MODEL), 1);
+        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(MODEL, metadata.get(MODEL), "1");
         final Sources2 sources = new Sources2(source, emptyList());
         final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
         final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
-        final EntProp2 makeProp2 = new EntProp2(source, 2, asList(pi(MODEL, "make")));
+        final EntProp2 makeProp2 = new EntProp2(source, "2", asList(pi(MODEL, "make")));
         firstAndConditionsGroup.add(new NullTest2(makeProp2, true));
         allConditions.add(firstAndConditionsGroup);
         final Conditions2 conditions = new Conditions2(false, allConditions);
@@ -224,7 +224,7 @@ public class PropResolutionTest extends EqlTestCase {
         final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
         final EntQuery2 expQry2 = new EntQuery2(parts, MODEL, RESULT_QUERY);
 
-        final TransformationResult<EntQuery2> trQry2 = expQry1.transform(new PropsResolutionContext(metadata));
+        final TransformationResult<EntQuery2> trQry2 = expQry1.transform(new PropsResolutionContext(metadata), null);
         assertEquals(expQry2, trQry2.item);
         assertEquals(setOf(makeProp2), trQry2.updatedContext.getResolvedProps());
     }
@@ -308,12 +308,12 @@ public class PropResolutionTest extends EqlTestCase {
         final EntityResultQueryModel<TgWorkshop> qry = select(TgWorkshop.class).as("w").where().prop("w.key").isNotNull().model();
         final TransformationResult<EntQuery2> qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
 
-        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(TgWorkshop.class, metadata.get(WORKSHOP), "w", 0);
+        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(TgWorkshop.class, metadata.get(WORKSHOP), "w", "0");
         
         final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
         final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
         // TODO make utility method for easy creation of Conditions2 with only one condition
-        firstAndConditionsGroup.add(new NullTest2(new EntProp2(source, 1, asList(pi(WORKSHOP, "key"))), true));
+        firstAndConditionsGroup.add(new NullTest2(new EntProp2(source, "1", asList(pi(WORKSHOP, "key"))), true));
         allConditions.add(firstAndConditionsGroup);
 
         final Conditions2 conditions = new Conditions2(false, allConditions);
@@ -365,11 +365,11 @@ public class PropResolutionTest extends EqlTestCase {
         final EntityResultQueryModel<TgAuthor> qry = select(AUTHOR).where().prop("surname").isNotNull().model();
         final TransformationResult<EntQuery2> qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
 
-        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(AUTHOR, metadata.get(AUTHOR), null, 0);
+        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(AUTHOR, metadata.get(AUTHOR), null, "0");
         final Sources2 sources = new Sources2(source, emptyList());
         final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
         final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
-        firstAndConditionsGroup.add(new NullTest2(new EntProp2(source, 1, asList(pi(AUTHOR, "surname"))), true));
+        firstAndConditionsGroup.add(new NullTest2(new EntProp2(source, "1", asList(pi(AUTHOR, "surname"))), true));
         allConditions.add(firstAndConditionsGroup);
         final Conditions2 conditions = new Conditions2(false, allConditions);
 
@@ -429,11 +429,11 @@ public class PropResolutionTest extends EqlTestCase {
         final EntityResultQueryModel<TgAuthor> qry = select(AUTHOR).as("a").where().prop("a.surname").isNotNull().model();
         final TransformationResult<EntQuery2> qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
 
-        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(AUTHOR, metadata.get(AUTHOR), "a", 0);
+        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(AUTHOR, metadata.get(AUTHOR), "a", "0");
         final Sources2 sources = new Sources2(source, Collections.<CompoundSource2> emptyList());
         final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
         final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
-        firstAndConditionsGroup.add(new NullTest2(new EntProp2(source, 1, asList(pi(AUTHOR, "surname"))), true));
+        firstAndConditionsGroup.add(new NullTest2(new EntProp2(source, "1", asList(pi(AUTHOR, "surname"))), true));
         allConditions.add(firstAndConditionsGroup);
         final Conditions2 conditions = new Conditions2(false, allConditions);
 
@@ -449,11 +449,11 @@ public class PropResolutionTest extends EqlTestCase {
         final EntityResultQueryModel<TgAuthor> qry = select(AUTHOR).where().prop("surname").isNotNull().and().prop("name").eq().iVal(null).model();
         final TransformationResult<EntQuery2> qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
 
-        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(AUTHOR, metadata.get(AUTHOR), null, 0);
+        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(AUTHOR, metadata.get(AUTHOR), null, "0");
         final Sources2 sources = new Sources2(source, Collections.<CompoundSource2> emptyList());
         final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
         final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
-        firstAndConditionsGroup.add(new NullTest2(new EntProp2(source, 1, asList(pi(AUTHOR, "surname"))), true));
+        firstAndConditionsGroup.add(new NullTest2(new EntProp2(source, "1", asList(pi(AUTHOR, "surname"))), true));
         allConditions.add(firstAndConditionsGroup);
         final Conditions2 conditions = new Conditions2(false, allConditions);
 
@@ -469,11 +469,11 @@ public class PropResolutionTest extends EqlTestCase {
         final EntityResultQueryModel<TgAuthor> qry = select(AUTHOR).where().prop("surname").isNotNull().and().prop("name").eq().iParam("param").model();
         final TransformationResult<EntQuery2> qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
 
-        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(AUTHOR, metadata.get(AUTHOR), null, 0);
+        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(AUTHOR, metadata.get(AUTHOR), null, "0");
         final Sources2 sources = new Sources2(source, Collections.<CompoundSource2> emptyList());
         final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
         final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
-        firstAndConditionsGroup.add(new NullTest2(new EntProp2(source, 1, asList(pi(AUTHOR, "surname"))), true));
+        firstAndConditionsGroup.add(new NullTest2(new EntProp2(source, "1", asList(pi(AUTHOR, "surname"))), true));
         allConditions.add(firstAndConditionsGroup);
         final Conditions2 conditions = new Conditions2(false, allConditions);
 
@@ -491,11 +491,11 @@ public class PropResolutionTest extends EqlTestCase {
         params.put("param", 1);
         final TransformationResult<EntQuery2> qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
 
-        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(AUTHOR, metadata.get(AUTHOR), null, 0);
+        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(AUTHOR, metadata.get(AUTHOR), null, "0");
         final Sources2 sources = new Sources2(source, Collections.<CompoundSource2> emptyList());
         final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
         final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
-        firstAndConditionsGroup.add(new ComparisonTest2(new EntProp2(source, 1, asList(pi(AUTHOR, "surname"))), EQ, new EntValue2(1)));
+        firstAndConditionsGroup.add(new ComparisonTest2(new EntProp2(source, "1", asList(pi(AUTHOR, "surname"))), EQ, new EntValue2(1)));
         allConditions.add(firstAndConditionsGroup);
         final Conditions2 conditions = new Conditions2(false, allConditions);
 
@@ -512,14 +512,14 @@ public class PropResolutionTest extends EqlTestCase {
         where().prop("surname").eq().val(1).model();
         final TransformationResult<EntQuery2> qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
 
-        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(AUTHOR, metadata.get(AUTHOR), null, 0);
-        final QrySource2BasedOnPersistentType source2 = new QrySource2BasedOnPersistentType(TgPersonName.class, metadata.get(TgPersonName.class), "pn", 0);
+        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(AUTHOR, metadata.get(AUTHOR), null, "0");
+        final QrySource2BasedOnPersistentType source2 = new QrySource2BasedOnPersistentType(TgPersonName.class, metadata.get(TgPersonName.class), "pn", "0");
 
         final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
         final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
-        firstAndConditionsGroup.add(new ComparisonTest2(new EntProp2(source, 1, asList(pi(AUTHOR, "name"))), //
+        firstAndConditionsGroup.add(new ComparisonTest2(new EntProp2(source, "1", asList(pi(AUTHOR, "name"))), //
                 EQ, // 
-                new EntProp2(source2, 1, asList(metadata.get(TgPersonName.class).getProps().get("id")))));
+                new EntProp2(source2, "1", asList(metadata.get(TgPersonName.class).getProps().get("id")))));
         allConditions.add(firstAndConditionsGroup);
         final Conditions2 joinConditions = new Conditions2(false, allConditions);
 
@@ -529,7 +529,7 @@ public class PropResolutionTest extends EqlTestCase {
         final Sources2 sources = new Sources2(source, compounds);
         final List<List<? extends ICondition2<?>>> allConditions2 = new ArrayList<>();
         final List<ICondition2<?>> firstAndConditionsGroup2 = new ArrayList<>();
-        firstAndConditionsGroup2.add(new ComparisonTest2(new EntProp2(source, 1, asList(pi(AUTHOR, "surname"))), EQ, new EntValue2(1)));
+        firstAndConditionsGroup2.add(new ComparisonTest2(new EntProp2(source, "1", asList(pi(AUTHOR, "surname"))), EQ, new EntValue2(1)));
         allConditions2.add(firstAndConditionsGroup2);
         final Conditions2 conditions = new Conditions2(false, allConditions2);
 
@@ -546,25 +546,25 @@ public class PropResolutionTest extends EqlTestCase {
         where().prop("lastRoyalty").eq().val(1).model();
         final TransformationResult<EntQuery2> qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
 
-        final QrySource2BasedOnPersistentType sourceAuthor = new QrySource2BasedOnPersistentType(AUTHOR, metadata.get(AUTHOR), null, 0);
+        final QrySource2BasedOnPersistentType sourceAuthor = new QrySource2BasedOnPersistentType(AUTHOR, metadata.get(AUTHOR), null, "0");
 
-        final QrySource2BasedOnPersistentType sourceAuthorRoyalty = new QrySource2BasedOnPersistentType(TgAuthorRoyalty.class, metadata.get(TgAuthorRoyalty.class), null, 0);
+        final QrySource2BasedOnPersistentType sourceAuthorRoyalty = new QrySource2BasedOnPersistentType(TgAuthorRoyalty.class, metadata.get(TgAuthorRoyalty.class), null, "0");
 
         final List<List<? extends ICondition2<?>>> lrAllConditions2 = new ArrayList<>();
         final List<ICondition2<?>> lrFirstAndConditionsGroup2 = new ArrayList<>();
-        lrFirstAndConditionsGroup2.add(new ComparisonTest2(new EntProp2(sourceAuthorRoyalty, 1, asList(null)), EQ,
-                new EntProp2(sourceAuthor, 1, asList(null))));
+        lrFirstAndConditionsGroup2.add(new ComparisonTest2(new EntProp2(sourceAuthorRoyalty, "1", asList(null)), EQ,
+                new EntProp2(sourceAuthor, "1", asList(null))));
         lrAllConditions2.add(lrFirstAndConditionsGroup2);
         final Conditions2 lrConditions = new Conditions2(false, lrAllConditions2);
 
         final EntQueryBlocks2 lastRoyaltyParts = new EntQueryBlocks2(new Sources2(sourceAuthorRoyalty, emptyList()), lrConditions, emptyYields2, new GroupBys2(Collections.<GroupBy2> emptyList()), new OrderBys2(null));
         final EntQuery2 lastRoyaltySubqry = new EntQuery2(lastRoyaltyParts, TgAuthorRoyalty.class, SUB_QUERY);
 
-        final QrySource2BasedOnPersistentType sourcePersonName = new QrySource2BasedOnPersistentType(TgPersonName.class, metadata.get(TgPersonName.class), "pn", 0);
+        final QrySource2BasedOnPersistentType sourcePersonName = new QrySource2BasedOnPersistentType(TgPersonName.class, metadata.get(TgPersonName.class), "pn", "0");
 
         final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
         final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
-        firstAndConditionsGroup.add(new ComparisonTest2(new EntProp2(sourceAuthor, 1, asList(null)), EQ, new EntProp2(sourcePersonName, 1, asList(null))));
+        firstAndConditionsGroup.add(new ComparisonTest2(new EntProp2(sourceAuthor, "1", asList(null)), EQ, new EntProp2(sourcePersonName, "1", asList(null))));
         allConditions.add(firstAndConditionsGroup);
         final Conditions2 joinConditions = new Conditions2(false, allConditions);
 
@@ -576,7 +576,7 @@ public class PropResolutionTest extends EqlTestCase {
         final List<ICondition2<?>> firstAndConditionsGroup2 = new ArrayList<>();
 
         final Expression2 lrExpr = new Expression2(lastRoyaltySubqry, emptyList());
-        firstAndConditionsGroup2.add(new ComparisonTest2(new EntProp2(sourceAuthor, 1, asList(null)), EQ, new EntValue2(1)));
+        firstAndConditionsGroup2.add(new ComparisonTest2(new EntProp2(sourceAuthor, "1", asList(null)), EQ, new EntValue2(1)));
         allConditions2.add(firstAndConditionsGroup2);
         final Conditions2 conditions = new Conditions2(false, allConditions2);
 

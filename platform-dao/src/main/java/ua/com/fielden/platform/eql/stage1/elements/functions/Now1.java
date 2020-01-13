@@ -7,7 +7,7 @@ import ua.com.fielden.platform.eql.stage2.elements.functions.Now2;
 public class Now1 extends AbstractFunction1<Now2> {
 
     @Override
-    public TransformationResult<Now2> transform(final PropsResolutionContext context) {
+    public TransformationResult<Now2> transform(final PropsResolutionContext context, final String sourceId) {
         return new TransformationResult<Now2>(new Now2(), context.cloneNew());
     }
     

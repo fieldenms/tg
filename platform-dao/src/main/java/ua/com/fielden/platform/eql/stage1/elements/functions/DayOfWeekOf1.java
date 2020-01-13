@@ -13,8 +13,8 @@ public class DayOfWeekOf1 extends SingleOperandFunction1<DayOfWeekOf2> {
     }
 
     @Override
-    public TransformationResult<DayOfWeekOf2> transform(final PropsResolutionContext context) {
-        final TransformationResult<? extends ISingleOperand2<?>> operandTransformationResult = operand.transform(context);
+    public TransformationResult<DayOfWeekOf2> transform(final PropsResolutionContext context, final String sourceId) {
+        final TransformationResult<? extends ISingleOperand2<?>> operandTransformationResult = operand.transform(context, sourceId);
         return new TransformationResult<DayOfWeekOf2>(new DayOfWeekOf2(operandTransformationResult.item), operandTransformationResult.updatedContext);
     }
     

@@ -22,9 +22,9 @@ public class SetTest1 implements ICondition1<SetTest2> {
     }
 
     @Override
-    public TransformationResult<SetTest2> transform(final PropsResolutionContext context) {
-        final TransformationResult<? extends ISingleOperand2<?>> leftOperandTr = leftOperand.transform(context);
-        final TransformationResult<? extends ISetOperand2<?>> rightOperandTr = rightOperand.transform(leftOperandTr.updatedContext);
+    public TransformationResult<SetTest2> transform(final PropsResolutionContext context, final String sourceId) {
+        final TransformationResult<? extends ISingleOperand2<?>> leftOperandTr = leftOperand.transform(context, sourceId);
+        final TransformationResult<? extends ISetOperand2<?>> rightOperandTr = rightOperand.transform(leftOperandTr.updatedContext, sourceId);
         return new TransformationResult<SetTest2>(new SetTest2(leftOperandTr.item, negated, rightOperandTr.item), rightOperandTr.updatedContext);
     }
 

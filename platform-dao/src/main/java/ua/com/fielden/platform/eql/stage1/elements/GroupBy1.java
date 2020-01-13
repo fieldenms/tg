@@ -13,8 +13,8 @@ public class GroupBy1 {
         this.operand = operand;
     }
 
-    public TransformationResult<GroupBy2> transform(final PropsResolutionContext context) {
-        final TransformationResult<? extends ISingleOperand2<?>> operandTr = operand.transform(context);
+    public TransformationResult<GroupBy2> transform(final PropsResolutionContext context, final String sourceId) {
+        final TransformationResult<? extends ISingleOperand2<?>> operandTr = operand.transform(context, sourceId);
         return new TransformationResult<GroupBy2>(new GroupBy2(operandTr.item), operandTr.updatedContext);
     }
 
