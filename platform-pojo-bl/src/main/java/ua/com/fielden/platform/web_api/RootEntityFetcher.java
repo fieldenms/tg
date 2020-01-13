@@ -1,11 +1,12 @@
 package ua.com.fielden.platform.web_api;
 
+import static java.lang.String.format;
+import static ua.com.fielden.platform.web_api.RootEntityMixin.generateQueryModelFrom;
+
 import java.util.List;
-import java.util.Map;
 
 import org.apache.log4j.Logger;
 
-import graphql.language.Field;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -26,19 +27,21 @@ public class RootEntityFetcher implements DataFetcher {
     @Override
     public Object get(final DataFetchingEnvironment environment) {
         try {
-            logger.error(String.format("Quering type [%s]...", entityType.getSimpleName()));
-            logger.error(String.format("\tArguments [%s]", environment.getArguments()));
-            logger.error(String.format("\tContext [%s]", environment.getContext()));
-            logger.error(String.format("\tFields [%s]", environment.getFields()));
-            logger.error(String.format("\tFieldType [%s]", environment.getFieldType()));
-            logger.error(String.format("\tParentType [%s]", environment.getParentType()));
-            logger.error(String.format("\tSource [%s]", environment.getSource()));
+            logger.error(format("Quering type [%s]...", entityType.getSimpleName()));
+            logger.error("\tSource " + environment.getSource());
+            logger.error(format("\tArguments [%s]", environment.getArguments()));
+            logger.error("\tContext " + environment.getContext());
+            logger.error("\tLocalContext " + environment.getLocalContext());
+            logger.error("\troot " + environment.getRoot());
             
-            final List<Field> fields = environment.getFields();
-            // Source was defined in GraphQLQueryResource as "variablesAndFragments".
-            final Map<String, Object> variablesAndFragments = (Map<String, Object>) environment.getSource();
+            logger.error(format("\tField [%s]", environment.getField()));
+            logger.error(format("\tMergedField [%s]", environment.getMergedField()));
+            logger.error(format("\tParentType [%s]", environment.getParentType()));
             
-            final QueryExecutionModel queryModel = RootEntityMixin.generateQueryModelFrom(fields, variablesAndFragments, entityType);
+            logger.error(format("\tVariables [%s]", environment.getVariables()));
+            logger.error(format("\tFragmentsByName [%s]", environment.getFragmentsByName()));
+            
+            final QueryExecutionModel queryModel = generateQueryModelFrom(environment.getField().getSelectionSet(), environment.getVariables(), environment.getFragmentsByName(), entityType);
             
             final IEntityDao<? extends AbstractEntity> co = coFinder.find(entityType);
             final List entities = co.getAllEntities(queryModel); // TODO fetch order etc.

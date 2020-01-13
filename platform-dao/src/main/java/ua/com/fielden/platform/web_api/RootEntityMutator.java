@@ -1,14 +1,15 @@
 package ua.com.fielden.platform.web_api;
 
+import static java.lang.String.format;
+import static ua.com.fielden.platform.web_api.RootEntityMixin.generateQueryModelFrom;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import org.apache.log4j.Logger;
 
-import graphql.language.Field;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -38,27 +39,30 @@ public class RootEntityMutator implements DataFetcher {
         try {
             final IEntityDao co = coFinder.find(entityType);
             final SavingInfoHolder savingInfoHolder = createSavingInfoHolder(environment.getArguments()); // TODO impl
-            final Pair<AbstractEntity, Optional<Exception>> potentiallySavedWithException = (Pair<AbstractEntity, Optional<Exception>>) EntityResourceContinuationsHelper.tryToSave(savingInfoHolder , entityType, entityFactory, coFinder, co);
+            final Pair<AbstractEntity, Optional<Exception>> potentiallySavedWithException = EntityResourceContinuationsHelper.tryToSave(savingInfoHolder , entityType, entityFactory, coFinder, co);
             
             if (potentiallySavedWithException.getValue().isPresent()) {
                 throw potentiallySavedWithException.getValue().get();
             }
             
-            logger.error(String.format("Mutating type [%s]...", entityType.getSimpleName()));
-            logger.error(String.format("\tArguments [%s]", environment.getArguments()));
-            logger.error(String.format("\tContext [%s]", environment.getContext()));
-            logger.error(String.format("\tFields [%s]", environment.getFields()));
-            logger.error(String.format("\tFieldType [%s]", environment.getFieldType()));
-            logger.error(String.format("\tParentType [%s]", environment.getParentType()));
-            logger.error(String.format("\tSource [%s]", environment.getSource()));
+            logger.error(format("Mutating type [%s]...", entityType.getSimpleName()));
+            logger.error("\tSource " + environment.getSource());
+            logger.error(format("\tArguments [%s]", environment.getArguments()));
+            logger.error("\tContext " + environment.getContext());
+            logger.error("\tLocalContext " + environment.getLocalContext());
+            logger.error("\troot " + environment.getRoot());
             
-            final List<Field> fields = environment.getFields();
-            // Source was defined in GraphQLQueryResource as "variables". So we can use it here to resolve variables
-            final Map<String, Object> variables = (Map<String, Object>) environment.getSource();
+            logger.error(format("\tField [%s]", environment.getField()));
+            logger.error(format("\tMergedField [%s]", environment.getMergedField()));
+            logger.error(format("\tParentType [%s]", environment.getParentType()));
+            
+            logger.error(format("\tVariables [%s]", environment.getVariables()));
+            logger.error(format("\tFragmentsByName [%s]", environment.getFragmentsByName()));
+            
             final QueryProperty idQueryProperty = new QueryProperty(entityType, AbstractEntity.ID);
             idQueryProperty.setValue(potentiallySavedWithException.getKey().getId());
             idQueryProperty.setValue2(potentiallySavedWithException.getKey().getId());
-            final QueryExecutionModel queryModel = RootEntityMixin.generateQueryModelFrom(fields, variables, entityType, idQueryProperty);
+            final QueryExecutionModel queryModel = generateQueryModelFrom(environment.getField().getSelectionSet(), environment.getVariables(), environment.getFragmentsByName(), entityType, idQueryProperty);
             
             final AbstractEntity entity = co.getEntity(queryModel); // TODO fetch order etc.
             logger.error(String.format("Mutating type [%s]...done", entityType.getSimpleName()));

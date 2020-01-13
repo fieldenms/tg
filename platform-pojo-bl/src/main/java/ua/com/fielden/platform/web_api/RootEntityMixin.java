@@ -1,13 +1,16 @@
 package ua.com.fielden.platform.web_api;
 
+import static java.lang.String.format;
+import static java.util.Arrays.asList;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.createQuery;
+import static ua.com.fielden.platform.utils.EntityUtils.fetchNotInstrumented;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.log4j.Logger;
@@ -24,26 +27,24 @@ import graphql.language.Value;
 import graphql.language.VariableReference;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
-import ua.com.fielden.platform.utils.EntityUtils;
 
 public class RootEntityMixin {
     private static final Logger LOGGER = Logger.getLogger(RootEntityMixin.class);
     
-    public static QueryExecutionModel generateQueryModelFrom(final List<Field> fields, final Map<String, Object> variablesAndFragments, final Class<? extends AbstractEntity<?>> entityType, final QueryProperty... additionalQueryProperties) {
-        final Map<String, FragmentDefinition> fragmentDefinitions = (Map<String, FragmentDefinition>) variablesAndFragments.get("fragments");
-        final List<Field> innerFieldsForEntityQuery = RootEntityMixin.toFields(fields.get(0).getSelectionSet(), fragmentDefinitions); // TODO fields could be empty? could contain more than one?
-        final LinkedHashMap<String, List<Argument>> properties = RootEntityMixin.properties(null, innerFieldsForEntityQuery, fragmentDefinitions);
+    public static QueryExecutionModel generateQueryModelFrom(final SelectionSet selectionSet, final Map<String, Object> variables, final Map<String, FragmentDefinition> fragmentDefinitions, final Class<? extends AbstractEntity<?>> entityType, final QueryProperty... additionalQueryProperties) {
+        // convert selectionSet to concrete properties (their dot-notated names) with their arguments
+        final LinkedHashMap<String, List<Argument>> propertiesAndArguments = properties(null, toFields(selectionSet, fragmentDefinitions), fragmentDefinitions);
         
+        // add custom QueryProperty instances to resultant ones
         final Map<String, QueryProperty> queryProperties = new LinkedHashMap<>();
-        Arrays.asList(additionalQueryProperties).stream().forEach(queryProperty -> {
+        asList(additionalQueryProperties).stream().forEach(queryProperty -> {
             queryProperties.put(queryProperty.getPropertyName(), queryProperty);
         });
-        final Map<String, Object> variables = (Map<String, Object>) variablesAndFragments.get("variables");
-        for (final Map.Entry<String, List<Argument>> propertyAndArguments: properties.entrySet()) {
+        
+        // add query properties based on GraphQL arguments if they are not empty
+        for (final Map.Entry<String, List<Argument>> propertyAndArguments: propertiesAndArguments.entrySet()) {
             final String propertyName = propertyAndArguments.getKey();
             final List<Argument> propertyArguments = propertyAndArguments.getValue();
             if (!propertyArguments.isEmpty()) {
@@ -74,12 +75,8 @@ public class RootEntityMixin {
             }
         }
         
-        final ICompleted<? extends AbstractEntity<?>> query = createQuery(entityType, new ArrayList<>(queryProperties.values()));
-        final EntityResultQueryModel eqlQuery = query.model();
-        
-        final fetch<? extends AbstractEntity> fetchModel = EntityUtils.fetchNotInstrumented(entityType).with(properties.keySet()).fetchModel();
-        final QueryExecutionModel queryModel = from(eqlQuery).with(fetchModel).lightweight().model();
-        return queryModel;
+        final EntityResultQueryModel eqlQuery = createQuery(entityType, new ArrayList<>(queryProperties.values())).model();
+        return from(eqlQuery).with(fetchNotInstrumented(entityType).with(propertiesAndArguments.keySet()).fetchModel()).model();
     }
 
     private static Optional<Object> resolveValue(final Value valueOrVariable, final Map<String, Object> variables) {
@@ -114,26 +111,37 @@ public class RootEntityMixin {
         LOGGER.error(String.format("\tFetching props [%s]", properties));
         return properties;
     }
-
+    
+    /**
+     * Converts {@link SelectionSet} instance to a list of first-level fields.
+     * <p>
+     * This method also handles "fragment spreads" and "inline fragments" converting them to list of concrete fields.
+     * This requires access to external <code>fragmentDefinitions</code>.
+     * 
+     * @param selectionSet
+     * @param fragmentDefinitions
+     * @return
+     */
     private static List<Field> toFields(final SelectionSet selectionSet, final Map<String, FragmentDefinition> fragmentDefinitions) {
         final List<Field> selectionFields = new ArrayList<>();
         if (selectionSet != null) {
-            final List<Selection> selections = selectionSet.getSelections();
-            for (final Selection selection: selections) {
+            for (final Selection selection: selectionSet.getSelections()) {
                 if (selection instanceof Field) {
                     selectionFields.add((Field) selection);
-                } if (selection instanceof FragmentSpread) {
+                } else if (selection instanceof FragmentSpread) {
                     final FragmentSpread fragmentSpread = (FragmentSpread) selection;
                     final FragmentDefinition fragmentDefinition = fragmentDefinitions.get(fragmentSpread.getName());
                     selectionFields.addAll(toFields(fragmentDefinition.getSelectionSet(), fragmentDefinitions));
-                } if (selection instanceof InlineFragment) {
+                } else if (selection instanceof InlineFragment) {
                     final InlineFragment inlineFragment = (InlineFragment) selection;
                     selectionFields.addAll(toFields(inlineFragment.getSelectionSet(), fragmentDefinitions));
                 } else {
-                    // TODO investigate what needs to be done here
+                    // this is the only three types of possible selections; log warning if something else appeared
+                    LOGGER.warn(format("Unknown Selection [%s] has appeared.", Objects.toString(selection))); // 'null' selection is possible
                 }
             }
         }
         return selectionFields;
     }
+    
 }
