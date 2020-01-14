@@ -50,7 +50,7 @@ public class TeWorkOrder extends AbstractEntity<String> {
     @IsProperty
     @Calculated
     private String makeKey2;
-    protected static final ExpressionModel makeKey2_ = expr().model(select(TeVehicle.class).where().prop("id").eq().extProp("vehicle").yield().prop("makeKey3").modelAsPrimitive()).model();
+    protected static final ExpressionModel makeKey2_ = expr().model(select(TeVehicle.class).where().prop("id").eq().extProp("vehicle").yield().prop("modelMakeKey4").modelAsPrimitive()).model();
 
     @IsProperty
     @Calculated

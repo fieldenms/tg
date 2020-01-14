@@ -37,18 +37,13 @@ public class TeVehicle extends AbstractEntity<String> {
 
     @IsProperty
     @Calculated
-    private String makeKey;
-    protected static final ExpressionModel makeKey_ = expr().prop("model.make.key").model();
+    private String modelKey;
+    protected static final ExpressionModel modelKey_ = expr().prop("model.key").model();
 
     @IsProperty
     @Calculated
-    private String makeDesc;
-    protected static final ExpressionModel makeDesc_ = expr().prop("model.make.desc").model();
-    
-    @IsProperty
-    @Calculated
-    private String modelKey;
-    protected static final ExpressionModel modelKey_ = expr().prop("model.key").model();
+    private String modelKey2;
+    protected static final ExpressionModel modelKey2_ = expr().model(select(TeVehicleModel.class).where().prop("id").eq().extProp("model").yield().prop("key").modelAsPrimitive()).model();
 
     @IsProperty
     @Calculated
@@ -57,28 +52,63 @@ public class TeVehicle extends AbstractEntity<String> {
 
     @IsProperty
     @Calculated
-    private String stationKey;
-    protected static final ExpressionModel stationKey_ = expr().prop("station.key").model();
+    private String stationName;
+    protected static final ExpressionModel stationName_ = expr().prop("station.name").model();
 
     @IsProperty
     @Calculated
-    private String makeKey2;
-    protected static final ExpressionModel makeKey2_ = expr().prop("model.makeKey").model();
+    private String modelMakeDesc;
+    protected static final ExpressionModel modelMakeDesc_ = expr().prop("model.make.desc").model();
 
     @IsProperty
     @Calculated
-    private String makeKey3;
-    protected static final ExpressionModel makeKey3_ = expr().model(select(TeVehicleModel.class).where().prop("id").eq().extProp("model").yield().prop("make.key").modelAsPrimitive()).model();
+    private TeVehicleMake modelMake;
+    protected static final ExpressionModel modelMake_ = expr().prop("model.make").model();
 
     @IsProperty
     @Calculated
-    private String makeKey4;
-    protected static final ExpressionModel makeKey4_ = expr().model(select(TeVehicleModel.class).where().prop("id").eq().extProp("model").yield().prop("makeKey").modelAsPrimitive()).model();
+    private TeVehicleMake modelMake2;
+    protected static final ExpressionModel modelMake2_ = expr().model(select(TeVehicleModel.class).where().prop("id").eq().extProp("model").yield().prop("make").modelAsEntity(TeVehicleMake.class)).model();
 
     @IsProperty
     @Calculated
-    private String makeKey5;
-    protected static final ExpressionModel makeKey5_ = expr().model(select(TeVehicleModel.class).where().prop("id").eq().extProp("model").yield().prop("makeKey2").modelAsPrimitive()).model();
+    private String modelMakeKey;
+    protected static final ExpressionModel modelMakeKey_ = expr().prop("model.make.key").model();
+
+    @IsProperty
+    @Calculated
+    private String modelMakeKey2;
+    protected static final ExpressionModel modelMakeKey2_ = expr().prop("model.makeKey").model();
+
+    @IsProperty
+    @Calculated
+    private String modelMakeKey3;
+    protected static final ExpressionModel modelMakeKey3_ = expr().prop("model.makeKey2").model();
+
+    @IsProperty
+    @Calculated
+    private String modelMakeKey4;
+    protected static final ExpressionModel modelMakeKey4_ = expr().model(select(TeVehicleModel.class).where().prop("id").eq().extProp("model").yield().prop("make.key").modelAsPrimitive()).model();
+
+    @IsProperty
+    @Calculated
+    private String modelMakeKey5;
+    protected static final ExpressionModel modelMakeKey5_ = expr().model(select(TeVehicleModel.class).where().prop("id").eq().extProp("model").yield().prop("makeKey").modelAsPrimitive()).model();
+
+    @IsProperty
+    @Calculated
+    private String modelMakeKey6;
+    protected static final ExpressionModel modelMakeKey6_ = expr().model(select(TeVehicleModel.class).where().prop("id").eq().extProp("model").yield().prop("makeKey2").modelAsPrimitive()).model();
+
+    @IsProperty
+    @Calculated
+    private String modelMakeKey7;
+    protected static final ExpressionModel modelMakeKey7_ = expr().prop("modelMake.key").model();
+
+    @IsProperty
+    @Calculated
+    private String modelMakeKey8;
+    protected static final ExpressionModel modelMakeKey8_ = expr().prop("modelMake2.key").model();
 
     @IsProperty
     @MapTo
@@ -123,13 +153,9 @@ public class TeVehicle extends AbstractEntity<String> {
     @Title("Leased?")
     private boolean leased;
 
-    @IsProperty(value = TgFuelUsage.class, linkProperty = "vehicle")
+    @IsProperty(value = TeVehicleFuelUsage.class, linkProperty = "vehicle")
     @Title("Fuel usages")
-    private Set<TgFuelUsage> fuelUsages = new HashSet<TgFuelUsage>();
-
-    @IsProperty(value = TgVehicleFuelUsage.class, linkProperty = "vehicle")
-    @Title("Vehicle Fuel usages")
-    private Set<TgVehicleFuelUsage> vehicleFuelUsages = new HashSet<TgVehicleFuelUsage>();
+    private Set<TeVehicleFuelUsage> fuelUsages = new HashSet<TeVehicleFuelUsage>();
 
     @IsProperty(precision = 10, scale = 3)
     @MapTo
@@ -139,8 +165,8 @@ public class TeVehicle extends AbstractEntity<String> {
     @IsProperty(linkProperty = "vehicle")
     @Calculated
     @Title("Last fuel usage")
-    private TgFuelUsage lastFuelUsage;
-    protected static final ExpressionModel lastFuelUsage_ = expr().model(select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("id").and().notExists(select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("vehicle").and().prop("date").gt().extProp("date").model()).model()).model();
+    private TeVehicleFuelUsage lastFuelUsage;
+    protected static final ExpressionModel lastFuelUsage_ = expr().model(select(TeVehicleFuelUsage.class).where().prop("vehicle").eq().extProp("id").and().notExists(select(TeVehicleFuelUsage.class).where().prop("vehicle").eq().extProp("vehicle").and().prop("date").gt().extProp("date").model()).model()).model();
 
     @IsProperty
     @Calculated
@@ -157,7 +183,7 @@ public class TeVehicle extends AbstractEntity<String> {
     @Calculated
     @Title("Last fuel usage qty")
     private BigDecimal lastFuelUsageQty;
-    protected static final ExpressionModel lastFuelUsageQty_ = expr().model(select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("id").and().notExists(select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("vehicle").and().prop("date").gt().extProp("date").model()).yield().prop("qty").modelAsPrimitive()).model();
+    protected static final ExpressionModel lastFuelUsageQty_ = expr().model(select(TeVehicleFuelUsage.class).where().prop("vehicle").eq().extProp("id").and().notExists(select(TeVehicleFuelUsage.class).where().prop("vehicle").eq().extProp("vehicle").and().prop("date").gt().extProp("date").model()).yield().prop("qty").modelAsPrimitive()).model();
 
     @IsProperty
     @Calculated
@@ -170,19 +196,19 @@ public class TeVehicle extends AbstractEntity<String> {
     @Calculated
     @Title("Calc2")
     private BigDecimal calc2;
-    protected static final ExpressionModel calc2_ = expr().model(select(TgFuelUsage.class).yield().sumOf().prop("qty").modelAsPrimitive()).model();
+    protected static final ExpressionModel calc2_ = expr().model(select(TeVehicleFuelUsage.class).yield().sumOf().prop("qty").modelAsPrimitive()).model();
 
     @IsProperty
     @Calculated
     @Title("Calc3")
     private BigDecimal calc3;
-    protected static final ExpressionModel calc3_ = expr().model(select(TgFuelUsage.class).where().prop("date").lt().extProp("initDate").yield().sumOf().prop("qty").modelAsPrimitive()).model();
+    protected static final ExpressionModel calc3_ = expr().model(select(TeVehicleFuelUsage.class).where().prop("date").lt().extProp("initDate").yield().sumOf().prop("qty").modelAsPrimitive()).model();
 
     @IsProperty
     @Calculated
     @Title("Calc4")
     private BigDecimal calc4;
-    protected static final ExpressionModel calc4_ = expr().model(select(TgFuelUsage.class).where().prop("qty").lt().extProp("calc2").yield().sumOf().prop("qty").modelAsPrimitive()).model();
+    protected static final ExpressionModel calc4_ = expr().model(select(TeVehicleFuelUsage.class).where().prop("qty").lt().extProp("calc2").yield().sumOf().prop("qty").modelAsPrimitive()).model();
 
     @IsProperty
     @Calculated
@@ -251,12 +277,12 @@ public class TeVehicle extends AbstractEntity<String> {
         return finDetails;
     }
 
-    public TgFuelUsage getLastFuelUsage() {
+    public TeVehicleFuelUsage getLastFuelUsage() {
         return lastFuelUsage;
     }
 
     @Observable
-    protected TeVehicle setLastFuelUsage(final TgFuelUsage fu) {
+    protected TeVehicle setLastFuelUsage(final TeVehicleFuelUsage fu) {
         this.lastFuelUsage = fu;
         return this;
     }
@@ -312,21 +338,12 @@ public class TeVehicle extends AbstractEntity<String> {
     }
 
     @Observable
-    public void setFuelUsages(final Set<TgFuelUsage> fuelUsages) {
+    public void setFuelUsages(final Set<TeVehicleFuelUsage> fuelUsages) {
         this.fuelUsages = fuelUsages;
     }
 
-    public Set<TgFuelUsage> getFuelUsages() {
+    public Set<TeVehicleFuelUsage> getFuelUsages() {
         return fuelUsages;
-    }
-
-    @Observable
-    public void setVehicleFuelUsages(final Set<TgVehicleFuelUsage> vehicleFuelUsages) {
-        this.vehicleFuelUsages = vehicleFuelUsages;
-    }
-
-    public Set<TgVehicleFuelUsage> getVehicleFuelUsages() {
-        return vehicleFuelUsages;
     }
 
     @Observable
@@ -464,13 +481,33 @@ public class TeVehicle extends AbstractEntity<String> {
     }
     
     @Observable
-    protected TeVehicle setMakeKey(final String makeKey) {
-        this.makeKey = makeKey;
+    protected TeVehicle setModelMake(final TeVehicleMake modelMake) {
+        this.modelMake = modelMake;
         return this;
     }
 
-    public String getMakeKey() {
-        return makeKey;
+    public TeVehicleMake getModelMake() {
+        return modelMake;
+    }
+
+    @Observable
+    protected TeVehicle setModelMake2(final TeVehicleMake modelMake2) {
+        this.modelMake2 = modelMake2;
+        return this;
+    }
+
+    public TeVehicleMake getModelMake2() {
+        return modelMake2;
+    }
+
+    @Observable
+    protected TeVehicle setModelMakeKey(final String modelMakeKey) {
+        this.modelMakeKey = modelMakeKey;
+        return this;
+    }
+
+    public String getModelMakeKey() {
+        return modelMakeKey;
     }
 
     @Observable
@@ -484,6 +521,16 @@ public class TeVehicle extends AbstractEntity<String> {
     }
 
     @Observable
+    protected TeVehicle setModelKey2(final String modelKey2) {
+        this.modelKey2 = modelKey2;
+        return this;
+    }
+
+    public String getModelKey2() {
+        return modelKey2;
+    }
+
+    @Observable
     protected TeVehicle setModelDesc(final String modelDesc) {
         this.modelDesc = modelDesc;
         return this;
@@ -494,63 +541,93 @@ public class TeVehicle extends AbstractEntity<String> {
     }
 
     @Observable
-    protected TeVehicle setStationKey(final String stationKey) {
-        this.stationKey = stationKey;
+    protected TeVehicle setStationName(final String stationName) {
+        this.stationName = stationName;
         return this;
     }
 
-    public String getStationKey() {
-        return stationKey;
+    public String getStationName() {
+        return stationName;
     }
 
     @Observable
-    protected TeVehicle setMakeDesc(final String makeDesc) {
-        this.makeDesc = makeDesc;
+    protected TeVehicle setModelMakeDesc(final String modelMakeDesc) {
+        this.modelMakeDesc = modelMakeDesc;
         return this;
     }
 
-    public String getMakeDesc() {
-        return makeDesc;
+    public String getModelMakeDesc() {
+        return modelMakeDesc;
     }
     
     @Observable
-    protected TeVehicle setMakeKey2(final String makeKey2) {
-        this.makeKey2 = makeKey2;
+    protected TeVehicle setModelMakeKey2(final String modelMakeKey2) {
+        this.modelMakeKey2 = modelMakeKey2;
         return this;
     }
 
-    public String getMakeKey2() {
-        return makeKey2;
+    public String getModelMakeKey2() {
+        return modelMakeKey2;
     }
 
     @Observable
-    protected TeVehicle setMakeKey3(final String makeKey3) {
-        this.makeKey3 = makeKey3;
+    protected TeVehicle setModelMakeKey3(final String modelMakeKey3) {
+        this.modelMakeKey3 = modelMakeKey3;
         return this;
     }
 
-    public String getMakeKey3() {
-        return makeKey3;
+    public String getModelMakeKey3() {
+        return modelMakeKey3;
     }
     
     @Observable
-    protected TeVehicle setMakeKey4(final String makeKey4) {
-        this.makeKey4 = makeKey4;
+    protected TeVehicle setModelMakeKey4(final String modelMakeKey4) {
+        this.modelMakeKey4 = modelMakeKey4;
         return this;
     }
 
-    public String getMakeKey4() {
-        return makeKey4;
+    public String getModelMakeKey4() {
+        return modelMakeKey4;
     }
 
     @Observable
-    protected TeVehicle setMakeKey5(final String makeKey5) {
-        this.makeKey5 = makeKey5;
+    protected TeVehicle setModelMakeKey5(final String modelMakeKey5) {
+        this.modelMakeKey5 = modelMakeKey5;
         return this;
     }
 
-    public String getMakeKey5() {
-        return makeKey5;
+    public String getModelMakeKey5() {
+        return modelMakeKey5;
+    }
+
+    @Observable
+    protected TeVehicle setModelMakeKey6(final String modelMakeKey6) {
+        this.modelMakeKey6 = modelMakeKey6;
+        return this;
+    }
+
+    public String getModelMakeKey6() {
+        return modelMakeKey6;
+    }
+
+    @Observable
+    protected TeVehicle setModelMakeKey7(final String modelMakeKey7) {
+        this.modelMakeKey7 = modelMakeKey7;
+        return this;
+    }
+
+    public String getModelMakeKey7() {
+        return modelMakeKey7;
+    }
+    
+    @Observable
+    protected TeVehicle setModelMakeKey8(final String modelMakeKey8) {
+        this.modelMakeKey8 = modelMakeKey8;
+        return this;
+    }
+
+    public String getModelMakeKey8() {
+        return modelMakeKey8;
     }
 
     @Observable
