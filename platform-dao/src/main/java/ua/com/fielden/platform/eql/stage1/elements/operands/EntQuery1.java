@@ -75,7 +75,7 @@ public class EntQuery1 extends AbstractElement1 implements ISingleOperand1<EntQu
         final EntQueryBlocks2 entQueryBlocks = new EntQueryBlocks2(sourcesTr.item, conditionsTr.item, yieldsTr.item, groupsTr.item, orderingsTr.item);
 
         final PropsResolutionContext resultResolutionContext = (isSubQuery() || isSourceQuery()) ? 
-                new PropsResolutionContext(orderingsTr.updatedContext.getDomainInfo(), orderingsTr.updatedContext.getSources(), orderingsTr.updatedContext.getResolvedProps()) :
+                new PropsResolutionContext(orderingsTr.updatedContext.getDomainInfo(), orderingsTr.updatedContext.getSources().subList(1, orderingsTr.updatedContext.getSources().size()), orderingsTr.updatedContext.getResolvedProps()) :
                     orderingsTr.updatedContext;
                
         return new TransformationResult<EntQuery2>(new EntQuery2(entQueryBlocks, type(), category), resultResolutionContext);
