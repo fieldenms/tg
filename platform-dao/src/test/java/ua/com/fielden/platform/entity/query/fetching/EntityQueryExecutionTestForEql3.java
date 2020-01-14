@@ -331,7 +331,11 @@ public class EntityQueryExecutionTestForEql3 extends AbstractDaoTestCase {
     @Test
     public void eql3_query_executes_correctly30() {
         run(select(TeVehicle.class).where().anyOfProps(
-                "lastFuelUsage", 
+                "lastFuelUsage",
+                "lastFuelUsageQty",
+                "calc2",
+                "calc3",
+                "calc4",
                 "replacedBy.lastFuelUsage").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
     }
 

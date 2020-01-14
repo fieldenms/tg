@@ -118,8 +118,11 @@ public class PathsToTreeTransformator {
                 }
             }
             
-            dependencies.addAll(dependenciesResult.get(contextSource));
-            result.addAll(dependenciesResult.get(contextSource));
+            final SortedSet<Child> csDr = dependenciesResult.get(contextSource);
+            if (csDr != null) {
+                dependencies.addAll(csDr);
+                result.addAll(csDr);
+            }
         }
         
         final boolean required = propInfo instanceof EntityTypePropInfo ? ((EntityTypePropInfo) propInfo).required : false;
