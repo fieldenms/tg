@@ -19,27 +19,28 @@ import ua.com.fielden.platform.entity.EntityResourceContinuationsHelper;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.utils.Pair;
 
-public class RootEntityMutator implements DataFetcher {
+public class RootEntityMutator<T extends AbstractEntity<?>> implements DataFetcher<T> {
     private final Logger logger = Logger.getLogger(getClass());
-    private final Class<? extends AbstractEntity<?>> entityType;
+    private final Class<T> entityType;
     private final ICompanionObjectFinder coFinder;
     private final EntityFactory entityFactory;
     
-    public RootEntityMutator(final Class<? extends AbstractEntity<?>> entityType, final ICompanionObjectFinder coFinder, final EntityFactory entityFactory) {
+    public RootEntityMutator(final Class<T> entityType, final ICompanionObjectFinder coFinder, final EntityFactory entityFactory) {
         this.entityType = entityType;
         this.coFinder = coFinder;
         this.entityFactory = entityFactory;
     }
     
     @Override
-    public Object get(final DataFetchingEnvironment environment) {
+    public T get(final DataFetchingEnvironment environment) {
         try {
-            final IEntityDao co = coFinder.find(entityType);
+            final IEntityDao<T> co = coFinder.find(entityType);
             final SavingInfoHolder savingInfoHolder = createSavingInfoHolder(environment.getArguments()); // TODO impl
-            final Pair<AbstractEntity, Optional<Exception>> potentiallySavedWithException = EntityResourceContinuationsHelper.tryToSave(savingInfoHolder , entityType, entityFactory, coFinder, co);
+            final Pair<T, Optional<Exception>> potentiallySavedWithException = EntityResourceContinuationsHelper.tryToSave(savingInfoHolder , entityType, entityFactory, coFinder, co);
             
             if (potentiallySavedWithException.getValue().isPresent()) {
                 throw potentiallySavedWithException.getValue().get();
@@ -62,9 +63,9 @@ public class RootEntityMutator implements DataFetcher {
             final QueryProperty idQueryProperty = new QueryProperty(entityType, AbstractEntity.ID);
             idQueryProperty.setValue(potentiallySavedWithException.getKey().getId());
             idQueryProperty.setValue2(potentiallySavedWithException.getKey().getId());
-            final QueryExecutionModel queryModel = generateQueryModelFrom(environment.getField().getSelectionSet(), environment.getVariables(), environment.getFragmentsByName(), entityType, idQueryProperty);
+            final QueryExecutionModel<T, EntityResultQueryModel<T>> queryModel = generateQueryModelFrom(environment.getField().getSelectionSet(), environment.getVariables(), environment.getFragmentsByName(), entityType, idQueryProperty);
             
-            final AbstractEntity entity = co.getEntity(queryModel); // TODO fetch order etc.
+            final T entity = co.getEntity(queryModel);
             logger.error(String.format("Mutating type [%s]...done", entityType.getSimpleName()));
             return entity;
         } catch (final Exception e) {

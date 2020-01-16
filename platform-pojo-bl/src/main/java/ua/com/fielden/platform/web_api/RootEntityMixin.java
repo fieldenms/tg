@@ -30,10 +30,26 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 
+/**
+ * Contains querying utility methods for root fields in GraphQL query / mutation schemas.
+ * 
+ * @author TG Team
+ *
+ */
 public class RootEntityMixin {
     private static final Logger LOGGER = Logger.getLogger(RootEntityMixin.class);
     
-    public static QueryExecutionModel generateQueryModelFrom(final SelectionSet selectionSet, final Map<String, Object> variables, final Map<String, FragmentDefinition> fragmentDefinitions, final Class<? extends AbstractEntity<?>> entityType, final QueryProperty... additionalQueryProperties) {
+    /**
+     * Generates EQL query execution model for retrieving <code>selectionSet</code> of fields inside root selection of GraphQL query or mutation.
+     * 
+     * @param selectionSet
+     * @param variables -- existing variable values by names in the query; they can be used in <code>selectionSet</code>
+     * @param fragmentDefinitions -- fragment definitions by names in the query; <code>selectionSet</code> can contain fragment spreads based on that definitions
+     * @param entityType
+     * @param additionalQueryProperties -- additional external constraints to be provided into EQL query execution model
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> QueryExecutionModel<T, EntityResultQueryModel<T>> generateQueryModelFrom(final SelectionSet selectionSet, final Map<String, Object> variables, final Map<String, FragmentDefinition> fragmentDefinitions, final Class<T> entityType, final QueryProperty... additionalQueryProperties) {
         // convert selectionSet to concrete properties (their dot-notated names) with their arguments
         final LinkedHashMap<String, List<Argument>> propertiesAndArguments = properties(null, toFields(selectionSet, fragmentDefinitions), fragmentDefinitions);
         
@@ -75,8 +91,8 @@ public class RootEntityMixin {
             }
         }
         
-        final EntityResultQueryModel eqlQuery = createQuery(entityType, new ArrayList<>(queryProperties.values())).model();
-        return from(eqlQuery).with(fetchNotInstrumented(entityType).with(propertiesAndArguments.keySet()).fetchModel()).model();
+        final EntityResultQueryModel<T> eqlQuery = createQuery(entityType, new ArrayList<>(queryProperties.values())).model();
+        return from(eqlQuery).with(fetchNotInstrumented(entityType).with(propertiesAndArguments.keySet()).fetchModel()).model(); // TODO fetch order etc.
     }
 
     private static Optional<Object> resolveValue(final Value valueOrVariable, final Map<String, Object> variables) {

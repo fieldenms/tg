@@ -1,19 +1,29 @@
 package ua.com.fielden.platform.web_api;
 
+import static graphql.GraphQL.newGraphQL;
+import static graphql.schema.FieldCoordinates.coordinates;
+import static graphql.schema.GraphQLArgument.newArgument;
+import static graphql.schema.GraphQLCodeRegistry.newCodeRegistry;
 import static graphql.schema.GraphQLFieldDefinition.newFieldDefinition;
 import static graphql.schema.GraphQLInputObjectField.newInputObjectField;
 import static graphql.schema.GraphQLInputObjectType.newInputObject;
 import static graphql.schema.GraphQLObjectType.newObject;
+import static graphql.schema.GraphQLSchema.newSchema;
+import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static org.apache.commons.lang.StringUtils.uncapitalize;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import com.google.inject.Inject;
@@ -21,6 +31,7 @@ import com.google.inject.Inject;
 import graphql.GraphQL;
 import graphql.Scalars;
 import graphql.schema.GraphQLArgument;
+import graphql.schema.GraphQLCodeRegistry;
 import graphql.schema.GraphQLInputObjectType;
 import graphql.schema.GraphQLInputType;
 import graphql.schema.GraphQLList;
@@ -76,17 +87,22 @@ public class GraphQLService implements IGraphQLService {
      * @param coFinder
      */
     private GraphQLService(final List<Class<? extends AbstractEntity<?>>> entityTypes, final ICompanionObjectFinder coFinder, final EntityFactory entityFactory) {
-        logger.error("GraphQL Web API...");
-        logger.error("\tBuilding root query...");
-        logger.error("\tBuilding schema...");
-        final GraphQLObjectType queryType = createQueryType(entityTypes, coFinder);
-        final GraphQLObjectType mutationType = createMutationType(entityTypes, coFinder, entityFactory);
-        final GraphQLSchema schema = GraphQLSchema.newSchema()
+        logger.info("GraphQL Web API...");
+        final GraphQLCodeRegistry.Builder codeRegistryBuilder = newCodeRegistry();
+        logger.info("\tBuilding dictionary...");
+        final Map<Class<? extends AbstractEntity<?>>, GraphQLType> dictionary = createDictionary(entityTypes);
+        logger.info("\tBuilding query schema...");
+        final GraphQLObjectType queryType = createQueryType(dictionary.keySet(), coFinder, codeRegistryBuilder);
+        logger.info("\tBuilding mutation schema...");
+        final GraphQLObjectType mutationType = createMutationType(dictionary.keySet(), coFinder, entityFactory, codeRegistryBuilder);
+        final GraphQLSchema schema = newSchema()
+                .codeRegistry(codeRegistryBuilder.build())
                 .query(queryType)
                 .mutation(mutationType)
-                .build(createDictionary(entityTypes));
-        graphQL = new GraphQL(schema);
-        logger.error("GraphQL Web API...done");
+                .additionalTypes(new LinkedHashSet<>(dictionary.values()))
+                .build();
+        graphQL = newGraphQL(schema).build();
+        logger.info("GraphQL Web API...done");
     }
     
     /**
@@ -95,10 +111,10 @@ public class GraphQLService implements IGraphQLService {
      * @param entityTypes
      * @return
      */
-    private static Set<GraphQLType> createDictionary(final List<Class<? extends AbstractEntity<?>>> entityTypes) {
-        final Set<GraphQLType> types = new LinkedHashSet<>();
+    private static Map<Class<? extends AbstractEntity<?>>, GraphQLType> createDictionary(final List<Class<? extends AbstractEntity<?>>> entityTypes) {
+        final Map<Class<? extends AbstractEntity<?>>, GraphQLType> types = new LinkedHashMap<>();
         for (final Class<? extends AbstractEntity<?>> entityType: entityTypes) {
-            types.add(createType(entityType));
+            createType(entityType).map(type -> types.put(entityType, type));
         }
         return types;
     }
@@ -108,21 +124,23 @@ public class GraphQLService implements IGraphQLService {
      * <p>
      * All query field names are represented as uncapitalised entity type simple names. All sub-field names are represented as entity property names.
      * 
-     * @param entityTypes
+     * @param dictionary
      * @param coFinder
+     * @param codeRegistryBuilder
      * @return
      */
-    private static GraphQLObjectType createQueryType(final List<Class<? extends AbstractEntity<?>>> entityTypes, final ICompanionObjectFinder coFinder) {
-        final Builder queryTypeBuilder = newObject().name("BasicQuery");
-        for (final Class<? extends AbstractEntity<?>> entityType: entityTypes) {
-            final String typeName = entityType.getSimpleName();
-            final String rootQueryFieldDescription = String.format("Query [%s] entity.", TitlesDescsGetter.getEntityTitleAndDesc(entityType).getValue());
+    private static GraphQLObjectType createQueryType(final Set<Class<? extends AbstractEntity<?>>> dictionary, final ICompanionObjectFinder coFinder, final GraphQLCodeRegistry.Builder codeRegistryBuilder) {
+        final String queryTypeName = "Query";
+        final Builder queryTypeBuilder = newObject().name(queryTypeName);
+        for (final Class<? extends AbstractEntity<?>> entityType: dictionary) {
+            final String simpleTypeName = entityType.getSimpleName();
+            final String fieldName = uncapitalize(simpleTypeName);
             queryTypeBuilder.field(newFieldDefinition()
-                .name(StringUtils.uncapitalize(typeName))
-                .description(rootQueryFieldDescription)
-                .type(new GraphQLList(new GraphQLTypeReference(typeName)))
-                .dataFetcher(new RootEntityFetcher(entityType, coFinder))
+                .name(fieldName)
+                .description(format("Query [%s] entity.", getEntityTitleAndDesc(entityType).getValue()))
+                .type(new GraphQLList(new GraphQLTypeReference(simpleTypeName)))
             );
+            codeRegistryBuilder.dataFetcher(coordinates(queryTypeName, fieldName), new RootEntityFetcher<>((Class<AbstractEntity<?>>) entityType, coFinder));
         }
         return queryTypeBuilder.build();
     }
@@ -136,24 +154,33 @@ public class GraphQLService implements IGraphQLService {
      * Update query requires <code>keys</code> in order to define which entity needs mutation.
      * Create query does not require <code>keys</code>, only <code>input</code> that contains mutated properties.
      * 
-     * @param entityTypes
+     * @param dictionary
      * @param coFinder
+     * @param entityFactory
+     * @param codeRegistryBuilder
      * @return
      */
-    private static GraphQLObjectType createMutationType(final List<Class<? extends AbstractEntity<?>>> entityTypes, final ICompanionObjectFinder coFinder, final EntityFactory entityFactory) {
-        final Builder mutationTypeBuilder = newObject().name("BasicMutation");
-        for (final Class<? extends AbstractEntity<?>> entityType: entityTypes) {
-            final String typeName = entityType.getSimpleName();
-            final String inputArgumentDescription = String.format("Input values for mutating / creating [%s] entity", TitlesDescsGetter.getEntityTitleAndDesc(entityType).getValue());
-            final String rootMutationFieldDescription = String.format("Mutate [%s] entity.", TitlesDescsGetter.getEntityTitleAndDesc(entityType).getValue());
-            mutationTypeBuilder.field(newFieldDefinition()
-                .name(StringUtils.uncapitalize(typeName))
+    private static GraphQLObjectType createMutationType(final Set<Class<? extends AbstractEntity<?>>> dictionary, final ICompanionObjectFinder coFinder, final EntityFactory entityFactory, final GraphQLCodeRegistry.Builder codeRegistryBuilder) {
+        final String mutationTypeName = "Mutation";
+        final Builder mutationTypeBuilder = newObject().name(mutationTypeName);
+        for (final Class<? extends AbstractEntity<?>> entityType: dictionary) {
+            final String simpleTypeName = entityType.getSimpleName();
+            final String inputArgumentDescription = format("Input values for mutating / creating [%s] entity.", getEntityTitleAndDesc(entityType).getValue());
+            final String rootMutationFieldDescription = format("Mutate [%s] entity.", getEntityTitleAndDesc(entityType).getValue());
+            final String fieldName = uncapitalize(simpleTypeName);
+            createMutationInputArgumentType(entityType, inputArgumentDescription).map(mutationInputArgumentType -> mutationTypeBuilder.field(newFieldDefinition()
+                .name(fieldName)
                 .description(rootMutationFieldDescription)
-                .type(new GraphQLTypeReference(typeName))
-                .dataFetcher(new RootEntityMutator(entityType, coFinder, entityFactory))
-                .argument(new GraphQLArgument("input", inputArgumentDescription, new GraphQLNonNull(createMutationInputArgumentType(entityType, inputArgumentDescription)), null /*default value of argument */))
+                .type(new GraphQLTypeReference(simpleTypeName))
+                .argument(newArgument()
+                    .name("input")
+                    .description(inputArgumentDescription)
+                    .type(new GraphQLNonNull(mutationInputArgumentType))
+                    .defaultValue(null /*default value of argument */)
+                    .build()))
                 // TODO .argument(new GraphQLArgument("keys", String.format("Key criteria for mutating some concrete [%s] entity", typeName), createKeysType(entityType), null /*default value of argument */))
             );
+            codeRegistryBuilder.dataFetcher(coordinates(mutationTypeName, fieldName), new RootEntityMutator<>((Class<AbstractEntity<?>>) entityType, coFinder, entityFactory));
         }
         return mutationTypeBuilder.build();
     }
@@ -164,7 +191,7 @@ public class GraphQLService implements IGraphQLService {
      * @param entityType
      * @return
      */
-    private static GraphQLObjectType createType(final Class<? extends AbstractEntity<?>> entityType) {
+    private static Optional<GraphQLObjectType> createType(final Class<? extends AbstractEntity<?>> entityType) {
         final Builder builder = newObject();
         
         // the name of object should correspond to simple entity type name
@@ -177,8 +204,11 @@ public class GraphQLService implements IGraphQLService {
         for (final Field propertyField : keysAndProperties) {
             createField(entityType, propertyField).map(b -> builder.field(b));
         }
-        
-        return builder.build();
+        final GraphQLObjectType type = builder.build();
+        if (type.getFieldDefinitions().isEmpty()) { // ignore types that have no GraphQL field equivalents; we can not use such types for any purpose including quering
+            return empty();
+        }
+        return of(type);
     }
     
     /**
@@ -189,7 +219,7 @@ public class GraphQLService implements IGraphQLService {
      * 
      * @return
      */
-    private static GraphQLInputObjectType createMutationInputArgumentType(final Class<? extends AbstractEntity<?>> entityType, final String inputArgumentDescription) {
+    private static Optional<GraphQLInputObjectType> createMutationInputArgumentType(final Class<? extends AbstractEntity<?>> entityType, final String inputArgumentDescription) {
         final String typeName = entityType.getSimpleName();
         final graphql.schema.GraphQLInputObjectType.Builder builder = newInputObject().name(typeName + "Input").description(inputArgumentDescription);
         
@@ -197,8 +227,11 @@ public class GraphQLService implements IGraphQLService {
         for (final Field propertyField : keysAndProperties) {
             createMutationInputArgumentField(entityType, propertyField).map(b -> builder.field(b));
         }
-        
-        return builder.build();
+        final GraphQLInputObjectType type = builder.build();
+        if (type.getFieldDefinitions().isEmpty()) { // ignore input types that have no GraphQL field equivalents; we can not use entity types without proper input types for mutation
+            return empty();
+        }
+        return of(type);
     }
     
     /**

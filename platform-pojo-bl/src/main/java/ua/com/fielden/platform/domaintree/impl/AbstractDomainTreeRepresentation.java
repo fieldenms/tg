@@ -1,7 +1,10 @@
 package ua.com.fielden.platform.domaintree.impl;
 
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
+import static ua.com.fielden.platform.reflection.Finder.getFieldByName;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
+import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -37,7 +40,6 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.development.EntityDescriptor;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -207,7 +209,9 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
         // now let's ensure that that key related properties and desc are first in the list of properties
         final List<Field> fieldsAndKeys = new ArrayList<>();
         fieldsAndKeys.addAll(keys);
-        fieldsAndKeys.add(Finder.getFieldByName(type, AbstractEntity.DESC));
+        if (hasDescProperty((Class<AbstractEntity<?>>) type)) {
+            fieldsAndKeys.add(getFieldByName(type, DESC));
+        }
         fieldsAndKeys.addAll(properties);
         // logger().info("Ended constructProperties for [" + type.getSimpleName() + "].");
         return fieldsAndKeys;
