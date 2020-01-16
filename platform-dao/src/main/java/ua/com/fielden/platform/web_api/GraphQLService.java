@@ -13,7 +13,9 @@ import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static org.apache.commons.lang.StringUtils.uncapitalize;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.constructKeysAndProperties;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -30,7 +32,6 @@ import com.google.inject.Inject;
 
 import graphql.GraphQL;
 import graphql.Scalars;
-import graphql.schema.GraphQLArgument;
 import graphql.schema.GraphQLCodeRegistry;
 import graphql.schema.GraphQLInputObjectType;
 import graphql.schema.GraphQLInputType;
@@ -198,9 +199,9 @@ public class GraphQLService implements IGraphQLService {
         // TODO naming conflicts?
         builder.name(entityType.getSimpleName());
         
-        builder.description(TitlesDescsGetter.getEntityTitleAndDesc(entityType).getValue());
+        builder.description(getEntityTitleAndDesc(entityType).getValue());
         
-        final List<Field> keysAndProperties = AbstractDomainTreeRepresentation.constructKeysAndProperties(entityType);
+        final List<Field> keysAndProperties = constructKeysAndProperties(entityType);
         for (final Field propertyField : keysAndProperties) {
             createField(entityType, propertyField).map(b -> builder.field(b));
         }
@@ -247,11 +248,24 @@ public class GraphQLService implements IGraphQLService {
         return fieldType.map(type -> {
             final graphql.schema.GraphQLFieldDefinition.Builder builder = newFieldDefinition();
             if (Scalars.GraphQLBoolean.equals(type)) {
-                builder.argument(new GraphQLArgument("value", null /* description of argument */, Scalars.GraphQLBoolean, null /*default value of argument */));
+                // null-valued or non-existing argument in GraphQL query means entities with both true and false values in the property
+                builder.argument(newArgument()
+                    .name("value")
+                    .description("Include entities with specified boolean value.")
+                    .type(Scalars.GraphQLBoolean)
+                );
+            } else if (Scalars.GraphQLString.equals(type)) {
+                // null-valued or non-existing argument in GraphQL query means entities with both true and false values in the property
+                builder.argument(newArgument()
+                    .name("like")
+                    .description("Include entities with specified string value pattern.")
+                    .type(Scalars.GraphQLString)
+                );
             }
-            builder.name(name);
-            builder.description(TitlesDescsGetter.getTitleAndDesc(name, entityType).getValue());
-            return builder.type(type);
+            return builder
+                .name(name)
+                .description(getTitleAndDesc(name, entityType).getValue())
+                .type(type);
         });
     }
     

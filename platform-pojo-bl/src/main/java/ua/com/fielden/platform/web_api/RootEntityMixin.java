@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web_api;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.Optional.of;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.createQuery;
 import static ua.com.fielden.platform.utils.EntityUtils.fetchNotInstrumented;
@@ -23,6 +24,7 @@ import graphql.language.FragmentSpread;
 import graphql.language.InlineFragment;
 import graphql.language.Selection;
 import graphql.language.SelectionSet;
+import graphql.language.StringValue;
 import graphql.language.Value;
 import graphql.language.VariableReference;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
@@ -77,15 +79,20 @@ public class RootEntityMixin {
                 
                 // TODO provide more type safety here 
                 if (value.isPresent()) {
-                    if (value.get() instanceof Boolean) {
-                        if ((Boolean) value.get()) {
-                            queryProperty.setValue(true);
-                            queryProperty.setValue2(false);
-                        } else {
-                            queryProperty.setValue(false);
-                            queryProperty.setValue2(true);
+                    if (value.get() != null) {
+                        if (value.get() instanceof Boolean) {
+                            if ((Boolean) value.get()) {
+                                queryProperty.setValue(true);
+                                queryProperty.setValue2(false);
+                            } else {
+                                queryProperty.setValue(false);
+                                queryProperty.setValue2(true);
+                            }
+                            queryProperties.put(propertyName, queryProperty); // only add query property if some criteria has been applied
+                        } else if (value.get() instanceof String) {
+                            queryProperty.setValue(value.get());
+                            queryProperties.put(propertyName, queryProperty); // only add query property if some criteria has been applied
                         }
-                        queryProperties.put(propertyName, queryProperty); // only add query property if some criteria has been applied
                     }
                 }
             }
@@ -108,7 +115,10 @@ public class RootEntityMixin {
             }
         } else if (valueOrVariable instanceof BooleanValue) {
             final BooleanValue booleanValue = (BooleanValue) valueOrVariable;
-            return Optional.of(booleanValue.isValue());
+            return of(booleanValue.isValue());
+        } else if (valueOrVariable instanceof StringValue) {
+            final StringValue stringValue = (StringValue) valueOrVariable;
+            return of(stringValue.getValue());
         } else {
             // TODO implement other cases
             return Optional.of(valueOrVariable);
