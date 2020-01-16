@@ -87,6 +87,44 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         
         assertEquals(expQry, actQry);    
     }
+    
+    @Test
+    @Ignore
+    public void calc_prop_is_correctly_transformed_12() {
+        // select(WORK_ORDER).
+        // where().anyOfProps("vehicle.modelMakeKey6").isNotNull().model();
+        
+        //protected static final ExpressionModel TgVehicle.modelMakeKey6_ = expr().model(select(TgVehicleModel.class).where().prop("id").eq().extProp("model").yield().prop("model.makeKey2").modelAsPrimitive()).model();
+        //protected static final ExpressionModel makeKey2_ = expr().model(select(TgVehicleMake.class).where().prop("id").eq().extProp("make").yield().prop(KEY).modelAsPrimitive()).model();
+
+        final EntQuery1 calcPropSubqry1 = (EntQuery1)metadata.get(VEHICLE).getProps().get("modelMakeKey6").expression.first;
+        
+        final QrySource1BasedOnPersistentType wo1 = source(WORK_ORDER);
+        final QrySource1BasedOnPersistentType vehModel1 = (QrySource1BasedOnPersistentType) calcPropSubqry1.sources.main;//source(MODEL);
+        final Conditions1 conditions1 = conditions(isNotNull(prop("vehicle.modelMakeKey6")));
+        
+
+
+        final EntQuery3 actQry = query(sources(wo1), conditions1, WORK_ORDER);
+        
+        final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
+        final QrySource3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
+        final QrySource3BasedOnTable model = source(MODEL, wo1, "vehicleModel");
+        
+        final IQrySources3 sources = 
+                lj(
+                        lj(
+                                wo, 
+                                veh, 
+                                eq(prop("vehicle", wo), prop(ID, veh))
+                          ),
+                        model,
+                        eq(expr(expr(prop("model", veh))), prop(ID, model))                
+                  );
+        final Conditions3 conditions = or(isNotNull(expr(prop(KEY, model))));
+        final EntQuery3 expQry = qry(sources, conditions);
+        assertEquals(expQry, actQry);
+    }
 
     @Test
     @Ignore

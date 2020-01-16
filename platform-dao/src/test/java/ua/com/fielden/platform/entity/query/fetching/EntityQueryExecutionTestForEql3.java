@@ -7,12 +7,18 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import org.junit.Test;
 
 import ua.com.fielden.platform.dao.IEntityAggregatesOperations;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.sample.domain.TeVehicle;
 import ua.com.fielden.platform.sample.domain.TeVehicleFuelUsage;
 import ua.com.fielden.platform.sample.domain.TeVehicleMake;
 import ua.com.fielden.platform.sample.domain.TeWorkOrder;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
+import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
+import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
+import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
+import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
 public class EntityQueryExecutionTestForEql3 extends AbstractDaoTestCase {
@@ -21,7 +27,11 @@ public class EntityQueryExecutionTestForEql3 extends AbstractDaoTestCase {
     private void run(final AggregatedResultQueryModel qry) {
         aggregateDao.getAllEntities(from(qry).with("EQL3", null).model());
     }
-    
+
+    private void run(final ICompoundCondition0<? extends AbstractEntity<?>> qryStart) {
+        run(qryStart.yield().countAll().as("KOUNT").modelAsAggregate());
+    }
+
     @Test
     public void eql3_query_executes_correctly() {
         final AggregatedResultQueryModel qry = select(TeVehicle.class).as("veh").leftJoin(TeVehicle.class).as("rbv").
@@ -121,97 +131,97 @@ public class EntityQueryExecutionTestForEql3 extends AbstractDaoTestCase {
 
     @Test
     public void eql3_query_executes_correctly8() {
-        run(select(TeWorkOrder.class).where().prop("makeKey").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+        run(select(TeWorkOrder.class).where().prop("makeKey").isNotNull());
     }
 
     @Test
     public void eql3_query_executes_correctly9() {
-        run(select(TeWorkOrder.class).where().prop("make.key").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+        run(select(TeWorkOrder.class).where().prop("make.key").isNotNull());
     }
 
     @Test
     public void eql3_query_executes_correctly10() {
-        run(select(TeWorkOrder.class).where().anyOfProps("vehicle.modelMakeKey").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+        run(select(TeWorkOrder.class).where().anyOfProps("vehicle.modelMakeKey").isNotNull());
     }
     
     @Test
     public void eql3_query_executes_correctly11() {
-        run(select(TeWorkOrder.class).where().anyOfProps("vehicle.modelMakeKey2").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+        run(select(TeWorkOrder.class).where().anyOfProps("vehicle.modelMakeKey2").isNotNull());
     }
     
     @Test
     public void eql3_query_executes_correctly12() {
-        run(select(TeWorkOrder.class).where().anyOfProps("model.makeKey2").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+        run(select(TeWorkOrder.class).where().anyOfProps("model.makeKey2").isNotNull());
     }
 
     @Test
     public void eql3_query_executes_correctly13() {
-        run(select(TeWorkOrder.class).where().anyOfProps("makeKey2").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+        run(select(TeWorkOrder.class).where().anyOfProps("makeKey2").isNotNull());
     }
 
     @Test
     public void eql3_query_executes_correctly14() {
-        run(select(TeVehicle.class).where().anyOfProps("calcModel").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+        run(select(TeVehicle.class).where().anyOfProps("calcModel").isNotNull());
     }
     
     @Test
     public void eql3_query_executes_correctly15() {
-        run(select(TeVehicleMake.class).where().anyOfProps("c7").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+        run(select(TeVehicleMake.class).where().anyOfProps("c7").isNotNull());
     }
 
     @Test
     public void eql3_query_executes_correctly16() {
-        run(select(TeVehicleMake.class).where().anyOfProps("c6").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+        run(select(TeVehicleMake.class).where().anyOfProps("c6").isNotNull());
     }
 
     @Test
     public void eql3_query_executes_correctly17() {
-        run(select(TeVehicleMake.class).where().anyOfProps("c3").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+        run(select(TeVehicleMake.class).where().anyOfProps("c3").isNotNull());
     }
     
     @Test
     public void eql3_query_executes_correctly18() {
-        run(select(TeVehicleMake.class).where().anyOfProps("c8").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+        run(select(TeVehicleMake.class).where().anyOfProps("c8").isNotNull());
     }
 
     @Test
     public void eql3_query_executes_correctly19() {
-        run(select(TeWorkOrder.class).where().anyOfProps("vehicle.modelMakeKey", "vehicle.model.make.key").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+        run(select(TeWorkOrder.class).where().anyOfProps("vehicle.modelMakeKey", "vehicle.model.make.key").isNotNull());
     }
     
     @Test
     public void eql3_query_executes_correctly20() {
-        run(select(TeWorkOrder.class).where().anyOfProps("vehicle.modelKey", "vehicle.model.key").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+        run(select(TeWorkOrder.class).where().anyOfProps("vehicle.modelKey", "vehicle.model.key").isNotNull());
     }
     
     @Test
     public void eql3_query_executes_correctly21() {
-        run(select(TeVehicle.class).where().anyOfProps("modelKey", "modelDesc").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+        run(select(TeVehicle.class).where().anyOfProps("modelKey", "modelDesc").isNotNull());
     }
     
     @Test
     public void eql3_query_executes_correctly22() {
-        run(select(TeVehicle.class).where().anyOfProps("modelMakeKey2", "make.key").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+        run(select(TeVehicle.class).where().anyOfProps("modelMakeKey2", "make.key").isNotNull());
     }
     
     @Test
     public void eql3_query_executes_correctly23() {
-        run(select(TeVehicle.class).where().anyOfProps("replacedBy.modelMakeKey2", "modelMakeKey2").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+        run(select(TeVehicle.class).where().anyOfProps("replacedBy.modelMakeKey2", "modelMakeKey2").isNotNull());
     }
 
     @Test
     public void eql3_query_executes_correctly24() {
-        run(select(TeVehicle.class).where().anyOfProps("modelMakeKey2").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+        run(select(TeVehicle.class).where().anyOfProps("modelMakeKey2").isNotNull());
     }
 
     @Test
     public void eql3_query_executes_correctly25() {
-        run(select(TeVehicle.class).where().anyOfProps("modelMakeKey3").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+        run(select(TeVehicle.class).where().anyOfProps("modelMakeKey3").isNotNull());
     }
 
     @Test
     public void eql3_query_executes_correctly26() {
-        run(select(TeVehicle.class).where().anyOfProps("modelMakeKey4").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+        run(select(TeVehicle.class).where().anyOfProps("modelMakeKey4").isNotNull());
     }
 
     @Test
@@ -233,7 +243,7 @@ public class EntityQueryExecutionTestForEql3 extends AbstractDaoTestCase {
                 "modelMakeKey7", 
                 "modelMakeKey8", 
                 "make.key"
-                ).isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+                ).isNotNull());
     }
     
     @Test
@@ -271,7 +281,7 @@ public class EntityQueryExecutionTestForEql3 extends AbstractDaoTestCase {
                 "replacedBy.modelMakeKey7", 
                 "replacedBy.modelMakeKey8", 
                 "replacedBy.make.key"
-                ).isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+                ).isNotNull());
     }
 
     @Test
@@ -325,7 +335,7 @@ public class EntityQueryExecutionTestForEql3 extends AbstractDaoTestCase {
                 "replacedBy.replacedBy.modelMakeKey7", 
                 "replacedBy.replacedBy.modelMakeKey8", 
                 "replacedBy.replacedBy.make.key"
-                ).isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+                ).isNotNull());
     }
 
     @Test
@@ -336,28 +346,61 @@ public class EntityQueryExecutionTestForEql3 extends AbstractDaoTestCase {
                 "calc2",
                 "calc3",
                 "calc4",
-                "replacedBy.lastFuelUsage").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+                "replacedBy.calc2",
+                "replacedBy.calc3",
+                "replacedBy.calc4",
+                "replacedBy.lastFuelUsage",
+                "replacedBy.lastFuelUsageQty"
+                ).isNotNull());
     }
 
     @Test
     public void eql3_query_executes_correctly31() {
         run(select(TeVehicle.class).where().anyOfProps(
                 "lastFuelUsageQty"
-                ).isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+                ).isNotNull());
     }
 
     @Test
     public void eql3_query_executes_correctly32() {
         run(select(TeVehicle.class).where().expr(
                 expr().model(select(TeVehicleFuelUsage.class).where().prop("vehicle").eq().extProp("id").and().notExists(select(TeVehicleFuelUsage.class).where().prop("vehicle").eq().extProp("vehicle").and().prop("date").gt().extProp("date").model()).yield().prop("qty").modelAsPrimitive()).model()
-                ).isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+                ).isNotNull());
     }
 
     @Test
     public void eql3_query_executes_correctly33() {
         run(select(TeVehicle.class).where().expr(
                 expr().model(select(TeVehicleFuelUsage.class).as("fu").where().prop("vehicle").eq().extProp("id").and().notExists(select(TeVehicleFuelUsage.class).where().prop("vehicle").eq().extProp("vehicle").and().prop("date").gt().extProp("date").model()).and().prop("qty").isNotNull().yield().prop("fu.qty").modelAsPrimitive()).model()
-                ).isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+                ).isNotNull());
     }
 
+    @Test
+    public void eql3_query_executes_correctly34() {
+        run(select(TgOrgUnit1.class).where().exists( //
+                select(TgOrgUnit2.class).where().prop("parent").eq().extProp("id").and().exists( //
+                        select(TgOrgUnit3.class).where().prop("parent").eq().extProp("id").and().exists( // 
+                        select(TgOrgUnit4.class).where().prop("parent").eq().extProp("id").and().exists( //
+                        select(TgOrgUnit5.class).where().prop("parent").eq().extProp("id").and().prop("name").isNotNull(). //
+                        model()). //
+                        model()). //
+                        model()). //
+                        model()). //
+                and().prop("id").isNotNull());
+    }
+
+    @Test
+    public void eql3_query_executes_correctly35() {
+        run(select(TeWorkOrder.class).where().anyOfProps("vehicle.modelMakeKey6").isNotNull());
+    }
+
+    @Test
+    public void eql3_query_executes_correctly36() {
+        run(select(TeWorkOrder.class).where().anyOfProps("vehicleReplacedBy.replacedBy.modelMake2.key").isNotNull());
+    }
+    
+    @Test
+    public void eql3_query_executes_correctly37() {
+        run(select(TeWorkOrder.class).where().anyOfProps("vehicleReplacedBy.replacedBy.modelMake2.key", "vehicle.replacedBy.modelMake2.key").isNotNull());
+    }
 }
