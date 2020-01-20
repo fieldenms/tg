@@ -4,12 +4,14 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.dao.IEntityAggregatesOperations;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.sample.domain.TeVehicle;
 import ua.com.fielden.platform.sample.domain.TeVehicleFuelUsage;
 import ua.com.fielden.platform.sample.domain.TeVehicleMake;
@@ -403,4 +405,36 @@ public class EntityQueryExecutionTestForEql3 extends AbstractDaoTestCase {
     public void eql3_query_executes_correctly37() {
         run(select(TeWorkOrder.class).where().anyOfProps("vehicleReplacedBy.replacedBy.modelMake2.key", "vehicle.replacedBy.modelMake2.key").isNotNull());
     }
+    
+    @Test
+    @Ignore
+    public void eql3_query_executes_correctly38() {
+        final EntityResultQueryModel<TeVehicle> qry = select(TeVehicle.class).where().prop("model.make.key").isNotNull().model();
+        
+        run(select(qry).where().prop("id").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+    }
+    
+    @Test
+    public void eql3_query_executes_correctly39() {
+        final AggregatedResultQueryModel qry = select(TeWorkOrder.class).yield().prop("vehicle").as("vh").modelAsAggregate();
+        
+        run(select(qry).where().prop("vh.lastFuelUsageQty").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+    }
+    
+    @Test
+    public void eql3_query_executes_correctly40() {
+        final AggregatedResultQueryModel qry1 = select(TeWorkOrder.class).where().prop("actCost").isNotNull().yield().prop("vehicle").as("vh").modelAsAggregate();
+        final AggregatedResultQueryModel qry2 = select(TeWorkOrder.class).where().prop("estCost").isNotNull().yield().prop("vehicle").as("vh").modelAsAggregate();
+        
+        run(select(qry1, qry2).where().prop("vh.lastFuelUsageQty").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+    }
+
+    @Test
+    @Ignore
+    public void eql3_query_executes_correctly41() {
+        final EntityResultQueryModel<TeVehicle> qry = select(TeWorkOrder.class).yield().prop("vehicle").modelAsEntity(TeVehicle.class);
+        
+        run(select(qry).where().prop("lastFuelUsageQty").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+    }
+
 }

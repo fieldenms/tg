@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage3.elements.sources;
 
+import static java.util.stream.Collectors.joining;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -36,7 +38,7 @@ public class QrySource3BasedOnSubqueries implements IQrySource3 {
 
     @Override
     public String sql(final DbVersion dbVersion) {
-        return "(" + models.get(0).sql(dbVersion) + ") AS " + sqlAlias();
+        return "(" + models.stream().map(m -> m.sql(dbVersion)).collect(joining("\n UNION ALL")) + ") AS " + sqlAlias();
     }
 
     @Override
