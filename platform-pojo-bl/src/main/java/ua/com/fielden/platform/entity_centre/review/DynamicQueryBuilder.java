@@ -174,6 +174,20 @@ public class DynamicQueryBuilder {
             this.single = isCritOnly() && Type.SINGLE.equals(critAnnotation.value());
         }
 
+        public QueryProperty makeEmpty() {
+            setValue(getEmptyValue(getType(), isSingle()));
+            setValue2(getEmptyValue(getType(), isSingle()));
+            setExclusive(null);
+            setExclusive2(null);
+            setDatePrefix(null);
+            setDateMnemonic(null);
+            setAndBefore(null);
+            setOrNull(null);
+            setNot(null);
+            setOrGroup(null);
+            return this;
+        }
+
         public static boolean critOnlyWithMnemonics(final CritOnly critAnnotation) {
             final CritOnly.Mnemonics mnemonics = critAnnotation.mnemonics() == CritOnly.Mnemonics.DEFAULT ? critAnnotation.value().defaultMnemonics : critAnnotation.mnemonics();
             return mnemonics == CritOnly.Mnemonics.WITH;

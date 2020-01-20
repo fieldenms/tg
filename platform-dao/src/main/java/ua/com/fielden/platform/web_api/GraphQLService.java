@@ -15,7 +15,7 @@ import static java.util.Optional.of;
 import static org.apache.commons.lang.StringUtils.uncapitalize;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.constructKeysAndProperties;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
-import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
+import static ua.com.fielden.platform.web_api.FieldSchema.createField;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -39,7 +39,6 @@ import graphql.schema.GraphQLList;
 import graphql.schema.GraphQLNonNull;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLObjectType.Builder;
-import graphql.schema.GraphQLOutputType;
 import graphql.schema.GraphQLSchema;
 import graphql.schema.GraphQLType;
 import graphql.schema.GraphQLTypeReference;
@@ -193,19 +192,20 @@ public class GraphQLService implements IGraphQLService {
      * @return
      */
     private static Optional<GraphQLObjectType> createType(final Class<? extends AbstractEntity<?>> entityType) {
-        final Builder builder = newObject();
+        final Builder typeBuilder = newObject();
         
         // the name of object should correspond to simple entity type name
         // TODO naming conflicts?
-        builder.name(entityType.getSimpleName());
+        typeBuilder.name(entityType.getSimpleName());
         
-        builder.description(getEntityTitleAndDesc(entityType).getValue());
+        typeBuilder.description(getEntityTitleAndDesc(entityType).getValue());
         
-        final List<Field> keysAndProperties = constructKeysAndProperties(entityType);
-        for (final Field propertyField : keysAndProperties) {
-            createField(entityType, propertyField).map(b -> builder.field(b));
-        }
-        final GraphQLObjectType type = builder.build();
+        constructKeysAndProperties(entityType).stream().forEach(prop ->
+            createField(entityType, prop.getName())
+            .map(field -> typeBuilder.field(field))
+        );
+        
+        final GraphQLObjectType type = typeBuilder.build();
         if (type.getFieldDefinitions().isEmpty()) { // ignore types that have no GraphQL field equivalents; we can not use such types for any purpose including quering
             return empty();
         }
@@ -236,40 +236,6 @@ public class GraphQLService implements IGraphQLService {
     }
     
     /**
-     * Creates GraphQL field definition on entity type's object from entity property defined by <code>propertyField</code>.
-     * 
-     * @param entityType
-     * @param propertyField
-     * @return
-     */
-    private static Optional<graphql.schema.GraphQLFieldDefinition.Builder> createField(final Class<? extends AbstractEntity<?>> entityType, final Field propertyField) {
-        final String name = propertyField.getName();
-        final Optional<GraphQLOutputType> fieldType = determineFieldType(entityType, name);
-        return fieldType.map(type -> {
-            final graphql.schema.GraphQLFieldDefinition.Builder builder = newFieldDefinition();
-            if (Scalars.GraphQLBoolean.equals(type)) {
-                // null-valued or non-existing argument in GraphQL query means entities with both true and false values in the property
-                builder.argument(newArgument()
-                    .name("value")
-                    .description("Include entities with specified boolean value.")
-                    .type(Scalars.GraphQLBoolean)
-                );
-            } else if (Scalars.GraphQLString.equals(type)) {
-                // null-valued or non-existing argument in GraphQL query means entities with both true and false values in the property
-                builder.argument(newArgument()
-                    .name("like")
-                    .description("Include entities with specified string value pattern.")
-                    .type(Scalars.GraphQLString)
-                );
-            }
-            return builder
-                .name(name)
-                .description(getTitleAndDesc(name, entityType).getValue())
-                .type(type);
-        });
-    }
-    
-    /**
      * Creates GraphQL field definition on entity type's <b>input</b> object from entity property defined by <code>propertyField</code>.
      * 
      * @param entityType
@@ -289,20 +255,6 @@ public class GraphQLService implements IGraphQLService {
             return builder.type(type);
         });
     }
-
-    private static Optional<GraphQLOutputType> determineFieldType(final Class<? extends AbstractEntity<?>> entityType, final String name) {
-        final Class<?> realType = PropertyTypeDeterminator.determineClass(entityType, name, true, false);
-        final Class<?> parameterType = PropertyTypeDeterminator.determineClass(entityType, name, true, true);
-        if (EntityUtils.isCollectional(realType)) {
-            if (Object.class == parameterType) { // TODO descendants of AbstractFunctionalEntityForCollectionModification<ID_TYPE> (chosenIds etc.) || 
-                return Optional.empty();
-                // return new GraphQLList(Scalars.GraphQLString);
-            }
-            return determineFieldTypeNonCollectional(parameterType, entityType, name).map(t -> new GraphQLList(t));
-        } else {
-            return determineFieldTypeNonCollectional(parameterType, entityType, name);
-        }
-    }
     
     private static Optional<GraphQLInputType> determineMutationInputArgumentFieldType(final Class<? extends AbstractEntity<?>> entityType, final String name) {
         final Class<?> realType = PropertyTypeDeterminator.determineClass(entityType, name, true, false);
@@ -312,53 +264,6 @@ public class GraphQLService implements IGraphQLService {
             // TODO return determineFieldTypeNonCollectional(parameterType, entityType, name).map(t -> new GraphQLList(t));
         } else {
             return determineMutationInputArgumentFieldTypeNonCollectional(parameterType, entityType, name);
-        }
-    }
-    
-    private static Optional<GraphQLOutputType> determineFieldTypeNonCollectional(final Class<?> type, final Class<? extends AbstractEntity<?>> entityType, final String name) {
-        if (EntityUtils.isString(type)) {
-            return Optional.of(Scalars.GraphQLString);
-        } else if (EntityUtils.isBoolean(type)) {
-            return Optional.of(Scalars.GraphQLBoolean);
-        } else if (EntityUtils.isDecimal(type) || Double.class.isAssignableFrom(type)) {
-            return Optional.of(Scalars.GraphQLBigDecimal);
-            // TODO remove return TgScalars.GraphQLBigDecimal;
-        } else if (Long.class.isAssignableFrom(type)) {
-            return Optional.of(Scalars.GraphQLLong);
-        } else if (Integer.class.isAssignableFrom(type)) {
-            return Optional.of(Scalars.GraphQLInt);
-        } else if (
-                IContinuationData.class.isAssignableFrom(type) ||
-                Map.class.isAssignableFrom(type) ||
-                byte[].class.isAssignableFrom(type) ||
-                Class.class.isAssignableFrom(type) || 
-                CentreContext.class.isAssignableFrom(type) || 
-                Optional.class.isAssignableFrom(type) || 
-                Boolean.class.isAssignableFrom(type) || 
-                int.class.isAssignableFrom(type) || 
-                AbstractEntity.class == type || // CentreContextHolder.selectedEntities => List<AbstractEntity>, masterEntity => AbstractEntity
-                AbstractView.class == type || 
-                PropertyDescriptor.class == type ||
-                Modifier.isAbstract(type.getModifiers())
-        ) {
-            return Optional.empty();
-        } else if (EntityUtils.isDate(type)) {
-            return Optional.empty();
-            // TODO return TgScalars.GraphQLDate;
-        } else if (Hyperlink.class.isAssignableFrom(type)) {
-            return Optional.empty();
-            // TODO return TgScalars.GraphQLHyperlink;
-        } else if (Colour.class.isAssignableFrom(type)) {
-            return Optional.empty();
-            // TODO return TgScalars.GraphQLColour;
-        } else if (EntityUtils.isEntityType(type)) {
-            return Optional.of(new GraphQLTypeReference(type.getSimpleName()));
-        } else if (NoKey.class.isAssignableFrom(type)) {
-            return Optional.empty();
-        } else if (DynamicEntityKey.class.isAssignableFrom(type)) { // this is for the weird cases where DynamicEntityKey is used but no @CompositeKeyMember exists
-            return Optional.empty();
-        } else {
-            throw new UnsupportedOperationException(String.format("Field: type [%s] is unknown (type = %s, name = %s).", type.getSimpleName(), entityType.getSimpleName(), name));
         }
     }
     
