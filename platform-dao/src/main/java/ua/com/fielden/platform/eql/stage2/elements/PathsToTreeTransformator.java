@@ -2,7 +2,7 @@ package ua.com.fielden.platform.eql.stage2.elements;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.emptySet;
+import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.joining;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
@@ -15,6 +15,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import com.microsoft.sqlserver.jdbc.StringUtils;
 
@@ -41,7 +42,7 @@ public class PathsToTreeTransformator {
         return id;
     }
 
-    static final Map<IQrySource2<?>, SortedSet<Child>> transform(final Set<EntProp2> props, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
+    static final Map<IQrySource2<?>, SortedSet<Child>> transform(final Map<IQrySource2<?>, Map<String, EntProp2>> props, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
         final Map<IQrySource2<?>, SortedSet<Child>> sourceChildren = new HashMap<>();
 
         for (final Entry<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>> sourceProps : groupBySource(props).entrySet()) {
@@ -53,16 +54,11 @@ public class PathsToTreeTransformator {
         return sourceChildren;
     }
 
-    static final Map<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>> groupBySource(final Set<EntProp2> props) {
+    static final Map<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>> groupBySource(final Map<IQrySource2<?>, Map<String, EntProp2>>  props) {
         final Map<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>> result = new HashMap<>();
 
-        for (final EntProp2 prop : props) {
-            Map<String, List<AbstractPropInfo<?>>> existing = result.get(prop.source);
-            if (existing == null) {
-                existing = new HashMap<>();
-                result.put(prop.source, existing);
-            }
-            existing.put(prop.name, prop.getPath());
+        for (final Entry<IQrySource2<?>, Map<String, EntProp2>> entry : props.entrySet()) {
+            result.put(entry.getKey(), entry.getValue().values().stream().collect(Collectors.toMap(x -> x.name, x -> x.getPath())));
         }
 
         return result;
@@ -170,7 +166,7 @@ public class PathsToTreeTransformator {
     }
     
     private static TransformationResult<Expression2> expressionToS2(final IQrySource2<?> contextSource, final Expression1 expression, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
-        final PropsResolutionContext prc = new PropsResolutionContext(domainInfo, asList(asList(contextSource)), emptySet());
+        final PropsResolutionContext prc = new PropsResolutionContext(domainInfo, asList(asList(contextSource)), emptyMap());
         return expression.transform(prc, contextSource.contextId());
     }
 }

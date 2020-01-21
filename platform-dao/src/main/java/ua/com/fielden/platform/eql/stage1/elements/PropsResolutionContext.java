@@ -3,14 +3,11 @@ package ua.com.fielden.platform.eql.stage1.elements;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
-import static java.util.Collections.unmodifiableSet;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.EntityInfo;
@@ -22,18 +19,18 @@ import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySource3;
 public class PropsResolutionContext {
     private final List<List<IQrySource2<? extends IQrySource3>>> sources;
     private final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo;
-    private final Set<EntProp2> resolvedProps;
+    private final Map<IQrySource2<?>, Map<String, EntProp2>> resolvedProps;
 
     public PropsResolutionContext(final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
         this.domainInfo = new HashMap<>(domainInfo);
         this.sources = buildSourcesStackForNewQuery(emptyList());
-        this.resolvedProps = new HashSet<>();
+        this.resolvedProps = new HashMap<>();
     }
     
-    public PropsResolutionContext(final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo, final List<List<IQrySource2<? extends IQrySource3>>> sources, final Set<EntProp2> props) {
+    public PropsResolutionContext(final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo, final List<List<IQrySource2<? extends IQrySource3>>> sources, final Map<IQrySource2<?>, Map<String, EntProp2>> props) {
         this.domainInfo = new HashMap<>(domainInfo);
         this.sources = sources;
-        this.resolvedProps = new HashSet<>(props);
+        this.resolvedProps = new HashMap<>(props);
     }
 
     public PropsResolutionContext produceForCorrelatedSubquery() {
@@ -51,7 +48,7 @@ public class PropsResolutionContext {
         return srcs;
     }
     
-    public PropsResolutionContext cloneWithAdded(final IQrySource2<? extends IQrySource3> transformedSource, final Set<EntProp2> resolvedProps) {
+    public PropsResolutionContext cloneWithAdded(final IQrySource2<? extends IQrySource3> transformedSource, final Map<IQrySource2<?>, Map<String, EntProp2>> resolvedProps) {
         final List<List<IQrySource2<? extends IQrySource3>>> srcs = new ArrayList<>();
         srcs.addAll(sources);
         srcs.get(0).add(transformedSource); // adding source to current query list of sources
@@ -61,8 +58,19 @@ public class PropsResolutionContext {
     public PropsResolutionContext cloneWithAdded(final EntProp2 transformedProp) {
         final List<List<IQrySource2<? extends IQrySource3>>> srcs = new ArrayList<>();
         srcs.addAll(sources);
-        final Set<EntProp2> props = new HashSet<>(resolvedProps);
-        props.add(transformedProp);
+        final Map<IQrySource2<?>, Map<String, EntProp2>> props = new HashMap<>(resolvedProps);
+        
+        final Map<String, EntProp2> existing = props.get(transformedProp.source);
+        
+        if (existing == null) {
+            final Map<String, EntProp2> propMap = new HashMap<>();
+            propMap.put(transformedProp.name, transformedProp);
+            props.put(transformedProp.source, propMap);
+            
+        } else {
+            existing.put(transformedProp.name, transformedProp);    
+        };
+        
         return new PropsResolutionContext(domainInfo, srcs, props);
     }
 
@@ -78,8 +86,8 @@ public class PropsResolutionContext {
         return new PropsResolutionContext(domainInfo, srcs, resolvedProps);
     }
 
-    public Set<EntProp2> getResolvedProps() {
-        return unmodifiableSet(resolvedProps);
+    public Map<IQrySource2<?>, Map<String, EntProp2>> getResolvedProps() {
+        return unmodifiableMap(resolvedProps);
     }
 
     public List<List<IQrySource2<? extends IQrySource3>>> getSources() {
