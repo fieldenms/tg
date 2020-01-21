@@ -13,7 +13,6 @@ import static ua.com.fielden.platform.utils.EntityUtils.fetchNotInstrumented;
 import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -115,10 +114,10 @@ public class RootEntityMixin {
             }));
         } else if (Integer.class.isAssignableFrom(type)) {
             ofNullable(argsByName.get("from")).ifPresent(from -> resolveValue(from.getValue(), varsByName).ifPresent(value -> {
-                queryProperty.setValue(((BigInteger) value).intValue()); // narrowing conversion (for big numbers), but should be sufficient in most cases; otherwise be silent and don't blow up the thread here
+                queryProperty.setValue(value);
             }));
             ofNullable(argsByName.get("to")).ifPresent(to -> resolveValue(to.getValue(), varsByName).ifPresent(value -> {
-                queryProperty.setValue2(((BigInteger) value).intValue()); // narrowing conversion (for big numbers), but should be sufficient in most cases; otherwise be silent and don't blow up the thread here
+                queryProperty.setValue2(value);
             }));
         }
         return queryProperty;
@@ -142,10 +141,10 @@ public class RootEntityMixin {
             return of(stringValue.getValue());
         } else if (valueOrVariable instanceof FloatValue) {
             final FloatValue floatValue = (FloatValue) valueOrVariable;
-            return of(floatValue.getValue());
+            return of(floatValue.getValue().doubleValue()); // this is not narrowing conversion, because only signed double precision floating point values are supported as GraphQL arguments; the same goes for GraphQL variables
         } else if (valueOrVariable instanceof IntValue) {
             final IntValue intValue = (IntValue) valueOrVariable;
-            return of(intValue.getValue());
+            return of(intValue.getValue().intValue()); // this is not narrowing conversion, because only signed 32-bit integer values are supported as GraphQL arguments; the same goes for GraphQL variables
         } else if (valueOrVariable instanceof NullValue) {
             return empty();
         } else {
