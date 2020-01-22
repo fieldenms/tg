@@ -16,11 +16,12 @@ import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDe
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
 import static ua.com.fielden.platform.utils.EntityUtils.isDate;
-import static ua.com.fielden.platform.utils.EntityUtils.isDecimal;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
+import static ua.com.fielden.platform.web_api.TgScalars.GraphQLMoney;
 
 import java.lang.reflect.Modifier;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +29,7 @@ import java.util.Optional;
 
 import graphql.schema.GraphQLArgument;
 import graphql.schema.GraphQLFieldDefinition.Builder;
+import graphql.schema.GraphQLInputType;
 import graphql.schema.GraphQLList;
 import graphql.schema.GraphQLOutputType;
 import graphql.schema.GraphQLTypeReference;
@@ -39,6 +41,7 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.menu.AbstractView;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
+import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.centre.CentreContext;
@@ -116,24 +119,17 @@ public class FieldSchema {
                 .build()
             )));
         } else if (Integer.class.isAssignableFrom(type)) {
-            return of(t2(GraphQLInt, asList(
-                newArgument()
-                .name("from")
-                .description("Include entities with property greater than (or equal to) specified value.")
-                .type(GraphQLInt)
-                .build(),
-                
-                newArgument()
-                .name("to")
-                .description("Include entities with property less than (or equal to) specified value.")
-                .type(GraphQLInt)
-                .build()
-            )));
+            return of(t2(GraphQLInt, createArgumentsFor(GraphQLInt)));
         } else if (Long.class.isAssignableFrom(type)) {
-            return of(t2(GraphQLLong, asList()));
-        } else if (isDecimal(type) || Double.class.isAssignableFrom(type)) { // TODO separate types for Money and BigDecimal
-            return of(t2(GraphQLBigDecimal, asList()));
+            // Even though we add here the support for Long values [-9,223,372,036,854,775,808; 9,223,372,036,854,775,807] = [-2^63; 2^63 - 1],
+            // the actual support would be limited to              [    -9,007,199,254,740,992;     9,007,199,254,740,991] = [-2^53; 2^53 - 1];
+            // This is because Javascript numbers, that are used in GraphiQL client, truncates higher numbers with zeros and performs weird rounding.
+            return of(t2(GraphQLLong, createArgumentsFor(GraphQLLong)));
+        } else if (BigDecimal.class.isAssignableFrom(type)) {
+            return of(t2(GraphQLBigDecimal, createArgumentsFor(GraphQLBigDecimal)));
             // TODO remove return TgScalars.GraphQLBigDecimal;
+        } else if (Money.class.isAssignableFrom(type)) {
+            return of(t2(GraphQLMoney, createArgumentsFor(GraphQLMoney)));
         } else if (Modifier.isAbstract(type.getModifiers())) {
             return empty();
         } else if (isEntityType(type)) {
@@ -150,6 +146,22 @@ public class FieldSchema {
         } else {
             throw new UnsupportedOperationException(format("Field: type [%s] is unknown (type = %s, name = %s).", type.getSimpleName(), entityType.getSimpleName(), name));
         }
+    }
+    
+    private static List<GraphQLArgument> createArgumentsFor(final GraphQLInputType inputType) {
+        return asList(
+            newArgument()
+            .name("from")
+            .description("Include entities with property greater than (or equal to) specified value.")
+            .type(inputType)
+            .build(),
+            
+            newArgument()
+            .name("to")
+            .description("Include entities with property less than (or equal to) specified value.")
+            .type(inputType)
+            .build()
+        );
     }
     
 }

@@ -13,6 +13,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.fetchNotInstrumented;
 import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -41,6 +42,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
+import ua.com.fielden.platform.types.Money;
 
 /**
  * Contains querying utility methods for root fields in GraphQL query / mutation schemas.
@@ -119,11 +121,36 @@ public class RootEntityMixin {
             ofNullable(argsByName.get("to")).ifPresent(to -> resolveValue(to.getValue(), varsByName).ifPresent(value -> {
                 queryProperty.setValue2(value);
             }));
+        } else if (Long.class.isAssignableFrom(type)) {
+            ofNullable(argsByName.get("from")).ifPresent(from -> resolveValue(from.getValue(), varsByName, true).ifPresent(value -> {
+                queryProperty.setValue(value);
+            }));
+            ofNullable(argsByName.get("to")).ifPresent(to -> resolveValue(to.getValue(), varsByName, true).ifPresent(value -> {
+                queryProperty.setValue2(value);
+            }));
+        } else if (BigDecimal.class.isAssignableFrom(type)) {
+            ofNullable(argsByName.get("from")).ifPresent(from -> resolveValue(from.getValue(), varsByName, true).ifPresent(value -> {
+                queryProperty.setValue(value instanceof Long ? new BigDecimal((long) value) : value);
+            }));
+            ofNullable(argsByName.get("to")).ifPresent(to -> resolveValue(to.getValue(), varsByName, true).ifPresent(value -> {
+                queryProperty.setValue2(value instanceof Long ? new BigDecimal((long) value) : value);
+            }));
+        } else if (Money.class.isAssignableFrom(type)) {
+            ofNullable(argsByName.get("from")).ifPresent(from -> resolveValue(from.getValue(), varsByName, true).ifPresent(value -> {
+                queryProperty.setValue(value instanceof Money ? value : new Money(value instanceof Long ? new BigDecimal((long) value) : (BigDecimal) value));
+            }));
+            ofNullable(argsByName.get("to")).ifPresent(to -> resolveValue(to.getValue(), varsByName, true).ifPresent(value -> {
+                queryProperty.setValue2(value instanceof Money ? value : new Money(value instanceof Long ? new BigDecimal((long) value) : (BigDecimal) value));
+            }));
         }
         return queryProperty;
     }
     
     private static Optional<Object> resolveValue(final Value valueOrVariable, final Map<String, Object> variables) {
+        return resolveValue(valueOrVariable, variables, false);
+    }
+    
+    private static Optional<Object> resolveValue(final Value valueOrVariable, final Map<String, Object> variables, final boolean biggerType) {
         if (valueOrVariable instanceof VariableReference) {
             final VariableReference variableReference = (VariableReference) valueOrVariable;
             final String variableName = variableReference.getName();
@@ -141,10 +168,10 @@ public class RootEntityMixin {
             return of(stringValue.getValue());
         } else if (valueOrVariable instanceof FloatValue) {
             final FloatValue floatValue = (FloatValue) valueOrVariable;
-            return of(floatValue.getValue().doubleValue()); // this is not narrowing conversion, because only signed double precision floating point values are supported as GraphQL arguments; the same goes for GraphQL variables
+            return biggerType ? of(floatValue.getValue()) : of(floatValue.getValue().doubleValue()); // this is not narrowing conversion, because only signed double precision floating point values are supported as GraphQL arguments; the same goes for GraphQL variables
         } else if (valueOrVariable instanceof IntValue) {
             final IntValue intValue = (IntValue) valueOrVariable;
-            return of(intValue.getValue().intValue()); // this is not narrowing conversion, because only signed 32-bit integer values are supported as GraphQL arguments; the same goes for GraphQL variables
+            return biggerType ? of(intValue.getValue().longValue()) : of(intValue.getValue().intValue()); // this is not narrowing conversion, because only signed 32-bit integer values are supported as GraphQL arguments; the same goes for GraphQL variables
         } else if (valueOrVariable instanceof NullValue) {
             return empty();
         } else {

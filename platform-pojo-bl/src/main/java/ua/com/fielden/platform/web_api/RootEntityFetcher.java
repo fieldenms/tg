@@ -43,7 +43,7 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
             
             final QueryExecutionModel<T, EntityResultQueryModel<T>> queryModel = generateQueryModelFrom(environment.getField().getSelectionSet(), environment.getVariables(), environment.getFragmentsByName(), entityType);
             
-            final List<T> entities = coFinder.find(entityType).getAllEntities(queryModel);
+            final List<T> entities = coFinder.find(entityType).getFirstEntities(queryModel, 1000);
             logger.error(String.format("Quering type [%s]...done", entityType.getSimpleName()));
             return entities;
         } catch (final Exception e) {
