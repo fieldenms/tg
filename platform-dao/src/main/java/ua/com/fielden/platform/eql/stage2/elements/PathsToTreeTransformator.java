@@ -103,7 +103,6 @@ public class PathsToTreeTransformator {
         Expression2 expr2 = null;
         final Set<Child> dependencies = new HashSet<>();
         if (propInfo.expression != null) {
-            //System.out.println("newContext = " + newContext);
             final TransformationResult<Expression2> tr = expressionToS2(contextSource, propInfo.expression, domainInfo);
             expr2 = tr.item;
             final Map<IQrySource2<?>, SortedSet<Child>> dependenciesResult = transform(tr.updatedContext.getResolvedProps(), domainInfo);
@@ -130,24 +129,7 @@ public class PathsToTreeTransformator {
         final T2<SortedSet<Child>, Map<IQrySource2<?>, SortedSet<Child>>> genRes = generateChildren(source, contextId, next._2, newContext, domainInfo, contextParentSource);
         final SortedSet<Child> children = genRes._1;
         other.putAll(genRes._2);
-        final Child child = new Child(propInfo, children, next._1, required, source, expr2, contextParentSource, dependencies, next()); 
-//        System.out.println("\n--------------------\n" + child);
-//        if (!child.dependencies.isEmpty()) {
-//            System.out.println(" +deps:");
-//            for (final Child d : child.dependencies) {
-//                System.out.println(d);
-//            }
-//            
-//        }
-//        if (!child.items.isEmpty()) {
-//            System.out.println(" +children:");
-//            for (final Child c : child.items) {
-//                System.out.println(c);
-//            }
-//            
-//        }
-
-        result.add(child);
+        result.add(new Child(propInfo, children, next._1, required, source, expr2, contextParentSource, dependencies, next()));
         return t2(result, other); 
     }    
     

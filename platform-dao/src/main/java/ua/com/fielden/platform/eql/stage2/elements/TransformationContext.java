@@ -30,10 +30,19 @@ import ua.com.fielden.platform.types.tuples.T2;
 public class TransformationContext {
 
     private final Map<String, Table> tables = new HashMap<>();
-    //private final Map<IQrySource2<?>, SortedSet<Child>> sourceChildren = new HashMap<>();
     private final Map<IQrySource2<?>, List<ChildGroup>> sourceChildren = new HashMap<>();
     private final Map<IQrySource2<?>, Map<String, T2<IQrySource3, Object>>> resolutions = new HashMap<>();
 
+    private TransformationContext() {
+    }
+
+    public TransformationContext(final Map<String, Table> tables, final PropsResolutionContext context) {
+        this.tables.putAll(tables);
+        for (final Entry<IQrySource2<?>, SortedSet<Child>> el : transform(context.getResolvedProps(), context.getDomainInfo()).entrySet()) {
+            this.sourceChildren.put(el.getKey(), convertToGroup(el.getValue()));
+        }
+    }
+   
     private List<ChildGroup> convertToGroup(final SortedSet<Child> children) {
         final List<ChildGroup> result = new ArrayList<>();
         final List<AbstractPropInfo<?>> items = new ArrayList<>();
@@ -45,9 +54,7 @@ public class TransformationContext {
                 map.get(child.main).add(child);
                 if (child.source != null) {
                     mapSources.get(child.main).put(child.source.contextId, child.source);
-                    //System.out.println(child.fullPath + " " + child.main.name + " " + mapSources.get(child.main).size());
                 }
-                
             } else {
                 items.add(child.main);
                 final Set<Child> itemChildren = new HashSet<>();
@@ -76,16 +83,7 @@ public class TransformationContext {
                 }
                 
             }
-            
-//            if (!mapSources.get(item).isEmpty() && mapSources.get(item).entrySet().size() > 1) {
-//                System.out.println("----------------------- 1 -----------");
-//                for (final Entry<String, QrySource2BasedOnPersistentType> t2 : mapSources.get(item).entrySet()) {
-//                    System.out.println("--- " + t2.getKey());
-//                }
-//                
-//                System.out.println("----------------------- 2 -----------");
-//            }
-            
+
             final List<ChildGroup> groupItems = convertToGroup(mergedItems);
             result.add(new ChildGroup(item, groupItems, groupPaths, first.required, mapSources.get(item).isEmpty() ? first.source : mapSources.get(item).entrySet().iterator().next().getValue(), first.expr));
         }   
@@ -94,52 +92,6 @@ public class TransformationContext {
         return result;
     }
     
-    public TransformationContext(final Map<String, Table> tables, final PropsResolutionContext context) {
-        this.tables.putAll(tables);
-        for (final Entry<IQrySource2<?>, SortedSet<Child>> el : transform(context.getResolvedProps(), context.getDomainInfo()).entrySet()) {
-            this.sourceChildren.put(el.getKey(), convertToGroup(el.getValue()));
-        }
-//        this.sourceChildren.putAll(transform(context.getResolvedProps(), context.getDomainInfo()));
-//        System.out.println("-======================================");
-//        for (final Entry<IQrySource2<?>, SortedSet<Child>> el : sourceChildren.entrySet()) {
-//            System.out.println("\n source: " + el.getKey() + "\n");
-//            for (final Child c : el.getValue()) {
-//                System.out.println("++++++++++++++++");
-//                System.out.println(c);
-//                if (!c.dependencies.isEmpty()) {
-//                    System.out.println(" +deps:");
-//                    for (final Child d : c.dependencies) {
-//                        System.out.println(d);
-//                    }
-//                    
-//                }
-//                if (!c.items.isEmpty()) {
-//                    System.out.println(" +children:");
-//                    for (final Child c1 : c.items) {
-//                        System.out.println(c1);
-//                        if (!c1.dependencies.isEmpty()) {
-//                            System.out.println(" ++deps:");
-//                            for (final Child d : c1.dependencies) {
-//                                System.out.println(d);
-//                            }
-//                            
-//                        }
-//                        
-//                        
-//                        
-//                        
-//                        
-//                        
-//                    }
-//                    
-//                }
-//            }
-//        }
-    }
-
-    private TransformationContext() {
-    }
-
     public Table getTable(final String sourceFullClassName) {
         return tables.get(sourceFullClassName);
     }
