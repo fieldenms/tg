@@ -173,7 +173,7 @@ const template = html`
         }
         .ordering-number {
             font-size: 8pt;
-            width: 1rem;
+            width: 13px;
             @apply --layout-self-center;
         }
         .table-data-row {
@@ -432,6 +432,14 @@ const template = html`
     <slot id="column_selector" name="property-column" hidden></slot>
     <slot id="primary_action_selector" name="primary-action" hidden></slot>
     <slot id="egi_master" name="egi-master" hidden></slot>
+    <!--Element for measuring column width -->
+    <div id="measuring_element_container" class="table-header-row" style="position:fixed;top:0;left:0;">
+        <div id="measuring_element_styler" class="table-cell cell">
+            <div class="table-header-column-content">
+                <div id="measuring_element" class="truncate table-header-column-title"></div>
+            </div>
+        </div>
+    </div>
     <!--EGI template-->
     <div id="paperMaterial" class="grid-container" style$="[[_calcMaterialStyle(showMarginAround)]]" fit-to-height$="[[fitToHeight]]">
         <!--Table toolbar-->
@@ -452,10 +460,9 @@ const template = html`
                             <!--Primary action stub header goes here-->
                         </div>
                         <template is="dom-repeat" items="[[fixedColumns]]">
-                            <div class="table-cell cell" fixed style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, 'true')]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
+                            <div class="table-cell cell" fixed style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, item.shouldAddDynamicWidth, 'true')]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                                 <div class="table-header-column-content">
                                     <div class="truncate table-header-column-title" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
-                                    <iron-icon class="header-icon indicator-icon" hidden$="[[!_headerHasAction(item)]]" tooltip-text="This column has an action" icon="icons:touch-app"></iron-icon>
                                     <iron-icon class="header-icon indicator-icon" hidden$="[[!item.editable]]" tooltip-text="This column is editable" icon="icons:create"></iron-icon>
                                     <div class="header-icon sorting-group" hidden$="[[!_isSortingVisible(item.sortable, item.sorting)]]">
                                         <iron-icon class="indicator-icon" icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_computeSortingIconStyle(item.sorting)]]"></iron-icon>
@@ -476,10 +483,9 @@ const template = html`
                             <!--Primary action stub header goes here-->
                         </div>
                         <template is="dom-repeat" items="[[columns]]">
-                            <div class="table-cell cell" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, 'false')]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
+                            <div class="table-cell cell" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, item.shouldAddDynamicWidth, 'false')]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                                 <div class="table-header-column-content">
                                     <div class="truncate table-header-column-title" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
-                                    <iron-icon class="header-icon indicator-icon" hidden="[[!_headerHasAction(item)]]" tooltip-text="This column has an action" icon="icons:touch-app"></iron-icon>
                                     <iron-icon class="header-icon indicator-icon" hidden="[[!item.editable]]" tooltip-text="This column is editable" icon="icons:create"></iron-icon>
                                     <div class="header-icon sorting-group" hidden$="[[!_isSortingVisible(item.sortable, item.sorting)]]">
                                         <iron-icon class="indicator-icon" icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_computeSortingIconStyle(item.sorting)]]"></iron-icon>
@@ -515,7 +521,7 @@ const template = html`
                                 <tg-ui-action class="action" show-dialog="[[primaryAction.showDialog]]" current-entity="[[egiEntity.entity]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" action-kind="[[primaryAction.actionKind]]" number-of-action="[[primaryAction.numberOfAction]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" ui-role="[[primaryAction.uiRole]]" icon-style="[[primaryAction.iconStyle]]"></tg-ui-action>
                             </div>
                             <template is="dom-repeat" items="[[fixedColumns]]" as="column">
-                                <tg-egi-cell column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'true')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapFixedAction"></tg-egi-cell>
+                                <tg-egi-cell column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'true')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapFixedAction"></tg-egi-cell>
                             </template>
                         </div>
                     </template>
@@ -528,7 +534,7 @@ const template = html`
                             <!--Primary action stub for master goes here-->
                         </div>
                         <template is="dom-repeat" items="[[fixedColumns]]" as="column">
-                            <div class="table-master-cell" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'false')]]">
+                            <div class="table-master-cell" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'false')]]">
                                 <slot name$="[[_getSlotNameFor(column.property)]]"></slot>
                             </div>
                         </template>
@@ -544,7 +550,7 @@ const template = html`
                                 <tg-ui-action class="action" show-dialog="[[primaryAction.showDialog]]" current-entity="[[egiEntity.entity]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" action-kind="[[primaryAction.actionKind]]" number-of-action="[[primaryAction.numberOfAction]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" ui-role="[[primaryAction.uiRole]]" icon-style="[[primaryAction.iconStyle]]"></tg-ui-action>
                             </div>
                             <template is="dom-repeat" items="[[columns]]" as="column">
-                                <tg-egi-cell column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'false')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapAction"></tg-egi-cell>
+                                <tg-egi-cell column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'false')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapAction"></tg-egi-cell>
                             </template>
                         </div>
                     </template>
@@ -556,7 +562,7 @@ const template = html`
                             <!--Primary action stub for master goes here-->
                         </div>
                         <template is="dom-repeat" items="[[columns]]" as="column">
-                            <div class="table-master-cell" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'false')]]">
+                            <div class="table-master-cell" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'false')]]">
                                 <slot name$="[[column.property]]"></slot>
                             </div>
                         </template>
@@ -588,7 +594,7 @@ const template = html`
                                     <!--Footer's primary action stub goes here-->
                                 </div>
                                 <template is="dom-repeat" items="[[summaryRow.0]]" as="column">
-                                    <tg-egi-cell column="[[column]]" egi-entity="[[egiTotalsEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'true')]]" tooltip-text$="[[_getTotalTooltip(column)]]"></tg-egi-cell>
+                                    <tg-egi-cell column="[[column]]" egi-entity="[[egiTotalsEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'true')]]" tooltip-text$="[[_getTotalTooltip(column)]]"></tg-egi-cell>
                                 </template>
                             </div>
                         </template>
@@ -606,7 +612,7 @@ const template = html`
                                     <!--Footer's primary action stub goes here-->
                                 </div>
                                 <template is="dom-repeat" items="[[summaryRow.1]]" as="column">
-                                    <tg-egi-cell column="[[column]]" egi-entity="[[egiTotalsEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'false')]]" tooltip-text$="[[_getTotalTooltip(column)]]"></tg-egi-cell>
+                                    <tg-egi-cell column="[[column]]" egi-entity="[[egiTotalsEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'false')]]" tooltip-text$="[[_getTotalTooltip(column)]]"></tg-egi-cell>
                                 </template>
                             </div>
                         </template>
@@ -1223,8 +1229,10 @@ Polymer({
      * Updates the sorting order for available columns
      */
     adjustColumnsSorting: function (sortingConfig) {
+        document.body.appendChild(this.$.measuring_element_container);
         this._setSortingFor(sortingConfig, this.fixedColumns, "fixedColumns");
         this._setSortingFor(sortingConfig, this.columns, "columns");
+        document.body.removeChild(this.$.measuring_element_container);
     },
 
     _setSortingFor(sortingConfig, columns, modelName) {
@@ -1233,9 +1241,16 @@ Polymer({
             if (configIdx >= 0) {
                 this.set(modelName + "." + idx + ".sorting", sortingConfig[configIdx].sorting === 'ASCENDING' ? true : false);
                 this.set(modelName + "." + idx + ".sortingNumber", configIdx);
+                this.$.measuring_element.innerHTML = this.get(modelName + "." + idx + ".columnTitle");
+                if (this.get(modelName + "." + idx + ".width") - 29 < this.$.measuring_element.scrollWidth) {
+                    this.set(modelName + "." + idx + ".shouldAddDynamicWidth", true);
+                }
             } else {
                 this.set(modelName + "." + idx + ".sorting", null);
                 this.set(modelName + "." + idx + ".sortingNumber", -1);
+                if (this.get(modelName + "." + idx + ".shouldAddDynamicWidth")) {
+                    this.set(modelName + "." + idx + ".shouldAddDynamicWidth", false);
+                }
             }
         });
     },
@@ -1488,9 +1503,15 @@ Polymer({
                 newWidth = this.$.scrollableContainer.clientWidth - this._columnResizingObject.otherFixedColumnWidth - this._columnResizingObject.widthCorrection;
             }
 
+            //Correct width if additional dynamic width was added
+            let widthCorrection = 0;
+            if (e.model.item.shouldAddDynamicWidth) {
+                widthCorrection = -29;
+            }
+
             if (columnWidth !== newWidth) {
-                this.set("fixedColumns." + e.model.index + ".width", newWidth);
-                this._updateFixedTotalRowWidth(e.model.index, newWidth);
+                this.set("fixedColumns." + e.model.index + ".width", newWidth + widthCorrection);
+                this._updateFixedTotalRowWidth(e.model.index, newWidth + widthCorrection);
                 this._updateTableSizeAsync();
             }
         }
@@ -1533,6 +1554,12 @@ Polymer({
             if (newWidth < e.model.item.minWidth + this._columnResizingObject.indicatorsWidth) {
                 newWidth = e.model.item.minWidth + this._columnResizingObject.indicatorsWidth;
             }
+
+            //Correct width if additional dynamic width was added
+            const widthCorrection = 0;
+            if (e.model.item.shouldAddDynamicWidth) {
+                widthCorrection = -29;
+            }
             
             //Change the column width if it is needed
             if (columnWidth !== newWidth) {
@@ -1545,8 +1572,8 @@ Polymer({
                     };
                     this._columnResizingObject.columnParameters = columnParameters;
                 }
-                this.set("columns." + e.model.index + ".width", newWidth);
-                this._updateTotalRowWidth(e.model.index, newWidth);
+                this.set("columns." + e.model.index + ".width", newWidth + widthCorrection);
+                this._updateTotalRowWidth(e.model.index, newWidth  + widthCorrection);
                 this._updateTableSizeAsync();
                 //scroll if needed.
                 if (mousePos.x > this._columnResizingObject.containerWithoutFixedSecondaryActionWidth || mousePos.x < this._columnResizingObject.leftFixedContainerWidth) {
@@ -1716,12 +1743,9 @@ Polymer({
         return entitySelected ? "true" : "false";
     },
 
-    _headerHasAction: function (column) {
-        return column.customAction;
-    },
-
-    _calcColumnHeaderStyle: function (item, itemWidth, columnGrowFactor, fixed) {
-        let colStyle = "min-width: " + itemWidth + "px;" + "width: " + itemWidth + "px;"
+    _calcColumnHeaderStyle: function (item, itemWidth, columnGrowFactor, shouldAddDynamicWidth, fixed) {
+        const additionalWidth = shouldAddDynamicWidth ? 29 : 0;
+        let colStyle = "min-width: " + (itemWidth + additionalWidth) + "px;" + "width: " + (itemWidth + additionalWidth) + "px;"
         if (columnGrowFactor === 0 || fixed === 'true') {
             colStyle += "flex-grow: 0;flex-shrink: 0;";
         } else {
@@ -1756,8 +1780,8 @@ Polymer({
         return sortingNumber >= 0 ? sortingNumber + 1 + "" : "";
     },
 
-    _calcColumnStyle: function (item, itemWidth, columnGrowFactor, fixed) {
-        let colStyle = this._calcColumnHeaderStyle(item, itemWidth, columnGrowFactor, fixed);
+    _calcColumnStyle: function (item, itemWidth, columnGrowFactor, shouldAddDynamicWidth, fixed) {
+        let colStyle = this._calcColumnHeaderStyle(item, itemWidth, columnGrowFactor, shouldAddDynamicWidth, fixed);
         if (item.type === 'Integer' || item.type === 'BigDecimal' || item.type === 'Money') {
             colStyle += "text-align: right;"
         }
