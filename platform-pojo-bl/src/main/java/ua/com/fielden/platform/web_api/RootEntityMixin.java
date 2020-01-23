@@ -15,6 +15,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isString;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -141,6 +142,13 @@ public class RootEntityMixin {
             }));
             ofNullable(argsByName.get("to")).ifPresent(to -> resolveValue(to.getValue(), varsByName, true).ifPresent(value -> {
                 queryProperty.setValue2(value instanceof Money ? value : new Money(value instanceof Long ? new BigDecimal((long) value) : (BigDecimal) value));
+            }));
+        } else if (Date.class.isAssignableFrom(type)) {
+            ofNullable(argsByName.get("from")).ifPresent(from -> resolveValue(from.getValue(), varsByName).ifPresent(value -> {
+                queryProperty.setValue(value);
+            }));
+            ofNullable(argsByName.get("to")).ifPresent(to -> resolveValue(to.getValue(), varsByName).ifPresent(value -> {
+                queryProperty.setValue2(value);
             }));
         }
         return queryProperty;
