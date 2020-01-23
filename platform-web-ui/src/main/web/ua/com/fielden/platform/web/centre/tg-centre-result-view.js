@@ -13,13 +13,35 @@ const template = html`
             @apply --layout-justified;
         }
     </style>
-    <slot></slot>
+    <slot id="resultSlots"></slot>
 `;
 
 Polymer({
     _template: template,
 
     is: 'tg-centre-result-view',
+
+    ready: function () {
+        this.addEventListener("tg-centre-page-was-selected", () => {
+            this.$.resultSlots.assignedNodes({ flatten: true }).forEach(node => {
+                this._fireEventToNode(node);
+            });
+        })
+    },
+
+    _fireEventToNode: function (node) {
+        if (node.shadowRoot && typeof node.fire === 'function') {
+            node.dispatchEvent(new CustomEvent("tg-centre-page-was-selected", {bubbles: false, composed: true}));
+        } else if (node.tagName === 'SLOT') {
+            node.assignedNodes().forEach(assignedNode => {
+                this._fireEventToNode(assignedNode);
+            });
+        } else if (node.nodeType === Node.ELEMENT_NODE && node.children.length > 0) {
+            Array.from(node.children).forEach(child => {
+                this._fireEventToNode(child);
+            });
+        }
+    },
 
     attached: function () {
         this.classList.add('centreResultView');

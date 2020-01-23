@@ -433,7 +433,7 @@ const template = html`
     <slot id="primary_action_selector" name="primary-action" hidden></slot>
     <slot id="egi_master" name="egi-master" hidden></slot>
     <!--Element for measuring column width -->
-    <div id="measuring_element_container" class="table-header-row" style="position:fixed;top:0;left:0;">
+    <div id="measuring_element_container" class="table-header-row" style="position:fixed;visibility:hidden;top:0;left:0;">
         <div id="measuring_element_styler" class="table-cell cell">
             <div class="table-header-column-content">
                 <div id="measuring_element" class="truncate table-header-column-title"></div>
@@ -945,6 +945,9 @@ Polymer({
         this._closeMaster = this._closeMaster.bind(this);
         this.$.left_egi_master.addEventListener('focusin', this._scrollToVisibleLeftMaster.bind(this));
         this.$.centre_egi_master.addEventListener('focusin', this._scrollToVisibleCentreMaster.bind(this));
+
+        //Add event listener to know when egi has become visible
+        this.addEventListener("tg-centre-page-was-selected", this._egiBecameSelected.bind(this))
     },
 
     attached: function () {
@@ -1229,10 +1232,12 @@ Polymer({
      * Updates the sorting order for available columns
      */
     adjustColumnsSorting: function (sortingConfig) {
-        document.body.appendChild(this.$.measuring_element_container);
-        this._setSortingFor(sortingConfig, this.fixedColumns, "fixedColumns");
-        this._setSortingFor(sortingConfig, this.columns, "columns");
-        document.body.removeChild(this.$.measuring_element_container);
+        if (this.offsetParent !== null) {
+            this._setSortingFor(sortingConfig, this.fixedColumns, "fixedColumns");
+            this._setSortingFor(sortingConfig, this.columns, "columns");
+        } else {
+            this._postponedSortingConfig = sortingConfig;
+        }
     },
 
     _setSortingFor(sortingConfig, columns, modelName) {
@@ -1342,6 +1347,13 @@ Polymer({
     },
 
     //Event listeners
+    _egiBecameSelected: function () {
+        if (this._postponedSortingConfig) {
+            this.adjustColumnsSorting(this._postponedSortingConfig);
+            delete this._postponedSortingConfig;
+        }
+    },
+
     _resizeEventListener: function() {
         this._handleScrollEvent();
     },
@@ -1556,7 +1568,7 @@ Polymer({
             }
 
             //Correct width if additional dynamic width was added
-            const widthCorrection = 0;
+            let widthCorrection = 0;
             if (e.model.item.shouldAddDynamicWidth) {
                 widthCorrection = -29;
             }
