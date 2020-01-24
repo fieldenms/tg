@@ -15,7 +15,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.stream.Collectors;
 
 import com.microsoft.sqlserver.jdbc.StringUtils;
 
@@ -26,7 +25,6 @@ import ua.com.fielden.platform.eql.meta.EntityTypePropInfo;
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage1.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage1.elements.operands.Expression1;
-import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.Expression2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.Child;
 import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
@@ -42,10 +40,10 @@ public class PathsToTreeTransformator {
         return id;
     }
 
-    static final Map<IQrySource2<?>, SortedSet<Child>> transform(final Map<IQrySource2<?>, Map<String, EntProp2>> props, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
+    static final Map<IQrySource2<?>, SortedSet<Child>> transform(final Map<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>> props, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
         final Map<IQrySource2<?>, SortedSet<Child>> sourceChildren = new HashMap<>();
 
-        for (final Entry<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>> sourceProps : groupBySource(props).entrySet()) {
+        for (final Entry<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>> sourceProps : props.entrySet()) {
             final T2<SortedSet<Child>, Map<IQrySource2<?>, SortedSet<Child>>> genRes = generateChildren(sourceProps.getKey(), sourceProps.getKey().contextId(), sourceProps.getValue(), emptyList(), domainInfo, sourceProps.getKey());
             sourceChildren.put(sourceProps.getKey(), genRes._1);
             sourceChildren.putAll(genRes._2);
@@ -54,16 +52,16 @@ public class PathsToTreeTransformator {
         return sourceChildren;
     }
 
-    static final Map<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>> groupBySource(final Map<IQrySource2<?>, Map<String, EntProp2>>  props) {
-        final Map<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>> result = new HashMap<>();
-
-        for (final Entry<IQrySource2<?>, Map<String, EntProp2>> entry : props.entrySet()) {
-            result.put(entry.getKey(), entry.getValue().values().stream().collect(Collectors.toMap(x -> x.name, x -> x.getPath())));
-        }
-
-        return result;
-    }
-
+//    static final Map<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>> groupBySource(final Map<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>>  props) {
+//        final Map<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>> result = new HashMap<>();
+//
+//        for (final Entry<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>> entry : props.entrySet()) {
+//            result.put(entry.getKey(), entry.getValue().values().stream().collect(Collectors.toMap(x -> x.name, x -> x.getPath())));
+//        }
+//
+//        return result;
+//    }
+//
     private static Map<AbstractPropInfo<?>, Map<String, List<AbstractPropInfo<?>>>> groupByFirstProp(final Map<String, List<AbstractPropInfo<?>>> props) {
         final Map<AbstractPropInfo<?>, Map<String, List<AbstractPropInfo<?>>>> result = new HashMap<>();
 

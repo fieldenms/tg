@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.meta.EntityInfo;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntValue2;
@@ -19,7 +20,7 @@ import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySource3;
 public class PropsResolutionContext {
     private final List<List<IQrySource2<? extends IQrySource3>>> sources;
     private final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo;
-    private final Map<IQrySource2<?>, Map<String, EntProp2>> resolvedProps;
+    private final Map<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>> resolvedProps;
 
     public PropsResolutionContext(final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
         this.domainInfo = new HashMap<>(domainInfo);
@@ -27,7 +28,7 @@ public class PropsResolutionContext {
         this.resolvedProps = new HashMap<>();
     }
     
-    public PropsResolutionContext(final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo, final List<List<IQrySource2<? extends IQrySource3>>> sources, final Map<IQrySource2<?>, Map<String, EntProp2>> props) {
+    public PropsResolutionContext(final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo, final List<List<IQrySource2<? extends IQrySource3>>> sources, final Map<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>> props) {
         this.domainInfo = new HashMap<>(domainInfo);
         this.sources = sources;
         this.resolvedProps = new HashMap<>(props);
@@ -48,7 +49,7 @@ public class PropsResolutionContext {
         return srcs;
     }
     
-    public PropsResolutionContext cloneWithAdded(final IQrySource2<? extends IQrySource3> transformedSource, final Map<IQrySource2<?>, Map<String, EntProp2>> resolvedProps) {
+    public PropsResolutionContext cloneWithAdded(final IQrySource2<? extends IQrySource3> transformedSource, final Map<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>> resolvedProps) {
         final List<List<IQrySource2<? extends IQrySource3>>> srcs = new ArrayList<>();
         srcs.addAll(sources);
         srcs.get(0).add(transformedSource); // adding source to current query list of sources
@@ -58,17 +59,18 @@ public class PropsResolutionContext {
     public PropsResolutionContext cloneWithAdded(final EntProp2 transformedProp) {
         final List<List<IQrySource2<? extends IQrySource3>>> srcs = new ArrayList<>();
         srcs.addAll(sources);
-        final Map<IQrySource2<?>, Map<String, EntProp2>> props = new HashMap<>(resolvedProps);
+        final Map<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>> props = new HashMap<>(resolvedProps);
         
-        final Map<String, EntProp2> existing = props.get(transformedProp.source);
+        final Map<String, List<AbstractPropInfo<?>>> existing = props.get(transformedProp.source);
         
         if (existing == null) {
-            final Map<String, EntProp2> propMap = new HashMap<>();
-            propMap.put(transformedProp.name, transformedProp);
+            final Map<String, List<AbstractPropInfo<?>>> propMap = new HashMap<>();
+            propMap.put(transformedProp.name, transformedProp.getPath());
             props.put(transformedProp.source, propMap);
-            
         } else {
-            existing.put(transformedProp.name, transformedProp);    
+            if (!existing.containsKey(transformedProp.name)) {
+                existing.put(transformedProp.name, transformedProp.getPath());    
+            }
         };
         
         return new PropsResolutionContext(domainInfo, srcs, props);
@@ -86,7 +88,7 @@ public class PropsResolutionContext {
         return new PropsResolutionContext(domainInfo, srcs, resolvedProps);
     }
 
-    public Map<IQrySource2<?>, Map<String, EntProp2>> getResolvedProps() {
+    public Map<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>> getResolvedProps() {
         return unmodifiableMap(resolvedProps);
     }
 
