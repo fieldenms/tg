@@ -169,11 +169,11 @@ const template = html`
             --iron-icon-height: 16px;
         }
         .sorting-group {
+            width: var(--egi-sorting-width, 29px);
             @apply --layout-horizontal;
         }
         .ordering-number {
             font-size: 8pt;
-            width: 13px;
             @apply --layout-self-center;
         }
         .table-data-row {
@@ -432,14 +432,6 @@ const template = html`
     <slot id="column_selector" name="property-column" hidden></slot>
     <slot id="primary_action_selector" name="primary-action" hidden></slot>
     <slot id="egi_master" name="egi-master" hidden></slot>
-    <!--Element for measuring column width -->
-    <div id="measuring_element_container" class="table-header-row" style="position:fixed;visibility:hidden;top:0;left:0;">
-        <div id="measuring_element_styler" class="table-cell cell">
-            <div class="table-header-column-content">
-                <div id="measuring_element" class="truncate table-header-column-title"></div>
-            </div>
-        </div>
-    </div>
     <!--EGI template-->
     <div id="paperMaterial" class="grid-container" style$="[[_calcMaterialStyle(showMarginAround)]]" fit-to-height$="[[fitToHeight]]">
         <!--Table toolbar-->
@@ -778,6 +770,12 @@ Polymer({
             type: String,
             value: "1.5rem",
             observer: "_rowHeightChanged"
+        },
+        //The width of .sorting-group element. 
+        sortingButtonWidth: {
+            type: Number,
+            value: 29,
+            observer: "_sortingButtonWidthChanged"
         },
         /**
          * This is alternative to visible row count and default egi behaviour that allows one to configure egi's height independently from content height.
@@ -1233,21 +1231,22 @@ Polymer({
      */
     adjustColumnsSorting: function (sortingConfig) {
         if (this.offsetParent !== null) {
-            this._setSortingFor(sortingConfig, this.fixedColumns, "fixedColumns");
-            this._setSortingFor(sortingConfig, this.columns, "columns");
+            const fixedHeaders = this.$.top_left_egi.querySelectorAll(".table-header-column-title");
+            const scrollingHeaders = this.$.top_egi.querySelectorAll(".table-header-column-title");
+            this._setSortingFor(sortingConfig, this.fixedColumns, fixedHeaders,"fixedColumns");
+            this._setSortingFor(sortingConfig, this.columns, scrollingHeaders, "columns");
         } else {
             this._postponedSortingConfig = sortingConfig;
         }
     },
 
-    _setSortingFor(sortingConfig, columns, modelName) {
+    _setSortingFor(sortingConfig, columns, headerTitles, modelName) {
         columns.forEach((col, idx) => {
             const configIdx = sortingConfig.findIndex(config => config.property === col.property);
             if (configIdx >= 0) {
                 this.set(modelName + "." + idx + ".sorting", sortingConfig[configIdx].sorting === 'ASCENDING' ? true : false);
                 this.set(modelName + "." + idx + ".sortingNumber", configIdx);
-                this.$.measuring_element.innerHTML = this.get(modelName + "." + idx + ".columnTitle");
-                if (this.get(modelName + "." + idx + ".width") - 29 < this.$.measuring_element.scrollWidth) {
+                if (headerTitles[idx].scrollWidth > headerTitles[idx].offsetWidth) {
                     this.set(modelName + "." + idx + ".shouldAddDynamicWidth", true);
                 }
             } else {
@@ -1518,7 +1517,7 @@ Polymer({
             //Correct width if additional dynamic width was added
             let widthCorrection = 0;
             if (e.model.item.shouldAddDynamicWidth) {
-                widthCorrection = -29;
+                widthCorrection = -this.sortingButtonWidth;
             }
 
             if (columnWidth !== newWidth) {
@@ -1570,7 +1569,7 @@ Polymer({
             //Correct width if additional dynamic width was added
             let widthCorrection = 0;
             if (e.model.item.shouldAddDynamicWidth) {
-                widthCorrection = -29;
+                widthCorrection = -this.sortingButtonWidth;
             }
             
             //Change the column width if it is needed
@@ -1756,7 +1755,7 @@ Polymer({
     },
 
     _calcColumnHeaderStyle: function (item, itemWidth, columnGrowFactor, shouldAddDynamicWidth, fixed) {
-        const additionalWidth = shouldAddDynamicWidth ? 29 : 0;
+        const additionalWidth = shouldAddDynamicWidth ? this.sortingButtonWidth : 0;
         let colStyle = "min-width: " + (itemWidth + additionalWidth) + "px;" + "width: " + (itemWidth + additionalWidth) + "px;"
         if (columnGrowFactor === 0 || fixed === 'true') {
             colStyle += "flex-grow: 0;flex-shrink: 0;";
@@ -1829,6 +1828,10 @@ Polymer({
 
     _rowHeightChanged: function (newValue) {
         this.updateStyles({"--egi-row-height": newValue});
+    },
+
+    _sortingButtonWidthChanged: function (newValue) {
+        this.updateStyles({"--egi-sorting-width": newValue + "px"});
     },
 
     _totalsChanged: function (newTotals) {
