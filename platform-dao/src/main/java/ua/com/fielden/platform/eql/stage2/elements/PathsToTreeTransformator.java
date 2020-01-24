@@ -52,16 +52,6 @@ public class PathsToTreeTransformator {
         return sourceChildren;
     }
 
-//    static final Map<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>> groupBySource(final Map<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>>  props) {
-//        final Map<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>> result = new HashMap<>();
-//
-//        for (final Entry<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>> entry : props.entrySet()) {
-//            result.put(entry.getKey(), entry.getValue().values().stream().collect(Collectors.toMap(x -> x.name, x -> x.getPath())));
-//        }
-//
-//        return result;
-//    }
-//
     private static Map<AbstractPropInfo<?>, Map<String, List<AbstractPropInfo<?>>>> groupByFirstProp(final Map<String, List<AbstractPropInfo<?>>> props) {
         final Map<AbstractPropInfo<?>, Map<String, List<AbstractPropInfo<?>>>> result = new HashMap<>();
 
@@ -146,7 +136,7 @@ public class PathsToTreeTransformator {
     }
     
     private static TransformationResult<Expression2> expressionToS2(final IQrySource2<?> contextSource, final Expression1 expression, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
-        final PropsResolutionContext prc = new PropsResolutionContext(domainInfo, asList(asList(contextSource)), emptyMap());
-        return expression.transform(prc, contextSource.contextId());
+        final PropsResolutionContext prc = new PropsResolutionContext(domainInfo, asList(asList(contextSource)), emptyMap(), contextSource.contextId()); 
+        return expression.transform(prc);
     }
 }

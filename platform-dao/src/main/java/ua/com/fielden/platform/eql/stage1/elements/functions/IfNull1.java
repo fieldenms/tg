@@ -14,9 +14,9 @@ public class IfNull1 extends TwoOperandsFunction1<IfNull2> {
     }
 
     @Override
-    public TransformationResult<IfNull2> transform(final PropsResolutionContext context, final String sourceId) {
-        final TransformationResult<? extends ISingleOperand2<? extends ISingleOperand3>> firstOperandTransformationResult = operand1.transform(context, sourceId);
-        final TransformationResult<? extends ISingleOperand2<? extends ISingleOperand3>> secondOperandTransformationResult = operand2.transform(firstOperandTransformationResult.updatedContext, sourceId);
+    public TransformationResult<IfNull2> transform(final PropsResolutionContext context) {
+        final TransformationResult<? extends ISingleOperand2<? extends ISingleOperand3>> firstOperandTransformationResult = operand1.transform(context);
+        final TransformationResult<? extends ISingleOperand2<? extends ISingleOperand3>> secondOperandTransformationResult = operand2.transform(firstOperandTransformationResult.updatedContext);
         return new TransformationResult<IfNull2>(new IfNull2(firstOperandTransformationResult.item, secondOperandTransformationResult.item), secondOperandTransformationResult.updatedContext);
     }
     

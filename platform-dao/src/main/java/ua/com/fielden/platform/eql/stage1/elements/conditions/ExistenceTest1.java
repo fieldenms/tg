@@ -18,8 +18,8 @@ public class ExistenceTest1 implements ICondition1<ExistenceTest2> {
     }
 
     @Override
-    public TransformationResult<ExistenceTest2> transform(final PropsResolutionContext context, final String sourceId) {
-        final TransformationResult<EntQuery2> subQueryTr = subQuery.transform(context, sourceId);
+    public TransformationResult<ExistenceTest2> transform(final PropsResolutionContext context) {
+        final TransformationResult<EntQuery2> subQueryTr = subQuery.transform(context);
         return new TransformationResult<ExistenceTest2>(new ExistenceTest2(negated, subQueryTr.item), subQueryTr.updatedContext);
     }
 

@@ -56,18 +56,18 @@ public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2Ba
     }
    
     @Override
-    public TransformationResult<QrySource2BasedOnSubqueries> transform(final PropsResolutionContext resolutionContext, final String sourceId) {
+    public TransformationResult<QrySource2BasedOnSubqueries> transform(final PropsResolutionContext resolutionContext) {
         
         final List<EntQuery2> transformedQueries = new ArrayList<>();
         PropsResolutionContext currentResolutionContext = resolutionContext;
 
         for (final EntQuery1 model : models) {
-            final TransformationResult<EntQuery2> modelTr = model.transform(currentResolutionContext/*.produceNewOne() // as already invoked as part of EntQuery1.transform(..)*/, sourceId);
+            final TransformationResult<EntQuery2> modelTr = model.transform(currentResolutionContext/*.produceNewOne() // as already invoked as part of EntQuery1.transform(..)*/);
             transformedQueries.add(modelTr.item);
             currentResolutionContext = modelTr.updatedContext; // TODO should be just resolutionContext with propsResolutions added from this model transformation   
         }
            
-        final QrySource2BasedOnSubqueries transformedSource = new QrySource2BasedOnSubqueries(transformedQueries, alias, resolutionContext.getDomainInfo(), (sourceId == null ? Integer.toString(contextId) : sourceId + "_" + Integer.toString(contextId)));
+        final QrySource2BasedOnSubqueries transformedSource = new QrySource2BasedOnSubqueries(transformedQueries, alias, resolutionContext.getDomainInfo(), (resolutionContext.sourceId == null ? Integer.toString(contextId) : resolutionContext.sourceId + "_" + Integer.toString(contextId)));
         return new TransformationResult<QrySource2BasedOnSubqueries>(transformedSource, /*currentResolutionContext*/resolutionContext.cloneWithAdded(transformedSource, currentResolutionContext.getResolvedProps()));
     }
     

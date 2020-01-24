@@ -15,8 +15,8 @@ public class AverageOf1 extends SingleOperandFunction1<AverageOf2> {
     }
 
     @Override
-    public TransformationResult<AverageOf2> transform(final PropsResolutionContext context, final String sourceId) {
-        final TransformationResult<? extends ISingleOperand2<?>> operandTr = operand.transform(context, sourceId);
+    public TransformationResult<AverageOf2> transform(final PropsResolutionContext context) {
+        final TransformationResult<? extends ISingleOperand2<?>> operandTr = operand.transform(context);
         return new TransformationResult<AverageOf2>(new AverageOf2(operandTr.item, distinct), operandTr.updatedContext);
     }
     

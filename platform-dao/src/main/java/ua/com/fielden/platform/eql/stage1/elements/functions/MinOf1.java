@@ -13,8 +13,8 @@ public class MinOf1 extends SingleOperandFunction1<MinOf2> {
     }
 
     @Override
-    public TransformationResult<MinOf2> transform(final PropsResolutionContext context, final String sourceId) {
-        final TransformationResult<? extends ISingleOperand2<?>> operandTransformationResult = operand.transform(context, sourceId);
+    public TransformationResult<MinOf2> transform(final PropsResolutionContext context) {
+        final TransformationResult<? extends ISingleOperand2<?>> operandTransformationResult = operand.transform(context);
         return new TransformationResult<MinOf2>(new MinOf2(operandTransformationResult.item), operandTransformationResult.updatedContext);
     }
     

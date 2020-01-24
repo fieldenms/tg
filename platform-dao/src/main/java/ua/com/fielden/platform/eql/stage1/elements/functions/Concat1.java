@@ -20,11 +20,11 @@ public class Concat1 extends AbstractFunction1<Concat2> {
     }
 
     @Override
-    public TransformationResult<Concat2> transform(final PropsResolutionContext context, final String sourceId) {
+    public TransformationResult<Concat2> transform(final PropsResolutionContext context) {
         final List<ISingleOperand2<? extends ISingleOperand3>> transformed = new ArrayList<>();
         PropsResolutionContext currentResolutionContext = context;
         for (final ISingleOperand1<? extends ISingleOperand2<? extends ISingleOperand3>> operand : operands) {
-            final TransformationResult<? extends ISingleOperand2<? extends ISingleOperand3>> operandTr = operand.transform(currentResolutionContext, sourceId);
+            final TransformationResult<? extends ISingleOperand2<? extends ISingleOperand3>> operandTr = operand.transform(currentResolutionContext);
             transformed.add(operandTr.item);
             currentResolutionContext = operandTr.updatedContext;
         }

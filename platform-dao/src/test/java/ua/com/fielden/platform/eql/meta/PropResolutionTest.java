@@ -186,7 +186,7 @@ public class PropResolutionTest extends EqlTestCase {
         final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
         final EntQuery2 expQry2 = new EntQuery2(parts, MODEL, RESULT_QUERY);
 
-        final TransformationResult<EntQuery2> trQry2 = expQry1.transform(new PropsResolutionContext(metadata), null);
+        final TransformationResult<EntQuery2> trQry2 = expQry1.transform(new PropsResolutionContext(metadata));
         assertEquals(expQry2, trQry2.item);
         //assertEquals(setOf(makeProp2), new HashSet<EntProp2>(trQry2.updatedContext.getResolvedProps().entrySet().iterator().next().getValue().values()));
     }
@@ -216,7 +216,7 @@ public class PropResolutionTest extends EqlTestCase {
         final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
         final EntQuery2 expQry2 = new EntQuery2(parts, MODEL, RESULT_QUERY);
 
-        final TransformationResult<EntQuery2> trQry2 = expQry1.transform(new PropsResolutionContext(metadata), null);
+        final TransformationResult<EntQuery2> trQry2 = expQry1.transform(new PropsResolutionContext(metadata));
         assertEquals(expQry2, trQry2.item);
         //assertEquals(setOf(makeProp2), new HashSet<EntProp2>(trQry2.updatedContext.getResolvedProps().entrySet().iterator().next().getValue().values()));
     }

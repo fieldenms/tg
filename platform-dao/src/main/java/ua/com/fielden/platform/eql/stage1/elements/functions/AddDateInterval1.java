@@ -20,9 +20,9 @@ public class AddDateInterval1 extends TwoOperandsFunction1<AddDateInterval2> {
     }
 
     @Override
-    public TransformationResult<AddDateInterval2> transform(final PropsResolutionContext context, final String sourceId) {
-        final TransformationResult<? extends ISingleOperand2<? extends ISingleOperand3>> firstOperandTr = operand1.transform(context, sourceId);
-        final TransformationResult<? extends ISingleOperand2<? extends ISingleOperand3>> secondOperandTr = operand2.transform(firstOperandTr.updatedContext, sourceId);
+    public TransformationResult<AddDateInterval2> transform(final PropsResolutionContext context) {
+        final TransformationResult<? extends ISingleOperand2<? extends ISingleOperand3>> firstOperandTr = operand1.transform(context);
+        final TransformationResult<? extends ISingleOperand2<? extends ISingleOperand3>> secondOperandTr = operand2.transform(firstOperandTr.updatedContext);
         return new TransformationResult<AddDateInterval2>(new AddDateInterval2(firstOperandTr.item, intervalUnit, secondOperandTr.item), secondOperandTr.updatedContext);
     }
     

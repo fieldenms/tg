@@ -17,8 +17,8 @@ public class Yield1 {
         this.hasRequiredHint = hasRequiredHint;
     }
     
-    public TransformationResult<Yield2> transform(final PropsResolutionContext context, final String sourceId) {
-        final TransformationResult<? extends ISingleOperand2<?>> operandTr = operand.transform(context, sourceId);
+    public TransformationResult<Yield2> transform(final PropsResolutionContext context) {
+        final TransformationResult<? extends ISingleOperand2<?>> operandTr = operand.transform(context);
         return new TransformationResult<Yield2>(new Yield2(operandTr.item, alias, hasRequiredHint), operandTr.updatedContext);
     }
 

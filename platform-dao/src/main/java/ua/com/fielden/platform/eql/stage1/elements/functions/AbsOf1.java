@@ -13,8 +13,8 @@ public class AbsOf1 extends SingleOperandFunction1<AbsOf2> {
     }
 
     @Override
-    public TransformationResult<AbsOf2> transform(final PropsResolutionContext context, final String sourceId) {
-        final TransformationResult<? extends ISingleOperand2<?>> operandTransformationResult = operand.transform(context, sourceId);
+    public TransformationResult<AbsOf2> transform(final PropsResolutionContext context) {
+        final TransformationResult<? extends ISingleOperand2<?>> operandTransformationResult = operand.transform(context);
         return new TransformationResult<AbsOf2>(new AbsOf2(operandTransformationResult.item), operandTransformationResult.updatedContext);
     }
     

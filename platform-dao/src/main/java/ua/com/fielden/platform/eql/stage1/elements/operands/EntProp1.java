@@ -32,7 +32,7 @@ public class EntProp1 extends AbstractElement1 implements ISingleOperand1<EntPro
     }
 
     @Override
-    public TransformationResult<EntProp2> transform(final PropsResolutionContext context, final String sourceId) {
+    public TransformationResult<EntProp2> transform(final PropsResolutionContext context) {
         
         final Iterator<List<IQrySource2<? extends IQrySource3>>> it = context.getSources().iterator();
         if (external) {

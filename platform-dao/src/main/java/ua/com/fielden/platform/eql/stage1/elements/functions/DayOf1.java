@@ -12,8 +12,8 @@ public class DayOf1 extends SingleOperandFunction1<DayOf2> {
     }
 
     @Override
-    public TransformationResult<DayOf2> transform(final PropsResolutionContext context, final String sourceId) {
-        final TransformationResult<? extends ISingleOperand2<?>> operandTransformationResult = operand.transform(context, sourceId);
+    public TransformationResult<DayOf2> transform(final PropsResolutionContext context) {
+        final TransformationResult<? extends ISingleOperand2<?>> operandTransformationResult = operand.transform(context);
         return new TransformationResult<DayOf2>(new DayOf2(operandTransformationResult.item), operandTransformationResult.updatedContext);
     }
     
