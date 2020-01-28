@@ -27,6 +27,8 @@ import graphql.schema.CoercingParseLiteralException;
 import graphql.schema.CoercingParseValueException;
 import graphql.schema.CoercingSerializeException;
 import graphql.schema.GraphQLScalarType;
+import ua.com.fielden.platform.types.Colour;
+import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
 
 public class TgScalars {
@@ -230,8 +232,68 @@ public class TgScalars {
         public Date parseLiteral(final Object argumentInput) {
             return convertArgumentInput(argumentInput).orElseThrow(() -> new CoercingParseLiteralException("Expected number-like or string-based 'Date' but was '" + typeName(argumentInput) + "'."));
         }
+        
     }).build();
     
+    /**
+     * Scalar type for {@link Hyperlink}.
+     */
+    public static final GraphQLScalarType GraphQLHyperlink = newScalar().name("Hyperlink").description("Hyperlink type.").coercing(new Coercing<Hyperlink, String>() {
+        
+        private Optional<String> convertDataFetcherResult(final Object input) {
+            if (input instanceof Hyperlink) {
+                return of(((Hyperlink) input).value);
+            } else {
+                return empty();
+            }
+        }
+        
+        @Override
+        public String serialize(final Object dataFetcherResult) {
+            return convertDataFetcherResult(dataFetcherResult).orElseThrow(() -> new CoercingSerializeException("Expected type 'Hyperlink' but was '" + typeName(dataFetcherResult) + "'."));
+        }
+        
+        @Override
+        public Hyperlink parseValue(final Object variableInput) {
+            throw new CoercingParseValueException("Hyperlink arguments not supported.");
+        }
+        
+        @Override
+        public Hyperlink parseLiteral(final Object argumentInput) {
+            throw new CoercingParseLiteralException("Hyperlink arguments not supported.");
+        }
+        
+    }).build();
+    
+    /**
+     * Scalar type for {@link Colour}.
+     */
+    public static final GraphQLScalarType GraphQLColour = newScalar().name("Colour").description("Colour type.").coercing(new Coercing<Colour, String>() {
+        
+        private Optional<String> convertDataFetcherResult(final Object input) {
+            if (input instanceof Colour) {
+                return of(((Colour) input).getColourValue());
+            } else {
+                return empty();
+            }
+        }
+        
+        @Override
+        public String serialize(final Object dataFetcherResult) {
+            return convertDataFetcherResult(dataFetcherResult).orElseThrow(() -> new CoercingSerializeException("Expected type 'Colour' but was '" + typeName(dataFetcherResult) + "'."));
+        }
+        
+        @Override
+        public Colour parseValue(final Object variableInput) {
+            throw new CoercingParseValueException("Colour arguments not supported.");
+        }
+        
+        @Override
+        public Colour parseLiteral(final Object argumentInput) {
+            throw new CoercingParseLiteralException("Colour arguments not supported.");
+        }
+        
+    }).build();
     
     public static void main(final String[] args) {
         final DateTimeFormatter parser = ISODateTimeFormat.dateTimeParser();

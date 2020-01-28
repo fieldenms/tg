@@ -18,7 +18,9 @@ import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
 import static ua.com.fielden.platform.utils.EntityUtils.isDate;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
+import static ua.com.fielden.platform.web_api.TgScalars.GraphQLColour;
 import static ua.com.fielden.platform.web_api.TgScalars.GraphQLDate;
+import static ua.com.fielden.platform.web_api.TgScalars.GraphQLHyperlink;
 import static ua.com.fielden.platform.web_api.TgScalars.GraphQLMoney;
 
 import java.lang.reflect.Modifier;
@@ -120,35 +122,33 @@ public class FieldSchema {
                 .build()
             )));
         } else if (Integer.class.isAssignableFrom(type)) {
-            return of(t2(GraphQLInt, createArgumentsFor(GraphQLInt)));
+            return of(t2(GraphQLInt, createRangeArgumentsFor(GraphQLInt)));
         } else if (Long.class.isAssignableFrom(type)) {
             // Even though we add here the support for Long values [-9,223,372,036,854,775,808; 9,223,372,036,854,775,807] = [-2^63; 2^63 - 1],
             // the actual support would be limited to              [    -9,007,199,254,740,992;     9,007,199,254,740,991] = [-2^53; 2^53 - 1];
             // This is because Javascript numbers, that are used in GraphiQL client, truncates higher numbers with zeros and performs weird rounding.
-            return of(t2(GraphQLLong, createArgumentsFor(GraphQLLong)));
+            return of(t2(GraphQLLong, createRangeArgumentsFor(GraphQLLong)));
         } else if (BigDecimal.class.isAssignableFrom(type)) {
-            return of(t2(GraphQLBigDecimal, createArgumentsFor(GraphQLBigDecimal)));
+            return of(t2(GraphQLBigDecimal, createRangeArgumentsFor(GraphQLBigDecimal)));
             // TODO remove return TgScalars.GraphQLBigDecimal;
         } else if (Money.class.isAssignableFrom(type)) {
-            return of(t2(GraphQLMoney, createArgumentsFor(GraphQLMoney)));
+            return of(t2(GraphQLMoney, createRangeArgumentsFor(GraphQLMoney)));
         } else if (Modifier.isAbstract(type.getModifiers())) {
             return empty();
         } else if (isEntityType(type)) {
             return of(t2(new GraphQLTypeReference(type.getSimpleName()), asList()));
         } else if (isDate(type)) {
-            return of(t2(GraphQLDate, createArgumentsFor(GraphQLDate)));
+            return of(t2(GraphQLDate, createRangeArgumentsFor(GraphQLDate)));
         } else if (Hyperlink.class.isAssignableFrom(type)) {
-            // TODO return TgScalars.GraphQLHyperlink;
-            return empty();
+            return of(t2(GraphQLHyperlink, asList()));
         } else if (Colour.class.isAssignableFrom(type)) {
-            // TODO return TgScalars.GraphQLColour;
-            return empty();
+            return of(t2(GraphQLColour, asList()));
         } else {
             throw new UnsupportedOperationException(format("Field: type [%s] is unknown (type = %s, name = %s).", type.getSimpleName(), entityType.getSimpleName(), name));
         }
     }
     
-    private static List<GraphQLArgument> createArgumentsFor(final GraphQLInputType inputType) {
+    private static List<GraphQLArgument> createRangeArgumentsFor(final GraphQLInputType inputType) {
         return asList(
             newArgument()
             .name("from")

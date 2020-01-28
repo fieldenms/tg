@@ -73,8 +73,10 @@ public class RootEntityMixin {
         for (final Map.Entry<String, T2<List<GraphQLArgument>, List<Argument>>> propertyAndArguments: propertiesAndArguments.entrySet()) {
             final String propertyName = propertyAndArguments.getKey();
             final List<Argument> propertyArguments = propertyAndArguments.getValue()._2;
-            final QueryProperty queryProperty = createQueryProperty(entityType, propertyName, propertyArguments, variables, schema.getCodeRegistry(), propertyAndArguments.getValue()._1);
-            queryProperties.put(queryProperty.getPropertyName(), queryProperty);
+            if (!propertyAndArguments.getValue()._1.isEmpty()) {
+                final QueryProperty queryProperty = createQueryProperty(entityType, propertyName, propertyArguments, variables, schema.getCodeRegistry(), propertyAndArguments.getValue()._1);
+                queryProperties.put(queryProperty.getPropertyName(), queryProperty);
+            }
         }
         
         final EntityResultQueryModel<T> eqlQuery = createQuery(entityType, new ArrayList<>(queryProperties.values())).model();
@@ -113,35 +115,12 @@ public class RootEntityMixin {
                     queryProperty.setValue(false);
                 }
             });
-        } else if (Integer.class.isAssignableFrom(type)) {
-            ofNullable(argumentValues.get("from")).ifPresent(value -> {
-                queryProperty.setValue(value);
-            });
-            ofNullable(argumentValues.get("to")).ifPresent(value -> {
-                queryProperty.setValue2(value);
-            });
-        } else if (Long.class.isAssignableFrom(type)) {
-            ofNullable(argumentValues.get("from")).ifPresent(value -> {
-                queryProperty.setValue(value);
-            });
-            ofNullable(argumentValues.get("to")).ifPresent(value -> {
-                queryProperty.setValue2(value);
-            });
-        } else if (BigDecimal.class.isAssignableFrom(type)) {
-            ofNullable(argumentValues.get("from")).ifPresent(value -> {
-                queryProperty.setValue(value);
-            });
-            ofNullable(argumentValues.get("to")).ifPresent(value -> {
-                queryProperty.setValue2(value);
-            });
-        } else if (Money.class.isAssignableFrom(type)) {
-            ofNullable(argumentValues.get("from")).ifPresent(value -> {
-                queryProperty.setValue(value);
-            });
-            ofNullable(argumentValues.get("to")).ifPresent(value -> {
-                queryProperty.setValue2(value);
-            });
-        } else if (Date.class.isAssignableFrom(type)) {
+        } else if (
+                Integer.class.isAssignableFrom(type)
+            || Long.class.isAssignableFrom(type)
+            || BigDecimal.class.isAssignableFrom(type)
+            || Money.class.isAssignableFrom(type)
+            || Date.class.isAssignableFrom(type)) {
             ofNullable(argumentValues.get("from")).ifPresent(value -> {
                 queryProperty.setValue(value);
             });
