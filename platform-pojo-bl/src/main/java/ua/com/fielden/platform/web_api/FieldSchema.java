@@ -24,12 +24,9 @@ import static ua.com.fielden.platform.web_api.TgScalars.GraphQLMoney;
 import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
-import org.joda.time.DateTime;
 
 import graphql.schema.GraphQLArgument;
 import graphql.schema.GraphQLFieldDefinition.Builder;
@@ -37,7 +34,6 @@ import graphql.schema.GraphQLInputType;
 import graphql.schema.GraphQLList;
 import graphql.schema.GraphQLOutputType;
 import graphql.schema.GraphQLTypeReference;
-import graphql.schema.PropertyDataFetcher;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.IContinuationData;
@@ -70,12 +66,6 @@ public class FieldSchema {
         return determineFieldType(entityType, name).map(typeAndArguments -> {
             final Builder builder = newFieldDefinition();
             typeAndArguments._2.stream().forEach(argument -> builder.argument(argument));
-            if (typeAndArguments._1.equals(GraphQLDate)) {
-                builder.dataFetcher(PropertyDataFetcher.<Object, AbstractEntity>fetching((entity) -> {
-                    final Object val = entity.get(name);
-                    return val instanceof Date ? (TgScalars.dateTimePrinter.print(new DateTime(val))) : val;
-                }));
-            }
             return builder
                 .name(name)
                 .description(getTitleAndDesc(name, entityType).getValue())

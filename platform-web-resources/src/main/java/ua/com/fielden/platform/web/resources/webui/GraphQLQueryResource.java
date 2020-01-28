@@ -18,7 +18,6 @@ import graphql.ExecutionResult;
 import graphql.GraphQLError;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web_api.GraphQLService;
-import ua.com.fielden.platform.web_api.Prettyfier;
 
 /**
  * The web resource for GraphQL queries.
@@ -75,7 +74,7 @@ public class GraphQLQueryResource extends ServerResource {
         }
         logger.error("============ GraphQL Data: ============");
         final Map<String, Object> data = (Map<String, Object>) execResult.getData(); // graphQL.execute("{hello}").getData();
-        logger.error(Prettyfier.prettyString(data, 0, true));
+        //logger.error(Prettyfier.prettyString(data, 0, true));
         
         return restUtil.graphQLResultRepresentation(data, execResult.getErrors());
     }

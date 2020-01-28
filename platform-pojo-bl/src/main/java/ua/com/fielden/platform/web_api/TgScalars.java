@@ -1,12 +1,19 @@
 package ua.com.fielden.platform.web_api;
+import static graphql.schema.GraphQLScalarType.newScalar;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static org.joda.time.format.ISODateTimeFormat.basicDate;
+import static org.joda.time.format.ISODateTimeFormat.date;
+import static org.joda.time.format.ISODateTimeFormat.dateElementParser;
+import static org.joda.time.format.ISODateTimeFormat.time;
+import static org.joda.time.format.ISODateTimeFormat.timeElementParser;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Date;
 import java.util.Optional;
 
+import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.DateTimeFormatterBuilder;
 import org.joda.time.format.DateTimeParser;
@@ -79,101 +86,99 @@ public class TgScalars {
     /**
      * This represents the "Money" type which is a representation of {@link Money}.
      */
-    public static final GraphQLScalarType GraphQLMoney = new GraphQLScalarType("Money", "Built-in ua.com.fielden.platform.types.Money", new Coercing<Money, Money>() {
+    public static final GraphQLScalarType GraphQLMoney = newScalar().name("Money").description("Money type.").coercing(new Coercing<Money, BigDecimal>() {
         
-        private Money convertImpl(final Object input) {
-            if (isNumberIsh(input)) {
+        //////////////////////////////////////////////// SERIALISE RESULTS ////////////////////////////////////////////////
+        
+        private Optional<BigDecimal> convertDataFetcherResult(final Object input) {
+            if (input instanceof Money) {
+                return of(((Money) input).getAmount());
+            } else {
+                return empty();
+            }
+        }
+        
+        @Override
+        public BigDecimal serialize(final Object dataFetcherResult) {
+            return convertDataFetcherResult(dataFetcherResult).orElseThrow(() -> new CoercingSerializeException("Expected type 'Money' but was '" + typeName(dataFetcherResult) + "'."));
+        }
+        
+        //////////////////////////////////////////////// PARSE ARGUMENT VARIABLES ////////////////////////////////////////////////
+        
+        private Optional<Money> convertVariableInput(final Object input) {
+            if (input instanceof Number) {
                 try {
-                    return new Money(input.toString());
+                    return of(new Money(input.toString()));
                 } catch (final NumberFormatException e) {
-                    return null;
+                    return empty();
                 }
-            } else if (input instanceof Money) {
-                return (Money) input;
+            } else {
+                return empty();
             }
-            return null;
-            
         }
         
         @Override
-        public Money serialize(final Object input) {
-            final Money result = convertImpl(input);
-            if (result == null) {
-                throw new CoercingSerializeException(
-                        "Expected type 'Money' but was '" + typeName(input) + "'."
-                );
+        public Money parseValue(final Object variableInput) {
+            return convertVariableInput(variableInput).orElseThrow(() -> new CoercingParseValueException("Expected number-like 'Money' but was '" + typeName(variableInput) + "'."));
+        }
+        
+        //////////////////////////////////////////////// PARSE ARGUMENT LITERALS ////////////////////////////////////////////////
+        
+        private Optional<Money> convertArgumentInput(final Object argumentInput) {
+            if (argumentInput instanceof IntValue) {
+                final BigInteger value = ((IntValue) argumentInput).getValue();
+                return of(new Money(new BigDecimal(value)));
+            } else if (argumentInput instanceof FloatValue) {
+                return of(new Money(((FloatValue) argumentInput).getValue()));
+            } else {
+                return empty();
             }
-            return result;
         }
         
         @Override
-        public Money parseValue(final Object input) {
-            final Money result = convertImpl(input);
-            if (result == null) {
-                throw new CoercingParseValueException(
-                        "Expected type 'Money' but was '" + typeName(input) + "'."
-                );
-            }
-            return result;
+        public Money parseLiteral(final Object argumentInput) {
+            return convertArgumentInput(argumentInput).orElseThrow(() -> new CoercingParseLiteralException("Expected number-like 'Money' but was '" + typeName(argumentInput) + "'."));
         }
         
-        @Override
-        public Money parseLiteral(final Object input) {
-            if (input instanceof StringValue) {
-                try {
-                    return new Money(((StringValue) input).getValue());
-                } catch (final NumberFormatException e) {
-                    throw new CoercingParseLiteralException(
-                            "Unable to turn AST input into a 'Money' : '" + String.valueOf(input) + "'"
-                    );
-                }
-            } else if (input instanceof IntValue) {
-                return new Money(new BigDecimal(((IntValue) input).getValue()));
-            } else if (input instanceof FloatValue) {
-                return new Money(((FloatValue) input).getValue());
-            }
-            throw new CoercingParseLiteralException(
-                    "Expected AST type 'IntValue', 'StringValue' or 'FloatValue' but was '" + typeName(input) + "'."
-            );
-        }
-    });
+    }).build();
     
-    public static final DateTimeFormatter basicDateParser = ISODateTimeFormat.basicDate();
+    public static final DateTimeFormatter basicDateParser = basicDate();
     public static final DateTimeFormatter dateTimeParser = new DateTimeFormatterBuilder()
-        .append(ISODateTimeFormat.dateElementParser())
+        .append(dateElementParser())
         .appendOptional(new DateTimeFormatterBuilder()
             .appendLiteral(' ')
-            .appendOptional(ISODateTimeFormat.timeElementParser().getParser())
+            .appendOptional(timeElementParser().getParser())
             .toParser())
         .toFormatter();
     public static final DateTimeFormatter dateTimePrinter = new DateTimeFormatterBuilder()
-            .append(ISODateTimeFormat.date())
-            .appendLiteral(' ')
-            .append(ISODateTimeFormat.time())
-            .toFormatter();
+        .append(date())
+        .appendLiteral(' ')
+        .append(time()) // TODO consider removing Z or +13:00 ?
+        .toFormatter();
     
-    public static final GraphQLScalarType GraphQLDate = new GraphQLScalarType("Date", "Date type.", new Coercing<Date, Date>() {
-        private Optional<Date> convertDataFetcherResult(final Object input) {
-            if (input instanceof String) {
-                return parseFrom((String) input, dateTimePrinter);
-//            } else if (input instanceof DateTime) {
-//                return of(((DateTime) input).toDate());
-//            } else if (input instanceof Date) {
-//                return of((Date) input);
+    /**
+     * Scalar type for dates.
+     */
+    public static final GraphQLScalarType GraphQLDate = newScalar().name("Date").description("Date type.").coercing(new Coercing<Date, String>() {
+        
+        //////////////////////////////////////////////// SERIALISE RESULTS ////////////////////////////////////////////////
+        
+        private Optional<String> convertDataFetcherResult(final Object input) {
+            if (input instanceof DateTime) {
+                return of(dateTimePrinter.print(((DateTime) input)));
+            } else if (input instanceof Date) {
+                return of(dateTimePrinter.print(new DateTime(input)));
             } else {
                 return empty();
             }
         }
         
-        private Optional<Date> convertVariableInput(final Object input) {
-            if (input instanceof Number) {
-                return basicDateFrom(input.toString());
-            } else if (input instanceof String) {
-                return basicDateFrom((String) input);
-            } else {
-                return empty();
-            }
+        @Override
+        public String serialize(final Object dataFetcherResult) {
+            return convertDataFetcherResult(dataFetcherResult).orElseThrow(() -> new CoercingSerializeException("Expected type 'Date' or 'DateTime' but was '" + typeName(dataFetcherResult) + "'."));
         }
+        
+        //////////////////////////////////////////////// PARSE ARGUMENT ... ////////////////////////////////////////////////
         
         private Optional<Date> parseFrom(final String input, final DateTimeFormatter formatter) {
             try {
@@ -191,15 +196,24 @@ public class TgScalars {
             return parseFrom(input, dateTimeParser);
         }
         
-        @Override
-        public Date serialize(final Object dataFetcherResult) {
-            return convertDataFetcherResult(dataFetcherResult).orElseThrow(() -> new CoercingSerializeException("Expected type 'Date' but was '" + typeName(dataFetcherResult) + "'."));
+        //////////////////////////////////////////////// ... VARIABLES ////////////////////////////////////////////////
+        
+        private Optional<Date> convertVariableInput(final Object input) {
+            if (input instanceof Number) {
+                return basicDateFrom(input.toString());
+            } else if (input instanceof String) {
+                return dateTimeFrom((String) input);
+            } else {
+                return empty();
+            }
         }
         
         @Override
         public Date parseValue(final Object variableInput) {
-            return convertVariableInput(variableInput).orElseThrow(() -> new CoercingParseValueException("Expected type 'Date' but was '" + typeName(variableInput) + "'."));
+            return convertVariableInput(variableInput).orElseThrow(() -> new CoercingParseValueException("Expected number-like or string-based 'Date' but was '" + typeName(variableInput) + "'."));
         }
+        
+        //////////////////////////////////////////////// ... LITERALS ////////////////////////////////////////////////
         
         private Optional<Date> convertArgumentInput(final Object argumentInput) {
             if (argumentInput instanceof IntValue) {
@@ -214,9 +228,9 @@ public class TgScalars {
         
         @Override
         public Date parseLiteral(final Object argumentInput) {
-            return convertArgumentInput(argumentInput).orElseThrow(() -> new CoercingParseLiteralException("Expected type 'Date' but was '" + typeName(argumentInput) + "'."));
+            return convertArgumentInput(argumentInput).orElseThrow(() -> new CoercingParseLiteralException("Expected number-like or string-based 'Date' but was '" + typeName(argumentInput) + "'."));
         }
-    });
+    }).build();
     
     
     public static void main(final String[] args) {
@@ -254,6 +268,8 @@ public class TgScalars {
         System.out.println(dateTimeParser.parseDateTime("2020-03-08 13:5:3"));
         System.out.println(dateTimeParser.parseDateTime("2020-03-08 3:5:3"));
         System.out.println(dateTimeParser.parseDateTime("2020-3-8 3:5:3"));
+        
+        System.out.println(dateTimePrinter.parseDateTime("2020-03-29 16:45:45.999Z"));
     }
     
     

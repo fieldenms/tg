@@ -2,13 +2,11 @@ package ua.com.fielden.platform.web_api;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
-import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.toMap;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.createQuery;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determineClass;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.fetchNotInstrumented;
 import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
@@ -20,30 +18,27 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 import org.apache.log4j.Logger;
 
+import graphql.execution.ValuesResolver;
 import graphql.language.Argument;
-import graphql.language.BooleanValue;
 import graphql.language.Field;
-import graphql.language.FloatValue;
 import graphql.language.FragmentDefinition;
 import graphql.language.FragmentSpread;
 import graphql.language.InlineFragment;
-import graphql.language.IntValue;
-import graphql.language.NullValue;
 import graphql.language.Selection;
 import graphql.language.SelectionSet;
-import graphql.language.StringValue;
-import graphql.language.Value;
-import graphql.language.VariableReference;
+import graphql.schema.GraphQLArgument;
+import graphql.schema.GraphQLCodeRegistry;
+import graphql.schema.GraphQLSchema;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.tuples.T2;
 
 /**
  * Contains querying utility methods for root fields in GraphQL query / mutation schemas.
@@ -64,9 +59,9 @@ public class RootEntityMixin {
      * @param additionalQueryProperties -- additional external constraints to be provided into EQL query execution model
      * @return
      */
-    public static <T extends AbstractEntity<?>> QueryExecutionModel<T, EntityResultQueryModel<T>> generateQueryModelFrom(final SelectionSet selectionSet, final Map<String, Object> variables, final Map<String, FragmentDefinition> fragmentDefinitions, final Class<T> entityType, final QueryProperty... additionalQueryProperties) {
+    public static <T extends AbstractEntity<?>> QueryExecutionModel<T, EntityResultQueryModel<T>> generateQueryModelFrom(final SelectionSet selectionSet, final Map<String, Object> variables, final Map<String, FragmentDefinition> fragmentDefinitions, final Class<T> entityType, final GraphQLSchema schema, final QueryProperty... additionalQueryProperties) {
         // convert selectionSet to concrete properties (their dot-notated names) with their arguments
-        final LinkedHashMap<String, List<Argument>> propertiesAndArguments = properties(null, toFields(selectionSet, fragmentDefinitions), fragmentDefinitions);
+        final LinkedHashMap<String, T2<List<GraphQLArgument>, List<Argument>>> propertiesAndArguments = properties(entityType, null, toFields(selectionSet, fragmentDefinitions), fragmentDefinitions, schema);
         
         // add custom QueryProperty instances to resultant ones
         final Map<String, QueryProperty> queryProperties = new LinkedHashMap<>();
@@ -75,13 +70,11 @@ public class RootEntityMixin {
         });
         
         // add query properties based on GraphQL arguments if they are not empty
-        for (final Map.Entry<String, List<Argument>> propertyAndArguments: propertiesAndArguments.entrySet()) {
+        for (final Map.Entry<String, T2<List<GraphQLArgument>, List<Argument>>> propertyAndArguments: propertiesAndArguments.entrySet()) {
             final String propertyName = propertyAndArguments.getKey();
-            final List<Argument> propertyArguments = propertyAndArguments.getValue();
-            if (!propertyArguments.isEmpty()) {
-                final QueryProperty queryProperty = createQueryProperty(entityType, propertyName, propertyArguments, variables);
-                queryProperties.put(queryProperty.getPropertyName(), queryProperty);
-            }
+            final List<Argument> propertyArguments = propertyAndArguments.getValue()._2;
+            final QueryProperty queryProperty = createQueryProperty(entityType, propertyName, propertyArguments, variables, schema.getCodeRegistry(), propertyAndArguments.getValue()._1);
+            queryProperties.put(queryProperty.getPropertyName(), queryProperty);
         }
         
         final EntityResultQueryModel<T> eqlQuery = createQuery(entityType, new ArrayList<>(queryProperties.values())).model();
@@ -98,104 +91,76 @@ public class RootEntityMixin {
      * @param varsByName
      * @return
      */
-    private static <T extends AbstractEntity<?>> QueryProperty createQueryProperty(final Class<T> entityType, final String property, final List<Argument> args, final Map<String, Object> varsByName) {
+    private static <T extends AbstractEntity<?>> QueryProperty createQueryProperty(final Class<T> entityType, final String property, final List<Argument> args, final Map<String, Object> varsByName, final GraphQLCodeRegistry codeRegistry, final List<GraphQLArgument> argumentTypes) {
         final QueryProperty queryProperty = new QueryProperty(entityType, property).makeEmpty();
         final Class<?> type = queryProperty.getType();
-        final Map<String, Argument> argsByName = args.stream().collect(toMap(val -> val.getName(), identity()));
+        
+        final Map<String, Object> argumentValues = new ValuesResolver().getArgumentValues(codeRegistry, argumentTypes, args, varsByName);
+        final StringBuilder strBuilder = new StringBuilder("\nARGUMENTS:\n");
+        argumentValues.entrySet().stream().forEach(entry -> strBuilder.append(String.format("%s: [%s] with type [%s]\n", entry.getKey(), entry.getValue(), entry.getValue() == null ? null : entry.getValue().getClass())));
+        System.err.println(strBuilder.toString());
+        
         if (isString(type)) {
-            ofNullable(argsByName.get("like")).ifPresent(like -> resolveValue(like.getValue(), varsByName).ifPresent(value -> {
+            ofNullable(argumentValues.get("like")).ifPresent(value -> {
                 queryProperty.setValue(value);
-            }));
+            });
         } else if (isBoolean(type)) {
-            ofNullable(argsByName.get("value")).ifPresent(value -> resolveValue(value.getValue(), varsByName).ifPresent(v -> {
-                final boolean boolValue = (boolean) v;
+            ofNullable(argumentValues.get("value")).ifPresent(value -> {
+                final boolean boolValue = (boolean) value;
                 if (boolValue) { // default empty values are 'true' for both 'value' and 'value2'
                     queryProperty.setValue2(false);
                 } else {
                     queryProperty.setValue(false);
                 }
-            }));
+            });
         } else if (Integer.class.isAssignableFrom(type)) {
-            ofNullable(argsByName.get("from")).ifPresent(from -> resolveValue(from.getValue(), varsByName).ifPresent(value -> {
+            ofNullable(argumentValues.get("from")).ifPresent(value -> {
                 queryProperty.setValue(value);
-            }));
-            ofNullable(argsByName.get("to")).ifPresent(to -> resolveValue(to.getValue(), varsByName).ifPresent(value -> {
+            });
+            ofNullable(argumentValues.get("to")).ifPresent(value -> {
                 queryProperty.setValue2(value);
-            }));
+            });
         } else if (Long.class.isAssignableFrom(type)) {
-            ofNullable(argsByName.get("from")).ifPresent(from -> resolveValue(from.getValue(), varsByName, true).ifPresent(value -> {
+            ofNullable(argumentValues.get("from")).ifPresent(value -> {
                 queryProperty.setValue(value);
-            }));
-            ofNullable(argsByName.get("to")).ifPresent(to -> resolveValue(to.getValue(), varsByName, true).ifPresent(value -> {
+            });
+            ofNullable(argumentValues.get("to")).ifPresent(value -> {
                 queryProperty.setValue2(value);
-            }));
+            });
         } else if (BigDecimal.class.isAssignableFrom(type)) {
-            ofNullable(argsByName.get("from")).ifPresent(from -> resolveValue(from.getValue(), varsByName, true).ifPresent(value -> {
-                queryProperty.setValue(value instanceof Long ? new BigDecimal((long) value) : value);
-            }));
-            ofNullable(argsByName.get("to")).ifPresent(to -> resolveValue(to.getValue(), varsByName, true).ifPresent(value -> {
-                queryProperty.setValue2(value instanceof Long ? new BigDecimal((long) value) : value);
-            }));
-        } else if (Money.class.isAssignableFrom(type)) {
-            ofNullable(argsByName.get("from")).ifPresent(from -> resolveValue(from.getValue(), varsByName, true).ifPresent(value -> {
-                queryProperty.setValue(value instanceof Money ? value : new Money(value instanceof Long ? new BigDecimal((long) value) : (BigDecimal) value));
-            }));
-            ofNullable(argsByName.get("to")).ifPresent(to -> resolveValue(to.getValue(), varsByName, true).ifPresent(value -> {
-                queryProperty.setValue2(value instanceof Money ? value : new Money(value instanceof Long ? new BigDecimal((long) value) : (BigDecimal) value));
-            }));
-        } else if (Date.class.isAssignableFrom(type)) {
-            ofNullable(argsByName.get("from")).ifPresent(from -> resolveValue(from.getValue(), varsByName).ifPresent(value -> {
+            ofNullable(argumentValues.get("from")).ifPresent(value -> {
                 queryProperty.setValue(value);
-            }));
-            ofNullable(argsByName.get("to")).ifPresent(to -> resolveValue(to.getValue(), varsByName).ifPresent(value -> {
+            });
+            ofNullable(argumentValues.get("to")).ifPresent(value -> {
                 queryProperty.setValue2(value);
-            }));
+            });
+        } else if (Money.class.isAssignableFrom(type)) {
+            ofNullable(argumentValues.get("from")).ifPresent(value -> {
+                queryProperty.setValue(value);
+            });
+            ofNullable(argumentValues.get("to")).ifPresent(value -> {
+                queryProperty.setValue2(value);
+            });
+        } else if (Date.class.isAssignableFrom(type)) {
+            ofNullable(argumentValues.get("from")).ifPresent(value -> {
+                queryProperty.setValue(value);
+            });
+            ofNullable(argumentValues.get("to")).ifPresent(value -> {
+                queryProperty.setValue2(value);
+            });
         }
         return queryProperty;
     }
     
-    private static Optional<Object> resolveValue(final Value valueOrVariable, final Map<String, Object> variables) {
-        return resolveValue(valueOrVariable, variables, false);
-    }
-    
-    private static Optional<Object> resolveValue(final Value valueOrVariable, final Map<String, Object> variables, final boolean biggerType) {
-        if (valueOrVariable instanceof VariableReference) {
-            final VariableReference variableReference = (VariableReference) valueOrVariable;
-            final String variableName = variableReference.getName();
-            if (variables.containsKey(variableName)) {
-                return ofNullable(variables.get(variableName)); // TODO here the values are not in exact correspondence to types below; need to use exact possible types to avoid conversion errors for variable values (Integer vs BigInteger)
-            } else {
-                // no criterion exists for this property argument!
-                return empty();
-            }
-        } else if (valueOrVariable instanceof BooleanValue) {
-            final BooleanValue booleanValue = (BooleanValue) valueOrVariable;
-            return of(booleanValue.isValue());
-        } else if (valueOrVariable instanceof StringValue) {
-            final StringValue stringValue = (StringValue) valueOrVariable;
-            return of(stringValue.getValue());
-        } else if (valueOrVariable instanceof FloatValue) {
-            final FloatValue floatValue = (FloatValue) valueOrVariable;
-            return biggerType ? of(floatValue.getValue()) : of(floatValue.getValue().doubleValue()); // this is not narrowing conversion, because only signed double precision floating point values are supported as GraphQL arguments; the same goes for GraphQL variables
-        } else if (valueOrVariable instanceof IntValue) {
-            final IntValue intValue = (IntValue) valueOrVariable;
-            return biggerType ? of(intValue.getValue().longValue()) : of(intValue.getValue().intValue()); // this is not narrowing conversion, because only signed 32-bit integer values are supported as GraphQL arguments; the same goes for GraphQL variables
-        } else if (valueOrVariable instanceof NullValue) {
-            return empty();
-        } else {
-            // return empty value for other unsupported cases (ArrayValue, EnumValue, ObjectValue -- not used)
-            return empty();
-        }
-    }
-    
-    private static LinkedHashMap<String, List<Argument>> properties(final String prefix, final List<Field> graphQLFields, final Map<String, FragmentDefinition> fragmentDefinitions) {
-        final LinkedHashMap<String, List<Argument>> properties = new LinkedHashMap<>();
+    private static LinkedHashMap<String, T2<List<GraphQLArgument>, List<Argument>>> properties(final Class<?> entityType, final String prefix, final List<Field> graphQLFields, final Map<String, FragmentDefinition> fragmentDefinitions, final GraphQLSchema schema) {
+        final LinkedHashMap<String, T2<List<GraphQLArgument>, List<Argument>>> properties = new LinkedHashMap<>();
         for (final Field graphQLField: graphQLFields) {
+            final List<GraphQLArgument> argumentDefinitions = schema.getObjectType(entityType.getSimpleName()).getFieldDefinition(graphQLField.getName()).getArguments();
             final List<Argument> args = graphQLField.getArguments();
             final String property = prefix == null ? graphQLField.getName() : prefix + "." + graphQLField.getName();
-            properties.put(property, args);
+            properties.put(property, t2(argumentDefinitions, args));
             
-            properties.putAll(properties(property, toFields(graphQLField.getSelectionSet(), fragmentDefinitions), fragmentDefinitions));
+            properties.putAll(properties(determineClass(entityType, graphQLField.getName(), true, true), property, toFields(graphQLField.getSelectionSet(), fragmentDefinitions), fragmentDefinitions, schema));
         }
         LOGGER.error(String.format("\tFetching props [%s]", properties));
         return properties;

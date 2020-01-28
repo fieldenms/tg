@@ -41,7 +41,7 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
             logger.error(format("\tVariables [%s]", environment.getVariables()));
             logger.error(format("\tFragmentsByName [%s]", environment.getFragmentsByName()));
             
-            final QueryExecutionModel<T, EntityResultQueryModel<T>> queryModel = generateQueryModelFrom(environment.getField().getSelectionSet(), environment.getVariables(), environment.getFragmentsByName(), entityType);
+            final QueryExecutionModel<T, EntityResultQueryModel<T>> queryModel = generateQueryModelFrom(environment.getField().getSelectionSet(), environment.getVariables(), environment.getFragmentsByName(), entityType, environment.getGraphQLSchema());
             
             final List<T> entities = coFinder.find(entityType).getFirstEntities(queryModel, 1000);
             logger.error(String.format("Quering type [%s]...done", entityType.getSimpleName()));

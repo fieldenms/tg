@@ -63,7 +63,7 @@ public class RootEntityMutator<T extends AbstractEntity<?>> implements DataFetch
             final QueryProperty idQueryProperty = new QueryProperty(entityType, AbstractEntity.ID);
             idQueryProperty.setValue(potentiallySavedWithException.getKey().getId());
             idQueryProperty.setValue2(potentiallySavedWithException.getKey().getId());
-            final QueryExecutionModel<T, EntityResultQueryModel<T>> queryModel = generateQueryModelFrom(environment.getField().getSelectionSet(), environment.getVariables(), environment.getFragmentsByName(), entityType, idQueryProperty);
+            final QueryExecutionModel<T, EntityResultQueryModel<T>> queryModel = generateQueryModelFrom(environment.getField().getSelectionSet(), environment.getVariables(), environment.getFragmentsByName(), entityType, environment.getGraphQLSchema(), idQueryProperty);
             
             final T entity = co.getEntity(queryModel);
             logger.error(String.format("Mutating type [%s]...done", entityType.getSimpleName()));
