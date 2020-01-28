@@ -4,6 +4,8 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/resources/polymer/@polymer/iron-icon/iron-icon.js';
 import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
 
+import '/resources/polymer/@polymer/paper-styles/color.js';
+
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
@@ -24,6 +26,9 @@ const template = html`
         .cell-background {
             @apply --layout-fit;
         }
+        .cell-background[modified] {
+            border-right: 0.5rem solid var(--paper-orange-500);
+        }
         .table-icon {
             --iron-icon-width: 1.3rem;
             --iron-icon-height: 1.3rem;
@@ -34,7 +39,7 @@ const template = html`
             text-overflow: ellipsis;
         }
     </style>
-    <div class="cell-background" style$="[[_backgroundRendHints]]"></div>
+    <div class="cell-background" style$="[[_backgroundRendHints]]" modified$="[[_modified]]"></div>
     <iron-icon class="table-icon" hidden$="[[!_isBooleanProp(_hostComponent, _entity, column)]]" style$="[[_foregroundRendHints]]" icon="[[_value]]"></iron-icon>
     <a class="truncate" hidden$="[[!_isHyperlinkProp(_hostComponent, _entity, column)]]" href$="[[_value]]" style$="[[_foregroundRendHints]]">[[_value]]</a>
     <div class="truncate value-container" hidden$="[[!_isNotBooleanOrHyperlinkProp(_hostComponent, _entity, column)]]" style$="[[_foregroundRendHints]]">[[_value]]</div>`;
@@ -63,6 +68,10 @@ Polymer({
             observer: "_contextChanged"
         },
         _value: String,
+        _modified: {
+            type: Boolean,
+            value: false
+        },
         withAction: {
             type: Boolean,
             observer: 'withActionChanged',
@@ -202,6 +211,7 @@ Polymer({
     },
 
     _propertyChangeHandler: function () {
+        this._modified = this.egiEntity && this.egiEntity.entityModification && this.egiEntity.entityModification[this.column.property];
         if (this._isBooleanProp(this._hostComponent, this._entity, this.column)) {
             this._value = this._getBooleanIcon(this._hostComponent, this._entity, this.column);
         } else {

@@ -1,10 +1,10 @@
 package ua.com.fielden.platform.serialisation.jackson;
 
-import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getTimeZone;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isCompositeKeySeparatorDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isCritOnlyDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isDisplayAsDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isDisplayDescDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isEntityDescDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isEntityTitleDefault;
@@ -14,6 +14,7 @@ import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isResultOnlyDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isScaleDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isSecreteDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isTrailingZerosDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isUpperCaseDefault;
 
 import java.lang.reflect.Field;
@@ -24,7 +25,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.esotericsoftware.kryo.Context;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -47,11 +47,8 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
-import ua.com.fielden.platform.security.user.UserSecret;
 import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
-import ua.com.fielden.platform.serialisation.exceptions.SerialisationException;
 import ua.com.fielden.platform.serialisation.jackson.deserialisers.EntityJsonDeserialiser;
-import ua.com.fielden.platform.serialisation.jackson.exceptions.EntitySerialisationException;
 import ua.com.fielden.platform.serialisation.jackson.serialisers.EntityJsonSerialiser;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -191,8 +188,12 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
                         entityTypeProp.set_scale(scale);
                     }
                     final boolean trailingZeros = isPropertyAnnotation.trailingZeros();
-                    if (DefaultValueContract.isTrailingZerosDefault(trailingZeros)) {
+                    if (isTrailingZerosDefault(trailingZeros)) {
                         entityTypeProp.set_trailingZeros(trailingZeros);
+                    }
+                    final String displayAs = isPropertyAnnotation.displayAs();
+                    if (!isDisplayAsDefault(displayAs)) {
+                        entityTypeProp.set_displayAs(displayAs);
                     }
                 }
                 final String timeZone = getTimeZone(type, name);
@@ -288,8 +289,6 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
 
     /**
      * Returns the thread local context for serialization and deserialization.
-     *
-     * @see Context
      */
     public static JacksonContext getContext() {
         return contextThreadLocal.get();

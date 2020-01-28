@@ -16,6 +16,8 @@ import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 
 import '/resources/egi/tg-entity-grid-inspector.js';
+import '/resources/master/actions/tg-action.js';
+import {TgEgiMasterBehavior} from '/resources/egi/tg-egi-master-behavior.js';
 import '/resources/centre/tg-selection-criteria.js';
 import { TgSelectionCriteriaTemplateBehavior } from '/resources/centre/tg-selection-criteria-template-behavior.js';
 import '/resources/centre/tg-entity-centre.js';
@@ -59,8 +61,11 @@ const entityCentreTemplate = html`
         
         <tg-entity-grid-inspector id="egi" slot="custom-egi" class="entity-grid-inspector" centre-selection="[[centreSelection]]" column-properties-mapper="{{columnPropertiesMapper}}" custom-shortcuts="@customShortcuts" visible-row-count="@visibleRowCount" constant-height="@egiHeight" row-height="@egiRowHeight" @fitToHeight @canDragFrom @toolbarVisible @checkboxVisible @dragAnchorFixed @checkboxesFixed @checkboxesWithPrimaryActionsFixed num-of-fixed-cols="@numOfFixedCols" @secondaryActionsFixed @headerFixed @summaryFixed @gridLayout>
             <!-- EGI COLUMNS DOM (GENERATED) -->
+            
             <!--@egi_columns-->
 
+            <tg-egi-@mi_type-master slot="egi-master" centre-uuid="[[uuid]]"></tg-egi-@mi_type-master>
+            
             <!--@toolbar-->
 
             <!--@primary_action-->
@@ -150,4 +155,31 @@ Polymer({
 
         }, 1);
     },
+});
+
+const egiMasterTemplate = html`
+    <tg-entity-master
+        id="masterDom"
+        entity-type="[[entityType]]"
+        entity-id="[[entityId]]"
+        _post-validated-default="[[_postValidatedDefault]]"
+        _post-validated-default-error="[[_postValidatedDefaultError]]"
+        _process-response="[[_processResponse]]"
+        _process-error="[[_processError]]"
+        _process-retriever-response="[[_processRetrieverResponse]]"
+        _process-retriever-error="[[_processRetrieverError]]"
+        _process-saver-response="[[_processSaverResponse]]"
+        _process-saver-error="[[_processSaverError]]"
+        _saver-loading="{{_saverLoading}}">
+            <!--@egi_editors-->
+            <tg-action slot="cancel-button" class="master-cancel-action" is-icon icon="clear" enabled-states='[[_actions.REFRESH.enabledStates]]' short-desc='Cancel' long-desc='Cancel changes' current-state='[[currentState]]' action='[[closeMaster]]' post-action='{{_postClose}}'></tg-action>
+            <tg-action slot="save-button" class="master-save-action" is-icon icon="check" enabled-states='[[_actions.SAVE.enabledStates]]' short-desc='Save' long-desc='Save changes' current-state='[[currentState]]' id='_saveAction' action='[[_actions.SAVE.action]]' post-action='{{_postSavedDefault}}' post-action-error='{{_postSavedDefaultError}}'></tg-action>
+    </tg-entity-master>`;
+
+Polymer({
+    _template: egiMasterTemplate,
+
+    is: 'tg-egi-@mi_type-master',
+
+    behaviors: [ TgEgiMasterBehavior ]
 });

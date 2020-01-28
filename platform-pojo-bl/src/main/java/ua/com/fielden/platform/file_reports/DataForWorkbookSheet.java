@@ -13,7 +13,6 @@ import java.util.stream.Stream;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity_centre.review.criteria.DynamicColumnForExport;
 import ua.com.fielden.platform.types.tuples.T2;
-import ua.com.fielden.platform.utils.Pair;
 
 /**
  * This is a package-private helper class to represent data that is used for building an Excel workbook sheet.
@@ -22,7 +21,7 @@ import ua.com.fielden.platform.utils.Pair;
  *
  * @param <E>
  */
-class DataForWorkbookSheet<E extends AbstractEntity<?>> {
+public class DataForWorkbookSheet<E extends AbstractEntity<?>> {
     private final String sheetTitle;
     private final Stream<E> entities;
     private final List<String> propNames = new ArrayList<>();

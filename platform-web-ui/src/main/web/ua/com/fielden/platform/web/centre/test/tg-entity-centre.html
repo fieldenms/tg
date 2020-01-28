@@ -36,8 +36,8 @@
             test('running does not occur for invalid criteria', function (done) {
                 const old_postRun = centre._postRun;
                 
-                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, visibleColumnsWithOrder) {
-                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, visibleColumnsWithOrder);
+                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, resultConfig) {
+                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, resultConfig);
                     
                     assert.strictEqual(centre.$.selection_criteria._centreChanged, true, '_centreChanged flag should be defined and should equal true.');
                     assert.ok(criteriaEntity, 'Criteria entity should arrive from the server.');
@@ -78,8 +78,8 @@
             test('run action works for custom fetch provider', function (done) {
                 const old_postRun = centre._postRun;
                 
-                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, visibleColumnsWithOrder) {
-                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, visibleColumnsWithOrder);
+                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, resultConfig) {
+                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, resultConfig);
                     
                     const entity = resultEntities[0];
                     

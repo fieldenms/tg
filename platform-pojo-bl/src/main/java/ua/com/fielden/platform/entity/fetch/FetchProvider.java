@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity.fetch;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
@@ -17,6 +18,7 @@ import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.firstAndRest;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isDotNotation;
+import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
@@ -552,10 +554,23 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
      * This method is based on a premise that property already has its provider (with NONE fetch category) if it is entity-typed.
      * 
      * @param dotNotationProperty
+     * @param withDesc -- specifies whether {@link AbstractEntity#DESC} property needs to be added, iff <code>dotNotationProperty</code> is entity-typed and has {@link AbstractEntity#DESC} property
      * @return
      */
     @Override
-    public FetchProvider<T> addKeysTo(final String dotNotationProperty) {
+    public FetchProvider<T> addKeysTo(final String dotNotationProperty, final boolean withDesc) {
+        return addKeysTo0(dotNotationProperty, withDesc);
+    }
+    
+    /**
+     * Internal recursive implementation of {@link #addKeysTo(String, boolean)} method resembling correct propagation of <code>withDesc</code> parameter further down dot-notated pathway
+     * and stopping this propagation on originally specified <code>dotNotationProperty</code> leaf.
+     * 
+     * @param dotNotationProperty
+     * @param withDesc
+     * @return
+     */
+    private FetchProvider<T> addKeysTo0(final String dotNotationProperty, final boolean withDesc) {
         if (isDotNotation(dotNotationProperty) || !"".equals(dotNotationProperty)) { // is dot-notation or simple property (not "" aka 'this')
             final Pair<String, String> firstAndRest = isDotNotation(dotNotationProperty) ? firstAndRest(dotNotationProperty) : pair(dotNotationProperty, "");
             final String firstName = firstAndRest.getKey();
@@ -573,7 +588,7 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
                     throw new FetchProviderException(format("Property provider for %s has fetch category other than NONE.", firstName));
                 } else {
                     extendWithIdAndVersion(provider);
-                    provider.addKeysTo(restDotNotation);
+                    provider.addKeysTo0(restDotNotation, withDesc); // delegate 'withDesc' parameter further down to dot-notated child
                     return this;
                 }
             } else {
@@ -588,10 +603,14 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
             final List<String> keyMemberNames = getKeyMembers(entityType).stream().map(Field::getName).collect(toList());
             for (final String keyMemberName: keyMemberNames) {
                 enhanceWith(keyMemberName);
-                addKeysTo(keyMemberName);
+                addKeysTo0(keyMemberName, false); // there is no need to fetch descriptions of key members -- 'desc' is only relevant to the top-level property
             }
             
             extendWithIdAndVersion(this);
+            
+            if (withDesc && hasDescProperty(entityType)) { // fetch description only if the API call requires that (withDesc == true) and entity type has description property in it
+                enhanceWith(DESC);
+            }
             return this;
         }
     }

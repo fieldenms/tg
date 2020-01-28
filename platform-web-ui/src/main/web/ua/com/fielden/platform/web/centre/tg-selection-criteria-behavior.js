@@ -228,9 +228,9 @@ const TgSelectionCriteriaBehaviorImpl = {
                 const summary = customObject.summary;
                 const staleCriteriaMessage = customObject.staleCriteriaMessage;
                 const columnWidths = customObject.columnWidths;
-                const visibleColumnsWithOrder = customObject.visibleColumnsWithOrder;
+                const resultConfig = customObject.resultConfig;
 
-                self._postRunDefault(criteriaEntity, resultEntities, pageNumber, pageCount, metaValues, centreChanged, renderingHints, dynamicColumns, summary, staleCriteriaMessage, columnWidths, visibleColumnsWithOrder);
+                self._postRunDefault(criteriaEntity, resultEntities, pageNumber, pageCount, metaValues, centreChanged, renderingHints, dynamicColumns, summary, staleCriteriaMessage, columnWidths, resultConfig);
             });
         };
 
@@ -241,7 +241,7 @@ const TgSelectionCriteriaBehaviorImpl = {
         };
 
         // calbacks, that will potentially be augmented by tg-action child elements: 
-        self._postRunDefault = (function (criteriaEntity, resultEntities, pageNumber, pageCount, metaValues, centreChanged, renderingHints, dynamicColumns, summary, staleCriteriaMessage, columnWidths, visibleColumnsWithOrder) {
+        self._postRunDefault = (function (criteriaEntity, resultEntities, pageNumber, pageCount, metaValues, centreChanged, renderingHints, dynamicColumns, summary, staleCriteriaMessage, columnWidths, resultConfig) {
             this.fire('egi-entities-appeared', resultEntities);
 
             if (typeof staleCriteriaMessage !== 'undefined') { // if staleCriteriaMessage is defined (i.e. it can be 'null' or 'Selection criteria have been changed, but ...' message) -- then populate it into config button tooltip / colour
@@ -259,7 +259,7 @@ const TgSelectionCriteriaBehaviorImpl = {
                 const msg = "Running completed successfully.";
                 this._openToastWithoutEntity(msg, false, msg, false);
 
-                this.postRun(null, null, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, visibleColumnsWithOrder);
+                this.postRun(null, null, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, resultConfig);
             } else {
                 this._setPropertyModel(metaValues);
                 this._centreChanged = centreChanged;
@@ -268,7 +268,7 @@ const TgSelectionCriteriaBehaviorImpl = {
                 this._openToast(criteriaEntity, msg, !criteriaEntity.isValid() || criteriaEntity.isValidWithWarning(), msg, false);
 
                 const newBindingEntity = this._postEntityReceived(criteriaEntity, false);
-                this.postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, visibleColumnsWithOrder);
+                this.postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, resultConfig);
             }
         }).bind(self);
 
@@ -403,6 +403,9 @@ const TgSelectionCriteriaBehaviorImpl = {
         }
         if (propertyMetaValues["not"] !== false) {
             modifiedMetaValues["not"] = propertyMetaValues["not"];
+        }
+        if (propertyMetaValues["orGroup"] !== null) {
+            modifiedMetaValues["orGroup"] = propertyMetaValues["orGroup"];
         }
         if (propertyMetaValues["exclusive"] !== false) {
             modifiedMetaValues["exclusive"] = propertyMetaValues["exclusive"];
@@ -607,6 +610,7 @@ const TgSelectionCriteriaBehaviorImpl = {
                 const prop = this.propertyModel[propertyName];
                 this.notifyPath('propertyModel.' + propertyName + '.orNull', prop.orNull);
                 this.notifyPath('propertyModel.' + propertyName + '.not', prop.not);
+                this.notifyPath('propertyModel.' + propertyName + '.orGroup', prop.orGroup);
                 this.notifyPath('propertyModel.' + propertyName + '.exclusive', prop.exclusive);
                 this.notifyPath('propertyModel.' + propertyName + '.exclusive2', prop.exclusive2);
                 this.notifyPath('propertyModel.' + propertyName + '.datePrefix', prop.datePrefix);
@@ -629,6 +633,7 @@ const TgSelectionCriteriaBehaviorImpl = {
                 const model = {};
                 model["orNull"] = typeof meta["orNull"] === 'undefined' ? false : meta["orNull"];
                 model["not"] = typeof meta["not"] === 'undefined' ? false : meta["not"];
+                model["orGroup"] = typeof meta["orGroup"] === 'undefined' ? null : meta["orGroup"];
                 model["exclusive"] = typeof meta["exclusive"] === 'undefined' ? false : meta["exclusive"];
                 model["exclusive2"] = typeof meta["exclusive2"] === 'undefined' ? false : meta["exclusive2"];
                 model["datePrefix"] = typeof meta["datePrefix"] === 'undefined' ? null : meta["datePrefix"];

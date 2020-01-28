@@ -8,8 +8,6 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-import com.esotericsoftware.kryo.Kryo;
-
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.ITickManager;
 import ua.com.fielden.platform.domaintree.IUsageManager;
 import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
@@ -21,8 +19,6 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
-import ua.com.fielden.platform.serialisation.kryo.serialisers.TgSimpleSerializer;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -33,7 +29,7 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public abstract class AbstractDomainTree {
-    private final ISerialiser serialiser;
+    private final EntityFactory entityFactory;
     private static final Logger logger = Logger.getLogger(AbstractDomainTree.class);
     private static final String COMMON_SUFFIX = ".common-properties", DUMMY_SUFFIX = ".dummy-property";
     protected static final String PLACEHOLDER = "-placeholder-origin-";
@@ -47,22 +43,12 @@ public abstract class AbstractDomainTree {
     }
 
     /**
-     * Constructs base domain tree with a <code>serialiser</code> and <code>factory</code> instances.
+     * Constructs base domain tree with <code>entityFactory</code> instance.
      *
-     * @param serialiser
-     * @param factory
+     * @param entityFactory
      */
-    protected AbstractDomainTree(final ISerialiser serialiser) {
-        this.serialiser = serialiser;
-    }
-
-    /**
-     * Returns an instance of serialiser for persistence and copying.
-     *
-     * @return
-     */
-    protected ISerialiser getSerialiser() {
-        return serialiser;
+    protected AbstractDomainTree(final EntityFactory entityFactory) {
+        this.entityFactory = entityFactory;
     }
 
     /**
@@ -71,7 +57,7 @@ public abstract class AbstractDomainTree {
      * @return
      */
     protected EntityFactory getFactory() {
-        return serialiser.factory();
+        return entityFactory;
     }
 
     /**
@@ -299,31 +285,6 @@ public abstract class AbstractDomainTree {
         return new Pair<>(root, property);
     }
 
-    /**
-     * A specific Kryo serialiser for {@link AbstractDomainTree}.
-     *
-     * @author TG Team
-     *
-     */
-    protected abstract static class AbstractDomainTreeSerialiser<T> extends TgSimpleSerializer<T> {
-        private final ISerialiser serialiser;
-        private final EntityFactory factory;
-
-        public AbstractDomainTreeSerialiser(final ISerialiser serialiser) {
-            super((Kryo) serialiser.getEngine(SerialiserEngines.KRYO));
-            this.serialiser = serialiser;
-            this.factory = serialiser.factory();
-        }
-
-        protected ISerialiser serialiser() {
-            return serialiser;
-        }
-
-        protected EntityFactory factory() {
-            return factory;
-        }
-    }
-    
     /**
      * Returns <code>true</code> when the property can represent criterion with two editors, <code>false</code> otherwise.
      *

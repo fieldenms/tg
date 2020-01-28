@@ -19,5 +19,7 @@ public interface IResultSetBuilder2Properties<T extends AbstractEntity<?>> exten
      */
     IResultSetBuilder3Ordering<T> addProp(final String propName);
 
+    IResultSetBuilderWidgetSelector<T> addEditableProp(final String propName);
+
     IResultSetBuilder4aWidth<T> addProp(final PropDef<?> propDef);
 }

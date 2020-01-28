@@ -10,6 +10,7 @@ import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
+import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -21,14 +22,13 @@ import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.Readonly;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.types.markers.IHyperlinkType;
 import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
 
 @KeyTitle("Author")
 @KeyType(DynamicEntityKey.class)
+@DescTitle("Description")
 @MapEntityTo
 @CompanionObject(ITgAuthor.class)
 public class TgAuthor extends AbstractEntity<DynamicEntityKey> {

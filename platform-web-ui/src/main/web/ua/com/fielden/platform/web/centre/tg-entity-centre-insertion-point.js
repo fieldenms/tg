@@ -78,6 +78,9 @@ const customStyle = html`
                 top: 44px;
                 right: 0;
             }
+            #insertionPointContent #loadableContent {
+                z-index:0;
+            }
         </style>
     </custom-style>
 `;
@@ -126,6 +129,9 @@ const template = html`
             background: white;
             border-radius: 2px;
             margin: 10px;
+        }
+        #loadableContent {
+            z-index:0;
         }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning tg-entity-centre-styles paper-material-styles"></style>

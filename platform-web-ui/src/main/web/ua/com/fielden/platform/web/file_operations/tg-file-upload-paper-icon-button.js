@@ -2,8 +2,8 @@ import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
-import '/resources/polymer/iron-icons/iron-icons.js';
-import '/resources/polymer/paper-styles/color.js';
+import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
+import '/resources/polymer/@polymer/paper-styles/color.js';
 
 import { TgFileProcessingBehavior } from '/resources/file_operations/tg-file-processing-behavior.js';
 import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';

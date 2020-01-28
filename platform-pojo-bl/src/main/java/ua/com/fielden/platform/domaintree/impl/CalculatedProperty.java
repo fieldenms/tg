@@ -587,9 +587,7 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
     }
 
     protected Object enhancer() {
-        if (enhancer instanceof DomainTreeEnhancer0) {
-            return enhancer;
-        } else if (enhancer instanceof DomainTreeEnhancer) {
+        if (enhancer instanceof DomainTreeEnhancer) {
             return enhancer;
         } else if (enhancer instanceof DomainTreeEnhancerWithPropertiesPopulation) {
             return ((DomainTreeEnhancerWithPropertiesPopulation) enhancer).baseEnhancer();
@@ -729,8 +727,7 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
     private static void validateCalculatedPropertyKey1(final CalculatedProperty calculatedPropertyToCheck, final String newPathAndName) {
         final Class<?> root = calculatedPropertyToCheck.getRoot();
 
-        final ICalculatedProperty calculatedProperty = (calculatedPropertyToCheck.enhancer() instanceof DomainTreeEnhancer) ? (((DomainTreeEnhancer) calculatedPropertyToCheck.enhancer()).calculatedProperty(root, newPathAndName))
-                : ((DomainTreeEnhancer0) calculatedPropertyToCheck.enhancer()).calculatedProperty(root, newPathAndName);
+        final ICalculatedProperty calculatedProperty = (((DomainTreeEnhancer) calculatedPropertyToCheck.enhancer()).calculatedProperty(root, newPathAndName));
         if (calculatedProperty != null) {
             if (calculatedProperty == calculatedPropertyToCheck) {
                 // this is the same property!

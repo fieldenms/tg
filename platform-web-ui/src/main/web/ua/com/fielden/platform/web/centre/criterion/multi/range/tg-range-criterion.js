@@ -45,7 +45,7 @@ Polymer({
     is: 'tg-range-criterion',
 
     observers: [
-        '_updateIconButtonStyle(orNull, not, exclusive, exclusive2)'
+        '_updateIconButtonStyle(orNull, not, orGroup, exclusive, exclusive2)'
     ],
 
     behaviors: [ TgAbstractRangeCriterionBehavior ],

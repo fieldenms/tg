@@ -55,7 +55,7 @@ paperToastStyle.setAttribute('style', 'display: none;');
 document.head.appendChild(paperToastStyle.content);
 
 const template = html`
-    <paper-toast id="toast" class="paper-toast" text="[[_text]]" on-tap="_showMoreIfPossible" always-on-top duration="0">
+    <paper-toast id="toast" class="paper-toast" text="[[_text]]" on-tap="_showMoreIfPossible" allow-click-through always-on-top duration="0">
         <!-- TODO responsive-width="250px" -->
         <paper-spinner id="spinner" hidden$="[[_skipShowProgress]]" active alt="in progress..." tabIndex="-1"></paper-spinner>
         <div id='btnMore' hidden$="[[_skipShowMore(_showProgress, _hasMore)]]" class="more" on-tap="_showMessageDlg">MORE</div>
@@ -163,8 +163,10 @@ Polymer({
     },
 
     _showMoreIfPossible: function (e) {
-        if (this._hasMore) {
+        if (this._hasMore) { // show dialog with 'more' information and close toast
             this._showMessageDlg(e);
+        } else if (!this._showProgress && this._isCritical !== true) { // close toast on tap; however, do not close if it represents progress indication or if it is critical, but does not have MORE button (rare cases)
+            this._closeToast();
         }
     },
 
@@ -304,5 +306,6 @@ Polymer({
     _closeToast: function () {
         this.$.toast.close();
         this.$.toast._autoCloseCallBack = null;
+        this.$.toast.error = false;
     }
 });

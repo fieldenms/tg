@@ -1,20 +1,39 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
 import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
+import static ua.com.fielden.platform.utils.EntityUtils.isCollectional;
+import static ua.com.fielden.platform.utils.EntityUtils.isDate;
+import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isInteger;
+import static ua.com.fielden.platform.utils.EntityUtils.isString;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
 import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp.dynamicProps;
 import static ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.mkInsertionPoint;
 import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig.configInsertionPoint;
 import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig.configInsertionPointWithPagination;
 
+import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 import org.apache.commons.lang.StringUtils;
 
+import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
+import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
+import ua.com.fielden.platform.types.Colour;
+import ua.com.fielden.platform.types.Hyperlink;
+import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.CentreContext;
@@ -34,6 +53,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.IAlsoSecondaryAction;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
 import ua.com.fielden.platform.web.centre.api.resultset.IDynamicColumnBuilder;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetAutocompleterConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder0Checkbox;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1Toolbar;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aScroll;
@@ -49,6 +69,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder4aWidth
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder7SecondaryAction;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder9RenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilderAlsoDynamicProps;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilderWidgetSelector;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.centre.api.resultset.layout.ICollapsedCardLayoutConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.layout.IExpandedCardLayoutConfig;
@@ -60,6 +81,17 @@ import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.tooltip.IWithTooltip;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
+import ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.EntityAutocompletionWidget;
+import ua.com.fielden.platform.web.view.master.api.widgets.checkbox.impl.CheckboxWidget;
+import ua.com.fielden.platform.web.view.master.api.widgets.collectional.impl.CollectionalRepresentorWidget;
+import ua.com.fielden.platform.web.view.master.api.widgets.colour.impl.ColourWidget;
+import ua.com.fielden.platform.web.view.master.api.widgets.datetimepicker.impl.DateTimePickerWidget;
+import ua.com.fielden.platform.web.view.master.api.widgets.decimal.impl.DecimalWidget;
+import ua.com.fielden.platform.web.view.master.api.widgets.hyperlink.impl.HyperlinkWidget;
+import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
+import ua.com.fielden.platform.web.view.master.api.widgets.money.impl.MoneyWidget;
+import ua.com.fielden.platform.web.view.master.api.widgets.singlelinetext.impl.SinglelineTextWidget;
+import ua.com.fielden.platform.web.view.master.api.widgets.spinner.impl.SpinnerWidget;
 
 /**
  * A package private helper class to decompose the task of implementing the Entity Centre DSL. It has direct access to protected fields in {@link EntityCentreBuilder}.
@@ -68,14 +100,17 @@ import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
  *
  * @param <T>
  */
-class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilderAlsoDynamicProps<T>, IResultSetBuilder0Checkbox<T>, IResultSetBuilder3Ordering<T>, IResultSetBuilder4OrderingDirection<T>, IResultSetBuilder7SecondaryAction<T>, IExpandedCardLayoutConfig<T>, ISummaryCardLayout<T> {
+class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilderAlsoDynamicProps<T>, IResultSetBuilderWidgetSelector<T>, IResultSetBuilder3Ordering<T>, IResultSetBuilder0Checkbox<T>, IResultSetBuilder4OrderingDirection<T>, IResultSetBuilder7SecondaryAction<T>, IExpandedCardLayoutConfig<T>, ISummaryCardLayout<T> {
 
     private final EntityCentreBuilder<T> builder;
     private final ResultSetSecondaryActionsBuilder secondaryActionBuilder = new ResultSetSecondaryActionsBuilder();
 
+    private final Map<String, Class<? extends IValueMatcherWithContext<T, ?>>> valueMatcherForProps = new HashMap<>();
+
     protected Optional<String> propName = Optional.empty();
     protected Optional<String> tooltipProp = Optional.empty();
     protected Optional<PropDef<?>> propDef = Optional.empty();
+    protected Optional<AbstractWidget> widget = Optional.empty();
     private Supplier<Optional<EntityActionConfig>> entityActionConfig;
     private Integer orderSeq;
     private int width = 80;
@@ -101,6 +136,45 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         this.orderSeq = null;
         this.entityActionConfig = Optional::empty;
         return this;
+    }
+
+    @Override
+    public IResultSetBuilderWidgetSelector<T> addEditableProp(final String propName) {
+        this.addProp(propName);
+        this.widget = createWidget(propName);
+        return this;
+    }
+
+    private Optional<AbstractWidget> createWidget(final String propName) {
+        final Class<? extends AbstractEntity<?>> root = this.builder.getEntityType();
+        final String resultPropName = treeName(propName);
+        final boolean isEntityItself = "".equals(resultPropName); // empty property means "entity itself"
+        final Class<?> propertyType = isEntityItself ? root : PropertyTypeDeterminator.determinePropertyType(root, resultPropName);
+        final String widgetPropName = "".equals(resultPropName) ? AbstractEntity.KEY : resultPropName;
+        if (isEntityType(propertyType)) {
+            return of(new EntityAutocompletionWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(widgetPropName, root).getValue()), widgetPropName, (Class<AbstractEntity<?>>)propertyType));
+        } else if (isString(propertyType)) {
+            return of(new SinglelineTextWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName));
+        } else if (isInteger(propertyType)) {
+            return of(new SpinnerWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName));
+        } else if (Money.class.isAssignableFrom(propertyType)) {
+            return of(new MoneyWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName));
+        } else if (BigDecimal.class.isAssignableFrom(propertyType)) {
+            return of(new DecimalWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName));
+        } else if (Hyperlink.class.isAssignableFrom(propertyType)){
+            return of(new HyperlinkWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName));
+        } else if (Colour.class.isAssignableFrom(propertyType)) {
+            return of(new ColourWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName));
+        } else if (isBoolean(propertyType)) {
+            return of(new CheckboxWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName));
+        } else if (isDate(propertyType)) {
+            return of(new DateTimePickerWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName, false,
+                    DefaultValueContract.getTimeZone(root, propName),
+                    DefaultValueContract.getTimePortionToDisplay(root, propName)));
+        } else if (isCollectional(propertyType)) {
+            return of(new CollectionalRepresentorWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()),propName));
+        }
+        return empty();
     }
 
     @Override
@@ -334,10 +408,10 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     private void completePropIfNeeded() {
         // construct and add property to the builder
         if (propName.isPresent()) {
-            final ResultSetProp prop = ResultSetProp.propByName(propName.get(), width, isFlexible, (tooltipProp.isPresent() ? tooltipProp.get() : null), entityActionConfig);
+            final ResultSetProp<T> prop = ResultSetProp.propByName(propName.get(), width, isFlexible, widget, (tooltipProp.isPresent() ? tooltipProp.get() : null), entityActionConfig);
             this.builder.resultSetProperties.add(prop);
         } else if (propDef.isPresent()) {
-            final ResultSetProp prop = ResultSetProp.propByDef(propDef.get(), width, isFlexible, (tooltipProp.isPresent() ? tooltipProp.get() : null), entityActionConfig);
+            final ResultSetProp<T> prop = ResultSetProp.propByDef(propDef.get(), width, isFlexible, (tooltipProp.isPresent() ? tooltipProp.get() : null), entityActionConfig);
             this.builder.resultSetProperties.add(prop);
         }
 
@@ -347,6 +421,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         this.propDef = Optional.empty();
         this.orderSeq = null;
         this.entityActionConfig = Optional::empty;
+        this.widget = Optional.empty();
     }
 
     @Override
@@ -502,6 +577,29 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     @Override
     public IResultSetBuilder2Properties<T> also() {
         completePropIfNeeded();
+        return this;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public IResultSetAutocompleterConfig<T> asAutocompleter() {
+        final Class<? extends AbstractEntity<?>> root = this.builder.getEntityType();
+        final String resultPropName = treeName(this.propName.get());
+        final boolean isEntityItself = "".equals(resultPropName); // empty property means "entity itself"
+        final Class<?> propType = isEntityItself ? root : PropertyTypeDeterminator.determinePropertyType(root, resultPropName);
+        final String widgetPropName = "".equals(resultPropName) ? AbstractEntity.KEY : resultPropName;
+        final EntityAutocompletionWidget editor = new EntityAutocompletionWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(widgetPropName, root).getValue()), widgetPropName, (Class<AbstractEntity<?>>)propType);
+        this.widget = Optional.of(editor);
+        return new ResultSetAutocompleterConfig<>(this, editor);
+    }
+
+    public void assignMatcher(final String propName, final Class<? extends IValueMatcherWithContext<T, ?>> matcher) {
+        valueMatcherForProps.put(propName, matcher);
+    }
+
+    @Override
+    public IResultSetBuilder3Ordering<T> skipValidation() {
+        this.widget.ifPresent(widget -> widget.skipValidation());
         return this;
     }
 }

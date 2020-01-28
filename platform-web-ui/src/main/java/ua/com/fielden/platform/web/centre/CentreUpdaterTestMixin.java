@@ -27,22 +27,15 @@ import org.joda.time.DateTime;
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurposes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
-import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisation;
 import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationNonPersistentChild;
 import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationNonPersistentCompositeChild;
 import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationPersistentChild;
-import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.api.impl.IdOnlyProxiedEntityTypeCacheForTests;
-import ua.com.fielden.platform.serialisation.api.impl.SerialisationTypeEncoder;
-import ua.com.fielden.platform.serialisation.api.impl.SerialiserForDomainTreesTestingPurposes;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -63,9 +56,6 @@ public class CentreUpdaterTestMixin {
     private static final EntityModuleWithPropertyFactory MODULE = new CommonTestEntityModuleWithPropertyFactory();
     private static final Injector INJECTOR = new ApplicationInjectorFactory().add(MODULE).getInjector();
     private static final EntityFactory FACTORY = INJECTOR.getInstance(EntityFactory.class);
-    private static final ISerialiser SERIALISER = new SerialiserForDomainTreesTestingPurposes(FACTORY, new ClassProviderForTestingPurposes(), CACHE);
-    private static final ISerialisationTypeEncoder serialisationTypeEncoder = new SerialisationTypeEncoder();
-    private static final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache = new IdOnlyProxiedEntityTypeCacheForTests();
     static final Date d2018 = new DateTime(2018, 1, 1, 0, 0).toDate();
     static final Date d2019 = new DateTime(2019, 1, 1, 0, 0).toDate();
     private static final EntityCentreConfig<TgCentreDiffSerialisation> DSL_CONFIG = 
@@ -114,9 +104,6 @@ public class CentreUpdaterTestMixin {
         .setLayoutFor(DESKTOP, empty(), mkGridForCentre(41, 1))
         .addProp("stringProp")
         .build();
-    static {
-        SERIALISER.initJacksonEngine(serialisationTypeEncoder, idOnlyProxiedEntityTypeCache);
-    }
     
     /**
      * Creates sampled version of centre and extracts diff.<br>
@@ -225,7 +212,7 @@ public class CentreUpdaterTestMixin {
     }
     
     static ICentreDomainTreeManagerAndEnhancer create() {
-        return createDefaultCentreFrom(DSL_CONFIG, SERIALISER, centre -> centre, true, TgCentreDiffSerialisation.class, CACHE, MI_TYPE, INJECTOR);
+        return createDefaultCentreFrom(DSL_CONFIG, FACTORY, centre -> centre, true, TgCentreDiffSerialisation.class, CACHE, MI_TYPE, INJECTOR);
     }
     
     static Map<String, Object> expectedDiffWithValue(final String property, final String category, final Object value) {

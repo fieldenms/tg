@@ -16,10 +16,10 @@ import ua.com.fielden.platform.domaintree.impl.EnhancementSet;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -37,8 +37,8 @@ public abstract class AbstractAnalysisDomainTreeRepresentation extends AbstractD
     /**
      * A <i>representation</i> constructor. Initialises also children references on itself.
      */
-    public AbstractAnalysisDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final AbstractAnalysisAddToDistributionTickRepresentation firstTick, final AbstractAnalysisAddToAggregationTickRepresentation secondTick) {
-        super(serialiser, rootTypes, excludedProperties, firstTick, secondTick);
+    public AbstractAnalysisDomainTreeRepresentation(final EntityFactory entityFactory, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final AbstractAnalysisAddToDistributionTickRepresentation firstTick, final AbstractAnalysisAddToAggregationTickRepresentation secondTick) {
+        super(entityFactory, rootTypes, excludedProperties, firstTick, secondTick);
 
         parentCentreDomainTreeManager = null; // as soon as this analysis wiil be added into centre manager -- this field should be initialised
     }
@@ -301,7 +301,7 @@ public abstract class AbstractAnalysisDomainTreeRepresentation extends AbstractD
             if (rootsListsOfOrderings.containsKey(managedType)) {
                 return rootsListsOfOrderings.get(managedType);
             }
-            return new ArrayList<Pair<String, Ordering>>();
+            return new ArrayList<>();
         }
 
         @Override
@@ -310,7 +310,7 @@ public abstract class AbstractAnalysisDomainTreeRepresentation extends AbstractD
             final Class<?> managedType = managedType(root);
 
             illegalExcludedProperties(getDtr(), managedType, "", "Could not set an 'ordering by default' for already 'excluded' type [" + managedType.getSimpleName() + "].");
-            rootsListsOfOrderings.put(managedType, new ArrayList<Pair<String, Ordering>>(orderedPropertiesByDefault));
+            rootsListsOfOrderings.put(managedType, new ArrayList<>(orderedPropertiesByDefault));
             return this;
         }
 
@@ -325,23 +325,30 @@ public abstract class AbstractAnalysisDomainTreeRepresentation extends AbstractD
 
         @Override
         public boolean equals(final Object obj) {
-            if (this == obj)
+            if (this == obj) {
                 return true;
-            if (!super.equals(obj))
+            }
+            if (!super.equals(obj)) {
                 return false;
-            if (getClass() != obj.getClass())
+            }
+            if (getClass() != obj.getClass()) {
                 return false;
+            }
             final AbstractAnalysisAddToAggregationTickRepresentation other = (AbstractAnalysisAddToAggregationTickRepresentation) obj;
             if (propertiesOrderingDisablement == null) {
-                if (other.propertiesOrderingDisablement != null)
+                if (other.propertiesOrderingDisablement != null) {
                     return false;
-            } else if (!propertiesOrderingDisablement.equals(other.propertiesOrderingDisablement))
+                }
+            } else if (!propertiesOrderingDisablement.equals(other.propertiesOrderingDisablement)) {
                 return false;
+            }
             if (rootsListsOfOrderings == null) {
-                if (other.rootsListsOfOrderings != null)
+                if (other.rootsListsOfOrderings != null) {
                     return false;
-            } else if (!rootsListsOfOrderings.equals(other.rootsListsOfOrderings))
+                }
+            } else if (!rootsListsOfOrderings.equals(other.rootsListsOfOrderings)) {
                 return false;
+            }
             return true;
         }
     }

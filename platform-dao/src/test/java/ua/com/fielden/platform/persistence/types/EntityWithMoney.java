@@ -69,6 +69,13 @@ public class EntityWithMoney extends AbstractEntity<String> {
         setMoney(money);
     }
 
+    @Override
+    @Observable
+    public EntityWithMoney setDesc(String desc) {
+        super.setDesc(desc);
+        return this;
+    }
+    
     @Observable
     public EntityWithMoney setMoney(final Money money) {
         if (money == null) {

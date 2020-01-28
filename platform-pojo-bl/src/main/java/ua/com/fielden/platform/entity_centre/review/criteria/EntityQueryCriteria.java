@@ -115,16 +115,6 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     }
 
     /**
-     * Returns the copy of centre domain tree manager
-     *
-     * @return
-     */
-    //TODO remove this later after details will be implemented using
-    public C getCentreDomainTreeManagerAndEnhnacerCopy() {
-        return EntityUtils.deepCopy(cdtme, serialiser);
-    }
-
-    /**
      * Returns the root for which this criteria was generated.
      *
      * @return
@@ -785,6 +775,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         }
         queryProperty.setOrNull(tickManager.getOrNull(root, actualProperty));
         queryProperty.setNot(tickManager.getNot(root, actualProperty));
+        queryProperty.setOrGroup(tickManager.getOrGroup(root, actualProperty));
         return queryProperty;
     }
 

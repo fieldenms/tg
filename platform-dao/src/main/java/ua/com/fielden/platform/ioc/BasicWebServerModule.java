@@ -91,9 +91,7 @@ import ua.com.fielden.platform.security.user.UserDao;
 import ua.com.fielden.platform.security.user.UserSecretDao;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.api.ISerialiser0;
 import ua.com.fielden.platform.serialisation.api.impl.Serialiser;
-import ua.com.fielden.platform.serialisation.api.impl.Serialiser0;
 import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfigDao;
 import ua.com.fielden.platform.ui.config.IEntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
@@ -191,7 +189,6 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(IApplicationDomainProvider.class).toInstance(applicationDomainProvider);
         // serialisation related binding
         bind(ISerialisationClassProvider.class).to(serialisationClassProviderType).in(Scopes.SINGLETON); // FleetSerialisationClassProvider.class
-        bind(ISerialiser0.class).to(Serialiser0.class).in(Scopes.SINGLETON);
         bind(ISerialiser.class).to(Serialiser.class).in(Scopes.SINGLETON); //
 
         // bind DAO and any other implementations of the required application controllers

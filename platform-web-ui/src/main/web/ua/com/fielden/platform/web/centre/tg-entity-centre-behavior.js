@@ -99,6 +99,8 @@ const createColumnAction = function (entityCentre) {
     return actionModel;
 };
 
+const MSG_SAVE_OR_CANCEL = "Please save or cancel changes.";
+
 const TgEntityCentreBehaviorImpl = {
     properties: {
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -490,7 +492,7 @@ const TgEntityCentreBehaviorImpl = {
         const insertionPoints = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point');
         this.$.egi.showMarginAround = insertionPoints.length > 0;
 
-        self._postRun = (function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, visibleColumnsWithOrder) {
+        self._postRun = (function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, resultConfig) {
             if (criteriaEntity === null || criteriaEntity.isValidWithoutException()) {
                 if (typeof summary !== 'undefined') {
                     this.retrievedTotals = summary;
@@ -500,7 +502,13 @@ const TgEntityCentreBehaviorImpl = {
                 this.selectionCriteriaEntity = criteriaEntity;
                 this.$.egi.renderingHints = renderingHints;
                 this.$.egi.adjustColumnWidths(columnWidths);
-                this.$.egi.adjustColumnsVisibility(visibleColumnsWithOrder.map(column => column === "this" ? "" : column));
+                this.$.egi.adjustColumnsVisibility(resultConfig.visibleColumnsWithOrder.map(column => column === "this" ? "" : column));
+                this.$.egi.adjustColumnsSorting(resultConfig.orderingConfig.map(propOrder => {
+                   if (propOrder.property === "this") {
+                       propOrder.property = "";
+                   }
+                   return propOrder;
+                }))
                 if (this._triggerRun) {
                     if (this._selectedView === 0) {
                         this.async(function () {
@@ -668,9 +676,16 @@ const TgEntityCentreBehaviorImpl = {
         self._showDialog = (function (action) {
             const closeEventChannel = self.uuid;
             const closeEventTopics = ['save.post.success', 'refresh.post.success'];
-            this.async(function () {
-                this.actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
-            }.bind(self), 1);
+            if (!self.$.egi.isEditing()) {
+                this.async(function () {
+                    this.actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
+                }.bind(self), 1);
+            } else {
+                this._showSaveOrCancelToast();
+                if (action) {
+                    action.restoreActionState();
+                }
+            }
         }).bind(self);
 
         self._showInsertionPoint = (function (action) {
@@ -724,7 +739,7 @@ const TgEntityCentreBehaviorImpl = {
         //Add event listener that indicates whne the layout has finished
         self.addEventListener("layout-finished", e => {
             const target = e.composedPath()[0];
-            if (target === e.detail) {
+            if (target === self.$.selection_criteria.$.masterDom.firstElementChild) {
                 tearDownEvent(e);
                 self.isSelectionCriteriaEmpty = !e.detail.componentsToLayout || e.detail.componentsToLayout.length === 0;
                 self._viewLoaded = true;
@@ -753,6 +768,12 @@ const TgEntityCentreBehaviorImpl = {
             this.actionDialog.setAttribute("id", self.uuid + '');
             document.body.appendChild(this.actionDialog);
         }
+
+        /* Provide predicate for egi that determines whether inline master can be opened or not.
+         * It can not be opened if another master in dialog is opened. */
+        this.$.egi.canOpenMaster = function () {
+            return !this.actionDialog.opened;
+        }.bind(this);
 
         ///////////////////////// Detail postSaved listener //////////////////////////////////////
         this.masterSavedListener = postal.subscribe({
@@ -804,6 +825,15 @@ const TgEntityCentreBehaviorImpl = {
 
     focusPreviousView: function (e) {
         this._focusView(e, false);
+    },
+
+    _showSaveOrCancelToast: function () {
+        this.$.selection_criteria._openToastWithoutEntity(MSG_SAVE_OR_CANCEL, false, MSG_SAVE_OR_CANCEL, false);
+    },
+
+    _saveOrCancelPromise: function () {
+        this._showSaveOrCancelToast();
+        return Promise.reject(MSG_SAVE_OR_CANCEL);
     },
 
     _focusView: function (e, forward) {
@@ -884,9 +914,13 @@ const TgEntityCentreBehaviorImpl = {
      */
     _activateSelectionCriteriaView: function () {
         const self = this;
-        self.async(function () {
-            self._selectedView = 0;
-        }, 100);
+        if (!this.$.egi.isEditing()) { 
+           self.async(function () {
+                self._selectedView = 0;
+            }, 100);
+        } else {
+            this._showSaveOrCancelToast();
+        }
     },
 
     /**
@@ -905,13 +939,15 @@ const TgEntityCentreBehaviorImpl = {
      */
     currentPage: function () {
         const self = this;
-        self.persistActiveElement();
-        return this.$.selection_criteria.currentPage()
-            .then(function () {
-                console.log("current page invocation");
-                self.runInsertionPointActions();
-                self.restoreActiveElement();
-            });
+        if (!this.$.egi.isEditing()) {
+            self.persistActiveElement();
+            return this.$.selection_criteria.currentPage()
+                .then(function () {
+                    self.runInsertionPointActions();
+                    self.restoreActiveElement();
+                });
+        }
+        return this._saveOrCancelPromise();
     },
 
     /**
@@ -919,10 +955,13 @@ const TgEntityCentreBehaviorImpl = {
      */
     firstPage: function () {
         const self = this;
-        self.persistActiveElement();
-        return this.$.selection_criteria.firstPage().then(function () {
-            self.restoreActiveElement();
-        });
+        if (!this.$.egi.isEditing()) {
+            self.persistActiveElement();
+            return this.$.selection_criteria.firstPage().then(function () {
+                self.restoreActiveElement();
+            });
+        }
+        return this._saveOrCancelPromise();
     },
 
     /**
@@ -930,10 +969,13 @@ const TgEntityCentreBehaviorImpl = {
      */
     lastPage: function () {
         const self = this;
-        self.persistActiveElement();
-        return this.$.selection_criteria.lastPage().then(function () {
-            self.restoreActiveElement();
-        });
+        if (!this.$.egi.isEditing()) {
+            self.persistActiveElement();
+            return this.$.selection_criteria.lastPage().then(function () {
+                self.restoreActiveElement();
+            });
+        }
+        return this._saveOrCancelPromise();
     },
 
     /**
@@ -941,10 +983,13 @@ const TgEntityCentreBehaviorImpl = {
      */
     nextPage: function () {
         const self = this;
-        self.persistActiveElement();
-        return this.$.selection_criteria.nextPage().then(function () {
-            self.restoreActiveElement();
-        });
+        if (!this.$.egi.isEditing()) {
+            self.persistActiveElement();
+            return this.$.selection_criteria.nextPage().then(function () {
+                self.restoreActiveElement();
+            });
+        }
+        return this._saveOrCancelPromise();
     },
 
     /**
@@ -952,10 +997,13 @@ const TgEntityCentreBehaviorImpl = {
      */
     prevPage: function () {
         const self = this;
-        self.persistActiveElement();
-        return this.$.selection_criteria.prevPage().then(function () {
-            self.restoreActiveElement();
-        });
+        if (!this.$.egi.isEditing()) {
+            self.persistActiveElement();
+            return this.$.selection_criteria.prevPage().then(function () {
+                self.restoreActiveElement();
+            });
+        }
+        return this._saveOrCancelPromise();
     },
 
     /**
@@ -1027,6 +1075,13 @@ const TgEntityCentreBehaviorImpl = {
      * for which tab-off wasn't actioned).
      */
     canLeave: function () {
+        //First of all check whether egi is edit mode. If it's true then don't levae this centre otherwise keep check whether
+        //insertion points can be left.
+        if (this.$.egi.isEditing()) {
+            return {
+                msg: MSG_SAVE_OR_CANCEL
+            };
+        }
         // Check whether all insertion points can be left.
         const insertionPoints = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point');
         for (let insPoIndex = 0; insPoIndex < insertionPoints.length; insPoIndex++) {

@@ -5,7 +5,7 @@ import java.util.List;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IDomainTreeRepresentation;
-import ua.com.fielden.platform.domaintree.ILocatorManager;
+import ua.com.fielden.platform.domaintree.IRootTyped;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
@@ -280,37 +280,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
      * @author TG Team
      *
      */
-    public interface IAddToCriteriaTickManager extends ITickManager, ILocatorManager {
-        /**
-         * A type of meta values.
-         *
-         * @author TG Team
-         *
-         */
-        public enum MetaValueType {
-            VALUE, VALUE2, EXCLUSIVE, EXCLUSIVE2, OR_NULL, NOT, DATE_PREFIX, DATE_MNEMONIC, AND_BEFORE, ALL_ORDERING, WIDTH, GROW_FACTOR
-        }
-
-        /**
-         * Returns <code>true</code> whether the meta value is present (when it was explicitly marked as 'present'), <code>false</code> otherwise.
-         *
-         * @param metaValueType
-         * @param root
-         * @param property
-         * @return
-         */
-        boolean isMetaValuePresent(final MetaValueType metaValueType, final Class<?> root, final String property);
-
-        /**
-         * Marks the meta value as 'present'.
-         *
-         * @param metaValueType
-         * @param root
-         * @param property
-         * @return
-         */
-        IAddToCriteriaTickManager markMetaValuePresent(final MetaValueType metaValueType, final Class<?> root, final String property);
-
+    public interface IAddToCriteriaTickManager extends ITickManager, IRootTyped {
         /**
          * Gets a <i>columnsNumber</i> for criteria editors. <br>
          * <br>
@@ -639,6 +609,29 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * @return -- a criteria tick manager
          */
         IAddToCriteriaTickManager setNot(final Class<?> root, final String property, final Boolean not);
+
+        /**
+         * Gets an "or group" number of a criteria property.
+         * <p>
+         * Throws {@link DomainTreeException} when the property is not checked (see {@link #isChecked(Class, String)} method).
+         *
+         * @param root -- a root type that contains property.
+         * @param property -- a dot-notation expression that defines a property.
+         * @return
+         */
+        Integer getOrGroup(final Class<?> root, final String property);
+
+        /**
+         * Sets an "or group" number of a criteria property.
+         * <p>
+         * Throws {@link DomainTreeException} when the property is not checked (see {@link #isChecked(Class, String)} method).
+         *
+         * @param root -- a root type that contains property.
+         * @param property -- a dot-notation expression that defines a property.
+         * @param orGroup
+         * @return -- a criteria tick manager
+         */
+        IAddToCriteriaTickManager setOrGroup(final Class<?> root, final String property, final Integer orGroup);
 
         // Boolean getAll(final Class<?> root, final String property);
         // ICriteriaTickManager setAll(final Class<?> root, final String property, final Boolean all);

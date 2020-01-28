@@ -34,14 +34,14 @@ const template = html`
         }
         #spinner {
             position: absolute;
-            width: var(--tg-ui-action-spinner-width);
-            height: var(--tg-ui-action-spinner-height); 
+            width: var(--tg-ui-action-spinner-width, 24px);
+            height: var(--tg-ui-action-spinner-height, 24px); 
             min-width: var(--tg-ui-action-spinner-min-width); 
             min-height: var(--tg-ui-action-spinner-min-height); 
             max-width: var(--tg-ui-action-spinner-max-width); 
             max-height: var(--tg-ui-action-spinner-max-height); 
-            padding: var(--tg-ui-action-spinner-padding);
-            margin-left: var(--tg-ui-action-spinner-margin-left);
+            padding: var(--tg-ui-action-spinner-padding, 2px);
+            margin-left: var(--tg-ui-action-spinner-margin-left, 0px);
             --paper-spinner-layer-1-color: var(--paper-blue-500);
             --paper-spinner-layer-2-color: var(--paper-blue-500);
             --paper-spinner-layer-3-color: var(--paper-blue-500);
