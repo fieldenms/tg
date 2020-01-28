@@ -4,6 +4,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.joining;
+import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 import java.util.ArrayList;
@@ -15,8 +16,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
-
-import com.microsoft.sqlserver.jdbc.StringUtils;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
@@ -110,7 +109,7 @@ public class PathsToTreeTransformator {
         
         final boolean required = propInfo instanceof EntityTypePropInfo ? ((EntityTypePropInfo) propInfo).required : false;
         final String childContext = newContext.stream().collect(joining("_"));
-        final String sourceContextId = StringUtils.isEmpty(childContext) ? contextId : contextId + "_" + childContext;
+        final String sourceContextId = isEmpty(childContext) ? contextId : contextId + "_" + childContext;
         final QrySource2BasedOnPersistentType source = propInfo instanceof EntityTypePropInfo ? new QrySource2BasedOnPersistentType(((EntityTypePropInfo) propInfo).javaType(), ((EntityTypePropInfo) propInfo).propEntityInfo, sourceContextId) 
                  : null;
         final T2<String, Map<String, List<AbstractPropInfo<?>>>> next = getPathAndNextProps(subprops);

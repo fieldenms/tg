@@ -1,15 +1,11 @@
 package ua.com.fielden.platform.sample.domain;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
 import java.math.BigDecimal;
 import java.util.Date;
 
 import org.junit.Ignore;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
@@ -22,7 +18,6 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
-import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.types.Money;
 
 @KeyType(String.class)
@@ -38,81 +33,6 @@ public class TgWorkOrder extends AbstractEntity<String> {
     @Title(value = "Vehicle", desc = "Vehicle under repair")
     @MapTo
     private TgVehicle vehicle;
-    
-    @IsProperty
-    @Calculated
-    private TgVehicleModel vehicleModel;
-    protected static final ExpressionModel vehicleModel_ = expr().prop("vehicle.model").model();
-
-    @Observable
-    protected TgWorkOrder setVehicleModel(final TgVehicleModel vehicleModel) {
-        this.vehicleModel = vehicleModel;
-        return this;
-    }
-
-    public TgVehicleModel getVehicleModel() {
-        return vehicleModel;
-    }
-
-    @IsProperty
-    @Calculated
-    private String makeKey;
-    protected static final ExpressionModel makeKey_ = expr().model(select(TgVehicle.class).where().prop("id").eq().extProp("vehicle").yield().prop("model.make.key").modelAsPrimitive()).model();
-
-    @Observable
-    protected TgWorkOrder setMakeKey(final String makeKey) {
-        this.makeKey = makeKey;
-        return this;
-    }
-
-    public String getMakeKey() {
-        return makeKey;
-    }
-
-    @IsProperty
-    @Calculated
-    private String makeKey2;
-    protected static final ExpressionModel makeKey2_ = expr().model(select(TgVehicle.class).where().prop("id").eq().extProp("vehicle").yield().prop("makeKey3").modelAsPrimitive()).model();
-
-    @Observable
-    protected TgWorkOrder setMakeKey2(final String makeKey2) {
-        this.makeKey2 = makeKey2;
-        return this;
-    }
-
-    public String getMakeKey2() {
-        return makeKey2;
-    }
-    
-    @IsProperty
-    @Calculated
-    private TgVehicleMake make;
-    protected static final ExpressionModel make_ = expr().model(select(TgVehicle.class).where().prop("id").eq().extProp("vehicle").yield().prop("model.make").modelAsEntity(TgVehicleMake.class)).model();
-
-    @Observable
-    protected TgWorkOrder setMake(final TgVehicleMake make) {
-        this.make = make;
-        return this;
-    }
-
-    public TgVehicleMake getMake() {
-        return make;
-    }
-
-    @IsProperty
-    @Calculated
-    private TgVehicleModel model;
-    protected static final ExpressionModel model_ = expr().model(select(TgVehicle.class).where().prop("id").eq().extProp("vehicle").yield().prop("model").modelAsEntity(TgVehicleModel.class)).model();
-
-    @Observable
-    protected TgWorkOrder setModel(final TgVehicleModel model) {
-        this.model = model;
-        return this;
-    }
-
-    public TgVehicleModel getModel() {
-        return model;
-    }
 
     @IsProperty
     @MapTo
@@ -162,6 +82,7 @@ public class TgWorkOrder extends AbstractEntity<String> {
     @CritOnly(Type.SINGLE)
     @Title(value = "Boolean Single", desc = "A single crit only property of type boolean")
     private boolean boolSingle = false;
+
 
     @IsProperty
     @CritOnly(Type.SINGLE)
@@ -214,6 +135,9 @@ public class TgWorkOrder extends AbstractEntity<String> {
         return moneySingle;
     }
 
+
+
+
     @Observable
     public TgWorkOrder setStringSingle(final String stringSingle) {
         this.stringSingle = stringSingle;
@@ -223,6 +147,9 @@ public class TgWorkOrder extends AbstractEntity<String> {
     public String getStringSingle() {
         return stringSingle;
     }
+
+
+
 
     @Observable
     public TgWorkOrder setBoolSingle(final boolean boolSingle) {
@@ -244,6 +171,9 @@ public class TgWorkOrder extends AbstractEntity<String> {
         return intRange;
     }
 
+
+
+
     @Observable
     public TgWorkOrder setIntSingle(final Integer intSingle) {
         this.intSingle = intSingle;
@@ -253,6 +183,9 @@ public class TgWorkOrder extends AbstractEntity<String> {
     public Integer getIntSingle() {
         return intSingle;
     }
+
+
+
 
     @Observable
     public TgWorkOrder setOrgunitCritOnlySingle(final TgOrgUnit1 orgunitCritOnlySingle) {
@@ -273,6 +206,7 @@ public class TgWorkOrder extends AbstractEntity<String> {
     public TgOrgUnit1 getOrgunitCritOnly() {
         return orgunitCritOnly;
     }
+
 
     @Observable
     public TgWorkOrder setOrgUnit1(final TgOrgUnit1 orgUnit1) {
@@ -329,8 +263,7 @@ public class TgWorkOrder extends AbstractEntity<String> {
     }
 
     @Observable
-    public TgWorkOrder setVehicle(final TgVehicle vehicle) {
+    public void setVehicle(final TgVehicle vehicle) {
         this.vehicle = vehicle;
-        return this;
     }
 }
