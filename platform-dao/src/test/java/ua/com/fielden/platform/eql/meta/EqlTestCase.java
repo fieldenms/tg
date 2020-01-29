@@ -137,7 +137,7 @@ public class EqlTestCase {
             throw new IllegalStateException("Not implemented yet");
         }
         
-        final TransformationContext context = new TransformationContext(tables, s1r.updatedContext);
+        final TransformationContext context = new TransformationContext(tables, s1r.updatedContext, s1r.item.collectProps());
         return s1r.item.transform(context);
     }
 

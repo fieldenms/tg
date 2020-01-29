@@ -4,10 +4,13 @@ import static java.util.Collections.unmodifiableCollection;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage3.elements.Yield3;
 import ua.com.fielden.platform.eql.stage3.elements.Yields3;
 
@@ -33,6 +36,14 @@ public class Yields2 {
             yieldsList.add(yieldTr.item);
         }
         return new TransformationResult<Yields3>(new Yields3(yieldsList), currentContext);
+    }
+    
+    public Set<EntProp2> collectProps() {
+        final Set<EntProp2> result = new HashSet<>();
+        for (final Yield2 yield : yieldsMap.values()) {
+            result.addAll(yield.operand.collectProps());
+        }
+        return result;
     }
 
     @Override

@@ -10,30 +10,24 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.meta.EntityInfo;
-import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
-import ua.com.fielden.platform.eql.stage2.elements.operands.EntValue2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
 import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySource3;
 
 public class PropsResolutionContext {
     private final List<List<IQrySource2<? extends IQrySource3>>> sources;
     private final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo;
-    private final Map<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>> resolvedProps;
     public final String sourceId;
 
     public PropsResolutionContext(final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
         this.domainInfo = new HashMap<>(domainInfo);
         this.sources = buildSourcesStackForNewQuery(emptyList());
-        this.resolvedProps = new HashMap<>();
         this.sourceId = null;
     }
     
-    public PropsResolutionContext(final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo, final List<List<IQrySource2<? extends IQrySource3>>> sources, final Map<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>> props, final String sourceId) {
+    public PropsResolutionContext(final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo, final List<List<IQrySource2<? extends IQrySource3>>> sources, final String sourceId) {
         this.domainInfo = new HashMap<>(domainInfo);
         this.sources = sources;
-        this.resolvedProps = new HashMap<>(props);
         this.sourceId = sourceId; 
     }
 
@@ -45,54 +39,24 @@ public class PropsResolutionContext {
     }
 
     public PropsResolutionContext produceForCorrelatedSubquery() {
-        return new PropsResolutionContext(domainInfo, buildSourcesStackForNewQuery(sources), resolvedProps, sourceId);
+        return new PropsResolutionContext(domainInfo, buildSourcesStackForNewQuery(sources), sourceId);
     }
 
     public PropsResolutionContext produceForUncorrelatedSubquery() {
-        return new PropsResolutionContext(domainInfo, buildSourcesStackForNewQuery(emptyList()), resolvedProps, sourceId);
+        return new PropsResolutionContext(domainInfo, buildSourcesStackForNewQuery(emptyList()), sourceId);
     }
     
-    public PropsResolutionContext cloneWithAdded(final IQrySource2<? extends IQrySource3> transformedSource, final Map<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>> resolvedProps) {
+    public PropsResolutionContext cloneWithAdded(final IQrySource2<? extends IQrySource3> transformedSource) {
         final List<List<IQrySource2<? extends IQrySource3>>> srcs = new ArrayList<>();
         srcs.addAll(sources);
         srcs.get(0).add(transformedSource); // adding source to current query list of sources
-        return new PropsResolutionContext(domainInfo, srcs, resolvedProps, sourceId);
-    }
-
-    public PropsResolutionContext cloneWithAdded(final EntProp2 transformedProp) {
-        final List<List<IQrySource2<? extends IQrySource3>>> srcs = new ArrayList<>();
-        srcs.addAll(sources);
-        final Map<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>> props = new HashMap<>(resolvedProps);
-        
-        final Map<String, List<AbstractPropInfo<?>>> existing = props.get(transformedProp.source);
-        
-        if (existing == null) {
-            final Map<String, List<AbstractPropInfo<?>>> propMap = new HashMap<>();
-            propMap.put(transformedProp.name, transformedProp.getPath());
-            props.put(transformedProp.source, propMap);
-        } else {
-            if (!existing.containsKey(transformedProp.name)) {
-                existing.put(transformedProp.name, transformedProp.getPath());    
-            }
-        };
-        
-        return new PropsResolutionContext(domainInfo, srcs, props, sourceId);
-    }
-
-    public PropsResolutionContext cloneWithAdded(final EntValue2 value) {
-        final List<List<IQrySource2<? extends IQrySource3>>> srcs = new ArrayList<>();
-        srcs.addAll(sources);
-        return new PropsResolutionContext(domainInfo, srcs, resolvedProps, sourceId);
+        return new PropsResolutionContext(domainInfo, srcs, sourceId);
     }
 
     public PropsResolutionContext cloneNew() {
         final List<List<IQrySource2<? extends IQrySource3>>> srcs = new ArrayList<>();
         srcs.addAll(sources);
-        return new PropsResolutionContext(domainInfo, srcs, resolvedProps, sourceId);
-    }
-
-    public Map<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>> getResolvedProps() {
-        return unmodifiableMap(resolvedProps);
+        return new PropsResolutionContext(domainInfo, srcs, sourceId);
     }
 
     public List<List<IQrySource2<? extends IQrySource3>>> getSources() {

@@ -45,7 +45,7 @@ public class EntProp1 extends AbstractElement1 implements ISingleOperand1<EntPro
             if (resolution != null) {
                 final EntProp2 transformedProp = new EntProp2(resolution.getSource(), Integer.toString(contextId), resolution.getPath());
                 
-                return new TransformationResult<EntProp2>(transformedProp, context.cloneWithAdded(transformedProp));
+                return new TransformationResult<EntProp2>(transformedProp, context.cloneNew());
             }
         }
 

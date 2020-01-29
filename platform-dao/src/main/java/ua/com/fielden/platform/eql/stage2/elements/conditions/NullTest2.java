@@ -1,9 +1,11 @@
 package ua.com.fielden.platform.eql.stage2.elements.conditions;
 
 import java.util.Objects;
+import java.util.Set;
 
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
+import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.NullTest3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
@@ -28,6 +30,11 @@ public class NullTest2 extends AbstractCondition2<NullTest3> {
         return new TransformationResult<NullTest3>(new NullTest3(operandTr.item, negated), operandTr.updatedContext);
     }
 
+    @Override
+    public Set<EntProp2> collectProps() {
+        return operand.collectProps();
+    }
+    
     @Override
     public int hashCode() {
         final int prime = 31;

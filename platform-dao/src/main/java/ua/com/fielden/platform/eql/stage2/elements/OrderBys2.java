@@ -1,9 +1,12 @@
 package ua.com.fielden.platform.eql.stage2.elements;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
+import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage3.elements.OrderBy3;
 import ua.com.fielden.platform.eql.stage3.elements.OrderBys3;
 
@@ -23,6 +26,14 @@ public class OrderBys2 {
                 currentContext = orderByTr.updatedContext;
             }
             return new TransformationResult<OrderBys3>(new OrderBys3(transformed), currentContext);
+    }
+    
+    public Set<EntProp2> collectProps() {
+        final Set<EntProp2> result = new HashSet<>();
+        for (final OrderBy2 orderBy : models) {
+            result.addAll(orderBy.operand.collectProps());
+        }
+        return result;
     }
 
     @Override

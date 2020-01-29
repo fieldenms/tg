@@ -1,8 +1,10 @@
 package ua.com.fielden.platform.eql.stage2.elements.operands;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
@@ -29,6 +31,15 @@ public class OperandsBasedSet2 implements ISetOperand2<OperandsBasedSet3> {
         return new TransformationResult<OperandsBasedSet3>(new OperandsBasedSet3(transformedOperands), currentContext);
     }
 
+    @Override
+    public Set<EntProp2> collectProps() {
+        final Set<EntProp2> result = new HashSet<>();
+        for (final ISingleOperand2<? extends ISingleOperand3> operand : operands) {
+            result.addAll(operand.collectProps());
+        }
+        return result;
+    }
+    
     @Override
     public int hashCode() {
         final int prime = 31;

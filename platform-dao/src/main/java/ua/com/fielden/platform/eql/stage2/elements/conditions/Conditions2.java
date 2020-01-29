@@ -3,11 +3,14 @@ package ua.com.fielden.platform.eql.stage2.elements.conditions;
 import static java.util.Collections.emptyList;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
+import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.ICondition3;
 
@@ -54,6 +57,17 @@ public class Conditions2 extends AbstractCondition2<Conditions3> {
 //                .collect(toList());
         
         return new TransformationResult<Conditions3>(new Conditions3(negated, result), currentContext);
+    }
+
+    @Override
+    public Set<EntProp2> collectProps() {
+        final Set<EntProp2> result = new HashSet<>();
+        for (final List<? extends ICondition2> list : allConditionsAsDnf) {
+            for (final ICondition2 cond : list) {
+                result.addAll(cond.collectProps());
+            }
+        }
+        return result;
     }
 
     @Override

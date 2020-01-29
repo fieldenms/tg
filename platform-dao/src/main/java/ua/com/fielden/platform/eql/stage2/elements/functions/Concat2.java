@@ -1,11 +1,14 @@
 package ua.com.fielden.platform.eql.stage2.elements.functions;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
+import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.elements.functions.Concat3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
@@ -33,6 +36,15 @@ public class Concat2 extends AbstractFunction2<Concat3> {
             currentContext = operandTr.updatedContext;
         }
         return new TransformationResult<Concat3>(new Concat3(transformed), currentContext);
+    }
+
+    @Override
+    public Set<EntProp2> collectProps() {
+        final Set<EntProp2> result = new HashSet<>();
+        for (final ISingleOperand2<? extends ISingleOperand3> operand : operands) {
+            result.addAll(operand.collectProps());
+        }
+        return result;
     }
 
     @Override

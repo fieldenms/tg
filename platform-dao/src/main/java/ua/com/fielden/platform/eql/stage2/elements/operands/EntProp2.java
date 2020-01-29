@@ -2,9 +2,11 @@ package ua.com.fielden.platform.eql.stage2.elements.operands;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
+import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
@@ -43,6 +45,11 @@ public class EntProp2 extends AbstractElement2 implements ISingleOperand2<Expres
         return new TransformationResult<Expression3>(transformedProp, context);
     }
 
+    @Override
+    public Set<EntProp2> collectProps() {
+        return setOf(this);
+    }
+    
     public List<AbstractPropInfo<?>> getPath() {
         return unmodifiableList(path);
     }

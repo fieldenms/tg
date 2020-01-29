@@ -19,6 +19,7 @@ import java.util.TreeSet;
 
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
+import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.Child;
 import ua.com.fielden.platform.eql.stage2.elements.sources.ChildGroup;
 import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
@@ -36,9 +37,9 @@ public class TransformationContext {
     private TransformationContext() {
     }
 
-    public TransformationContext(final Map<String, Table> tables, final PropsResolutionContext context) {
+    public TransformationContext(final Map<String, Table> tables, final PropsResolutionContext context, final Set<EntProp2> props) {
         this.tables.putAll(tables);
-        for (final Entry<IQrySource2<?>, SortedSet<Child>> el : transform(context.getResolvedProps(), context.getDomainInfo()).entrySet()) {
+        for (final Entry<IQrySource2<?>, SortedSet<Child>> el : transform(props, context.getDomainInfo()).entrySet()) {
             this.sourceChildren.put(el.getKey(), convertToGroup(el.getValue()));
         }
     }

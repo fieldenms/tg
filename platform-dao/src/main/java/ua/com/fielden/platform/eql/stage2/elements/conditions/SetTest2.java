@@ -1,9 +1,12 @@
 package ua.com.fielden.platform.eql.stage2.elements.conditions;
 
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
+import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISetOperand2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.SetTest3;
@@ -31,6 +34,14 @@ public class SetTest2 extends AbstractCondition2<SetTest3> {
         final TransformationResult<? extends ISingleOperand3> leftOperandTr = leftOperand.transform(context);
         final TransformationResult<? extends ISetOperand3> rightOperandTr = rightOperand.transform(leftOperandTr.updatedContext);
         return new TransformationResult<SetTest3>(new SetTest3(leftOperandTr.item, negated, rightOperandTr.item), rightOperandTr.updatedContext);
+    }
+    
+    @Override
+    public Set<EntProp2> collectProps() {
+        final Set<EntProp2> result = new HashSet<>();
+        result.addAll(leftOperand.collectProps());
+        result.addAll(rightOperand.collectProps());
+        return result;
     }
 
     @Override

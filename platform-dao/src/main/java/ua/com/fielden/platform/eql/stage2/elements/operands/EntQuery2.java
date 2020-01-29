@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.eql.stage2.elements.operands;
 
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.QueryCategory;
@@ -51,6 +53,18 @@ public class EntQuery2 implements ISingleOperand2<EntQuery3> {
         final EntQueryBlocks3 entQueryBlocks = new EntQueryBlocks3(sourcesTr.item, conditionsTr.item, yieldsTr.item, groupsTr.item, orderingsTr.item);
 
         return new TransformationResult<EntQuery3>(new EntQuery3(entQueryBlocks, category), orderingsTr.updatedContext);
+    }
+
+    @Override
+    public Set<EntProp2> collectProps() {
+        final Set<EntProp2> result = new HashSet<>();
+        result.addAll(sources.collectProps());
+        result.addAll(conditions.collectProps());
+        result.addAll(yields.collectProps());
+        result.addAll(groups.collectProps());
+        result.addAll(orderings.collectProps());
+        
+        return result;
     }
 
     @Override

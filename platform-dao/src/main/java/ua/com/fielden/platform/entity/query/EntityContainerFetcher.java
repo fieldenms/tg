@@ -144,7 +144,7 @@ public class EntityContainerFetcher {
             
             final PropsResolutionContext resolutionContext = new PropsResolutionContext(domainInfo );
             final TransformationResult<EntQuery2> s1tr = gen1.generateEntQueryAsResultQuery(qem.queryModel, qem.orderModel).transform(resolutionContext);
-            final EntQuery3 entQuery3 = s1tr.item.transform(new TransformationContext(tables, s1tr.updatedContext)).item;
+            final EntQuery3 entQuery3 = s1tr.item.transform(new TransformationContext(tables, s1tr.updatedContext, s1tr.item.collectProps())).item;
             final String sql3 = entQuery3.sql(domainMetadataAnalyser.getDbVersion());
             return new QueryModelResult<>((Class<E>)EntityAggregates.class, sql3, getResultPropsInfos(entQuery3.yields), Collections.<String, Object>emptyMap(), qem.fetchModel);
             

@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.eql.stage2.elements.functions;
 
 import java.util.Objects;
+import java.util.Set;
 
+import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 
@@ -13,6 +15,11 @@ abstract class SingleOperandFunction2<S3 extends ISingleOperand3> extends Abstra
         this.operand = operand;
     }
 
+    @Override
+    public Set<EntProp2> collectProps() {
+        return operand.collectProps();
+    }
+    
     @Override
     public int hashCode() {
         final int prime = 31;

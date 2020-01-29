@@ -1,14 +1,17 @@
 package ua.com.fielden.platform.eql.stage2.elements.sources;
 
 import static java.lang.String.format;
+import static java.util.Collections.emptySet;
 
 import java.util.Objects;
+import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.EntityInfo;
 import ua.com.fielden.platform.eql.stage2.elements.AbstractElement2;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
+import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage3.elements.sources.QrySource3BasedOnTable;
 
 public class QrySource2BasedOnPersistentType extends AbstractElement2 implements IQrySource2<QrySource3BasedOnTable> {
@@ -36,6 +39,11 @@ public class QrySource2BasedOnPersistentType extends AbstractElement2 implements
         final QrySource3BasedOnTable transformedSource = new QrySource3BasedOnTable(context.getTable(sourceType().getName()), contextId);
         return new TransformationResult<QrySource3BasedOnTable>(transformedSource, context/*.cloneWithAdded(transformedSource, this)*/);
     }
+
+    @Override
+    public Set<EntProp2> collectProps() {
+        return emptySet();
+    } 
     
     @Override
     public Class<? extends AbstractEntity<?>> sourceType() {

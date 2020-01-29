@@ -1,9 +1,12 @@
 package ua.com.fielden.platform.eql.stage2.elements;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
+import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage3.elements.GroupBy3;
 import ua.com.fielden.platform.eql.stage3.elements.GroupBys3;
 
@@ -23,6 +26,14 @@ public class GroupBys2 {
                 currentContext = groupByTr.updatedContext;
             }
             return new TransformationResult<GroupBys3>(new GroupBys3(transformed), currentContext);
+    }
+    
+    public Set<EntProp2> collectProps() {
+        final Set<EntProp2> result = new HashSet<>();
+        for (final GroupBy2 group : groups) {
+            result.addAll(group.operand.collectProps());
+        }
+        return result;
     }
 
     @Override

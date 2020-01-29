@@ -1,9 +1,14 @@
 package ua.com.fielden.platform.eql.stage2.elements.functions;
 
+import static java.util.Collections.emptySet;
+
+import java.util.Set;
+
 import org.joda.time.DateTime;
 
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
+import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage3.elements.functions.Now3;
 
 
@@ -20,6 +25,11 @@ public class Now2 extends AbstractFunction2<Now3> {
     }
     
     @Override
+    public Set<EntProp2> collectProps() {
+        return emptySet();
+    } 
+    
+    @Override
     public int hashCode() {
         final int prime = 31;
         final int result = 1;
@@ -29,5 +39,5 @@ public class Now2 extends AbstractFunction2<Now3> {
     @Override
     public boolean equals(final Object obj) {
         return this == obj || obj instanceof Now2;
-    } 
+    }
 }

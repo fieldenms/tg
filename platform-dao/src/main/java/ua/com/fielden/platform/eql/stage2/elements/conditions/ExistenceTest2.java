@@ -1,9 +1,11 @@
 package ua.com.fielden.platform.eql.stage2.elements.conditions;
 
 import java.util.Objects;
+import java.util.Set;
 
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
+import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntQuery2;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.ExistenceTest3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.EntQuery3;
@@ -26,6 +28,11 @@ public class ExistenceTest2 extends AbstractCondition2<ExistenceTest3> {
     public TransformationResult<ExistenceTest3> transform(final TransformationContext context) {
         final TransformationResult<EntQuery3> subQueryTr = subQuery.transform(context);
         return new TransformationResult<ExistenceTest3>(new ExistenceTest3(negated, subQueryTr.item), subQueryTr.updatedContext);
+    }
+    
+    @Override
+    public Set<EntProp2> collectProps() {
+        return subQuery.collectProps();
     }
 
     @Override

@@ -7,11 +7,14 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.IJ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.LJ;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
+import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.ComparisonTest3;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.EntProp3;
@@ -24,7 +27,7 @@ import ua.com.fielden.platform.eql.stage3.elements.sources.SingleQrySource3;
 import ua.com.fielden.platform.types.tuples.T2;
 
 
-public class Sources2 {
+public class Sources2  {
     public final IQrySource2<? extends IQrySource3> main;
     private final List<CompoundSource2> compounds;
 
@@ -51,6 +54,16 @@ public class Sources2 {
         }
         
         return new TransformationResult<>(currentSourceTree, currentContext);
+    }
+    
+    public Set<EntProp2> collectProps() {
+        final Set<EntProp2> result = new HashSet<>(); 
+        result.addAll(main.collectProps());
+        for (final CompoundSource2 item : compounds) {
+            result.addAll(item.source.collectProps());
+            result.addAll(item.joinConditions.collectProps());
+        }
+        return result;
     }
     
     private T2<IQrySources3, TransformationContext> enhance(final IQrySource2<?> source2, final IQrySource3 source, final TransformationContext context) {

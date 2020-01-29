@@ -1,7 +1,12 @@
 package ua.com.fielden.platform.eql.stage2.elements.functions;
 
+import static java.util.Collections.emptySet;
+
+import java.util.Set;
+
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
+import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage3.elements.functions.CountAll3;
 
 public class CountAll2 extends AbstractFunction2<CountAll3> {
@@ -15,6 +20,11 @@ public class CountAll2 extends AbstractFunction2<CountAll3> {
     public TransformationResult<CountAll3> transform(final TransformationContext context) {
         return new TransformationResult<CountAll3>(new CountAll3(), context);
     }
+
+    @Override
+    public Set<EntProp2> collectProps() {
+        return emptySet();
+    } 
     
     @Override
     public int hashCode() {

@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -96,10 +97,10 @@ public class PropResolutionTest extends EqlTestCase {
         return new EntQueryBlocks1(sources, conditions, new Yields1(emptyList()), new GroupBys1(emptyList()), new OrderBys1(emptyList()));
     }
     
-    private static Map<String, List<AbstractPropInfo<?>>> getResolvedProps(final PropsResolutionContext context) {
+    private static Map<String, List<AbstractPropInfo<?>>> getResolvedProps(final Set<EntProp2> props) {
         final Map<String, List<AbstractPropInfo<?>>> result = new HashMap<>();
-        for (final Map<String, List<AbstractPropInfo<?>>> el : context.getResolvedProps().values()) {
-            result.putAll(el);
+        for (final EntProp2 el : props) {
+            result.put(el.name, el.getPath());
         }
         
         return result;
@@ -111,7 +112,7 @@ public class PropResolutionTest extends EqlTestCase {
                 anyOfProps("initDate", "station.name", "station.parent.name", "replacedBy.initDate").isNotNull().model();
         
         final TransformationResult<EntQuery2> a = transform(qry);
-        final Map<String, List<AbstractPropInfo<?>>> paths = getResolvedProps(a.updatedContext);
+        final Map<String, List<AbstractPropInfo<?>>> paths = getResolvedProps(a.item.collectProps());
 
         assertEquals(asList(pi(VEHICLE, "initDate")), paths.get("initDate"));
         assertEquals(asList(pi(VEHICLE, "station"), pi(ORG5, "name")), paths.get("station.name"));
@@ -125,7 +126,7 @@ public class PropResolutionTest extends EqlTestCase {
                 anyOfProps("initDate", "station.name", "station.parent.name", "replacedBy.initDate").isNotNull().model();
         
         final TransformationResult<EntQuery2> a = transform(qry);
-        final Map<String, List<AbstractPropInfo<?>>> paths = getResolvedProps(a.updatedContext);
+        final Map<String, List<AbstractPropInfo<?>>> paths = getResolvedProps(a.item.collectProps());
 
         assertEquals(asList(pi(VEHICLE, "initDate")), paths.get("initDate"));
         assertEquals(asList(pi(VEHICLE, "station"), pi(ORG5, "name")), paths.get("station.name"));
@@ -139,7 +140,7 @@ public class PropResolutionTest extends EqlTestCase {
                 anyOfProps("v.initDate", "station.name", "station.parent.name", "v.replacedBy.initDate").isNotNull().model();
         
         final TransformationResult<EntQuery2> a = transform(qry);
-        final Map<String, List<AbstractPropInfo<?>>> paths = getResolvedProps(a.updatedContext);
+        final Map<String, List<AbstractPropInfo<?>>> paths = getResolvedProps(a.item.collectProps());
 
         assertEquals(asList(pi(VEHICLE, "initDate")), paths.get("initDate"));
         assertEquals(asList(pi(VEHICLE, "station"), pi(ORG5, "name")), paths.get("station.name"));
@@ -153,7 +154,7 @@ public class PropResolutionTest extends EqlTestCase {
                 where().anyOfProps("v.initDate", "rv.station.name", "v.station.parent.name", "rv.replacedBy.initDate").isNotNull().model();
         
         final TransformationResult<EntQuery2> a = transform(qry);
-        final Map<String, List<AbstractPropInfo<?>>> paths = getResolvedProps(a.updatedContext);
+        final Map<String, List<AbstractPropInfo<?>>> paths = getResolvedProps(a.item.collectProps());
 
         assertEquals(asList(pi(VEHICLE, "initDate")), paths.get("initDate"));
         assertEquals(asList(pi(VEHICLE, "station"), pi(ORG5, "name")), paths.get("station.name"));
@@ -228,7 +229,7 @@ public class PropResolutionTest extends EqlTestCase {
                 model()). //
                 model();  
         final TransformationResult<EntQuery2> qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
-        System.out.println(qry2.updatedContext.getResolvedProps());
+        System.out.println(qry2.item.collectProps());
     }
 
     @Test

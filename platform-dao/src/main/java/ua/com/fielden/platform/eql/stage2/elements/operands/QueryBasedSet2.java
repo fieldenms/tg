@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.elements.operands;
 
 import java.util.Objects;
+import java.util.Set;
 
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
@@ -18,6 +19,11 @@ public class QueryBasedSet2 implements ISetOperand2<QueryBasedSet3> {
     public TransformationResult<QueryBasedSet3> transform(final TransformationContext context) {
         final TransformationResult<EntQuery3> modelTr = model.transform(context);
         return new TransformationResult<QueryBasedSet3>(new QueryBasedSet3(modelTr.item), modelTr.updatedContext);
+    }
+
+    @Override
+    public Set<EntProp2> collectProps() {
+        return model.collectProps();
     }
 
     @Override

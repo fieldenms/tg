@@ -1,10 +1,13 @@
 package ua.com.fielden.platform.eql.stage2.elements.conditions;
 
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 import ua.com.fielden.platform.entity.query.fluent.LikeOptions;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
+import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.LikeTest3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
@@ -32,6 +35,14 @@ public class LikeTest2 extends AbstractCondition2<LikeTest3> {
         return new TransformationResult<LikeTest3>(new LikeTest3(leftOperandTr.item, rightOperandTr.item, options), rightOperandTr.updatedContext);
     }
 
+    @Override
+    public Set<EntProp2> collectProps() {
+        final Set<EntProp2> result = new HashSet<>();
+        result.addAll(leftOperand.collectProps());
+        result.addAll(rightOperand.collectProps());
+        return result;
+    }
+    
     @Override
     public int hashCode() {
         final int prime = 31;

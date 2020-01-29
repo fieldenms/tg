@@ -2,8 +2,10 @@ package ua.com.fielden.platform.eql.stage2.elements.operands;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
@@ -32,6 +34,17 @@ public class Expression2 implements ISingleOperand2<Expression3> {
             currentContext = itemTr.updatedContext;
         }
         return new TransformationResult<Expression3>(new Expression3(firstTr.item, transformed), currentContext);
+    }
+
+    @Override
+    public Set<EntProp2> collectProps() {
+        final Set<EntProp2> result = new HashSet<>();
+        result.addAll(first.collectProps());
+        for (final CompoundSingleOperand2 item : items) {
+            result.addAll(item.operand.collectProps());
+        }
+        
+        return result;
     }
     
     @Override

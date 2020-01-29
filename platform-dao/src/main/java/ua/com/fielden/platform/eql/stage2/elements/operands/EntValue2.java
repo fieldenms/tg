@@ -1,10 +1,12 @@
 package ua.com.fielden.platform.eql.stage2.elements.operands;
 
+import static java.util.Collections.emptySet;
 import static ua.com.fielden.platform.entity.query.metadata.DomainMetadata.getBooleanValue_;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
@@ -71,6 +73,11 @@ public class EntValue2 implements ISingleOperand2<EntValue3> {
     public TransformationResult<EntValue3> transform(final TransformationContext context) {
         // TODO Auto-generated method stub
         return null;
+    }
+
+    @Override
+    public Set<EntProp2> collectProps() {
+        return emptySet();
     }
 
     @Override

@@ -3,13 +3,16 @@ package ua.com.fielden.platform.eql.stage2.elements.functions;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import ua.com.fielden.platform.entity.query.fluent.ITypeCast;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.ICondition2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.ICondition3;
 import ua.com.fielden.platform.eql.stage3.elements.functions.CaseWhen3;
@@ -50,6 +53,17 @@ public class CaseWhen2 extends AbstractFunction2<CaseWhen3> {
         return new TransformationResult<CaseWhen3>(new CaseWhen3(transformedWhenThenPairs, elseOperandTr.item, typeCast), elseOperandTr.updatedContext);
     }
 
+    @Override
+    public Set<EntProp2> collectProps() {
+        final Set<EntProp2> result = new HashSet<>();
+        for (final T2<ICondition2<? extends ICondition3>, ISingleOperand2<? extends ISingleOperand3>> pair : whenThenPairs) {
+            result.addAll(pair._1.collectProps());
+            result.addAll(pair._2.collectProps());
+        }
+        result.addAll(elseOperand.collectProps());
+        return result;
+    }
+    
     @Override
     public int hashCode() {
         final int prime = 31;
