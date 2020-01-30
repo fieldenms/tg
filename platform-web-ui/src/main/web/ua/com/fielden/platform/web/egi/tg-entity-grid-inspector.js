@@ -772,10 +772,10 @@ Polymer({
             observer: "_rowHeightChanged"
         },
         //The width of .sorting-group element. 
-        sortingButtonWidth: {
+        sortIndicatorWidth: {
             type: Number,
             value: 29,
-            observer: "_sortingButtonWidthChanged"
+            observer: "_sortIndicatorWidthChanged"
         },
         /**
          * This is alternative to visible row count and default egi behaviour that allows one to configure egi's height independently from content height.
@@ -1517,7 +1517,7 @@ Polymer({
             //Correct width if additional dynamic width was added
             let widthCorrection = 0;
             if (e.model.item.shouldAddDynamicWidth) {
-                widthCorrection = -this.sortingButtonWidth;
+                widthCorrection = -this.sortIndicatorWidth;
             }
 
             if (columnWidth !== newWidth) {
@@ -1569,7 +1569,7 @@ Polymer({
             //Correct width if additional dynamic width was added
             let widthCorrection = 0;
             if (e.model.item.shouldAddDynamicWidth) {
-                widthCorrection = -this.sortingButtonWidth;
+                widthCorrection = -this.sortIndicatorWidth;
             }
             
             //Change the column width if it is needed
@@ -1755,7 +1755,7 @@ Polymer({
     },
 
     _calcColumnHeaderStyle: function (item, itemWidth, columnGrowFactor, shouldAddDynamicWidth, fixed) {
-        const additionalWidth = shouldAddDynamicWidth ? this.sortingButtonWidth : 0;
+        const additionalWidth = shouldAddDynamicWidth ? this.sortIndicatorWidth : 0;
         let colStyle = "min-width: " + (itemWidth + additionalWidth) + "px;" + "width: " + (itemWidth + additionalWidth) + "px;"
         if (columnGrowFactor === 0 || fixed === 'true') {
             colStyle += "flex-grow: 0;flex-shrink: 0;";
@@ -1830,7 +1830,7 @@ Polymer({
         this.updateStyles({"--egi-row-height": newValue});
     },
 
-    _sortingButtonWidthChanged: function (newValue) {
+    _sortIndicatorWidthChanged: function (newValue) {
         this.updateStyles({"--egi-sorting-width": newValue + "px"});
     },
 
