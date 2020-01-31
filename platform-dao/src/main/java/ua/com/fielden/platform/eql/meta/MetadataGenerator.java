@@ -48,8 +48,6 @@ import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator;
 import ua.com.fielden.platform.eql.stage1.builders.StandAloneExpressionBuilder;
 import ua.com.fielden.platform.eql.stage1.elements.operands.Expression1;
-import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
-import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.elements.Column;
 import ua.com.fielden.platform.eql.stage3.elements.Table;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -160,7 +158,8 @@ public class MetadataGenerator {
     }
 
     private <T extends AbstractEntity<?>> void addProps(final EntityInfo<T> entityInfo, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> allEntitiesInfo) {
-        generateIdPropertyMetadata(entityInfo.javaType(), entityInfo.getCategory()).ifPresent(id -> entityInfo.addProp(id));
+        //generateIdPropertyMetadata(entityInfo.javaType(), entityInfo.getCategory()).ifPresent(id -> entityInfo.addProp(id));
+        entityInfo.addProp(new EntityTypePropInfo<T>(ID, (EntityInfo<T>) allEntitiesInfo.get(entityInfo.javaType()), true));
         entityInfo.addProp(new PrimTypePropInfo<Long>(VERSION, Long.class));
         
         EntityUtils.getRealProperties(entityInfo.javaType()).stream()
@@ -170,9 +169,9 @@ public class MetadataGenerator {
             Expression1 expr = null;
             if (field.isAnnotationPresent(Calculated.class)) {
                 try {
-                    ExpressionModel expressionModel = extractExpressionModelFromCalculatedProperty(entityInfo.javaType(), field);
+                    final ExpressionModel expressionModel = extractExpressionModelFromCalculatedProperty(entityInfo.javaType(), field);
                     expr = (Expression1) (new StandAloneExpressionBuilder(qb, expressionModel)).getResult().getValue();
-                } catch (Exception e) {
+                } catch (final Exception e) {
                     e.printStackTrace();
                 }
             }
