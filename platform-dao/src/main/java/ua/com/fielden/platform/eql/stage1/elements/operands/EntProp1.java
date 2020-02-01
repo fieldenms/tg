@@ -1,12 +1,14 @@
 package ua.com.fielden.platform.eql.stage1.elements.operands;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.ResolutionContext;
 import ua.com.fielden.platform.eql.stage1.elements.AbstractElement1;
@@ -55,8 +57,8 @@ public class EntProp1 extends AbstractElement1 implements ISingleOperand1<EntPro
     
     private PropResolution resolvePropAgainstSource(final IQrySource2<? extends IQrySource3> source, final EntProp1 entProp) {
         final ResolutionContext asIsResolution = source.entityInfo().resolve(new ResolutionContext(entProp.name));
-        if (source.alias() != null && entProp.name.startsWith(source.alias() + ".")) {
-            final String aliaslessPropName = entProp.name.substring(source.alias().length() + 1);
+        if (source.alias() != null && (entProp.name.startsWith(source.alias() + ".") || entProp.name.equals(source.alias()))) {
+            final String aliaslessPropName = entProp.name.equals(source.alias()) ? ID : entProp.name.substring(source.alias().length() + 1);
             final ResolutionContext aliaslessResolution = source.entityInfo().resolve(new ResolutionContext(aliaslessPropName));
             if (aliaslessResolution.isSuccessful()) {
                 if (!asIsResolution.isSuccessful()) {

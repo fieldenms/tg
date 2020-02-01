@@ -263,7 +263,6 @@ public class PropResolutionTest extends EqlTestCase {
     }
 
     @Test
-    @Ignore
     public void test_20() {
         transform(//
         select(ORG1).as("L1").where().exists( //
@@ -630,7 +629,6 @@ public class PropResolutionTest extends EqlTestCase {
     }
 
     @Test
-    @Ignore
     public void test_10() {
         transform(select(select(TgAuthorship.class).where().prop("title").isNotNull().yield().prop("author").as("author").yield().prop("title").as("bookTitle").modelAsAggregate()).where().prop("bookTitle").isNotNull().or().begin().prop("author.surname").eq().val("Date").or().prop("author.name.key").eq().val("Chris").end().yield().prop("author.name.key").as("name").yield().prop("bookTitle").as("titel").modelAsAggregate());
     }
@@ -660,7 +658,6 @@ public class PropResolutionTest extends EqlTestCase {
     }
 
     @Test
-    @Ignore
     public void test_16() {
         // TODO EQL.3
         transform(select(AUTHOR).leftJoin(TgPersonName.class).as("pn").on().prop("name").eq().prop("pn").where().prop("lastRoyalty").eq().val(1).model());
