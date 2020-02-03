@@ -15,8 +15,8 @@ public class EntityOne extends AbstractEntity<String> {
     @IsProperty
     private String stringProperty;
 
-    @IsProperty
-    private Double doubleProperty;
+//    @IsProperty
+//    private Double doubleProperty;
 
     public String getStringProperty() {
         return stringProperty;
@@ -27,13 +27,13 @@ public class EntityOne extends AbstractEntity<String> {
         this.stringProperty = stringProperty;
     }
 
-    public Double getDoubleProperty() {
-        return doubleProperty;
-    }
-
-    @Observable
-    public void setDoubleProperty(final Double doubleProperty) {
-        this.doubleProperty = doubleProperty;
-    }
+//    public Double getDoubleProperty() {
+//        return doubleProperty;
+//    }
+//
+//    @Observable
+//    public void setDoubleProperty(final Double doubleProperty) {
+//        this.doubleProperty = doubleProperty;
+//    }
 
 }

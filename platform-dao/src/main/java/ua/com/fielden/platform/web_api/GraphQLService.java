@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web_api;
 
+import static graphql.ExecutionInput.newExecutionInput;
 import static graphql.GraphQL.newGraphQL;
 import static graphql.schema.FieldCoordinates.coordinates;
 import static graphql.schema.GraphQLArgument.newArgument;
@@ -16,6 +17,9 @@ import static org.apache.commons.lang.StringUtils.uncapitalize;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.constructKeysAndProperties;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.web_api.FieldSchema.createField;
+import static ua.com.fielden.platform.web_api.WebApiUtils.operationName;
+import static ua.com.fielden.platform.web_api.WebApiUtils.query;
+import static ua.com.fielden.platform.web_api.WebApiUtils.variables;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -30,6 +34,7 @@ import org.apache.log4j.Logger;
 
 import com.google.inject.Inject;
 
+import graphql.ExecutionResult;
 import graphql.GraphQL;
 import graphql.Scalars;
 import graphql.schema.GraphQLCodeRegistry;
@@ -65,9 +70,9 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  * @author TG Team
  *
  */
-public class GraphQLService implements IGraphQLService {
+public class GraphQLService implements IWebApi {
     private final Logger logger = Logger.getLogger(getClass());
-    public final GraphQL graphQL;
+    private final GraphQL graphQL;
     
     /**
      * Creates GraphQLService instance based on <code>applicationDomainProvider</code> which contains all entity types.
@@ -103,6 +108,20 @@ public class GraphQLService implements IGraphQLService {
                 .build();
         graphQL = newGraphQL(schema).build();
         logger.info("GraphQL Web API...done");
+    }
+    
+    @Override
+    public Map<String, Object> execute(final Map<String, Object> input) {
+        System.err.println("======================================= INPUT =======================================\n" + input + "\n=====================================================================================");
+        final ExecutionResult execResult = graphQL.execute(
+            newExecutionInput()
+            .query(query(input))
+            .operationName(operationName(input).orElse(null))
+            .variables(variables(input))
+        );
+        final Map<String, Object> result = execResult.toSpecification();
+        System.err.println("======================================= RESULT =======================================\n" + result + "\n=====================================================================================");
+        return result;
     }
     
     /**

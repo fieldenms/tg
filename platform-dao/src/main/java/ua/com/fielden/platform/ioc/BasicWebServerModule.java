@@ -111,7 +111,7 @@ import ua.com.fielden.platform.web.centre.ICentreConfigDuplicateAction;
 import ua.com.fielden.platform.web.centre.ICentreConfigNewAction;
 import ua.com.fielden.platform.web.centre.ICustomisableColumn;
 import ua.com.fielden.platform.web_api.GraphQLService;
-import ua.com.fielden.platform.web_api.IGraphQLService;
+import ua.com.fielden.platform.web_api.IWebApi;
 import ua.com.fielden.platform.web.centre.ILoadableCentreConfig;
 import ua.com.fielden.platform.web.centre.IOverrideCentreConfig;
 import ua.com.fielden.platform.web.centre.LoadableCentreConfigDao;
@@ -268,7 +268,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(IAcknowledgeWarnings.class).to(AcknowledgeWarningsDao.class);
         bind(IPropertyWarning.class).to(PropertyWarningDao.class);
         
-        bind(IGraphQLService.class).to(GraphQLService.class).in(Scopes.SINGLETON);
+        bind(IWebApi.class).to(GraphQLService.class).in(Scopes.SINGLETON);
     }
 
     public Properties getProps() {

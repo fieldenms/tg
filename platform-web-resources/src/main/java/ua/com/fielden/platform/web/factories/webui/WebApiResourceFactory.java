@@ -8,8 +8,8 @@ import org.restlet.data.Method;
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.web.resources.RestServerUtil;
-import ua.com.fielden.platform.web.resources.webui.GraphQLQueryResource;
-import ua.com.fielden.platform.web_api.GraphQLService;
+import ua.com.fielden.platform.web.resources.webui.WebApiResource;
+import ua.com.fielden.platform.web_api.IWebApi;
 
 /**
  * A factory for Web API resources.
@@ -18,7 +18,7 @@ import ua.com.fielden.platform.web_api.GraphQLService;
  *
  */
 public class WebApiResourceFactory extends Restlet {
-    private final GraphQLService graphQLService;
+    private final IWebApi webApi;
     private final RestServerUtil restUtil;
     
     /**
@@ -27,23 +27,16 @@ public class WebApiResourceFactory extends Restlet {
      * @param injector
      */
     public WebApiResourceFactory(final Injector injector) {
-        graphQLService = injector.getInstance(GraphQLService.class);
+        webApi = injector.getInstance(IWebApi.class);
         restUtil = injector.getInstance(RestServerUtil.class);
     }
-
+    
     @Override
     public void handle(final Request request, final Response response) {
         super.handle(request, response);
-
         if (Method.POST == request.getMethod()) {
-            final GraphQLQueryResource resource = new GraphQLQueryResource(
-                    graphQLService,
-                    restUtil,
-                    getContext(),
-                    request,
-                    response
-            );
-            resource.handle();
+            new WebApiResource(webApi, restUtil, getContext(), request, response).handle();
         }
     }
+    
 }

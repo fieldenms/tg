@@ -37,6 +37,7 @@ import graphql.schema.GraphQLList;
 import graphql.schema.GraphQLOutputType;
 import graphql.schema.GraphQLTypeReference;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.IContinuationData;
 import ua.com.fielden.platform.entity.NoKey;
@@ -104,7 +105,8 @@ public class FieldSchema {
             AbstractView.class == type || 
             PropertyDescriptor.class == type ||
             NoKey.class.isAssignableFrom(type) ||
-            DynamicEntityKey.class.isAssignableFrom(type) // this is for the weird cases where DynamicEntityKey is used but no @CompositeKeyMember exists
+            DynamicEntityKey.class.isAssignableFrom(type) || // this is for the weird cases where DynamicEntityKey is used but no @CompositeKeyMember exists
+            AbstractUnionEntity.class.isAssignableFrom(type) // not supported yet
             ) {
             return empty();
         } else if (isString(type)) {
