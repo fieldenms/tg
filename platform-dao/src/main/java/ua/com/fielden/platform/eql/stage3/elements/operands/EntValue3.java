@@ -14,7 +14,7 @@ public class EntValue3 implements ISingleOperand3 {
     @Override
     public String sql(final DbVersion dbVersion) {
         // TODO Auto-generated method stub
-        return null;
+        return "'" + value.toString() + "'"; 
     }
 
     @Override

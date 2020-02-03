@@ -454,4 +454,8 @@ public class EntityQueryExecutionTestForEql3 extends AbstractDaoTestCase {
         run(select(qry).where().prop("vehicle.lastFuelUsageQty").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
     }
 
+    @Test
+    public void eql3_query_executes_correctly45() {
+        run(select(TeVehicleFuelUsage.class).where().prop("key").isNotNull());
+    }
 }

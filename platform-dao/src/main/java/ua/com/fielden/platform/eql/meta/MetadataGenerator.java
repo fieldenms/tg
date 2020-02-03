@@ -43,6 +43,7 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISubsequentCompletedAndYielded;
+import ua.com.fielden.platform.entity.query.metadata.CompositeKeyEqlExpressionGenerator;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator;
@@ -165,7 +166,9 @@ public class MetadataGenerator {
         EntityUtils.getRealProperties(entityInfo.javaType()).stream()
         .filter(f -> f.isAnnotationPresent(MapTo.class) || f.isAnnotationPresent(Calculated.class)).forEach(field -> {
             final Class<?> javaType = determinePropertyType(entityInfo.javaType(), field.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
-
+//            if (entityInfo.javaType().getSimpleName().equals("TeVehicleFuelUsage")) {
+//                System.out.println(field.getName());
+//            }
             Expression1 expr = null;
             if (field.isAnnotationPresent(Calculated.class)) {
                 try {
@@ -185,6 +188,14 @@ public class MetadataGenerator {
             }
 
         });
+        
+        if (EntityUtils.isCompositeEntity(entityInfo.javaType())) {
+            //System.out.println(entityInfo.javaType().getSimpleName());
+            final ExpressionModel expressionModel = CompositeKeyEqlExpressionGenerator.generateCompositeKeyEqlExpression((Class<? extends AbstractEntity<DynamicEntityKey>>) entityInfo.javaType());
+            final Expression1 expr = (Expression1) (new StandAloneExpressionBuilder(qb, expressionModel)).getResult().getValue();
+            entityInfo.addProp(new PrimTypePropInfo<String>(KEY, String.class, expr));
+        }        
+
        
         
 //        for (final Field field : getRealProperties(entityInfo.javaType())) {
