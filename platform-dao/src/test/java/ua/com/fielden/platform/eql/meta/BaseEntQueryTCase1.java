@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.meta;
 
+import static java.util.Collections.emptyMap;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
@@ -100,8 +101,6 @@ public class BaseEntQueryTCase1 {
 
     public static final Map<Class, Class> hibTypeDefaults = new HashMap<>();
     public static final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> metadata = new HashMap<>();
-    public static final MetadataGenerator mdg = new MetadataGenerator(qb());
-    public static final Map<String, Table> tables = new HashMap<>();
 
     protected static Type hibtype(final String name) {
         return typeResolver.basic(name);
@@ -114,8 +113,13 @@ public class BaseEntQueryTCase1 {
 
     protected static final DomainMetadataAnalyser DOMAIN_METADATA_ANALYSER = new DomainMetadataAnalyser(DOMAIN_METADATA);
 
+    
+    public static final MetadataGenerator mdg = new MetadataGenerator(qb());
+    public static final Map<String, Table> tables = new HashMap<>();
+
+
     protected static final EntQueryGenerator qb() {
-        return new EntQueryGenerator();
+        return new EntQueryGenerator(DOMAIN_METADATA_ANALYSER, null, null, null, emptyMap());
     }
 
     static {

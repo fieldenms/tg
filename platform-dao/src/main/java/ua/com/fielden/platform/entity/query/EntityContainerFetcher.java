@@ -130,7 +130,7 @@ public class EntityContainerFetcher {
 
     private <E extends AbstractEntity<?>> QueryModelResult<E> getModelResult(final QueryProcessingModel<E, ?> qem, final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username) {
         if (qem.getParamValues().containsKey("EQL3")) {
-            final ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator gen1 = new ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator();
+            final ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator gen1 = new ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator(domainMetadataAnalyser, filter, username, executionContext.getUniversalConstants(), qem.getParamValues());
             Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo = null;
             Map<String, Table> tables = null;
             

@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.meta;
 
+import static java.util.Collections.emptyMap;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 
@@ -19,6 +20,7 @@ import com.google.inject.Guice;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
+import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
@@ -83,16 +85,17 @@ public class EqlTestCase {
 
     public static final Map<Class, Class> hibTypeDefaults = new HashMap<>();
     public static final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> metadata = new HashMap<>();
-    public static final MetadataGenerator mdg = new MetadataGenerator(new EntQueryGenerator());
-    public static final Map<String, Table> tables = new HashMap<>();
-
     protected static final DomainMetadata DOMAIN_METADATA = new DomainMetadata(hibTypeDefaults, 
             Guice.createInjector(new HibernateUserTypesModule()), 
             PlatformTestDomainTypes.entityTypes, 
             DbVersion.H2);
 
+    public static final MetadataGenerator mdg = new MetadataGenerator(qb());
+    public static final Map<String, Table> tables = new HashMap<>();
+
+
     protected static final EntQueryGenerator qb() {
-        return new EntQueryGenerator();
+        return new EntQueryGenerator(new DomainMetadataAnalyser(DOMAIN_METADATA), null, null, null, emptyMap());
     }
 
     static {

@@ -1,37 +1,57 @@
 package ua.com.fielden.platform.eql.stage1.builders;
 
+import static java.util.Collections.unmodifiableMap;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.QUERY_TOKEN;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.SORT_ORDER;
 import static ua.com.fielden.platform.eql.meta.QueryCategory.RESULT_QUERY;
 import static ua.com.fielden.platform.eql.meta.QueryCategory.SOURCE_QUERY;
 import static ua.com.fielden.platform.eql.meta.QueryCategory.SUB_QUERY;
 
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Optional;
 
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fluent.enums.QueryTokens;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
+import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.eql.meta.QueryCategory;
 import ua.com.fielden.platform.eql.stage1.elements.EntQueryBlocks1;
 import ua.com.fielden.platform.eql.stage1.elements.OrderBys1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.EntQuery1;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.Pair;
 
 public class EntQueryGenerator {
+    public static final String NOW = "UC#NOW";
 
-    private final int increment;
+    public final DbVersion dbVersion;
+    public final DomainMetadataAnalyser domainMetadataAnalyser;
+    public final IUniversalConstants universalConstants;
+    public final IFilter filter;
+    public final String username;
+    private final Map<String, Object> paramValues = new HashMap<>();
+
+    private final int increment = 1;
     
-    public EntQueryGenerator() {
-        this(false);
+    public EntQueryGenerator(final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username, final IUniversalConstants universalConstants, final Map<String, Object> paramValues) {
+        dbVersion = domainMetadataAnalyser.getDbVersion();
+        this.domainMetadataAnalyser = domainMetadataAnalyser;
+        this.filter = filter;
+        this.username = username;
+        this.universalConstants = universalConstants;
+        this.paramValues.putAll(paramValues);
     }
     
-    public EntQueryGenerator(final boolean forCalcExpression) {
-        increment = forCalcExpression ? -1 : 1;
-    }
+//    public EntQueryGenerator(final boolean forCalcExpression) {
+//        increment = forCalcExpression ? -1 : 1;
+//    }
     
     private int contextId = 0;
     
@@ -128,4 +148,9 @@ public class EntQueryGenerator {
         }
         return orderBy.getModel();
     }
+    
+    public Map<String, Object> getParamValues() {
+        return unmodifiableMap(paramValues);
+    }
+
 }
