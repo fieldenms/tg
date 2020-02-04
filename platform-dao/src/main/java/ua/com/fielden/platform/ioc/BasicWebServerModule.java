@@ -110,12 +110,12 @@ import ua.com.fielden.platform.web.centre.ICentreConfigDeleteAction;
 import ua.com.fielden.platform.web.centre.ICentreConfigDuplicateAction;
 import ua.com.fielden.platform.web.centre.ICentreConfigNewAction;
 import ua.com.fielden.platform.web.centre.ICustomisableColumn;
-import ua.com.fielden.platform.web_api.GraphQLService;
-import ua.com.fielden.platform.web_api.IWebApi;
 import ua.com.fielden.platform.web.centre.ILoadableCentreConfig;
 import ua.com.fielden.platform.web.centre.IOverrideCentreConfig;
 import ua.com.fielden.platform.web.centre.LoadableCentreConfigDao;
 import ua.com.fielden.platform.web.centre.OverrideCentreConfigDao;
+import ua.com.fielden.platform.web_api.GraphQLService;
+import ua.com.fielden.platform.web_api.IWebApi;
 
 /**
  * Basic IoC module for server web applications, which should be enhanced by the application specific IoC module.
@@ -268,6 +268,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(IAcknowledgeWarnings.class).to(AcknowledgeWarningsDao.class);
         bind(IPropertyWarning.class).to(PropertyWarningDao.class);
         
+        // Web API binding to platform-dao GraphQL-based implementation
         bind(IWebApi.class).to(GraphQLService.class).in(Scopes.SINGLETON);
     }
 

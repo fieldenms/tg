@@ -2,7 +2,6 @@ package ua.com.fielden.platform.sample.domain;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.entity.annotation.EntityType;
-import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.sample.domain.ITgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
@@ -15,11 +14,5 @@ public class TgVehicleDao extends CommonEntityDao<TgVehicle> implements ITgVehic
     @Inject
     protected TgVehicleDao(final IFilter filter) {
         super(filter);
-    }
-    
-    @Override
-    protected IFetchProvider<TgVehicle> createFetchProvider() {
-        return super.createFetchProvider()
-            .with("key", "model", "replacedBy");
     }
 }
