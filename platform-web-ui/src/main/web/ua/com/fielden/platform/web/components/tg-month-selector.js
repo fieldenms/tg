@@ -222,8 +222,8 @@ const template = html`
          * Selects the date.
          */
         _selectDay: function (event, detail, el) {
-            var yearMonthDay = { year: this.year, month: this.month + event.model.day.monthIncrementor, day: Math.abs(event.model.day.day) };
-            this.selectedDate = _momentTz(yearMonthDay, this.timeZone).valueOf();
+            var yearMonthDay = { year: this.year, month: this.month, day: 1 };
+            this.selectedDate = _momentTz(yearMonthDay, this.timeZone).add(event.model.day.monthIncrementor, 'M').date(Math.abs(event.model.day.day)).valueOf();
             if (event.detail.sourceEvent.detail > 1) {
                 this.fire("tg-accept-date");
             }

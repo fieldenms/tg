@@ -75,7 +75,7 @@ const createColumnAction = function (entityCentre) {
     actionModel.uiRole = 'ICON';
     actionModel.componentUri = '/master_ui/ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater';
     actionModel.elementName = 'tg-CentreColumnWidthConfigUpdater-master';
-    actionModel.showDialog = entityCentre._showDialog;
+    actionModel.showDialog = entityCentre._showCentreConfigDialog;
     actionModel.createContextHolder = entityCentre._createContextHolder;
     actionModel.preAction = function (action) {
         action.modifyFunctionalEntity = (function (bindingEntity, master) {
@@ -97,6 +97,13 @@ const createColumnAction = function (entityCentre) {
     actionModel.requireSelectedEntities = 'NONE';
     actionModel.requireMasterEntity = 'false';
     return actionModel;
+};
+
+const createDialog = function (id) {
+    const dialog = document.createElement('tg-custom-action-dialog');
+    dialog.setAttribute("id", id);
+    document.body.appendChild(dialog);
+    return dialog;
 };
 
 const MSG_SAVE_OR_CANCEL = "Please save or cancel changes.";
@@ -229,6 +236,15 @@ const TgEntityCentreBehaviorImpl = {
          */
         actionDialog: {
             type: Object,
+            value: null
+        },
+
+        /**
+         * This dialog should be used to update centre columns width while other ui or non ui actions are in progress which
+         * prevents user from saving columns width.
+         */
+        centreConfigDialog: {
+            type:Object,
             value: null
         },
 
@@ -368,6 +384,13 @@ const TgEntityCentreBehaviorImpl = {
          * Shows the dialog relative to this centre's EGI ('tg-ui-action's).
          */
         _showDialog: {
+            type: Function
+        },
+
+        /**
+         * Shows the dialog for centre column width updater.
+         */
+        _showCentreConfigDialog: {
             type: Function
         },
 
@@ -688,6 +711,14 @@ const TgEntityCentreBehaviorImpl = {
             }
         }).bind(self);
 
+        self._showCentreConfigDialog = (function (action) {
+            const closeEventChannel = self.uuid;
+            const closeEventTopics = ['save.post.success', 'refresh.post.success'];
+            this.async(function () {
+                this.centreConfigDialog.showDialog(action, closeEventChannel, closeEventTopics);
+            }.bind(self), 1);
+        }).bind(self);
+
         self._showInsertionPoint = (function (action) {
             this.async(function () {
                 this._activateInsertionPoint('ip' + action.numberOfAction, action);
@@ -763,10 +794,12 @@ const TgEntityCentreBehaviorImpl = {
     attached: function () {
         const self = this;
 
-        if (this.actionDialog == null) {
-            this.actionDialog = document.createElement('tg-custom-action-dialog');
-            this.actionDialog.setAttribute("id", self.uuid + '');
-            document.body.appendChild(this.actionDialog);
+        if (this.actionDialog === null) {
+            this.actionDialog = createDialog(self.uuid + '');
+        }
+
+        if (this.centreConfigDialog === null) {
+            this.centreConfigDialog = createDialog(self.uuid + '_centreConfig');
         }
 
         /* Provide predicate for egi that determines whether inline master can be opened or not.
