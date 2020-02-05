@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.sample.domain;
 
+import java.math.BigInteger;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
@@ -31,10 +33,10 @@ public class TgModelYearCount extends AbstractEntity<DynamicEntityKey> {
     @CompositeKeyMember(2)
     private Long year;
 
-//    @IsProperty
-//    @MapTo
-//    @Title(value = "Count", desc = "Count per vehicle")
-//    private BigInteger count;
+    @IsProperty
+    @MapTo
+    @Title(value = "Count", desc = "Count per vehicle")
+    private BigInteger count;
 
     @Observable
     public TgModelYearCount setModel(final TgVehicleModel model) {
@@ -56,15 +58,15 @@ public class TgModelYearCount extends AbstractEntity<DynamicEntityKey> {
         return year;
     }
 
-//    @Observable
-//    public TgModelYearCount setCount(final BigInteger count) {
-//        this.count = count;
-//        return this;
-//    }
-//
-//    public BigInteger getCount() {
-//        return count;
-//    }
+    @Observable
+    public TgModelYearCount setCount(final BigInteger count) {
+        this.count = count;
+        return this;
+    }
+
+    public BigInteger getCount() {
+        return count;
+    }
 
     /**
      * Constructor for (@link EntityFactory}.

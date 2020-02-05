@@ -25,6 +25,7 @@ import static ua.com.fielden.platform.web_api.TgScalars.GraphQLMoney;
 
 import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -122,7 +123,9 @@ public class FieldSchema {
             PropertyDescriptor.class == type ||
             NoKey.class.isAssignableFrom(type) ||
             DynamicEntityKey.class.isAssignableFrom(type) || // this is for the weird cases where DynamicEntityKey is used but no @CompositeKeyMember exists
-            AbstractUnionEntity.class.isAssignableFrom(type) // not supported yet
+            AbstractUnionEntity.class.isAssignableFrom(type) || // not supported yet
+            BigInteger.class == type || // not supported yet, low priority
+            Double.class == type // not supported yet, low priority
             ) {
             return empty();
         } else if (isString(type)) {
