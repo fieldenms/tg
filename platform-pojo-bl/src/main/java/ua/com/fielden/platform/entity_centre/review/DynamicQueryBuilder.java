@@ -174,18 +174,20 @@ public class DynamicQueryBuilder {
             this.single = isCritOnly() && Type.SINGLE.equals(critAnnotation.value());
         }
 
-        public QueryProperty makeEmpty() {
-            setValue(getEmptyValue(getType(), isSingle()));
-            setValue2(getEmptyValue(getType(), isSingle()));
-            setExclusive(null);
-            setExclusive2(null);
-            setDatePrefix(null);
-            setDateMnemonic(null);
-            setAndBefore(null);
-            setOrNull(null);
-            setNot(null);
-            setOrGroup(null);
-            return this;
+        /**
+         * Creates {@link QueryProperty} ensuring that all its values (including {@link #value} and {@link #value2}) are empty.
+         * All other state (e.g. {@link #datePrefix}) is empty (aka <code>null</code>) by default -- please enhance this method
+         * if this will change in future.
+         * 
+         * @param entityClass
+         * @param propertyName
+         * @return
+         */
+        public static QueryProperty createEmptyQueryProperty(final Class<?> entityClass, final String propertyName) {
+            final QueryProperty queryProperty = new QueryProperty(entityClass, propertyName);
+            queryProperty.setValue(getEmptyValue(queryProperty.getType(), queryProperty.isSingle()));
+            queryProperty.setValue2(getEmptyValue(queryProperty.getType(), queryProperty.isSingle()));
+            return queryProperty;
         }
 
         public static boolean critOnlyWithMnemonics(final CritOnly critAnnotation) {

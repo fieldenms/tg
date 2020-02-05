@@ -5,6 +5,7 @@ import static java.util.Arrays.asList;
 import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.createQuery;
+import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty.createEmptyQueryProperty;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determineClass;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.fetchNotInstrumented;
@@ -94,7 +95,7 @@ public class RootEntityMixin {
      * @return
      */
     private static <T extends AbstractEntity<?>> QueryProperty createQueryProperty(final Class<T> entityType, final String property, final List<Argument> args, final Map<String, Object> varsByName, final GraphQLCodeRegistry codeRegistry, final List<GraphQLArgument> argumentTypes) {
-        final QueryProperty queryProperty = new QueryProperty(entityType, property).makeEmpty();
+        final QueryProperty queryProperty = createEmptyQueryProperty(entityType, property);
         final Class<?> type = queryProperty.getType();
         
         final Map<String, Object> argumentValues = new ValuesResolver().getArgumentValues(codeRegistry, argumentTypes, args, varsByName);
