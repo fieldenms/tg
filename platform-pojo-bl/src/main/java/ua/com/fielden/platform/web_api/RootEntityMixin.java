@@ -142,7 +142,6 @@ public class RootEntityMixin {
             
             properties.putAll(properties(determineClass(entityType, graphQLField.getName(), true, true), property, toFields(graphQLField.getSelectionSet(), fragmentDefinitions), fragmentDefinitions, schema));
         }
-        LOGGER.error(String.format("\tFetching props [%s]", properties));
         return properties;
     }
     
