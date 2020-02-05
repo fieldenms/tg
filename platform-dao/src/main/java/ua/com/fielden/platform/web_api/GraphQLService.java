@@ -12,10 +12,13 @@ import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang.StringUtils.uncapitalize;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.createSet;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.reflectionProperty;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.constructKeysAndProperties;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isExcluded;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
-import static ua.com.fielden.platform.types.tuples.T3.t3;
+import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web_api.FieldSchema.createField;
 import static ua.com.fielden.platform.web_api.WebApiUtils.operationName;
@@ -129,19 +132,16 @@ public class GraphQLService implements IWebApi {
     private static GraphQLObjectType createQueryType(final Set<Class<? extends AbstractEntity<?>>> dictionary, final ICompanionObjectFinder coFinder, final GraphQLCodeRegistry.Builder codeRegistryBuilder) {
         final String queryTypeName = "Query";
         final Builder queryTypeBuilder = newObject().name(queryTypeName);
-        dictionary.stream()
-            .map(entityType -> {
-                final String simpleTypeName = entityType.getSimpleName();
-                final String fieldName = uncapitalize(simpleTypeName);
-                return t3(fieldName, new RootEntityFetcher<>((Class<AbstractEntity<?>>) entityType, coFinder), newFieldDefinition()
-                    .name(fieldName)
-                    .description(format("Query [%s] entity.", getEntityTitleAndDesc(entityType).getValue()))
-                    .type(new GraphQLList(new GraphQLTypeReference(simpleTypeName))));
-            })
-            .forEach(t3 -> {
-                queryTypeBuilder.field(t3._3);
-                codeRegistryBuilder.dataFetcher(coordinates(queryTypeName, t3._1), t3._2);
-            });
+        dictionary.stream().forEach(entityType -> {
+            final String simpleTypeName = entityType.getSimpleName();
+            final String fieldName = uncapitalize(simpleTypeName);
+            queryTypeBuilder.field(newFieldDefinition()
+                .name(fieldName)
+                .description(format("Query [%s] entity.", getEntityTitleAndDesc(entityType).getValue()))
+                .type(new GraphQLList(new GraphQLTypeReference(simpleTypeName)))
+            );
+            codeRegistryBuilder.dataFetcher(coordinates(queryTypeName, fieldName), new RootEntityFetcher<>((Class<AbstractEntity<?>>) entityType, coFinder));
+        });
         return queryTypeBuilder.build();
     }
     
@@ -155,7 +155,8 @@ public class GraphQLService implements IWebApi {
      */
     private static Optional<Pair<Class<? extends AbstractEntity<?>>, GraphQLObjectType>> createGraphQLTypeFor(final Class<? extends AbstractEntity<?>> entityType) {
         final List<GraphQLFieldDefinition> graphQLFieldDefinitions = constructKeysAndProperties(entityType).stream()
-            .map(prop -> createField(entityType, prop.getName()))
+            .filter(field -> !isExcluded(entityType, reflectionProperty(field.getName()), createSet(), setOf(entityType)))
+            .map(field -> createField(entityType, field.getName()))
             .flatMap(optField -> optField.map(Stream::of).orElseGet(Stream::empty))
             .collect(toList());
         if (!graphQLFieldDefinitions.isEmpty()) { // ignore types that have no GraphQL field equivalents; we can not use such types for any purpose including querying
