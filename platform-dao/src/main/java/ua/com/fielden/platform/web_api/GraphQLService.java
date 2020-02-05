@@ -12,15 +12,13 @@ import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang.StringUtils.uncapitalize;
-import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.createSet;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.reflectionProperty;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.constructKeysAndProperties;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isExcluded;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
-import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 import static ua.com.fielden.platform.utils.Pair.pair;
-import static ua.com.fielden.platform.web_api.FieldSchema.createField;
+import static ua.com.fielden.platform.web_api.FieldSchema.createGraphQLFieldDefinition;
 import static ua.com.fielden.platform.web_api.WebApiUtils.operationName;
 import static ua.com.fielden.platform.web_api.WebApiUtils.query;
 import static ua.com.fielden.platform.web_api.WebApiUtils.variables;
@@ -155,8 +153,8 @@ public class GraphQLService implements IWebApi {
      */
     private static Optional<Pair<Class<? extends AbstractEntity<?>>, GraphQLObjectType>> createGraphQLTypeFor(final Class<? extends AbstractEntity<?>> entityType) {
         final List<GraphQLFieldDefinition> graphQLFieldDefinitions = constructKeysAndProperties(entityType).stream()
-            .filter(field -> !isExcluded(entityType, reflectionProperty(field.getName()), createSet(), setOf(entityType)))
-            .map(field -> createField(entityType, field.getName()))
+            .filter(field -> !isExcluded(entityType, reflectionProperty(field.getName())))
+            .map(field -> createGraphQLFieldDefinition(entityType, field.getName()))
             .flatMap(optField -> optField.map(Stream::of).orElseGet(Stream::empty))
             .collect(toList());
         if (!graphQLFieldDefinitions.isEmpty()) { // ignore types that have no GraphQL field equivalents; we can not use such types for any purpose including querying

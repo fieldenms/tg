@@ -26,11 +26,13 @@ import static ua.com.fielden.platform.web_api.TgScalars.GraphQLMoney;
 import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import graphql.schema.GraphQLArgument;
+import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLFieldDefinition.Builder;
 import graphql.schema.GraphQLInputType;
 import graphql.schema.GraphQLList;
@@ -59,19 +61,33 @@ import ua.com.fielden.platform.web.centre.CentreContext;
 public class FieldSchema {
     
     /**
-     * Creates GraphQL field definition on entity type's object from entity property defined by <code>propertyField</code>.
+     * Creates GraphQL field definition for <code>entityType</code> and <code>property</code>.
+     * Set of supported property types:
+     * <ul>
+     * <li>{@link String}</li>
+     * <li>boolean</li>
+     * <li>{@link Integer}</li>
+     * <li>{@link Long}</li>
+     * <li>{@link BigDecimal}</li>
+     * <li>{@link Money}</li>
+     * <li>entity</li>
+     * <li>{@link Date}</li>
+     * <li>{@link Hyperlink}</li>
+     * <li>{@link Colour}</li>
+     * </ul>
+     * Returns {@link Optional#empty()} if the property type is not supported.
      * 
      * @param entityType
-     * @param name
+     * @param property
      * @return
      */
-    public static Optional<graphql.schema.GraphQLFieldDefinition> createField(final Class<? extends AbstractEntity<?>> entityType, final String name) {
-        return determineFieldType(entityType, name).map(typeAndArguments -> {
+    public static Optional<GraphQLFieldDefinition> createGraphQLFieldDefinition(final Class<? extends AbstractEntity<?>> entityType, final String property) {
+        return determineFieldType(entityType, property).map(typeAndArguments -> {
             final Builder builder = newFieldDefinition();
             typeAndArguments._2.stream().forEach(argument -> builder.argument(argument));
             return builder
-                .name(name)
-                .description(getTitleAndDesc(name, entityType).getValue())
+                .name(property)
+                .description(getTitleAndDesc(property, entityType).getValue())
                 .type(typeAndArguments._1)
                 .build();
         });
