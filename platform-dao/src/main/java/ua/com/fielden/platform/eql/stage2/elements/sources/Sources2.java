@@ -18,6 +18,7 @@ import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.ComparisonTest3;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.EntProp3;
+import ua.com.fielden.platform.eql.stage3.elements.operands.Expression3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySource3;
 import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySources3;
@@ -45,6 +46,7 @@ public class Sources2  {
         
         for (final CompoundSource2 compoundSource : compounds) {
             final TransformationResult<? extends IQrySource3> compoundSourceTr = compoundSource.source.transform(currentContext);
+            currentContext = compoundSourceTr.updatedContext;
             final T2<IQrySources3, TransformationContext> compoundEnhancement = enhance(compoundSource.source, compoundSourceTr.item, currentContext);
             final IQrySources3 coumpoundSourceTree = compoundEnhancement._1;
             currentContext = compoundEnhancement._2;
@@ -91,11 +93,21 @@ public class Sources2  {
     }
     
     private T2<IQrySources3, TransformationContext> attachChild(final IQrySources3 mainSources, final IQrySource3 rootSource, final ChildGroup child, final TransformationContext context) {
-        final TransformationContext currentContext = context;
-        //final Table tbl = context.getTable(child.main.javaType().getName());
-        final QrySource3BasedOnTable addedSource = child.source.transform(currentContext).item;//new QrySource3BasedOnTable(tbl, rootSource.contextId(), child.context);
-        //TODO need to currentContext = child.expr.transform(currentContext).updatedContext;
-        final ISingleOperand3 lo = child.expr == null ? new EntProp3(child.main.name, rootSource) : child.expr.transform(context).item; //new EntProp3(child.main.name, rootSource);
+        TransformationContext currentContext = context;
+        final TransformationResult<QrySource3BasedOnTable> tr = child.source.transform(currentContext);
+        final QrySource3BasedOnTable addedSource = tr.item;
+        currentContext = tr.updatedContext; 
+
+        final ISingleOperand3 lo;
+        
+        if (child.expr == null) {
+            lo = new EntProp3(child.main.name, rootSource);
+        } else {
+            final TransformationResult<Expression3> expTr = child.expr.transform(currentContext);
+            lo = expTr.item;
+            currentContext = expTr.updatedContext;
+        }
+        
         final EntProp3 ro = new EntProp3(ID, addedSource);
         final ComparisonTest3 ct = new ComparisonTest3(lo, EQ, ro);
         final Conditions3 jc = new Conditions3(false, asList(asList(ct)));

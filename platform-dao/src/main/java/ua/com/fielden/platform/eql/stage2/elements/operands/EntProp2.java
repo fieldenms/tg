@@ -37,12 +37,15 @@ public class EntProp2 extends AbstractElement2 implements ISingleOperand2<Expres
     public TransformationResult<Expression3> transform(final TransformationContext context) {
         final T2<IQrySource3, Object> resolution = context.resolve(source, name);
         Expression3 transformedProp;  
+        TransformationContext currentContext = context;
         if (resolution._2 instanceof String) {
             transformedProp = new Expression3(new EntProp3((String) resolution._2, resolution._1), emptyList());
         } else {
-            transformedProp = ((Expression2) resolution._2).transform(context).item;
+            final TransformationResult<Expression3> tr = ((Expression2) resolution._2).transform(context);
+            currentContext = tr.updatedContext;
+            transformedProp = tr.item;
         }
-        return new TransformationResult<Expression3>(transformedProp, context);
+        return new TransformationResult<Expression3>(transformedProp, currentContext);
     }
 
     @Override
