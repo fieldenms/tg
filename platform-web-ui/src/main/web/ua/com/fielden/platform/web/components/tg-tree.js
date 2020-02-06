@@ -376,7 +376,7 @@ Polymer({
             if (parentItem) {
                 const numOfItemsToDelete = calculateNumberOfOpenedItems(parentItem);
                 parentItem.children = generateChildrenModel(change.value, parentItem, this.additionalInfoCb);
-                this._filterSubTree(this._lastFilterText, parentItem.children, false);
+                this._lastFilterText && this._filterSubTree(this._lastFilterText, parentItem.children, false);
                 if (typeof modelIdx !== 'undefined') {
                     this.splice("_entities", modelIdx + 1 + parentItem.additionalInfoNodes.length, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(parentItem, true));
                 }
