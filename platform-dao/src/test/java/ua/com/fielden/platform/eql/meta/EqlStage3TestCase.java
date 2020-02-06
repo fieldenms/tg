@@ -21,6 +21,7 @@ import ua.com.fielden.platform.eql.stage1.elements.conditions.Conditions1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.EntQuery1;
 import ua.com.fielden.platform.eql.stage1.elements.sources.QrySource1BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage1.elements.sources.Sources1;
+import ua.com.fielden.platform.eql.stage2.elements.PathsToTreeTransformator;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntQuery2;
 import ua.com.fielden.platform.eql.stage3.elements.EntQueryBlocks3;
@@ -286,7 +287,7 @@ public class EqlStage3TestCase extends EqlStage1TestCase {
     
     protected static ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> entResultQry3(final EntQuery1 qryModel, final PropsResolutionContext transformator, final Map<String, Table> tables) {
         final TransformationResult<EntQuery2> s1r = qryModel.transform(transformator);
-        final TransformationContext context = new TransformationContext(tables, s1r.updatedContext, s1r.item.collectProps());
+        final TransformationContext context = new TransformationContext(tables, PathsToTreeTransformator.groupChildren(s1r.item.collectProps(), s1r.updatedContext.getDomainInfo()));
         return s1r.item.transform(context);
     }
 }

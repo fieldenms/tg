@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity.query;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.eql.stage2.elements.PathsToTreeTransformator.groupChildren;
 
 import java.util.Collections;
 import java.util.List;
@@ -144,7 +145,9 @@ public class EntityContainerFetcher {
             
             final PropsResolutionContext resolutionContext = new PropsResolutionContext(domainInfo );
             final TransformationResult<EntQuery2> s1tr = gen1.generateEntQueryAsResultQuery(qem.queryModel, qem.orderModel).transform(resolutionContext);
-            final EntQuery3 entQuery3 = s1tr.item.transform(new TransformationContext(tables, s1tr.updatedContext, s1tr.item.collectProps())).item;
+            //final EntQuery3 entQuery3 = s1tr.item.transform(new TransformationContext(tables, s1tr.updatedContext, s1tr.item.collectProps())).item;
+            final EntQuery3 entQuery3 = s1tr.item.transform(new TransformationContext(tables, groupChildren(s1tr.item.collectProps(), domainInfo))).item;
+            
             final String sql3 = entQuery3.sql(domainMetadataAnalyser.getDbVersion());
             return new QueryModelResult<>((Class<E>)EntityAggregates.class, sql3, getResultPropsInfos(entQuery3.yields), Collections.<String, Object>emptyMap(), qem.fetchModel);
             

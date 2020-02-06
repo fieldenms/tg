@@ -43,11 +43,9 @@ import ua.com.fielden.platform.eql.stage1.elements.operands.EntValue1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.Expression1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.OperandsBasedSet1;
-import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntQuery2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.elements.Table;
-import ua.com.fielden.platform.eql.stage3.elements.operands.EntQuery3;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
 import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
@@ -171,19 +169,19 @@ public class BaseEntQueryTCase1 {
         throw new IllegalStateException("Not implemented yet");
     }
     
-    protected static ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> entResultQry3(final QueryModel qryModel, final PropsResolutionContext transformator, final Map<String, Table> tables) {
-        final TransformationResult<EntQuery2> s1r;
-        if (qryModel instanceof EntityResultQueryModel) {
-            s1r = qb().generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).model()).transform(transformator);
-        } else if (qryModel instanceof AggregatedResultQueryModel) {
-            s1r = qb().generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).model()).transform(transformator); 
-        } else {
-            throw new IllegalStateException("Not implemented yet");
-        }
-        
-        final TransformationContext context = new TransformationContext(tables, s1r.updatedContext, s1r.item.collectProps());
-        return s1r.item.transform(context);
-    }
+//    protected static ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> entResultQry3(final QueryModel qryModel, final PropsResolutionContext transformator, final Map<String, Table> tables) {
+//        final TransformationResult<EntQuery2> s1r;
+//        if (qryModel instanceof EntityResultQueryModel) {
+//            s1r = qb().generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).model()).transform(transformator);
+//        } else if (qryModel instanceof AggregatedResultQueryModel) {
+//            s1r = qb().generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).model()).transform(transformator); 
+//        } else {
+//            throw new IllegalStateException("Not implemented yet");
+//        }
+//        
+//        final TransformationContext context = new TransformationContext(tables, s1r.updatedContext, s1r.item.collectProps());
+//        return s1r.item.transform(context);
+//    }
 
     protected static EntQuery1 entResultQry(final EntityResultQueryModel qryModel, final OrderingModel orderModel) {
         return qb().generateEntQueryAsResultQuery(from(qryModel).with(orderModel).model());

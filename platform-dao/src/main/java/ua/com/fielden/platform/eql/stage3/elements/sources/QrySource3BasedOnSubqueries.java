@@ -42,11 +42,6 @@ public class QrySource3BasedOnSubqueries implements IQrySource3 {
     }
 
     @Override
-    public String contextId() {
-        return contextId;
-    }
-    
-    @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;

@@ -13,7 +13,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.SortedMap;
 import java.util.SortedSet;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -26,6 +28,7 @@ import ua.com.fielden.platform.eql.stage1.elements.operands.Expression1;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.Expression2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.Child;
+import ua.com.fielden.platform.eql.stage2.elements.sources.ChildGroup;
 import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.QrySource2BasedOnPersistentType;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -39,7 +42,15 @@ public class PathsToTreeTransformator {
         return id;
     }
 
-    static final Map<IQrySource2<?>, SortedSet<Child>> transform(final Set<EntProp2> props, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
+    public static Map<IQrySource2<?>, List<ChildGroup>> groupChildren(final Set<EntProp2> props, final  Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
+        final Map<IQrySource2<?>, List<ChildGroup>> result = new HashMap<>();
+        for (final Entry<IQrySource2<?>, SortedSet<Child>> el : transform(props, domainInfo).entrySet()) {
+            result.put(el.getKey(), convertToGroup(el.getValue()));
+        }
+        return result;
+    }
+    
+    private static final Map<IQrySource2<?>, SortedSet<Child>> transform(final Set<EntProp2> props, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
         final Map<IQrySource2<?>, SortedSet<Child>> sourceChildren = new HashMap<>();
 
         for (final Entry<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>> sourceProps : groupBySource(props).entrySet()) {
@@ -152,5 +163,52 @@ public class PathsToTreeTransformator {
     private static TransformationResult<Expression2> expressionToS2(final IQrySource2<?> contextSource, final Expression1 expression, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
         final PropsResolutionContext prc = new PropsResolutionContext(domainInfo, asList(asList(contextSource)), contextSource.contextId()); 
         return expression.transform(prc);
+    }
+    
+    private static List<ChildGroup> convertToGroup(final SortedSet<Child> children) {
+        final List<ChildGroup> result = new ArrayList<>();
+        final List<AbstractPropInfo<?>> items = new ArrayList<>();
+        final Map<AbstractPropInfo<?>, Set<Child>> map = new HashMap<>();
+        final Map<AbstractPropInfo<?>, SortedMap<String, QrySource2BasedOnPersistentType>> mapSources = new HashMap<>();
+        
+        for (final Child child : children) {
+            if (items.contains(child.main)) {
+                map.get(child.main).add(child);
+                if (child.source != null) {
+                    mapSources.get(child.main).put(child.source.contextId, child.source);
+                }
+            } else {
+                items.add(child.main);
+                final Set<Child> itemChildren = new HashSet<>();
+                final SortedMap<String, QrySource2BasedOnPersistentType> itemSources = new TreeMap<>();
+
+                itemChildren.add(child);
+                if (child.source != null) {
+                    itemSources.put(child.source.contextId, child.source);    
+                }
+                
+                map.put(child.main, itemChildren);
+                mapSources.put(child.main, itemSources);
+            }
+        }
+        
+        for (final AbstractPropInfo<?> item : items) {
+            final Child first = map.get(item).iterator().next();
+            final SortedSet<Child> mergedItems = new TreeSet<>();
+            
+            final Set<T2<String, IQrySource2<?>>> groupPaths = new HashSet<>();
+            
+            for (final Child c : map.get(item)) {
+                mergedItems.addAll(c.items);
+                if (c.fullPath != null) {
+                    groupPaths.add(t2(c.fullPath, c.parentSource));    
+                }
+            }
+
+            final List<ChildGroup> groupItems = convertToGroup(mergedItems);
+            result.add(new ChildGroup(item, groupItems, groupPaths, first.required, mapSources.get(item).isEmpty() ? first.source : mapSources.get(item).entrySet().iterator().next().getValue(), first.expr));
+        }   
+        
+        return result;
     }
 }

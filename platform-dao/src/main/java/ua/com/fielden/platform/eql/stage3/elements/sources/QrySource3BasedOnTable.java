@@ -31,11 +31,6 @@ public class QrySource3BasedOnTable implements IQrySource3 {
     }
 
     @Override
-    public String contextId() {
-        return contextId;
-    }
-    
-    @Override
     public String toString() {
         // TODO Auto-generated method stub
         return "QrySource3BasedOnTable [" + table.name +"]";
