@@ -261,6 +261,15 @@ Polymer({
         this.splice("_entities", 0, this._entities.length, ...composeChildren.bind(this)(this._treeModel, true));
         this.debounce("refreshTree", refreshTree.bind(this));
     },
+
+    expandSubTree: function(parentItem) {
+        parentItem.opened = true;
+        parentItem.children.forEach(treeEntity => {
+            if (treeEntity.entity.hasChildren && wasLoaded(treeEntity)) {
+                this.expandSubTree(treeEntity);
+            }
+        });
+    },
     
     reloadSubtreeFull: function (idx, entity) {
         if (entity.entity.hasChildren) {
@@ -349,7 +358,7 @@ Polymer({
                 treeEntity.highlight = false;
             }
             if (treeEntity.entity.hasChildren && wasLoaded(treeEntity)) {
-                treeEntity.opened = true;
+                treeEntity.opened = expand;
                 this._filterSubTree(text, treeEntity.children, expand);
             }
         });
@@ -377,6 +386,7 @@ Polymer({
                 const numOfItemsToDelete = calculateNumberOfOpenedItems(parentItem);
                 parentItem.children = generateChildrenModel(change.value, parentItem, this.additionalInfoCb);
                 this._lastFilterText && this._filterSubTree(this._lastFilterText, parentItem.children, false);
+                this.fire("tg-tree-model-changed", parentItem);
                 if (typeof modelIdx !== 'undefined') {
                     this.splice("_entities", modelIdx + 1 + parentItem.additionalInfoNodes.length, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(parentItem, true));
                 }
