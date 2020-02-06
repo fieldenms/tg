@@ -15,6 +15,8 @@ import ua.com.fielden.platform.eql.stage3.elements.operands.EntValue3;
 public class EntValue2 implements ISingleOperand2<EntValue3> {
     private final Object value;
     private final boolean ignoreNull;
+    private static String yes = "Y";
+    private static String no = "N";
 
     public EntValue2(final Object value) {
         this(value, false);
@@ -25,8 +27,12 @@ public class EntValue2 implements ISingleOperand2<EntValue3> {
         this.ignoreNull = ignoreNull;
         if (!ignoreNull && value == null) {
             // TODO Uncomment when yieldNull() operator is implemented and all occurences of yield().val(null) are corrected.
-            //	    throw new IllegalStateException("Value can't be null"); //
+            //      throw new IllegalStateException("Value can't be null"); //
         }
+    }
+    
+    private boolean needsParameter() {
+        return !(value instanceof Long || value instanceof Integer || value instanceof Short || yes.equals(value) || no.equals(value));
     }
 
     private Object preprocessValue(final Object value) {
@@ -71,8 +77,12 @@ public class EntValue2 implements ISingleOperand2<EntValue3> {
 
     @Override
     public TransformationResult<EntValue3> transform(final TransformationContext context) {
-        // TODO Auto-generated method stub
-        return new TransformationResult<EntValue3>(new EntValue3(value), context);
+        if (needsParameter()) {
+            final EntValue3 transformed = new EntValue3(value, context.getNextParamId());
+            return new TransformationResult<EntValue3>(transformed, context.cloneWithParamValue(transformed.getParamName(), transformed.value));
+        } else {
+            return new TransformationResult<EntValue3>(new EntValue3(value, 0), context);
+        }
     }
 
     @Override

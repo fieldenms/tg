@@ -4,7 +4,6 @@ import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.eql.stage2.elements.PathsToTreeTransformator.groupChildren;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -32,7 +31,6 @@ import ua.com.fielden.platform.entity.query.stream.ScrollableResultStream;
 import ua.com.fielden.platform.eql.meta.EntityInfo;
 import ua.com.fielden.platform.eql.meta.MetadataGenerator;
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
-import ua.com.fielden.platform.eql.stage1.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntQuery2;
 import ua.com.fielden.platform.eql.stage3.elements.Table;
@@ -144,12 +142,11 @@ public class EntityContainerFetcher {
             }
             
             final PropsResolutionContext resolutionContext = new PropsResolutionContext(domainInfo );
-            final TransformationResult<EntQuery2> s1tr = gen1.generateEntQueryAsResultQuery(qem.queryModel, qem.orderModel).transform(resolutionContext);
-            //final EntQuery3 entQuery3 = s1tr.item.transform(new TransformationContext(tables, s1tr.updatedContext, s1tr.item.collectProps())).item;
-            final EntQuery3 entQuery3 = s1tr.item.transform(new TransformationContext(tables, groupChildren(s1tr.item.collectProps(), domainInfo))).item;
-            
+            final ua.com.fielden.platform.eql.stage1.elements.TransformationResult<EntQuery2> s1tr = gen1.generateEntQueryAsResultQuery(qem.queryModel, qem.orderModel).transform(resolutionContext);
+            final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> s2tr = s1tr.item.transform(new TransformationContext(tables, groupChildren(s1tr.item.collectProps(), domainInfo)));
+            final EntQuery3 entQuery3 = s2tr.item;
             final String sql3 = entQuery3.sql(domainMetadataAnalyser.getDbVersion());
-            return new QueryModelResult<>((Class<E>)EntityAggregates.class, sql3, getResultPropsInfos(entQuery3.yields), Collections.<String, Object>emptyMap(), qem.fetchModel);
+            return new QueryModelResult<>((Class<E>)EntityAggregates.class, sql3, getResultPropsInfos(entQuery3.yields), s2tr.updatedContext.getParamValues(), qem.fetchModel);
             
         } else {
             final EntQueryGenerator gen = new EntQueryGenerator(domainMetadataAnalyser, filter, username, executionContext.getUniversalConstants());
