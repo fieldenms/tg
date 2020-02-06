@@ -53,7 +53,11 @@ import ua.com.fielden.platform.types.tuples.T2;
  *
  */
 public class FieldSchema {
-    
+    static final String LIKE = "like";
+    static final String VALUE = "value";
+    static final String FROM = "from";
+    static final String TO = "to";
+
     /**
      * Creates GraphQL field definition for <code>entityType</code> and <code>property</code>.
      * Set of supported property types:
@@ -115,14 +119,14 @@ public class FieldSchema {
     private static Optional<T2<GraphQLOutputType, List<GraphQLArgument>>> determineFieldTypeNonCollectional(final Class<?> propertyType) {
         if (isString(propertyType)) {
             return of(t2(GraphQLString, asList(newArgument()
-                .name("like")
+                .name(LIKE)
                 .description("Include entities with specified string value pattern with % as a wildcard.")
                 .type(GraphQLString)
                 .build()
             )));
         } else if (isBoolean(propertyType)) {
             return of(t2(GraphQLBoolean, asList(newArgument() // null-valued or non-existing argument in GraphQL query means entities with both true and false values in the property
-                .name("value")
+                .name(VALUE)
                 .description("Include entities with specified boolean value.")
                 .type(GraphQLBoolean)
                 .build()
@@ -166,13 +170,13 @@ public class FieldSchema {
     private static List<GraphQLArgument> createRangeArgumentsFor(final GraphQLInputType inputType) {
         return asList(
             newArgument()
-            .name("from")
+            .name(FROM)
             .description("Include entities with property greater than (or equal to) specified value.")
             .type(inputType)
             .build(),
             
             newArgument()
-            .name("to")
+            .name(TO)
             .description("Include entities with property less than (or equal to) specified value.")
             .type(inputType)
             .build()

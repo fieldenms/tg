@@ -1,55 +1,58 @@
 package ua.com.fielden.platform.web_api;
 
-import static ua.com.fielden.platform.web_api.RootEntityMixin.generateQueryModelFrom;
+import static ua.com.fielden.platform.web_api.RootEntityUtils.generateQueryModelFrom;
 
 import java.util.List;
 
-import org.apache.log4j.Logger;
-
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
-import ua.com.fielden.platform.dao.QueryExecutionModel;
+import graphql.schema.PropertyDataFetcher;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
+/**
+ * {@link DataFetcher} implementation responsible for resolving root <code>Query</code> fields that correspond to main entity trees.
+ * All other {@link DataFetcher}s for sub-fields can be left unchanged ({@link PropertyDataFetcher}) unless some specific behaviour is needed.
+ * 
+ * @author TG Team
+ *
+ * @param <T>
+ */
 public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetcher<List<T>> {
-    private final Logger logger = Logger.getLogger(getClass());
     private final Class<T> entityType;
     private final ICompanionObjectFinder coFinder;
+    /**
+     * Default maximum number of entities returned in a single root field of a <code>Query</code>.
+     */
+    private final int MAX_NUMBER_OF_ENTITIES = 1000;
     
+    /**
+     * Creates {@link RootEntityFetcher} for concrete <code>entityType</code>.
+     * 
+     * @param entityType
+     * @param coFinder
+     */
     public RootEntityFetcher(final Class<T> entityType, final ICompanionObjectFinder coFinder) {
         this.entityType = entityType;
         this.coFinder = coFinder;
     }
     
+    /**
+     * Finds an uninstrumented reader for the {@link #entityType} and retrieves first {@link #MAX_NUMBER_OF_ENTITIES} entities.<p>
+     * {@inheritDoc}
+     */
     @Override
     public List<T> get(final DataFetchingEnvironment environment) {
-        try {
-//            logger.error(format("Quering type [%s]...", entityType.getSimpleName()));
-//            logger.error("\tSource " + environment.getSource());
-//            logger.error(format("\tArguments [%s]", environment.getArguments()));
-//            logger.error("\tContext " + environment.getContext());
-//            logger.error("\tLocalContext " + environment.getLocalContext());
-//            logger.error("\troot " + environment.getRoot());
-//            
-//            logger.error(format("\tField [%s]", environment.getField()));
-//            logger.error(format("\tMergedField [%s]", environment.getMergedField()));
-//            logger.error(format("\tParentType [%s]", environment.getParentType()));
-//            
-//            logger.error(format("\tVariables [%s]", environment.getVariables()));
-//            logger.error(format("\tFragmentsByName [%s]", environment.getFragmentsByName()));
-            
-            final QueryExecutionModel<T, EntityResultQueryModel<T>> queryModel = generateQueryModelFrom(environment.getField().getSelectionSet(), environment.getVariables(), environment.getFragmentsByName(), entityType, environment.getGraphQLSchema());
-            
-            final List<T> entities = coFinder.findAsReader(entityType, true).getFirstEntities(queryModel, 1000);
-//            logger.error(String.format("Quering type [%s]...done", entityType.getSimpleName()));
-            return entities;
-        } catch (final Exception e) {
-            logger.error(e.getMessage(), e);
-//            logger.error(String.format("Quering type [%s]...done", entityType.getSimpleName()));
-            // TODO improve errors handling
-            throw new IllegalStateException(e);
-        }
+        return coFinder.findAsReader(entityType, true).getFirstEntities( // reader must be uninstrumented
+            generateQueryModelFrom(
+                environment.getField().getSelectionSet(),
+                environment.getVariables(),
+                environment.getFragmentsByName(),
+                entityType,
+                environment.getGraphQLSchema()
+            ),
+            MAX_NUMBER_OF_ENTITIES
+        );
     }
+    
 }
