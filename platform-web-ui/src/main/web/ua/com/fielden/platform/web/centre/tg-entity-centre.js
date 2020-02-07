@@ -447,6 +447,7 @@ Polymer({
             }
             this.focusSelectedView();
             tearDownEvent(event);
+            (this._selectedView === 0 ? this.$.selectionView: this.$.centreResultContainer).fire("tg-centre-page-was-selected");
         }
     },
 
