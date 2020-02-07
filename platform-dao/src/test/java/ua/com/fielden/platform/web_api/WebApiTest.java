@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+import static ua.com.fielden.platform.web_api.TgScalars.createDateRepr;
 import static ua.com.fielden.platform.web_api.WebApiUtils.DATA;
 import static ua.com.fielden.platform.web_api.WebApiUtils.QUERY;
 import static ua.com.fielden.platform.web_api.WebApiUtils.errors;
@@ -17,8 +18,6 @@ import java.math.BigDecimal;
 import java.util.Map;
 
 import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormatter;
-import org.joda.time.format.DateTimeFormatterBuilder;
 import org.junit.Test;
 
 import graphql.execution.UnknownOperationException;
@@ -1130,15 +1129,12 @@ public class WebApiTest extends AbstractDaoTestCase {
     }
     
     //////////////////////// Date ////////////////////////
-    private final DateTimeFormatter offsetFormatter = new DateTimeFormatterBuilder()
-        .appendTimeZoneOffset("Z", true, 2, 4)
-        .toFormatter();
     private final DateTime date1Instant = new DateTime(2020, 2, 10, 0, 0);
     private final DateTime date2Instant = new DateTime(2020, 2, 15, 0, 0);
     private final DateTime date3Instant = new DateTime(2020, 2, 20, 0, 0);
-    private final String date1 = "2020-02-10 00:00:00.000" + offsetFormatter.print(date1Instant);
-    private final String date2 = "2020-02-15 00:00:00.000" + offsetFormatter.print(date2Instant);
-    private final String date3 = "2020-02-20 00:00:00.000" + offsetFormatter.print(date3Instant);
+    private final Map<String, Object> date1 = createDateRepr(date1Instant.toDate());
+    private final Map<String, Object> date2 = createDateRepr(date2Instant.toDate());
+    private final Map<String, Object> date3 = createDateRepr(date3Instant.toDate());
     
     private void createDateVehicles() {
         final TgVehicleMake merc = save(new_(TgVehicleMake.class, "MERC", "Mercedes"));

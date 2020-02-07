@@ -8,10 +8,13 @@ import static org.joda.time.format.ISODateTimeFormat.time;
 import static org.joda.time.format.ISODateTimeFormat.timeElementParser;
 import static ua.com.fielden.platform.types.either.Either.left;
 import static ua.com.fielden.platform.types.either.Either.right;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Date;
+import java.util.Map;
 
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
@@ -252,10 +255,29 @@ public class TgScalars {
         
     }).build();
     
+    private static final DateTimeFormatter dateTimePrinter = new DateTimeFormatterBuilder()
+        .append(date())
+        .appendLiteral(' ')
+        .append(time())
+        .toFormatter();
+    
+    /**
+     * Creates simplistic {@link Date} representation that has string-based 'value' and 'millis'.
+     * 
+     * @param date
+     * @return
+     */
+    static Map<String, Object> createDateRepr(final Date date) {
+        return linkedMapOf(
+            t2("value", dateTimePrinter.print(new DateTime(date))),
+            t2("millis", date.getTime())
+        );
+    }
+    
     /**
      * GraphQL scalar implementation for {@link Date} type.
      */
-    public static final GraphQLScalarType GraphQLDate = newScalarType("Date").coercing(new TgCoercing<Date, String>() {
+    public static final GraphQLScalarType GraphQLDate = newScalarType("Date").coercing(new TgCoercing<Date, Map<String, Object>>() {
         private final DateTimeFormatter basicDateParser = basicDate();
         private final DateTimeFormatter dateTimeParser = new DateTimeFormatterBuilder()
             .append(dateElementParser())
@@ -263,11 +285,6 @@ public class TgScalars {
                 .appendLiteral(' ')
                 .appendOptional(timeElementParser().getParser())
                 .toParser())
-            .toFormatter();
-        private final DateTimeFormatter dateTimePrinter = new DateTimeFormatterBuilder()
-            .append(date())
-            .appendLiteral(' ')
-            .append(time())
             .toFormatter();
         
         @Override
@@ -278,9 +295,9 @@ public class TgScalars {
         //////////////////////////////////////////////// SERIALISE RESULTS ////////////////////////////////////////////////
         
         @Override
-        public Either<String, String> convertDataFetcherResult(final Object dataFetcherResult) {
+        public Either<String, Map<String, Object>> convertDataFetcherResult(final Object dataFetcherResult) {
             if (dataFetcherResult instanceof Date) {
-                return right(dateTimePrinter.print(new DateTime(dataFetcherResult)));
+                return right(createDateRepr((Date) dataFetcherResult));
             } else {
                 return error(title(), dataFetcherResult);
             }
