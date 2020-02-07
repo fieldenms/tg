@@ -31,7 +31,6 @@ import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.eql.stage1.elements.functions.CountAll1;
-import ua.com.fielden.platform.eql.stage1.elements.functions.Now1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.EntProp1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.EntQuery1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.EntValue1;
@@ -312,7 +311,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         case COUNT_ALL:
             return new CountAll1();
         case NOW:
-            return new Now1();
+            return new EntValue1(getParamValue(EntQueryGenerator.NOW)); //new Now1();
 
         default:
             throw new RuntimeException("Unrecognised zero agrument function: " + function);
@@ -409,8 +408,11 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
             singleCat = VAL;
             break;
         case SET_OF_PARAMS:
+            singleCat = PARAM;
+            break;
         case SET_OF_IPARAMS:
-            throw new UnsupportedOperationException("Operations with params not yet supported");
+            singleCat = IPARAM;
+            break;
         case SET_OF_EXPR_TOKENS:
             singleCat = EXPR_TOKENS;
             break;
@@ -424,8 +426,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
 
         for (final Object singleValue : (List<Object>) value) {
             if (singleCat == PARAM || singleCat == IPARAM) {
-                throw new UnsupportedOperationException("Operations with params not yet supported");
-                //result.addAll(getModelForArrayParam(singleCat, singleValue));
+                result.addAll(getModelForArrayParam(singleCat, singleValue));
             } else {
                 result.add(getModelForSingleOperand(singleCat, singleValue));
             }
@@ -450,9 +451,12 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
             break;
         case ANY_OF_PARAMS:
         case ALL_OF_PARAMS:
+            singleCat = PARAM;
+            break;
         case ANY_OF_IPARAMS:
         case ALL_OF_IPARAMS:
-            throw new EqlStage1ProcessingException(format("Param related token [%s] processing should be moved to stage 3.", cat));
+            singleCat = IPARAM;
+            break;
         case ANY_OF_VALUES:
         case ALL_OF_VALUES:
             singleCat = VAL;
@@ -466,7 +470,11 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         }
 
         for (final Object singleValue : (List<Object>) value) {
-            result.add(getModelForSingleOperand(singleCat, singleValue));
+            if (singleCat == PARAM || singleCat == IPARAM) {
+                result.addAll(getModelForArrayParam(singleCat, singleValue));
+            } else {
+                result.add(getModelForSingleOperand(singleCat, singleValue));
+            }
         }
 
         return result;

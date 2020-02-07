@@ -23,6 +23,7 @@ import com.google.inject.Guice;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.generation.ioc.HelperIocModule;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.query.metadata.PropertyCategory;
@@ -66,6 +67,7 @@ import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.sample.domain.TgWorkshop;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 
 public class BaseEntQueryTCase1 {
     protected static final Class<TgWorkOrder> WORK_ORDER = TgWorkOrder.class;
@@ -117,7 +119,7 @@ public class BaseEntQueryTCase1 {
 
 
     protected static final EntQueryGenerator qb() {
-        return new EntQueryGenerator(DOMAIN_METADATA_ANALYSER, null, null, null, emptyMap());
+        return new EntQueryGenerator(DOMAIN_METADATA_ANALYSER, null, null, Guice.createInjector(new HibernateUserTypesModule(), new HelperIocModule()).getInstance(IUniversalConstants.class), emptyMap());
     }
 
     static {

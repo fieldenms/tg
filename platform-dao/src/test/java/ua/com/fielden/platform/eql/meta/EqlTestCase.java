@@ -19,6 +19,7 @@ import com.google.inject.Guice;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.generation.ioc.HelperIocModule;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
@@ -50,6 +51,7 @@ import ua.com.fielden.platform.sample.domain.TgWagonSlot;
 import ua.com.fielden.platform.sample.domain.TgWorkshop;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 
 public class EqlTestCase {
     protected static final Class<TeWorkOrder> WORK_ORDER = TeWorkOrder.class;
@@ -93,7 +95,7 @@ public class EqlTestCase {
 
 
     protected static final EntQueryGenerator qb() {
-        return new EntQueryGenerator(new DomainMetadataAnalyser(DOMAIN_METADATA), null, null, null, emptyMap());
+        return new EntQueryGenerator(new DomainMetadataAnalyser(DOMAIN_METADATA), null, null, Guice.createInjector(new HibernateUserTypesModule(), new HelperIocModule()).getInstance(IUniversalConstants.class), emptyMap());
     }
 
     static {

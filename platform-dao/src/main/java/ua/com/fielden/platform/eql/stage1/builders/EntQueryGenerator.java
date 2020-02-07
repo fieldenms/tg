@@ -1,14 +1,17 @@
 package ua.com.fielden.platform.eql.stage1.builders;
 
 import static java.util.Collections.unmodifiableMap;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ORDER_TOKENS;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.QUERY_TOKEN;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.SORT_ORDER;
 import static ua.com.fielden.platform.eql.meta.QueryCategory.RESULT_QUERY;
 import static ua.com.fielden.platform.eql.meta.QueryCategory.SOURCE_QUERY;
 import static ua.com.fielden.platform.eql.meta.QueryCategory.SUB_QUERY;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -47,6 +50,9 @@ public class EntQueryGenerator {
         this.username = username;
         this.universalConstants = universalConstants;
         this.paramValues.putAll(paramValues);
+        if (universalConstants.now() != null) {
+            this.paramValues.put(NOW, universalConstants.now().toDate());
+        }
     }
     
 //    public EntQueryGenerator(final boolean forCalcExpression) {
@@ -85,7 +91,7 @@ public class EntQueryGenerator {
         ITokensBuilder active = null;
 
         for (final Pair<TokenCategory, Object> pair : qryModel.getTokens()) {
-            if (!QUERY_TOKEN.equals(pair.getKey())) {
+            if (QUERY_TOKEN != pair.getKey()) {
                 if (active != null) {
                     active.add(pair.getKey(), pair.getValue());
                 }
@@ -112,7 +118,7 @@ public class EntQueryGenerator {
             }
         }
 
-        return new EntQueryBlocks1(from.getModel(), where.getModel(), select.getModel(), groupBy.getModel(), produceOrderBys(orderModel));
+        return new EntQueryBlocks1(from.getModel(), where.getModel(), select.getModel(), groupBy.getModel(), produceOrderBys(orderModel), qryModel.isYieldAll());
     }
 
     private <T extends AbstractEntity<?>> EntQuery1 generateEntQuery(final QueryModel<T> qryModel, 
@@ -127,11 +133,25 @@ public class EntQueryGenerator {
         nextCondtextId());
     }
 
+    private List<Pair<TokenCategory, Object>> linearizeTokens(final List<Pair<TokenCategory, Object>> tokens) {
+        final List<Pair<TokenCategory, Object>> result = new ArrayList<>();
+        for (final Pair<TokenCategory, Object> pair : tokens) {
+            if (ORDER_TOKENS.equals(pair.getKey())) {
+                result.addAll(linearizeTokens(((OrderingModel) pair.getValue()).getTokens()));
+            } else {
+                result.add(pair);
+            }
+        }
+
+        return result;
+    }
+
     private OrderBys1 produceOrderBys(final OrderingModel orderModel) {
         final QryOrderingsBuilder orderBy = new QryOrderingsBuilder(null, this);
 
         if (orderModel != null) {
-            for (final Iterator<Pair<TokenCategory, Object>> iterator = orderModel.getTokens().iterator(); iterator.hasNext();) {
+            final List<Pair<TokenCategory, Object>> linearizedTokens = linearizeTokens(orderModel.getTokens());
+            for (final Iterator<Pair<TokenCategory, Object>> iterator = linearizedTokens.iterator(); iterator.hasNext();) {
                 final Pair<TokenCategory, Object> pair = iterator.next();
                 if (SORT_ORDER.equals(pair.getKey())) {
                     orderBy.add(pair.getKey(), pair.getValue());

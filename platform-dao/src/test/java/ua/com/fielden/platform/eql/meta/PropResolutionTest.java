@@ -92,7 +92,7 @@ public class PropResolutionTest extends EqlTestCase {
     }
     
     public static EntQueryBlocks1 qb1(final Sources1 sources, final Conditions1 conditions) {
-        return new EntQueryBlocks1(sources, conditions, new Yields1(emptyList()), new GroupBys1(emptyList()), new OrderBys1(emptyList()));
+        return new EntQueryBlocks1(sources, conditions, new Yields1(emptyList()), new GroupBys1(emptyList()), new OrderBys1(emptyList()), false);
     }
     
     private static Map<String, List<AbstractPropInfo<?>>> getResolvedProps(final Set<EntProp2> props) {

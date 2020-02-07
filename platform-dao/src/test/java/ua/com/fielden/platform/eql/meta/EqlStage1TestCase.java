@@ -37,7 +37,7 @@ public class EqlStage1TestCase extends EqlTestCase {
     }
     
     protected static EntQueryBlocks1 qb1(final Sources1 sources, final Conditions1 conditions) {
-        return new EntQueryBlocks1(sources, conditions, new Yields1(emptyList()), new GroupBys1(emptyList()), new OrderBys1(emptyList()));
+        return new EntQueryBlocks1(sources, conditions, new Yields1(emptyList()), new GroupBys1(emptyList()), new OrderBys1(emptyList()), false);
     }
 
     protected static Conditions1 conditions(final ICondition1<?> firstCondition, final CompoundCondition1... otherConditions) {

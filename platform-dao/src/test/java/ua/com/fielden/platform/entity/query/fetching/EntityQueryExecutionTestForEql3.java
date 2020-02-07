@@ -458,4 +458,10 @@ public class EntityQueryExecutionTestForEql3 extends AbstractDaoTestCase {
     public void eql3_query_executes_correctly45() {
         run(select(TeVehicleFuelUsage.class).where().prop("key").isNull().or().prop("key").eq().val("HOH").or().prop("qty").gt().val(0).or().prop("vehicle.active").eq().val(true));
     }
+    
+    @Test
+    public void eql3_query_executes_correctly46() {
+        run(select(TeVehicleFuelUsage.class).where().exists(select(TeVehicle.class).where().prop("key").eq().val("A101").model()));
+    }
+
 }
