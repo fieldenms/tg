@@ -1,23 +1,21 @@
 package ua.com.fielden.platform.web_api;
 import static graphql.schema.GraphQLScalarType.newScalar;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
+import static java.lang.String.format;
 import static org.joda.time.format.ISODateTimeFormat.basicDate;
 import static org.joda.time.format.ISODateTimeFormat.date;
 import static org.joda.time.format.ISODateTimeFormat.dateElementParser;
 import static org.joda.time.format.ISODateTimeFormat.time;
 import static org.joda.time.format.ISODateTimeFormat.timeElementParser;
+import static ua.com.fielden.platform.types.either.Either.left;
+import static ua.com.fielden.platform.types.either.Either.right;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Date;
-import java.util.Optional;
 
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.DateTimeFormatterBuilder;
-import org.joda.time.format.DateTimeParser;
-import org.joda.time.format.ISODateTimeFormat;
 
 import graphql.language.FloatValue;
 import graphql.language.IntValue;
@@ -27,312 +25,312 @@ import graphql.schema.CoercingParseLiteralException;
 import graphql.schema.CoercingParseValueException;
 import graphql.schema.CoercingSerializeException;
 import graphql.schema.GraphQLScalarType;
+import graphql.schema.GraphQLScalarType.Builder;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.either.Either;
 
+/**
+ * TG-specific GraphQL Web API scalar type implementations.
+ * 
+ * @author TG Team
+ *
+ */
 public class TgScalars {
+    private static final String UNEXPECTED_TYPE_ERROR = "Expected [%] but was [%].";
     
-    public static GraphQLScalarType GraphQLBigDecimal = new GraphQLScalarType("BigDecimal", "BigDecimal scalar type for TG platform", new Coercing() {
-        @Override
-        public Double serialize(final Object input) {
-            if (input instanceof String) {
-                return Double.parseDouble((String) input);
-            } else if (input instanceof Double) {
-                return (Double) input;
-            } else if (input instanceof Float) {
-                return (double) (Float) input;
-            } else if (input instanceof Integer) {
-                return (double) (Integer) input;
-            // ADDED
-            //    TODO consider re-using of Scalars.GraphQLFloat code here?
-            } else if (input instanceof BigDecimal) {
-                return ((BigDecimal) input).doubleValue();
-            } else if (input instanceof BigInteger) {
-                return ((BigInteger) input).doubleValue();
-            // ADDED [end]
-            } else {
-                return null;
-            }
-        }
-
-        @Override
-        public Object parseValue(final Object input) {
-            return serialize(input);
-        }
-
-        @Override
-        public Object parseLiteral(final Object input) {
-            if (input instanceof IntValue) {
-                return ((IntValue) input).getValue().doubleValue();
-            } else if (input instanceof FloatValue) {
-                return ((FloatValue) input).getValue().doubleValue();
-            } else {
-                return null;
-            }
-        }
-    });
-    
-    private static boolean isNumberIsh(final Object input) {
-        return input instanceof Number || input instanceof String;
-    }
-    
-    private static String typeName(final Object input) {
-        if (input == null) {
-            return "null";
-        }
-        
-        return input.getClass().getSimpleName();
+    /**
+     * Creates builder for scalar type and assigns name and description derived from the specified <code>title</code>.
+     * 
+     * @param title
+     * @return
+     */
+    private static Builder newScalarType(final String title) {
+        return newScalar().name(title).description(format("%s type.", title));
     }
     
     /**
-     * This represents the "Money" type which is a representation of {@link Money}.
+     * Returns left {@link Either} for unexpected data error showing the type name for that unexpected data.
+     * 
+     * @param expected
+     * @param unexpected
+     * @return
      */
-    public static final GraphQLScalarType GraphQLMoney = newScalar().name("Money").description("Money type.").coercing(new Coercing<Money, BigDecimal>() {
+    private static <R> Either<String, R> error(final String expected, final Object unexpected) {
+        return left(format(UNEXPECTED_TYPE_ERROR, expected, unexpected.getClass().getSimpleName()));
+    }
+    
+    /////////////////////////////////////////////////////////////// SCALAR TYPES WITHOUT ARGUMENTS ///////////////////////////////////////////////////////////////
+    
+    /**
+     * Private interface for ouput scalar {@link Coercing} to increase level of abstraction for implementing scalars.
+     * 
+     * @author TG Team
+     *
+     * @param <O> -- output type to which fetched data converts
+     */
+    private static interface TgOutputCoercing<O> {
         
-        //////////////////////////////////////////////// SERIALISE RESULTS ////////////////////////////////////////////////
+        /**
+         * Scalar type title.
+         * 
+         * @return
+         */
+        String title();
+        /**
+         * Converts <code>dataFetcherResult</code> to either value of type <code>O</code> if successful or otherwise returns error message.
+         * 
+         * @param dataFetcherResult
+         * @return
+         */
+        Either<String, O> convertDataFetcherResult(final Object dataFetcherResult);
         
-        private Optional<BigDecimal> convertDataFetcherResult(final Object input) {
-            if (input instanceof Money) {
-                return of(((Money) input).getAmount());
-            } else {
-                return empty();
-            }
+    }
+    
+    /**
+     * Private interface for scalar {@link Coercing} to increase level of abstraction for implementing scalars that do not support arguments.
+     * 
+     * @author TG Team
+     *
+     * @param <O> -- output type to which fetched data converts
+     */
+    private static interface TgCoercingNoArguments<O> extends Coercing<Object, O>, TgOutputCoercing<O> {
+        
+        @Override
+        default O serialize(final Object dataFetcherResult) {
+            return convertDataFetcherResult(dataFetcherResult).orElseThrow((error) -> new CoercingSerializeException(error));
         }
         
         @Override
-        public BigDecimal serialize(final Object dataFetcherResult) {
-            return convertDataFetcherResult(dataFetcherResult).orElseThrow(() -> new CoercingSerializeException("Expected type 'Money' but was '" + typeName(dataFetcherResult) + "'."));
-        }
-        
-        //////////////////////////////////////////////// PARSE ARGUMENT VARIABLES ////////////////////////////////////////////////
-        
-        private Optional<Money> convertVariableInput(final Object input) {
-            if (input instanceof Number) {
-                try {
-                    return of(new Money(input.toString()));
-                } catch (final NumberFormatException e) {
-                    return empty();
-                }
-            } else {
-                return empty();
-            }
+        default Object parseValue(final Object variableInput) {
+            throw new CoercingParseValueException(format("%s argument variables not supported.", title()));
         }
         
         @Override
-        public Money parseValue(final Object variableInput) {
-            return convertVariableInput(variableInput).orElseThrow(() -> new CoercingParseValueException("Expected number-like 'Money' but was '" + typeName(variableInput) + "'."));
+        default Object parseLiteral(final Object argumentInput) {
+            throw new CoercingParseLiteralException(format("%s argument literals not supported.", title()));
         }
-        
-        //////////////////////////////////////////////// PARSE ARGUMENT LITERALS ////////////////////////////////////////////////
-        
-        private Optional<Money> convertArgumentInput(final Object argumentInput) {
-            if (argumentInput instanceof IntValue) {
-                final BigInteger value = ((IntValue) argumentInput).getValue();
-                return of(new Money(new BigDecimal(value)));
-            } else if (argumentInput instanceof FloatValue) {
-                return of(new Money(((FloatValue) argumentInput).getValue()));
-            } else {
-                return empty();
-            }
-        }
+    }
+    
+    /**
+     * GraphQL scalar implementation for {@link Hyperlink} type.
+     */
+    public static final GraphQLScalarType GraphQLHyperlink = newScalarType("Hyperlink").coercing(new TgCoercingNoArguments<String>() {
         
         @Override
-        public Money parseLiteral(final Object argumentInput) {
-            return convertArgumentInput(argumentInput).orElseThrow(() -> new CoercingParseLiteralException("Expected number-like 'Money' but was '" + typeName(argumentInput) + "'."));
+        public String title() {
+            return "Hyperlink";
+        };
+        
+        @Override
+        public Either<String, String> convertDataFetcherResult(final Object dataFetcherResult) {
+            if (dataFetcherResult instanceof Hyperlink) {
+                return right(((Hyperlink) dataFetcherResult).value);
+            } else {
+                return error(title(), dataFetcherResult);
+            }
         }
         
     }).build();
     
-    public static final DateTimeFormatter basicDateParser = basicDate();
-    public static final DateTimeFormatter dateTimeParser = new DateTimeFormatterBuilder()
-        .append(dateElementParser())
-        .appendOptional(new DateTimeFormatterBuilder()
-            .appendLiteral(' ')
-            .appendOptional(timeElementParser().getParser())
-            .toParser())
-        .toFormatter();
-    public static final DateTimeFormatter dateTimePrinter = new DateTimeFormatterBuilder()
-        .append(date())
-        .appendLiteral(' ')
-        .append(time()) // TODO consider removing Z or +13:00 ?
-        .toFormatter();
-    
     /**
-     * Scalar type for dates.
+     * GraphQL scalar implementation for {@link Colour} type.
      */
-    public static final GraphQLScalarType GraphQLDate = newScalar().name("Date").description("Date type.").coercing(new Coercing<Date, String>() {
+    public static final GraphQLScalarType GraphQLColour = newScalarType("Colour").coercing(new TgCoercingNoArguments<String>() {
         
-        //////////////////////////////////////////////// SERIALISE RESULTS ////////////////////////////////////////////////
+        @Override
+        public String title() {
+            return "Colour";
+        };
         
-        private Optional<String> convertDataFetcherResult(final Object input) {
-            if (input instanceof DateTime) {
-                return of(dateTimePrinter.print(((DateTime) input)));
-            } else if (input instanceof Date) {
-                return of(dateTimePrinter.print(new DateTime(input)));
+        @Override
+        public Either<String, String> convertDataFetcherResult(final Object dataFetcherResult) {
+            if (dataFetcherResult instanceof Colour) {
+                return right(((Colour) dataFetcherResult).getColourValue());
             } else {
-                return empty();
+                return error(title(), dataFetcherResult);
             }
         }
         
+    }).build();
+    
+    /////////////////////////////////////////////////////////////// SCALAR TYPES ///////////////////////////////////////////////////////////////
+    
+    /**
+     * Private interface for scalar {@link Coercing} to increase level of abstraction for implementing scalars.
+     * 
+     * @author TG Team
+     *
+     * @param <I> -- input type to which argument literals / variables convert
+     * @param <O> -- output type to which fetched data converts
+     */
+    private static interface TgCoercing<I, O> extends Coercing<I, O>, TgOutputCoercing<O> {
+        
         @Override
-        public String serialize(final Object dataFetcherResult) {
-            return convertDataFetcherResult(dataFetcherResult).orElseThrow(() -> new CoercingSerializeException("Expected type 'Date' or 'DateTime' but was '" + typeName(dataFetcherResult) + "'."));
+        default O serialize(final Object dataFetcherResult) {
+            return convertDataFetcherResult(dataFetcherResult).orElseThrow((error) -> new CoercingSerializeException(error));
+        }
+        
+        /**
+         * Converts <code>variableInput</code> to either value of type <code>I</code> if successful or otherwise returns error message.
+         * 
+         * @param variableInput
+         * @return
+         */
+        Either<String, I> convertVariableInput(final Object variableInput);
+        
+        @Override
+        default I parseValue(final Object variableInput) {
+            return convertVariableInput(variableInput).orElseThrow((error) -> new CoercingParseValueException(error));
+        }
+        
+        /**
+         * Converts <code>literalInput</code> to either value of type <code>I</code> if successful or otherwise returns error message.
+         * 
+         * @param literalInput
+         * @return
+         */
+        Either<String, I> convertLiteralInput(final Object literalInput);
+        
+        @Override
+        default I parseLiteral(final Object literalInput) {
+            return convertLiteralInput(literalInput).orElseThrow((error) -> new CoercingParseLiteralException(error));
+        }
+        
+    }
+    
+    /**
+     * GraphQL scalar implementation for {@link Money} type.
+     */
+    public static final GraphQLScalarType GraphQLMoney = newScalarType("Money").coercing(new TgCoercing<Money, BigDecimal>() {
+        
+        @Override
+        public String title() {
+            return "Money";
+        };
+        
+        //////////////////////////////////////////////// SERIALISE RESULTS ////////////////////////////////////////////////
+        
+        @Override
+        public Either<String, BigDecimal> convertDataFetcherResult(final Object dataFetcherResult) {
+            if (dataFetcherResult instanceof Money) {
+                return right(((Money) dataFetcherResult).getAmount());
+            } else {
+                return error(title(), dataFetcherResult);
+            }
+        }
+        
+        //////////////////////////////////////////////// PARSE ARGUMENT VARIABLES ////////////////////////////////////////////////
+        
+        @Override
+        public Either<String, Money> convertVariableInput(final Object variableInput) {
+            if (variableInput instanceof Number) {
+                try {
+                    return right(new Money(variableInput.toString()));
+                } catch (final NumberFormatException e) {
+                    return error("number-like " + title(), variableInput);
+                }
+            } else {
+                return error("number-like " + title(), variableInput);
+            }
+        }
+        
+        //////////////////////////////////////////////// PARSE ARGUMENT LITERALS ////////////////////////////////////////////////
+        
+        @Override
+        public Either<String, Money> convertLiteralInput(final Object literalInput) {
+            if (literalInput instanceof IntValue) {
+                final BigInteger value = ((IntValue) literalInput).getValue();
+                return right(new Money(new BigDecimal(value)));
+            } else if (literalInput instanceof FloatValue) {
+                return right(new Money(((FloatValue) literalInput).getValue()));
+            } else {
+                return error("number-like " + title(), literalInput);
+            }
+        }
+        
+    }).build();
+    
+    /**
+     * GraphQL scalar implementation for {@link Date} type.
+     */
+    public static final GraphQLScalarType GraphQLDate = newScalarType("Date").coercing(new TgCoercing<Date, String>() {
+        private final DateTimeFormatter basicDateParser = basicDate();
+        private final DateTimeFormatter dateTimeParser = new DateTimeFormatterBuilder()
+            .append(dateElementParser())
+            .appendOptional(new DateTimeFormatterBuilder()
+                .appendLiteral(' ')
+                .appendOptional(timeElementParser().getParser())
+                .toParser())
+            .toFormatter();
+        private final DateTimeFormatter dateTimePrinter = new DateTimeFormatterBuilder()
+            .append(date())
+            .appendLiteral(' ')
+            .append(time())
+            .toFormatter();
+        
+        @Override
+        public String title() {
+            return "Date";
+        }
+        
+        //////////////////////////////////////////////// SERIALISE RESULTS ////////////////////////////////////////////////
+        
+        @Override
+        public Either<String, String> convertDataFetcherResult(final Object dataFetcherResult) {
+            if (dataFetcherResult instanceof Date) {
+                return right(dateTimePrinter.print(new DateTime(dataFetcherResult)));
+            } else {
+                return error(title(), dataFetcherResult);
+            }
         }
         
         //////////////////////////////////////////////// PARSE ARGUMENT ... ////////////////////////////////////////////////
         
-        private Optional<Date> parseFrom(final String input, final DateTimeFormatter formatter) {
+        private Either<String, Date> parseFrom(final String input, final DateTimeFormatter formatter) {
             try {
-                return of(formatter.parseDateTime(input).toDate()); // server time-zone is used here
+                return right(formatter.parseDateTime(input).toDate()); // server time-zone is used here
             } catch (final IllegalArgumentException e) {
-                return empty();
+                return left(format(UNEXPECTED_TYPE_ERROR, "number-like or string-based " + title(), input));
             }
         }
         
-        private Optional<Date> basicDateFrom(final String input) {
+        private Either<String, Date> basicDateFrom(final String input) {
             return parseFrom(input, basicDateParser);
         }
         
-        private Optional<Date> dateTimeFrom(final String input) {
+        private Either<String, Date> dateTimeFrom(final String input) {
             return parseFrom(input, dateTimeParser);
         }
         
         //////////////////////////////////////////////// ... VARIABLES ////////////////////////////////////////////////
         
-        private Optional<Date> convertVariableInput(final Object input) {
-            if (input instanceof Number) {
-                return basicDateFrom(input.toString());
-            } else if (input instanceof String) {
-                return dateTimeFrom((String) input);
-            } else {
-                return empty();
-            }
-        }
-        
         @Override
-        public Date parseValue(final Object variableInput) {
-            return convertVariableInput(variableInput).orElseThrow(() -> new CoercingParseValueException("Expected number-like or string-based 'Date' but was '" + typeName(variableInput) + "'."));
+        public Either<String, Date> convertVariableInput(final Object variableInput) {
+            if (variableInput instanceof Number) {
+                return basicDateFrom(variableInput.toString());
+            } else if (variableInput instanceof String) {
+                return dateTimeFrom((String) variableInput);
+            } else {
+                return error("number-like or string-based " + title(), variableInput);
+            }
         }
         
         //////////////////////////////////////////////// ... LITERALS ////////////////////////////////////////////////
         
-        private Optional<Date> convertArgumentInput(final Object argumentInput) {
-            if (argumentInput instanceof IntValue) {
-                final BigInteger value = ((IntValue) argumentInput).getValue();
+        @Override
+        public Either<String, Date> convertLiteralInput(final Object literalInput) {
+            if (literalInput instanceof IntValue) {
+                final BigInteger value = ((IntValue) literalInput).getValue();
                 return basicDateFrom(value.toString());
-            } else if (argumentInput instanceof StringValue) {
-                return dateTimeFrom(((StringValue) argumentInput).getValue());
+            } else if (literalInput instanceof StringValue) {
+                return dateTimeFrom(((StringValue) literalInput).getValue());
             } else {
-                return empty();
+                return error("number-like or string-based " + title(), literalInput);
             }
         }
         
-        @Override
-        public Date parseLiteral(final Object argumentInput) {
-            return convertArgumentInput(argumentInput).orElseThrow(() -> new CoercingParseLiteralException("Expected number-like or string-based 'Date' but was '" + typeName(argumentInput) + "'."));
-        }
-        
     }).build();
-    
-    /**
-     * Scalar type for {@link Hyperlink}.
-     */
-    public static final GraphQLScalarType GraphQLHyperlink = newScalar().name("Hyperlink").description("Hyperlink type.").coercing(new Coercing<Hyperlink, String>() {
-        
-        private Optional<String> convertDataFetcherResult(final Object input) {
-            if (input instanceof Hyperlink) {
-                return of(((Hyperlink) input).value);
-            } else {
-                return empty();
-            }
-        }
-        
-        @Override
-        public String serialize(final Object dataFetcherResult) {
-            return convertDataFetcherResult(dataFetcherResult).orElseThrow(() -> new CoercingSerializeException("Expected type 'Hyperlink' but was '" + typeName(dataFetcherResult) + "'."));
-        }
-        
-        @Override
-        public Hyperlink parseValue(final Object variableInput) {
-            throw new CoercingParseValueException("Hyperlink arguments not supported.");
-        }
-        
-        @Override
-        public Hyperlink parseLiteral(final Object argumentInput) {
-            throw new CoercingParseLiteralException("Hyperlink arguments not supported.");
-        }
-        
-    }).build();
-    
-    /**
-     * Scalar type for {@link Colour}.
-     */
-    public static final GraphQLScalarType GraphQLColour = newScalar().name("Colour").description("Colour type.").coercing(new Coercing<Colour, String>() {
-        
-        private Optional<String> convertDataFetcherResult(final Object input) {
-            if (input instanceof Colour) {
-                return of(((Colour) input).getColourValue());
-            } else {
-                return empty();
-            }
-        }
-        
-        @Override
-        public String serialize(final Object dataFetcherResult) {
-            return convertDataFetcherResult(dataFetcherResult).orElseThrow(() -> new CoercingSerializeException("Expected type 'Colour' but was '" + typeName(dataFetcherResult) + "'."));
-        }
-        
-        @Override
-        public Colour parseValue(final Object variableInput) {
-            throw new CoercingParseValueException("Colour arguments not supported.");
-        }
-        
-        @Override
-        public Colour parseLiteral(final Object argumentInput) {
-            throw new CoercingParseLiteralException("Colour arguments not supported.");
-        }
-        
-    }).build();
-    
-    public static void main(final String[] args) {
-        final DateTimeFormatter parser = ISODateTimeFormat.dateTimeParser();
-        final DateTimeFormatter parserWithOffset = ISODateTimeFormat.dateTimeParser().withOffsetParsed();
-        System.out.println(parser.parseDateTime("2020-01-08"));
-        System.out.println(parserWithOffset.parseDateTime("2020-01-08"));
-        
-        System.out.println();
-        //System.out.println(parser.parseDateTime("2020-01-08 13:45"));
-        //System.out.println(parserWithOffset.parseDateTime("2020-01-08 13:45"));
-        
-        final DateTimeParser time = new DateTimeFormatterBuilder()
-                .appendLiteral(' ')
-                .appendOptional(ISODateTimeFormat.timeElementParser().getParser())
-                .toParser();
-        final DateTimeFormatter dateTimeParser = new DateTimeFormatterBuilder()
-                .append(ISODateTimeFormat.dateElementParser())
-                .appendOptional(time)
-                .toFormatter();
-        
-        System.out.println(dateTimeParser.parseDateTime("2020-03-08 13:45:23.789"));
-        System.out.println(dateTimeParser.parseDateTime("2020-03-08 13:45:23"));
-        System.out.println(dateTimeParser.parseDateTime("2020-03-08 13:45"));
-        System.out.println(dateTimeParser.parseDateTime("2020-03-08 13"));
-        System.out.println(dateTimeParser.parseDateTime("2020-03-08"));
-        System.out.println(dateTimeParser.parseDateTime("2020-03"));
-        System.out.println(dateTimeParser.parseDateTime("2020"));
-        
-        System.out.println();
-        System.out.println(dateTimeParser.parseDateTime("2020-03-08 13.125"));
-        System.out.println(dateTimeParser.parseDateTime("2020-03-08 13:45.125"));
-        
-        System.out.println(dateTimeParser.parseDateTime("2020-03-08 13:45:3"));
-        System.out.println(dateTimeParser.parseDateTime("2020-03-08 13:5:3"));
-        System.out.println(dateTimeParser.parseDateTime("2020-03-08 3:5:3"));
-        System.out.println(dateTimeParser.parseDateTime("2020-3-8 3:5:3"));
-        
-        System.out.println(dateTimePrinter.parseDateTime("2020-03-29 16:45:45.999Z"));
-    }
-    
     
 }

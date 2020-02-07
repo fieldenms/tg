@@ -140,7 +140,6 @@ public class FieldSchema {
             return of(t2(GraphQLLong, createRangeArgumentsFor(GraphQLLong)));
         } else if (BigDecimal.class.isAssignableFrom(propertyType)) {
             return of(t2(GraphQLBigDecimal, createRangeArgumentsFor(GraphQLBigDecimal)));
-            // TODO remove return TgScalars.GraphQLBigDecimal;
         } else if (Money.class.isAssignableFrom(propertyType)) {
             return of(t2(GraphQLMoney, createRangeArgumentsFor(GraphQLMoney)));
         } else if (isDate(propertyType)) {
