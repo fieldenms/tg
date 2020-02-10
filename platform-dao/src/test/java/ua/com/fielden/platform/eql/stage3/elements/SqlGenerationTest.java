@@ -21,7 +21,10 @@ import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySources3;
 import ua.com.fielden.platform.eql.stage3.elements.sources.QrySource3BasedOnTable;
 
 public class SqlGenerationTest extends EqlStage3TestCase {
-
+    private final static String[] modelYields = new String[]{"id", "key", "desc", "version", "make"};
+    private final static String[] vehicleYields = new String[]{"id", "key", "desc", "version", "initDate", "model", "make", "replacedBy", "station", "active", "leased", "lastMeterReading", "price", "purchasePrice"};
+    private final static String[] woYields = new String[]{"id", "key", "desc", "version", "vehicle", "actCost", "estCost", "yearlyCost"};
+    
     
     @Test
     public void calc_prop_is_correctly_transformed_10() {
@@ -53,7 +56,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                         eq(prop("vehicle", wo), prop(ID, veh))
                   );
         final Conditions3 conditions = or(isNotNull(expr(expr(prop(KEY, make)))), isNotNull(expr(prop(KEY, make))));
-        final EntQuery3 expQry = qry(sources, conditions);
+        final EntQuery3 expQry = qry(sources, conditions, yields(wo, woYields));
         
         assertEquals(expQry, actQry);    
     }
@@ -83,7 +86,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                         eq(prop("vehicle", wo), prop(ID, veh))
                   );
         final Conditions3 conditions = or(isNotNull(expr(expr(prop(KEY, model)))), isNotNull(expr(prop(KEY, model))));
-        final EntQuery3 expQry = qry(sources, conditions);
+        final EntQuery3 expQry = qry(sources, conditions, yields(wo, woYields));
         
         assertEquals(expQry, actQry);    
     }
@@ -122,7 +125,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                         eq(expr(expr(prop("model", veh))), prop(ID, model))                
                   );
         final Conditions3 conditions = or(isNotNull(expr(prop(KEY, model))));
-        final EntQuery3 expQry = qry(sources, conditions);
+        final EntQuery3 expQry = qry(sources, conditions, yields(wo, woYields));
         assertEquals(expQry, actQry);
     }
 
@@ -157,7 +160,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                         eq(expr(expr(prop("model", veh))), prop(ID, model))                
                   );
         final Conditions3 conditions = or(isNotNull(expr(prop(KEY, model))));
-        final EntQuery3 expQry = qry(sources, conditions);
+        final EntQuery3 expQry = qry(sources, conditions, yields(wo, woYields));
         assertEquals(expQry, actQry);
     }
     
@@ -198,7 +201,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                         eq(expr(expSubQry), prop(ID, make))                
                   );
         final Conditions3 conditions = or(isNotNull(expr(prop(KEY, make))));
-        final EntQuery3 expQry = qry(sources, conditions);
+        final EntQuery3 expQry = qry(sources, conditions, yields(wo, woYields));
         
         assertEquals(expQry, actQry);
         System.out.println(actQry.sql(DbVersion.H2));        
@@ -236,7 +239,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
 
         final IQrySources3 sources = sources(wo);
         final Conditions3 conditions = or(isNotNull(expr(expSubQry)));
-        final EntQuery3 expQry = qry(sources, conditions);
+        final EntQuery3 expQry = qry(sources, conditions, yields(wo, woYields));
         
         assertEquals(expQry, actQry);
     }
@@ -278,7 +281,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
 
         final IQrySources3 sources = sources(wo);
         final Conditions3 conditions = or(isNotNull(expr(expSubQry)));
-        final EntQuery3 expQry = qry(sources, conditions);
+        final EntQuery3 expQry = qry(sources, conditions, yields(wo, woYields));
         
         assertEquals(expQry, actQry);
         System.out.println(actQry.sql(DbVersion.H2));
@@ -309,7 +312,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                         eq(expr(expr(prop("model", veh))), prop(ID, model))                
                   );
         final Conditions3 conditions = or(isNotNull(expr(prop(KEY, model))));
-        final EntQuery3 expQry = qry(sources, conditions);
+        final EntQuery3 expQry = qry(sources, conditions, yields(wo, woYields));
         
         assertEquals(expQry, actQry);
         System.out.println(actQry.sql(DbVersion.H2));
@@ -345,7 +348,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                         eq(expr(expr(prop("model", veh))), prop(ID, model))                
                   );
         final Conditions3 conditions = or(isNotNull(expr(expr(prop(KEY, make)))));
-        final EntQuery3 expQry = qry(sources, conditions);
+        final EntQuery3 expQry = qry(sources, conditions, yields(wo, woYields));
         
         assertEquals(expQry, actQry);
         System.out.println(actQry.sql(DbVersion.H2));
@@ -382,7 +385,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                         eq(prop("vehicle", wo), prop(ID, veh))
                   );
         final Conditions3 conditions = or(isNotNull(expr(expr(expr(prop(KEY, make))))));
-        final EntQuery3 expQry = qry(sources, conditions);
+        final EntQuery3 expQry = qry(sources, conditions, yields(wo, woYields));
         
         assertEquals(expQry, actQry);
     }
@@ -417,7 +420,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                         eq(prop("vehicle", wo), prop(ID, veh))
                   );
         final Conditions3 conditions = or(isNotNull(expr(expr(prop(KEY, make)))));
-        final EntQuery3 expQry = qry(sources, conditions);
+        final EntQuery3 expQry = qry(sources, conditions, yields(wo, woYields));
         
         assertEquals(expQry, actQry);
     }
@@ -458,7 +461,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                         eq(prop("model", veh), prop(ID, model))
                   );
         final Conditions3 conditions = or(isNotNull(expr(expr(expr(prop(KEY, make))))), isNotNull(expr(prop(KEY, makeA))), isNotNull(expr(prop(KEY, make))));
-        final EntQuery3 expQry = qry(sources, conditions);
+        final EntQuery3 expQry = qry(sources, conditions, yields(veh, vehicleYields));
         
         assertEquals(expQry, actQry);   
     }
@@ -495,7 +498,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                         eq(prop("model", veh), prop(ID, model))
                   );
         final Conditions3 conditions = or(isNotNull(expr(expr(expr(prop(KEY, make))))), isNotNull(expr(prop(KEY, make))));
-        final EntQuery3 expQry = qry(sources, conditions);
+        final EntQuery3 expQry = qry(sources, conditions, yields(veh, vehicleYields));
         
         assertNotEquals(expQry, actQry);
     }
@@ -530,7 +533,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                         eq(prop("model", veh), prop(ID, model))
                   );
         final Conditions3 conditions = or(isNotNull(expr(expr(expr(prop(KEY, make))))), isNotNull(expr(prop(KEY, makeA))));
-        final EntQuery3 expQry = qry(sources, conditions);
+        final EntQuery3 expQry = qry(sources, conditions, yields(veh, vehicleYields));
         
         assertEquals(expQry, actQry);
     }
@@ -565,7 +568,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                         eq(prop("model", veh), prop(ID, model))
                   );
         final Conditions3 conditions = or(isNotNull(expr(prop(KEY, make))), isNotNull(expr(prop(KEY, makeA))));
-        final EntQuery3 expQry = qry(sources, conditions);
+        final EntQuery3 expQry = qry(sources, conditions, yields(veh, vehicleYields));
         
         assertEquals(expQry, actQry);    
     }
@@ -595,7 +598,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                         eq(prop("model", veh), prop(ID, model))
                   );
         final Conditions3 conditions = or(isNotNull(expr(expr(expr(prop(KEY, make))))), isNotNull(expr(prop(KEY, make))));
-        final EntQuery3 expQry = qry(sources, conditions);
+        final EntQuery3 expQry = qry(sources, conditions, yields(veh, vehicleYields));
         
         assertEquals(expQry, actQry);
     }
@@ -628,7 +631,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                         eq(prop("model", veh), prop(ID, model))
                   );
         final Conditions3 conditions = or(isNotNull(expr(expr(prop(KEY, make)))), isNotNull(expr(expr(prop("desc", make)))));
-        final EntQuery3 expQry = qry(sources, conditions);
+        final EntQuery3 expQry = qry(sources, conditions, yields(veh, vehicleYields));
         
         assertEquals(expQry, actQry);
     }
@@ -654,7 +657,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                         eq(prop("model", veh), prop(ID, model))
                   );
         final Conditions3 conditions = or(isNotNull(expr(expr(prop(KEY, model)))), isNotNull(expr(expr(prop("desc", model)))));
-        final EntQuery3 expQry = qry(sources, conditions);
+        final EntQuery3 expQry = qry(sources, conditions, yields(veh, vehicleYields));
         
         assertEquals(expQry, actQry);
     }
@@ -683,7 +686,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                         eq(prop("model", veh), prop(ID, model))
                   );
         final Conditions3 conditions = or(isNotNull(expr(expr(prop(KEY, make)))));
-        final EntQuery3 expQry = qry(sources, conditions);
+        final EntQuery3 expQry = qry(sources, conditions, yields(veh, vehicleYields));
         
         assertEquals(expQry, actQry);
     }
@@ -720,7 +723,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                         eq(prop("make", model), prop(ID, make))
                   );
         final Conditions3 conditions = or(isNotNull(expr(expr(prop(KEY, make)))), isNotNull(expr(expSubQry)), isNotNull(expr(prop(KEY, make))));
-        final EntQuery3 expQry = qry(sources, conditions);
+        final EntQuery3 expQry = qry(sources, conditions, yields(model, modelYields));
         
         assertEquals(expQry, actQry);
     }
@@ -756,7 +759,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                         eq(prop("make", model), prop(ID, make))
                   );
         final Conditions3 conditions = or(isNotNull(expr(expr(prop(KEY, make)))), isNotNull(expr(expSubQry)));
-        final EntQuery3 expQry = qry(sources, conditions);
+        final EntQuery3 expQry = qry(sources, conditions, yields(model, modelYields));
         
         assertEquals(expQry, actQry);
     }
@@ -781,7 +784,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                         eq(prop("make", model), prop(ID, make))
                   );
         final Conditions3 conditions = or(isNotNull(expr(expr(prop(KEY, make)))), isNotNull(expr(prop(KEY, make))));
-        final EntQuery3 expQry = qry(sources, conditions);
+        final EntQuery3 expQry = qry(sources, conditions, yields(model, modelYields));
         
         assertEquals(expQry, actQry);
     }
@@ -813,7 +816,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
 
         final IQrySources3 sources = sources(model);
         final Conditions3 conditions = or(isNotNull(expr(expSubQry)));
-        final EntQuery3 expQry = qry(sources, conditions);
+        final EntQuery3 expQry = qry(sources, conditions, yields(model, modelYields));
         
         assertEquals(expQry, actQry);
     }
@@ -838,7 +841,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                         eq(prop("make", model), prop(ID, make))
                   );
         final Conditions3 conditions = or(isNotNull(expr(expr(prop(KEY, make)))));
-        final EntQuery3 expQry = qry(sources, conditions);
+        final EntQuery3 expQry = qry(sources, conditions, yields(model, modelYields));
         
         assertEquals(expQry, actQry);
     }
@@ -865,7 +868,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                         eq(prop("replacedBy", veh), prop(ID, repVeh))
                   );
         final Conditions3 conditions = or(isNotNull(expr(prop(KEY, veh))), isNotNull(expr(prop(KEY, repVeh))));
-        final EntQuery3 expQry = qry(sources, conditions);
+        final EntQuery3 expQry = qry(sources, conditions, yields(veh, vehicleYields));
         
         assertEquals(expQry, actQry);
     }
@@ -904,7 +907,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                         eq(prop("station", veh), prop(ID, org5))
                   );
         final Conditions3 conditions = or(isNotNull(expr(prop("initDate", veh))), isNotNull(expr(prop("name", org5))), isNotNull(expr(prop("name", org4))), isNotNull(expr(prop("initDate", repVeh))));
-        final EntQuery3 expQry = qry(sources, conditions);
+        final EntQuery3 expQry = qry(sources, conditions, yields(veh, vehicleYields));
         
         assertEquals(expQry, actQry);
     }
@@ -939,7 +942,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                         eq(expr(prop("station", veh)), expr(prop(ID, ou5e)))
                   );
         final Conditions3 conditions = or(isNotNull(expr(prop(KEY, veh))), isNotNull(expr(prop(KEY, repVeh))));
-        final EntQuery3 expQry = qry(sources, conditions);
+        final EntQuery3 expQry = qry(sources, conditions, yields(veh, vehicleYields));
 
         assertEquals(expQry, actQry);
     }
@@ -1000,12 +1003,13 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                 isNotNull(expr(prop("name", ou5))), 
                 isNotNull(expr(prop("name", ou4))),
                 isNotNull(expr(prop("name", ou5eou4))));
-        final EntQuery3 expQry = qry(sources, conditions);
+        final EntQuery3 expQry = qry(sources, conditions, yields(veh, vehicleYields));
 
         assertEquals(expQry, actQry);
     }
 
     @Test
+    @Ignore
     public void dot_notated_props_are_correctly_transformed_05() {
     
         // select(VEHICLE).

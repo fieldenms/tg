@@ -411,11 +411,10 @@ public class EntityQueryExecutionTestForEql3 extends AbstractDaoTestCase {
     }
     
     @Test
-    @Ignore
     public void eql3_query_executes_correctly38() {
         final EntityResultQueryModel<TeVehicle> qry = select(TeVehicle.class).where().prop("model.make.key").isNotNull().model();
         
-        run(select(qry).where().prop("id").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+        run(select(qry).where().anyOfProps("id", "modelMake").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
     }
     
     @Test

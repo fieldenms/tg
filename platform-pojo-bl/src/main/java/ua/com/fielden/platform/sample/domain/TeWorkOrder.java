@@ -21,7 +21,6 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.types.Money;
 
@@ -82,10 +81,10 @@ public class TeWorkOrder extends AbstractEntity<String> {
     @Title(value = "Yearly Cost", desc = "Yearly Cost")
     private Money yearlyCost;
 
-    @IsProperty(TeWorkOrder.class)
-    @MapTo
-    @Title(value = "Important Property", desc = "Property that has a special meaning")
-    private PropertyDescriptor<TeWorkOrder> importantProperty;
+//    @IsProperty(TeWorkOrder.class)
+//    @MapTo
+//    @Title(value = "Important Property", desc = "Property that has a special meaning")
+//    private PropertyDescriptor<TeWorkOrder> importantProperty;
 
     @IsProperty
     @Title(value = "Org Unit", desc = "Desc")
@@ -267,15 +266,15 @@ public class TeWorkOrder extends AbstractEntity<String> {
         return actCost;
     }
 
-    public PropertyDescriptor<TeWorkOrder> getImportantProperty() {
-        return importantProperty;
-    }
-
-    @Observable
-    public TeWorkOrder setImportantProperty(final PropertyDescriptor<TeWorkOrder> importantProperty) {
-        this.importantProperty = importantProperty;
-        return this;
-    }
+//    public PropertyDescriptor<TeWorkOrder> getImportantProperty() {
+//        return importantProperty;
+//    }
+//
+//    @Observable
+//    public TeWorkOrder setImportantProperty(final PropertyDescriptor<TeWorkOrder> importantProperty) {
+//        this.importantProperty = importantProperty;
+//        return this;
+//    }
 
     public TeVehicle getVehicle() {
         return vehicle;

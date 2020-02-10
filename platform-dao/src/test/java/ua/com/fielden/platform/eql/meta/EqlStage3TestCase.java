@@ -241,6 +241,15 @@ public class EqlStage3TestCase extends EqlStage1TestCase {
         return qry(sources, conditions, yields, SUB_QUERY);
     }
 
+    protected static Yields3 yields(final IQrySource3 source, final String ... props) {
+        final List<Yield3> yields = new ArrayList<>();
+        for (final String prop : props) {
+            yields.add(yieldExpr(prop, source, prop));
+        }
+        
+        return new Yields3(yields);
+    }
+    
     protected static Yields3 yields(final Yield3 ... yields) {
         return new Yields3(asList(yields));
     }
