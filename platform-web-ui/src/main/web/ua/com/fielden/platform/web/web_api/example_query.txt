@@ -20,6 +20,10 @@
 #
 # Keyboard shortcuts:
 #
+#  Prettify Query:  Shift-Ctrl-P (or press the prettify button above)
+#
+#     Merge Query:  Shift-Ctrl-M (or press the merge button above)
+#
 #       Run Query:  Ctrl-Enter (or press the play button above)
 #
 #   Auto Complete:  Ctrl-Space (or just start typing)
@@ -83,7 +87,7 @@ Use the following variables for query running (or use completely empty variables
 
 ########### variables [END] ############
 
-########### fragments (do not work yet) ############
+########### fragments ############
 query VehiclesWithFragment {
   tgVehicle {
     ...vehicleCommons
@@ -97,75 +101,4 @@ fragment vehicleCommons on TgVehicle {
     key
   }
 }
-########### fragments (do not work yet) [END] ############
-
-########### mutations ############
-mutation Misc($fourthVehicleInput: TgVehicleInput!) {
-  
-  addThirdVehicle: tgVehicle(input: {
-    key: "CAR3"
-    desc: "desc of CAR3"
-    active: true
-  }) {
-    key
-  }
-
-  addFourthVehicle: tgVehicle(input: $fourthVehicleInput) {
-    key
-  }
-  
-  tgMachine(input: {
-    key: "BC1487AC"
-    desc: "desc of BC1487AC"
-  }) {
-    key
-    enabled(value: true)
-  }
-}
-
-query Vehicles {
-  tgVehicle {
-    key
-    desc
-    replacedBy {
-      key
-    }
-    model {
-      key
-    }
-  }
-}
-
-mutation AddVehicles($vehicleInput: TgVehicleInput!, $secVehicleInput: TgVehicleInput!) {
-  first: tgVehicle(input: $vehicleInput) {
-    key
-    desc
-    replacedBy {
-      key
-    }
-  }
-  secondDependingOnFirst: tgVehicle(input: $secVehicleInput) {
-    key
-    desc
-    replacedBy {
-      key
-    }
-  }
-}
-
-Use the following inputs for mutation running: 
-{
-  "vehicleInput": {
-    "key": "CAR20",
-    "desc": "desc of ...",
-    "model": "321"
-  },
-  "secVehicleInput": {
-    "key": "CAR21",
-    "desc": "desc of ...",
-    "model": "322",
-    "replacedBy": "CAR20" -- recently created entity ('vehicleInput') can be used! mutations are guaranteed to be sequential
-  }
-}
-
-########### mutations [END] ############
+########### fragments [END] ############
