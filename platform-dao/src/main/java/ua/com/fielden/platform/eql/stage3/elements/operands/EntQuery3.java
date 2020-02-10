@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.stage3.elements.operands;
 
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import static ua.com.fielden.platform.entity.query.DbVersion.ORACLE;
 import static ua.com.fielden.platform.eql.meta.QueryCategory.RESULT_QUERY;
 
 import java.util.Objects;
@@ -38,8 +39,7 @@ public class EntQuery3 implements ISingleOperand3 {
         final String yieldsSql = yields.sql(dbVersion);
         sb.append("SELECT\n");
         sb.append(isNotEmpty(yieldsSql) ? yieldsSql : " * "); 
-        sb.append("\nFROM\n");
-        sb.append(sources.sql(dbVersion, true));
+        sb.append(sourcesSql(dbVersion));
         final String conditionsSql = conditions.sql(dbVersion);
         if (isNotEmpty(conditionsSql)) {
             sb.append("\nWHERE ");
@@ -48,6 +48,14 @@ public class EntQuery3 implements ISingleOperand3 {
         sb.append(groups.sql(dbVersion));
         sb.append(orderings.sql(dbVersion));
         return category == RESULT_QUERY ? sb.toString() : "(" + sb.toString() + ")";
+    }
+    
+    private String sourcesSql(final DbVersion dbVersion) {
+        if (sources == null) {
+            return dbVersion == ORACLE ? " FROM DUAL " : " ";
+        } else {
+            return "\nFROM\n" + sources.sql(dbVersion, true);
+        }
     }
 
     @Override
@@ -61,7 +69,7 @@ public class EntQuery3 implements ISingleOperand3 {
         int result = 1;
         result = prime * result + conditions.hashCode();
         result = prime * result + yields.hashCode();
-        result = prime * result + sources.hashCode();
+        result = prime * result + ((sources == null) ? 0 : sources.hashCode());
         result = prime * result + groups.hashCode();
         result = prime * result + orderings.hashCode();
         result = prime * result + category.hashCode();

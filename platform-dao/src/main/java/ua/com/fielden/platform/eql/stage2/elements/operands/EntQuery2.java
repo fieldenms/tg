@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.elements.operands;
 
+import static java.util.Collections.emptySet;
+
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -44,13 +46,13 @@ public class EntQuery2 implements ISingleOperand2<EntQuery3> {
 
     @Override
     public TransformationResult<EntQuery3> transform(final TransformationContext context) {
-        final TransformationResult<IQrySources3> sourcesTr = sources.transform(context);
-        final TransformationResult<Conditions3> conditionsTr = conditions.transform(sourcesTr.updatedContext);
+        final TransformationResult<IQrySources3> sourcesTr = sources != null ? sources.transform(context) : null;
+        final TransformationResult<Conditions3> conditionsTr = conditions.transform(sourcesTr != null ? sourcesTr.updatedContext : context);
         final TransformationResult<Yields3> yieldsTr = yields.transform(conditionsTr.updatedContext);
         final TransformationResult<GroupBys3> groupsTr = groups.transform(yieldsTr.updatedContext);
         final TransformationResult<OrderBys3> orderingsTr = orderings.transform(groupsTr.updatedContext);
 
-        final EntQueryBlocks3 entQueryBlocks = new EntQueryBlocks3(sourcesTr.item, conditionsTr.item, yieldsTr.item, groupsTr.item, orderingsTr.item);
+        final EntQueryBlocks3 entQueryBlocks = new EntQueryBlocks3(sourcesTr != null ? sourcesTr.item : null, conditionsTr.item, yieldsTr.item, groupsTr.item, orderingsTr.item);
 
         return new TransformationResult<EntQuery3>(new EntQuery3(entQueryBlocks, category), orderingsTr.updatedContext);
     }
@@ -58,7 +60,7 @@ public class EntQuery2 implements ISingleOperand2<EntQuery3> {
     @Override
     public Set<EntProp2> collectProps() {
         final Set<EntProp2> result = new HashSet<>();
-        result.addAll(sources.collectProps());
+        result.addAll(sources != null ? sources.collectProps() : emptySet());
         result.addAll(conditions.collectProps());
         result.addAll(yields.collectProps());
         result.addAll(groups.collectProps());
@@ -85,7 +87,7 @@ public class EntQuery2 implements ISingleOperand2<EntQuery3> {
         result = prime * result + groups.hashCode();
         result = prime * result + category.hashCode();
         result = prime * result + ((resultType == null) ? 0 : resultType.hashCode());
-        result = prime * result + sources.hashCode();
+        result = prime * result + ((sources == null) ? 0 : sources.hashCode());
         result = prime * result + yields.hashCode();
         result = prime * result + orderings.hashCode();
         return result;

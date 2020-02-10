@@ -4,6 +4,7 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EN
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.QRY_MODELS_AS_QRY_SOURCE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.QRY_SOURCE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.QRY_SOURCE_ALIAS;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.VALUES_AS_QRY_SOURCE;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
@@ -50,6 +51,10 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
         return getSize() == 1 && QRY_MODELS_AS_QRY_SOURCE == firstCat();
     }
 
+    private boolean isNothingAsSourceWithoutAlias() {
+        return getSize() == 1 && VALUES_AS_QRY_SOURCE.equals(firstCat());
+    }
+    
     @Override
     public boolean isClosing() {
         return false;
@@ -58,7 +63,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
     @Override
     public boolean canBeClosed() {
         return isEntityTypeAsSource() || isEntityTypeAsSourceWithoutAlias() ||
-               isSubqueriesAsSource() || isSubqueriesAsSourceWithoutAlias();
+               isSubqueriesAsSource() || isSubqueriesAsSourceWithoutAlias() || isNothingAsSourceWithoutAlias();
     }
 
     private Pair<TokenCategory, Object> buildResultForQrySourceBasedOnEntityType() {
@@ -89,6 +94,8 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
             return buildResultForQrySourceBasedOnEntityType();
         } else if (isSubqueriesAsSource() || isSubqueriesAsSourceWithoutAlias()) {
             return buildResultForQrySourceBasedOnSubqueries();
+        } else if (isNothingAsSourceWithoutAlias()) {
+            return pair(QRY_SOURCE, null);
         } else {
             throw new RuntimeException("Unable to get result - unrecognised state.");
         }

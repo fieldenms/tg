@@ -66,13 +66,13 @@ public class EntQuery1 extends AbstractElement1 implements ISingleOperand1<EntQu
     public TransformationResult<EntQuery2> transform(final PropsResolutionContext context) {
         final PropsResolutionContext localResolutionContext = isSubQuery() ? context.produceForCorrelatedSubquery() : context.produceForUncorrelatedSubquery();
         // .produceForUncorrelatedSubquery() should be used only for cases of synthetic entities (where source query can only be uncorrelated) -- simple queries as source queries are accessible for correlation
-        final TransformationResult<Sources2> sourcesTr =  sources.transform(localResolutionContext);
-        final TransformationResult<Conditions2> conditionsTr =  conditions.transform(sourcesTr.updatedContext);
+        final TransformationResult<Sources2> sourcesTr =  sources != null ? sources.transform(localResolutionContext) : null;
+        final TransformationResult<Conditions2> conditionsTr =  conditions.transform(sourcesTr != null ? sourcesTr.updatedContext : localResolutionContext);
         final TransformationResult<Yields2> yieldsTr =  yields.transform(conditionsTr.updatedContext);
         final TransformationResult<GroupBys2> groupsTr =  groups.transform(yieldsTr.updatedContext);
         final TransformationResult<OrderBys2> orderingsTr =  orderings.transform(groupsTr.updatedContext);
 
-        final EntQueryBlocks2 entQueryBlocks = new EntQueryBlocks2(sourcesTr.item, conditionsTr.item, yieldsTr.item, groupsTr.item, orderingsTr.item);
+        final EntQueryBlocks2 entQueryBlocks = new EntQueryBlocks2(sourcesTr != null ? sourcesTr.item : null, conditionsTr.item, yieldsTr.item, groupsTr.item, orderingsTr.item);
 
         final PropsResolutionContext resultResolutionContext = (isSubQuery() || isSourceQuery()) ? 
                 new PropsResolutionContext(orderingsTr.updatedContext.getDomainInfo(), orderingsTr.updatedContext.getSources().subList(1, orderingsTr.updatedContext.getSources().size()), orderingsTr.updatedContext.sourceId) :
@@ -90,7 +90,7 @@ public class EntQuery1 extends AbstractElement1 implements ISingleOperand1<EntQu
         result = prime * result + groups.hashCode();
         result = prime * result + orderings.hashCode();
         result = prime * result + ((resultType == null) ? 0 : resultType.hashCode());
-        result = prime * result + sources.hashCode();
+        result = prime * result + ((sources == null) ? 0 : sources.hashCode());
         result = prime * result + yields.hashCode();
         return result;
     }

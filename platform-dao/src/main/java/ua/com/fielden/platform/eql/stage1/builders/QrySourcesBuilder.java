@@ -53,7 +53,7 @@ public class QrySourcesBuilder extends AbstractTokensBuilder {
             final CompoundSource1 subsequentSource = (CompoundSource1) iterator.next().getValue();
             otherSources.add(subsequentSource);
         }
-        return new Sources1(mainSource, otherSources);
+        return mainSource != null ? new Sources1(mainSource, otherSources) : null;
 
     }
 
