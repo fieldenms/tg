@@ -57,6 +57,7 @@ import ua.com.fielden.platform.sample.domain.TgWagon;
 import ua.com.fielden.platform.sample.domain.TgWagonClass;
 import ua.com.fielden.platform.sample.domain.TgWagonClassCompatibility;
 import ua.com.fielden.platform.sample.domain.TgWagonSlot;
+import ua.com.fielden.platform.sample.domain.TgWebApiEntity;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.sample.domain.TgWorkshop;
 import ua.com.fielden.platform.test.entities.ComplexKeyEntity;
@@ -107,6 +108,7 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(TgWorkshop.class);
         add(TgTimesheet.class);
         add(TgVehicle.class);
+        add(TgWebApiEntity.class);
         add(TgVehicleFinDetails.class);
         add(TgVehicleFuelUsage.class);
         add(TgVehicleModel.class);

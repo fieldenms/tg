@@ -25,8 +25,6 @@ import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
-import ua.com.fielden.platform.types.Colour;
-import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
 
@@ -78,11 +76,11 @@ public class TgVehicle extends AbstractEntity<String> {
 
     @IsProperty(value = TgFuelUsage.class, linkProperty = "vehicle")
     @Title("Fuel usages")
-    private Set<TgFuelUsage> fuelUsages = new HashSet<>();
+    private Set<TgFuelUsage> fuelUsages = new HashSet<TgFuelUsage>();
 
     @IsProperty(value = TgVehicleFuelUsage.class, linkProperty = "vehicle")
     @Title("Vehicle Fuel usages")
-    private Set<TgVehicleFuelUsage> vehicleFuelUsages = new HashSet<>();
+    private Set<TgVehicleFuelUsage> vehicleFuelUsages = new HashSet<TgVehicleFuelUsage>();
 
     @IsProperty(precision = 10, scale = 3)
     @MapTo
@@ -180,111 +178,6 @@ public class TgVehicle extends AbstractEntity<String> {
     @CritOnly
     @Title("Date period")
     private Date datePeriod;
-
-    @IsProperty
-    @MapTo
-    @Title(value = "Int Prop", desc = "Integer property.")
-    private Integer intProp;
-
-    @IsProperty
-    @MapTo
-    @Title(value = "Long Prop", desc = "Long property.")
-    private Long longProp;
-
-    @IsProperty(precision = 10, scale = 4)
-    @MapTo
-    @Title(value = "BigDecimal Prop", desc = "BigDecimal property.")
-    private BigDecimal bigDecimalProp;
-
-    @IsProperty
-    @MapTo
-    @Title(value = "Money Prop", desc = "Money property.")
-    private Money moneyProp;
-
-    @IsProperty
-    @MapTo
-    @Title(value = "Date Prop", desc = "Date property.")
-    private Date dateProp;
-
-    @IsProperty
-    @MapTo
-    @Title(value = "Hyperlink Prop", desc = "Hyperlink property.")
-    private Hyperlink hyperlinkProp;
-
-    @IsProperty
-    @MapTo
-    @Title(value = "Colour Prop", desc = "Colour property.")
-    private Colour colourProp;
-
-    @Observable
-    public TgVehicle setColourProp(final Colour colourProp) {
-        this.colourProp = colourProp;
-        return this;
-    }
-
-    public Colour getColourProp() {
-        return colourProp;
-    }
-
-    @Observable
-    public TgVehicle setHyperlinkProp(final Hyperlink hyperlinkProp) {
-        this.hyperlinkProp = hyperlinkProp;
-        return this;
-    }
-
-    public Hyperlink getHyperlinkProp() {
-        return hyperlinkProp;
-    }
-
-    @Observable
-    public TgVehicle setDateProp(final Date dateProp) {
-        this.dateProp = dateProp;
-        return this;
-    }
-
-    public Date getDateProp() {
-        return dateProp;
-    }
-
-    @Observable
-    public TgVehicle setMoneyProp(final Money moneyProp) {
-        this.moneyProp = moneyProp;
-        return this;
-    }
-
-    public Money getMoneyProp() {
-        return moneyProp;
-    }
-
-    @Observable
-    public TgVehicle setBigDecimalProp(final BigDecimal bigDecimalProp) {
-        this.bigDecimalProp = bigDecimalProp;
-        return this;
-    }
-
-    public BigDecimal getBigDecimalProp() {
-        return bigDecimalProp;
-    }
-
-    @Observable
-    public TgVehicle setLongProp(final Long longProp) {
-        this.longProp = longProp;
-        return this;
-    }
-
-    public Long getLongProp() {
-        return longProp;
-    }
-
-    @Observable
-    public TgVehicle setIntProp(final Integer intProp) {
-        this.intProp = intProp;
-        return this;
-    }
-
-    public Integer getIntProp() {
-        return intProp;
-    }
 
     @Observable
     public TgVehicle setDatePeriod(final Date datePeriod) {
