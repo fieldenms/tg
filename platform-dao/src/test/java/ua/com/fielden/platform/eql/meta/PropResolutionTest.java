@@ -657,8 +657,7 @@ public class PropResolutionTest extends EqlTestCase {
 
     @Test
     public void test_16() {
-        // TODO EQL.3
-        transform(select(AUTHOR).as("A").leftJoin(TgPersonName.class).as("pn").on().prop("name").eq().prop("pn").where().prop("lastRoyalty").eq().val(1).model());
+        transform(select(AUTHOR).leftJoin(TgPersonName.class).as("pn").on().prop("name").eq().prop("pn").where().prop("lastRoyalty").eq().val(1).model());
     }
 
     @Test

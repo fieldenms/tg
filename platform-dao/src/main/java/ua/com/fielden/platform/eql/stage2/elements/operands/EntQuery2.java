@@ -1,18 +1,24 @@
 package ua.com.fielden.platform.eql.stage2.elements.operands;
 
 import static java.util.Collections.emptySet;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.meta.QueryCategory;
 import ua.com.fielden.platform.eql.stage2.elements.EntQueryBlocks2;
 import ua.com.fielden.platform.eql.stage2.elements.GroupBys2;
 import ua.com.fielden.platform.eql.stage2.elements.OrderBys2;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
+import ua.com.fielden.platform.eql.stage2.elements.Yield2;
 import ua.com.fielden.platform.eql.stage2.elements.Yields2;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.Sources2;
@@ -38,16 +44,35 @@ public class EntQuery2 implements ISingleOperand2<EntQuery3> {
         this.category = category;
         this.sources = queryBlocks.sources;
         this.conditions = queryBlocks.conditions;
-        this.yields = queryBlocks.yields;
+        this.yields = enhancedYields(queryBlocks.yields, queryBlocks.sources);
         this.groups = queryBlocks.groups;
         this.orderings = queryBlocks.orderings;
         this.resultType = resultType;
     }
 
+    private Yields2 enhancedYields(final Yields2 yields, final Sources2 sources) {
+        if (yields.getYields().isEmpty()) {
+            final List<Yield2> enhancedYields = new ArrayList<>();
+            for (final Entry<String, AbstractPropInfo<?>> el : sources.main.entityInfo().getProps().entrySet()) {
+                if (el.getValue().expression == null) {
+                    //final String yieldedPropAliasedName = sourcesTr.item.main.alias() != null ?  sourcesTr.item.main.alias() + "." + el.getKey() : el.getKey();
+                    enhancedYields.add(new Yield2(new EntProp2(sources.main, "0", listOf(el.getValue())), el.getKey(), false));
+                }
+            }
+            return new Yields2(enhancedYields);
+        }
+        return yields;
+    }
+    
     @Override
     public TransformationResult<EntQuery3> transform(final TransformationContext context) {
+
+
+        
         final TransformationResult<IQrySources3> sourcesTr = sources != null ? sources.transform(context) : null;
         final TransformationResult<Conditions3> conditionsTr = conditions.transform(sourcesTr != null ? sourcesTr.updatedContext : context);
+
+        
         final TransformationResult<Yields3> yieldsTr = yields.transform(conditionsTr.updatedContext);
         final TransformationResult<GroupBys3> groupsTr = groups.transform(yieldsTr.updatedContext);
         final TransformationResult<OrderBys3> orderingsTr = orderings.transform(groupsTr.updatedContext);

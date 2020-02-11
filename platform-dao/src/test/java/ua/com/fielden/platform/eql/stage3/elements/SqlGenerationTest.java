@@ -1009,7 +1009,6 @@ public class SqlGenerationTest extends EqlStage3TestCase {
     }
 
     @Test
-    @Ignore
     public void dot_notated_props_are_correctly_transformed_05() {
     
         // select(VEHICLE).
@@ -1070,7 +1069,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                 isNotNull(expr(prop("name", ou5))), 
                 isNotNull(expr(prop("name", ou4))),
                 isNotNull(expr(prop(KEY, ou2eou1))));
-        final EntQuery3 expQry = qry(sources, conditions);
+        final EntQuery3 expQry = qry(sources, conditions, yields(veh, vehicleYields));
 
         assertEquals(expQry, actQry);
     }
