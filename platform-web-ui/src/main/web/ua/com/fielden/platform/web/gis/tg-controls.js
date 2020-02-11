@@ -59,37 +59,37 @@ export const Controls = function (_map, _markersClusterGroup, _baseLayers, _addi
     });
     self._map.addControl(scaleControl);
 
-//    // leaflet draw controls
-//    const drawControl = new LeafletDraw({
-//        position: 'bottomleft',
-//
-//        edit: {
-//            featureGroup: self._markersClusterGroup // drawnItems
-//        },
-//
-//        draw: {
-//            polygon: {
-//                shapeOptions: {
-//                    color: 'purple'
-//                },
-//                allowIntersection: false,
-//                drawError: {
-//                    color: 'orange',
-//                    timeout: 1000
-//                },
-//                showArea: true,
-//                metric: true
-//            }
-//        }
-//    });
-//    self._map.addControl(drawControl);
-//
-//    self._map.on('draw:created', function (e) {
-//        const type = e.layerType;
-//        const layer = e.layer;
-//        self._markersClusterGroup.addLayer(layer);
-//        // self._markersClusterGroup.refreshClusters();
-//    });
+   // leaflet draw controls
+   const drawControl = new LeafletDraw({
+       position: 'bottomleft',
+
+       edit: {
+           featureGroup: self._markersClusterGroup // drawnItems
+       },
+
+       draw: {
+           polygon: {
+               shapeOptions: {
+                   color: 'purple'
+               },
+               allowIntersection: false,
+               drawError: {
+                   color: 'orange',
+                   timeout: 1000
+               },
+               showArea: true,
+               metric: true
+           }
+       }
+   });
+   self._map.addControl(drawControl);
+
+   self._map.on('draw:created', function (e) {
+       const type = e.layerType;
+       const layer = e.layer;
+       self._markersClusterGroup.addLayer(layer);
+       // self._markersClusterGroup.refreshClusters();
+   });
     
     if (_editableArcGisOverlay) {
         // Editable plugin + Path.Drag.js plugin + ArcGIS backend

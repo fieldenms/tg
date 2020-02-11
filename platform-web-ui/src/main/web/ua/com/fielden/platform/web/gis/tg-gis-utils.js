@@ -43,7 +43,7 @@ export const fitToBounds = function (map, markerClusterGroup, overlays) {
             let bounds = null;
             let processedArcGisOverlaysCount = 0;
             let arcGisOverlaysCount = 0;
-            Object.values(overlays).forEach(overlay => {
+/*            Object.values(overlays).forEach(overlay => {
                 if (overlay.query) {
                     if (map.hasLayer(overlay)) {
                         arcGisOverlaysCount++;
@@ -60,7 +60,7 @@ export const fitToBounds = function (map, markerClusterGroup, overlays) {
                         });
                     }
                 }
-            });
+            }); */
         }
     }, 1);
 }
