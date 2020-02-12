@@ -268,17 +268,14 @@ GisComponent.prototype.promoteEntities = function (newEntities) {
     const self = this;
     this._entities = newEntities;
 
-    this.traverseEntities(this._entities, null /* the parent for top-level entities is null! */, function (entity) {
-        if (entity.type) {
-            console.warn('Entity already has "type" object. Cannot continue with conversion into feature.');
-        }
+    this.traverseEntities(this._entities, null /* the parent for top-level entities is null! */, function (entity, parentFeature) {
         entity.type = "Feature";
 
          if (entity.properties) {
             console.warn('Entity already has "properties" object. Cannot continue with conversion into feature.');
         }
         entity.properties = entity.properties || {};
-        entity.properties._parentFeature = null;
+        entity.properties._parentFeature = parentFeature;
 
          if (entity.geometry) {
             throw 'Entity already has "geometry" object. Cannot continue with conversion into feature.';
@@ -290,12 +287,13 @@ GisComponent.prototype.promoteEntities = function (newEntities) {
         // console.debug('entity.geometry:');
         // console.debug(entity.geometry);
 
-         if (entity.geometry) {
+        if (entity.geometry) {
             self._geoJsonOverlay.addData(entity);
+            console.debug('added', entity);
         } else {
             // TODO do nothing in case when the entity has no visual representation
-            console.debug("entity with no visual representation: ");
-            console.debug(entity);
+            // console.debug("entity with no visual representation: ");
+            // console.debug(entity);
         }
     }, function (entities) {
         return self.createSummaryFeature(entities);
@@ -361,22 +359,18 @@ GisComponent.prototype.createGeometry = function (feature) {
 GisComponent.prototype.traverseEntities = function (entities, parentFeature, entityAction, createSummaryFeatureAction) {
     for (let i = 0; i < entities.length; i++) {
         const entity = entities[i];
-        this.traverseEntity(entity, entityAction, createSummaryFeatureAction); // entityAction converts entity to a feature form
-
-        entity.properties._parentFeature = parentFeature;
+        this.traverseEntity(entity, parentFeature, entityAction, createSummaryFeatureAction); // entityAction converts entity to a feature form
     }
     const summaryFeature = createSummaryFeatureAction(entities);
     if (summaryFeature) {
         entities.push(summaryFeature); // the last sibling item to the entities will be summaryFeature (if any)
-        entityAction(summaryFeature); // entityAction converts entity to a feature form if it is not feature already
-
-        summaryFeature.properties._parentFeature = parentFeature;
+        entityAction(summaryFeature, parentFeature); // entityAction converts entity to a feature form if it is not feature already
     }
 }
 
-GisComponent.prototype.traverseEntity = function (entity, entityAction, createSummaryFeatureAction) {
+GisComponent.prototype.traverseEntity = function (entity, parentFeature, entityAction, createSummaryFeatureAction) {
     const self = this;
-    entityAction(entity); // entityAction converts entity to a feature form
+    entityAction(entity, parentFeature); // entityAction converts entity to a feature form
 
     /* if (entity.properties) {
         for (let prop in entity.properties) {
