@@ -76,8 +76,10 @@ public class LogoutResource extends ServerResource {
                 final Optional<UserSession> session = coUserSession.currentSession(userProvider.getUser(), auth.toString(), false);
                 if (session.isPresent()) {
                     coUserSession.clearSession(session.get());
-                    return loggedOutPage();
                 }
+                // let's use this opportunity to clear expired sessions for the user
+                coUserSession.clearExpired(userProvider.getUser());
+                return loggedOutPage();
             }
 
             // otherwise return the response as if the logout actually happened
