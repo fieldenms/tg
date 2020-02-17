@@ -248,9 +248,7 @@ GisComponent.prototype.getTopEntityFor = function (feature) {
 }
 
 GisComponent.prototype.initialise = function () {
-    this._geoJsonOverlay.addData([]);
-
-    fjdkhfjsdhdjsfks
+    Object.values(self._overlays).addData([]);
 };
 
 GisComponent.prototype.createMarkerFactory = function () {
@@ -307,7 +305,13 @@ GisComponent.prototype.promoteEntities = function (newEntities) {
         // console.debug(entity.geometry);
 
         if (entity.geometry) {
-            self._geoJsonOverlay.addData(entity);
+            if (entity.type = "Location"){
+                self._createLayer.addData(entity);//somehow to `Location'?
+            } else if(entity.type = "Equipment"){
+                self._createLayer.addData(entity);//somehow to `Equipment'?
+            } else {
+                self._createLayer.addData(entity);//somehow to `Statistics'?
+            }
             //console.debug('added', entity);
         } else {
             // TODO do nothing in case when the entity has no visual representation
