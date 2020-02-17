@@ -289,7 +289,7 @@ GisComponent.prototype.promoteEntities = function (newEntities) {
 
         if (entity.geometry) {
             self._geoJsonOverlay.addData(entity);
-            console.debug('added', entity);
+            //console.debug('added', entity);
         } else {
             // TODO do nothing in case when the entity has no visual representation
             // console.debug("entity with no visual representation: ");
