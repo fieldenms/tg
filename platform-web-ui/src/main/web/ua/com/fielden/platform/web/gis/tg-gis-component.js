@@ -161,7 +161,7 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
     self._entityStyling = self.createEntityStyling();
     self._geoJsonOverlay = self._createLayer();
 
-    self._controls = new Controls(self._map, self._markerCluster.getGisMarkerClusterGroup(), self._baseLayers, overlays, Object.values(overlays)[0]);
+    self._controls = new Controls(self._map, self._markerCluster.getGisMarkerClusterGroup(), self._baseLayers, overlays, /*Object.values(overlays)[0]*/ null);
 
     const findLayerByPredicate = function (overlay, predicate) {
         if (overlay._layers) {
@@ -248,7 +248,12 @@ GisComponent.prototype.getTopEntityFor = function (feature) {
 }
 
 GisComponent.prototype.initialise = function () {
-    Object.values(self._overlays).addData([]);
+    this._geoJsonOverlay.addData([]);
+    Object.values(this._overlays).forEach(function (overlay) {
+        if (overlay.addData) { // marker cluster layer is not geoJson compatible, because it wraps _geoJsonOverlay -- skip it; need to refactor
+            overlay.addData([]);
+        }
+    });
 };
 
 GisComponent.prototype.createMarkerFactory = function () {
@@ -305,12 +310,13 @@ GisComponent.prototype.promoteEntities = function (newEntities) {
         // console.debug(entity.geometry);
 
         if (entity.geometry) {
-            if (entity.type = "Location"){
-                self._createLayer.addData(entity);//somehow to `Location'?
-            } else if(entity.type = "Equipment"){
-                self._createLayer.addData(entity);//somehow to `Equipment'?
+            const featureType = self.featureType(entity);
+            if (featureType === "Location") {
+                self._overlays['Locations'].addData(entity);
+            } else if (featureType === "Equipment"){
+                self._overlays['Equipments'].addData(entity);
             } else {
-                self._createLayer.addData(entity);//somehow to `Statistics'?
+                self._overlays['Statistics'].addData(entity);
             }
             //console.debug('added', entity);
         } else {
