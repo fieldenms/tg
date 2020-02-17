@@ -39,7 +39,7 @@ public class EntityTypePropInfo<T extends AbstractEntity<?>> extends AbstractPro
     
     @Override
     public ResolutionContext resolve(final ResolutionContext context) {
-        return context.isSuccessful() ? context : propEntityInfo.resolve(context);
+        return propEntityInfo.resolve(context);
     }
 
     @Override

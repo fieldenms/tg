@@ -28,6 +28,6 @@ public class ComponentTypePropInfo extends AbstractPropInfo {
 
     @Override
     public ResolutionContext resolve(final ResolutionContext context) {
-        return context.isSuccessful() ? context : getPropEntityInfo().resolve(context);
+        return getPropEntityInfo().resolve(context);
     }
 }
