@@ -4,12 +4,11 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.stage2.elements.operands.Expression2;
 import ua.com.fielden.platform.types.tuples.T2;
 
 public class ChildGroup {
-    final AbstractPropInfo<?> main;
+    final String mainName;
     final QrySource2BasedOnPersistentType source;
     final boolean required;
     final List<ChildGroup> items;
@@ -18,8 +17,8 @@ public class ChildGroup {
     
     final Expression2 expr;
     
-    public ChildGroup(final AbstractPropInfo<?> main, final List<ChildGroup> items, final Set<T2<String, IQrySource2<?>>> paths, final boolean required, final QrySource2BasedOnPersistentType source, final Expression2 expr) {
-        this.main = main;
+    public ChildGroup(final String mainName, final List<ChildGroup> items, final Set<T2<String, IQrySource2<?>>> paths, final boolean required, final QrySource2BasedOnPersistentType source, final Expression2 expr) {
+        this.mainName = mainName;
         this.items = items;
         this.required = required;
         this.source = source;
@@ -32,7 +31,7 @@ public class ChildGroup {
         final int prime = 31;
         int result = 1;
         result = prime * result + items.hashCode();
-        result = prime * result + main.hashCode();
+        result = prime * result + mainName.hashCode();
         result = prime * result + ((paths == null) ? 0 : paths.hashCode());
         result = prime * result + ((source == null) ? 0 : source.hashCode());
         return result;
@@ -50,6 +49,6 @@ public class ChildGroup {
 
         final ChildGroup other = (ChildGroup) obj;
         
-        return Objects.equals(main, other.main) && Objects.equals(items, other.items) && Objects.equals(paths, other.paths) && Objects.equals(source, other.source);
+        return Objects.equals(mainName, other.mainName) && Objects.equals(items, other.items) && Objects.equals(paths, other.paths) && Objects.equals(source, other.source);
     }
 }

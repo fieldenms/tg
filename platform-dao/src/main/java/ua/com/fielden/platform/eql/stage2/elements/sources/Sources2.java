@@ -77,7 +77,7 @@ public class Sources2  {
         TransformationContext currentContext = context;
         for (final ChildGroup fc : children) {
             for (final T2<String, IQrySource2<?>> el : fc.paths) {
-                currentContext = currentContext.cloneWithResolutions(t2(el._1, el._2), t2(source, fc.expr == null ? fc.main.name : fc.expr));
+                currentContext = currentContext.cloneWithResolutions(t2(el._1, el._2), t2(source, fc.expr == null ? fc.mainName : fc.expr));
             }
 
             if (!fc.items.isEmpty()) {
@@ -99,7 +99,7 @@ public class Sources2  {
         final ISingleOperand3 lo;
         
         if (child.expr == null) {
-            lo = new EntProp3(child.main.name, rootSource);
+            lo = new EntProp3(child.mainName, rootSource);
         } else {
             final TransformationResult<Expression3> expTr = child.expr.transform(currentContext);
             lo = expTr.item;
