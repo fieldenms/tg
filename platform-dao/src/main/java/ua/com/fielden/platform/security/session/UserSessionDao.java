@@ -43,6 +43,7 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
 @EntityType(UserSession.class)
 public class UserSessionDao extends CommonEntityDao<UserSession> implements IUserSession {
     private final Logger logger = Logger.getLogger(UserSessionDao.class);
+    private static final DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS");
 
     /** A key to be used for hashing authenticators and series ID before storing them. */
     private final String hashingKey;
@@ -132,16 +133,20 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
     @Override
     @SessionRequired
     public void clearExpired(final User user) {
-        final EntityResultQueryModel<UserSession> query =
-                select(UserSession.class)
-                        .where()
-                        .prop("user").eq().val(user)
-                        .and().prop("expiryTime").lt().now()
-                        .model();
-        
-        invalidateCache(query);
-        
-        defaultBatchDelete(query);
+        try {
+            final EntityResultQueryModel<UserSession> query =
+                    select(UserSession.class)
+                            .where()
+                            .prop("user").eq().val(user)
+                            .and().prop("expiryTime").lt().now()
+                            .model();
+            
+            invalidateCache(query);
+            
+            defaultBatchDelete(query);
+        } catch (final Exception ex) {
+            logger.error(format("Could not clear expired sessions for user [%s].", user), ex);
+        }
     }
 
     @Override
@@ -264,15 +269,6 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
             return Optional.empty();
         }
 
-        // the presented authenticator might already be expired and does not need to be validated any further -- simply return no session
-        // if authenticator has expired then use this opportunity to clear all expired sessions for the current
-        if (auth.getExpiryTime().isBefore(constants.now().getMillis())) {
-            logger.warn(format("The provided authenticator %s for user %s has expired.", auth, user.getKey()));
-            // clean up expired sessions
-            clearExpired(user);
-            return Optional.empty();
-        }
-
         // so far so good, there is a hope that the current request is authentic, but there is still a chance that it is coming for an adversary...
         // let's find a persisted session, and there should be one if request is authentic, associated with the specified user and series ID
         final UserSession session = findByKeyAndFetch(fetchAll(UserSession.class), user, seriesHash(auth.seriesId));
@@ -295,12 +291,13 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
             // remove all user sessions if theft scenario should be considered
             if (shouldConsiderTheftScenario) {
                 // if the session was not found in the cache then proceed with the theft story...
-                logger.warn(format("A seemingly correct authenticator %s did not have a corresponding sesssion record.", auth));
+                logger.warn(format("A seemingly correct authenticator [%s] did not have a corresponding sesssion record.", auth));
                 // in this case, sessions are removed based on user name and series ID, which is required taking into consideration that series ID could have been already regenerated
                 final int count = clearAllFoUserAndBySeriesId(user, auth);
                 logger.debug(format("Removed %s session(s) for series ID %s", count, auth.seriesId));
                 return Optional.empty();
             } else { // otherwise just return an empty result, indicating no user session could be found
+                logger.warn(format("A seemingly correct authenticator [%s] did not have a corresponding sesssion record, access denied (skip regeneration == %s).", auth, skipRegeneration));
                 return Optional.empty();
             }
         }
@@ -311,9 +308,11 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
         // if they are not.... then most likely the database was tempered with... just log the problem, but proceed with further session validation
         // the thing is that the only way to reach this point of validation for an authenticator, it would need to be either valid or an adversary would needed to either steal it and no legitimate user yet used it, or forge it, which would
         // require an access to the server... in this unfortunate case there is no way to identify the actually stolen session...
-        if (auth.expiryTime != session.getExpiryTime().getTime()) {
-            final DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS");
-            logger.warn(format("Session expiry time %s for authenticator %s differes to the persisted expiry time %s.", formatter.print(auth.expiryTime), auth, formatter.print(session.getExpiryTime().getTime())));
+        if (session.getExpiryTime().before(now().toDate())) {
+            logger.warn(format("Session for user [%s] has expired at [%s], access denied (skip regeneration == %s).", user, formatter.print(session.getExpiryTime().getTime()), skipRegeneration));
+            // if authenticator has expired then use this opportunity to clear all expired sessions for the current
+            clearExpired(user);
+            return Optional.empty();
         }
 
         // if this point is reached then the identified session is considered valid
@@ -333,7 +332,7 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
             final UserSession updated = save(session);
             final UserSession userSessionForCache = updated.copyTo(newPlainEntity(UserSession.class,  updated.getId()));
             // assign authenticator, but in way not to disturb the entity meta-state
-            userSessionForCache.setAuthenticator(mkAuthenticator(userSessionForCache.getUser(), seriesId /* un-hashed */, userSessionForCache.getExpiryTime()));
+            userSessionForCache.setAuthenticator(mkAuthenticator(userSessionForCache.getUser(), seriesId /* un-hashed */, updated.getVersion(), userSessionForCache.getExpiryTime()));
 
             // in order to support concurrent request from the same user it is necessary to
             // associate the presented and verified authenticator as well as the new authenticator with an updated session in the session cache
@@ -383,7 +382,7 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
         // assign authenticator in way not to disturb the entity meta-state
         final UserSession saved = save(session);
         saved.beginInitialising();
-        saved.setAuthenticator(mkAuthenticator(saved.getUser(), seriesId /* un-hashed */, saved.getExpiryTime()));
+        saved.setAuthenticator(mkAuthenticator(saved.getUser(), seriesId /* un-hashed */, saved.getVersion(), saved.getExpiryTime()));
         saved.endInitialising();
 
         // need to cache the established session in associated with the generated authenticator
@@ -401,11 +400,11 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
      * @return
      */
     @Override
-    public Authenticator mkAuthenticator(final User user, final String seriesId, final Date expiryTime) {
+    public Authenticator mkAuthenticator(final User user, final String seriesId, final long version, final Date expiryTime) {
         try {
-            final String token = mkToken(user.getKey(), seriesId, expiryTime);
+            final String token = mkToken(user.getKey(), seriesId, version);
             final String hash = crypto.calculateRFC2104HMAC(token, hashingKey);
-            return new Authenticator(token, hash);
+            return new Authenticator(Optional.of(expiryTime), token, hash);
         } catch (final SignatureException ex) {
             throw new IllegalStateException(ex);
         }
