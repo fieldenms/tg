@@ -42,6 +42,12 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
         self.promoteEntities(newRetrievedEntitiesCopy);
 
         self._markerCluster.getGisMarkerClusterGroup().addLayer(self._geoJsonOverlay);
+
+        const overlays = Object.values(self._overlays);
+        for (let i = 0; i < overlays.length; i++) {
+            self._markerCluster.getGisMarkerClusterGroup().addLayer(overlays[i]);
+        }
+
         self.finishReload();
 
         // In standard cases ShouldFitToBounds is always true. However, sse (event sourcing) dataHandlers could change ShouldFitToBounds to false.
@@ -93,6 +99,31 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
     // create a factory for markers
     self._markerFactory = self.createMarkerFactory();
 
+    self._createLayer = function () {
+        const geoJson = L.geoJson([], {
+            style: function (feature) {
+                return self._entityStyling.getStyle(feature);
+            },
+            pointToLayer: function (feature, latlng) {
+                return self._markerFactory.createFeatureMarker(feature, latlng);
+            },
+            onEachFeature: function (feature, layer) {
+                const layerId = geoJson.getLayerId(layer);
+                feature.properties.layerId = layerId;
+                layer.on('mouseover', function () {
+                    if (!feature.properties.popupContentInitialised) { // initialise popupContent (text or even heavyweight HTMLElement) only once when mouseOver occurs
+                        layer.bindPopup(self.createPopupContent(feature));
+                        feature.properties.popupContentInitialised = true;
+                    }
+                });
+                layer.on('click', function () { // dblclick
+                    self._select.select(layerId);
+                });
+            }
+        });
+        return geoJson;
+    };
+
     self._createEsriLayer = function (url, _featureType, checkedByDefault = false) {
         const esriOverlay = esri.featureLayer({
             url: url,
@@ -124,30 +155,11 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
     };
 
     const overlays = self.createOverlays();
+    self._overlays = overlays;
     self._markerCluster = self.createMarkerCluster(self._map, self._markerFactory, progressDiv, progressBarDiv, overlays);
 
     self._entityStyling = self.createEntityStyling();
-    self._geoJsonOverlay = L.geoJson([], {
-        style: function (feature) {
-            return self._entityStyling.getStyle(feature);
-        },
-        pointToLayer: function (feature, latlng) {
-            return self._markerFactory.createFeatureMarker(feature, latlng);
-        },
-        onEachFeature: function (feature, layer) {
-            const layerId = self._geoJsonOverlay.getLayerId(layer);
-            feature.properties.layerId = layerId;
-            layer.on('mouseover', function () {
-                if (!feature.properties.popupContentInitialised) { // initialise popupContent (text or even heavyweight HTMLElement) only once when mouseOver occurs
-                    layer.bindPopup(self.createPopupContent(feature));
-                    feature.properties.popupContentInitialised = true;
-                }
-            });
-            layer.on('click', function () { // dblclick
-                self._select.select(layerId);
-            });
-        }
-    });
+    self._geoJsonOverlay = self._createLayer();
 
     self._controls = new Controls(self._map, self._markerCluster.getGisMarkerClusterGroup(), self._baseLayers, overlays, Object.values(overlays)[0]);
 
@@ -189,6 +201,11 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
     self._map.fire('dataloading');
     self.initialise();
     self._markerCluster.getGisMarkerClusterGroup().addLayer(self._geoJsonOverlay);
+
+    for (let i = 0; i < Object.values(overlays).length; i++) {
+        self._markerCluster.getGisMarkerClusterGroup().addLayer(Object.values(overlays)[i]);
+    }
+
     self._map.fire('dataload');
 };
 
@@ -232,6 +249,8 @@ GisComponent.prototype.getTopEntityFor = function (feature) {
 
 GisComponent.prototype.initialise = function () {
     this._geoJsonOverlay.addData([]);
+
+    fjdkhfjsdhdjsfks
 };
 
 GisComponent.prototype.createMarkerFactory = function () {
