@@ -17,8 +17,8 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 /**
- * Default implementation of {@link IDates} contract containing thread-local time-zone for each client-originating server resources.
- * This time-zone is to be used when converting timeline moments to time-zone 
+ * Default implementation of {@link IDates}, which uses a thread-local state for managing time-zone values specified in client requests.
+ * Request time-zones are used when converting timeline moments to time-zone specific ones. 
  * 
  * @author TG Team
  *

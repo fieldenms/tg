@@ -5,6 +5,7 @@ import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isPlace
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.getDateValuesFrom;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.utils.EntityUtils.isDate;
+import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -105,12 +106,12 @@ public class EntityQueryCriteriaUtils {
                     if (isDate(determinePropertyType(managedType, propertyName)) && tickManager.getDatePrefix(root, propertyName) != null
                             && tickManager.getDateMnemonic(root, propertyName) != null) {
                         final Pair<Date, Date> fromAndTo = getDateValuesFrom(tickManager.getDatePrefix(root, propertyName), tickManager.getDateMnemonic(root, propertyName), tickManager.getAndBefore(root, propertyName), dates);
-                        paramValues.put(propertyName, new Pair<Object, Object>(fromAndTo.getKey(), fromAndTo.getValue()));
+                        paramValues.put(propertyName, pair(fromAndTo.getKey(), fromAndTo.getValue()));
                     } else {
-                        paramValues.put(propertyName, new Pair<>(tickManager.getValue(root, propertyName), tickManager.getValue2(root, propertyName)));
+                        paramValues.put(propertyName, pair(tickManager.getValue(root, propertyName), tickManager.getValue2(root, propertyName)));
                     }
                 } else {
-                    paramValues.put(propertyName, new Pair<>(tickManager.getValue(root, propertyName), null));
+                    paramValues.put(propertyName, pair(tickManager.getValue(root, propertyName), null));
                 }
             }
         }
