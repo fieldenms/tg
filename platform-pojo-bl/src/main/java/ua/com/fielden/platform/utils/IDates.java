@@ -7,12 +7,15 @@ import java.util.Date;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
+import com.google.inject.ImplementedBy;
+
 /**
  * Contract for time-zone-aware date handling.
  * 
  * @author TG Team
  *
  */
+@ImplementedBy(DefaultDates.class)
 public interface IDates {
     
     /**

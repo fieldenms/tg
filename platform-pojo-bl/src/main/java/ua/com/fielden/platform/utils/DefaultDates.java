@@ -14,6 +14,7 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 /**
@@ -23,6 +24,7 @@ import com.google.inject.name.Named;
  * @author TG Team
  *
  */
+@Singleton
 public class DefaultDates implements IDates {
     private static final String SERVER_TIME_ZONE_APPLIED = "Server time-zone will be used.";
     private final Logger logger = Logger.getLogger(getClass());

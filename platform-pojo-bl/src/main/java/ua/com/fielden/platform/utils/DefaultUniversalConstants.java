@@ -5,8 +5,17 @@ import java.util.Locale;
 import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+/**
+ * This is the default implementation for {@link IUniversalConstants}, which can be used for production purposes.
+ * However, an alternative implementation for testing purposes may be desirable if it is required to have modelling time.
+ *
+ * @author TG Team
+ *
+ */
+@Singleton
 public class DefaultUniversalConstants implements IUniversalConstants {
     private final String appName;
     private final String smtpServer;
