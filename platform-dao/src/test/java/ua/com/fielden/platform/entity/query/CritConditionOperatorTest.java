@@ -27,6 +27,7 @@ import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
+import ua.com.fielden.platform.test.ioc.DatesForTesting;
 import ua.com.fielden.platform.utils.IDates;
 
 public class CritConditionOperatorTest extends BaseEntQueryCompositionTCase {
@@ -37,7 +38,7 @@ public class CritConditionOperatorTest extends BaseEntQueryCompositionTCase {
     private static final String persistedPropInCollection = "fuelType.key";
     private static final String D = "D";
     private static final ICompoundCondition0<TgFuelUsage> modelStart = select(TgFuelUsage.class).where().prop("vehicle").eq().extProp(ID);
-    private static final IDates dates = new IDates() {};
+    private static final IDates dates = new DatesForTesting();
 
     @Test
     public void single_operator_generates_correct_condition_if_crit_prop_param_not_available() {

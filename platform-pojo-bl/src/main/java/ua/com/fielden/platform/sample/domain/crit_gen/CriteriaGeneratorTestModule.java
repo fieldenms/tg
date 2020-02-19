@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.sample.domain.crit_gen;
 
 import com.google.inject.Scopes;
+import com.google.inject.name.Names;
 
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
@@ -25,6 +26,10 @@ public class CriteriaGeneratorTestModule extends EntityModuleWithPropertyFactory
     @Override
     protected void configure() {
         super.configure();
+        bindConstant().annotatedWith(Names.named("app.name")).to("Unit Tests");
+        bindConstant().annotatedWith(Names.named("email.smtp")).to("192.168.1.8");
+        bindConstant().annotatedWith(Names.named("email.fromAddress")).to("tests@tg.org"); 
+
         bind(IApplicationDomainProvider.class).to(ApplicationDomain.class);
         bind(ITopLevelEntity.class).to(TopLevelEntityDaoStub.class);
         bind(ILastLevelEntity.class).to(LastLevelEntityDaoStub.class);
