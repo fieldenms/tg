@@ -54,6 +54,7 @@ import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.impl.Serialiser;
 import ua.com.fielden.platform.test.UserProviderForTesting;
+import ua.com.fielden.platform.test.ioc.DatesForTesting;
 import ua.com.fielden.platform.test.ioc.PlatformTestServerModule.TestSessionCacheBuilder;
 import ua.com.fielden.platform.test.ioc.TickerForSessionCache;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
@@ -63,6 +64,7 @@ import ua.com.fielden.platform.ui.config.api.IEntityMasterConfig;
 import ua.com.fielden.platform.ui.config.controller.EntityCentreConfigDao;
 import ua.com.fielden.platform.ui.config.controller.EntityLocatorConfigDao;
 import ua.com.fielden.platform.ui.config.controller.EntityMasterConfigDao;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdaterDao;
 import ua.com.fielden.platform.web.centre.CentreConfigDeleteActionDao;
@@ -148,6 +150,7 @@ public class WebHibernateModule extends CommonFactoryModule {
         bindConstant().annotatedWith(UntrustedDeviceSessionDuration.class).to(5); // 5 minutes
 
         bind(Ticker.class).to(TickerForSessionCache.class).in(Scopes.SINGLETON);
+        bind(IDates.class).to(DatesForTesting.class).in(Scopes.SINGLETON);
         bind(IUniversalConstants.class).to(UniversalConstantsForTesting.class).in(Scopes.SINGLETON);
         bind(new TypeLiteral<Cache<String, UserSession>>(){}).annotatedWith(SessionCache.class).toProvider(TestSessionCacheBuilder.class).in(Scopes.SINGLETON);
         

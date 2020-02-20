@@ -64,7 +64,6 @@ import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.fetch.FetchProviderFactory;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
@@ -392,13 +391,13 @@ public class EntityUtils {
      *            - use true if validation have to be performed inside the "finish" date setter, false - inside the "start" date setter
      * @throws Result
      */
-    public static void validateDateRange(final Date start, final Date finish, final MetaProperty<Date> startProperty, final MetaProperty<Date> finishProperty, final boolean finishSetter) {
+    public static void validateDateRange(final Date start, final Date finish, final MetaProperty<Date> startProperty, final MetaProperty<Date> finishProperty, final boolean finishSetter, final IDates dates) {
         if (finish != null) {
             if (start != null) {
                 if (start.after(finish)) {
                     throw Result.failure(finishSetter
-                    ? format("Property [%s] (value [%s]) cannot be before property [%s] (value [%s]).", finishProperty.getTitle(), toString(finish) , startProperty.getTitle(), toString(start))
-                    : format("Property [%s] (value [%s]) cannot be after property [%s] (value [%s]).", startProperty.getTitle(), toString(start), finishProperty.getTitle(), toString(finish)));
+                    ? format("Property [%s] (value [%s]) cannot be before property [%s] (value [%s]).", finishProperty.getTitle(), dates.toString(finish) , startProperty.getTitle(), dates.toString(start))
+                    : format("Property [%s] (value [%s]) cannot be after property [%s] (value [%s]).", startProperty.getTitle(), dates.toString(start), finishProperty.getTitle(), dates.toString(finish)));
                 }
             } else {
                 throw Result.failure(finishSetter
@@ -420,13 +419,13 @@ public class EntityUtils {
      *            - use true if validation have to be performed inside the "finish" date setter, false - inside the "start" date setter
      * @throws Result
      */
-    public static void validateDateTimeRange(final DateTime start, final DateTime finish, final MetaProperty<DateTime> startProperty, final MetaProperty<DateTime> finishProperty, final boolean finishSetter) {
+    public static void validateDateTimeRange(final DateTime start, final DateTime finish, final MetaProperty<DateTime> startProperty, final MetaProperty<DateTime> finishProperty, final boolean finishSetter, final IDates dates) {
         if (finish != null) {
             if (start != null) {
                 if (start.isAfter(finish)) {
                     throw Result.failure(finishSetter
-                    ? format("Property [%s] (value [%s]) cannot be before property [%s] (value [%s]).", finishProperty.getTitle(), toString(finish) , startProperty.getTitle(), toString(start))
-                    : format("Property [%s] (value [%s]) cannot be after property [%s] (value [%s]).", startProperty.getTitle(), toString(start), finishProperty.getTitle(), toString(finish)));
+                    ? format("Property [%s] (value [%s]) cannot be before property [%s] (value [%s]).", finishProperty.getTitle(), dates.toString(finish) , startProperty.getTitle(), dates.toString(start))
+                    : format("Property [%s] (value [%s]) cannot be after property [%s] (value [%s]).", startProperty.getTitle(), dates.toString(start), finishProperty.getTitle(), dates.toString(finish)));
                 }
             } else {
                 throw Result.failure(finishSetter

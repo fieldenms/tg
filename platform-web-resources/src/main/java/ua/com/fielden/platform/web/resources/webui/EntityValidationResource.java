@@ -24,6 +24,7 @@ import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -57,10 +58,11 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Abstr
             final IWebUiConfig webUiConfig,
             final IUserProvider userProvider,
             final IDeviceProvider deviceProvider,
+            final IDates dates,
             final Context context,
             final Request request,
             final Response response) {
-        super(context, request, response, deviceProvider);
+        super(context, request, response, deviceProvider, dates);
         
         this.entityType = entityType;
         this.entityFactory = entityFactory;

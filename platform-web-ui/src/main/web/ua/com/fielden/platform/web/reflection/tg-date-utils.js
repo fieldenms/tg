@@ -48,3 +48,7 @@ export function _momentTz(input) {
     const timeZone = arguments[arguments.length - 1];
     return timeZone ? moment.tz.apply(null, arguments) : moment.apply(null, args);
 };
+
+export function _timeZoneHeader () {
+    return {"Time-Zone": moment.tz.guess(true)};
+};

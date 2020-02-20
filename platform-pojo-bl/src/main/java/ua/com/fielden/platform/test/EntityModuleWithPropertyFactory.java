@@ -9,6 +9,7 @@ import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.entity.validation.HappyValidator;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
+import ua.com.fielden.platform.test.ioc.DatesForTesting;
 
 import com.google.inject.Injector;
 
@@ -43,7 +44,7 @@ public class EntityModuleWithPropertyFactory extends EntityModule {
         //////////////////////////////////////////////
         //////////// bind property factory ///////////
         //////////////////////////////////////////////
-        bind(IMetaPropertyFactory.class).toInstance(new AbstractMetaPropertyFactory(domainValidationConfig, domainMetaPropertyConfig) {
+        bind(IMetaPropertyFactory.class).toInstance(new AbstractMetaPropertyFactory(domainValidationConfig, domainMetaPropertyConfig, new DatesForTesting()) {
 
             @Override
             protected IBeforeChangeEventHandler createEntityExists(final EntityExists anotation) {

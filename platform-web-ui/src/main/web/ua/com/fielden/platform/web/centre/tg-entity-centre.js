@@ -13,13 +13,14 @@ import '/resources/centre/tg-centre-result-view.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import { tearDownEvent, getRelativePos, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
 import '/resources/actions/tg-ui-action.js';
+import { TgElementSelectorBehavior, queryElements} from '/resources/components/tg-element-selector-behavior.js';
+import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 
 import '/resources/polymer/@polymer/iron-pages/iron-pages.js';
 import '/resources/polymer/@polymer/iron-ajax/iron-ajax.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
-import { TgElementSelectorBehavior, queryElements} from '/resources/components/tg-element-selector-behavior.js';
 
 const template = html`
     <style>
@@ -133,7 +134,7 @@ const template = html`
     <style include="paper-material-styles iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <tg-serialiser id="serialiser"></tg-serialiser>
 
-    <iron-ajax id="ajaxDiscarder" url="[[_url]]" method="PUT" handle-as="json" on-response="_processDiscarderResponse" on-error="_processDiscarderError"></iron-ajax>
+    <iron-ajax id="ajaxDiscarder" headers="[[_headers]]" url="[[_url]]" method="PUT" handle-as="json" on-response="_processDiscarderResponse" on-error="_processDiscarderError"></iron-ajax>
 
     <tg-confirmation-dialog id="confirmationDialog"></tg-confirmation-dialog>
 
@@ -232,7 +233,18 @@ Polymer({
             type: String,
             observer: '_staleCriteriaMessageChanged'
         },
-        _confirm: Function
+        _confirm: Function,
+        
+        /**
+         * Additional headers for every 'iron-ajax' client-side requests. These only contain 
+         * our custom 'Time-Zone' header that indicates real time-zone for the client application.
+         * The time-zone then is to be assigned to threadlocal 'IDates.timeZone' to be able
+         * to compute 'Now' moment properly.
+         */
+        _headers: {
+            type: String,
+            value: _timeZoneHeader
+        }
     },
 
     behaviors: [ IronResizableBehavior, TgFocusRestorationBehavior, TgElementSelectorBehavior ],

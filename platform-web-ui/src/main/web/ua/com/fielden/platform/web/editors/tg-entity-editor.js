@@ -17,6 +17,7 @@ import {microTask} from '/resources/polymer/@polymer/polymer/lib/utils/async.js'
 import { TgEditor, createEditorTemplate} from '/resources/editors/tg-editor.js';
 import { tearDownEvent, allDefined } from '/resources/reflection/tg-polymer-utils.js'
 import { composeEntityValue, composeDefaultEntityValue } from '/resources/editors/tg-entity-formatter.js'; 
+import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 
 const additionalTemplate = html`
     <style>
@@ -55,7 +56,7 @@ const additionalTemplate = html`
             --tg-editor-default-input-layer-display: flex;
         }
     </style>
-    <iron-ajax id="ajaxSearcher" loading="{{searching}}" url="[[_url]]" method="POST" handle-as="json" on-response="_processSearcherResponse" on-error="_processSearcherError"></iron-ajax>
+    <iron-ajax id="ajaxSearcher" headers="[[_headers]]" loading="{{searching}}" url="[[_url]]" method="POST" handle-as="json" on-response="_processSearcherResponse" on-error="_processSearcherError"></iron-ajax>
     <tg-serialiser id="serialiser"></tg-serialiser>`;
 const customInputTemplate = html`
     <iron-input bind-value="{{_editingValue}}" class="custom-input-wrapper">
@@ -359,7 +360,18 @@ export class TgEntityEditor extends TgEditor {
             */
            _retrieveContainerSizes: {
                type: Function
-           }
+           },
+            
+            /**
+             * Additional headers for every 'iron-ajax' client-side requests. These only contain 
+             * our custom 'Time-Zone' header that indicates real time-zone for the client application.
+             * The time-zone then is to be assigned to threadlocal 'IDates.timeZone' to be able
+             * to compute 'Now' moment properly.
+             */
+            _headers: {
+                type: String,
+                value: _timeZoneHeader
+            }
        };
     }
     
