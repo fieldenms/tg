@@ -7,6 +7,14 @@ import org.joda.time.DateTime;
 
 import ua.com.fielden.platform.utils.IDates;
 
+/**
+ * A convenient implementation of the {@link IDates} contract for the unit testing purposes.
+ * <p>
+ * The main reason to have a separate implementation specifically for testing, is to support modelling time and flexible ways of controlling it.
+ *
+ * @author TG Team
+ *
+ */
 public class DatesForTesting implements IDates {
     private DateTime now;
     private Supplier<DateTime> timeSupplier;
