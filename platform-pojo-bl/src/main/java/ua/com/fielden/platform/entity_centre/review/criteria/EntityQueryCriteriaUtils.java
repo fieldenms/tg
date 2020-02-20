@@ -53,7 +53,7 @@ public class EntityQueryCriteriaUtils {
         for (final List<String> totalProps : totalFetchProps.getValue().values()) {
             totalProperties.addAll(totalProps);
         }
-        return new Pair<>(fetchProperties, totalProperties);
+        return pair(fetchProperties, totalProperties);
     }
 
     /**
@@ -81,13 +81,13 @@ public class EntityQueryCriteriaUtils {
                         totalList.add(property);
                     }
                 } else {
-                    columns.add(new Pair<>(property, Integer.valueOf(tickManager.getWidth(root, property))));
+                    columns.add(pair(property, Integer.valueOf(tickManager.getWidth(root, property))));
                 }
             } catch (final IncorrectCalcPropertyException ex) {
-                columns.add(new Pair<>(property, Integer.valueOf(tickManager.getWidth(root, property))));
+                columns.add(pair(property, Integer.valueOf(tickManager.getWidth(root, property))));
             }
         }
-        return new Pair<>(columns, totals);
+        return pair(columns, totals);
     }
 
     /**
