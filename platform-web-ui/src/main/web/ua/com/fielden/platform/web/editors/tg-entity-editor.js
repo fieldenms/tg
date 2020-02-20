@@ -365,7 +365,7 @@ export class TgEntityEditor extends TgEditor {
             /**
              * Additional headers for every 'iron-ajax' client-side requests. These only contain 
              * our custom 'Time-Zone' header that indicates real time-zone for the client application.
-             * The time-zone then is to be assigned to threadlocal 'IUniversalConstants.timeZone' to be able
+             * The time-zone then is to be assigned to threadlocal 'IDates.timeZone' to be able
              * to compute 'Now' moment properly.
              */
             _headers: {
