@@ -159,7 +159,7 @@ public class DomainMetadata {
         // the following operations are a bit heave and benefit from parallel processing
         entityTypes.parallelStream().forEach(entityType -> {
             try {
-                final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo = new EntityTypeInfo<>(entityType);
+                EntityTypeInfo<? extends AbstractEntity<?>> parentInfo = new EntityTypeInfo<>(entityType);
                 switch (parentInfo.category) {
                 case PERSISTED:
                     persistedEntityMetadataMap.put(entityType, generatePersistedEntityMetadata(parentInfo));
@@ -555,9 +555,4 @@ public class DomainMetadata {
     public Map<Class<? extends AbstractEntity<?>>, PureEntityMetadata> getPureEntityMetadataMap() {
         return pureEntityMetadataMap;
     }
-    
-    public static String getBooleanValue_(final boolean value) {
-        return value ? "Y" : "N";
-    }
 }
-

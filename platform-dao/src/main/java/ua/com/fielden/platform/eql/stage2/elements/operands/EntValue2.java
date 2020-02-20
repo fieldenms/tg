@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.eql.stage2.elements.operands;
 
 import static java.util.Collections.emptySet;
-import static ua.com.fielden.platform.entity.query.metadata.DomainMetadata.getBooleanValue_;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -55,7 +54,7 @@ public class EntValue2 implements ISingleOperand2<EntValue3> {
     /** Ensures that values of boolean types are converted properly. */
     private Object convertValue(final Object value) {
         if (value instanceof Boolean) {
-            return getBooleanValue_((Boolean) value);
+            return Boolean.TRUE == value ? "Y" : "N";
         }
         return value;
     }
