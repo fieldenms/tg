@@ -6,15 +6,14 @@ import ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.CompoundCondition;
 import ua.com.fielden.platform.entity.query.generation.elements.ICondition;
-import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
 
 public class CompoundConditionBuilder extends AbstractTokensBuilder {
 
-    protected CompoundConditionBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final TokenCategory cat, final Object value, final IDates dates) {
-        super(parent, queryBuilder, paramValues, dates);
+    protected CompoundConditionBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final TokenCategory cat, final Object value) {
+        super(parent, queryBuilder, paramValues);
         getTokens().add(new Pair<>(cat, value));
-        setChild(new ConditionBuilder(this, queryBuilder, paramValues, dates));
+        setChild(new ConditionBuilder(this, queryBuilder, paramValues));
     }
 
     @Override

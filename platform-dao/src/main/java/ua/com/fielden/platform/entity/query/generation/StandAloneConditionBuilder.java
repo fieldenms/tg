@@ -10,16 +10,15 @@ import ua.com.fielden.platform.entity.query.generation.elements.CompoundConditio
 import ua.com.fielden.platform.entity.query.generation.elements.GroupedConditions;
 import ua.com.fielden.platform.entity.query.generation.elements.ICondition;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
-import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
 
 public class StandAloneConditionBuilder extends AbstractTokensBuilder {
     private final boolean negated;
 
-    public StandAloneConditionBuilder(final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final ConditionModel exprModel, final boolean negated, final IDates dates) {
-        super(null, queryBuilder, paramValues, dates);
+    public StandAloneConditionBuilder(final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final ConditionModel exprModel, final boolean negated) {
+        super(null, queryBuilder, paramValues);
         this.negated = negated;
-        setChild(new ConditionBuilder(this, queryBuilder, paramValues, dates));
+        setChild(new ConditionBuilder(this, queryBuilder, paramValues));
 
         for (final Pair<TokenCategory, Object> tokenPair : exprModel.getTokens()) {
             add(tokenPair.getKey(), tokenPair.getValue());

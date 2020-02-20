@@ -9,14 +9,13 @@ import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.CompoundSource;
 import ua.com.fielden.platform.entity.query.generation.elements.ISource;
 import ua.com.fielden.platform.entity.query.generation.elements.Sources;
-import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
 
 public class QrySourcesBuilder extends AbstractTokensBuilder {
 
-    protected QrySourcesBuilder(final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final IDates dates) {
-        super(null, queryBuilder, paramValues, dates);
-        setChild(new QrySourceBuilder(this, queryBuilder, paramValues, dates));
+    protected QrySourcesBuilder(final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
+        super(null, queryBuilder, paramValues);
+        setChild(new QrySourceBuilder(this, queryBuilder, paramValues));
     }
 
     @Override
@@ -24,7 +23,7 @@ public class QrySourcesBuilder extends AbstractTokensBuilder {
         switch (cat) {
         case JOIN_TYPE: //eats token
             finaliseChild();
-            setChild(new CompoundQrySourceBuilder(this, getQueryBuilder(), getParamValues(), cat, value, dates));
+            setChild(new CompoundQrySourceBuilder(this, getQueryBuilder(), getParamValues(), cat, value));
             break;
         default:
             super.add(cat, value);

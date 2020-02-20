@@ -6,15 +6,14 @@ import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.CompoundSource;
 import ua.com.fielden.platform.entity.query.generation.elements.ISource;
-import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
 
 public class CompoundQrySourceBuilder extends AbstractTokensBuilder {
 
-    protected CompoundQrySourceBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final TokenCategory cat, final Object value, final IDates dates) {
-        super(parent, queryBuilder, paramValues, dates);
+    protected CompoundQrySourceBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final TokenCategory cat, final Object value) {
+        super(parent, queryBuilder, paramValues);
         getTokens().add(new Pair<>(cat, value));
-        setChild(new QrySourceBuilder(this, queryBuilder, paramValues, dates));
+        setChild(new QrySourceBuilder(this, queryBuilder, paramValues));
     }
 
     @Override
@@ -22,8 +21,8 @@ public class CompoundQrySourceBuilder extends AbstractTokensBuilder {
         switch (cat) {
         case ON: //eats token
             finaliseChild();
-            final ConditionsBuilder onCondition = new ConditionsBuilder(this, getQueryBuilder(), getParamValues(), dates);
-            onCondition.setChild(new ConditionBuilder(onCondition, getQueryBuilder(), getParamValues(), dates));
+            final ConditionsBuilder onCondition = new ConditionsBuilder(this, getQueryBuilder(), getParamValues());
+            onCondition.setChild(new ConditionBuilder(onCondition, getQueryBuilder(), getParamValues()));
             setChild(onCondition);
             break;
         default:

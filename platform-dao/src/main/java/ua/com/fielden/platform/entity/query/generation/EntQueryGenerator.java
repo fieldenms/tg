@@ -63,10 +63,10 @@ public class EntQueryGenerator {
     public EntQueryBlocks parseTokensIntoComponents(final QueryModel<?> qryModel, //
             final OrderingModel orderModel, //
             final Map<String, Object> paramValues) {
-        final QrySourcesBuilder from = new QrySourcesBuilder(this, paramValues, dates);
-        final ConditionsBuilder where = new ConditionsBuilder(null, this, paramValues, dates);
-        final QryYieldsBuilder select = new QryYieldsBuilder(this, paramValues, dates);
-        final QryGroupsBuilder groupBy = new QryGroupsBuilder(this, paramValues, dates);
+        final QrySourcesBuilder from = new QrySourcesBuilder(this, paramValues);
+        final ConditionsBuilder where = new ConditionsBuilder(null, this, paramValues);
+        final QryYieldsBuilder select = new QryYieldsBuilder(this, paramValues);
+        final QryGroupsBuilder groupBy = new QryGroupsBuilder(this, paramValues);
 
         ITokensBuilder active = null;
 
@@ -79,18 +79,18 @@ public class EntQueryGenerator {
                 switch ((QueryTokens) pair.getValue()) {
                 case WHERE:
                     active = where;
-                    where.setChild(new ConditionBuilder(where, this, paramValues, dates));
+                    where.setChild(new ConditionBuilder(where, this, paramValues));
                     break;
                 case FROM:
                     active = from;
                     break;
                 case YIELD:
                     active = select;
-                    select.setChild(new YieldBuilder(select, this, paramValues, dates));
+                    select.setChild(new YieldBuilder(select, this, paramValues));
                     break;
                 case GROUP_BY:
                     active = groupBy;
-                    groupBy.setChild(new GroupBuilder(groupBy, this, paramValues, dates));
+                    groupBy.setChild(new GroupBuilder(groupBy, this, paramValues));
                     break;
                 default:
                     break;
@@ -124,8 +124,7 @@ public class EntQueryGenerator {
         username, //
         this, //
         fetchModel,
-        paramValues,
-        dates);
+        paramValues);
     }
 
 
@@ -144,7 +143,7 @@ public class EntQueryGenerator {
     }
 
     private OrderBys produceOrderBys(final OrderingModel orderModel, final Map<String, Object> paramValues) {
-        final QryOrderingsBuilder orderBy = new QryOrderingsBuilder(null, this, paramValues, dates);
+        final QryOrderingsBuilder orderBy = new QryOrderingsBuilder(null, this, paramValues);
 
         if (orderModel != null) {
         	final List<Pair<TokenCategory, Object>> linearizedTokens = linearizeTokens(orderModel.getTokens());
@@ -153,11 +152,11 @@ public class EntQueryGenerator {
                 if (SORT_ORDER.equals(pair.getKey())) {
                     orderBy.add(pair.getKey(), pair.getValue());
                     if (iterator.hasNext()) {
-                    	orderBy.setChild(new OrderByBuilder(orderBy, this, paramValues, dates));
+                    	orderBy.setChild(new OrderByBuilder(orderBy, this, paramValues));
                     }
                 } else {
                     if (orderBy.getChild() == null) {
-                    	orderBy.setChild(new OrderByBuilder(orderBy, this, paramValues, dates));
+                    	orderBy.setChild(new OrderByBuilder(orderBy, this, paramValues));
                     }
                     orderBy.add(pair.getKey(), pair.getValue());
                 }
@@ -172,5 +171,9 @@ public class EntQueryGenerator {
 
     public DomainMetadataAnalyser getDomainMetadataAnalyser() {
         return domainMetadataAnalyser;
+    }
+    
+    public IDates dates() {
+        return dates;
     }
 }

@@ -7,13 +7,12 @@ import java.util.Map;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.GroupBy;
 import ua.com.fielden.platform.entity.query.generation.elements.GroupBys;
-import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
 
 public class QryGroupsBuilder extends AbstractTokensBuilder {
 
-    protected QryGroupsBuilder(final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final IDates dates) {
-        super(null, queryBuilder, paramValues, dates);
+    protected QryGroupsBuilder(final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
+        super(null, queryBuilder, paramValues);
     }
 
     @Override

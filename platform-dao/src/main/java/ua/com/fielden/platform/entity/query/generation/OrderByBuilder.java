@@ -8,14 +8,13 @@ import ua.com.fielden.platform.entity.query.fluent.enums.QueryTokens;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.ISingleOperand;
 import ua.com.fielden.platform.entity.query.generation.elements.OrderBy;
-import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
 
 public class OrderByBuilder extends AbstractTokensBuilder {
     private boolean descOrder;
 
-    protected OrderByBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final IDates dates) {
-        super(parent, queryBuilder, paramValues, dates);
+    protected OrderByBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
+        super(parent, queryBuilder, paramValues);
     }
 
     @Override

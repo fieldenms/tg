@@ -4,12 +4,11 @@ import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.DateIntervalUnit;
 import ua.com.fielden.platform.entity.query.generation.elements.CountDateInterval;
-import ua.com.fielden.platform.utils.IDates;
 
 public class CountDateIntervalBuilder extends ThreeArgumentsFunctionBuilder {
 
-    protected CountDateIntervalBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final IDates dates) {
-        super(parent, queryBuilder, paramValues, dates);
+    protected CountDateIntervalBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
+        super(parent, queryBuilder, paramValues);
     }
 
     @Override

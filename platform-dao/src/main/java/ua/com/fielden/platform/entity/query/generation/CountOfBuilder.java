@@ -3,13 +3,12 @@ package ua.com.fielden.platform.entity.query.generation;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.query.generation.elements.CountOf;
-import ua.com.fielden.platform.utils.IDates;
 
 public class CountOfBuilder extends OneArgumentFunctionBuilder {
     private final boolean distinct;
 
-    protected CountOfBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final boolean distinct, final IDates dates) {
-        super(parent, queryBuilder, paramValues, dates);
+    protected CountOfBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final boolean distinct) {
+        super(parent, queryBuilder, paramValues);
         this.distinct = distinct;
     }
 

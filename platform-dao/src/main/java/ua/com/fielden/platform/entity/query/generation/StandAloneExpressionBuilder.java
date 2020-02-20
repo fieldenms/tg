@@ -11,13 +11,12 @@ import ua.com.fielden.platform.entity.query.generation.elements.CompoundSingleOp
 import ua.com.fielden.platform.entity.query.generation.elements.Expression;
 import ua.com.fielden.platform.entity.query.generation.elements.ISingleOperand;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
-import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
 
 public class StandAloneExpressionBuilder extends AbstractTokensBuilder {
 
-    public StandAloneExpressionBuilder(final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final ExpressionModel exprModel, final IDates dates) {
-        super(null, queryBuilder, paramValues, dates);
+    public StandAloneExpressionBuilder(final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final ExpressionModel exprModel) {
+        super(null, queryBuilder, paramValues);
 
         for (final Pair<TokenCategory, Object> tokenPair : exprModel.getTokens()) {
             add(tokenPair.getKey(), tokenPair.getValue());
