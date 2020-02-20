@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.sample.domain.TgCategory;
 import ua.com.fielden.platform.sample.domain.TgFuelType;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
