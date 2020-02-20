@@ -167,18 +167,18 @@ public class PathsToTreeTransformator {
     
     private static List<ChildGroup> convertToGroup(final SortedSet<Child> children) {
         final List<ChildGroup> result = new ArrayList<>();
-        final List<AbstractPropInfo<?>> items = new ArrayList<>();
-        final Map<AbstractPropInfo<?>, Set<Child>> map = new HashMap<>();
-        final Map<AbstractPropInfo<?>, SortedMap<String, QrySource2BasedOnPersistentType>> mapSources = new HashMap<>();
+        final List<String> items = new ArrayList<>();
+        final Map<String, Set<Child>> map = new HashMap<>();
+        final Map<String, SortedMap<String, QrySource2BasedOnPersistentType>> mapSources = new HashMap<>();
         
         for (final Child child : children) {
-            if (items.contains(child.main)) {
-                map.get(child.main).add(child);
+            if (items.contains(child.main.name)) {
+                map.get(child.main.name).add(child);
                 if (child.source != null) {
-                    mapSources.get(child.main).put(child.source.contextId, child.source);
+                    mapSources.get(child.main.name).put(child.source.contextId, child.source);
                 }
             } else {
-                items.add(child.main);
+                items.add(child.main.name);
                 final Set<Child> itemChildren = new HashSet<>();
                 final SortedMap<String, QrySource2BasedOnPersistentType> itemSources = new TreeMap<>();
 
@@ -187,12 +187,12 @@ public class PathsToTreeTransformator {
                     itemSources.put(child.source.contextId, child.source);    
                 }
                 
-                map.put(child.main, itemChildren);
-                mapSources.put(child.main, itemSources);
+                map.put(child.main.name, itemChildren);
+                mapSources.put(child.main.name, itemSources);
             }
         }
         
-        for (final AbstractPropInfo<?> item : items) {
+        for (final String item : items) {
             final Child first = map.get(item).iterator().next();
             final SortedSet<Child> mergedItems = new TreeSet<>();
             
