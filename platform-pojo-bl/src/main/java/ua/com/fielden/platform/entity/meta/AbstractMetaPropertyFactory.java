@@ -82,11 +82,12 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
 
     protected final DomainValidationConfig domainConfig;
     protected final DomainMetaPropertyConfig domainMetaConfig;
-    private IDates dates;
+    private final IDates dates;
 
-    public AbstractMetaPropertyFactory(final DomainValidationConfig domainConfig, final DomainMetaPropertyConfig domainMetaConfig) {
+    public AbstractMetaPropertyFactory(final DomainValidationConfig domainConfig, final DomainMetaPropertyConfig domainMetaConfig, final IDates dates) {
         this.domainConfig = domainConfig;
         this.domainMetaConfig = domainMetaConfig;
+        this.dates = dates;
     }
 
     @Override
@@ -119,9 +120,9 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
         case GREATER_OR_EQUAL:
             return new IBeforeChangeEventHandler[] { createGreaterOrEqualValidator(((GreaterOrEqual) annotation).value()) };
         case LE_PROPETY:
-            initUniversalConstants(); return new IBeforeChangeEventHandler[] { createLePropertyValidator(entity, propertyName, ((LeProperty) annotation).value(), dates) };
+            return new IBeforeChangeEventHandler[] { createLePropertyValidator(entity, propertyName, ((LeProperty) annotation).value(), dates) };
         case GE_PROPETY:
-            initUniversalConstants(); return new IBeforeChangeEventHandler[] { createGePropertyValidator(entity, ((GeProperty) annotation).value(), propertyName, dates) };
+            return new IBeforeChangeEventHandler[] { createGePropertyValidator(entity, ((GeProperty) annotation).value(), propertyName, dates) };
         case MAX:
             if (Number.class.isAssignableFrom(propertyType) || double.class == propertyType || int.class == propertyType) {
                 return new IBeforeChangeEventHandler[] { createMaxValueValidator(((Max) annotation).value()) };
@@ -309,15 +310,6 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
     }
 
     /**
-     * Initialise constants lazily as it is only needed for Date/DateTime ACE/BCE parameters. 
-     */
-    private void initUniversalConstants() {
-        if (dates == null) {
-            dates = injector.getInstance(IDates.class);
-        }
-    }
-
-    /**
      * Initialises {@link Date} handler parameters as provided in {@link Handler#date()}.
      *
      * @param entity
@@ -325,7 +317,6 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
      * @param handler
      */
     private void initDateHandlerParameters(final AbstractEntity<?> entity, final DateParam[] params, final Object handler) {
-        initUniversalConstants();
         for (final DateParam param : params) {
             final Field paramField = Finder.getFieldByName(handler.getClass(), param.name());
             paramField.setAccessible(true);
@@ -345,7 +336,6 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
      * @param handler
      */
     private void initDateTimeHandlerParameters(final AbstractEntity<?> entity, final DateTimeParam[] params, final Object handler) {
-        initUniversalConstants();
         for (final DateTimeParam param : params) {
             final Field paramField = Finder.getFieldByName(handler.getClass(), param.name());
             paramField.setAccessible(true);
