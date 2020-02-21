@@ -56,18 +56,20 @@ public class WebUiResources extends AbstractWebUiResources {
                 DumpCsvTxtProcessor.class,
                 f -> f.newByKey(DumpCsvTxtProcessor.class, "DUMMY"), // this entity construction could be more sophisticated in practice
                 deviceProvider,
+                dates,
                 20 * 1024, // Kilobytes
                 MediaType.TEXT_CSV,
                 MediaType.TEXT_PLAIN);
         router.attach("/csv-txt-file-processing", factory);
 
         // register attachment uploader
-        final FileProcessingResourceFactory<AttachmentUploader> factoryForAttachmentUploader = new FileProcessingResourceFactory<AttachmentUploader>(
+        final FileProcessingResourceFactory<AttachmentUploader> factoryForAttachmentUploader = new FileProcessingResourceFactory<>(
                 router,
                 injector,
                 AttachmentUploader.class,
                 f -> f.newEntity(AttachmentUploader.class),
                 deviceProvider,
+                dates,
                 20 * 1024 * 1024, // Kilobytes
                 // image/png,image/jpeg,
                 // .csv,.txt,text/plain,text/csv,
@@ -86,7 +88,7 @@ public class WebUiResources extends AbstractWebUiResources {
 
         // register some server-side eventing
         // router.attach("/sse/events",  new _EventSourcingResourceFactory()); -- some experimental stuff, which should be kept here for the moment
-        router.attach("/sse/entity-centre-events",  new EventSourcingResourceFactory(injector, TgPersistentEntityWithPropertiesEventSrouce.class, deviceProvider));
-        router.attach("/sse/message-update-events", new EventSourcingResourceFactory(injector, TgMessageEventSource.class, deviceProvider));
+        router.attach("/sse/entity-centre-events",  new EventSourcingResourceFactory(injector, TgPersistentEntityWithPropertiesEventSrouce.class, deviceProvider, dates));
+        router.attach("/sse/message-update-events", new EventSourcingResourceFactory(injector, TgMessageEventSource.class, deviceProvider, dates));
     }
 }

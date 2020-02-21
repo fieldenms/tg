@@ -17,6 +17,7 @@ import org.restlet.security.ChallengeAuthenticator;
 
 import com.google.inject.Injector;
 
+import ua.com.fielden.platform.security.exceptions.SecurityException;
 import ua.com.fielden.platform.security.session.Authenticator;
 import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.session.UserSession;
@@ -92,7 +93,7 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
             // for SSE requests session ID should not be regenerated
             // this is due to the fact that for SSE requests no HTTP responses are sent, and so there is nothing to carry an updated cookie with a new authenticator back to the client
             final boolean skipRegeneration = SseUtils.isEventSourceRequest(request);
-            final Optional<UserSession> session = coUserSession.currentSession(getUser(auth.username), auth.toString(), skipRegeneration);
+            final Optional<UserSession> session = coUserSession.currentSession(getUser(auth.username), auth.toString(), enforceUserSessionEvictionWhenDbSessionIsMissing(), skipRegeneration);
             if (!session.isPresent()) {
                 logger.warn(format("Authenticator validation failed for a request to a resource at URI %s (%s, %s, %s)", request.getResourceRef(), request.getClientInfo().getAddress(), request.getClientInfo().getAgentName(), request.getClientInfo().getAgentVersion()));
                 // TODO this is an interesting approach to prevent any further processing of the request, this event prevents receiving it completely
@@ -110,6 +111,8 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
         } catch (final Exception ex) {
             // in case of any internal exception forbid the request
             forbid(response);
+            
+            // TODO Do we really want to expire a potentially valid authenticator in this case? For example, where there was just an intermittent DB connectivity issue?
             assignAuthenticatorCookieToExpire(response);
             logger.fatal(ex);
             return false;
@@ -130,7 +133,7 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
         return request.getCookies().stream()
                 .filter(c -> AUTHENTICATOR_COOKIE_NAME.equals(c.getName()) && !StringUtils.isEmpty(c.getValue()))
                 .map(c -> fromString(c.getValue()))
-                .max((auth1, auth2) -> Long.compare(auth1.expiryTime, auth2.expiryTime));
+                .max((auth1, auth2) -> Long.compare(auth1.version, auth2.version));
     }
 
     /**
@@ -148,7 +151,8 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
         // on the other hand, it might server as an additional security level, limiting computationally intensive requests being send from untrusted devices
 
         // calculate maximum cookie age in seconds
-        final int maxAge = (int) (authenticator.expiryTime - now.getMillis()) / 1000;
+        final long millis = authenticator.getExpiryTime().orElseThrow(() -> new SecurityException("Authenticator is missing the expiration date.")).getMillis();
+        final int maxAge = (int) (millis - now.getMillis()) / 1000;
 
         if (maxAge <= 0) {
             throw new IllegalStateException("What the hack is goinig on! maxAge for cookier is not > zero.");
@@ -209,6 +213,14 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
                 0 /* number of seconds before cookie expires, 0 -- expires immediately */,
                 true /*secure*/, // if secure is set to true then this cookie would only be included into the request if it is done over HTTPS!
                 true /*accessRestricted*/);
+    }
+
+    /**
+     * Indicates to the authenticator validation logic whether all user sessions needs to be evicted in case if a valid authenticator was provided, but a corresponding DB record was missing.
+     * @return
+     */
+    protected boolean enforceUserSessionEvictionWhenDbSessionIsMissing() {
+        return false;
     }
 
 }

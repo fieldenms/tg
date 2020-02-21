@@ -11,6 +11,8 @@ import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.NewUserNotifierMockBindingModule;
 import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
+import ua.com.fielden.platform.utils.DefaultDates;
+import ua.com.fielden.platform.utils.DefaultUniversalConstants;
 import ua.com.fielden.platform.web.test.config.ApplicationDomain;
 
 /**
@@ -43,7 +45,7 @@ public final class DataPopulationConfig implements IDomainDrivenTestCaseConfigur
             props.setProperty("email.fromAddress", "tg@fielden.com.au");
 
             final ApplicationDomain applicationDomainProvider = new ApplicationDomain();
-            module = new TgTestApplicationServerModule(HibernateSetup.getHibernateTypes(), applicationDomainProvider, applicationDomainProvider.domainTypes(), SerialisationClassProvider.class, ExampleDataFilter.class, props);
+            module = new TgTestApplicationServerModule(HibernateSetup.getHibernateTypes(), applicationDomainProvider, applicationDomainProvider.domainTypes(), SerialisationClassProvider.class, ExampleDataFilter.class, DefaultUniversalConstants.class, DefaultDates.class, props);
             injector = new ApplicationInjectorFactory().add(module).add(new NewUserNotifierMockBindingModule()).getInjector();
             entityFactory = injector.getInstance(EntityFactory.class);
         } catch (final Exception e) {

@@ -184,6 +184,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bindConstant().annotatedWith(Names.named("attachments.location")).to(props.getProperty("attachments.location"));
         bindConstant().annotatedWith(Names.named("email.smtp")).to(props.getProperty("email.smtp"));
         bindConstant().annotatedWith(Names.named("email.fromAddress")).to(props.getProperty("email.fromAddress"));
+        bindConstant().annotatedWith(Names.named("independent.time.zone")).to(Boolean.valueOf(props.getProperty("independent.time.zone")));
 
         bind(IApplicationSettings.class).to(ApplicationSettings.class).in(Scopes.SINGLETON);
         bind(IApplicationDomainProvider.class).toInstance(applicationDomainProvider);

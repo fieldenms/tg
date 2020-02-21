@@ -198,6 +198,8 @@ public class LoginResource extends ServerResource {
                 LOGIN_ATTEMPTS.invalidate(credo.username); // logged in successful, invalidate user login attempts from cache
                 // create a new session for an authenticated user...
                 final User user = (User) authResult.getInstance();
+                // let's use this opportunity to clear expired sessions for the user
+                coUserSession.clearExpired(user);
                 final UserSession session = coUserSession.newSession(user, credo.trustedDevice);
          
                 // ...and provide the response with an authenticating cookie
