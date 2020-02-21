@@ -69,7 +69,7 @@ public class TgTestApplicationServerModule extends BasicWebServerModule {
             throw new IllegalArgumentException("Missing implemementation for IUniversalConstants.");
         }
         if (datesImplType == null) {
-            throw new IllegalArgumentException("Missing implemementation for IUniversalConstants.");
+            throw new IllegalArgumentException("Missing implemementation for IDates.");
         }
 
         this.universalConstantsImplType = universalConstantsImplType;
