@@ -28,7 +28,7 @@ import ua.com.fielden.platform.eql.meta.QueryCategory;
 import ua.com.fielden.platform.eql.stage1.elements.EntQueryBlocks1;
 import ua.com.fielden.platform.eql.stage1.elements.OrderBys1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.EntQuery1;
-import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
 
 public class EntQueryGenerator {
@@ -36,22 +36,22 @@ public class EntQueryGenerator {
 
     public final DbVersion dbVersion;
     public final DomainMetadataAnalyser domainMetadataAnalyser;
-    public final IUniversalConstants universalConstants;
+    private final IDates dates;
     public final IFilter filter;
     public final String username;
     private final Map<String, Object> paramValues = new HashMap<>();
 
     private final int increment = 1;
     
-    public EntQueryGenerator(final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username, final IUniversalConstants universalConstants, final Map<String, Object> paramValues) {
+    public EntQueryGenerator(final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username, final IDates dates, final Map<String, Object> paramValues) {
         dbVersion = domainMetadataAnalyser.getDbVersion();
         this.domainMetadataAnalyser = domainMetadataAnalyser;
         this.filter = filter;
         this.username = username;
-        this.universalConstants = universalConstants;
+        this.dates = dates;
         this.paramValues.putAll(paramValues);
-        if (universalConstants.now() != null) {
-            this.paramValues.put(NOW, universalConstants.now().toDate());
+        if (dates.now() != null) {
+            this.paramValues.put(NOW, dates.now().toDate());
         }
     }
     
@@ -173,4 +173,7 @@ public class EntQueryGenerator {
         return unmodifiableMap(paramValues);
     }
 
+    public IDates dates() {
+        return dates;
+    }
 }

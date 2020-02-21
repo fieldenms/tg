@@ -188,7 +188,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         if (qp == null || qp.isEmptyWithoutMnemonics()) {
             return emptyCondition();
         } else if (props.getKey() instanceof String) {
-            return buildCondition(qp, (String) props.getKey(), false);
+            return buildCondition(qp, (String) props.getKey(), false, queryBuilder.dates());
         } else {
             final T2<ICompoundCondition0<?>, String> args =  (T2<ICompoundCondition0<?>, String>) props.getKey();
             return collectionalCritConditionOperatorModel(args._1, args._2, qp);
@@ -201,7 +201,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         final Boolean originalNot = qp.getNot();
         qp.setOrNull(null);
         qp.setNot(null);
-        final ConditionModel result = qp == null || qp.isEmptyWithoutMnemonics() ? emptyCondition() : buildCondition(qp, propName, false);
+        final ConditionModel result = qp == null || qp.isEmptyWithoutMnemonics() ? emptyCondition() : buildCondition(qp, propName, false, queryBuilder.dates());
         qp.setOrNull(originalOrNull);
         qp.setNot(originalNot);
         return result;

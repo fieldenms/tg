@@ -51,7 +51,7 @@ import ua.com.fielden.platform.sample.domain.TgWagonSlot;
 import ua.com.fielden.platform.sample.domain.TgWorkshop;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.utils.IDates;
 
 public class EqlTestCase {
     protected static final Class<TeWorkOrder> WORK_ORDER = TeWorkOrder.class;
@@ -95,7 +95,7 @@ public class EqlTestCase {
 
 
     protected static final EntQueryGenerator qb() {
-        return new EntQueryGenerator(new DomainMetadataAnalyser(DOMAIN_METADATA), null, null, Guice.createInjector(new HibernateUserTypesModule(), new HelperIocModule()).getInstance(IUniversalConstants.class), emptyMap());
+        return new EntQueryGenerator(new DomainMetadataAnalyser(DOMAIN_METADATA), null, null, Guice.createInjector(new HibernateUserTypesModule(), new HelperIocModule()).getInstance(IDates.class), emptyMap());
     }
 
     static {
