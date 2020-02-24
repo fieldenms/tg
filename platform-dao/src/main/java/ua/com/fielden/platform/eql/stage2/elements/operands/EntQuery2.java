@@ -21,6 +21,7 @@ import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.Yield2;
 import ua.com.fielden.platform.eql.stage2.elements.Yields2;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.Conditions2;
+import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.Sources2;
 import ua.com.fielden.platform.eql.stage3.elements.EntQueryBlocks3;
 import ua.com.fielden.platform.eql.stage3.elements.GroupBys3;
@@ -28,6 +29,7 @@ import ua.com.fielden.platform.eql.stage3.elements.OrderBys3;
 import ua.com.fielden.platform.eql.stage3.elements.Yields3;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.EntQuery3;
+import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySource3;
 import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySources3;
 
 public class EntQuery2 implements ISingleOperand2<EntQuery3> {
@@ -44,19 +46,19 @@ public class EntQuery2 implements ISingleOperand2<EntQuery3> {
         this.category = category;
         this.sources = queryBlocks.sources;
         this.conditions = queryBlocks.conditions;
-        this.yields = enhancedYields(queryBlocks.yields, queryBlocks.sources);
+        this.yields = enhancedYields(queryBlocks.yields, queryBlocks.sources.main);
         this.groups = queryBlocks.groups;
         this.orderings = queryBlocks.orderings;
         this.resultType = resultType;
     }
 
-    private Yields2 enhancedYields(final Yields2 yields, final Sources2 sources) {
+    private Yields2 enhancedYields(final Yields2 yields, final IQrySource2<? extends IQrySource3> mainSource) {
         if (yields.getYields().isEmpty()) {
             final List<Yield2> enhancedYields = new ArrayList<>();
-            for (final Entry<String, AbstractPropInfo<?>> el : sources.main.entityInfo().getProps().entrySet()) {
+            for (final Entry<String, AbstractPropInfo<?>> el : mainSource.entityInfo().getProps().entrySet()) {
                 if (el.getValue().expression == null) {
                     //final String yieldedPropAliasedName = sourcesTr.item.main.alias() != null ?  sourcesTr.item.main.alias() + "." + el.getKey() : el.getKey();
-                    enhancedYields.add(new Yield2(new EntProp2(sources.main, "0", listOf(el.getValue())), el.getKey(), false));
+                    enhancedYields.add(new Yield2(new EntProp2(mainSource, "0", listOf(el.getValue())), el.getKey(), false));
                 }
             }
             return new Yields2(enhancedYields);
