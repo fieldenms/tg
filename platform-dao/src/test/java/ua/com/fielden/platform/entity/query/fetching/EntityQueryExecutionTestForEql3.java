@@ -478,4 +478,9 @@ public class EntityQueryExecutionTestForEql3 extends AbstractDaoTestCase {
         final List<EntityAggregates> result = run(select(qry1, qry2, qry3, qry4, qry5).where().prop("position").gt().val(2).yield().sumOf().prop("value").as("QTY").modelAsAggregate());
         assertEquals("1200", result.get(0).get("QTY").toString());
     }
+    
+    @Test
+    public void eql3_query_executes_correctly48() {
+        run(select(TeVehicle.class).where().prop("lastFuelUsage.qty").gt().val(100));
+    }
 }
