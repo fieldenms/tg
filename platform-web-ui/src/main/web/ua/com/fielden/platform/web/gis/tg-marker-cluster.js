@@ -46,14 +46,14 @@ import { createStyleModule } from '/resources/gis/tg-gis-utils.js';
 export const tgMarkerClusterStylesName = 'tg-marker-cluster-styles';
 createStyleModule(tgMarkerClusterStylesName, tgMarkerClusterStyles);
 
-export const MarkerCluster = function (_map, _markerFactory, progressDiv, progressBarDiv, overlays) {
+export const MarkerCluster = function (_map, _markerFactory, progressDiv, progressBarDiv) {
     const self = this;
 
     self._markerFactory = _markerFactory;
     self._getMarkers = function () {
         return self._gisMarkerClusterGroup;
     };
-    self._progressBarUpdater = new ProgressBarUpdater(_map, self._getMarkers, progressDiv, progressBarDiv, overlays);
+    self._progressBarUpdater = new ProgressBarUpdater(_map, self._getMarkers, progressDiv, progressBarDiv);
 
     self._gisMarkerClusterGroup = markerClusterGroup({
         chunkedLoading: true,
@@ -61,8 +61,8 @@ export const MarkerCluster = function (_map, _markerFactory, progressDiv, progre
         chunkProgress: function (processed, total, elapsed) {
             self._progressBarUpdater.updateProgressBar(processed, total, elapsed);
         },
-        // chunkInterval: 2000,
-        // chunkDelay: 1000,
+        chunkInterval: 5,
+        chunkDelay: 5,
 
         disableClusteringAtZoom: self.disableClusteringAtZoom(),
         maxClusterRadius: function (zoom) {

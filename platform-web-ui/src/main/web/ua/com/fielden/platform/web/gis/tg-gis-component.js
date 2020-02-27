@@ -9,6 +9,7 @@ import { MarkerCluster, leafletMarkerClusterStylesName, tgMarkerClusterStylesNam
 import { Select } from '/resources/gis/tg-select.js';
 import { Controls, leafletDrawStylesName, leafletControlloadingStylesName, leafletEasybuttonStylesName } from '/resources/gis/tg-controls.js';
 import { _millisDateRepresentation } from '/resources/reflection/tg-date-utils.js';
+import '/resources/gis/leaflet/subgroup/leaflet-subgroup-lib.js';
 
 export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap, ...otherStyles) {
     // IMPORTANT: use the following reference in cases when you need some properties of the 
@@ -41,12 +42,8 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
 
         self.promoteEntities(newRetrievedEntitiesCopy);
 
-        self._markerCluster.getGisMarkerClusterGroup().addLayer(self._geoJsonOverlay);
-
-        const overlays = Object.values(self._overlays);
-        for (let i = 0; i < overlays.length; i++) {
-            self._markerCluster.getGisMarkerClusterGroup().addLayer(overlays[i]);
-        }
+        // we add checked overlays to marker cluster again: this is because we need to trigger tg-progress-bar-updater's chunked loading and fitToBounds logic
+        Object.values(self._overlays).filter(overlay => overlay._checkedByDefault).forEach(overlay => self._markerCluster.getGisMarkerClusterGroup().addLayer(overlay));
 
         self.finishReload();
 
@@ -99,8 +96,8 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
     // create a factory for markers
     self._markerFactory = self.createMarkerFactory();
 
-    self._createLayer = function () {
-        const geoJson = L.geoJson([], {
+    self._createLayer = function (checkedByDefault = false, parentGroup) {
+        const geoJson = new L.GeoJSON.SubGroup(parentGroup, [], {
             style: function (feature) {
                 return self._entityStyling.getStyle(feature);
             },
@@ -121,6 +118,7 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
                 });
             }
         });
+        geoJson._checkedByDefault = checkedByDefault;
         return geoJson;
     };
 
@@ -154,12 +152,11 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
         return esriOverlay;
     };
 
-    const overlays = self.createOverlays();
+    self._markerCluster = self.createMarkerCluster(self._map, self._markerFactory, progressDiv, progressBarDiv);
+    const overlays = self.createOverlays(self._markerCluster.getGisMarkerClusterGroup());
     self._overlays = overlays;
-    self._markerCluster = self.createMarkerCluster(self._map, self._markerFactory, progressDiv, progressBarDiv, overlays);
 
     self._entityStyling = self.createEntityStyling();
-    self._geoJsonOverlay = self._createLayer();
 
     self._controls = new Controls(self._map, self._markerCluster.getGisMarkerClusterGroup(), self._baseLayers, overlays, /*Object.values(overlays)[0]*/ null);
 
@@ -188,11 +185,7 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
     };
 
     const getLayerById = function (layerId) {
-        const found = findLayerByPredicateIn(Object.values(overlays), value => value._leaflet_id === layerId);
-        if (found) {
-            return found;
-        }
-        return self._geoJsonOverlay.getLayer(layerId);
+        return findLayerByPredicateIn(Object.values(overlays), value => value._leaflet_id === layerId);
     };
     const getLayerByGlobalId = function (globalId) {
         return findLayerByPredicateIn(Object.values(overlays), value => value.feature.properties.GlobalID === globalId);
@@ -200,11 +193,6 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
     self._select = new Select(self._map, getLayerById, self._markerFactory, tgMap, self.findEntityBy.bind(self), getLayerByGlobalId);
     self._map.fire('dataloading');
     self.initialise();
-    self._markerCluster.getGisMarkerClusterGroup().addLayer(self._geoJsonOverlay);
-
-    for (let i = 0; i < Object.values(overlays).length; i++) {
-        self._markerCluster.getGisMarkerClusterGroup().addLayer(Object.values(overlays)[i]);
-    }
 
     self._map.fire('dataload');
 };
@@ -219,7 +207,7 @@ GisComponent.prototype.appendStyles = function (tgMap, ...styleModuleNames) {
     tgMap.shadowRoot.appendChild(styleWrapper);
 };
 
-GisComponent.prototype.createOverlays = function () {
+GisComponent.prototype.createOverlays = function (parentGroup) {
     return {};
 };
 
@@ -248,11 +236,8 @@ GisComponent.prototype.getTopEntityFor = function (feature) {
 }
 
 GisComponent.prototype.initialise = function () {
-    this._geoJsonOverlay.addData([]);
     Object.values(this._overlays).forEach(function (overlay) {
-        if (overlay.addData) { // marker cluster layer is not geoJson compatible, because it wraps _geoJsonOverlay -- skip it; need to refactor
-            overlay.addData([]);
-        }
+        overlay.addData([]);
     });
 };
 
@@ -260,8 +245,8 @@ GisComponent.prototype.createMarkerFactory = function () {
     return new MarkerFactory();
 };
 
-GisComponent.prototype.createMarkerCluster = function (map, markerFactory, progressDiv, progressBarDiv, overlays) {
-    return new MarkerCluster(map, markerFactory, progressDiv, progressBarDiv, overlays);
+GisComponent.prototype.createMarkerCluster = function (map, markerFactory, progressDiv, progressBarDiv) {
+    return new MarkerCluster(map, markerFactory, progressDiv, progressBarDiv);
 };
 
 GisComponent.prototype.createEntityStyling = function () {
@@ -279,7 +264,9 @@ GisComponent.prototype.finishReload = function () {
 };
 
 GisComponent.prototype.clearAll = function () {
-    this._geoJsonOverlay.clearLayers();
+    Object.values(this._overlays).forEach(function (overlay) {
+        overlay.clearLayers();
+    });
     this._markerCluster.getGisMarkerClusterGroup().clearLayers();
     if (this._select) {
         this._select._prevId = null;
@@ -310,14 +297,7 @@ GisComponent.prototype.promoteEntities = function (newEntities) {
         // console.debug(entity.geometry);
 
         if (entity.geometry) {
-            const featureType = self.featureType(entity);
-            if (featureType === "Location") {
-                self._overlays['Locations'].addData(entity);
-            } else if (featureType === "Equipment"){
-                self._overlays['Equipments'].addData(entity);
-            } else {
-                self._overlays['Statistics'].addData(entity);
-            }
+            self._overlays[self.overlayNameFor(entity)].addData(entity);
             //console.debug('added', entity);
         } else {
             // TODO do nothing in case when the entity has no visual representation
