@@ -13,19 +13,25 @@ import ua.com.fielden.platform.eql.stage1.elements.operands.Expression1;
 public abstract class AbstractPropInfo<T> implements IResolvable<T> {
     public final String name;
     public final Expression1 expression;
+    public final Object hibType;
 
     /**
      * Principal constructor.
      * 
      * @param name - property yield alias or property name.
      */
-    public AbstractPropInfo(final String name) {
-        this(name, null);
+    public AbstractPropInfo(final String name, final Object hibType) {
+        this(name, hibType, null);
     }
-
-    public AbstractPropInfo(final String name, final Expression1 expression) {
+    
+    public AbstractPropInfo(final String name, final Object hibType, final Expression1 expression) {
         this.name = name;
         this.expression = expression;
+        this.hibType = hibType;
+    }
+    
+    public boolean hasExpression() {
+        return expression != null;
     }
 
     @Override
@@ -33,6 +39,7 @@ public abstract class AbstractPropInfo<T> implements IResolvable<T> {
         final int prime = 31;
         int result = 1;
         result = prime * result + name.hashCode();
+        result = prime * result + hibType.hashCode();
         result = prime * result + ((expression == null) ? 0 : expression.hashCode());
         return result;
     }
@@ -49,6 +56,6 @@ public abstract class AbstractPropInfo<T> implements IResolvable<T> {
 
         final AbstractPropInfo<?> other = (AbstractPropInfo<?>) obj;
         
-        return Objects.equals(name, other.name) && Objects.equals(expression, other.expression);
+        return Objects.equals(name, other.name) && Objects.equals(hibType, other.hibType) && Objects.equals(expression, other.expression);
     }
 }

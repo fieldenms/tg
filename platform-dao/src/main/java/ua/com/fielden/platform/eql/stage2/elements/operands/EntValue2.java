@@ -7,6 +7,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.type.StringType;
+
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage3.elements.operands.EntValue3;
@@ -73,6 +75,13 @@ public class EntValue2 implements ISingleOperand2<EntValue3> {
         // TODO EQL
         return value != null ? value.getClass() : null;
     }
+    
+    @Override
+    public Object hibType() {
+        // TODO EQL
+        return value != null ? StringType.INSTANCE : null;
+    }
+    
 
     @Override
     public TransformationResult<EntValue3> transform(final TransformationContext context) {

@@ -6,4 +6,5 @@ public interface ISingleOperand3 {
     String sql(final DbVersion dbVersion);
     
     default Class<?> type() {return null;}
+    default Object hibType() {return null;}
 }

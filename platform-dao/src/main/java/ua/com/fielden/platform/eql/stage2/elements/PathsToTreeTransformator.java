@@ -115,7 +115,7 @@ public class PathsToTreeTransformator {
 
         Expression2 expr2 = null;
         final Set<Child> dependencies = new HashSet<>();
-        if (propInfo.expression != null) {
+        if (propInfo.hasExpression()) {
             final TransformationResult<Expression2> tr = expressionToS2(contextSource, propInfo.expression, domainInfo);
             expr2 = tr.item;
             final Map<IQrySource2<?>, SortedSet<Child>> dependenciesResult = transform(expr2.collectProps(), domainInfo);

@@ -2,9 +2,11 @@ package ua.com.fielden.platform.entity.query.fetching;
 
 import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.junit.Ignore;
@@ -16,16 +18,38 @@ import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.sample.domain.ITeVehicleModel;
 import ua.com.fielden.platform.sample.domain.TeVehicle;
 import ua.com.fielden.platform.sample.domain.TeVehicleFuelUsage;
 import ua.com.fielden.platform.sample.domain.TeVehicleMake;
+import ua.com.fielden.platform.sample.domain.TeVehicleModel;
 import ua.com.fielden.platform.sample.domain.TeWorkOrder;
+import ua.com.fielden.platform.sample.domain.TgAuthor;
+import ua.com.fielden.platform.sample.domain.TgAuthorship;
+import ua.com.fielden.platform.sample.domain.TgBogie;
+import ua.com.fielden.platform.sample.domain.TgBogieLocation;
+import ua.com.fielden.platform.sample.domain.TgEntityWithComplexSummaries;
+import ua.com.fielden.platform.sample.domain.TgFuelType;
+import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
+import ua.com.fielden.platform.sample.domain.TgPersonName;
+import ua.com.fielden.platform.sample.domain.TgTimesheet;
+import ua.com.fielden.platform.sample.domain.TgVehicle;
+import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
+import ua.com.fielden.platform.sample.domain.TgVehicleMake;
+import ua.com.fielden.platform.sample.domain.TgVehicleModel;
+import ua.com.fielden.platform.sample.domain.TgWagon;
+import ua.com.fielden.platform.sample.domain.TgWagonSlot;
+import ua.com.fielden.platform.sample.domain.TgWorkshop;
+import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
+import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
+import ua.com.fielden.platform.types.Money;
 
 public class EntityQueryExecutionTestForEql3 extends AbstractDaoTestCase {
     private final IEntityAggregatesOperations aggregateDao = getInstance(IEntityAggregatesOperations.class);
@@ -482,5 +506,134 @@ public class EntityQueryExecutionTestForEql3 extends AbstractDaoTestCase {
     @Test
     public void eql3_query_executes_correctly48() {
         run(select(TeVehicle.class).where().prop("lastFuelUsage.qty").gt().val(100));
+    }
+    
+    @Test
+    public void eql3_query_executes_correctly49() {
+        final EntityResultQueryModel<TeVehicleModel> qry = select(TeVehicleModel.class).model();
+        final List<TeVehicleModel> models = getInstance(ITeVehicleModel.class).getAllEntities(from(qry).with(fetchAll(TeVehicleModel.class).with("makeKey")).with("EQL3", null).model());
+        for (final TeVehicleModel item : models) {
+            System.out.println(item.getId() + " : " + item.getKey() + " : " + item.getMake() + " : " + item.getMakeKey());
+        }
+    }
+    
+    @Override
+    protected void populateDomain() {
+        super.populateDomain();
+        
+        final TgFuelType unleadedFuelType = save(new_(TgFuelType.class, "U", "Unleaded"));
+        final TgFuelType petrolFuelType = save(new_(TgFuelType.class, "P", "Petrol"));
+
+        final TgWorkshop workshop1 = save(new_(TgWorkshop.class, "WSHOP1", "Workshop 1"));
+        final TgWorkshop workshop2 = save(new_(TgWorkshop.class, "WSHOP2", "Workshop 2"));
+
+        final TgBogieLocation location = co$(TgBogieLocation.class).new_();
+        location.setWorkshop(workshop1);
+        final TgBogie bogie1 = save(new_(TgBogie.class, "BOGIE1", "Bogie 1").setLocation(location));
+        final TgBogie bogie2 = save(new_(TgBogie.class, "BOGIE2", "Bogie 2"));
+        final TgBogie bogie3 = save(new_(TgBogie.class, "BOGIE3", "Bogie 3"));
+        final TgBogie bogie4 = save(new_(TgBogie.class, "BOGIE4", "Bogie 4"));
+        final TgBogie bogie5 = save(new_(TgBogie.class, "BOGIE5", "Bogie 5"));
+        final TgBogie bogie6 = save(new_(TgBogie.class, "BOGIE6", "Bogie 6"));
+        final TgBogie bogie7 = save(new_(TgBogie.class, "BOGIE7", "Bogie 7"));
+        
+        final TgWagon wagon1 = save(new_(TgWagon.class, "WAGON1", "Wagon 1"));
+        final TgWagon wagon2 = save(new_(TgWagon.class, "WAGON2", "Wagon 2"));
+
+        save(new_composite(TgWagonSlot.class, wagon1, 5));
+        save(new_composite(TgWagonSlot.class, wagon1, 6));
+        save(new_composite(TgWagonSlot.class, wagon1, 7));
+        save(new_composite(TgWagonSlot.class, wagon1, 8));
+        save(new_composite(TgWagonSlot.class, wagon1, 4).setBogie(bogie1));
+        save(new_composite(TgWagonSlot.class, wagon1, 3).setBogie(bogie2));
+        save(new_composite(TgWagonSlot.class, wagon1, 2).setBogie(bogie3));
+        save(new_composite(TgWagonSlot.class, wagon1, 1).setBogie(bogie4));
+
+        save(new_composite(TgWagonSlot.class, wagon2, 1).setBogie(bogie5));
+        save(new_composite(TgWagonSlot.class, wagon2, 2).setBogie(bogie6));
+        
+        final TgWagonSlot wagonSlot = save(new_composite(TgWagonSlot.class, wagon2, 3).setBogie(bogie7).setFuelType(petrolFuelType));
+        final TgBogieLocation slotLocation = co$(TgBogieLocation.class).new_();
+        slotLocation.setWagonSlot(wagonSlot);
+        save(bogie7.setLocation(slotLocation));
+        
+        final TgOrgUnit1 orgUnit1 = save(new_(TgOrgUnit1.class, "orgunit1", "desc orgunit1"));
+        final TgOrgUnit2 orgUnit2 = save(new_composite(TgOrgUnit2.class, orgUnit1, "orgunit2"));
+        final TgOrgUnit3 orgUnit3 = save(new_composite(TgOrgUnit3.class, orgUnit2, "orgunit3"));
+        final TgOrgUnit4 orgUnit4 = save(new_composite(TgOrgUnit4.class, orgUnit3, "orgunit4"));
+        final TgOrgUnit5 orgUnit5 = save(new_composite(TgOrgUnit5.class, orgUnit4, "orgunit5"));
+
+        final TgVehicleMake merc = save(new_(TgVehicleMake.class, "MERC", "Mercedes"));
+        final TgVehicleMake audi = save(new_(TgVehicleMake.class, "AUDI", "Audi"));
+        final TgVehicleMake bmw = save(new_(TgVehicleMake.class, "BMW", "BMW"));
+        final TgVehicleMake subaro = save(new_(TgVehicleMake.class, "SUBARO", "Subaro"));
+
+        final TeVehicleMake merc_ = save(new_(TeVehicleMake.class, "MERC", "Mercedes"));
+        final TeVehicleMake audi_ = save(new_(TeVehicleMake.class, "AUDI", "Audi"));
+        final TeVehicleMake bmw_ = save(new_(TeVehicleMake.class, "BMW", "BMW"));
+        final TeVehicleMake subaro_ = save(new_(TeVehicleMake.class, "SUBARO", "Subaro"));
+
+        final TgVehicleModel m316 = save(new_(TgVehicleModel.class, "316", "316").setMake(merc));
+        final TgVehicleModel m317 = save(new_(TgVehicleModel.class, "317", "317").setMake(audi));
+        final TgVehicleModel m318 = save(new_(TgVehicleModel.class, "318", "318").setMake(audi));
+        final TgVehicleModel m319 = save(new_(TgVehicleModel.class, "319", "319").setMake(bmw));
+        final TgVehicleModel m320 = save(new_(TgVehicleModel.class, "320", "320").setMake(bmw));
+        final TgVehicleModel m321 = save(new_(TgVehicleModel.class, "321", "321").setMake(bmw));
+        final TgVehicleModel m322 = save(new_(TgVehicleModel.class, "322", "322").setMake(bmw));
+
+        final TeVehicleModel m316_ = save(new_(TeVehicleModel.class, "316", "316").setMake(merc_));
+        final TeVehicleModel m317_ = save(new_(TeVehicleModel.class, "317", "317").setMake(audi_));
+        final TeVehicleModel m318_ = save(new_(TeVehicleModel.class, "318", "318").setMake(audi_));
+        final TeVehicleModel m319_ = save(new_(TeVehicleModel.class, "319", "319").setMake(bmw_));
+        final TeVehicleModel m320_ = save(new_(TeVehicleModel.class, "320", "320").setMake(bmw_));
+        final TeVehicleModel m321_ = save(new_(TeVehicleModel.class, "321", "321").setMake(bmw_));
+        final TeVehicleModel m322_ = save(new_(TeVehicleModel.class, "322", "322").setMake(bmw_));
+
+        final TgVehicle car1 = save(new_(TgVehicle.class, "CAR1", "CAR1 DESC").setInitDate(date("2001-01-01 00:00:00")).setModel(m318).setPrice(new Money("20")).setPurchasePrice(new Money("10")).setActive(true).setLeased(false));
+        final TgVehicle car2 = save(new_(TgVehicle.class, "CAR2", "CAR2 DESC").setInitDate(date("2007-01-01 00:00:00")).setModel(m316).setPrice(new Money("200")).setPurchasePrice(new Money("100")).setActive(false).setLeased(true).setLastMeterReading(new BigDecimal("105")).setStation(orgUnit5).setReplacedBy(car1));
+
+        save(new_(TgVehicleFinDetails.class, car1).setCapitalWorksNo("CAP_NO1"));
+
+        save(new_composite(TgFuelUsage.class, car2, date("2006-02-09 00:00:00")).setQty(new BigDecimal("100")).setFuelType(unleadedFuelType));
+        save(new_composite(TgFuelUsage.class, car2, date("2008-02-10 00:00:00")).setQty(new BigDecimal("120")).setFuelType(petrolFuelType));
+
+        save(new_composite(TgTimesheet.class, "USER1", date("2011-11-01 13:00:00")).setFinishDate(date("2011-11-01 15:00:00")).setIncident("002"));
+
+        final UserRole managerRole = save(new_(UserRole.class, "MANAGER", "Managerial role"));
+        final UserRole dataEntryRole = save(new_(UserRole.class, "DATAENTRY", "Data entry role"));
+        final UserRole analyticRole = save(new_(UserRole.class, "ANALYTIC", "Analytic role"));
+        final UserRole fleetOperatorRole = save(new_(UserRole.class, "FLEET_OPERATOR", "Fleet operator role"));
+        final UserRole workshopOperatorRole = save(new_(UserRole.class, "WORKSHOP_OPERATOR", "Workshop operator role"));
+        final UserRole warehouseOperatorRole = save(new_(UserRole.class, "WAREHOUSE_OPERATOR", "Warehouse operator role"));
+
+        final User baseUser1 = save(new_(User.class, "base_user1", "base user1").setBase(true));
+        final User user1 = save(new_(User.class, "user1", "user1 desc").setBase(false).setBasedOnUser(baseUser1));
+        final User user2 = save(new_(User.class, "user2", "user2 desc").setBase(false).setBasedOnUser(baseUser1));
+        final User user3 = save(new_(User.class, "user3", "user3 desc").setBase(false).setBasedOnUser(baseUser1));
+
+        save(new_composite(UserAndRoleAssociation.class, user1, managerRole));
+        save(new_composite(UserAndRoleAssociation.class, user1, analyticRole));
+        save(new_composite(UserAndRoleAssociation.class, user2, dataEntryRole));
+        save(new_composite(UserAndRoleAssociation.class, user2, fleetOperatorRole));
+        save(new_composite(UserAndRoleAssociation.class, user2, warehouseOperatorRole));
+        save(new_composite(UserAndRoleAssociation.class, user3, dataEntryRole));
+        save(new_composite(UserAndRoleAssociation.class, user3, fleetOperatorRole));
+        save(new_composite(UserAndRoleAssociation.class, user3, warehouseOperatorRole));
+
+        final TgPersonName chris = save(new_(TgPersonName.class, "Chris", "Chris"));
+        final TgAuthor chrisDate = save(new_composite(TgAuthor.class, chris, "Date", null));
+
+        final TgPersonName yurij = save(new_(TgPersonName.class, "Yurij", "Yurij"));
+        final TgAuthor yurijShcherbyna = save(new_composite(TgAuthor.class, yurij, "Shcherbyna", "Mykolajovych"));
+
+        save(new_composite(TgAuthorship.class, chrisDate, "An Introduction to Database Systems").setYear(2003));
+        save(new_composite(TgAuthorship.class, chrisDate, "Database Design and Relational Theory").setYear(2012));
+        save(new_composite(TgAuthorship.class, chrisDate, "SQL and Relational Theory").setYear(2015));
+        save(new_composite(TgAuthorship.class, yurijShcherbyna, "Дискретна математика").setYear(2007));
+
+        save(new_(TgEntityWithComplexSummaries.class, "veh1").setKms(200).setCost(100));
+        save(new_(TgEntityWithComplexSummaries.class, "veh2").setKms(0).setCost(100));
+        save(new_(TgEntityWithComplexSummaries.class, "veh3").setKms(300).setCost(100));
+        save(new_(TgEntityWithComplexSummaries.class, "veh4").setKms(0).setCost(200));
     }
 }

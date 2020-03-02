@@ -6,6 +6,7 @@ import static ua.com.fielden.platform.eql.meta.QueryCategory.RESULT_QUERY;
 
 import java.util.Objects;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.meta.QueryCategory;
 import ua.com.fielden.platform.eql.stage3.elements.EntQueryBlocks3;
@@ -23,14 +24,16 @@ public class EntQuery3 implements ISingleOperand3 {
     public final GroupBys3 groups;
     public final OrderBys3 orderings;
     public final QueryCategory category;
+    public final Class<? extends AbstractEntity<?>> resultType;
 
-    public EntQuery3(final EntQueryBlocks3 queryBlocks, final QueryCategory category) {
+    public EntQuery3(final EntQueryBlocks3 queryBlocks, final QueryCategory category, final Class<? extends AbstractEntity<?>> resultType) {
         this.sources = queryBlocks.sources;
         this.conditions = queryBlocks.conditions;
         this.yields = queryBlocks.yields;
         this.groups = queryBlocks.groups;
         this.orderings = queryBlocks.orderings;
         this.category = category;
+        this.resultType = resultType;
     }
 
     @Override
@@ -73,6 +76,7 @@ public class EntQuery3 implements ISingleOperand3 {
         result = prime * result + groups.hashCode();
         result = prime * result + orderings.hashCode();
         result = prime * result + category.hashCode();
+        result = prime * result + resultType.hashCode();
         return result;
     }
 
@@ -93,6 +97,7 @@ public class EntQuery3 implements ISingleOperand3 {
                 Objects.equals(conditions, other.conditions) &&
                 Objects.equals(groups, other.groups) &&
                 Objects.equals(orderings, other.orderings) &&
-                Objects.equals(category, other.category);
+                Objects.equals(category, other.category) &&
+                Objects.equals(resultType, other.resultType);
     }
 }

@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import org.hibernate.type.LongType;
+
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
@@ -99,14 +101,14 @@ public class Sources2  {
         final ISingleOperand3 lo;
         
         if (child.expr == null) {
-            lo = new EntProp3(child.mainName, rootSource);
+            lo = new EntProp3(child.mainName, rootSource, child.source.sourceType(), LongType.INSTANCE);
         } else {
             final TransformationResult<Expression3> expTr = child.expr.transform(currentContext);
             lo = expTr.item;
             currentContext = expTr.updatedContext;
         }
         
-        final EntProp3 ro = new EntProp3(ID, addedSource);
+        final EntProp3 ro = new EntProp3(ID, addedSource, Long.class, LongType.INSTANCE);
         final ComparisonTest3 ct = new ComparisonTest3(lo, EQ, ro);
         final Conditions3 jc = new Conditions3(false, asList(asList(ct)));
         final T2<IQrySources3, TransformationContext> res = attachChildren(addedSource, child.items, currentContext);

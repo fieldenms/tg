@@ -11,7 +11,7 @@ public class ComponentTypePropInfo extends AbstractPropInfo {
     }
 
     public ComponentTypePropInfo(final String name, final EntityInfo propEntityInfo) {
-        super(name);
+        super(name, null);
         //TODO this class should be refactored to support components.
         throw new EqlException("Not yet.");
 //        this.propEntityInfo = propEntityInfo;

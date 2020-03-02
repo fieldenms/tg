@@ -17,25 +17,15 @@ public class EntityTypePropInfo<T extends AbstractEntity<?>> extends AbstractPro
     public final EntityInfo<T> propEntityInfo;
     public final boolean required;
 
-    /**
-     * Principal constructor.
-     * 
-     * @param name - property yield alias or property name.
-     * @param propEntityInfo -- entity info for property.  
-     * @param parent - property holder structure, which represents either query source or query-able entity of type <code>PARENT</code>.
-     */
-    public EntityTypePropInfo(final String name, final EntityInfo<T> propEntityInfo, final boolean required) {
-        super(name);
+    public EntityTypePropInfo(final String name, final EntityInfo<T> propEntityInfo, final Object hibType, final boolean required) {
+        this(name, propEntityInfo, hibType, required, null);
+    }
+
+    public EntityTypePropInfo(final String name, final EntityInfo<T> propEntityInfo, final Object hibType, final boolean required, final Expression1 expression) {
+        super(name, hibType, expression);
         this.propEntityInfo = propEntityInfo;
         this.required = required;
     }
-
-    public EntityTypePropInfo(final String name, final EntityInfo<T> propEntityInfo, final boolean required, final Expression1 expression) {
-        super(name, expression);
-        this.propEntityInfo = propEntityInfo;
-        this.required = required;
-    }
-
     
     @Override
     public ResolutionContext resolve(final ResolutionContext context) {

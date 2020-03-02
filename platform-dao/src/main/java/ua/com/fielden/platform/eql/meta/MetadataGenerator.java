@@ -35,6 +35,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiFunction;
 
+import org.hibernate.type.LongType;
+import org.hibernate.type.StringType;
+import org.hibernate.type.YesNoType;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.Calculated;
@@ -138,16 +142,16 @@ public class MetadataGenerator {
         switch (category) {
         case PERSISTED:
             //TODO Need to handle expression for one-2-one case.
-            return of(isOneToOne(entityType) ? new PrimTypePropInfo<Long>(ID, Long.class)
-                    : new PrimTypePropInfo<Long>(ID, Long.class)); 
+            return of(isOneToOne(entityType) ? new PrimTypePropInfo<Long>(ID, LongType.INSTANCE, Long.class)
+                    : new PrimTypePropInfo<Long>(ID, LongType.INSTANCE, Long.class)); 
         case QUERY_BASED:
             if (EntityUtils.isSyntheticBasedOnPersistentEntityType(entityType)) {
                 if (isEntityType(getKeyType(entityType))) {
                     throw new EntityDefinitionException(format("Entity [%s] is recognised as synthetic that is based on a persystent type with an entity-typed key. This is not supported.", entityType.getName()));
                 }
-                return of(new PrimTypePropInfo<Long>(ID, Long.class));
+                return of(new PrimTypePropInfo<Long>(ID, LongType.INSTANCE, Long.class));
             } else if (isEntityType(getKeyType(entityType))) {
-                return of(new PrimTypePropInfo<Long>(ID, Long.class)); //TODO need to move this to createYieldAllQueryModel -- entQryExpression(expr().prop("key").model())));
+                return of(new PrimTypePropInfo<Long>(ID, LongType.INSTANCE, Long.class)); //TODO need to move this to createYieldAllQueryModel -- entQryExpression(expr().prop("key").model())));
             } else {
                 return empty();
             }
@@ -160,15 +164,12 @@ public class MetadataGenerator {
 
     private <T extends AbstractEntity<?>> void addProps(final EntityInfo<T> entityInfo, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> allEntitiesInfo) {
         //generateIdPropertyMetadata(entityInfo.javaType(), entityInfo.getCategory()).ifPresent(id -> entityInfo.addProp(id));
-        entityInfo.addProp(new EntityTypePropInfo<T>(ID, (EntityInfo<T>) allEntitiesInfo.get(entityInfo.javaType()), true));
-        entityInfo.addProp(new PrimTypePropInfo<Long>(VERSION, Long.class));
+        entityInfo.addProp(new EntityTypePropInfo<T>(ID, (EntityInfo<T>) allEntitiesInfo.get(entityInfo.javaType()), LongType.INSTANCE, true));
+        entityInfo.addProp(new PrimTypePropInfo<Long>(VERSION, LongType.INSTANCE, Long.class));
         
         EntityUtils.getRealProperties(entityInfo.javaType()).stream()
         .filter(f -> f.isAnnotationPresent(MapTo.class) || f.isAnnotationPresent(Calculated.class)).forEach(field -> {
             final Class<?> javaType = determinePropertyType(entityInfo.javaType(), field.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
-//            if (entityInfo.javaType().getSimpleName().equals("TeVehicleFuelUsage")) {
-//                System.out.println(field.getName());
-//            }
             Expression1 expr = null;
             if (field.isAnnotationPresent(Calculated.class)) {
                 try {
@@ -182,9 +183,9 @@ public class MetadataGenerator {
             if (AbstractEntity.class.isAssignableFrom(javaType)) {
                 final boolean required = PropertyTypeDeterminator.isRequiredByDefinition(field, javaType);
 
-                entityInfo.addProp(new EntityTypePropInfo(field.getName(), allEntitiesInfo.get(javaType), required, expr));
+                entityInfo.addProp(new EntityTypePropInfo(field.getName(), allEntitiesInfo.get(javaType), LongType.INSTANCE, required, expr));
             } else {
-                entityInfo.addProp(new PrimTypePropInfo(field.getName(), javaType, expr));
+                entityInfo.addProp(new PrimTypePropInfo(field.getName(),EntityUtils.isBoolean(javaType) ? YesNoType.INSTANCE : StringType.INSTANCE, javaType, expr));
             }
 
         });
@@ -193,7 +194,7 @@ public class MetadataGenerator {
             //System.out.println(entityInfo.javaType().getSimpleName());
             final ExpressionModel expressionModel = CompositeKeyEqlExpressionGenerator.generateCompositeKeyEqlExpression((Class<? extends AbstractEntity<DynamicEntityKey>>) entityInfo.javaType());
             final Expression1 expr = (Expression1) (new StandAloneExpressionBuilder(qb, expressionModel)).getResult().getValue();
-            entityInfo.addProp(new PrimTypePropInfo<String>(KEY, String.class, expr));
+            entityInfo.addProp(new PrimTypePropInfo<String>(KEY, StringType.INSTANCE, String.class, expr));
         }        
 
        

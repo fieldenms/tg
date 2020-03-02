@@ -152,7 +152,7 @@ public class EntityContainerFetcher {
             final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> s2tr = s1tr.item.transform(new TransformationContext(tables, groupChildren(s1tr.item.collectProps(), domainInfo)));
             final EntQuery3 entQuery3 = s2tr.item;
             final String sql3 = entQuery3.sql(domainMetadataAnalyser.getDbVersion());
-            return new QueryModelResult<>((Class<E>)EntityAggregates.class, sql3, getResultPropsInfos(entQuery3.yields), s2tr.updatedContext.getParamValues(), qem.fetchModel);
+            return new QueryModelResult<>((Class<E>)entQuery3.resultType, sql3, getResultPropsInfos(entQuery3.yields), s2tr.updatedContext.getParamValues(), qem.fetchModel);
         }
     }
 
@@ -167,7 +167,7 @@ public class EntityContainerFetcher {
     private SortedSet<ResultQueryYieldDetails> getResultPropsInfos(final Yields3 model) {
         final SortedSet<ResultQueryYieldDetails> result = new TreeSet<>();
         for (final Yield3 yield : model.getYields()) {
-            result.add(new ResultQueryYieldDetails(yield.alias, null, null, yield.column.name, YieldDetailsType.USUAL_PROP));
+            result.add(new ResultQueryYieldDetails(yield.alias, yield.operand.type(), yield.operand.hibType(), yield.column.name, YieldDetailsType.USUAL_PROP));
         }
         return result;
     }

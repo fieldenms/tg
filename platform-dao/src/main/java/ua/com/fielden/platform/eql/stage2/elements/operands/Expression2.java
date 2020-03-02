@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import org.hibernate.type.BigDecimalType;
+
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage3.elements.operands.CompoundSingleOperand3;
@@ -53,11 +55,16 @@ public class Expression2 implements ISingleOperand2<Expression3> {
     }
 
     @Override
-    public Class<BigDecimal> type() {
-        // TODO EQL Need to provide proper implementation.
-        return BigDecimal.class;
+    public Class<?> type() {
+        return items.isEmpty() ? first.type() : BigDecimal.class;
     }
 
+    @Override
+    public Object hibType() {
+        return items.isEmpty() ? first.hibType() : BigDecimalType.INSTANCE;
+    }
+
+    
     @Override
     public int hashCode() {
         final int prime = 31;

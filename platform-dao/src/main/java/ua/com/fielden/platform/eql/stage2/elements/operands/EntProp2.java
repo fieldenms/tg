@@ -24,6 +24,7 @@ public class EntProp2 extends AbstractElement2 implements ISingleOperand2<Expres
     private final List<AbstractPropInfo<?>> path;
     public final String name;
     public final Class<?> type;
+    public final Object hibType;
 
     public EntProp2(final IQrySource2<? extends IQrySource3> source, final String contextId, final List<AbstractPropInfo<?>> path) {
         super(contextId);
@@ -31,6 +32,7 @@ public class EntProp2 extends AbstractElement2 implements ISingleOperand2<Expres
         this.path = path;
         this.name = path.stream().map(k -> k.name).collect(Collectors.joining("."));
         this.type = path.stream().reduce((first, second) -> second).orElse(null).javaType();
+        this.hibType = path.stream().reduce((first, second) -> second).orElse(null).hibType;
     }
 
     @Override
@@ -39,7 +41,7 @@ public class EntProp2 extends AbstractElement2 implements ISingleOperand2<Expres
         Expression3 transformedProp;  
         TransformationContext currentContext = context;
         if (resolution._2 instanceof String) {
-            transformedProp = new Expression3(new EntProp3((String) resolution._2, resolution._1), emptyList());
+            transformedProp = new Expression3(new EntProp3((String) resolution._2, resolution._1, type, hibType), emptyList());
         } else {
             final TransformationResult<Expression3> tr = ((Expression2) resolution._2).transform(context);
             currentContext = tr.updatedContext;
@@ -65,6 +67,11 @@ public class EntProp2 extends AbstractElement2 implements ISingleOperand2<Expres
     @Override
     public Class<?> type() {
         return type;
+    }
+
+    @Override
+    public Object hibType() {
+        return hibType;
     }
 
     @Override

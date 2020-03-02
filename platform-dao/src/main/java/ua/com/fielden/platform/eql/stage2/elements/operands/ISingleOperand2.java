@@ -12,4 +12,5 @@ public interface ISingleOperand2<S3 extends ISingleOperand3> extends IIgnorableA
      * @return
      */
     Class<?> type();
+    Object hibType();
 }

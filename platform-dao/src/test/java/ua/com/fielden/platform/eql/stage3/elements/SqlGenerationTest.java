@@ -20,6 +20,7 @@ import ua.com.fielden.platform.eql.stage3.elements.operands.EntQuery3;
 import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySources3;
 import ua.com.fielden.platform.eql.stage3.elements.sources.QrySource3BasedOnTable;
 
+@Ignore
 public class SqlGenerationTest extends EqlStage3TestCase {
     private final static String[] modelYields = new String[]{"id", "key", "desc", "version", "make"};
     private final static String[] vehicleYields = new String[]{"id", "key", "desc", "version", "initDate", "model", "make", "replacedBy", "station", "active", "leased", "lastMeterReading", "price", "purchasePrice"};

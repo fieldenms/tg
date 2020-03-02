@@ -2,6 +2,8 @@ package ua.com.fielden.platform.eql.stage2.elements.operands;
 
 import static java.util.Collections.emptySet;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.eql.meta.QueryCategory.RESULT_QUERY;
+import static ua.com.fielden.platform.eql.meta.QueryCategory.SOURCE_QUERY;
 import static ua.com.fielden.platform.eql.meta.QueryCategory.SUB_QUERY;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 
@@ -11,6 +13,8 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
+
+import org.hibernate.type.LongType;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
@@ -63,7 +67,7 @@ public class EntQuery2 implements ISingleOperand2<EntQuery3> {
             } else {
                 final List<Yield2> enhancedYields = new ArrayList<>();
                 for (final Entry<String, AbstractPropInfo<?>> el : sources2.main.entityInfo().getProps().entrySet()) {
-                    if (el.getValue().expression == null) {
+                    if (!el.getValue().hasExpression() && category == SOURCE_QUERY || category == RESULT_QUERY) {
                         //final String yieldedPropAliasedName = sourcesTr.item.main.alias() != null ?  sourcesTr.item.main.alias() + "." + el.getKey() : el.getKey();
                         enhancedYields.add(new Yield2(new EntProp2(sources2.main, "0", listOf(el.getValue())), el.getKey(), false));
                     }
@@ -89,7 +93,7 @@ public class EntQuery2 implements ISingleOperand2<EntQuery3> {
 
         final EntQueryBlocks3 entQueryBlocks = new EntQueryBlocks3(sourcesTr != null ? sourcesTr.item : null, conditionsTr.item, yieldsTr.item, groupsTr.item, orderingsTr.item);
 
-        return new TransformationResult<EntQuery3>(new EntQuery3(entQueryBlocks, category), orderingsTr.updatedContext);
+        return new TransformationResult<EntQuery3>(new EntQuery3(entQueryBlocks, category, resultType), orderingsTr.updatedContext);
     }
 
     @Override
@@ -106,7 +110,14 @@ public class EntQuery2 implements ISingleOperand2<EntQuery3> {
 
     @Override
     public Class<? extends AbstractEntity<?>> type() {
+        // TODO EQL (if resultType == null, then take it should be PrimitiveResultQuery -- just take resultType of its single yield
         return resultType;
+    }
+    
+    @Override
+    public Object hibType() {
+        // TODO EQL (if resultType == null, then take it should be PrimitiveResultQuery -- just take hibType of its single yield
+        return LongType.INSTANCE;
     }
 
     @Override

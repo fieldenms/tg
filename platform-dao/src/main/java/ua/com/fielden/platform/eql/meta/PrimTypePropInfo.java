@@ -7,13 +7,12 @@ import ua.com.fielden.platform.eql.stage1.elements.operands.Expression1;
 public class PrimTypePropInfo<T> extends AbstractPropInfo<T> {
     private final Class<T> propType;
 
-    public PrimTypePropInfo(final String name, final Class<T> propType) {
-        super(name);
-        this.propType = propType;
+    public PrimTypePropInfo(final String name, final Object hibType, final Class<T> propType) {
+        this(name, hibType, propType, null);
     }
     
-    public PrimTypePropInfo(final String name, final Class<T> propType, final Expression1 expression) {
-        super(name, expression);
+    public PrimTypePropInfo(final String name, final Object hibType, final Class<T> propType, final Expression1 expression) {
+        super(name, hibType, expression);
         this.propType = propType;
     }
 

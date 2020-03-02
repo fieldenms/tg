@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.type.LongType;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
@@ -139,8 +141,8 @@ public class QrySource2BasedOnSubqueries extends AbstractElement2 implements IQr
             final EntityInfo<EntityAggregates> entAggEntityInfo = new EntityInfo<>(EntityAggregates.class, null);
             for (final Yield2 yield : getYields().getYields()) {
                 final AbstractPropInfo<?> aep = isEntityType(yield.javaType())
-                        ? new EntityTypePropInfo(yield.alias, domainInfo.get(yield.javaType()), yield.hasRequiredHint)
-                        : new PrimTypePropInfo(yield.alias, yield.javaType());
+                        ? new EntityTypePropInfo(yield.alias, domainInfo.get(yield.javaType()), LongType.INSTANCE, yield.hasRequiredHint)
+                        : new PrimTypePropInfo(yield.alias, yield.operand.hibType(), yield.javaType());
                 entAggEntityInfo.addProp(aep);
             }
             return entAggEntityInfo;

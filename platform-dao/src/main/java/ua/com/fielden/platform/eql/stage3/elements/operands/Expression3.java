@@ -23,6 +23,18 @@ public class Expression3 implements ISingleOperand3 {
     }
     
     @Override
+    public Class<?> type() {
+        // TODO EQL
+        return items.isEmpty() ? first.type() : null;
+    }
+
+    @Override
+    public Object hibType() {
+        // TODO EQL
+        return items.isEmpty() ? first.hibType() : null;
+    }
+
+    @Override
     public String sql(final DbVersion dbVersion) {
         return items.isEmpty() ? first.sql(dbVersion) : "(" + first.sql(dbVersion) + items.stream().map(co -> co.sql(dbVersion)).collect(joining()) +")";
     }

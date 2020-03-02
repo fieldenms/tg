@@ -70,7 +70,7 @@ public class EqlStage3TestCase extends EqlStage1TestCase {
     }
 
     protected static ISingleOperand3 prop(final String name, final IQrySource3 source) {
-        return new EntProp3(name, source);
+        return new EntProp3(name, source, null, null);
     }
     
     protected static ComparisonTest3 eq(final ISingleOperand3 op1, final ISingleOperand3 op2) {
@@ -194,19 +194,19 @@ public class EqlStage3TestCase extends EqlStage1TestCase {
     }
 
     private static EntQuery3 qry(final IQrySources3 sources, final QueryCategory queryCategory) {
-        return new EntQuery3(new EntQueryBlocks3(sources, new Conditions3(), yields(), groups(), orders()), queryCategory);
+        return new EntQuery3(new EntQueryBlocks3(sources, new Conditions3(), yields(), groups(), orders()), queryCategory, null);
     }
 
     private static EntQuery3 qry(final IQrySources3 sources, final Conditions3 conditions, final QueryCategory queryCategory) {
-        return new EntQuery3(new EntQueryBlocks3(sources, conditions, yields(), groups(), orders()), queryCategory);
+        return new EntQuery3(new EntQueryBlocks3(sources, conditions, yields(), groups(), orders()), queryCategory, null);
     }
 
     private static EntQuery3 qry(final IQrySources3 sources, final Yields3 yields, final QueryCategory queryCategory) {
-        return new EntQuery3(new EntQueryBlocks3(sources, new Conditions3(), yields, groups(), orders()), queryCategory);
+        return new EntQuery3(new EntQueryBlocks3(sources, new Conditions3(), yields, groups(), orders()), queryCategory, null);
     }
 
     private static EntQuery3 qry(final IQrySources3 sources, final Conditions3 conditions, final Yields3 yields, final QueryCategory queryCategory) {
-        return new EntQuery3(new EntQueryBlocks3(sources, conditions, yields, groups(), orders()), queryCategory);
+        return new EntQuery3(new EntQueryBlocks3(sources, conditions, yields, groups(), orders()), queryCategory, null);
     }
     
     protected static EntQuery3 qry(final IQrySources3 sources) {
