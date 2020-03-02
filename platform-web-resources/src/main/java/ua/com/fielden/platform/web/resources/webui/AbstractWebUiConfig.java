@@ -71,16 +71,20 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     private final List<String> resourcePaths;
     private final Workflows workflow;
     private final Map<String, String> checksums;
+    private final boolean independentTimeZone;
 
     /**
      * Creates abstract {@link IWebUiConfig}.
      *
-     * @param title
+     * @param title -- application title displayed by the web client
+     * @param workflow -- indicates development or deployment workflow, which affects how web resources get loaded.
      * @param externalResourcePaths
      * - additional root paths for file resources. (see {@link #resourcePaths} for more information).
+     * @param independentTimeZone -- if {@code true} is passed then user requests are treated as if they are made from the same timezone as defined for the application server.
      */
-    public AbstractWebUiConfig(final String title, final Workflows workflow, final String[] externalResourcePaths) {
+    public AbstractWebUiConfig(final String title, final Workflows workflow, final String[] externalResourcePaths, final boolean independentTimeZone) {
         this.title = title;
+        this.independentTimeZone = independentTimeZone;
         this.webUiBuilder = new WebUiBuilder(this);
         this.desktopMainMenuConfig = new MainMenuBuilder(this);
         this.mobileMainMenuConfig = new MainMenuBuilder(this);
@@ -101,6 +105,14 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         }
     }
 
+    /**
+     * The same as {@link #AbstractWebUiConfig(String, Workflows, String[], boolean), but with the last argument {@code false}.
+     * This value is suitable for most applications.
+     */
+    public AbstractWebUiConfig(final String title, final Workflows workflow, final String[] externalResourcePaths) {
+            this(title, workflow, externalResourcePaths, false);
+    }
+    
     @Override
     public void initConfiguration() {
         final EntityMaster<EntityNewAction> genericEntityNewActionMaster = StandardMastersWebUiConfig.createEntityNewMaster(injector());
@@ -240,6 +252,11 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     @Override
     public Optional<String> checksum(final String resourceURI) {
         return ofNullable(checksums.get(resourceURI));
+    }
+    
+    @Override
+    public boolean independentTimeZone() {
+        return independentTimeZone;
     }
     
 }

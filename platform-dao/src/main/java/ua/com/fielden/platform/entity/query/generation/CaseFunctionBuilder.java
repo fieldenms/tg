@@ -48,7 +48,7 @@ public class CaseFunctionBuilder extends AbstractTokensBuilder {
             getTokens().remove(getSize() - 1);
         }
 
-        final List<Pair<ICondition, ISingleOperand>> whenThens = new ArrayList<Pair<ICondition, ISingleOperand>>();
+        final List<Pair<ICondition, ISingleOperand>> whenThens = new ArrayList<>();
         ISingleOperand elseOperand = null;
 
         for (final Iterator<Pair<TokenCategory, Object>> iterator = getTokens().iterator(); iterator.hasNext();) {
@@ -56,7 +56,7 @@ public class CaseFunctionBuilder extends AbstractTokensBuilder {
             final Pair<TokenCategory, Object> secondTokenPair = iterator.hasNext() ? iterator.next() : null;
 
             if (secondTokenPair != null) {
-                whenThens.add(new Pair<ICondition, ISingleOperand>((ICondition) firstTokenPair.getValue(), getModelForSingleOperand(secondTokenPair)));
+                whenThens.add(new Pair<>((ICondition) firstTokenPair.getValue(), getModelForSingleOperand(secondTokenPair)));
             } else {
                 elseOperand = getModelForSingleOperand(firstTokenPair);
             }
@@ -67,6 +67,6 @@ public class CaseFunctionBuilder extends AbstractTokensBuilder {
 
     @Override
     public Pair<TokenCategory, Object> getResult() {
-        return new Pair<TokenCategory, Object>(TokenCategory.FUNCTION_MODEL, getModel());
+        return new Pair<>(TokenCategory.FUNCTION_MODEL, getModel());
     }
 }

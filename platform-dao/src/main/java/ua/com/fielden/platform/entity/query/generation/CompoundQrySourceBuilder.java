@@ -12,7 +12,7 @@ public class CompoundQrySourceBuilder extends AbstractTokensBuilder {
 
     protected CompoundQrySourceBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues, final TokenCategory cat, final Object value) {
         super(parent, queryBuilder, paramValues);
-        getTokens().add(new Pair<TokenCategory, Object>(cat, value));
+        getTokens().add(new Pair<>(cat, value));
         setChild(new QrySourceBuilder(this, queryBuilder, paramValues));
     }
 
@@ -46,9 +46,9 @@ public class CompoundQrySourceBuilder extends AbstractTokensBuilder {
         if (getChild() != null) {
             final ITokensBuilder last = getChild();
             setChild(null);
-            return new Pair<TokenCategory, Object>(TokenCategory.QRY_COMPOUND_SOURCE, new CompoundSource((ISource) secondValue(), (JoinType) firstValue(), ((ConditionsBuilder) last).getModel()));
+            return new Pair<>(TokenCategory.QRY_COMPOUND_SOURCE, new CompoundSource((ISource) secondValue(), (JoinType) firstValue(), ((ConditionsBuilder) last).getModel()));
         } else {
-            return new Pair<TokenCategory, Object>(TokenCategory.QRY_COMPOUND_SOURCE, new CompoundSource((ISource) secondValue(), (JoinType) firstValue(), null));
+            return new Pair<>(TokenCategory.QRY_COMPOUND_SOURCE, new CompoundSource((ISource) secondValue(), (JoinType) firstValue(), null));
         }
     }
 }

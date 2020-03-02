@@ -74,14 +74,15 @@ public interface IUserSession extends IEntityDao<UserSession> {
     String genSeriesId();
 
     /**
-     * Makes a session authenticator from {@code user}, {@code seriesId} and {@code expiryTime}.
+     * Makes a session authenticator from {@code user}, {@code seriesId}, {@code version} and {@code expiryTime}.
      *
      * @param user
      * @param seriesId
+     * @param version -- user session version
      * @param expiryTime
      * @return
      */
-    Authenticator mkAuthenticator(final User user, final String seriesId, final Date expiryTime);
+    Authenticator mkAuthenticator(final User user, final String seriesId, final long version,  final Date expiryTime);
 
     /**
      * Invalidates the specified user session. 

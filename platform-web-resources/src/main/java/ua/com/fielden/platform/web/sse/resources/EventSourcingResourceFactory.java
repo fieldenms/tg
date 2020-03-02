@@ -8,6 +8,7 @@ import org.restlet.data.Method;
 import com.google.inject.Injector;
 
 import rx.Observable;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.sse.AbstractEventSource;
 import ua.com.fielden.platform.web.sse.SseUtils;
@@ -27,19 +28,22 @@ public class EventSourcingResourceFactory extends Restlet {
     private final Class<? extends AbstractEventSource<?, ?>> eventSourceType;
     private final AbstractEventSource<?, ?> eventSource;
     private final IDeviceProvider deviceProvider;
+    private final IDates dates;
 
-    public EventSourcingResourceFactory(final Injector injector, final Class<? extends AbstractEventSource<?, ?>> eventSourceType, final IDeviceProvider deviceProvider) {
+    public EventSourcingResourceFactory(final Injector injector, final Class<? extends AbstractEventSource<?, ?>> eventSourceType, final IDeviceProvider deviceProvider, final IDates dates) {
         this.injector = injector;
         this.eventSourceType = eventSourceType;
         this.eventSource = null;
         this.deviceProvider = deviceProvider;
+        this.dates = dates;
     }
 
-    public EventSourcingResourceFactory(final AbstractEventSource<?, ?> eventSource, final IDeviceProvider deviceProvider) {
+    public EventSourcingResourceFactory(final AbstractEventSource<?, ?> eventSource, final IDeviceProvider deviceProvider, final IDates dates) {
         this.injector = null;
         this.eventSource = eventSource;
         this.eventSourceType = null;
         this.deviceProvider = deviceProvider;
+        this.dates = dates;
     }
 
     @Override
@@ -50,9 +54,9 @@ public class EventSourcingResourceFactory extends Restlet {
                 throw new InvalidSseUriException(String.format("URI [%s] is not valid for SSE.", request.getResourceRef().toString()));
             }
             if (this.eventSource != null) {
-                new EventSourcingResource(eventSource, deviceProvider, getContext(), request, response).handle();
+                new EventSourcingResource(eventSource, deviceProvider, dates, getContext(), request, response).handle();
             } else {
-                new EventSourcingResource(injector.getInstance(eventSourceType), deviceProvider, getContext(), request, response).handle();
+                new EventSourcingResource(injector.getInstance(eventSourceType), deviceProvider, dates, getContext(), request, response).handle();
             }
         }
     }

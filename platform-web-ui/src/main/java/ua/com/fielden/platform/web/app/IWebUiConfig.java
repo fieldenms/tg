@@ -142,4 +142,12 @@ public interface IWebUiConfig extends IMenuRetriever {
      * @return
      */
     Optional<String> checksum(final String resourceURI);
+    
+    /**
+     * Returns true if server and client applications operate in the same time-zone, otherwise false.
+     * The only exception is handling of 'now': it calculates based on real user time-zone (and later converts to server time-zone).
+     * 
+     * @return
+     */
+    boolean independentTimeZone();
 }

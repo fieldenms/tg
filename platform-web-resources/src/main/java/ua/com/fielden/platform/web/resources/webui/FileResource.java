@@ -20,6 +20,7 @@ import org.restlet.data.MediaType;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
@@ -42,8 +43,8 @@ public class FileResource extends AbstractWebResource {
      * @param request
      * @param response
      */
-    public FileResource(final IWebResourceLoader webResourceLoader, final List<String> resourcePaths, final IDeviceProvider deviceProvider, final Context context, final Request request, final Response response) {
-        super(context, request, response, deviceProvider);
+    public FileResource(final IWebResourceLoader webResourceLoader, final List<String> resourcePaths, final IDeviceProvider deviceProvider, final IDates dates, final Context context, final Request request, final Response response) {
+        super(context, request, response, deviceProvider, dates);
         this.resourcePaths = resourcePaths;
         this.webResourceLoader = webResourceLoader;
     }

@@ -12,9 +12,9 @@ import com.google.inject.Injector;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -29,13 +29,14 @@ import ua.com.fielden.platform.web.resources.webui.CentreResource;
  *
  */
 public class CentreResourceFactory extends Restlet {
+    private final IDomainTreeEnhancerCache domainTreeEnhancerCache;
     private final IWebUiConfig webUiConfig;
     private final RestServerUtil restUtil;
     private final ICompanionObjectFinder companionFinder;
     private final ICriteriaGenerator critGenerator;
     private final IUserProvider userProvider;
     private final IDeviceProvider deviceProvider;
-    private final IDomainTreeEnhancerCache domainTreeEnhancerCache;
+    private final IDates dates;
     
     /**
      * Instantiates a factory for centre resources.
@@ -49,6 +50,7 @@ public class CentreResourceFactory extends Restlet {
         this.companionFinder = injector.getInstance(ICompanionObjectFinder.class);
         this.userProvider = injector.getInstance(IUserProvider.class);
         this.deviceProvider = injector.getInstance(IDeviceProvider.class);
+        this.dates = injector.getInstance(IDates.class);
     }
     
     @Override
@@ -56,12 +58,13 @@ public class CentreResourceFactory extends Restlet {
         super.handle(request, response);
         
         if (Method.PUT == request.getMethod()) {
-            new CentreResource<AbstractEntity<?>>(
+            new CentreResource<>(
                     restUtil,
                     getEntityCentre(request, webUiConfig),
                     saveAsName(request),
                     userProvider,
                     deviceProvider,
+                    dates,
                     companionFinder,
                     critGenerator,
                     domainTreeEnhancerCache,
