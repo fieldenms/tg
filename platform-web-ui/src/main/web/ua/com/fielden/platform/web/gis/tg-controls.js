@@ -85,10 +85,16 @@ export const Controls = function (_map, _markersClusterGroup, _baseLayers, _addi
    self._map.addControl(drawControl);
 
    self._map.on('draw:created', function (e) {
-       const type = e.layerType;
-       const layer = e.layer;
-       self._markersClusterGroup.addLayer(layer);
-       // self._markersClusterGroup.refreshClusters();
+        const type = e.layerType;
+        const layer = e.layer;
+        self._markersClusterGroup.addLayer(layer);
+        if (layer._latlngs) {
+            console.log('----------------');
+            for (let i = 0; i < layer._latlngs.length; i++) {
+                console.log('			((NEXT VALUE FOR dbo.TG_ENTITY_ID_SEQ), 0, (SELECT _ID FROM POLYGON_ WHERE KEY_ = \'XXXXX\'), ' + (i+1) + ', ' + layer._latlngs[i].lng + ', ' + layer._latlngs[i].lat + '),');
+            }
+        }
+        // self._markersClusterGroup.refreshClusters();
    });
     
     if (_editableArcGisOverlay) {
