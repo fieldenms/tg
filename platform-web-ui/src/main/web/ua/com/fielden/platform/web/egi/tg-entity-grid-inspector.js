@@ -1233,14 +1233,14 @@ Polymer({
         if (this.offsetParent !== null) {
             const fixedHeaders = this.$.top_left_egi.querySelectorAll(".table-header-column-title");
             const scrollingHeaders = this.$.top_egi.querySelectorAll(".table-header-column-title");
-            this._setSortingFor(sortingConfig, this.fixedColumns, fixedHeaders,"fixedColumns");
-            this._setSortingFor(sortingConfig, this.columns, scrollingHeaders, "columns");
+            this._setSortingFor(sortingConfig, this.fixedColumns, fixedHeaders,"fixedColumns", "0");
+            this._setSortingFor(sortingConfig, this.columns, scrollingHeaders, "columns", "1");
         } else {
             this._postponedSortingConfig = sortingConfig;
         }
     },
 
-    _setSortingFor(sortingConfig, columns, headerTitles, modelName) {
+    _setSortingFor(sortingConfig, columns, headerTitles, modelName, totalsModelName) {
         columns.forEach((col, idx) => {
             const configIdx = sortingConfig.findIndex(config => config.property === col.property);
             if (configIdx >= 0) {
@@ -1248,12 +1248,14 @@ Polymer({
                 this.set(modelName + "." + idx + ".sortingNumber", configIdx);
                 if (headerTitles[idx].scrollWidth > headerTitles[idx].offsetWidth) {
                     this.set(modelName + "." + idx + ".shouldAddDynamicWidth", true);
+                    this._updateTotalDynamicWidth(idx, totalsModelName, true);
                 }
             } else {
                 this.set(modelName + "." + idx + ".sorting", null);
                 this.set(modelName + "." + idx + ".sortingNumber", -1);
                 if (this.get(modelName + "." + idx + ".shouldAddDynamicWidth")) {
                     this.set(modelName + "." + idx + ".shouldAddDynamicWidth", false);
+                    this._updateTotalDynamicWidth(idx, totalsModelName, false);
                 }
             }
         });
@@ -1627,6 +1629,14 @@ Polymer({
         }
     },
 
+    _updateTotalDynamicWidth: function (colIndex, modelIndex, value) {
+        if (this._totalsRows) {
+            this._totalsRows.forEach((totalRow, totalIndex) => {
+                this.set("_totalsRows." + totalIndex + "." + modelIndex + "." + colIndex + ".shouldAddDynamicWidth", value);
+            });
+        }
+    },
+
     _endColumnResizing: function (e) {
         //this.style.cursor = "default";
         e.currentTarget.classList.toggle("resizing-action", false);
@@ -1860,12 +1870,14 @@ Polymer({
                         const totalColumn = item.summary[summaryRowCounter]
                         totalColumn.width = item.width;
                         totalColumn.growFactor = item.growFactor;
+                        totalColumn.shouldAddDynamicWidth = item.shouldAddDynamicWidth;
                         totalsRow.push(item.summary[summaryRowCounter]);
                     } else {
                         const totalColumn = {};
                         totalColumn.width = item.width;
                         totalColumn.growFactor = item.growFactor;
                         totalColumn.type = item.type
+                        totalColumn.shouldAddDynamicWidth = item.shouldAddDynamicWidth;
                         totalsRow.push(totalColumn);
                     }
                 });
