@@ -1233,8 +1233,8 @@ Polymer({
         if (this.offsetParent !== null) {
             const fixedHeaders = this.$.top_left_egi.querySelectorAll(".table-header-column-title");
             const scrollingHeaders = this.$.top_egi.querySelectorAll(".table-header-column-title");
-            this._setSortingFor(sortingConfig, this.fixedColumns, fixedHeaders,"fixedColumns", "0");
-            this._setSortingFor(sortingConfig, this.columns, scrollingHeaders, "columns", "1");
+            this._setSortingFor(sortingConfig, this.fixedColumns, fixedHeaders,"fixedColumns", "0"/*The index of fixed columns in summary row*/);
+            this._setSortingFor(sortingConfig, this.columns, scrollingHeaders, "columns", "1"/*The index of scrollable columns in summary row*/);
         } else {
             this._postponedSortingConfig = sortingConfig;
         }
