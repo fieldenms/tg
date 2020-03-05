@@ -1,5 +1,9 @@
 package ua.com.fielden.platform.eql.stage3.elements.functions;
 
+import java.math.BigInteger;
+
+import org.hibernate.type.BigIntegerType;
+
 import ua.com.fielden.platform.entity.query.DbVersion;
 
 public class CountAll3 extends AbstractFunction3 {
@@ -10,6 +14,16 @@ public class CountAll3 extends AbstractFunction3 {
         return sql;
     }
    
+    @Override
+    public Class<?> type() {
+        return BigInteger.class;
+    }
+    
+    @Override
+    public Object hibType() {
+        return BigIntegerType.INSTANCE;
+    }
+    
     @Override
     public int hashCode() {
         final int prime = 31;

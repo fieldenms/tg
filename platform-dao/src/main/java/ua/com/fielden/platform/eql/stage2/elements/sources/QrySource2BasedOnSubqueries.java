@@ -88,7 +88,7 @@ public class QrySource2BasedOnSubqueries extends AbstractElement2 implements IQr
 
     @Override
     public Class<? extends AbstractEntity<?>> sourceType() {
-        return firstModel().type();
+        return (Class<? extends AbstractEntity<?>>) firstModel().type();
     }
 
     public Yields2 getYields() {

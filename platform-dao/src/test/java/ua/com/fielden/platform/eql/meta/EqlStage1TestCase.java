@@ -13,12 +13,14 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage1.elements.EntQueryBlocks1;
 import ua.com.fielden.platform.eql.stage1.elements.GroupBys1;
 import ua.com.fielden.platform.eql.stage1.elements.OrderBys1;
+import ua.com.fielden.platform.eql.stage1.elements.Yield1;
 import ua.com.fielden.platform.eql.stage1.elements.Yields1;
 import ua.com.fielden.platform.eql.stage1.elements.conditions.ComparisonTest1;
 import ua.com.fielden.platform.eql.stage1.elements.conditions.CompoundCondition1;
 import ua.com.fielden.platform.eql.stage1.elements.conditions.Conditions1;
 import ua.com.fielden.platform.eql.stage1.elements.conditions.ICondition1;
 import ua.com.fielden.platform.eql.stage1.elements.conditions.NullTest1;
+import ua.com.fielden.platform.eql.stage1.elements.functions.CountAll1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.EntProp1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage1.elements.sources.CompoundSource1;
@@ -38,6 +40,18 @@ public class EqlStage1TestCase extends EqlTestCase {
     
     protected static EntQueryBlocks1 qb1(final Sources1 sources, final Conditions1 conditions) {
         return new EntQueryBlocks1(sources, conditions, new Yields1(emptyList()), new GroupBys1(emptyList()), new OrderBys1(emptyList()), false);
+    }
+
+    protected static EntQueryBlocks1 qb1(final Sources1 sources, final Conditions1 conditions, final Yields1 yields) {
+        return new EntQueryBlocks1(sources, conditions, yields, new GroupBys1(emptyList()), new OrderBys1(emptyList()), false);
+    }
+
+    protected static Yields1 yields(final Yield1 ... yields) {
+        return new Yields1(asList(yields));
+    }
+    
+    protected static Yield1 yieldCountAll(final String alias) {
+        return new Yield1(new CountAll1(), alias, false);
     }
 
     protected static Conditions1 conditions(final ICondition1<?> firstCondition, final CompoundCondition1... otherConditions) {

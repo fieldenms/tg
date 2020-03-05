@@ -20,13 +20,11 @@ import ua.com.fielden.platform.eql.stage3.elements.operands.EntQuery3;
 import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySources3;
 import ua.com.fielden.platform.eql.stage3.elements.sources.QrySource3BasedOnTable;
 
-@Ignore
 public class SqlGenerationTest extends EqlStage3TestCase {
     private final static String[] modelYields = new String[]{"id", "key", "desc", "version", "make"};
     private final static String[] vehicleYields = new String[]{"id", "key", "desc", "version", "initDate", "model", "make", "replacedBy", "station", "active", "leased", "lastMeterReading", "price", "purchasePrice"};
     private final static String[] woYields = new String[]{"id", "key", "desc", "version", "vehicle", "actCost", "estCost", "yearlyCost"};
-    
-    
+
     @Test
     public void calc_prop_is_correctly_transformed_10() {
         // select(WORK_ORDER).
@@ -35,7 +33,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final QrySource1BasedOnPersistentType wo1 = source(WORK_ORDER);
         final Conditions1 conditions1 = conditions(isNotNull(prop("vehicle.modelMakeKey")), or(isNotNull(prop("vehicle.model.make.key"))));
 
-        final EntQuery3 actQry = query(sources(wo1), conditions1, WORK_ORDER);
+        final EntQuery3 actQry = queryCountAll(sources(wo1), conditions1);
         
         final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
         final QrySource3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
@@ -50,16 +48,16 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                                 ij(
                                         model,
                                         make,
-                                        eq(prop("make", model), prop(ID, make))
+                                        eq(entityProp("make", model, MAKE), entityProp(ID, make, MAKE))
                                   ),
-                                eq(prop("model", veh), prop(ID, model))
+                                eq(entityProp("model", veh, MODEL), entityProp(ID, model, MODEL))
                           ),
-                        eq(prop("vehicle", wo), prop(ID, veh))
+                        eq(entityProp("vehicle", wo, VEHICLE), entityProp(ID, veh, VEHICLE))
                   );
-        final Conditions3 conditions = or(isNotNull(expr(expr(prop(KEY, make)))), isNotNull(expr(prop(KEY, make))));
-        final EntQuery3 expQry = qry(sources, conditions, yields(wo, woYields));
+        final Conditions3 conditions = or(isNotNull(expr(expr(stringProp(KEY, make)))), isNotNull(expr(stringProp(KEY, make))));
+        final EntQuery3 expQry = qryCountAll(sources, conditions);
         
-        assertEquals(expQry, actQry);    
+        assertEquals(expQry, actQry);
     }
 
     @Test
@@ -70,7 +68,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final QrySource1BasedOnPersistentType wo1 = source(WORK_ORDER);
         final Conditions1 conditions1 = conditions(isNotNull(prop("vehicle.modelKey")), or(isNotNull(prop("vehicle.model.key"))));
 
-        final EntQuery3 actQry = query(sources(wo1), conditions1, WORK_ORDER);
+        final EntQuery3 actQry = queryCountAll(sources(wo1), conditions1);
         
         final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
         final QrySource3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
@@ -82,12 +80,12 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                         ij(
                                 veh,
                                 model,
-                                eq(prop("model", veh), prop(ID, model))
+                                eq(entityProp("model", veh, MODEL), entityProp(ID, model, MODEL))
                           ),
-                        eq(prop("vehicle", wo), prop(ID, veh))
+                        eq(entityProp("vehicle", wo, VEHICLE), entityProp(ID, veh, VEHICLE))
                   );
-        final Conditions3 conditions = or(isNotNull(expr(expr(prop(KEY, model)))), isNotNull(expr(prop(KEY, model))));
-        final EntQuery3 expQry = qry(sources, conditions, yields(wo, woYields));
+        final Conditions3 conditions = or(isNotNull(expr(expr(stringProp(KEY, model)))), isNotNull(expr(stringProp(KEY, model))));
+        final EntQuery3 expQry = qryCountAll(sources, conditions);
         
         assertEquals(expQry, actQry);    
     }
@@ -109,7 +107,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         
 
 
-        final EntQuery3 actQry = query(sources(wo1), conditions1, WORK_ORDER);
+        final EntQuery3 actQry = queryCountAll(sources(wo1), conditions1);
         
         final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
         final QrySource3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
@@ -126,7 +124,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                         eq(expr(expr(prop("model", veh))), prop(ID, model))                
                   );
         final Conditions3 conditions = or(isNotNull(expr(prop(KEY, model))));
-        final EntQuery3 expQry = qry(sources, conditions, yields(wo, woYields));
+        final EntQuery3 expQry = qryCountAll(sources, conditions);
         assertEquals(expQry, actQry);
     }
 
@@ -144,7 +142,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         //protected static final ExpressionModel makeKey2_ = expr().model(select(TgVehicleMake.class).where().prop("id").eq().extProp("make").yield().prop(KEY).modelAsPrimitive()).model();
 
 
-        final EntQuery3 actQry = query(sources(wo1), conditions1, WORK_ORDER);
+        final EntQuery3 actQry = queryCountAll(sources(wo1), conditions1);
         
         final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
         final QrySource3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
@@ -161,7 +159,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                         eq(expr(expr(prop("model", veh))), prop(ID, model))                
                   );
         final Conditions3 conditions = or(isNotNull(expr(prop(KEY, model))));
-        final EntQuery3 expQry = qry(sources, conditions, yields(wo, woYields));
+        final EntQuery3 expQry = qryCountAll(sources, conditions);
         assertEquals(expQry, actQry);
     }
     
@@ -176,7 +174,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final QrySource1BasedOnPersistentType veh1 = (QrySource1BasedOnPersistentType) calcPropSubqry1.sources.main;//source(VEHICLE);
         final Conditions1 conditions1 = conditions(isNotNull(prop("make.key")));
 
-        final EntQuery3 actQry = query(sources(wo1), conditions1, WORK_ORDER);
+        final EntQuery3 actQry = queryCountAll(sources(wo1), conditions1);
 
         final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
 
@@ -188,24 +186,23 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                 ij(
                         veh,  
                         model, 
-                        eq(prop("model", veh), prop(ID, model))
+                        eq(entityProp("model", veh, MODEL), entityProp(ID, model, MODEL))
                   );
         
-        final Conditions3 subQryConditions = cond(eq(expr(prop(ID, veh)), expr(prop("vehicle", wo))));
+        final Conditions3 subQryConditions = cond(eq(expr(entityProp(ID, veh, VEHICLE)), expr(entityProp("vehicle", wo, VEHICLE))));
         
-        final EntQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleExpr("make", model)));
+        final EntQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields3(yieldSingleExpr("make", model, MAKE)), MAKE);
 
         final IQrySources3 sources = 
                 lj(
                         wo,
                         make,
-                        eq(expr(expSubQry), prop(ID, make))                
+                        eq(expr(expSubQry), entityProp(ID, make, MAKE))                
                   );
-        final Conditions3 conditions = or(isNotNull(expr(prop(KEY, make))));
-        final EntQuery3 expQry = qry(sources, conditions, yields(wo, woYields));
+        final Conditions3 conditions = or(isNotNull(expr(stringProp(KEY, make))));
+        final EntQuery3 expQry = qryCountAll(sources, conditions);
         
         assertEquals(expQry, actQry);
-        System.out.println(actQry.sql(DbVersion.H2));        
     }
     
     @Test
@@ -220,7 +217,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final QrySource1BasedOnPersistentType veh1 = (QrySource1BasedOnPersistentType) calcPropSubqry1.sources.main;//source(VEHICLE);
         final Conditions1 conditions1 = conditions(isNotNull(prop("make")));
 
-        final EntQuery3 actQry = query(sources(wo1), conditions1, WORK_ORDER);
+        final EntQuery3 actQry = queryCountAll(sources(wo1), conditions1);
 
         final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
 
@@ -231,16 +228,16 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                 ij(
                         veh,  
                         model, 
-                        eq(prop("model", veh), prop(ID, model))
+                        eq(entityProp("model", veh, MODEL), entityProp(ID, model, MODEL))
                   );
         
-        final Conditions3 subQryConditions = cond(eq(expr(prop(ID, veh)), expr(prop("vehicle", wo))));
+        final Conditions3 subQryConditions = cond(eq(expr(entityProp(ID, veh, VEHICLE)), expr(entityProp("vehicle", wo, VEHICLE))));
         
-        final EntQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleExpr("make", model)));
+        final EntQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields3(yieldSingleExpr("make", model, MAKE)), MAKE);
 
         final IQrySources3 sources = sources(wo);
         final Conditions3 conditions = or(isNotNull(expr(expSubQry)));
-        final EntQuery3 expQry = qry(sources, conditions, yields(wo, woYields));
+        final EntQuery3 expQry = qryCountAll(sources, conditions);
         
         assertEquals(expQry, actQry);
     }
@@ -257,7 +254,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final QrySource1BasedOnPersistentType veh1 = (QrySource1BasedOnPersistentType) calcPropSubqry1.sources.main;//source(VEHICLE);
         final Conditions1 conditions1 = conditions(isNotNull(prop("makeKey")));
 
-        final EntQuery3 actQry = query(sources(wo1), conditions1, WORK_ORDER);
+        final EntQuery3 actQry = queryCountAll(sources(wo1), conditions1);
 
         final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
 
@@ -271,18 +268,18 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                         ij(
                                 model, 
                                 make, 
-                                eq(prop("make", model), prop(ID, make))
+                                eq(entityProp("make", model, MAKE), entityProp(ID, make, MAKE))
                           ), 
-                        eq(prop("model", veh), prop(ID, model))
+                        eq(entityProp("model", veh, MODEL), entityProp(ID, model, MODEL))
                   );
         
-        final Conditions3 subQryConditions = cond(eq(expr(prop(ID, veh)), expr(prop("vehicle", wo))));
+        final Conditions3 subQryConditions = cond(eq(expr(entityProp(ID, veh, VEHICLE)), expr(entityProp("vehicle", wo, VEHICLE))));
         
-        final EntQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleExpr(KEY, make)));
+        final EntQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields3(yieldSingleStringExpr(KEY, make)), String.class);
 
         final IQrySources3 sources = sources(wo);
         final Conditions3 conditions = or(isNotNull(expr(expSubQry)));
-        final EntQuery3 expQry = qry(sources, conditions, yields(wo, woYields));
+        final EntQuery3 expQry = qryCountAll(sources, conditions);
         
         assertEquals(expQry, actQry);
         System.out.println(actQry.sql(DbVersion.H2));
@@ -296,7 +293,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final QrySource1BasedOnPersistentType wo1 = source(WORK_ORDER);
         final Conditions1 conditions1 = conditions(isNotNull(prop("vehicleModel.key")));
 
-        final EntQuery3 actQry = query(sources(wo1), conditions1, WORK_ORDER);
+        final EntQuery3 actQry = queryCountAll(sources(wo1), conditions1);
         
         final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
         final QrySource3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
@@ -307,13 +304,13 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                         lj(
                                 wo, 
                                 veh, 
-                                eq(prop("vehicle", wo), prop(ID, veh))
+                                eq(entityProp("vehicle", wo, VEHICLE), entityProp(ID, veh, VEHICLE))
                           ),
                         model,
-                        eq(expr(expr(prop("model", veh))), prop(ID, model))                
+                        eq(expr(expr(entityProp("model", veh, MODEL))), entityProp(ID, model, MODEL))                
                   );
-        final Conditions3 conditions = or(isNotNull(expr(prop(KEY, model))));
-        final EntQuery3 expQry = qry(sources, conditions, yields(wo, woYields));
+        final Conditions3 conditions = or(isNotNull(expr(stringProp(KEY, model))));
+        final EntQuery3 expQry = qryCountAll(sources, conditions);
         
         assertEquals(expQry, actQry);
         System.out.println(actQry.sql(DbVersion.H2));
@@ -327,7 +324,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final QrySource1BasedOnPersistentType wo1 = source(WORK_ORDER);
         final Conditions1 conditions1 = conditions(isNotNull(prop("vehicleModel.makeKey")));
 
-        final EntQuery3 actQry = query(sources(wo1), conditions1, WORK_ORDER);
+        final EntQuery3 actQry = queryCountAll(sources(wo1), conditions1);
         
         final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
         final QrySource3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
@@ -339,17 +336,17 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                         lj(
                                 wo,
                                 veh,
-                                eq(prop("vehicle", wo), prop(ID, veh))
+                                eq(entityProp("vehicle", wo, VEHICLE), entityProp(ID, veh, VEHICLE))
                           ),  
                         ij(
                                 model,
                                 make,
-                                eq(prop("make", model), prop(ID, make))
+                                eq(entityProp("make", model, MAKE), entityProp(ID, make, MAKE))
                           ), 
-                        eq(expr(expr(prop("model", veh))), prop(ID, model))                
+                        eq(expr(expr(entityProp("model", veh, MODEL))), entityProp(ID, model, MODEL))                
                   );
-        final Conditions3 conditions = or(isNotNull(expr(expr(prop(KEY, make)))));
-        final EntQuery3 expQry = qry(sources, conditions, yields(wo, woYields));
+        final Conditions3 conditions = or(isNotNull(expr(expr(stringProp(KEY, make)))));
+        final EntQuery3 expQry = qryCountAll(sources, conditions);
         
         assertEquals(expQry, actQry);
         System.out.println(actQry.sql(DbVersion.H2));
@@ -364,7 +361,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final QrySource1BasedOnPersistentType wo1 = source(WORK_ORDER);
         final Conditions1 conditions1 = conditions(isNotNull(prop("vehicle.modelMakeKey2")));
 
-        final EntQuery3 actQry = query(sources(wo1), conditions1, WORK_ORDER);
+        final EntQuery3 actQry = queryCountAll(sources(wo1), conditions1);
         
         final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
         final QrySource3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
@@ -379,14 +376,14 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                                 ij(
                                         model,
                                         make,
-                                        eq(prop("make", model), prop(ID, make))
+                                        eq(entityProp("make", model, MAKE), entityProp(ID, make, MAKE))
                                   ), 
-                                eq(prop("model", veh), prop(ID, model))
+                                eq(entityProp("model", veh, MODEL), entityProp(ID, model, MODEL))
                           ),
-                        eq(prop("vehicle", wo), prop(ID, veh))
+                        eq(entityProp("vehicle", wo, VEHICLE), entityProp(ID, veh, VEHICLE))
                   );
-        final Conditions3 conditions = or(isNotNull(expr(expr(expr(prop(KEY, make))))));
-        final EntQuery3 expQry = qry(sources, conditions, yields(wo, woYields));
+        final Conditions3 conditions = or(isNotNull(expr(expr(expr(stringProp(KEY, make))))));
+        final EntQuery3 expQry = qryCountAll(sources, conditions);
         
         assertEquals(expQry, actQry);
     }
@@ -399,7 +396,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final QrySource1BasedOnPersistentType wo1 = source(WORK_ORDER);
         final Conditions1 conditions1 = conditions(isNotNull(prop("vehicle.modelMakeKey")));
 
-        final EntQuery3 actQry = query(sources(wo1), conditions1, WORK_ORDER);
+        final EntQuery3 actQry = queryCountAll(sources(wo1), conditions1);
         
         final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
         final QrySource3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
@@ -414,14 +411,14 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                                 ij(
                                         model,
                                         make,
-                                        eq(prop("make", model), prop(ID, make))
+                                        eq(entityProp("make", model, MAKE), entityProp(ID, make, MAKE))
                                   ),
-                                eq(prop("model", veh), prop(ID, model))
+                                eq(entityProp("model", veh, MODEL), entityProp(ID, model, MODEL))
                           ),
-                        eq(prop("vehicle", wo), prop(ID, veh))
+                        eq(entityProp("vehicle", wo, VEHICLE), entityProp(ID, veh, VEHICLE))
                   );
-        final Conditions3 conditions = or(isNotNull(expr(expr(prop(KEY, make)))));
-        final EntQuery3 expQry = qry(sources, conditions, yields(wo, woYields));
+        final Conditions3 conditions = or(isNotNull(expr(expr(stringProp(KEY, make)))));
+        final EntQuery3 expQry = qryCountAll(sources, conditions);
         
         assertEquals(expQry, actQry);
     }
@@ -440,7 +437,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         
         final QrySource1BasedOnPersistentType veh1 = source(VEHICLE);
         final Conditions1 conditions1 = conditions(isNotNull(prop("modelMakeKey2")), or(isNotNull(prop("make.key"))), or(isNotNull(prop("model.make.key"))));
-        final EntQuery3 actQry = query(sources(veh1), conditions1, VEHICLE);
+        final EntQuery3 actQry = queryCountAll(sources(veh1), conditions1);
         
         final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
         final QrySource3BasedOnTable model = source(MODEL, veh1, "model");
@@ -452,17 +449,17 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                         lj(
                                 veh,
                                 makeA,
-                                eq(prop("make", veh), prop(ID, makeA))
+                                eq(entityProp("make", veh, MAKE), entityProp(ID, makeA, MAKE))
                           ),
                         ij(
                                 model,
                                 make,
-                                eq(prop("make", model), prop(ID, make))
+                                eq(entityProp("make", model, MAKE), entityProp(ID, make, MAKE))
                           ),
-                        eq(prop("model", veh), prop(ID, model))
+                        eq(entityProp("model", veh, MODEL), entityProp(ID, model, MODEL))
                   );
-        final Conditions3 conditions = or(isNotNull(expr(expr(expr(prop(KEY, make))))), isNotNull(expr(prop(KEY, makeA))), isNotNull(expr(prop(KEY, make))));
-        final EntQuery3 expQry = qry(sources, conditions, yields(veh, vehicleYields));
+        final Conditions3 conditions = or(isNotNull(expr(expr(expr(stringProp(KEY, make))))), isNotNull(expr(stringProp(KEY, makeA))), isNotNull(expr(stringProp(KEY, make))));
+        final EntQuery3 expQry = qryCountAll(sources, conditions);
         
         assertEquals(expQry, actQry);   
     }
@@ -476,7 +473,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         
         final QrySource1BasedOnPersistentType veh1 = source(VEHICLE);
         final Conditions1 conditions1 = conditions(isNotNull(prop("modelMakeKey2")), or(isNotNull(prop("make.key"))));
-        final EntQuery3 actQry = query(sources(veh1), conditions1, VEHICLE);
+        final EntQuery3 actQry = queryCountAll(sources(veh1), conditions1);
         
         final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
         final QrySource3BasedOnTable model = source(MODEL, veh1, "model");
@@ -499,7 +496,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                         eq(prop("model", veh), prop(ID, model))
                   );
         final Conditions3 conditions = or(isNotNull(expr(expr(expr(prop(KEY, make))))), isNotNull(expr(prop(KEY, make))));
-        final EntQuery3 expQry = qry(sources, conditions, yields(veh, vehicleYields));
+        final EntQuery3 expQry = qryCountAll(sources, conditions);
         
         assertNotEquals(expQry, actQry);
     }
@@ -512,7 +509,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         
         final QrySource1BasedOnPersistentType veh1 = source(VEHICLE);
         final Conditions1 conditions1 = conditions(isNotNull(prop("modelMakeKey2")), or(isNotNull(prop("make.key"))));
-        final EntQuery3 actQry = query(sources(veh1), conditions1, VEHICLE);
+        final EntQuery3 actQry = queryCountAll(sources(veh1), conditions1);
         
         final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
         final QrySource3BasedOnTable model = source(MODEL, veh1, "model");
@@ -524,17 +521,17 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                         lj(
                                 veh,
                                 makeA,
-                                eq(prop("make", veh), prop(ID, makeA))
+                                eq(entityProp("make", veh, MAKE), entityProp(ID, makeA, MAKE))
                           ),
                         ij(
                                 model,
                                 make,
-                                eq(prop("make", model), prop(ID, make))
+                                eq(entityProp("make", model, MAKE), entityProp(ID, make, MAKE))
                           ),
-                        eq(prop("model", veh), prop(ID, model))
+                        eq(entityProp("model", veh, MODEL), entityProp(ID, model, MODEL))
                   );
-        final Conditions3 conditions = or(isNotNull(expr(expr(expr(prop(KEY, make))))), isNotNull(expr(prop(KEY, makeA))));
-        final EntQuery3 expQry = qry(sources, conditions, yields(veh, vehicleYields));
+        final Conditions3 conditions = or(isNotNull(expr(expr(expr(stringProp(KEY, make))))), isNotNull(expr(stringProp(KEY, makeA))));
+        final EntQuery3 expQry = qryCountAll(sources, conditions);
         
         assertEquals(expQry, actQry);
     }
@@ -547,7 +544,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final QrySource1BasedOnPersistentType veh1 = source(VEHICLE);
         final Conditions1 conditions1 = conditions(isNotNull(prop("model.make.key")), or(isNotNull(prop("make.key"))));
 
-        final EntQuery3 actQry = query(sources(veh1), conditions1, VEHICLE);
+        final EntQuery3 actQry = queryCountAll(sources(veh1), conditions1);
         
         final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
         final QrySource3BasedOnTable model = source(MODEL, veh1, "model");
@@ -559,17 +556,17 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                         lj(
                                 veh,
                                 makeA,
-                                eq(prop("make", veh), prop(ID, makeA))
+                                eq(entityProp("make", veh, MAKE), entityProp(ID, makeA, MAKE))
                           ),
                         ij(
                                 model,
                                 make,
-                                eq(prop("make", model), prop(ID, make))
+                                eq(entityProp("make", model, MAKE), entityProp(ID, make, MAKE))
                           ),
-                        eq(prop("model", veh), prop(ID, model))
+                        eq(entityProp("model", veh, MODEL), entityProp(ID, model, MODEL))
                   );
-        final Conditions3 conditions = or(isNotNull(expr(prop(KEY, make))), isNotNull(expr(prop(KEY, makeA))));
-        final EntQuery3 expQry = qry(sources, conditions, yields(veh, vehicleYields));
+        final Conditions3 conditions = or(isNotNull(expr(stringProp(KEY, make))), isNotNull(expr(stringProp(KEY, makeA))));
+        final EntQuery3 expQry = qryCountAll(sources, conditions);
         
         assertEquals(expQry, actQry);    
     }
@@ -581,7 +578,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         
         final QrySource1BasedOnPersistentType veh1 = source(VEHICLE);
         final Conditions1 conditions1 = conditions(isNotNull(prop("modelMakeKey2")), or(isNotNull(prop("model.make.key"))));
-        final EntQuery3 actQry = query(sources(veh1), conditions1, VEHICLE);
+        final EntQuery3 actQry = queryCountAll(sources(veh1), conditions1);
         
         final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
         final QrySource3BasedOnTable model = source(MODEL, veh1, "model");
@@ -594,12 +591,12 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                         ij(
                                 model,
                                 make,
-                                eq(prop("make", model), prop(ID, make))
+                                eq(entityProp("make", model, MAKE), entityProp(ID, make, MAKE))
                           ),
-                        eq(prop("model", veh), prop(ID, model))
+                        eq(entityProp("model", veh, MODEL), entityProp(ID, model, MODEL))
                   );
-        final Conditions3 conditions = or(isNotNull(expr(expr(expr(prop(KEY, make))))), isNotNull(expr(prop(KEY, make))));
-        final EntQuery3 expQry = qry(sources, conditions, yields(veh, vehicleYields));
+        final Conditions3 conditions = or(isNotNull(expr(expr(expr(stringProp(KEY, make))))), isNotNull(expr(stringProp(KEY, make))));
+        final EntQuery3 expQry = qryCountAll(sources, conditions);
         
         assertEquals(expQry, actQry);
     }
@@ -615,7 +612,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final Sources1 sources1 = sources(veh1);
         final Conditions1 conditions1 = conditions(isNotNull(prop("modelMakeKey")), or(isNotNull(prop("modelMakeDesc"))));
  
-        final EntQuery3 actQry = query(sources1, conditions1, VEHICLE);
+        final EntQuery3 actQry = queryCountAll(sources1, conditions1);
         
         final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
         final QrySource3BasedOnTable model = source(MODEL, veh1, "model");
@@ -627,12 +624,12 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                         ij(
                                 model,
                                 make,
-                                eq(prop("make", model), prop(ID, make))
+                                eq(entityProp("make", model, MAKE), entityProp(ID, make, MAKE))
                           ),
-                        eq(prop("model", veh), prop(ID, model))
+                        eq(entityProp("model", veh, MODEL), entityProp(ID, model, MODEL))
                   );
-        final Conditions3 conditions = or(isNotNull(expr(expr(prop(KEY, make)))), isNotNull(expr(expr(prop("desc", make)))));
-        final EntQuery3 expQry = qry(sources, conditions, yields(veh, vehicleYields));
+        final Conditions3 conditions = or(isNotNull(expr(expr(stringProp(KEY, make)))), isNotNull(expr(expr(stringProp("desc", make)))));
+        final EntQuery3 expQry = qryCountAll(sources, conditions);
         
         assertEquals(expQry, actQry);
     }
@@ -646,7 +643,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         
         final QrySource1BasedOnPersistentType veh1 = source(VEHICLE);
         final Conditions1 conditions1 = conditions(isNotNull(prop("modelKey")), or(isNotNull(prop("modelDesc"))));
-        final EntQuery3 actQry = query(sources(veh1), conditions1, VEHICLE);
+        final EntQuery3 actQry = queryCountAll(sources(veh1), conditions1);
         
         final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
         final QrySource3BasedOnTable model = source(MODEL, veh1, "model");
@@ -655,10 +652,10 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                 ij(
                         veh,
                         model,
-                        eq(prop("model", veh), prop(ID, model))
+                        eq(entityProp("model", veh, MODEL), entityProp(ID, model, MODEL))
                   );
-        final Conditions3 conditions = or(isNotNull(expr(expr(prop(KEY, model)))), isNotNull(expr(expr(prop("desc", model)))));
-        final EntQuery3 expQry = qry(sources, conditions, yields(veh, vehicleYields));
+        final Conditions3 conditions = or(isNotNull(expr(expr(stringProp(KEY, model)))), isNotNull(expr(expr(stringProp("desc", model)))));
+        final EntQuery3 expQry = qryCountAll(sources, conditions);
         
         assertEquals(expQry, actQry);
     }
@@ -670,7 +667,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         
         final QrySource1BasedOnPersistentType veh1 = source(VEHICLE);
         final Conditions1 conditions1 = conditions(isNotNull(prop("modelMakeKey")));
-        final EntQuery3 actQry = query(sources(veh1), conditions1, VEHICLE);
+        final EntQuery3 actQry = queryCountAll(sources(veh1), conditions1);
         
         final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
         final QrySource3BasedOnTable model = source(MODEL, veh1, "model");
@@ -682,12 +679,12 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                         ij(
                                 model,
                                 make,
-                                eq(prop("make", model), prop(ID, make))
+                                eq(entityProp("make", model, MAKE), entityProp(ID, make, MAKE))
                           ),
-                        eq(prop("model", veh), prop(ID, model))
+                        eq(entityProp("model", veh, MODEL), entityProp(ID, model, MODEL))
                   );
-        final Conditions3 conditions = or(isNotNull(expr(expr(prop(KEY, make)))));
-        final EntQuery3 expQry = qry(sources, conditions, yields(veh, vehicleYields));
+        final Conditions3 conditions = or(isNotNull(expr(expr(stringProp(KEY, make)))));
+        final EntQuery3 expQry = qryCountAll(sources, conditions);
         
         assertEquals(expQry, actQry);
     }
@@ -703,7 +700,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final QrySource1BasedOnPersistentType make1 = (QrySource1BasedOnPersistentType) calcPropSubqry1.sources.main;//source(MAKE);
         final Conditions1 conditions1 = conditions(isNotNull(prop("makeKey")), or(isNotNull(prop("makeKey2"))), or(isNotNull(prop("make.key"))));
 
-        final EntQuery3 actQry = query(sources(model1), conditions1, MODEL);
+        final EntQuery3 actQry = queryCountAll(sources(model1), conditions1);
         
         final QrySource3BasedOnTable model = source(MODEL, model1);
         final QrySource3BasedOnTable make = source(MAKE, model1, "make");
@@ -712,19 +709,19 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         
         final IQrySources3 subQrySources = sources(subQryMake);
         
-        final Conditions3 subQryConditions = cond(eq(expr(prop(ID, subQryMake)), expr(prop("make", model))));
+        final Conditions3 subQryConditions = cond(eq(expr(entityProp(ID, subQryMake, MAKE)), expr(entityProp("make", model, MAKE))));
         
-        final EntQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleExpr(KEY, subQryMake)));
+        final EntQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields3(yieldSingleStringExpr(KEY, subQryMake)), String.class);
 
         
         final IQrySources3 sources = 
                 ij(
                         model,
                         make,
-                        eq(prop("make", model), prop(ID, make))
+                        eq(entityProp("make", model, MAKE), entityProp(ID, make, MAKE))
                   );
-        final Conditions3 conditions = or(isNotNull(expr(expr(prop(KEY, make)))), isNotNull(expr(expSubQry)), isNotNull(expr(prop(KEY, make))));
-        final EntQuery3 expQry = qry(sources, conditions, yields(model, modelYields));
+        final Conditions3 conditions = or(isNotNull(expr(expr(stringProp(KEY, make)))), isNotNull(expr(expSubQry)), isNotNull(expr(stringProp(KEY, make))));
+        final EntQuery3 expQry = qryCountAll(sources, conditions);
         
         assertEquals(expQry, actQry);
     }
@@ -739,7 +736,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final QrySource1BasedOnPersistentType make1 = (QrySource1BasedOnPersistentType) calcPropSubqry1.sources.main;//source(MAKE);
         final Conditions1 conditions1 = conditions(isNotNull(prop("makeKey")), or(isNotNull(prop("makeKey2"))));
 
-        final EntQuery3 actQry = query(sources(model1), conditions1, MODEL);
+        final EntQuery3 actQry = queryCountAll(sources(model1), conditions1);
         
         final QrySource3BasedOnTable model = source(MODEL, model1);
         final QrySource3BasedOnTable make = source(MAKE, model1, "make");
@@ -748,19 +745,19 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         
         final IQrySources3 subQrySources = sources(subQryMake);
         
-        final Conditions3 subQryConditions = cond(eq(expr(prop(ID, subQryMake)), expr(prop("make", model))));
+        final Conditions3 subQryConditions = cond(eq(expr(entityProp(ID, subQryMake, MAKE)), expr(entityProp("make", model, MAKE))));
         
-        final EntQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleExpr(KEY, subQryMake)));
+        final EntQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields3(yieldSingleStringExpr(KEY, subQryMake)), String.class);
 
         
         final IQrySources3 sources = 
                 ij(
                         model,
                         make,
-                        eq(prop("make", model), prop(ID, make))
+                        eq(entityProp("make", model, MAKE), entityProp(ID, make, MAKE))
                   );
-        final Conditions3 conditions = or(isNotNull(expr(expr(prop(KEY, make)))), isNotNull(expr(expSubQry)));
-        final EntQuery3 expQry = qry(sources, conditions, yields(model, modelYields));
+        final Conditions3 conditions = or(isNotNull(expr(expr(stringProp(KEY, make)))), isNotNull(expr(expSubQry)));
+        final EntQuery3 expQry = qryCountAll(sources, conditions);
         
         assertEquals(expQry, actQry);
     }
@@ -773,7 +770,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final QrySource1BasedOnPersistentType model1 = source(MODEL);
         final Conditions1 conditions1 = conditions(isNotNull(prop("makeKey")), or(isNotNull(prop("make.key"))));
 
-        final EntQuery3 actQry = query(sources(model1), conditions1, MODEL);
+        final EntQuery3 actQry = queryCountAll(sources(model1), conditions1);
         
         final QrySource3BasedOnTable model = source(MODEL, model1);
         final QrySource3BasedOnTable make = source(MAKE, model1, "make");
@@ -782,10 +779,10 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                 ij(
                         model,
                         make,
-                        eq(prop("make", model), prop(ID, make))
+                        eq(entityProp("make", model, MAKE), entityProp(ID, make, MAKE))
                   );
-        final Conditions3 conditions = or(isNotNull(expr(expr(prop(KEY, make)))), isNotNull(expr(prop(KEY, make))));
-        final EntQuery3 expQry = qry(sources, conditions, yields(model, modelYields));
+        final Conditions3 conditions = or(isNotNull(expr(expr(stringProp(KEY, make)))), isNotNull(expr(stringProp(KEY, make))));
+        final EntQuery3 expQry = qryCountAll(sources, conditions);
         
         assertEquals(expQry, actQry);
     }
@@ -803,7 +800,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final QrySource1BasedOnPersistentType make1 = (QrySource1BasedOnPersistentType) calcPropSubqry1.sources.main;//source(MAKE);
         final Conditions1 conditions1 = conditions(isNotNull(prop("makeKey2")));
 
-        final EntQuery3 actQry = query(sources(model1), conditions1, MODEL);
+        final EntQuery3 actQry = queryCountAll(sources(model1), conditions1);
 
         final QrySource3BasedOnTable model = source(MODEL, model1);
 
@@ -811,13 +808,13 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         
         final IQrySources3 subQrySources = sources(subQryMake);
         
-        final Conditions3 subQryConditions = cond(eq(expr(prop(ID, subQryMake)), expr(prop("make", model))));
+        final Conditions3 subQryConditions = cond(eq(expr(entityProp(ID, subQryMake, MAKE)), expr(entityProp("make", model, MAKE))));
         
-        final EntQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleExpr(KEY, subQryMake)));
+        final EntQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields3(yieldSingleStringExpr(KEY, subQryMake)), String.class);
 
         final IQrySources3 sources = sources(model);
         final Conditions3 conditions = or(isNotNull(expr(expSubQry)));
-        final EntQuery3 expQry = qry(sources, conditions, yields(model, modelYields));
+        final EntQuery3 expQry = qryCountAll(sources, conditions);
         
         assertEquals(expQry, actQry);
     }
@@ -830,7 +827,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
         final QrySource1BasedOnPersistentType model1 = source(MODEL);
         final Conditions1 conditions1 = conditions(isNotNull(prop("makeKey")));
 
-        final EntQuery3 actQry = query(sources(model1), conditions1, MODEL);
+        final EntQuery3 actQry = queryCountAll(sources(model1), conditions1);
         
         final QrySource3BasedOnTable model = source(MODEL, model1);
         final QrySource3BasedOnTable make = source(MAKE, model1, "make");
@@ -839,10 +836,10 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                 ij(
                         model,
                         make,
-                        eq(prop("make", model), prop(ID, make))
+                        eq(entityProp("make", model, MAKE), entityProp(ID, make, MAKE))
                   );
-        final Conditions3 conditions = or(isNotNull(expr(expr(prop(KEY, make)))));
-        final EntQuery3 expQry = qry(sources, conditions, yields(model, modelYields));
+        final Conditions3 conditions = or(isNotNull(expr(expr(stringProp(KEY, make)))));
+        final EntQuery3 expQry = qryCountAll(sources, conditions);
         
         assertEquals(expQry, actQry);
     }
@@ -857,7 +854,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                 or(isNotNull(prop("replacedBy.key"))) //
         );
 
-        final EntQuery3 actQry = query(sources(veh1), conditions1, VEHICLE);
+        final EntQuery3 actQry = queryCountAll(sources(veh1), conditions1);
         
         final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
         final QrySource3BasedOnTable repVeh = source(VEHICLE, veh1, "replacedBy");
@@ -866,10 +863,10 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                 lj(
                         veh,
                         repVeh,
-                        eq(prop("replacedBy", veh), prop(ID, repVeh))
+                        eq(entityProp("replacedBy", veh, VEHICLE), entityProp(ID, repVeh, VEHICLE))
                   );
-        final Conditions3 conditions = or(isNotNull(expr(prop(KEY, veh))), isNotNull(expr(prop(KEY, repVeh))));
-        final EntQuery3 expQry = qry(sources, conditions, yields(veh, vehicleYields));
+        final Conditions3 conditions = or(isNotNull(expr(stringProp(KEY, veh))), isNotNull(expr(stringProp(KEY, repVeh))));
+        final EntQuery3 expQry = qryCountAll(sources, conditions);
         
         assertEquals(expQry, actQry);
     }
@@ -886,7 +883,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                 or(isNotNull(prop("replacedBy.initDate"))) //
         );
 
-        final EntQuery3 actQry = query(sources(veh1), conditions1, VEHICLE);
+        final EntQuery3 actQry = queryCountAll(sources(veh1), conditions1);
         
         final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
         final QrySource3BasedOnTable repVeh = source(VEHICLE, veh1, "replacedBy");
@@ -898,17 +895,17 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                         lj(
                                 veh,
                                 repVeh,
-                                eq(prop("replacedBy", veh), prop(ID, repVeh))
+                                eq(entityProp("replacedBy", veh, VEHICLE), entityProp(ID, repVeh, VEHICLE))
                           ),
                         ij(
                                 org5,
                                 org4,
-                                eq(prop("parent", org5), prop(ID, org4))
+                                eq(entityProp("parent", org5, ORG4), entityProp(ID, org4, ORG4))
                           ),
-                        eq(prop("station", veh), prop(ID, org5))
+                        eq(entityProp("station", veh, ORG5), entityProp(ID, org5, ORG5))
                   );
-        final Conditions3 conditions = or(isNotNull(expr(prop("initDate", veh))), isNotNull(expr(prop("name", org5))), isNotNull(expr(prop("name", org4))), isNotNull(expr(prop("initDate", repVeh))));
-        final EntQuery3 expQry = qry(sources, conditions, yields(veh, vehicleYields));
+        final Conditions3 conditions = or(isNotNull(expr(dateProp("initDate", veh))), isNotNull(expr(stringProp("name", org5))), isNotNull(expr(stringProp("name", org4))), isNotNull(expr(dateProp("initDate", repVeh))));
+        final EntQuery3 expQry = qryCountAll(sources, conditions);
         
         assertEquals(expQry, actQry);
     }
@@ -926,7 +923,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                 or(isNotNull(prop("veh.replacedBy.key"))) //
         );
 
-        final EntQuery3 actQry = query(sources1, conditions1, VEHICLE);
+        final EntQuery3 actQry = queryCountAll(sources1, conditions1);
 
         final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
         final QrySource3BasedOnTable repVeh = source(VEHICLE, veh1, "replacedBy");
@@ -937,13 +934,13 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                         lj(
                                 veh,
                                 repVeh,
-                                eq(prop("replacedBy", veh), prop(ID, repVeh))
+                                eq(entityProp("replacedBy", veh, VEHICLE), entityProp(ID, repVeh, VEHICLE))
                           ),
                         ou5e,
-                        eq(expr(prop("station", veh)), expr(prop(ID, ou5e)))
+                        eq(expr(entityProp("station", veh, ORG5)), expr(entityProp(ID, ou5e, ORG5)))
                   );
-        final Conditions3 conditions = or(isNotNull(expr(prop(KEY, veh))), isNotNull(expr(prop(KEY, repVeh))));
-        final EntQuery3 expQry = qry(sources, conditions, yields(veh, vehicleYields));
+        final Conditions3 conditions = or(isNotNull(expr(stringProp(KEY, veh))), isNotNull(expr(stringProp(KEY, repVeh))));
+        final EntQuery3 expQry = qryCountAll(sources, conditions);
 
         assertEquals(expQry, actQry);
     }
@@ -966,7 +963,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                 or(isNotNull(prop("ou5e.parent.name"))) //
         );
 
-        final EntQuery3 actQry = query(sources1, conditions1, VEHICLE);
+        final EntQuery3 actQry = queryCountAll(sources1, conditions1);
 
         final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
         final QrySource3BasedOnTable repVeh = source(VEHICLE, veh1, "replacedBy");
@@ -981,30 +978,30 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                                 lj(
                                         veh,
                                         repVeh,
-                                        eq(prop("replacedBy", veh), prop(ID, repVeh))
+                                        eq(entityProp("replacedBy", veh, VEHICLE), entityProp(ID, repVeh, VEHICLE))
                                   ),
                                 ij(
                                         ou5,
                                         ou4,
-                                        eq(prop("parent", ou5), prop(ID, ou4))
+                                        eq(entityProp("parent", ou5, ORG4), entityProp(ID, ou4, ORG4))
                                   ),
-                                eq(prop("station", veh), prop(ID, ou5))
+                                eq(entityProp("station", veh, ORG5), entityProp(ID, ou5, ORG5))
                           ),
                         ij(
                                 ou5e,
                                 ou5eou4,
-                                eq(prop("parent", ou5e), prop(ID, ou5eou4))
+                                eq(entityProp("parent", ou5e, ORG4), entityProp(ID, ou5eou4, ORG4))
                           ),
-                        eq(expr(prop("station", veh)), expr(prop(ID, ou5e)))
+                        eq(expr(entityProp("station", veh, ORG5)), expr(entityProp(ID, ou5e, ORG5)))
                   );
         final Conditions3 conditions = or(
-                isNotNull(expr(prop(KEY, veh))),
-                isNotNull(expr(prop(KEY, repVeh))), 
-                isNotNull(expr(prop("initDate", veh))), 
-                isNotNull(expr(prop("name", ou5))), 
-                isNotNull(expr(prop("name", ou4))),
-                isNotNull(expr(prop("name", ou5eou4))));
-        final EntQuery3 expQry = qry(sources, conditions, yields(veh, vehicleYields));
+                isNotNull(expr(stringProp(KEY, veh))),
+                isNotNull(expr(stringProp(KEY, repVeh))), 
+                isNotNull(expr(dateProp("initDate", veh))), 
+                isNotNull(expr(stringProp("name", ou5))), 
+                isNotNull(expr(stringProp("name", ou4))),
+                isNotNull(expr(stringProp("name", ou5eou4))));
+        final EntQuery3 expQry = qryCountAll(sources, conditions);
 
         assertEquals(expQry, actQry);
     }
@@ -1027,7 +1024,7 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                 or(isNotNull(prop("ou2e.parent.key"))) //
         );
         
-        final EntQuery3 actQry = query(sources1, conditions1, VEHICLE);
+        final EntQuery3 actQry = queryCountAll(sources1, conditions1);
         
         
         final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
@@ -1044,33 +1041,33 @@ public class SqlGenerationTest extends EqlStage3TestCase {
                                 lj(
                                         veh,
                                         repVeh,
-                                        eq(prop("replacedBy", veh), prop(ID, repVeh))
+                                        eq(entityProp("replacedBy", veh, VEHICLE), entityProp(ID, repVeh, VEHICLE))
                                   ),
                                 ij(
                                         ou5,
                                         ij(
                                                 ou4,
                                                 ou3,
-                                                eq(prop("parent", ou4), prop(ID, ou3))
+                                                eq(entityProp("parent", ou4, ORG3), entityProp(ID, ou3, ORG3))
                                           ),
-                                        eq(prop("parent", ou5), prop(ID, ou4))
+                                        eq(entityProp("parent", ou5, ORG4), entityProp(ID, ou4, ORG4))
                                   ),
-                                eq(prop("station", veh), prop(ID, ou5))
+                                eq(entityProp("station", veh, ORG5), entityProp(ID, ou5, ORG5))
                           ),
                         ij(
                                 ou2e,
                                 ou2eou1,
-                                eq(prop("parent", ou2e), prop(ID, ou2eou1))
+                                eq(entityProp("parent", ou2e, ORG1), entityProp(ID, ou2eou1, ORG1))
                           ),
-                        eq(expr(prop("parent", ou3)), expr(prop(ID, ou2e)))
+                        eq(expr(entityProp("parent", ou3, ORG2)), expr(entityProp(ID, ou2e, ORG2)))
                   );
         final Conditions3 conditions = or(
-                isNotNull(expr(prop("initDate", veh))),
-                isNotNull(expr(prop("initDate", repVeh))), 
-                isNotNull(expr(prop("name", ou5))), 
-                isNotNull(expr(prop("name", ou4))),
-                isNotNull(expr(prop(KEY, ou2eou1))));
-        final EntQuery3 expQry = qry(sources, conditions, yields(veh, vehicleYields));
+                isNotNull(expr(dateProp("initDate", veh))),
+                isNotNull(expr(dateProp("initDate", repVeh))), 
+                isNotNull(expr(stringProp("name", ou5))), 
+                isNotNull(expr(stringProp("name", ou4))),
+                isNotNull(expr(stringProp(KEY, ou2eou1))));
+        final EntQuery3 expQry = qryCountAll(sources, conditions);
 
         assertEquals(expQry, actQry);
     }

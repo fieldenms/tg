@@ -6,7 +6,6 @@ import static ua.com.fielden.platform.eql.meta.QueryCategory.RESULT_QUERY;
 
 import java.util.Objects;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.meta.QueryCategory;
 import ua.com.fielden.platform.eql.stage3.elements.EntQueryBlocks3;
@@ -24,9 +23,9 @@ public class EntQuery3 implements ISingleOperand3 {
     public final GroupBys3 groups;
     public final OrderBys3 orderings;
     public final QueryCategory category;
-    public final Class<? extends AbstractEntity<?>> resultType;
+    public final Class<?> resultType;
 
-    public EntQuery3(final EntQueryBlocks3 queryBlocks, final QueryCategory category, final Class<? extends AbstractEntity<?>> resultType) {
+    public EntQuery3(final EntQueryBlocks3 queryBlocks, final QueryCategory category, final Class<?> resultType) {
         this.sources = queryBlocks.sources;
         this.conditions = queryBlocks.conditions;
         this.yields = queryBlocks.yields;

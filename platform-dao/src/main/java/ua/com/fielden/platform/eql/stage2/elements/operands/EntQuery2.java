@@ -43,20 +43,27 @@ public class EntQuery2 implements ISingleOperand2<EntQuery3> {
     public final Yields2 yields;
     public final GroupBys2 groups;
     public final OrderBys2 orderings;
-    public final Class<? extends AbstractEntity<?>> resultType;
+    public final Class<?> resultType;
     public final QueryCategory category;
+    public final Object hibType;
 
     public EntQuery2(final EntQueryBlocks2 queryBlocks, final Class<? extends AbstractEntity<?>> resultType, final QueryCategory category) {
         this.category = category;
         this.sources = queryBlocks.sources;
         this.conditions = queryBlocks.conditions;
-        this.yields = enhancedYields(queryBlocks.yields, queryBlocks.sources, category);
+        this.yields = enhanceYields(queryBlocks.yields, queryBlocks.sources, category);
         this.groups = queryBlocks.groups;
         this.orderings = queryBlocks.orderings;
-        this.resultType = resultType;
+        this.resultType = enhance(resultType);
+        this.hibType = resultType == null ? yields.getYields().iterator().next().javaType() : LongType.INSTANCE;
     }
 
-    private Yields2 enhancedYields(final Yields2 yields, final Sources2 sources2, final QueryCategory category) {
+    private Class<?> enhance(final Class<? extends AbstractEntity<?>> resultType) {
+        // TODO EQL (if resultType == null, then take it should be PrimitiveResultQuery -- just take resultType of its single yield
+        return resultType == null ? yields.getYields().iterator().next().javaType() : resultType;
+    }
+
+    private Yields2 enhanceYields(final Yields2 yields, final Sources2 sources2, final QueryCategory category) {
         if (yields.getYields().isEmpty()) {
             if (category == SUB_QUERY) {
                 if (sources2.main.entityInfo().getProps().containsKey(ID)) {
@@ -68,7 +75,6 @@ public class EntQuery2 implements ISingleOperand2<EntQuery3> {
                 final List<Yield2> enhancedYields = new ArrayList<>();
                 for (final Entry<String, AbstractPropInfo<?>> el : sources2.main.entityInfo().getProps().entrySet()) {
                     if (!el.getValue().hasExpression() && category == SOURCE_QUERY || category == RESULT_QUERY) {
-                        //final String yieldedPropAliasedName = sourcesTr.item.main.alias() != null ?  sourcesTr.item.main.alias() + "." + el.getKey() : el.getKey();
                         enhancedYields.add(new Yield2(new EntProp2(sources2.main, "0", listOf(el.getValue())), el.getKey(), false));
                     }
                 }
@@ -80,13 +86,8 @@ public class EntQuery2 implements ISingleOperand2<EntQuery3> {
     
     @Override
     public TransformationResult<EntQuery3> transform(final TransformationContext context) {
-
-
-        
         final TransformationResult<IQrySources3> sourcesTr = sources != null ? sources.transform(context) : null;
         final TransformationResult<Conditions3> conditionsTr = conditions.transform(sourcesTr != null ? sourcesTr.updatedContext : context);
-
-        
         final TransformationResult<Yields3> yieldsTr = yields.transform(conditionsTr.updatedContext);
         final TransformationResult<GroupBys3> groupsTr = groups.transform(yieldsTr.updatedContext);
         final TransformationResult<OrderBys3> orderingsTr = orderings.transform(groupsTr.updatedContext);
@@ -109,15 +110,13 @@ public class EntQuery2 implements ISingleOperand2<EntQuery3> {
     }
 
     @Override
-    public Class<? extends AbstractEntity<?>> type() {
-        // TODO EQL (if resultType == null, then take it should be PrimitiveResultQuery -- just take resultType of its single yield
+    public Class<?> type() {
         return resultType;
     }
     
     @Override
     public Object hibType() {
-        // TODO EQL (if resultType == null, then take it should be PrimitiveResultQuery -- just take hibType of its single yield
-        return LongType.INSTANCE;
+        return hibType;
     }
 
     @Override

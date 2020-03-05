@@ -68,18 +68,7 @@ public class EntQuery1 extends AbstractElement1 implements ISingleOperand1<EntQu
         // .produceForUncorrelatedSubquery() should be used only for cases of synthetic entities (where source query can only be uncorrelated) -- simple queries as source queries are accessible for correlation
         final TransformationResult<Sources2> sourcesTr =  sources != null ? sources.transform(localResolutionContext) : null;
         final TransformationResult<Conditions2> conditionsTr =  conditions.transform(sourcesTr != null ? sourcesTr.updatedContext : localResolutionContext);
-
-//        final List<Yield1> enhancedYields = new ArrayList<>();
-//        if (yields.getYields().isEmpty()) {
-//            for (final Entry<String, AbstractPropInfo<?>> el : sourcesTr.item.main.entityInfo().getProps().entrySet()) {
-//                if (el.getValue().expression == null) {
-//                    final String yieldedPropAliasedName = sourcesTr.item.main.alias() != null ?  sourcesTr.item.main.alias() + "." + el.getKey() : el.getKey();
-//                    enhancedYields.add(new Yield1(new EntProp1(yieldedPropAliasedName, false, 0), el.getKey(), false));
-//                }
-//            } 
-//        }
-
-        final TransformationResult<Yields2> yieldsTr =  yields.transform(conditionsTr.updatedContext);//(yields.getYields().isEmpty() ? new Yields1(enhancedYields) : yields).transform(conditionsTr.updatedContext);
+        final TransformationResult<Yields2> yieldsTr =  yields.transform(conditionsTr.updatedContext);
         final TransformationResult<GroupBys2> groupsTr =  groups.transform(yieldsTr.updatedContext);
         final TransformationResult<OrderBys2> orderingsTr =  orderings.transform(groupsTr.updatedContext);
 

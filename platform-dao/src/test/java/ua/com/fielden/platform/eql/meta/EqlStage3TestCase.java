@@ -9,14 +9,20 @@ import static ua.com.fielden.platform.eql.meta.QueryCategory.RESULT_QUERY;
 import static ua.com.fielden.platform.eql.meta.QueryCategory.SUB_QUERY;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.type.LongType;
+import org.hibernate.type.StringType;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.eql.stage1.elements.EntQueryBlocks1;
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage1.elements.TransformationResult;
+import ua.com.fielden.platform.eql.stage1.elements.Yields1;
 import ua.com.fielden.platform.eql.stage1.elements.conditions.Conditions1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.EntQuery1;
 import ua.com.fielden.platform.eql.stage1.elements.sources.QrySource1BasedOnPersistentType;
@@ -36,6 +42,7 @@ import ua.com.fielden.platform.eql.stage3.elements.conditions.ComparisonTest3;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.ICondition3;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.NullTest3;
+import ua.com.fielden.platform.eql.stage3.elements.functions.CountAll3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.EntProp3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.EntQuery3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.Expression3;
@@ -65,12 +72,35 @@ public class EqlStage3TestCase extends EqlStage1TestCase {
         return entResultQry3(new EntQuery1(parts1, resultType, RESULT_QUERY, nextId()), new PropsResolutionContext(metadata), tables).item;
     }
 
+    protected static EntQuery3 queryCountAll(final Sources1 sources, final Conditions1 conditions) {
+        final EntQueryBlocks1 parts1 = qb1(sources, conditions, yields(yieldCountAll("KOUNT")));
+        return entResultQry3(new EntQuery1(parts1, EntityAggregates.class, RESULT_QUERY, nextId()), new PropsResolutionContext(metadata), tables).item;
+    }
+    
+    protected static EntQuery3 query(final Sources1 sources, final Conditions1 conditions, final Yields1 yields, final Class<? extends AbstractEntity<?>> resultType) {
+        final EntQueryBlocks1 parts1 = qb1(sources, conditions, yields);
+        return entResultQry3(new EntQuery1(parts1, resultType, RESULT_QUERY, nextId()), new PropsResolutionContext(metadata), tables).item;
+    }
+
+    
     protected static Expression3 expr(final ISingleOperand3 op1) {
         return new Expression3(op1);
     }
 
     protected static ISingleOperand3 prop(final String name, final IQrySource3 source) {
         return new EntProp3(name, source, null, null);
+    }
+    
+    protected static ISingleOperand3 entityProp(final String name, final IQrySource3 source, final Class<? extends AbstractEntity<?>> entityType) {
+        return new EntProp3(name, source, entityType, LongType.INSTANCE);
+    }
+
+    protected static ISingleOperand3 stringProp(final String name, final IQrySource3 source) {
+        return new EntProp3(name, source, String.class, StringType.INSTANCE);
+    }
+
+    protected static ISingleOperand3 dateProp(final String name, final IQrySource3 source) {
+        return new EntProp3(name, source, Date.class, StringType.INSTANCE);
     }
     
     protected static ComparisonTest3 eq(final ISingleOperand3 op1, final ISingleOperand3 op2) {
@@ -194,19 +224,19 @@ public class EqlStage3TestCase extends EqlStage1TestCase {
     }
 
     private static EntQuery3 qry(final IQrySources3 sources, final QueryCategory queryCategory) {
-        return new EntQuery3(new EntQueryBlocks3(sources, new Conditions3(), yields(), groups(), orders()), queryCategory, null);
+        return new EntQuery3(new EntQueryBlocks3(sources, new Conditions3(), yields3(), groups(), orders()), queryCategory, null);
     }
 
     private static EntQuery3 qry(final IQrySources3 sources, final Conditions3 conditions, final QueryCategory queryCategory) {
-        return new EntQuery3(new EntQueryBlocks3(sources, conditions, yields(), groups(), orders()), queryCategory, null);
+        return new EntQuery3(new EntQueryBlocks3(sources, conditions, yields3(), groups(), orders()), queryCategory, null);
     }
 
     private static EntQuery3 qry(final IQrySources3 sources, final Yields3 yields, final QueryCategory queryCategory) {
         return new EntQuery3(new EntQueryBlocks3(sources, new Conditions3(), yields, groups(), orders()), queryCategory, null);
     }
 
-    private static EntQuery3 qry(final IQrySources3 sources, final Conditions3 conditions, final Yields3 yields, final QueryCategory queryCategory) {
-        return new EntQuery3(new EntQueryBlocks3(sources, conditions, yields, groups(), orders()), queryCategory, null);
+    private static EntQuery3 qry(final IQrySources3 sources, final Conditions3 conditions, final Yields3 yields, final QueryCategory queryCategory, final Class<?> resultType) {
+        return new EntQuery3(new EntQueryBlocks3(sources, conditions, yields, groups(), orders()), queryCategory, resultType);
     }
     
     protected static EntQuery3 qry(final IQrySources3 sources) {
@@ -217,12 +247,16 @@ public class EqlStage3TestCase extends EqlStage1TestCase {
         return qry(sources, conditions, RESULT_QUERY);
     }
 
+    protected static EntQuery3 qryCountAll(final IQrySources3 sources, final Conditions3 conditions) {
+        return qry(sources, conditions, yields3(yieldCountAll3("KOUNT")), RESULT_QUERY, EntityAggregates.class);
+    }
+    
     protected static EntQuery3 qry(final IQrySources3 sources, final Yields3 yields) {
         return qry(sources, yields, RESULT_QUERY);
     }
 
-    protected static EntQuery3 qry(final IQrySources3 sources, final Conditions3 conditions, final Yields3 yields) {
-        return qry(sources, conditions, yields, RESULT_QUERY);
+    protected static EntQuery3 qry(final IQrySources3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType) {
+        return qry(sources, conditions, yields, RESULT_QUERY, resultType);
     }
 
     protected static EntQuery3 subqry(final IQrySources3 sources) {
@@ -237,35 +271,56 @@ public class EqlStage3TestCase extends EqlStage1TestCase {
         return qry(sources, yields, SUB_QUERY);
     }
 
-    protected static EntQuery3 subqry(final IQrySources3 sources, final Conditions3 conditions, final Yields3 yields) {
-        return qry(sources, conditions, yields, SUB_QUERY);
+    protected static EntQuery3 subqry(final IQrySources3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType) {
+        return qry(sources, conditions, yields, SUB_QUERY, resultType);
     }
 
-    protected static Yields3 yields(final IQrySource3 source, final String ... props) {
-        final List<Yield3> yields = new ArrayList<>();
-        for (final String prop : props) {
-            yields.add(yieldExpr(prop, source, prop));
-        }
-        
-        return new Yields3(yields);
-    }
+//    protected static Yields3 yields(final IQrySource3 source, final String ... props) {
+//        final List<Yield3> yields = new ArrayList<>();
+//        for (final String prop : props) {
+//            yields.add(yieldExpr(prop, source, prop));
+//        }
+//        
+//        return new Yields3(yields);
+//    }
     
-    protected static Yields3 yields(final Yield3 ... yields) {
+    protected static Yields3 yields3(final Yield3 ... yields) {
         return new Yields3(asList(yields));
     }
 
+    protected static Yield3 yieldCountAll3(final String alias) {
+        return new Yield3(new CountAll3(), alias);
+    }
+    
     protected static Yield3 yieldExpr(final String propName, final IQrySource3 source, final String alias) {
         return new Yield3(expr(prop(propName, source)), alias);
+    }
+
+    protected static Yield3 yieldEntityExpr(final String propName, final IQrySource3 source, final String alias, final Class<? extends AbstractEntity<?>> propType) {
+        return new Yield3(expr(entityProp(propName, source, propType)), alias);
+    }
+
+    protected static Yield3 yieldStringExpr(final String propName, final IQrySource3 source, final String alias) {
+        return new Yield3(expr(stringProp(propName, source)), alias);
     }
 
     protected static Yield3 yieldProp(final String propName, final IQrySource3 source, final String alias) {
         return new Yield3(prop(propName, source), alias);
     }
 
+    protected static Yield3 yieldSingleExpr(final String propName, final IQrySource3 source, final Class<? extends AbstractEntity<?>> propType) {
+        return yieldEntityExpr(propName, source, "", propType);
+    }
+
+    protected static Yield3 yieldSingleStringExpr(final String propName, final IQrySource3 source) {
+        return yieldStringExpr(propName, source, "");
+    }
+
     protected static Yield3 yieldSingleExpr(final String propName, final IQrySource3 source) {
         return yieldExpr(propName, source, "");
     }
 
+    
     protected static Yield3 yieldSingleProp(final String propName, final IQrySource3 source) {
         return yieldProp(propName, source, "");
     }
