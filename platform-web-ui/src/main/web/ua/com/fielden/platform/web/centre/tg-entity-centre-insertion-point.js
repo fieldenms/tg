@@ -250,7 +250,8 @@ Polymer({
         },
 
         contextRetriever: {
-            type: Function
+            type: Function,
+            observer: "_updateElementWithContextRetriever"
         },
 
         _element: {
@@ -392,6 +393,12 @@ Polymer({
         }
     },
 
+    _updateElementWithContextRetriever: function (newValue, oldValue) {
+        if (this._element) {
+            this._element.contextRetriever = newValue;
+        }
+    },
+
     /**
      * customAction -- an action that was actioned by user and may require showing a diglog (e.g. with master)
      */
@@ -411,6 +418,7 @@ Polymer({
                     self._element = element;
                     self._element.selectionCriteriaEntity = self.selectionCriteriaEntity;
                     self._element.isCentreRunning = self.isCentreRunning;
+                    self._element.contextRetriever = self.contextRetriever;
                     self._element.addEventListener('retrieved-entities-changed', function (ev) {
                         self.retrievedEntities = this.retrievedEntities;
                     });
