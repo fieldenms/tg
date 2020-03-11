@@ -8,8 +8,6 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.entity.query.metadata.CompositeKeyEqlExpressionGenerator.generateCompositeKeyEqlExpression;
 import static ua.com.fielden.platform.entity.query.metadata.DomainMetadataUtils.extractExpressionModelFromCalculatedProperty;
 import static ua.com.fielden.platform.eql.meta.EntityCategory.PERSISTED;
 import static ua.com.fielden.platform.eql.meta.EntityCategory.PURE;
@@ -19,34 +17,31 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
 import static ua.com.fielden.platform.utils.EntityUtils.getEntityModelsOfQueryBasedEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
-import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.BiFunction;
 
 import org.hibernate.type.LongType;
 import org.hibernate.type.StringType;
 import org.hibernate.type.YesNoType;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISubsequentCompletedAndYielded;
 import ua.com.fielden.platform.entity.query.metadata.CompositeKeyEqlExpressionGenerator;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
@@ -60,21 +55,7 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 public class MetadataGenerator {
-    //    public static final Map<Class, Class> hibTypeDefaults = new HashMap<Class, Class>();
-    //    public static final Map<Class<? extends AbstractEntity<?>>, EntityInfo> metadata = new HashMap<>();
-    //
-    //    static {
-    //        hibTypeDefaults.put(Date.class, DateTimeType.class);
-    //        hibTypeDefaults.put(Money.class, SimpleMoneyType.class);
-    //    }
-    //
-    //    protected static final DomainMetadata DOMAIN_METADATA = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), PlatformTestDomainTypes.entityTypes, AnnotationReflector.getAnnotation(User.class, MapEntityTo.class), DbVersion.H2);
-    //
-    //    protected static final DomainMetadataAnalyser DOMAIN_METADATA_ANALYSER = new DomainMetadataAnalyser(DOMAIN_METADATA);
-    //
     protected final EntQueryGenerator qb;// = new EntQueryGenerator1(null); //DOMAIN_METADATA_ANALYSER
-    //    
-    //private final DomainMetadataExpressionsGenerator dmeg = new DomainMetadataExpressionsGenerator();
 
     public MetadataGenerator(final EntQueryGenerator qb) {
         this.qb = qb;
@@ -134,10 +115,6 @@ public class MetadataGenerator {
         return isPersistedEntityType(getKeyType(entityType));
     }
 
-    private Expression1 entQryExpression(final ExpressionModel exprModel) {
-        return (Expression1) new StandAloneExpressionBuilder(qb, exprModel).getResult().getValue();
-    }
-
     private <T extends AbstractEntity<?>> Optional<PrimTypePropInfo<?>> generateIdPropertyMetadata(final Class<T> entityType, final EntityCategory category) {
         switch (category) {
         case PERSISTED:
@@ -180,9 +157,10 @@ public class MetadataGenerator {
                 }
             }
             
-            if (AbstractEntity.class.isAssignableFrom(javaType)) {
+            if (AbstractUnionEntity.class.isAssignableFrom(javaType)) {
+                //entityInfo.addProp(new UnionTypePropInfo(field.getName(), allEntitiesInfo.get(javaType), LongType.INSTANCE, expr));
+            } else if (AbstractEntity.class.isAssignableFrom(javaType)) {
                 final boolean required = PropertyTypeDeterminator.isRequiredByDefinition(field, javaType);
-
                 entityInfo.addProp(new EntityTypePropInfo(field.getName(), allEntitiesInfo.get(javaType), LongType.INSTANCE, required, expr));
             } else {
                 entityInfo.addProp(new PrimTypePropInfo(field.getName(),EntityUtils.isBoolean(javaType) ? YesNoType.INSTANCE : StringType.INSTANCE, javaType, expr));
@@ -196,33 +174,6 @@ public class MetadataGenerator {
             final Expression1 expr = (Expression1) (new StandAloneExpressionBuilder(qb, expressionModel)).getResult().getValue();
             entityInfo.addProp(new PrimTypePropInfo<String>(KEY, StringType.INSTANCE, String.class, expr));
         }        
-
-       
-        
-//        for (final Field field : getRealProperties(entityInfo.javaType())) {
-//            final Class<?> javaType = determinePropertyType(entityInfo.javaType(), field.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
-//
-//            if (AbstractEntity.class.isAssignableFrom(javaType)) {
-//                entityInfo.addProp(new EntityTypePropInfo(field.getName(), allEntitiesInfo.get(javaType), entityInfo));
-//            } else {
-//                entityInfo.addProp(new PrimTypePropInfo(field.getName(), javaType, entityInfo));
-//            }
-//            //	    if (!result.containsKey(field.getName())) {
-//            //		if (Collection.class.isAssignableFrom(field.getType()) && Finder.hasLinkProperty(entityType, field.getName())) {
-//            //		    safeMapAdd(result, getCollectionalPropInfo(entityType, field));
-//            //		} else if (field.isAnnotationPresent(Calculated.class)) {
-//            //		    safeMapAdd(result, getCalculatedPropInfo(entityType, field));
-//            //		} else if (field.isAnnotationPresent(MapTo.class)) {
-//            //		    safeMapAdd(result, getCommonPropHibInfo(entityType, field));
-//            //		} else if (Finder.isOne2One_association(entityType, field.getName())) {
-//            //		    safeMapAdd(result, getOneToOnePropInfo(entityType, field));
-//            //		} else if (!field.isAnnotationPresent(CritOnly.class)) {
-//            //		    safeMapAdd(result, getSyntheticPropInfo(entityType, field));
-//            //		} else {
-//            //		    //System.out.println(" --------------------------------------------------------- " + entityType.getSimpleName() + ": " + field.getName());
-//            //		}
-//            //	    }
-//        }
     }
 
     private <T extends AbstractEntity<?>> Map<String, Column> getColumns(final Class<? extends AbstractEntity<?>> entityType) {
@@ -236,42 +187,5 @@ public class MetadataGenerator {
         });
         
         return result;
-    }
-
-    /**
-     * Creates an EQL model for an entity that yields all yield-able properties.
-     * <ul>
-     * <li>persistent properties,
-     * <li>explicitly calculated properties (with <code>@Calculated</code>),
-     * <li>implicitly calculated properties (their formulae are created and added during EQL metadata creation and available only at EQL processing level; e.g. composite key as
-     * string).
-     * </ul>
-     * 
-     * @param entityType
-     * @return
-     */
-    public static <T extends AbstractEntity<?>> EntityResultQueryModel<T> createYieldAllQueryModel(final Class<T> entityType) {
-        final ISubsequentCompletedAndYielded<T> yield = select(entityType).yield().prop(ID).as(ID).yield().prop(VERSION).as(VERSION);
-        return EntityUtils.getRealProperties(entityType).stream().reduce(of(yield), yieldAnother(entityType), (o1, o2) -> {
-            throw new EqlException("Parallel reduction is not supported.");
-        }).get().modelAsEntity(entityType);
-    }
-
-    private static <T extends AbstractEntity<?>> BiFunction<Optional<ISubsequentCompletedAndYielded<T>>, Field, Optional<ISubsequentCompletedAndYielded<T>>> yieldAnother(final Class<T> entityType) {
-        return (yield, field) -> {
-            if (field.isAnnotationPresent(MapTo.class)) {
-                return yield.map(y -> {
-                    if (KEY.equals(field.getName()) && isCompositeEntity(entityType)) {
-                        return y.yield().expr(generateCompositeKeyEqlExpression((Class<? extends AbstractEntity<DynamicEntityKey>>) entityType)).as(KEY);
-                    } else {
-                        return y.yield().prop(field.getName()).as(field.getName());
-                    }
-                });
-            } else if (field.isAnnotationPresent(Calculated.class)) {
-                return yield.map(y -> y.yield().expr(null/*extractExpressionModelFromCalculatedProperty(entityType, field)*/ /*TODO TFM*/).as(field.getName()));
-            } else {
-                return yield;
-            }
-        };
     }
 }

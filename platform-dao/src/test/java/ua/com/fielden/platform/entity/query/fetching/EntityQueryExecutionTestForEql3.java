@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.query.fetching;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
@@ -514,6 +515,40 @@ public class EntityQueryExecutionTestForEql3 extends AbstractDaoTestCase {
         final List<TeVehicleModel> models = getInstance(ITeVehicleModel.class).getAllEntities(from(qry).with(fetchAll(TeVehicleModel.class).with("makeKey")).with("EQL3", null).model());
         for (final TeVehicleModel item : models) {
             System.out.println(item.getId() + " : " + item.getKey() + " : " + item.getMake() + " : " + item.getMakeKey());
+        }
+    }
+
+    @Test
+    public void eql3_query_executes_correctly50() {
+        run(select(TeVehicleModel.class).where().prop("make.id").isNotNull());
+    }
+
+    @Test
+    public void eql3_query_executes_correctly51() {
+        run(select(TeVehicle.class).where().prop("model.make.id").isNotNull());
+    }
+
+    @Test
+    public void eql3_query_executes_correctly52() {
+        run(select(TeVehicle.class).leftJoin(TeVehicleFuelUsage.class).as("lastFuelUsage1").on().prop("lastFuelUsage").eq().prop("lastFuelUsage1.id").where().prop("lastFuelUsage.qty").gt().val(100));
+    }
+
+    @Test
+    public void eql3_query_executes_correctly53() {
+        run(select(TeVehicle.class).where().prop("lastFuelUsage.qty").gt().val(100));
+    }
+    
+    @Test
+    public void eql3_query_executes_correctly54() {
+        run(select(TeVehicle.class).leftJoin(TeVehicleFuelUsage.class).as("lastFuelUsage1").on().prop("lastFuelUsage").eq().prop("lastFuelUsage1.id").where().prop("lastFuelUsage1.qty").gt().val(100));
+    }
+    
+    @Test
+    public void eql3_query_executes_correctly55() {
+        try {
+            run(select(TeVehicle.class).leftJoin(TeVehicleFuelUsage.class).as("lastFuelUsage").on().prop("lastFuelUsage").eq().prop("lastFuelUsage.id").where().prop("lastFuelUsage.qty").gt().val(100));
+            fail("Should have failed while trying to resolve property [lastFuelUsage.qty]");
+        } catch (final Exception e) {
         }
     }
     
