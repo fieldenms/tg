@@ -1,9 +1,11 @@
 package ua.com.fielden.platform.attachment;
 
+import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
@@ -274,6 +276,33 @@ public class AttachmentOperationsTest extends AbstractDaoTestCase {
         
         final Path uploadedFile = Paths.get(coAttachmentUploader.attachmentsLocation + File.separator + attachment1.getSha1());
         assertFalse(uploadedFile.toFile().exists());
+    }
+
+    @Test
+    public void hyperlink_attachment_can_be_created_for_valid_URIs() {
+        final IAttachment co$ = co$(Attachment.class);
+        final String uri = "https://supported.uri.org";
+        final Attachment hyperAttachment = co$.newAsHyperlink(uri).orElseThrow(null);
+        assertNotNull(hyperAttachment);
+        final Attachment savedAttachment = co$.save(hyperAttachment);
+        assertTrue(savedAttachment.isPersisted());
+        assertEquals(hyperAttachment, savedAttachment);
+        
+        assertEquals(uri, savedAttachment.getTitle());
+        assertEquals(Attachment.HYPERLINK, savedAttachment.getOrigFileName());
+        assertTrue(isNotEmpty(savedAttachment.getSha1()));
+        assertNull(savedAttachment.getLastModified());
+        assertNull(savedAttachment.getMime());
+        assertNull(savedAttachment.getLastRevision());
+        assertEquals(Integer.valueOf(0), savedAttachment.getRevNo());
+    }
+
+    @Test
+    public void hyperlink_attachment_cannot_be_created_for_invalid_URIs_or_unsupported_protocols() {
+        final IAttachment co$ = co$(Attachment.class);
+        assertFalse(co$.newAsHyperlink("file://supported.uri.org").isPresent());
+        assertFalse(co$.newAsHyperlink("https:broken.uri").isPresent());
+        assertFalse(co$.newAsHyperlink("uri.missing.protocol").isPresent());
     }
 
     /**
