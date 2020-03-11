@@ -7,24 +7,25 @@ export const TgShortcutProcessingBehavior = {
      * Processes shortcut with appropriate IronA11yKeysBehavior's event.
      * Finds appropriate action component through the tag names specified in 'elementTags' (in that order).
      */
-    processShortcut: function (event, elementTags) {
+    processShortcut: function (event, elementTags, customKeyEventTarget) {
         const shortcut = event.detail.combo;
         console.debug('Shortcut', shortcut, 'processing...');
 
         // finds and runs the shortcut action if there is any such action
-        this._findAndRun(shortcut, elementTags);
-
-        // prevents event propagation
-        tearDownEvent(event);
+        if (this._findAndRun(shortcut, elementTags, customKeyEventTarget)) {
+            // prevents event propagation
+            tearDownEvent(event);
+        }
+        
         console.debug('Shortcut', shortcut, 'processing... done');
     },
 
     /**
      * Finds 'shortcut' action and runs it.
      */
-    _findAndRun: function (shortcut, elementTags) {
+    _findAndRun: function (shortcut, elementTags, customKeyEventTarget) {
         for (let elementTag of elementTags) {
-            const actionElement = this._findVisibleEnabledActionElement(elementTag, shortcut);
+            const actionElement = this._findVisibleEnabledActionElement(elementTag, shortcut, customKeyEventTarget);
             if (actionElement) {
                 if (actionElement === 'disabled') {
                     console.debug('Shortcut', shortcut, 'processing... Action is found and it is disabled: skipped.');
@@ -38,7 +39,7 @@ export const TgShortcutProcessingBehavior = {
                 return actionElement;
             }
         }
-        console.debug('Shortcut', shortcut, 'processing... Action hasnt been found: skipped.');
+        console.debug('Shortcut', shortcut, `processing... Action hasnt been found for`, customKeyEventTarget || this.keyEventTarget || this, ` skipped.`);
         return null;
     },
 
@@ -47,8 +48,8 @@ export const TgShortcutProcessingBehavior = {
      *
      * Returns 'null' if not found, 'disabled' string if found but disabled.
      */
-    _findVisibleEnabledActionElement: function (elementTag, shortcut) {
-        const whereToSearch = this.keyEventTarget || this;
+    _findVisibleEnabledActionElement: function (elementTag, shortcut, customKeyEventTarget) {
+        const whereToSearch = customKeyEventTarget || this.keyEventTarget || this;
         const searchSelector = elementTag + '[shortcut~="' + shortcut + '"]';
         const matchingElements = queryElements(whereToSearch, searchSelector); // find all tag-matching elements with concrete 'shortcut'
         for (let matchingElement of matchingElements) {
