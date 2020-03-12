@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.dao;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.annotations.companion.Category.Operation.OTHER;
+import static ua.com.fielden.platform.annotations.companion.Category.Operation.READ;
 import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrDeclared;
 
 import java.io.IOException;
@@ -20,6 +22,7 @@ import org.joda.time.DateTime;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
+import ua.com.fielden.platform.annotations.companion.Category;
 import ua.com.fielden.platform.companion.AbstractEntityReader;
 import ua.com.fielden.platform.companion.DeleteOperations;
 import ua.com.fielden.platform.companion.ICanReadUninstrumented;
@@ -181,6 +184,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     }
 
     @Override
+    @Category(OTHER)
     public DbVersion getDbVersion() {
         return domainMetadata.getDbVersion();
     }
@@ -196,6 +200,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * @return
      */
     @Override
+    @Category(OTHER)
     public boolean stop() {
         final Session sess = getSession();
         try {
@@ -210,11 +215,13 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * By default all DAO computations are considered indefinite. Thus returning <code>null</code> as the result.
      */
     @Override
+    @Category(OTHER)
     public Optional<Integer> progress() {
         return Optional.empty();
     }
 
     @Override
+    @Category(READ)
     public final String getUsername() {
         final User user = getUser();
         return user != null ? user.getKey() : null;
@@ -222,6 +229,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     @Override
     @SessionRequired
+    @Category(READ)
     public List<T> getAllEntities(final QueryExecutionModel<T, ?> query) {
         return getEntitiesOnPage(query, null, null);
     }
@@ -268,6 +276,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     }
 
     @Override
+    @Category(OTHER)
     public Session getSession() {
         if (session == null) {
             throw new EntityCompanionException("Session is missing, most likely, due to missing @SessionRequired annotation.");
@@ -276,11 +285,13 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     }
 
     @Override
+    @Category(OTHER)
     public void setSession(final Session session) {
         this.session = session;
     }
     
     @Override
+    @Category(OTHER)
     public String getTransactionGuid() {
         if (StringUtils.isEmpty(transactionGuid)) {
             throw new EntityCompanionException("Transaction GUID is missing.");
@@ -289,6 +300,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     }
     
     @Override
+    @Category(OTHER)
     public void setTransactionGuid(final String guid) {
         this.transactionGuid = guid;
     }
@@ -309,23 +321,28 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     @Override
     @SessionRequired
+    @Category(READ)
     public byte[] export(final QueryExecutionModel<T, ?> query, final String[] propertyNames, final String[] propertyTitles) throws IOException {
         return WorkbookExporter.convertToGZipByteArray(WorkbookExporter.export(stream(query), propertyNames, propertyTitles));
     }
 
+    @Category(OTHER)
     public DomainMetadata getDomainMetadata() {
         return domainMetadata;
     }
 
+    @Category(OTHER)
     public IdOnlyProxiedEntityTypeCache getIdOnlyProxiedEntityTypeCache() {
         return idOnlyProxiedEntityTypeCache;
     }
 
     @Override
+    @Category(READ)
     public User getUser() {
         return up.getUser();
     }
 
+    @Category(OTHER)
     public IFilter getFilter() {
         return filter;
     }
@@ -334,10 +351,12 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return coFinder;
     }
 
+    @Category(OTHER)
     public IUniversalConstants getUniversalConstants() {
         return universalConstants;
     }
     
+    @Category(OTHER)
     public IDates dates() {
         return dates;
     }
@@ -346,6 +365,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * Just a convenience method for obtaining the current date/time as a single call {@code now()} instead of chaining {@code getUniversalConstants().now()}.
      * @return
      */
+    @Category(OTHER)
     public DateTime now() {
         return getUniversalConstants().now();
     }
@@ -361,6 +381,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     @Override
     @SuppressWarnings("unchecked")
+    @Category(OTHER)
     public <C extends IEntityDao<E>, E extends AbstractEntity<?>> C co$(final Class<E> type) {
         if (instrumented() && getEntityType().equals(type)) {
             return (C) this;
@@ -382,6 +403,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     @Override
     @SuppressWarnings("unchecked")
+    @Category(OTHER)
     public <C extends IEntityReader<E>, E extends AbstractEntity<?>> C co(final Class<E> type) {
         if (!instrumented() && getEntityType().equals(type)) {
             return (C) this;
@@ -396,6 +418,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     }
 
     @Override
+    @Category(OTHER)
     public void readUninstrumented() {
         this.$instrumented$ = false;
     }
@@ -406,6 +429,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * @return
      */
     @Override
+    @Category(OTHER)
     public boolean instrumented() {
         return $instrumented$;
     }
@@ -418,6 +442,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * 
      * @param moreData
      */
+    @Category(OTHER)
     public CommonEntityDao<T> setMoreData(final Map<String, IContinuationData> moreData) {
         clearMoreData();
         this.moreData.putAll(moreData);
@@ -432,6 +457,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * @param moreData
      * @return
      */
+    @Category(OTHER)
     public CommonEntityDao<T> setMoreData(final String key, final IContinuationData moreData) {
         this.moreData.put(key, moreData);
         return this;
@@ -440,6 +466,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     /**
      * Clears continuations in this companion object.
      */
+    @Category(OTHER)
     public void clearMoreData() {
         this.moreData.clear();
     }
@@ -451,6 +478,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * @return
      */
     @SuppressWarnings("unchecked")
+    @Category(OTHER)
     public <E extends IContinuationData> Optional<E> moreData(final String key) {
         return Optional.ofNullable((E) this.moreData.get(key));
     }
@@ -460,6 +488,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * 
      * @return
      */
+    @Category(OTHER)
     public Map<String, IContinuationData> moreData() {
         return Collections.unmodifiableMap(moreData);
     }
@@ -597,16 +626,19 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     }
 
     @Override
+    @Category(OTHER)
     public Class<T> getEntityType() {
         return entityType;
     }
 
     @Override
+    @Category(OTHER)
     public Class<? extends Comparable<?>> getKeyType() {
         return keyType;
     }
 
     @Override
+    @Category(OTHER)
     public final IFetchProvider<T> getFetchProvider() {
         if (fetchProvider == null) {
             fetchProvider = createFetchProvider();

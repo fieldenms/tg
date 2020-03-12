@@ -1,8 +1,11 @@
 package ua.com.fielden.platform.dao;
 
-import java.io.IOException;
-import java.util.List;
+import static ua.com.fielden.platform.annotations.companion.Category.Operation.OTHER;
+import static ua.com.fielden.platform.annotations.companion.Category.Operation.READ;
 
+import java.io.IOException;
+
+import ua.com.fielden.platform.annotations.companion.Category;
 import ua.com.fielden.platform.companion.IEntityInstantiator;
 import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.companion.IPersistentEntityMutator;
@@ -24,6 +27,7 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IEntityReader<T
      *
      * @return
      */
+    @Category(OTHER)
     default <C extends IEntityReader<E>, E extends AbstractEntity<?>> C co(final Class<E> type) {
         throw new UnsupportedOperationException("This method should be overriden by descendants.");
     }
@@ -34,6 +38,7 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IEntityReader<T
      *
      * @return
      */
+    @Category(OTHER)
     default <C extends IEntityDao<E>, E extends AbstractEntity<?>> C co$(final Class<E> type) {
         throw new UnsupportedOperationException("This method should be overriden by descendants.");
     }
@@ -43,6 +48,7 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IEntityReader<T
      *
      * @return
      */
+    @Category(READ)
     String getUsername();
 
     /**
@@ -50,6 +56,7 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IEntityReader<T
      *
      * @return
      */
+    @Category(READ)
     abstract User getUser();
 
     /**
@@ -65,6 +72,7 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IEntityReader<T
      *            -- titles corresponding to the properties being exported, which are used as headers of columns.
      * @return
      */
+    @Category(READ)
     byte[] export(final QueryExecutionModel<T, ?> query, final String[] propertyNames, final String[] propertyTitles) throws IOException;
 
 }

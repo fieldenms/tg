@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.companion;
 
+import static ua.com.fielden.platform.annotations.companion.Category.Operation.READ;
+import static ua.com.fielden.platform.annotations.companion.Category.Operation.OTHER;
+
 import static java.lang.String.format;
 import static java.util.Collections.emptyMap;
 import static ua.com.fielden.platform.companion.helper.KeyConditionBuilder.createQueryByKey;
@@ -18,6 +21,7 @@ import java.util.stream.Stream;
 import org.hibernate.Session;
 import org.hibernate.type.LongType;
 
+import ua.com.fielden.platform.annotations.companion.Category;
 import ua.com.fielden.platform.dao.ISessionEnabled;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.dao.QueryExecutionModel.Builder;
@@ -79,6 +83,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
     
     @Override
     @SessionRequired
+    @Category(READ)
     public boolean isStale(final Long entityId, final Long version) {
         if (entityId == null) {
             return false;
@@ -92,18 +97,21 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
 
     @Override
     @SessionRequired
+    @Category(READ)
     public T findById(final Long id) {
         return findById(id, null);
     }
 
     @Override
     @SessionRequired
+    @Category(READ)
     public T findById(final Long id, final fetch<T> fetchModel) {
         return fetchOneEntityInstance(id, fetchModel);
     }
 
     @Override
     @SessionRequired
+    @Category(READ)
     public T findByKeyAndFetch(final fetch<T> fetchModel, final Object... keyValues) {
         try {
             final EntityResultQueryModel<T> queryModel = createQueryByKey(getDbVersion(), getEntityType(), getKeyType(), isFilterable(), keyValues);
@@ -118,12 +126,14 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
 
     @Override
     @SessionRequired
+    @Category(READ)
     public T findByKey(final Object... keyValues) {
         return findByKeyAndFetch(null, keyValues);
     }
 
     @Override
     @SessionRequired
+    @Category(READ)
     public T findByEntityAndFetch(final fetch<T> fetchModel, final T entity) {
         if (entity.getId() != null) {
             return findById(entity.getId(), fetchModel);
@@ -134,6 +144,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
 
     @Override
     @SessionRequired
+    @Category(READ)
     public boolean entityExists(final T entity) {
         if (entity == null) {
             return false;
@@ -143,6 +154,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
 
     @Override
     @SessionRequired
+    @Category(READ)
     public boolean entityExists(final Long id) {
         if (id == null) {
             return false;
@@ -154,6 +166,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
 
     @Override
     @SessionRequired
+    @Category(READ)
     public boolean entityWithKeyExists(final Object... keyValues) {
         final T entity = findByKeyAndFetch(null, keyValues);
         return entity != null;
@@ -161,18 +174,21 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
 
     @Override
     @SessionRequired
+    @Category(READ)
     public int count(final EntityResultQueryModel<T> model) {
         return count(model, emptyMap());
     }
 
     @Override
     @SessionRequired
+    @Category(READ)
     public int count(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
         return evalNumOfPages(model, paramValues, 1).getKey();
     }
     
     @Override
     @SessionRequired
+    @Category(READ)
     public boolean exists(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
         final AggregatedResultQueryModel existsQuery = select().yield().caseWhen().exists(model).then().val(1).otherwise().val(0).endAsInt().as("exists").modelAsAggregate();
         final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> countModel = from(existsQuery).with(paramValues).with(fetchAggregates().with("exists")).lightweight().model();
@@ -187,6 +203,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
      */
     @Override
     @SessionRequired
+    @Category(READ)
     public Stream<T> stream(final QueryExecutionModel<T, ?> queryModel) {
         return stream(queryModel, 100);
     }
@@ -199,6 +216,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
      */
     @Override
     @SessionRequired
+    @Category(READ)
     public Stream<T> stream(final QueryExecutionModel<T, ?> queryModel, final int fetchSize) {
         final QueryExecutionModel<T, ?> qem = !instrumented() ? queryModel.lightweight() : queryModel;
         return new EntityFetcher(newQueryExecutionContext()).streamEntities(qem, Optional.of(fetchSize));
@@ -209,6 +227,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
      */
     @Override
     @SessionRequired
+    @Category(READ)
     public List<T> getFirstEntities(final QueryExecutionModel<T, ?> query, final int numberOfEntities) {
         return getEntitiesOnPage(query, 0, numberOfEntities);
     }
@@ -218,6 +237,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
      */
     @Override
     @SessionRequired
+    @Category(READ)
     public IPage<T> firstPage(final int pageCapacity) {
         return new EntityQueryPage(getDefaultQueryExecutionModel(), 0, pageCapacity, evalNumOfPages(getDefaultQueryExecutionModel().getQueryModel(), Collections.<String, Object> emptyMap(), pageCapacity));
     }
@@ -227,6 +247,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
      */
     @Override
     @SessionRequired
+    @Category(READ)
     public IPage<T> firstPage(final QueryExecutionModel<T, ?> model, final int pageCapacity) {
         final QueryExecutionModel<T, ?> qem = !instrumented() ? model.lightweight() : model;
         return new EntityQueryPage(qem, 0, pageCapacity, evalNumOfPages(qem.getQueryModel(), qem.getParamValues(), pageCapacity));
@@ -238,6 +259,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
      */
     @Override
     @SessionRequired
+    @Category(READ)
     public IPage<T> firstPage(final QueryExecutionModel<T, ?> model, final QueryExecutionModel<T, ?> summaryModel, final int pageCapacity) {
         final QueryExecutionModel<T, ?> qem = !instrumented() ? model.lightweight() : model;
         return new EntityQueryPage(qem, summaryModel, 0, pageCapacity, evalNumOfPages(qem.getQueryModel(), qem.getParamValues(), pageCapacity));
@@ -245,6 +267,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
 
     @Override
     @SessionRequired
+    @Category(READ)
     public IPage<T> getPage(final QueryExecutionModel<T, ?> model, final int pageNo, final int pageCapacity) {
         final QueryExecutionModel<T, ?> qem = !instrumented() ? model.lightweight() : model;
         return getPage(qem, pageNo, 0, pageCapacity);
@@ -252,6 +275,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
 
     @Override
     @SessionRequired
+    @Category(READ)
     public IPage<T> getPage(final QueryExecutionModel<T, ?> model, final int pageNo, final int pageCount, final int pageCapacity) {
         final QueryExecutionModel<T, ?> qem = !instrumented() ? model.lightweight() : model;
         
@@ -263,6 +287,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
 
     @Override
     @SessionRequired
+    @Category(READ)
     public IPage<T> getPage(final int pageNo, final int pageCapacity) {
         final Pair<Integer, Integer> numberOfPagesAndCount = evalNumOfPages(getDefaultQueryExecutionModel().getQueryModel(), Collections.<String, Object> emptyMap(), pageCapacity);
         final int pageNumber = pageNo < 0 ? numberOfPagesAndCount.getKey() - 1 : pageNo;
@@ -287,6 +312,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
 
     @Override
     @SessionRequired
+    @Category(READ)
     public T getEntity(final QueryExecutionModel<T, ?> model) {
         final QueryExecutionModel<T, ?> qem = !instrumented() ? model.lightweight() : model;
         final List<T> data = getFirstEntities(qem, 2);

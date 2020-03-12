@@ -1,11 +1,14 @@
 package ua.com.fielden.platform.companion;
 
+import static ua.com.fielden.platform.annotations.companion.Category.Operation.READ;
+import static ua.com.fielden.platform.annotations.companion.Category.Operation.OTHER;
 import static java.util.Collections.emptyMap;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import ua.com.fielden.platform.annotations.companion.Category;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.dao.exceptions.UnexpectedNumberOfReturnedEntities;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -30,6 +33,7 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      *
      * @return
      */
+    @Category(OTHER)
     Class<T> getEntityType();
 
     /**
@@ -37,6 +41,7 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      *
      * @return
      */
+    @Category(OTHER)
     Class<? extends Comparable<?>> getKeyType();
 
     /**
@@ -45,6 +50,7 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      *
      * @return
      */
+    @Category(OTHER)
     <C extends IEntityReader<E>, E extends AbstractEntity<?>> C co(final Class<E> type);
 
     /**
@@ -58,6 +64,7 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      *
      * @return
      */
+    @Category(OTHER)
     IFetchProvider<T> getFetchProvider();
 
     /**
@@ -67,6 +74,7 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      * @param version
      * @return
      */
+    @Category(READ)
     boolean isStale(final Long entityId, final Long version);
 
     /**
@@ -78,8 +86,10 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      *            -- one or more fetching models specifying the initialisation strategy (i.e. what properties should be retrieved).
      * @return
      */
+    @Category(READ)
     T findById(final Long id, final fetch<T> fetchModel);
 
+    @Category(READ)
     default Optional<T> findByIdOptional(final Long id, final fetch<T> fetchModel) {
         return Optional.ofNullable(findById(id, fetchModel));
     }
@@ -93,8 +103,10 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      *            -- one or more fetching models specifying the initialisation strategy (i.e. what properties should be retrieved).
      * @return
      */
+    @Category(READ)
     T findById(final Long id);
 
+    @Category(READ)
     default Optional<T> findByIdOptional(final Long id) {
         return Optional.ofNullable(findById(id));
     }
@@ -106,8 +118,10 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      * @param keyValues
      * @return
      */
+    @Category(READ)
     T findByKey(final Object... keyValues);
 
+    @Category(READ)
     default Optional<T> findByKeyOptional(final Object... keyValues) {
         return Optional.ofNullable(findByKey(keyValues));
     }
@@ -119,8 +133,10 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      * @param keyValues
      * @return
      */
+    @Category(READ)
     T findByKeyAndFetch(final fetch<T> fetchModel, final Object... keyValues);
 
+    @Category(READ)
     default Optional<T> findByKeyAndFetchOptional(final fetch<T> fetchModel, final Object... keyValues) {
         return Optional.ofNullable(findByKeyAndFetch(fetchModel, keyValues));
     }
@@ -132,8 +148,10 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      * @param entity
      * @return
      */
+    @Category(READ)
     T findByEntityAndFetch(final fetch<T> fetchModel, final T entity);
 
+    @Category(READ)
     default Optional<T> findByEntityAndFetchOptional(final fetch<T> fetchModel, final T entity) {
         return Optional.ofNullable(findByEntityAndFetch(fetchModel, entity));
     }
@@ -145,6 +163,7 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      * @param numberOfEntities
      * @return
      */
+    @Category(READ)
     List<T> getFirstEntities(final QueryExecutionModel<T, ?> query, final int numberOfEntities);
     
     /**
@@ -153,6 +172,7 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      * @param pageCapacity
      * @return
      */
+    @Category(READ)
     IPage<T> firstPage(final int pageCapacity);
 
     /**
@@ -162,6 +182,7 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      * @param query
      * @return
      */
+    @Category(READ)
     IPage<T> firstPage(final QueryExecutionModel<T, ?> query, final int pageCapacity);
 
     /**
@@ -173,6 +194,7 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      * @param pageCapacity
      * @return
      */
+    @Category(READ)
     default IPage<T> firstPage(final QueryExecutionModel<T, ?> model, final QueryExecutionModel<T, ?> summaryModel, final int pageCapacity) {
         throw new UnsupportedOperationException("Not supported.");
     }
@@ -185,6 +207,7 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      * @param pageNo
      * @return
      */
+    @Category(READ)
     IPage<T> getPage(final int pageNo, final int pageCapacity);
 
     /**
@@ -195,6 +218,7 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      * @param pageNo
      * @return
      */
+    @Category(READ)
     IPage<T> getPage(final QueryExecutionModel<T, ?> query, final int pageNo, final int pageCapacity);
 
     /**
@@ -206,6 +230,7 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      * @param pageCapacity
      * @return
      */
+    @Category(READ)
     IPage<T> getPage(final QueryExecutionModel<T, ?> query, final int pageNo, final int pageCount, final int pageCapacity);
 
     /**
@@ -220,6 +245,7 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      * @return
      * 
      */
+    @Category(READ)
     List<T> getAllEntities(final QueryExecutionModel<T, ?> query);
 
     /**
@@ -229,8 +255,10 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      * @param model
      * @return
      */
+    @Category(READ)
     T getEntity(final QueryExecutionModel<T, ?> model);
 
+    @Category(READ)
     default Optional<T> getEntityOptional(final QueryExecutionModel<T, ?> model) {
         try {
             return Optional.ofNullable(getEntity(model));
@@ -245,6 +273,7 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      * @param entity
      * @return
      */
+    @Category(READ)
     boolean entityExists(final T entity);
 
     /**
@@ -253,6 +282,7 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      * @param id
      * @return
      */
+    @Category(READ)
     boolean entityExists(final Long id);
 
     /**
@@ -261,6 +291,7 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      * @param entity
      * @return
      */
+    @Category(READ)
     boolean entityWithKeyExists(final Object... keyValues);
 
     /**
@@ -269,8 +300,10 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      * @param model
      * @return
      */
+    @Category(READ)
     int count(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues);
 
+    @Category(READ)
     int count(final EntityResultQueryModel<T> model);
     
     /**
@@ -279,8 +312,10 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      * @param model
      * @return
      */
+    @Category(READ)
     boolean exists(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues);
 
+    @Category(READ)
     default boolean exists(final EntityResultQueryModel<T> model) {
         return exists(model, emptyMap());
     }

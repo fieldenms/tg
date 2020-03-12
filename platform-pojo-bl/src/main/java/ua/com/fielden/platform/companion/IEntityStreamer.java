@@ -2,6 +2,7 @@ package ua.com.fielden.platform.companion;
 
 import java.util.stream.Stream;
 
+import ua.com.fielden.platform.annotations.companion.Category;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 
@@ -22,6 +23,7 @@ public interface IEntityStreamer<T extends AbstractEntity<?>> {
      * @param fetchSize -- a batch size for retrieve the next lot of data to feed the stream
      * @return
      */
+    @Category(Category.Operation.READ)
     Stream<T> stream(final QueryExecutionModel<T, ?> qem, final int fetchSize);
     
     /**
@@ -31,6 +33,7 @@ public interface IEntityStreamer<T extends AbstractEntity<?>> {
      * @param qem
      * @return
      */
+    @Category(Category.Operation.READ)
     Stream<T> stream(final QueryExecutionModel<T, ?> qem);
 
 }
