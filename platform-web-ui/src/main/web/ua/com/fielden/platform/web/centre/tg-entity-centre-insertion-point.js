@@ -128,7 +128,6 @@ const template = html`
         .paper-material {
             background: white;
             border-radius: 2px;
-            margin: 10px;
         }
         #loadableContent {
             z-index:0;
@@ -174,6 +173,12 @@ Polymer({
             type: Boolean,
             value: false,
             observer: "_flexibilityChanged"
+        },
+
+        hideMargins: {
+            type:Boolean,
+            value: false,
+            observer: "_hideMarginsChanged"
         },
 
         activated: {
@@ -415,6 +420,14 @@ Polymer({
         } else {
             this.style.removeProperty("flex-grow");
             this.parentElement.style.removeProperty("flex-grow");
+        }
+    },
+
+    _hideMarginsChanged: function (newValue, oldValue) {
+        if (newValue) {
+            this.$.pm.style.removeProperty("margin");
+        } else {
+            this.$.pm.style["margin"] = "10px";
         }
     },
 
