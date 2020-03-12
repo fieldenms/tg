@@ -29,6 +29,7 @@ import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgBogieClass;
 import ua.com.fielden.platform.sample.domain.TgCategory;
+import ua.com.fielden.platform.sample.domain.TgCategoryAttachment;
 import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisation;
 import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationNonPersistentChild;
 import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationNonPersistentCompositeChild;
@@ -155,6 +156,7 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(TgCentreDiffSerialisationPersistentChild.class);
         add(TgCentreDiffSerialisationNonPersistentChild.class);
         add(TgCentreDiffSerialisationNonPersistentCompositeChild.class);
+        add(TgCategoryAttachment.class);
     }
 
     @Override

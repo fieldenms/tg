@@ -29,6 +29,8 @@ import ua.com.fielden.platform.migration.dao.MigrationHistoryDao;
 import ua.com.fielden.platform.migration.dao.MigrationRunDao;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.sample.domain.*;
+import ua.com.fielden.platform.sample.domain.ITgCategoryAttachment;
+import ua.com.fielden.platform.sample.domain.TgCategoryAttachmentDao;
 import ua.com.fielden.platform.security.annotations.SessionCache;
 import ua.com.fielden.platform.security.annotations.SessionHashingKey;
 import ua.com.fielden.platform.security.annotations.TrustedDeviceSessionDuration;
@@ -112,6 +114,7 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bind(ITgSystem.class).to(TgSystemDao.class);
         bind(ITgSubSystem.class).to(TgSubSystemDao.class);
         bind(ITgCategory.class).to(TgCategoryDao.class);
+        bind(ITgCategoryAttachment.class).to(TgCategoryAttachmentDao.class);
         bind(ITgVehicle.class).to(TgVehicleDao.class);
         bind(ITeVehicle.class).to(TeVehicleDao.class);
         bind(ITgVehicleFinDetails.class).to(TgVehicleFinDetailsDao.class);
