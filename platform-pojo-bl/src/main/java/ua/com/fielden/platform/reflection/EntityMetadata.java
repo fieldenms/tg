@@ -27,7 +27,7 @@ import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 
 /**
  * A set of utility functions to obtain metadata that is required (mainly) to instantiating instrumented entities.
- * The main goal of these functions in comparison the approach that existed before, is the memoization of entity metadata for efficient reuse.
+ * The main goal of these functions in comparison to the approach that existed before, is the memoization of entity metadata for efficient reuse.
  *
  * @author TG Team
  *
@@ -35,7 +35,7 @@ import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 public class EntityMetadata {
     private static final Logger LOGGER = Logger.getLogger(EntityMetadata.class);
     private static final Cache<Class<? extends AbstractEntity<?>>, Cache<String, Boolean>> CACHE_IS_ENTITY_EXISTS_APPLICABLE = CacheBuilder.newBuilder().initialCapacity(1000).concurrencyLevel(50).build();
-    private static final Cache<Class<? extends AbstractEntity<?>>, Class<? extends Comparable>> CACHE_KEY_TYPE = CacheBuilder.newBuilder().initialCapacity(1000).concurrencyLevel(50).build();
+    private static final Cache<Class<? extends AbstractEntity<?>>, Class<? extends Comparable<?>>> CACHE_KEY_TYPE = CacheBuilder.newBuilder().initialCapacity(1000).concurrencyLevel(50).build();
     private static final Cache<Class<? extends AbstractEntity<?>>, Cache<String, Class<?>>> CACHE_PROP_TYPE = CacheBuilder.newBuilder().initialCapacity(1000).concurrencyLevel(50).build();
     private static final Cache<Class<? extends AbstractEntity<?>>, Cache<String, EntityExists>> CACHE_ENTITY_EXISTS_ANNOTATION = CacheBuilder.newBuilder().initialCapacity(1000).concurrencyLevel(50).build();
     private EntityMetadata() {}
@@ -72,10 +72,10 @@ public class EntityMetadata {
      * @param entityType
      * @return
      */
-    public static Class<? extends Comparable> keyTypeInfo(final Class<? extends AbstractEntity<?>> entityType) {
+    public static Class<? extends Comparable<?>> keyTypeInfo(final Class<? extends AbstractEntity<?>> entityType) {
         try {
             return CACHE_KEY_TYPE.get(entityType, () -> {
-                final Class<? extends Comparable> keyType = (Class<? extends Comparable>) AnnotationReflector.getKeyType(entityType);
+                final Class<? extends Comparable<?>> keyType = (Class<? extends Comparable<?>>) AnnotationReflector.getKeyType(entityType);
                 if (keyType == null) {
                     throw new EntityDefinitionException(format("Entity [%s] is not fully defined -- key type is missing.", entityType.getName()));
                 }
