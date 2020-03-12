@@ -20,6 +20,12 @@
 	</properties>
 
 	<dependencies>
+		<!-- inner module dependencies -->
+		<dependency>
+			<groupId>fielden</groupId>
+			<artifactId>platform-annotations</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 		<!-- https://mvnrepository.com/artifact/com.google.guava/guava -->
 		<dependency>
 		    <groupId>com.google.guava</groupId>
