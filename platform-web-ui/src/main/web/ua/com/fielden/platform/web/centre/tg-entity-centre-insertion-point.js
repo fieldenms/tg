@@ -90,7 +90,7 @@ document.head.appendChild(customStyle.content);
 const template = html`
     <style>
         :host {
-            @apply --layout-self-stretch;
+            @apply --layout-vertical;
             overflow: auto;
         }
         .truncate {
@@ -133,9 +133,12 @@ const template = html`
         #loadableContent {
             z-index:0;
         }
+        [flexible] {
+            flex-grow: 1;
+        }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning tg-entity-centre-styles paper-material-styles"></style>
-    <div id="pm" hidden$="[[detachedView]]" class="paper-material layout vertical" elevation="1">
+    <div id="pm" hidden$="[[detachedView]]" class="paper-material layout vertical" elevation="1" flexible$="[[flexible]]">
         <div hidden>
             <slot name="insertion-point-child" id="custom_actions_content"></slot>
         </div>
@@ -167,6 +170,12 @@ Polymer({
     ],
 
     properties: {
+        flexible: {
+            type: Boolean,
+            value: false,
+            observer: "_flexibilityChanged"
+        },
+
         activated: {
             type: Boolean,
             value: false
@@ -396,6 +405,16 @@ Polymer({
     _updateElementWithContextRetriever: function (newValue, oldValue) {
         if (this._element) {
             this._element.contextRetriever = newValue;
+        }
+    },
+
+    _flexibilityChanged: function (newValue, oldValue) {
+        if (newValue) {
+            this.style["flex-grow"] = "1";
+            this.parentElement.style["flex-grow"] = "1";
+        } else {
+            this.style.removeProperty("flex-grow");
+            this.parentElement.style.removeProperty("flex-grow");
         }
     },
 
