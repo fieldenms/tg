@@ -329,19 +329,24 @@ Polymer({
 
     _getBaseEntityIdx: function (idx) {
         const entity = this._entities[idx];
-        if (entity.isAdditionalInfo) {
-            const additionalInfoIdx = entity.relatedTo.additionalInfoNodes.indexOf(entity);
-            return idx - additionalInfoIdx - 1;
+        if (entity) {
+            if (entity.isAdditionalInfo) {
+                const additionalInfoIdx = entity.relatedTo.additionalInfoNodes.indexOf(entity);
+                return idx - additionalInfoIdx - 1;
+            }
+            return idx;
         }
-        return idx;
+        return -1;
     },
 
     _setOver: function (idx, over) {
         const entity = this._entities[idx];
-        this.set("_entities." + idx + ".over", over);
-        entity.additionalInfoNodes.forEach((item, additionalInfoIdx) => {
-            this.set("_entities." + (additionalInfoIdx + idx + 1) + ".over", over);
-        });
+        if (entity) {
+            this.set("_entities." + idx + ".over", over);
+            entity.additionalInfoNodes.forEach((item, additionalInfoIdx) => {
+                this.set("_entities." + (additionalInfoIdx + idx + 1) + ".over", over);
+            });
+        }
     },
     
     _filterSubTree: function (text, subtree, expand) {
