@@ -169,18 +169,25 @@ Polymer({
     ],
 
     properties: {
+        /**
+         * Indicates whether insertion point fits all visible are or not.
+         */
         flexible: {
             type: Boolean,
             value: false,
             observer: "_flexibilityChanged"
         },
-
+        
+        /**
+         * Indicates whether to hide margins around insertion point.
+         * This is typically needed for the case where there is only one flexible insertion point and EGI is hidden.
+         */
         hideMargins: {
-            type:Boolean,
+            type: Boolean,
             value: false,
             observer: "_hideMarginsChanged"
         },
-
+        
         activated: {
             type: Boolean,
             value: false

@@ -16,7 +16,7 @@ import ua.com.fielden.platform.web.minijs.JsCode;
 
 /**
  * The Insertion point builder class that allows one to render insertion point and generate action object.
- *
+ * 
  * @author TG Team
  *
  */
@@ -29,7 +29,7 @@ public class InsertionPointBuilder implements IRenderable, IExecutable {
         this.insertionPointConfig = insertionPointConfig;
         this.insertionPointActionElement = new FunctionalActionElement(insertionPointConfig.getInsertionPointAction(), numberOfAction, FunctionalActionKind.INSERTION_POINT);
     }
-
+    
     /**
      * Renders the insertion point DOM.
      */
@@ -64,7 +64,7 @@ public class InsertionPointBuilder implements IRenderable, IExecutable {
 
     /**
      * Renders the insertion point's action DOM
-     *
+     * 
      * @return
      */
     public DomElement renderInsertionPointAction() {
@@ -73,7 +73,7 @@ public class InsertionPointBuilder implements IRenderable, IExecutable {
 
     /**
      * Returns the import paths for this insertion point
-     *
+     * 
      * @return
      */
     public Set<String> importPaths() {
@@ -87,7 +87,7 @@ public class InsertionPointBuilder implements IRenderable, IExecutable {
 
     /**
      * Determines the place where to insert the insertion point on entity centre.
-     *
+     * 
      * @return
      */
     public InsertionPoints whereToInsert() {

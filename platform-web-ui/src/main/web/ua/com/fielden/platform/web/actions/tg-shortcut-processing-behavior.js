@@ -4,16 +4,25 @@ import { queryElements } from '/resources/components/tg-element-selector-behavio
 export const TgShortcutProcessingBehavior = {
 
     /**
-     * Processes shortcut with appropriate IronA11yKeysBehavior's event.
+     * Processes shortcut with appropriate IronA11yKeysBehavior's 'event'.
      * Finds appropriate action component through the tag names specified in 'elementTags' (in that order).
+     * 
+     * By default, shortcut action element will be searched starting from 'keyEventTarget' defined for 'this' component.
+     * This is typically wider parent area to cover focused elements outside 'this'.
+     * If 'keyEventTarget' is not defined, 'this' will be used as a starting point.
+     * 
+     * However, we can specify fully custom target (@param customKeyEventTarget) to start searching from. This can be very useful in cases where
+     * keyEventTarget is wide and 'this' component is inside it very deeply but actual shortcut action is inside 'this' or deeper.
+     * This is sometimes required since Web Components v1 spec where better encapsulation of element inner parts was provisioned.
      */
     processShortcut: function (event, elementTags, customKeyEventTarget) {
         const shortcut = event.detail.combo;
         console.debug('Shortcut', shortcut, 'processing...');
-
+        
         // finds and runs the shortcut action if there is any such action
         if (this._findAndRun(shortcut, elementTags, customKeyEventTarget)) {
-            // prevents event propagation
+            // In case where action has been found (either enabled or disabled) -- prevents event propagation.
+            // Otherwise the event will be propagated further to enable processing of shortcut event by other subscribers with the same target or the target above.
             tearDownEvent(event);
         }
         
@@ -39,7 +48,7 @@ export const TgShortcutProcessingBehavior = {
                 return actionElement;
             }
         }
-        console.debug('Shortcut', shortcut, `processing... Action hasnt been found for`, customKeyEventTarget || this.keyEventTarget || this, ` skipped.`);
+        console.debug('Shortcut', shortcut, 'processing... Action hasnt been found for', customKeyEventTarget || this.keyEventTarget || this, ': skipped.');
         return null;
     },
 
