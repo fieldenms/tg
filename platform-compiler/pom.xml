@@ -5,6 +5,7 @@
 	<artifactId>platform-compiler</artifactId>
 	<packaging>pom</packaging>
 	<version>1.4.5-SNAPSHOT</version>
+
 	<name>Trident Genesis Platform Compiler</name>
 	<description>
 		A compiler project to process annotations and generate derived code.
@@ -14,6 +15,7 @@
 		<name>Fielden Management Services</name>
 		<url>http://www.fielden.com.au/</url>
 	</organization>
+
 	<modules>
 		<module>platform-annotations</module>
 		<module>platform-annotation-processor</module>
@@ -44,8 +46,36 @@
 						<optimize>true</optimize>
 					</configuration>
 				</plugin>
+
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-javadoc-plugin</artifactId>
+					<executions>
+						<execution>
+							<id>attach-javadocs</id>
+							<goals>
+								<goal>jar</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-source-plugin</artifactId>
+					<executions>
+						<execution>
+							<id>attach-sources</id>
+							<goals>
+								<goal>jar</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+
 			</plugins>
 		</pluginManagement>
+
 
 		<plugins>
 			<plugin>

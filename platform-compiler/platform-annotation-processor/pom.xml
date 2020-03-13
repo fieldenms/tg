@@ -11,6 +11,11 @@
 	<artifactId>platform-annotation-processor</artifactId>
 	<packaging>jar</packaging>
 
+	<properties>
+		<auto-service.version>1.0-rc6</auto-service.version>
+		<maven-compiler-plugin.version>3.5.1</maven-compiler-plugin.version>
+	</properties>
+
 	<name>Trident Genesis Platform Annotation Processor</name>
 	<dependencies>
 		<dependency>
@@ -22,10 +27,12 @@
 		<dependency>
 			<groupId>com.google.auto.service</groupId>
 			<artifactId>auto-service</artifactId>
-			<version>1.0-rc6</version>
+			<version>${auto-service.version}</version>
 			<optional>true</optional>
 		</dependency>
+
 	</dependencies>
+
 	<build>
 		<resources>
 			<resource>
@@ -42,35 +49,22 @@
 			</resource>
 		</resources>
 
-		<pluginManagement>
-			<plugins>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-compiler-plugin</artifactId>
-					<executions>
-						<execution>
-							<id>default-compile</id>
-							<configuration>
-								<compilerArgument>-proc:none</compilerArgument>
-							</configuration>
-						</execution>
-						<execution>
-							<id>default-testCompile</id>
-							<configuration>
-								<compilerArgument>-proc:none</compilerArgument>
-							</configuration>
-						</execution>
-					</executions>
-				</plugin>
-				<plugin>
-					<artifactId>maven-assembly-plugin</artifactId>
-					<configuration>
-						<descriptorRefs>
-							<descriptorRef>jar-with-dependencies</descriptorRef>
-						</descriptorRefs>
-					</configuration>
-				</plugin>
-			</plugins>
-		</pluginManagement>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+			</plugin>
+		</plugins>
+
 	</build>
 </project>
