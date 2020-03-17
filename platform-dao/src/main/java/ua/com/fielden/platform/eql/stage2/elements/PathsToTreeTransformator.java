@@ -116,7 +116,8 @@ public class PathsToTreeTransformator {
         Expression2 expr2 = null;
         final Set<Child> dependencies = new HashSet<>();
         if (propInfo.hasExpression()) {
-            final TransformationResult<Expression2> tr = expressionToS2(contextSource, propInfo.expression, domainInfo);
+            
+            final TransformationResult<Expression2> tr = expressionToS2(contextSource, propInfo, domainInfo);
             expr2 = tr.item;
             final Map<IQrySource2<?>, SortedSet<Child>> dependenciesResult = transform(expr2.collectProps(), domainInfo);
 
@@ -160,9 +161,10 @@ public class PathsToTreeTransformator {
         return t2(path, nextProps);
     }
     
-    private static TransformationResult<Expression2> expressionToS2(final IQrySource2<?> contextSource, final Expression1 expression, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
-        final PropsResolutionContext prc = new PropsResolutionContext(domainInfo, asList(asList(contextSource)), contextSource.contextId()); 
-        return expression.transform(prc);
+    private static TransformationResult<Expression2> expressionToS2(final IQrySource2<?> contextSource, final AbstractPropInfo<?> propInfo, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
+        System.out.println(contextSource.contextId() + "_" + propInfo.name);
+        final PropsResolutionContext prc = new PropsResolutionContext(domainInfo, asList(asList(contextSource)), contextSource.contextId() + "_" + propInfo.name); 
+        return propInfo.expression.transform(prc);
     }
     
     private static List<ChildGroup> convertToGroup(final SortedSet<Child> children) {

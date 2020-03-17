@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.meta;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.NE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.IJ;
@@ -10,6 +11,9 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.
 import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.OR;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.eql.stage1.elements.EntQueryBlocks1;
 import ua.com.fielden.platform.eql.stage1.elements.GroupBys1;
 import ua.com.fielden.platform.eql.stage1.elements.OrderBys1;
@@ -22,6 +26,7 @@ import ua.com.fielden.platform.eql.stage1.elements.conditions.ICondition1;
 import ua.com.fielden.platform.eql.stage1.elements.conditions.NullTest1;
 import ua.com.fielden.platform.eql.stage1.elements.functions.CountAll1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.EntProp1;
+import ua.com.fielden.platform.eql.stage1.elements.operands.EntQuery1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage1.elements.sources.CompoundSource1;
 import ua.com.fielden.platform.eql.stage1.elements.sources.IQrySource1;
@@ -31,13 +36,27 @@ import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
 
 public class EqlStage1TestCase extends EqlTestCase {
 
-    static int contextId = mdg.qb.nextCondtextId();
+    static int contextId = 0;
     
     protected static int nextId() {
         contextId = contextId + 1;
         return contextId;
     }
+
+    protected static void resetId() {
+        contextId = 0;
+    }
     
+    protected static EntQuery1 entResultQry(final QueryModel<?> qryModel) {
+        if (qryModel instanceof EntityResultQueryModel) {
+            return qb().generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).model());
+        } else if (qryModel instanceof AggregatedResultQueryModel) {
+            return qb().generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).model());
+        } else {
+            throw new IllegalArgumentException("Instance of incorrect QueryModel descendant");
+        }
+    }
+
     protected static EntQueryBlocks1 qb1(final Sources1 sources, final Conditions1 conditions) {
         return new EntQueryBlocks1(sources, conditions, new Yields1(emptyList()), new GroupBys1(emptyList()), new OrderBys1(emptyList()), false);
     }
@@ -110,13 +129,12 @@ public class EqlStage1TestCase extends EqlTestCase {
         return new ComparisonTest1(op1, NE, op2);
     }
 
-    
     protected static EntProp1 prop(final String name) {
-        return new EntProp1(name, false, nextId());
+        return new EntProp1(name, false);
     }
 
     protected static EntProp1 extProp(final String name) {
-        return new EntProp1(name, true, nextId());
+        return new EntProp1(name, true);
     }
 
     protected static QrySource1BasedOnPersistentType source(final Class<? extends AbstractEntity<?>> sourceType, final String alias) {
@@ -127,4 +145,11 @@ public class EqlStage1TestCase extends EqlTestCase {
         return new QrySource1BasedOnPersistentType(sourceType, nextId());
     }
 
+    protected static Sources1 sources(final Class<? extends AbstractEntity<?>> sourceType, final String alias) {
+        return sources(source(sourceType, alias));
+    }
+
+    protected static Sources1 sources(final Class<? extends AbstractEntity<?>> sourceType) {
+        return sources(source(sourceType));
+    }
 }

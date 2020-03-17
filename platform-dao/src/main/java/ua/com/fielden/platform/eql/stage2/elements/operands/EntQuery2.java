@@ -67,7 +67,7 @@ public class EntQuery2 implements ISingleOperand2<EntQuery3> {
         if (yields.getYields().isEmpty()) {
             if (category == SUB_QUERY) {
                 if (sources2.main.entityInfo().getProps().containsKey(ID)) {
-                    return new Yields2(listOf(new Yield2(new EntProp2(sources2.main, "0", listOf(sources2.main.entityInfo().getProps().get(ID))), "", false)));
+                    return new Yields2(listOf(new Yield2(new EntProp2(sources2.main, listOf(sources2.main.entityInfo().getProps().get(ID))), "", false)));
                 } else {
                     return new Yields2(listOf(new Yield2(new EntValue2(0), "", false)));
                 }
@@ -75,7 +75,7 @@ public class EntQuery2 implements ISingleOperand2<EntQuery3> {
                 final List<Yield2> enhancedYields = new ArrayList<>();
                 for (final Entry<String, AbstractPropInfo<?>> el : sources2.main.entityInfo().getProps().entrySet()) {
                     if (!el.getValue().hasExpression() && category == SOURCE_QUERY || category == RESULT_QUERY) {
-                        enhancedYields.add(new Yield2(new EntProp2(sources2.main, "0", listOf(el.getValue())), el.getKey(), false));
+                        enhancedYields.add(new Yield2(new EntProp2(sources2.main, listOf(el.getValue())), el.getKey(), false));
                     }
                 }
                 return new Yields2(enhancedYields);

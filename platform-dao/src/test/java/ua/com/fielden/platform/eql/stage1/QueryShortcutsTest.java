@@ -1,15 +1,25 @@
 package ua.com.fielden.platform.eql.stage1;
 
+import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.eql.meta.EqlTestCase;
+import ua.com.fielden.platform.entity.query.model.QueryModel;
+import ua.com.fielden.platform.eql.meta.EqlStage1TestCase;
+import ua.com.fielden.platform.eql.stage1.elements.operands.EntQuery1;
 import ua.com.fielden.platform.sample.domain.TeVehicleModel;
 
-public class QueryShortcutsTest extends EqlTestCase {
+public class QueryShortcutsTest extends EqlStage1TestCase {
 
+
+    public static void assertModelsEquals(final QueryModel shortcutModel, final QueryModel explicitModel) {
+        final EntQuery1 shortcutQry = entResultQry(shortcutModel);
+        final EntQuery1 explicitQry = entResultQry(explicitModel);
+        assertTrue(("Query models are different!\nShortcut:\n" + shortcutQry.toString() + "\nExplicit:\n" + explicitQry.toString()), shortcutQry.equals(explicitQry));
+    }
+    
     //////////////////////////////////////////////////// ANY/ALL shortcuts ///////////////////////////////////////////
     @Test
     public void test_multiple_vs_single_comparison_test() {

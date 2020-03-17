@@ -50,14 +50,10 @@ public class EntQueryGenerator {
         this.username = username;
         this.dates = dates;
         this.paramValues.putAll(paramValues);
-        if (dates.now() != null) {
+        if (dates != null && dates.now() != null) {
             this.paramValues.put(NOW, dates.now().toDate());
         }
     }
-    
-//    public EntQueryGenerator(final boolean forCalcExpression) {
-//        increment = forCalcExpression ? -1 : 1;
-//    }
     
     private int contextId = 0;
     
@@ -129,8 +125,7 @@ public class EntQueryGenerator {
         return new EntQuery1( 
         parseTokensIntoComponents(qryModel, orderModel), 
         resultType.orElse(qryModel.getResultType()), 
-        category, 
-        nextCondtextId());
+        category);
     }
 
     private List<Pair<TokenCategory, Object>> linearizeTokens(final List<Pair<TokenCategory, Object>> tokens) {

@@ -7,7 +7,6 @@ import java.util.Objects;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.QueryCategory;
-import ua.com.fielden.platform.eql.stage1.elements.AbstractElement1;
 import ua.com.fielden.platform.eql.stage1.elements.EntQueryBlocks1;
 import ua.com.fielden.platform.eql.stage1.elements.GroupBys1;
 import ua.com.fielden.platform.eql.stage1.elements.OrderBys1;
@@ -24,7 +23,7 @@ import ua.com.fielden.platform.eql.stage2.elements.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntQuery2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.Sources2;
 
-public class EntQuery1 extends AbstractElement1 implements ISingleOperand1<EntQuery2> {
+public class EntQuery1 implements ISingleOperand1<EntQuery2> {
 
     public final Sources1 sources;
     public final Conditions1 conditions;
@@ -35,8 +34,7 @@ public class EntQuery1 extends AbstractElement1 implements ISingleOperand1<EntQu
     public final Class<? extends AbstractEntity<?>> resultType;
     public final QueryCategory category;
 
-    public EntQuery1(final EntQueryBlocks1 queryBlocks, final Class<? extends AbstractEntity<?>> resultType, final QueryCategory category, final int contextId) {
-       super(contextId);  // contextId is not taken into consideration in hashCode() and equals(..) methods on purpose -- Stage1 elements have no need to reference uniquely one another.
+    public EntQuery1(final EntQueryBlocks1 queryBlocks, final Class<? extends AbstractEntity<?>> resultType, final QueryCategory category) {
        this.category = category;
        this.sources = queryBlocks.sources;
        this.conditions = queryBlocks.conditions;

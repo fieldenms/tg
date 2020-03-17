@@ -1,12 +1,14 @@
 package ua.com.fielden.platform.eql.meta;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.NE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.IJ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.LJ;
 import static ua.com.fielden.platform.eql.meta.QueryCategory.RESULT_QUERY;
 import static ua.com.fielden.platform.eql.meta.QueryCategory.SUB_QUERY;
+import static ua.com.fielden.platform.eql.stage2.elements.PathsToTreeTransformator.groupChildren;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -18,15 +20,12 @@ import org.hibernate.type.StringType;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
-import ua.com.fielden.platform.eql.stage1.elements.EntQueryBlocks1;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage1.elements.TransformationResult;
-import ua.com.fielden.platform.eql.stage1.elements.Yields1;
-import ua.com.fielden.platform.eql.stage1.elements.conditions.Conditions1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.EntQuery1;
-import ua.com.fielden.platform.eql.stage1.elements.sources.QrySource1BasedOnPersistentType;
-import ua.com.fielden.platform.eql.stage1.elements.sources.Sources1;
 import ua.com.fielden.platform.eql.stage2.elements.PathsToTreeTransformator;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntQuery2;
@@ -53,35 +52,38 @@ import ua.com.fielden.platform.eql.stage3.elements.sources.JoinedQrySource3;
 import ua.com.fielden.platform.eql.stage3.elements.sources.QrySource3BasedOnTable;
 import ua.com.fielden.platform.eql.stage3.elements.sources.SingleQrySource3;
 
-public class EqlStage3TestCase extends EqlStage1TestCase {
+public class EqlStage3TestCase extends EqlTestCase {
     
-    protected static QrySource3BasedOnTable source(final Class<? extends AbstractEntity<?>> sourceType, final QrySource1BasedOnPersistentType sourceForContextId) {
-        return new QrySource3BasedOnTable(tables.get(sourceType.getName()), Integer.toString(sourceForContextId.contextId));
+    protected static ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> entResultQry3(final EntQuery1 qryModel, final PropsResolutionContext transformator, final Map<String, Table> tables) {
+        final TransformationResult<EntQuery2> s1r = qryModel.transform(transformator);
+        final TransformationContext context = new TransformationContext(tables, PathsToTreeTransformator.groupChildren(s1r.item.collectProps(), s1r.updatedContext.getDomainInfo()));
+        return s1r.item.transform(context);
     }
 
-    protected static QrySource3BasedOnTable source(final Class<? extends AbstractEntity<?>> sourceType, final QrySource1BasedOnPersistentType sourceForContextId, final String subcontextId) {
-        return new QrySource3BasedOnTable(tables.get(sourceType.getName()), Integer.toString(sourceForContextId.contextId) + "_" + subcontextId);
+    protected static <T extends AbstractEntity<?>> EntQuery3 qryCountAll(final ICompoundCondition0<T> unfinishedQry) {
+        final AggregatedResultQueryModel countQry = unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate();
+
+        final PropsResolutionContext resolutionContext = new PropsResolutionContext(metadata);
+        final ua.com.fielden.platform.eql.stage1.elements.TransformationResult<EntQuery2> s1tr = qb().generateEntQueryAsResultQuery(countQry, null).transform(resolutionContext);
+        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> s2tr = s1tr.item.transform(new TransformationContext(tables, groupChildren(s1tr.item.collectProps(), metadata)));
+        return s2tr.item;
     }
     
+    private void a() {
+
+    }
+
+    protected static QrySource3BasedOnTable source(final Class<? extends AbstractEntity<?>> sourceType, final String sourceForContextId) {
+        return new QrySource3BasedOnTable(tables.get(sourceType.getName()), sourceForContextId);
+    }
+
+    protected static QrySource3BasedOnTable source(final Class<? extends AbstractEntity<?>> sourceType, final String sourceForContextId, final String subcontextId) {
+        return new QrySource3BasedOnTable(tables.get(sourceType.getName()), sourceForContextId + "_" + subcontextId);
+    }
+
     protected static QrySource3BasedOnTable source(final Class<? extends AbstractEntity<?>> sourceType, final QrySource3BasedOnTable sourceForContextId, final String subcontextId) {
         return new QrySource3BasedOnTable(tables.get(sourceType.getName()), sourceForContextId.contextId + "_" + subcontextId);
     }
-    
-    protected static EntQuery3 query(final Sources1 sources, final Conditions1 conditions, final Class<? extends AbstractEntity<?>> resultType) {
-        final EntQueryBlocks1 parts1 = qb1(sources, conditions);
-        return entResultQry3(new EntQuery1(parts1, resultType, RESULT_QUERY, nextId()), new PropsResolutionContext(metadata), tables).item;
-    }
-
-    protected static EntQuery3 queryCountAll(final Sources1 sources, final Conditions1 conditions) {
-        final EntQueryBlocks1 parts1 = qb1(sources, conditions, yields(yieldCountAll("KOUNT")));
-        return entResultQry3(new EntQuery1(parts1, EntityAggregates.class, RESULT_QUERY, nextId()), new PropsResolutionContext(metadata), tables).item;
-    }
-    
-    protected static EntQuery3 query(final Sources1 sources, final Conditions1 conditions, final Yields1 yields, final Class<? extends AbstractEntity<?>> resultType) {
-        final EntQueryBlocks1 parts1 = qb1(sources, conditions, yields);
-        return entResultQry3(new EntQuery1(parts1, resultType, RESULT_QUERY, nextId()), new PropsResolutionContext(metadata), tables).item;
-    }
-
     
     protected static Expression3 expr(final ISingleOperand3 op1) {
         return new Expression3(op1);
@@ -224,7 +226,7 @@ public class EqlStage3TestCase extends EqlStage1TestCase {
     }
 
     private static EntQuery3 qry(final IQrySources3 sources, final QueryCategory queryCategory) {
-        return new EntQuery3(new EntQueryBlocks3(sources, new Conditions3(), yields3(), groups(), orders()), queryCategory, null);
+        return new EntQuery3(new EntQueryBlocks3(sources, new Conditions3(false, emptyList()), yields3(), groups(), orders()), queryCategory, null);
     }
 
     private static EntQuery3 qry(final IQrySources3 sources, final Conditions3 conditions, final QueryCategory queryCategory) {
@@ -232,7 +234,7 @@ public class EqlStage3TestCase extends EqlStage1TestCase {
     }
 
     private static EntQuery3 qry(final IQrySources3 sources, final Yields3 yields, final QueryCategory queryCategory) {
-        return new EntQuery3(new EntQueryBlocks3(sources, new Conditions3(), yields, groups(), orders()), queryCategory, null);
+        return new EntQuery3(new EntQueryBlocks3(sources, new Conditions3(false, emptyList()), yields, groups(), orders()), queryCategory, null);
     }
 
     private static EntQuery3 qry(final IQrySources3 sources, final Conditions3 conditions, final Yields3 yields, final QueryCategory queryCategory, final Class<?> resultType) {
@@ -274,15 +276,6 @@ public class EqlStage3TestCase extends EqlStage1TestCase {
     protected static EntQuery3 subqry(final IQrySources3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType) {
         return qry(sources, conditions, yields, SUB_QUERY, resultType);
     }
-
-//    protected static Yields3 yields(final IQrySource3 source, final String ... props) {
-//        final List<Yield3> yields = new ArrayList<>();
-//        for (final String prop : props) {
-//            yields.add(yieldExpr(prop, source, prop));
-//        }
-//        
-//        return new Yields3(yields);
-//    }
     
     protected static Yields3 yields3(final Yield3 ... yields) {
         return new Yields3(asList(yields));
@@ -347,11 +340,5 @@ public class EqlStage3TestCase extends EqlStage1TestCase {
 
     protected static Conditions3 or(final List<? extends ICondition3> ... conditions) {
         return new Conditions3(false, asList(conditions));
-    }
-    
-    protected static ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> entResultQry3(final EntQuery1 qryModel, final PropsResolutionContext transformator, final Map<String, Table> tables) {
-        final TransformationResult<EntQuery2> s1r = qryModel.transform(transformator);
-        final TransformationContext context = new TransformationContext(tables, PathsToTreeTransformator.groupChildren(s1r.item.collectProps(), s1r.updatedContext.getDomainInfo()));
-        return s1r.item.transform(context);
     }
 }

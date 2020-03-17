@@ -10,7 +10,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
-import ua.com.fielden.platform.eql.stage2.elements.AbstractElement2;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
@@ -19,15 +18,14 @@ import ua.com.fielden.platform.eql.stage3.elements.operands.Expression3;
 import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySource3;
 import ua.com.fielden.platform.types.tuples.T2;
 
-public class EntProp2 extends AbstractElement2 implements ISingleOperand2<Expression3> {
+public class EntProp2 implements ISingleOperand2<Expression3> {
     public final IQrySource2<? extends IQrySource3> source;
     private final List<AbstractPropInfo<?>> path;
     public final String name;
     public final Class<?> type;
     public final Object hibType;
 
-    public EntProp2(final IQrySource2<? extends IQrySource3> source, final String contextId, final List<AbstractPropInfo<?>> path) {
-        super(contextId);
+    public EntProp2(final IQrySource2<? extends IQrySource3> source, final List<AbstractPropInfo<?>> path) {
         this.source = source;
         this.path = path;
         this.name = path.stream().map(k -> k.name).collect(Collectors.joining("."));
@@ -77,7 +75,7 @@ public class EntProp2 extends AbstractElement2 implements ISingleOperand2<Expres
     @Override
     public int hashCode() {
         final int prime = 31;
-        int result = super.hashCode();
+        int result = 1;
         result = prime * result + source.hashCode();
         result = prime * result + path.hashCode();
         return result;
@@ -87,10 +85,6 @@ public class EntProp2 extends AbstractElement2 implements ISingleOperand2<Expres
     public boolean equals(final Object obj) {
         if (this == obj) {
             return true;
-        }
-
-        if (!super.equals(obj)) {
-            return false;
         }
 
         if (!(obj instanceof EntProp2)) {

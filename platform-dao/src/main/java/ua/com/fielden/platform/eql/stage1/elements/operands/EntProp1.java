@@ -8,10 +8,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.ResolutionContext;
-import ua.com.fielden.platform.eql.stage1.elements.AbstractElement1;
 import ua.com.fielden.platform.eql.stage1.elements.PropResolution;
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage1.elements.TransformationResult;
@@ -19,18 +17,13 @@ import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
 import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySource3;
 
-public class EntProp1 extends AbstractElement1 implements ISingleOperand1<EntProp2> {
+public class EntProp1 implements ISingleOperand1<EntProp2> {
     public final String name;
     public final boolean external;
 
-    public EntProp1(final String name, final boolean external, final int contextId) {
-        super(contextId);  // contextId is not taken into consideration in hashCode() and equals(..) methods on purpose -- Stage1 elements have no need to reference uniquely one another.
+    public EntProp1(final String name, final boolean external) {
         this.name = name;
         this.external = external;
-    }
-
-    public EntProp1(final String name, final int contextId) {
-        this(name, false, contextId);
     }
 
     @Override
@@ -45,7 +38,7 @@ public class EntProp1 extends AbstractElement1 implements ISingleOperand1<EntPro
             final List<IQrySource2<? extends IQrySource3>> item = it.next();
             final PropResolution resolution = resolveProp(item, this);
             if (resolution != null) {
-                final EntProp2 transformedProp = new EntProp2(resolution.getSource(), Integer.toString(contextId), resolution.getPath());
+                final EntProp2 transformedProp = new EntProp2(resolution.getSource(), resolution.getPath());
                 
                 return new TransformationResult<EntProp2>(transformedProp, context.cloneNew());
             }

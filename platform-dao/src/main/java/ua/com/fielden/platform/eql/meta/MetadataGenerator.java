@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.meta;
 
 import static java.lang.String.format;
+import static java.util.Collections.emptyMap;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toMap;
@@ -43,6 +44,8 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.metadata.CompositeKeyEqlExpressionGenerator;
+import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
+import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator;
@@ -55,11 +58,16 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 public class MetadataGenerator {
-    protected final EntQueryGenerator qb;// = new EntQueryGenerator1(null); //DOMAIN_METADATA_ANALYSER
+    protected final DomainMetadata dm;
 
-    public MetadataGenerator(final EntQueryGenerator qb) {
-        this.qb = qb;
+    public MetadataGenerator(final DomainMetadata dm) {
+        this.dm = dm;
     }
+    
+    protected final EntQueryGenerator qb() {
+        return new EntQueryGenerator(new DomainMetadataAnalyser(dm), null, null, null, emptyMap());
+    }
+
 
     public final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> generate(final Set<Class<? extends AbstractEntity<?>>> entities) throws Exception {
         final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> result = entities.stream()
@@ -151,7 +159,7 @@ public class MetadataGenerator {
             if (field.isAnnotationPresent(Calculated.class)) {
                 try {
                     final ExpressionModel expressionModel = extractExpressionModelFromCalculatedProperty(entityInfo.javaType(), field);
-                    expr = (Expression1) (new StandAloneExpressionBuilder(qb, expressionModel)).getResult().getValue();
+                    expr = (Expression1) (new StandAloneExpressionBuilder(qb(), expressionModel)).getResult().getValue();
                 } catch (final Exception e) {
                     e.printStackTrace();
                 }
@@ -171,7 +179,7 @@ public class MetadataGenerator {
         if (EntityUtils.isCompositeEntity(entityInfo.javaType())) {
             //System.out.println(entityInfo.javaType().getSimpleName());
             final ExpressionModel expressionModel = CompositeKeyEqlExpressionGenerator.generateCompositeKeyEqlExpression((Class<? extends AbstractEntity<DynamicEntityKey>>) entityInfo.javaType());
-            final Expression1 expr = (Expression1) (new StandAloneExpressionBuilder(qb, expressionModel)).getResult().getValue();
+            final Expression1 expr = (Expression1) (new StandAloneExpressionBuilder(qb(), expressionModel)).getResult().getValue();
             entityInfo.addProp(new PrimTypePropInfo<String>(KEY, StringType.INSTANCE, String.class, expr));
         }        
     }

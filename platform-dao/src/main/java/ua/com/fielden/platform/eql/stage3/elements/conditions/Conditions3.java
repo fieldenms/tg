@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.eql.stage3.elements.conditions;
 
-import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.joining;
 
 import java.util.ArrayList;
@@ -16,10 +15,6 @@ public class Conditions3 implements ICondition3 {
     public Conditions3(final boolean negated, final List<List<? extends ICondition3>> allConditions) {
         this.allConditionsAsDnf.addAll(allConditions);
         this.negated = negated;
-    }
-    
-    public Conditions3() {
-        this(false, emptyList());
     }
 
     @Override

@@ -140,7 +140,7 @@ public class EntityContainerFetcher {
             Map<String, Table> tables = null;
             
             try {
-                final MetadataGenerator mtg = new MetadataGenerator(gen1);
+                final MetadataGenerator mtg = new MetadataGenerator(executionContext.getDomainMetadata());
                 domainInfo = mtg.generate(executionContext.getDomainMetadata().getPersistedEntityMetadataMap().keySet());
                 tables = mtg.generateTables(executionContext.getDomainMetadata().getPersistedEntityMetadataMap().keySet());
             } catch (final Exception e) {

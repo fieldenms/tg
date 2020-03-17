@@ -1,19 +1,11 @@
 package ua.com.fielden.platform.eql.meta;
 
-import static java.util.Collections.emptyMap;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
@@ -21,32 +13,12 @@ import org.hibernate.type.TypeResolver;
 
 import com.google.inject.Guice;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.entity.query.generation.ioc.HelperIocModule;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.query.metadata.PropertyCategory;
 import ua.com.fielden.platform.entity.query.metadata.PropertyColumn;
 import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
-import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.ExpressionModel;
-import ua.com.fielden.platform.entity.query.model.OrderingModel;
-import ua.com.fielden.platform.entity.query.model.QueryModel;
-import ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator;
-import ua.com.fielden.platform.eql.stage1.builders.StandAloneExpressionBuilder;
-import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
-import ua.com.fielden.platform.eql.stage1.elements.TransformationResult;
-import ua.com.fielden.platform.eql.stage1.elements.operands.EntProp1;
-import ua.com.fielden.platform.eql.stage1.elements.operands.EntQuery1;
-import ua.com.fielden.platform.eql.stage1.elements.operands.EntValue1;
-import ua.com.fielden.platform.eql.stage1.elements.operands.Expression1;
-import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
-import ua.com.fielden.platform.eql.stage1.elements.operands.OperandsBasedSet1;
-import ua.com.fielden.platform.eql.stage2.elements.operands.EntQuery2;
-import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
-import ua.com.fielden.platform.eql.stage3.elements.Table;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
 import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
@@ -67,7 +39,6 @@ import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.sample.domain.TgWorkshop;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.utils.IDates;
 
 public class BaseEntQueryTCase1 {
     protected static final Class<TgWorkOrder> WORK_ORDER = TgWorkOrder.class;
@@ -100,11 +71,6 @@ public class BaseEntQueryTCase1 {
     protected static final TypeResolver typeResolver = new TypeResolver();
 
     public static final Map<Class, Class> hibTypeDefaults = new HashMap<>();
-    public static final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> metadata = new HashMap<>();
-
-    protected static Type hibtype(final String name) {
-        return typeResolver.basic(name);
-    }
 
     protected static final DomainMetadata DOMAIN_METADATA = new DomainMetadata(hibTypeDefaults, 
             Guice.createInjector(new HibernateUserTypesModule()), 
@@ -113,208 +79,11 @@ public class BaseEntQueryTCase1 {
 
     protected static final DomainMetadataAnalyser DOMAIN_METADATA_ANALYSER = new DomainMetadataAnalyser(DOMAIN_METADATA);
 
-    
-    public static final MetadataGenerator mdg = new MetadataGenerator(qb());
-    public static final Map<String, Table> tables = new HashMap<>();
-
-
-    protected static final EntQueryGenerator qb() {
-        return new EntQueryGenerator(DOMAIN_METADATA_ANALYSER, null, null, Guice.createInjector(new HibernateUserTypesModule(), new HelperIocModule()).getInstance(IDates.class), emptyMap());
-    }
-
     static {
         hibTypeDefaults.put(Date.class, DateTimeType.class);
         hibTypeDefaults.put(Money.class, SimpleMoneyType.class);
-        try {
-            metadata.putAll(mdg.generate(new HashSet<>(PlatformTestDomainTypes.entityTypes)));
-            tables.putAll(mdg.generateTables(PlatformTestDomainTypes.entityTypes));
-        } catch (final Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-
-    }
-    //private static final EntQueryGenerator1 qbwf = new EntQueryGenerator1(DOMAIN_METADATA_ANALYSER, new SimpleUserFilter(), null);
-
-    protected static EntQuery1 entSourceQry(final QueryModel qryModel) {
-        return qb().generateEntQueryAsSourceQuery(qryModel, Optional.empty());
     }
     
-    protected static EntQuery2 entSourceQry(final QueryModel qryModel, final PropsResolutionContext transformator) {
-        return qb().generateEntQueryAsSourceQuery(qryModel, Optional.empty()).transform(transformator).item;
-    }
-
-    //    protected static EntQuery1 entSourceQry(final QueryModel qryModel, final Map<String, Object> paramValues) {
-    //	return qb.generateEntQueryAsSourceQuery(qryModel, paramValues, null);
-    //    }
-
-    protected static Expression1 entQryExpression(final ExpressionModel exprModel) {
-        return (Expression1) new StandAloneExpressionBuilder(qb(), exprModel).getResult().getValue();
-    }
-
-    protected static EntQuery1 entResultQry(final QueryModel qryModel) {
-        if (qryModel instanceof EntityResultQueryModel) {
-            return qb().generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).model());
-        } else if (qryModel instanceof AggregatedResultQueryModel) {
-            return qb().generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).model());
-        } else {
-            throw new IllegalArgumentException("Instance of incorrect QueryModel descendant");
-        }
-    }
-
-    protected static TransformationResult<EntQuery2> entResultQry2(final QueryModel qryModel, final PropsResolutionContext transformator) {
-        if (qryModel instanceof EntityResultQueryModel) {
-            return qb().generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).model()).transform(transformator);
-        } else if (qryModel instanceof AggregatedResultQueryModel) {
-            return qb().generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).model()).transform(transformator);
-        }
-        throw new IllegalStateException("Not implemented yet");
-    }
-    
-//    protected static ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> entResultQry3(final QueryModel qryModel, final PropsResolutionContext transformator, final Map<String, Table> tables) {
-//        final TransformationResult<EntQuery2> s1r;
-//        if (qryModel instanceof EntityResultQueryModel) {
-//            s1r = qb().generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).model()).transform(transformator);
-//        } else if (qryModel instanceof AggregatedResultQueryModel) {
-//            s1r = qb().generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).model()).transform(transformator); 
-//        } else {
-//            throw new IllegalStateException("Not implemented yet");
-//        }
-//        
-//        final TransformationContext context = new TransformationContext(tables, s1r.updatedContext, s1r.item.collectProps());
-//        return s1r.item.transform(context);
-//    }
-
-    protected static EntQuery1 entResultQry(final EntityResultQueryModel qryModel, final OrderingModel orderModel) {
-        return qb().generateEntQueryAsResultQuery(from(qryModel).with(orderModel).model());
-    }
-
-    protected static EntQuery1 entResultQry(final QueryModel qryModel, final Map<String, Object> paramValues) {
-        if (qryModel instanceof EntityResultQueryModel) {
-            return qb().generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).with(paramValues).model());
-        } else if (qryModel instanceof AggregatedResultQueryModel) {
-            return qb().generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).with(paramValues).model());
-        } else {
-            throw new IllegalArgumentException("Instance of incorrect QueryModel descendant");
-        }
-    }
-
-    protected static EntQuery1 entSubQry(final QueryModel qryModel) {
-        return qb().generateEntQueryAsSubquery(qryModel);
-    }
-
-    //    protected static EntQuery1 entResultQryWithUserFilter(final QueryModel qryModel) {
-    //	if (qryModel instanceof EntityResultQueryModel) {
-    //	    return qbwf.generateEntQueryAsResultQuery(from((EntityResultQueryModel)qryModel).model());
-    //	} else if (qryModel instanceof AggregatedResultQueryModel) {
-    //	    return qbwf.generateEntQueryAsResultQuery(from((AggregatedResultQueryModel)qryModel).model());
-    //	} else {
-    //	    throw new IllegalArgumentException("Instance of incorrect QueryModel descendant");
-    //	}
-    //    }
-
-    protected static EntProp1 prop(final String propName, final int contextId) {
-        return new EntProp1(propName, contextId);
-    }
-
-    protected static EntValue1 val(final Object value) {
-        return new EntValue1(value);
-    }
-
-//    protected static EntParam1 param(final String value) {
-//        return new EntParam1(value);
-//    }
-
-    protected static EntValue1 iVal(final Object value) {
-        return new EntValue1(value, true);
-    }
-
-//    protected static EntParam1 iParam(final String value) {
-//        return new EntParam1(value, true);
-//    }
-
-    protected static OperandsBasedSet1 set(final ISingleOperand1<? extends ISingleOperand2<?>>... operands) {
-        return new OperandsBasedSet1(Arrays.asList(operands));
-    }
-
-    //    protected static PurePropInfo ppi(final String name, final Class type, final Object hibType, final boolean nullable) {
-    //	return new PurePropInfo(name, type, hibType, nullable);
-    //    }
-    //
-    //    protected static PropResolutionInfo propResInf(final String propName, final String aliasPart, final PurePropInfo propPart, final PurePropInfo explicitPropPart) {
-    //	return new PropResolutionInfo(prop(propName), aliasPart, propPart, explicitPropPart);
-    //    }
-    //
-    //    protected static PropResolutionInfo propResInf(final String propName, final String aliasPart, final PurePropInfo propPart) {
-    //	return new PropResolutionInfo(prop(propName), aliasPart, propPart, propPart);
-    //    }
-    //
-    //    protected static PropResolutionInfo impIdPropResInf(final String propName, final String aliasPart, final PurePropInfo propPart, final PurePropInfo explicitPropPart) {
-    //	return new PropResolutionInfo(prop(propName), aliasPart, propPart, explicitPropPart, true);
-    //    }
-    //
-    //    protected static PropResolutionInfo impIdPropResInf(final String propName, final String aliasPart, final PurePropInfo propPart) {
-    //	return new PropResolutionInfo(prop(propName), aliasPart, propPart, propPart, true);
-    //    }
-    //
-    //    protected List<List<PropResolutionInfo>> getSourcesReferencingProps(final EntQuery entQry) {
-    //	final List<List<PropResolutionInfo>> result = new ArrayList<List<PropResolutionInfo>>();
-    //	for (final ISource source : entQry.getSources().getAllSources()) {
-    //	    if (!source.generated()) {
-    //		result.add(source.getReferencingProps());
-    //	    }
-    //	}
-    //
-    //	return result;
-    //    }
-
-//    protected final List<PropResolutionInfo> prepare(final PropResolutionInfo... infos) {
-//        return Arrays.asList(infos);
-//    }
-//
-//    protected final List<List<PropResolutionInfo>> compose(final List<PropResolutionInfo>... srcLists) {
-//        return Arrays.asList(srcLists);
-//    }
-
-    public static void assertModelsEquals(final QueryModel shortcutModel, final QueryModel explicitModel) {
-        final EntQuery1 shortcutQry = entResultQry(shortcutModel);
-        final EntQuery1 explicitQry = entResultQry(explicitModel);
-        assertTrue(("Query models are different!\nShortcut:\n" + shortcutQry.toString() + "\nExplicit:\n" + explicitQry.toString()), shortcutQry.equals(explicitQry));
-    }
-
-    public static void assertSubQueryModelsEquals(final QueryModel shortcutModel, final QueryModel explicitModel) {
-        final EntQuery1 shortcutQry = entSubQry(shortcutModel);
-        final EntQuery1 explicitQry = entSubQry(explicitModel);
-        assertTrue(("Query models are different!\nShortcut:\n" + shortcutQry.toString() + "\nExplicit:\n" + explicitQry.toString()), shortcutQry.equals(explicitQry));
-    }
-
-    //    public static void assertModelsEqualsAccordingUserDataFiltering(final QueryModel shortcutModel, final QueryModel explicitModel) {
-    //	shortcutModel.setFilterable(true);
-    //	final EntQuery1 shortcutQry = entResultQryWithUserFilter(shortcutModel);
-    //	final EntQuery1 explicitQry = entResultQry(explicitModel);
-    //	assertTrue(("Query models are different!\nShortcut:\n" + shortcutQry.toString() + "\nExplicit:\n" + explicitQry.toString()), shortcutQry.equals(explicitQry));
-    //    }
-
-    public static void assertModelsDifferent(final QueryModel shortcutModel, final QueryModel explicitModel) {
-        final EntQuery1 shortcutQry = entResultQry(shortcutModel);
-        final EntQuery1 explicitQry = entResultQry(explicitModel);
-        assertFalse(("Query models are equal! exp: " + shortcutQry.toString() + " act: " + explicitQry.toString()), shortcutQry.equals(explicitQry));
-    }
-
-    //    public static void assertPropInfoEquals(final QueryModel qryModel, final String propName, final PropResolutionInfo propResInfo) {
-    //	final PropResolutionInfo act = entResultQry(qryModel).getSources().getMain().containsProperty(prop(propName));
-    //	assertEquals(("Prop resolution infos are different! exp: " + propResInfo.toString() + " act: " + act.toString()), propResInfo, act);
-    //    }
-    //
-    //    public static void assertPropInfoDifferent(final QueryModel qryModel, final String propName, final PropResolutionInfo propResInfo) {
-    //	final PropResolutionInfo act = entResultQry(qryModel).getSources().getMain().containsProperty(prop(propName));
-    //	assertFalse(("Prop resolution infos are equal! exp: " + propResInfo.toString() + " act: " + act.toString()), propResInfo.equals(act));
-    //    }
-
-    public static Type hibType(final String name) {
-        return typeResolver.basic(name);
-    }
-
     public static PropertyMetadata ppi(final String name, final Class javaType, final boolean nullable, final Object hibType, final String column, final PropertyCategory type/*, final EntityTypeInfo <? extends AbstractEntity<?>> entityCategory*/) {
         return new PropertyMetadata.Builder(name, javaType, nullable, null /*entityCategory*/).column(new PropertyColumn(column)).hibType(hibType).category(type).build();
     }
