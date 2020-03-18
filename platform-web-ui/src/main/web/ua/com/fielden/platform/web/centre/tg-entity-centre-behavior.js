@@ -513,6 +513,9 @@ const TgEntityCentreBehaviorImpl = {
         self._showProgress = false;
         //Configures the egi's margin.
         const insertionPoints = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point');
+        if (insertionPoints.length === 1 && insertionPoints[0].flexible) {
+            insertionPoints[0].hideMargins = true;
+        }
         this.$.egi.showMarginAround = insertionPoints.length > 0;
 
         self._postRun = (function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, resultConfig) {

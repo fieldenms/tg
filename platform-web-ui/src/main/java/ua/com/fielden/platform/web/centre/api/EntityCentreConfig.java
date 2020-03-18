@@ -58,6 +58,7 @@ import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
  */
 public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
+    private final boolean egiHidden;
     private final boolean draggable;
     private final boolean hideCheckboxes;
     private final IToolbarConfig toolbarConfig;
@@ -353,6 +354,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     ///////// CONSTRUCTOR /////////////
     ///////////////////////////////////
     public EntityCentreConfig(
+            final boolean egiHidden,
             final boolean draggable,
             final boolean hideCheckboxes,
             final IToolbarConfig toolbarConfig,
@@ -420,6 +422,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>> queryEnhancerConfig,
             final Pair<Class<?>, Class<?>> generatorTypes,
             final IFetchProvider<T> fetchProvider) {
+        this.egiHidden = egiHidden;
         this.draggable = draggable;
         this.hideCheckboxes = hideCheckboxes;
         this.toolbarConfig = toolbarConfig;
@@ -824,6 +827,10 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     public Optional<String> getSseUri() {
         return Optional.ofNullable(sseUri);
+    }
+
+    public boolean isEgiHidden() {
+        return egiHidden;
     }
 
     public boolean shouldHideCheckboxes() {
