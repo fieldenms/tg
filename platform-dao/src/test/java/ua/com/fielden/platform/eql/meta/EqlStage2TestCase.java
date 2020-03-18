@@ -5,13 +5,17 @@ import static java.util.Collections.emptyList;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.NE;
+import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.IJ;
+import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.LJ;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
@@ -31,11 +35,12 @@ import ua.com.fielden.platform.eql.stage2.elements.functions.CountAll2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntQuery2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage2.elements.sources.CompoundSource2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.QrySource2BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage2.elements.sources.Sources2;
-import ua.com.fielden.platform.eql.stage3.elements.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.ICondition3;
+import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySource3;
 
 public class EqlStage2TestCase extends EqlTestCase {
@@ -46,6 +51,12 @@ public class EqlStage2TestCase extends EqlTestCase {
 
     protected static AbstractPropInfo<?> pi(final Class<?> type, final String propName) {
         return metadata.get(type).getProps().get(propName);
+    }
+    
+    protected static <T extends AbstractEntity<?>> EntQuery2 qryCountAll(final ICompoundCondition0<T> unfinishedQry) {
+        final AggregatedResultQueryModel countQry = unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate();
+        final PropsResolutionContext resolutionContext = new PropsResolutionContext(metadata);
+        return qb().generateEntQueryAsResultQuery(countQry, null).transform(resolutionContext).item;
     }
     
     protected static TransformationResult<EntQuery2> entResultQry2(final QueryModel qryModel, final PropsResolutionContext transformator) {
@@ -90,7 +101,7 @@ public class EqlStage2TestCase extends EqlTestCase {
         return new Yield2(new CountAll2(), alias, false);
     }
     
-    protected static EntProp2 prop(final IQrySource2<? extends IQrySource3> source, AbstractPropInfo<?> ... propInfos) {
+    protected static EntProp2 prop(final IQrySource2<? extends IQrySource3> source, final AbstractPropInfo<?> ... propInfos) {
         return new EntProp2(source, asList(propInfos));
     }
 
@@ -110,18 +121,18 @@ public class EqlStage2TestCase extends EqlTestCase {
         return new Sources2(main, emptyList());
     }
 
-//    protected static Sources1 sources(final IQrySource1<? extends IQrySource2<?>> main, final CompoundSource1... otherSources) {
-//        return new Sources1(main, asList(otherSources));
-//    }
-//
-//    protected static CompoundSource1 lj(final IQrySource1<? extends IQrySource2<?>> source, final Conditions1 conditions) {
-//        return new CompoundSource1(source, LJ, conditions);
-//    }
-//
-//    protected static CompoundSource1 ij(final IQrySource1<? extends IQrySource2<?>> source, final Conditions1 conditions) {
-//        return new CompoundSource1(source, IJ, conditions);
-//    }
-//
+    protected static Sources2 sources(final IQrySource2<? extends IQrySource3> main, final CompoundSource2... otherSources) {
+        return new Sources2(main, asList(otherSources));
+    }
+
+    protected static CompoundSource2 lj(final IQrySource2<? extends IQrySource3> source, final Conditions2 conditions) {
+        return new CompoundSource2(source, LJ, conditions);
+    }
+
+    protected static CompoundSource2 ij(final IQrySource2<? extends IQrySource3> source, final Conditions2 conditions) {
+        return new CompoundSource2(source, IJ, conditions);
+    }
+
 //    protected static CompoundSource1 lj(final IQrySource1<? extends IQrySource2<?>> source, final ICondition1<?> firstCondition) {
 //        return new CompoundSource1(source, LJ, conditions(firstCondition));
 //    }
@@ -138,11 +149,28 @@ public class EqlStage2TestCase extends EqlTestCase {
 //        return new CompoundCondition1(OR, condition);
 //    }
 
-    protected static NullTest2 isNull(final ISingleOperand2 operand) {
+    protected static List<? extends ICondition2<?>> and(final ICondition2<?> ... conditions) {
+        return asList(conditions);
+    }
+
+    protected static Conditions2 or(final ICondition2<?> ... conditions) {
+        final List<List<? extends ICondition2<?>>> list = new ArrayList<>();
+        for (final ICondition2<?> cond : conditions) {
+            list.add(and(cond));
+        }
+        return new Conditions2(false, list);
+    }
+
+    @SafeVarargs
+    protected static Conditions2 or(final List<? extends ICondition2<?>> ... conditions) {
+        return new Conditions2(false, asList(conditions));
+    }
+    
+    protected static NullTest2 isNull(final ISingleOperand2<? extends ISingleOperand3> operand) {
         return new NullTest2(operand, false);
     }
 
-    protected static NullTest2 isNotNull(final ISingleOperand2 operand) {
+    protected static NullTest2 isNotNull(final ISingleOperand2<? extends ISingleOperand3> operand) {
         return new NullTest2(operand, true);
     }
 

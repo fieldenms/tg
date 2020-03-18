@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.eql.stage2.elements.conditions;
 
-import static java.util.Collections.emptyList;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -21,10 +19,6 @@ public class Conditions2 extends AbstractCondition2<Conditions3> {
     public Conditions2(final boolean negated, final List<List<? extends ICondition2<?>>> allConditions) {
         this.allConditionsAsDnf.addAll(allConditions);
         this.negated = negated;
-    }
-    
-    public Conditions2() {
-        this(false, emptyList());
     }
 
     @Override

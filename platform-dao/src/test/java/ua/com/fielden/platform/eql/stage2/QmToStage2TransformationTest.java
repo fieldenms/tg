@@ -21,7 +21,6 @@ import org.junit.Test;
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.meta.EqlStage2TestCase;
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage1.elements.TransformationResult;
@@ -41,7 +40,6 @@ import ua.com.fielden.platform.eql.stage2.elements.sources.CompoundSource2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.QrySource2BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage2.elements.sources.Sources2;
 import ua.com.fielden.platform.sample.domain.TeVehicle;
-import ua.com.fielden.platform.sample.domain.TeVehicleMake;
 import ua.com.fielden.platform.sample.domain.TeVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.TgAuthorRoyalty;
@@ -60,12 +58,11 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         
         final QrySource2BasedOnPersistentType source = source("1", MODEL);
         final Sources2 sources = sources(source);
-        final EntProp2 makeProp2 = prop(source, pi(MODEL, "make"), pi(MAKE, "key"));
-        final Conditions2 conditions = cond(isNotNull(makeProp2));
-        final EntQuery2 expQry2 = new EntQuery2(qb2(sources, conditions), MODEL, RESULT_QUERY);
+        final EntProp2 makeProp = prop(source, pi(MODEL, "make"), pi(MAKE, "key"));
+        final Conditions2 conditions = cond(isNotNull(makeProp));
+        final EntQuery2 expQry = new EntQuery2(qb2(sources, conditions), MODEL, RESULT_QUERY);
 
-        final TransformationResult<EntQuery2> trQry2 = transform(qry);
-        assertEquals(expQry2, trQry2.item);
+        assertEquals(expQry, transform(qry).item);
     }
     
     @Test
@@ -74,26 +71,34 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         
         final QrySource2BasedOnPersistentType source = source("1", MODEL);
         final Sources2 sources = sources(source);
-        final EntProp2 makeProp2 = prop(source, pi(MODEL, "make"));
-        final Conditions2 conditions = cond(isNotNull(makeProp2));
-        final EntQuery2 expQry2 = new EntQuery2(qb2(sources, conditions), MODEL, RESULT_QUERY);
+        final EntProp2 makeProp = prop(source, pi(MODEL, "make"));
+        final Conditions2 conditions = cond(isNotNull(makeProp));
+        final EntQuery2 expQry = new EntQuery2(qb2(sources, conditions), MODEL, RESULT_QUERY);
 
-        final TransformationResult<EntQuery2> trQry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
-        assertEquals(expQry2, trQry2.item);
+        assertEquals(expQry, transform(qry).item);
     }
     
     @Test
     public void prop_paths_are_correctly_resolved() {
         final EntityResultQueryModel<TeVehicle> qry = select(VEHICLE).where().
                 anyOfProps("initDate", "station.name", "station.parent.name", "replacedBy.initDate").isNotNull().model();
-        
-        final TransformationResult<EntQuery2> a = transform(qry);
-        final Map<String, List<AbstractPropInfo<?>>> paths = getResolvedProps(a.item.collectProps());
 
-        assertEquals(asList(pi(VEHICLE, "initDate")), paths.get("initDate"));
-        assertEquals(asList(pi(VEHICLE, "station"), pi(ORG5, "name")), paths.get("station.name"));
-        assertEquals(asList(pi(VEHICLE, "station"), pi(ORG5, "parent"), pi(ORG4, "name")), paths.get("station.parent.name"));
-        assertEquals(asList(pi(VEHICLE, "replacedBy"), pi(VEHICLE, "initDate")), paths.get("replacedBy.initDate"));
+        final QrySource2BasedOnPersistentType source = source("1", VEHICLE);
+        final Sources2 sources = sources(source);
+        final EntProp2 initDate = prop(source, pi(VEHICLE, "initDate"));
+        final EntProp2 station_name = prop(source, pi(VEHICLE, "station"), pi(ORG5, "name"));
+        final EntProp2 station_parent_name = prop(source, pi(VEHICLE, "station"), pi(ORG5, "parent"), pi(ORG4, "name"));
+        final EntProp2 replacedBy_initDate = prop(source, pi(VEHICLE, "replacedBy"), pi(VEHICLE, "initDate"));
+        
+        final Conditions2 conditions = or(and(or(
+                isNotNull(initDate), 
+                isNotNull(station_name), 
+                isNotNull(station_parent_name), 
+                isNotNull(replacedBy_initDate)
+                )));
+        final EntQuery2 expQry = new EntQuery2(qb2(sources, conditions), VEHICLE, RESULT_QUERY);
+
+        assertEquals(expQry, transform(qry).item);
     }
     
     @Test
@@ -101,13 +106,22 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final EntityResultQueryModel<TeVehicle> qry = select(VEHICLE).as("v").where().
                 anyOfProps("initDate", "station.name", "station.parent.name", "replacedBy.initDate").isNotNull().model();
         
-        final TransformationResult<EntQuery2> a = transform(qry);
-        final Map<String, List<AbstractPropInfo<?>>> paths = getResolvedProps(a.item.collectProps());
+        final QrySource2BasedOnPersistentType source = source("1", VEHICLE, "v");
+        final Sources2 sources = sources(source);
+        final EntProp2 initDate = prop(source, pi(VEHICLE, "initDate"));
+        final EntProp2 station_name = prop(source, pi(VEHICLE, "station"), pi(ORG5, "name"));
+        final EntProp2 station_parent_name = prop(source, pi(VEHICLE, "station"), pi(ORG5, "parent"), pi(ORG4, "name"));
+        final EntProp2 replacedBy_initDate = prop(source, pi(VEHICLE, "replacedBy"), pi(VEHICLE, "initDate"));
+        
+        final Conditions2 conditions = or(and(or(
+                isNotNull(initDate), 
+                isNotNull(station_name), 
+                isNotNull(station_parent_name), 
+                isNotNull(replacedBy_initDate)
+                )));
+        final EntQuery2 expQry = new EntQuery2(qb2(sources, conditions), VEHICLE, RESULT_QUERY);
 
-        assertEquals(asList(pi(VEHICLE, "initDate")), paths.get("initDate"));
-        assertEquals(asList(pi(VEHICLE, "station"), pi(ORG5, "name")), paths.get("station.name"));
-        assertEquals(asList(pi(VEHICLE, "station"), pi(ORG5, "parent"), pi(ORG4, "name")), paths.get("station.parent.name"));
-        assertEquals(asList(pi(VEHICLE, "replacedBy"), pi(VEHICLE, "initDate")), paths.get("replacedBy.initDate"));
+        assertEquals(expQry, transform(qry).item);
     }
 
     @Test
@@ -115,27 +129,46 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final EntityResultQueryModel<TeVehicle> qry = select(VEHICLE).as("v").where().
                 anyOfProps("v.initDate", "station.name", "station.parent.name", "v.replacedBy.initDate").isNotNull().model();
         
-        final TransformationResult<EntQuery2> a = transform(qry);
-        final Map<String, List<AbstractPropInfo<?>>> paths = getResolvedProps(a.item.collectProps());
+        final QrySource2BasedOnPersistentType source = source("1", VEHICLE, "v");
+        final Sources2 sources = sources(source);
+        final EntProp2 initDate = prop(source, pi(VEHICLE, "initDate"));
+        final EntProp2 station_name = prop(source, pi(VEHICLE, "station"), pi(ORG5, "name"));
+        final EntProp2 station_parent_name = prop(source, pi(VEHICLE, "station"), pi(ORG5, "parent"), pi(ORG4, "name"));
+        final EntProp2 replacedBy_initDate = prop(source, pi(VEHICLE, "replacedBy"), pi(VEHICLE, "initDate"));
+        
+        final Conditions2 conditions = or(and(or(
+                isNotNull(initDate), 
+                isNotNull(station_name), 
+                isNotNull(station_parent_name), 
+                isNotNull(replacedBy_initDate)
+                )));
+        final EntQuery2 expQry = new EntQuery2(qb2(sources, conditions), VEHICLE, RESULT_QUERY);
 
-        assertEquals(asList(pi(VEHICLE, "initDate")), paths.get("initDate"));
-        assertEquals(asList(pi(VEHICLE, "station"), pi(ORG5, "name")), paths.get("station.name"));
-        assertEquals(asList(pi(VEHICLE, "station"), pi(ORG5, "parent"), pi(ORG4, "name")), paths.get("station.parent.name"));
-        assertEquals(asList(pi(VEHICLE, "replacedBy"), pi(VEHICLE, "initDate")), paths.get("replacedBy.initDate"));
+        assertEquals(expQry, transform(qry).item);
     }
     
     @Test
     public void prop_paths_in_qry_with_two_sources_are_correctly_resolved() {
         final EntityResultQueryModel<TeVehicle> qry = select(VEHICLE).as("v").join(VEHICLE).as("rv").on().prop("v.replacedBy").eq().prop("rv.id").
                 where().anyOfProps("v.initDate", "rv.station.name", "v.station.parent.name", "rv.replacedBy.initDate").isNotNull().model();
-        
-        final TransformationResult<EntQuery2> a = transform(qry);
-        final Map<String, List<AbstractPropInfo<?>>> paths = getResolvedProps(a.item.collectProps());
 
-        assertEquals(asList(pi(VEHICLE, "initDate")), paths.get("initDate"));
-        assertEquals(asList(pi(VEHICLE, "station"), pi(ORG5, "name")), paths.get("station.name"));
-        assertEquals(asList(pi(VEHICLE, "station"), pi(ORG5, "parent"), pi(ORG4, "name")), paths.get("station.parent.name"));
-        assertEquals(asList(pi(VEHICLE, "replacedBy"), pi(VEHICLE, "initDate")), paths.get("replacedBy.initDate"));
+        final QrySource2BasedOnPersistentType source = source("1", VEHICLE, "v");
+        final QrySource2BasedOnPersistentType source2 = source("2", VEHICLE, "rv");
+        final Sources2 sources = sources(source, ij(source2, or(eq(prop(source, pi(VEHICLE, "replacedBy")), prop(source2, pi(VEHICLE, "id"))))));
+        final EntProp2 initDate = prop(source, pi(VEHICLE, "initDate"));
+        final EntProp2 station_name = prop(source2, pi(VEHICLE, "station"), pi(ORG5, "name"));
+        final EntProp2 station_parent_name = prop(source, pi(VEHICLE, "station"), pi(ORG5, "parent"), pi(ORG4, "name"));
+        final EntProp2 replacedBy_initDate = prop(source2, pi(VEHICLE, "replacedBy"), pi(VEHICLE, "initDate"));
+        
+        final Conditions2 conditions = or(and(or(
+                isNotNull(initDate), 
+                isNotNull(station_name), 
+                isNotNull(station_parent_name), 
+                isNotNull(replacedBy_initDate)
+                )));
+        final EntQuery2 expQry = new EntQuery2(qb2(sources, conditions), VEHICLE, RESULT_QUERY);
+
+        assertEquals(expQry, transform(qry).item);
     }
     
     @Test

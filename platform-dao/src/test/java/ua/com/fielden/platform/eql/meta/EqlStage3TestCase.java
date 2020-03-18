@@ -69,10 +69,6 @@ public class EqlStage3TestCase extends EqlTestCase {
         return s2tr.item;
     }
     
-    private void a() {
-
-    }
-
     protected static QrySource3BasedOnTable source(final Class<? extends AbstractEntity<?>> sourceType, final String sourceForContextId) {
         return new QrySource3BasedOnTable(tables.get(sourceType.getName()), sourceForContextId);
     }
@@ -338,6 +334,7 @@ public class EqlStage3TestCase extends EqlTestCase {
         return new Conditions3(false, list);
     }
 
+    @SafeVarargs
     protected static Conditions3 or(final List<? extends ICondition3> ... conditions) {
         return new Conditions3(false, asList(conditions));
     }

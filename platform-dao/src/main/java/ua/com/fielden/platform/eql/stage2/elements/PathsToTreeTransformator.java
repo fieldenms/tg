@@ -24,7 +24,6 @@ import ua.com.fielden.platform.eql.meta.EntityInfo;
 import ua.com.fielden.platform.eql.meta.EntityTypePropInfo;
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage1.elements.TransformationResult;
-import ua.com.fielden.platform.eql.stage1.elements.operands.Expression1;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.Expression2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.Child;
@@ -162,7 +161,6 @@ public class PathsToTreeTransformator {
     }
     
     private static TransformationResult<Expression2> expressionToS2(final IQrySource2<?> contextSource, final AbstractPropInfo<?> propInfo, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
-        System.out.println(contextSource.contextId() + "_" + propInfo.name);
         final PropsResolutionContext prc = new PropsResolutionContext(domainInfo, asList(asList(contextSource)), contextSource.contextId() + "_" + propInfo.name); 
         return propInfo.expression.transform(prc);
     }
