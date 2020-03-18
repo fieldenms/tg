@@ -25,13 +25,18 @@ import ua.com.fielden.platform.eql.stage2.elements.Yield2;
 import ua.com.fielden.platform.eql.stage2.elements.Yields2;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.ComparisonTest2;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.Conditions2;
+import ua.com.fielden.platform.eql.stage2.elements.conditions.ICondition2;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.NullTest2;
 import ua.com.fielden.platform.eql.stage2.elements.functions.CountAll2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntQuery2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.QrySource2BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage2.elements.sources.Sources2;
+import ua.com.fielden.platform.eql.stage3.elements.conditions.Conditions3;
+import ua.com.fielden.platform.eql.stage3.elements.conditions.ICondition3;
+import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySource3;
 
 public class EqlStage2TestCase extends EqlTestCase {
 
@@ -84,7 +89,15 @@ public class EqlStage2TestCase extends EqlTestCase {
     protected static Yield2 yieldCountAll(final String alias) {
         return new Yield2(new CountAll2(), alias, false);
     }
+    
+    protected static EntProp2 prop(final IQrySource2<? extends IQrySource3> source, AbstractPropInfo<?> ... propInfos) {
+        return new EntProp2(source, asList(propInfos));
+    }
 
+    protected static Conditions2 cond(final ICondition2<? extends ICondition3> condition) {
+        return new Conditions2(false, asList(asList(condition)));
+    }
+    
 //    protected static Conditions1 conditions(final ICondition1<?> firstCondition, final CompoundCondition1... otherConditions) {
 //        return new Conditions1(false, firstCondition, asList(otherConditions));
 //    }
@@ -92,11 +105,11 @@ public class EqlStage2TestCase extends EqlTestCase {
 //    protected static Conditions1 conditions(final ICondition1<?> firstCondition) {
 //        return new Conditions1(false, firstCondition, emptyList());
 //    }
-//    
-//    protected static Sources1 sources(final IQrySource1<? extends IQrySource2<?>> main) {
-//        return new Sources1(main, emptyList());
-//    }
-//
+    
+    protected static Sources2 sources(final IQrySource2<? extends IQrySource3> main) {
+        return new Sources2(main, emptyList());
+    }
+
 //    protected static Sources1 sources(final IQrySource1<? extends IQrySource2<?>> main, final CompoundSource1... otherSources) {
 //        return new Sources1(main, asList(otherSources));
 //    }
@@ -141,24 +154,15 @@ public class EqlStage2TestCase extends EqlTestCase {
         return new ComparisonTest2(op1, NE, op2);
     }
 
-    
     protected static EntProp1 prop(final String name) {
         return new EntProp1(name, false);
     }
 
-//    protected static QrySource1BasedOnPersistentType source(final Class<? extends AbstractEntity<?>> sourceType, final String alias) {
-//        return new QrySource1BasedOnPersistentType(sourceType, alias, nextId());
-//    }
-
-    protected static QrySource2BasedOnPersistentType source(final Class<? extends AbstractEntity<?>> sourceType, final EntityInfo entityInfo, final String contextId ) {
-        return new QrySource2BasedOnPersistentType(sourceType, entityInfo, contextId);
+    protected static QrySource2BasedOnPersistentType source(final String contextId, final Class<? extends AbstractEntity<?>> sourceType, final String alias) {
+        return new QrySource2BasedOnPersistentType(sourceType, metadata.get(sourceType), alias, contextId);
     }
 
-//    protected static Sources1 sources(final Class<? extends AbstractEntity<?>> sourceType, final String alias) {
-//        return sources(source(sourceType, alias));
-//    }
-//
-//    protected static Sources1 sources(final Class<? extends AbstractEntity<?>> sourceType) {
-//        return sources(source(sourceType, null));
-//    }
+    protected static QrySource2BasedOnPersistentType source(final String contextId, final Class<? extends AbstractEntity<?>> sourceType) {
+        return new QrySource2BasedOnPersistentType(sourceType, metadata.get(sourceType), contextId);
+    }
 }

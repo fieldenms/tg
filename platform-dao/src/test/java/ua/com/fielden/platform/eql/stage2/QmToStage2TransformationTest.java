@@ -58,19 +58,13 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
     public void test01() {
         final EntityResultQueryModel<TeVehicleModel> qry = select(MODEL).where().prop("make.key").isNotNull().model();
         
-        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(MODEL, metadata.get(MODEL), "1");
-        final Sources2 sources = new Sources2(source, emptyList());
-        final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
-        final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
-        final EntProp2 makeProp2 = new EntProp2(source, asList(pi(MODEL, "make"), pi(TeVehicleMake.class, "key")));
-        firstAndConditionsGroup.add(new NullTest2(makeProp2, true));
-        allConditions.add(firstAndConditionsGroup);
-        final Conditions2 conditions = new Conditions2(false, allConditions);
+        final QrySource2BasedOnPersistentType source = source("1", MODEL);
+        final Sources2 sources = sources(source);
+        final EntProp2 makeProp2 = prop(source, pi(MODEL, "make"), pi(MAKE, "key"));
+        final Conditions2 conditions = cond(isNotNull(makeProp2));
+        final EntQuery2 expQry2 = new EntQuery2(qb2(sources, conditions), MODEL, RESULT_QUERY);
 
-        final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
-        final EntQuery2 expQry2 = new EntQuery2(parts, MODEL, RESULT_QUERY);
-
-        final TransformationResult<EntQuery2> trQry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
+        final TransformationResult<EntQuery2> trQry2 = transform(qry);
         assertEquals(expQry2, trQry2.item);
     }
     
@@ -78,22 +72,15 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
     public void test02() {
         final EntityResultQueryModel<TeVehicleModel> qry = select(MODEL).where().prop("make").isNotNull().model();
         
-        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(MODEL, metadata.get(MODEL), "1");
-        final Sources2 sources = new Sources2(source, emptyList());
-        final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
-        final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
-        final EntProp2 makeProp2 = new EntProp2(source, asList(pi(MODEL, "make")));
-        firstAndConditionsGroup.add(new NullTest2(makeProp2, true));
-        allConditions.add(firstAndConditionsGroup);
-        final Conditions2 conditions = new Conditions2(false, allConditions);
-
-        final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
-        final EntQuery2 expQry2 = new EntQuery2(parts, MODEL, RESULT_QUERY);
+        final QrySource2BasedOnPersistentType source = source("1", MODEL);
+        final Sources2 sources = sources(source);
+        final EntProp2 makeProp2 = prop(source, pi(MODEL, "make"));
+        final Conditions2 conditions = cond(isNotNull(makeProp2));
+        final EntQuery2 expQry2 = new EntQuery2(qb2(sources, conditions), MODEL, RESULT_QUERY);
 
         final TransformationResult<EntQuery2> trQry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
         assertEquals(expQry2, trQry2.item);
     }
-    
     
     @Test
     public void prop_paths_are_correctly_resolved() {
