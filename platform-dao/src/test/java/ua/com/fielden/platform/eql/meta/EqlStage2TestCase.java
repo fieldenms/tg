@@ -9,10 +9,7 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.IJ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.LJ;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
@@ -76,15 +73,6 @@ public class EqlStage2TestCase extends EqlTestCase {
         return entResultQry2(qry, new PropsResolutionContext(metadata));
     }
 
-    protected static Map<String, List<AbstractPropInfo<?>>> getResolvedProps(final Set<EntProp2> props) {
-        final Map<String, List<AbstractPropInfo<?>>> result = new HashMap<>();
-        for (final EntProp2 el : props) {
-            result.put(el.name, el.getPath());
-        }
-        
-        return result;
-    }
-    
     protected static EntQueryBlocks2 qb2(final Sources2 sources, final Conditions2 conditions) {
         return new EntQueryBlocks2(sources, conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
     }

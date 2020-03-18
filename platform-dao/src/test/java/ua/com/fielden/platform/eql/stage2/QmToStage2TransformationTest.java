@@ -30,6 +30,7 @@ import ua.com.fielden.platform.eql.stage2.elements.GroupBys2;
 import ua.com.fielden.platform.eql.stage2.elements.OrderBys2;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.ComparisonTest2;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.Conditions2;
+import ua.com.fielden.platform.eql.stage2.elements.conditions.ExistenceTest2;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.ICondition2;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.NullTest2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
@@ -177,18 +178,18 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
                 select(ORG2).where().prop("parent").eq().extProp("id"). //
                 model()). //
                 model();  
-        final TransformationResult<EntQuery2> qry2 = entResultQry2(qry, new PropsResolutionContext(metadata));
-        System.out.println(qry2.item.collectProps());
-    }
 
-    @Test
-    public void test_00() {
-        transform(select(AUTHOR).where().prop("lastRoyalty").isNotNull().model());
-    }
+        final QrySource2BasedOnPersistentType source1 = source("2", ORG1);
+        final QrySource2BasedOnPersistentType source2 = source("1", ORG2);
 
-    @Test
-    public void test_01() {
-        transform(select(AUTHOR).as("aa").where().prop("lastRoyalty").isNotNull().and().prop("aa.surname").isNull().model());
+        final Sources2 sources1 = sources(source1);
+        final Sources2 sources2 = sources(source2);
+        final Conditions2 conditions2 = or(eq(prop(source2, pi(ORG2, "parent")), prop(source1, pi(ORG1, "id"))));
+        final Conditions2 conditions1 = or(new ExistenceTest2(false, new EntQuery2(qb2(sources2, conditions2), ORG2, SUB_QUERY)));
+
+        final EntQuery2 expQry = new EntQuery2(qb2(sources1, conditions1), ORG1, RESULT_QUERY);
+
+        assertEquals(expQry, transform(qry).item);
     }
 
     @Test

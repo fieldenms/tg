@@ -53,8 +53,8 @@ import ua.com.fielden.platform.eql.stage3.elements.sources.QrySource3BasedOnTabl
 import ua.com.fielden.platform.eql.stage3.elements.sources.SingleQrySource3;
 
 public class EqlStage3TestCase extends EqlTestCase {
-    
-    protected static ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> entResultQry3(final EntQuery1 qryModel, final PropsResolutionContext transformator, final Map<String, Table> tables) {
+
+    protected static ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> resultQry(final EntQuery1 qryModel, final PropsResolutionContext transformator, final Map<String, Table> tables) {
         final TransformationResult<EntQuery2> s1r = qryModel.transform(transformator);
         final TransformationContext context = new TransformationContext(tables, PathsToTreeTransformator.groupChildren(s1r.item.collectProps(), s1r.updatedContext.getDomainInfo()));
         return s1r.item.transform(context);
@@ -221,63 +221,63 @@ public class EqlStage3TestCase extends EqlTestCase {
         return new SingleQrySource3(main);
     }
 
-    private static EntQuery3 qry(final IQrySources3 sources, final QueryCategory queryCategory) {
-        return new EntQuery3(new EntQueryBlocks3(sources, new Conditions3(false, emptyList()), yields3(), groups(), orders()), queryCategory, null);
+    private static EntQuery3 qry(final IQrySources3 sources, final QueryCategory queryCategory, final Class<?> resultType) {
+        return new EntQuery3(new EntQueryBlocks3(sources, new Conditions3(false, emptyList()), yields(), groups(), orders()), queryCategory, resultType);
     }
 
-    private static EntQuery3 qry(final IQrySources3 sources, final Conditions3 conditions, final QueryCategory queryCategory) {
-        return new EntQuery3(new EntQueryBlocks3(sources, conditions, yields3(), groups(), orders()), queryCategory, null);
+    private static EntQuery3 qry(final IQrySources3 sources, final Conditions3 conditions, final QueryCategory queryCategory, final Class<?> resultType) {
+        return new EntQuery3(new EntQueryBlocks3(sources, conditions, yields(), groups(), orders()), queryCategory, resultType);
     }
 
-    private static EntQuery3 qry(final IQrySources3 sources, final Yields3 yields, final QueryCategory queryCategory) {
-        return new EntQuery3(new EntQueryBlocks3(sources, new Conditions3(false, emptyList()), yields, groups(), orders()), queryCategory, null);
+    private static EntQuery3 qry(final IQrySources3 sources, final Yields3 yields, final QueryCategory queryCategory, final Class<?> resultType) {
+        return new EntQuery3(new EntQueryBlocks3(sources, new Conditions3(false, emptyList()), yields, groups(), orders()), queryCategory, resultType);
     }
 
     private static EntQuery3 qry(final IQrySources3 sources, final Conditions3 conditions, final Yields3 yields, final QueryCategory queryCategory, final Class<?> resultType) {
         return new EntQuery3(new EntQueryBlocks3(sources, conditions, yields, groups(), orders()), queryCategory, resultType);
     }
     
-    protected static EntQuery3 qry(final IQrySources3 sources) {
-        return qry(sources, RESULT_QUERY);
+    protected static EntQuery3 qry(final IQrySources3 sources, final Class<?> resultType) {
+        return qry(sources, RESULT_QUERY, resultType);
     }
 
-    protected static EntQuery3 qry(final IQrySources3 sources, final Conditions3 conditions) {
-        return qry(sources, conditions, RESULT_QUERY);
+    protected static EntQuery3 qry(final IQrySources3 sources, final Conditions3 conditions, final Class<?> resultType) {
+        return qry(sources, conditions, RESULT_QUERY, resultType);
     }
 
     protected static EntQuery3 qryCountAll(final IQrySources3 sources, final Conditions3 conditions) {
-        return qry(sources, conditions, yields3(yieldCountAll3("KOUNT")), RESULT_QUERY, EntityAggregates.class);
+        return qry(sources, conditions, yields(yieldCountAll("KOUNT")), RESULT_QUERY, EntityAggregates.class);
     }
     
-    protected static EntQuery3 qry(final IQrySources3 sources, final Yields3 yields) {
-        return qry(sources, yields, RESULT_QUERY);
+    protected static EntQuery3 qry(final IQrySources3 sources, final Yields3 yields, final Class<?> resultType) {
+        return qry(sources, yields, RESULT_QUERY, resultType);
     }
 
     protected static EntQuery3 qry(final IQrySources3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType) {
         return qry(sources, conditions, yields, RESULT_QUERY, resultType);
     }
 
-    protected static EntQuery3 subqry(final IQrySources3 sources) {
-        return qry(sources, SUB_QUERY);
+    protected static EntQuery3 subqry(final IQrySources3 sources, final Class<?> resultType) {
+        return qry(sources, SUB_QUERY, resultType);
     }
 
-    protected static EntQuery3 subqry(final IQrySources3 sources, final Conditions3 conditions) {
-        return qry(sources, conditions, SUB_QUERY);
+    protected static EntQuery3 subqry(final IQrySources3 sources, final Conditions3 conditions, final Class<?> resultType) {
+        return qry(sources, conditions, SUB_QUERY, resultType);
     }
 
-    protected static EntQuery3 subqry(final IQrySources3 sources, final Yields3 yields) {
-        return qry(sources, yields, SUB_QUERY);
+    protected static EntQuery3 subqry(final IQrySources3 sources, final Yields3 yields, final Class<?> resultType) {
+        return qry(sources, yields, SUB_QUERY, resultType);
     }
 
     protected static EntQuery3 subqry(final IQrySources3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType) {
         return qry(sources, conditions, yields, SUB_QUERY, resultType);
     }
     
-    protected static Yields3 yields3(final Yield3 ... yields) {
+    protected static Yields3 yields(final Yield3 ... yields) {
         return new Yields3(asList(yields));
     }
 
-    protected static Yield3 yieldCountAll3(final String alias) {
+    protected static Yield3 yieldCountAll(final String alias) {
         return new Yield3(new CountAll3(), alias);
     }
     

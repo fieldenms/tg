@@ -149,7 +149,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         
         final Conditions3 subQryConditions = cond(eq(expr(entityProp(ID, veh, VEHICLE)), expr(entityProp("vehicle", wo, VEHICLE))));
         
-        final EntQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields3(yieldSingleExpr("make", model, MAKE)), MAKE);
+        final EntQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleExpr("make", model, MAKE)), MAKE);
 
         final IQrySources3 sources = 
                 lj(
@@ -182,7 +182,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         
         final Conditions3 subQryConditions = cond(eq(expr(entityProp(ID, veh, VEHICLE)), expr(entityProp("vehicle", wo, VEHICLE))));
         
-        final EntQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields3(yieldSingleExpr("make", model, MAKE)), MAKE);
+        final EntQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleExpr("make", model, MAKE)), MAKE);
 
         final IQrySources3 sources = sources(wo);
         final Conditions3 conditions = or(and(or(isNotNull(expr(expSubQry)))));
@@ -215,7 +215,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         
         final Conditions3 subQryConditions = cond(eq(expr(entityProp(ID, veh, VEHICLE)), expr(entityProp("vehicle", wo, VEHICLE))));
         
-        final EntQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields3(yieldSingleStringExpr(KEY, make)), String.class);
+        final EntQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleStringExpr(KEY, make)), String.class);
 
         final IQrySources3 sources = sources(wo);
         final Conditions3 conditions = or(and(or(isNotNull(expr(expSubQry)))));
@@ -575,7 +575,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         
         final Conditions3 subQryConditions = cond(eq(expr(entityProp(ID, subQryMake, MAKE)), expr(entityProp("make", model, MAKE))));
         
-        final EntQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields3(yieldSingleStringExpr(KEY, subQryMake)), String.class);
+        final EntQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleStringExpr(KEY, subQryMake)), String.class);
 
         
         final IQrySources3 sources = 
@@ -604,7 +604,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         
         final Conditions3 subQryConditions = cond(eq(expr(entityProp(ID, subQryMake, MAKE)), expr(entityProp("make", model, MAKE))));
         
-        final EntQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields3(yieldSingleStringExpr(KEY, subQryMake)), String.class);
+        final EntQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleStringExpr(KEY, subQryMake)), String.class);
 
         
         final IQrySources3 sources = 
@@ -652,7 +652,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         
         final Conditions3 subQryConditions = cond(eq(expr(entityProp(ID, subQryMake, MAKE)), expr(entityProp("make", model, MAKE))));
         
-        final EntQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields3(yieldSingleStringExpr(KEY, subQryMake)), String.class);
+        final EntQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleStringExpr(KEY, subQryMake)), String.class);
 
         final IQrySources3 sources = sources(model);
         final Conditions3 conditions = or(and(or(isNotNull(expr(expSubQry)))));
