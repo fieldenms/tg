@@ -376,7 +376,7 @@ Polymer({
         const entity = this._entities[idx];
         if (entity) {
             this.set("_entities." + idx + ".over", over);
-            entity.additionalInfoNodes.forEach((item, additionalInfoIdx) => {
+            entity.additionalInfoNodes && entity.additionalInfoNodes.forEach((item, additionalInfoIdx) => {
                 this.set("_entities." + (additionalInfoIdx + idx + 1) + ".over", over);
             });
         }
@@ -427,6 +427,7 @@ Polymer({
                 this.fire("tg-tree-model-changed", parentItem);
                 if (typeof modelIdx !== 'undefined') {
                     this.splice("_entities", modelIdx + 1 + parentItem.additionalInfoNodes.length, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(parentItem, true, false));
+                    this.$.treeList.notifyResize();
                 }
             }
         }
