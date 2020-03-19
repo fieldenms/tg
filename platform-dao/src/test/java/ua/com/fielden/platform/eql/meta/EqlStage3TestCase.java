@@ -13,7 +13,6 @@ import static ua.com.fielden.platform.eql.stage2.elements.PathsToTreeTransformat
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 import org.hibernate.type.LongType;
 import org.hibernate.type.StringType;
@@ -24,9 +23,6 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
-import ua.com.fielden.platform.eql.stage1.elements.TransformationResult;
-import ua.com.fielden.platform.eql.stage1.elements.operands.EntQuery1;
-import ua.com.fielden.platform.eql.stage2.elements.PathsToTreeTransformator;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntQuery2;
 import ua.com.fielden.platform.eql.stage3.elements.EntQueryBlocks3;
@@ -34,7 +30,6 @@ import ua.com.fielden.platform.eql.stage3.elements.GroupBy3;
 import ua.com.fielden.platform.eql.stage3.elements.GroupBys3;
 import ua.com.fielden.platform.eql.stage3.elements.OrderBy3;
 import ua.com.fielden.platform.eql.stage3.elements.OrderBys3;
-import ua.com.fielden.platform.eql.stage3.elements.Table;
 import ua.com.fielden.platform.eql.stage3.elements.Yield3;
 import ua.com.fielden.platform.eql.stage3.elements.Yields3;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.ComparisonTest3;
@@ -53,12 +48,6 @@ import ua.com.fielden.platform.eql.stage3.elements.sources.QrySource3BasedOnTabl
 import ua.com.fielden.platform.eql.stage3.elements.sources.SingleQrySource3;
 
 public class EqlStage3TestCase extends EqlTestCase {
-
-    protected static ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> resultQry(final EntQuery1 qryModel, final PropsResolutionContext transformator, final Map<String, Table> tables) {
-        final TransformationResult<EntQuery2> s1r = qryModel.transform(transformator);
-        final TransformationContext context = new TransformationContext(tables, PathsToTreeTransformator.groupChildren(s1r.item.collectProps(), s1r.updatedContext.getDomainInfo()));
-        return s1r.item.transform(context);
-    }
 
     protected static <T extends AbstractEntity<?>> EntQuery3 qryCountAll(final ICompoundCondition0<T> unfinishedQry) {
         final AggregatedResultQueryModel countQry = unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate();

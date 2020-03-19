@@ -2,22 +2,20 @@ package ua.com.fielden.platform.eql.meta;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.NE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.IJ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.LJ;
+import static ua.com.fielden.platform.eql.meta.QueryCategory.RESULT_QUERY;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
-import ua.com.fielden.platform.eql.stage1.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage1.elements.operands.EntProp1;
 import ua.com.fielden.platform.eql.stage2.elements.EntQueryBlocks2;
 import ua.com.fielden.platform.eql.stage2.elements.GroupBys2;
@@ -56,23 +54,6 @@ public class EqlStage2TestCase extends EqlTestCase {
         return qb().generateEntQueryAsResultQuery(countQry, null).transform(resolutionContext).item;
     }
     
-    protected static TransformationResult<EntQuery2> entResultQry2(final QueryModel qryModel, final PropsResolutionContext transformator) {
-        if (qryModel instanceof EntityResultQueryModel) {
-            return qb().generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).model()).transform(transformator);
-        } else if (qryModel instanceof AggregatedResultQueryModel) {
-            return qb().generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).model()).transform(transformator);
-        }
-        throw new IllegalStateException("Not implemented yet");
-    }
-    
-    protected static TransformationResult<EntQuery2> transform(final EntityResultQueryModel qry) {
-        return entResultQry2(qry, new PropsResolutionContext(metadata));
-    }
-
-    protected static TransformationResult<EntQuery2> transform(final AggregatedResultQueryModel qry) {
-        return entResultQry2(qry, new PropsResolutionContext(metadata));
-    }
-
     protected static EntQueryBlocks2 qb2(final Sources2 sources, final Conditions2 conditions) {
         return new EntQueryBlocks2(sources, conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
     }
@@ -180,5 +161,9 @@ public class EqlStage2TestCase extends EqlTestCase {
 
     protected static QrySource2BasedOnPersistentType source(final String contextId, final Class<? extends AbstractEntity<?>> sourceType) {
         return new QrySource2BasedOnPersistentType(sourceType, metadata.get(sourceType), contextId);
+    }
+    
+    protected static EntQuery2 qryCountAll(final Sources2 sources, final Conditions2 conditions) {
+        return new EntQuery2(qb2(sources, conditions, yields(yieldCountAll("KOUNT"))), EntityAggregates.class, RESULT_QUERY);
     }
 }

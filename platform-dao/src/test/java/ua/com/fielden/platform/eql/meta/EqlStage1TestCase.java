@@ -32,6 +32,7 @@ import ua.com.fielden.platform.eql.stage1.elements.sources.CompoundSource1;
 import ua.com.fielden.platform.eql.stage1.elements.sources.IQrySource1;
 import ua.com.fielden.platform.eql.stage1.elements.sources.QrySource1BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage1.elements.sources.Sources1;
+import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
 
 public class EqlStage1TestCase extends EqlTestCase {
@@ -113,11 +114,11 @@ public class EqlStage1TestCase extends EqlTestCase {
         return new CompoundCondition1(OR, condition);
     }
 
-    protected static NullTest1 isNull(final ISingleOperand1 operand) {
+    protected static NullTest1 isNull(final ISingleOperand1<? extends ISingleOperand2<?>> operand) {
         return new NullTest1(operand, false);
     }
 
-    protected static NullTest1 isNotNull(final ISingleOperand1 operand) {
+    protected static NullTest1 isNotNull(final ISingleOperand1<? extends ISingleOperand2<?>> operand) {
         return new NullTest1(operand, true);
     }
 
