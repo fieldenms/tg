@@ -131,7 +131,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
     
     @Test
     public void calc_prop_is_correctly_transformed_08() {
-        final EntQuery3 actQry = qryCountAll(select(WORK_ORDER).where().anyOfProps("make.key").isNotNull());
+        final EntQuery3 actQry = qryCountAll(select(WORK_ORDER).where().prop("make.key").isNotNull());
         final String wo1 = "1";
 
         final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
@@ -157,7 +157,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
                         make,
                         eq(expr(expSubQry), entityProp(ID, make, MAKE))                
                   );
-        final Conditions3 conditions = or(and(or(isNotNull(expr(stringProp(KEY, make))))));
+        final Conditions3 conditions = or(isNotNull(expr(stringProp(KEY, make))));
         final EntQuery3 expQry = qryCountAll(sources, conditions);
         
         assertEquals(expQry, actQry);
@@ -165,7 +165,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
     
     @Test
     public void calc_prop_is_correctly_transformed_07() {
-        final EntQuery3 actQry = qryCountAll(select(WORK_ORDER).where().anyOfProps("make").isNotNull());
+        final EntQuery3 actQry = qryCountAll(select(WORK_ORDER).where().prop("make").isNotNull());
         final String wo1 = "1";
 
         final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
@@ -185,7 +185,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final EntQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleExpr("make", model, MAKE)), MAKE);
 
         final IQrySources3 sources = sources(wo);
-        final Conditions3 conditions = or(and(or(isNotNull(expr(expSubQry)))));
+        final Conditions3 conditions = or(isNotNull(expr(expSubQry)));
         final EntQuery3 expQry = qryCountAll(sources, conditions);
         
         assertEquals(expQry, actQry);
@@ -193,7 +193,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
 
     @Test
     public void calc_prop_is_correctly_transformed_06() {
-        final EntQuery3 actQry = qryCountAll(select(WORK_ORDER).where().anyOfProps("makeKey").isNotNull());
+        final EntQuery3 actQry = qryCountAll(select(WORK_ORDER).where().prop("makeKey").isNotNull());
         final String wo1 = "1";
         
         final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
@@ -218,7 +218,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final EntQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleStringExpr(KEY, make)), String.class);
 
         final IQrySources3 sources = sources(wo);
-        final Conditions3 conditions = or(and(or(isNotNull(expr(expSubQry)))));
+        final Conditions3 conditions = or(isNotNull(expr(expSubQry)));
         final EntQuery3 expQry = qryCountAll(sources, conditions);
         
         assertEquals(expQry, actQry);
@@ -227,7 +227,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
     
     @Test
     public void calc_prop_is_correctly_transformed_05() {
-        final EntQuery3 actQry = qryCountAll(select(WORK_ORDER).where().anyOfProps("vehicleModel.key").isNotNull());
+        final EntQuery3 actQry = qryCountAll(select(WORK_ORDER).where().prop("vehicleModel.key").isNotNull());
         final String wo1 = "1";
         
         final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
@@ -244,7 +244,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
                         model,
                         eq(expr(expr(entityProp("model", veh, MODEL))), entityProp(ID, model, MODEL))                
                   );
-        final Conditions3 conditions = or(and(or(isNotNull(expr(stringProp(KEY, model))))));
+        final Conditions3 conditions = or(isNotNull(expr(stringProp(KEY, model))));
         final EntQuery3 expQry = qryCountAll(sources, conditions);
         
         assertEquals(expQry, actQry);
@@ -253,7 +253,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
 
     @Test
     public void calc_prop_is_correctly_transformed_04() {
-        final EntQuery3 actQry = qryCountAll(select(WORK_ORDER).where().anyOfProps("vehicleModel.makeKey").isNotNull());
+        final EntQuery3 actQry = qryCountAll(select(WORK_ORDER).where().prop("vehicleModel.makeKey").isNotNull());
         final String wo1 = "1";
         
         final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
@@ -275,7 +275,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
                           ), 
                         eq(expr(expr(entityProp("model", veh, MODEL))), entityProp(ID, model, MODEL))                
                   );
-        final Conditions3 conditions = or(and(or(isNotNull(expr(expr(stringProp(KEY, make)))))));
+        final Conditions3 conditions = or(isNotNull(expr(expr(stringProp(KEY, make)))));
         final EntQuery3 expQry = qryCountAll(sources, conditions);
         
         assertEquals(expQry, actQry);
@@ -285,7 +285,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
 
     @Test
     public void calc_prop_is_correctly_transformed_03() {
-        final EntQuery3 actQry = qryCountAll(select(WORK_ORDER).where().anyOfProps("vehicle.modelMakeKey2").isNotNull());
+        final EntQuery3 actQry = qryCountAll(select(WORK_ORDER).where().prop("vehicle.modelMakeKey2").isNotNull());
         final String wo1 = "1";
         
         final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
@@ -307,7 +307,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
                           ),
                         eq(entityProp("vehicle", wo, VEHICLE), entityProp(ID, veh, VEHICLE))
                   );
-        final Conditions3 conditions = or(and(or(isNotNull(expr(expr(expr(stringProp(KEY, make))))))));
+        final Conditions3 conditions = or(isNotNull(expr(expr(expr(stringProp(KEY, make))))));
         final EntQuery3 expQry = qryCountAll(sources, conditions);
         
         assertEquals(expQry, actQry);
@@ -315,7 +315,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
 
     @Test
     public void calc_prop_is_correctly_transformed_02() {
-        final EntQuery3 actQry = qryCountAll(select(WORK_ORDER).where().anyOfProps("vehicle.modelMakeKey").isNotNull());
+        final EntQuery3 actQry = qryCountAll(select(WORK_ORDER).where().prop("vehicle.modelMakeKey").isNotNull());
         final String wo1 = "1";
         
         final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
@@ -337,7 +337,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
                           ),
                         eq(entityProp("vehicle", wo, VEHICLE), entityProp(ID, veh, VEHICLE))
                   );
-        final Conditions3 conditions = or(and(or(isNotNull(expr(expr(stringProp(KEY, make)))))));
+        final Conditions3 conditions = or(isNotNull(expr(expr(stringProp(KEY, make)))));
         final EntQuery3 expQry = qryCountAll(sources, conditions);
         
         assertEquals(expQry, actQry);
@@ -537,7 +537,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
 
     @Test
     public void veh_calc_prop_is_correctly_transformed_01() {
-        final EntQuery3 actQry = qryCountAll(select(VEHICLE).where().anyOfProps("modelMakeKey").isNotNull());
+        final EntQuery3 actQry = qryCountAll(select(VEHICLE).where().prop("modelMakeKey").isNotNull());
         final String veh1 = "1";
         
         final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
@@ -554,7 +554,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
                           ),
                         eq(entityProp("model", veh, MODEL), entityProp(ID, model, MODEL))
                   );
-        final Conditions3 conditions = or(and(or(isNotNull(expr(expr(stringProp(KEY, make)))))));
+        final Conditions3 conditions = or(isNotNull(expr(expr(stringProp(KEY, make)))));
         final EntQuery3 expQry = qryCountAll(sources, conditions);
         
         assertEquals(expQry, actQry);
@@ -641,7 +641,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
     
     @Test
     public void veh_model_calc_prop_is_correctly_transformed_02() {
-        final EntQuery3 actQry = qryCountAll(select(MODEL).where().anyOfProps("makeKey2").isNotNull());
+        final EntQuery3 actQry = qryCountAll(select(MODEL).where().prop("makeKey2").isNotNull());
         final String model1 = "1";
 
         final QrySource3BasedOnTable model = source(MODEL, model1);
@@ -655,7 +655,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final EntQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleStringExpr(KEY, subQryMake)), String.class);
 
         final IQrySources3 sources = sources(model);
-        final Conditions3 conditions = or(and(or(isNotNull(expr(expSubQry)))));
+        final Conditions3 conditions = or(isNotNull(expr(expSubQry)));
         final EntQuery3 expQry = qryCountAll(sources, conditions);
         
         assertEquals(expQry, actQry);
@@ -663,7 +663,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
 
     @Test
     public void veh_model_calc_prop_is_correctly_transformed_01() {
-        final EntQuery3 actQry = qryCountAll(select(MODEL).where().anyOfProps("makeKey").isNotNull());
+        final EntQuery3 actQry = qryCountAll(select(MODEL).where().prop("makeKey").isNotNull());
         final String model1 = "1";
         
         final QrySource3BasedOnTable model = source(MODEL, model1);
@@ -675,7 +675,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
                         make,
                         eq(entityProp("make", model, MAKE), entityProp(ID, make, MAKE))
                   );
-        final Conditions3 conditions = or(and(or(isNotNull(expr(expr(stringProp(KEY, make)))))));
+        final Conditions3 conditions = or(isNotNull(expr(expr(stringProp(KEY, make)))));
         final EntQuery3 expQry = qryCountAll(sources, conditions);
         
         assertEquals(expQry, actQry);

@@ -36,17 +36,13 @@ import ua.com.fielden.platform.eql.stage2.elements.sources.CompoundSource2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.QrySource2BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage2.elements.sources.Sources2;
-import ua.com.fielden.platform.eql.stage3.elements.EntQueryBlocks3;
-import ua.com.fielden.platform.eql.stage3.elements.Yields3;
-import ua.com.fielden.platform.eql.stage3.elements.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.ICondition3;
-import ua.com.fielden.platform.eql.stage3.elements.operands.EntQuery3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySource3;
-import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySources3;
 
 public class EqlStage2TestCase extends EqlTestCase {
 
+    protected static final Conditions2 emptyConditions2 = new Conditions2(false, emptyList());
     protected static final GroupBys2 emptyGroupBys2 = new GroupBys2(emptyList());
     protected static final OrderBys2 emptyOrderBys2 = new OrderBys2(emptyList());
     protected static final Yields2 emptyYields2 = new Yields2(emptyList());
@@ -181,7 +177,11 @@ public class EqlStage2TestCase extends EqlTestCase {
     protected static EntQuery2 qryCountAll(final Sources2 sources, final Conditions2 conditions) {
         return new EntQuery2(qb2(sources, conditions, yields(yieldCountAll("KOUNT"))), EntityAggregates.class, RESULT_QUERY);
     }
-    
+
+    protected static EntQuery2 qryCountAll(final Sources2 sources) {
+        return new EntQuery2(qb2(sources, emptyConditions2, yields(yieldCountAll("KOUNT"))), EntityAggregates.class, RESULT_QUERY);
+    }
+
     private static EntQuery2 qry(final Sources2 sources, final Conditions2 conditions, final QueryCategory queryCategory, final Class<? extends AbstractEntity<?>> resultType) {
         return new EntQuery2(qb2(sources, conditions), resultType, queryCategory);
     }

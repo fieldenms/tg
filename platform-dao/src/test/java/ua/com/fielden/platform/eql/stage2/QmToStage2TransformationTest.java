@@ -28,7 +28,6 @@ import ua.com.fielden.platform.eql.stage2.elements.GroupBys2;
 import ua.com.fielden.platform.eql.stage2.elements.OrderBys2;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.ComparisonTest2;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.Conditions2;
-import ua.com.fielden.platform.eql.stage2.elements.conditions.ExistenceTest2;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.ICondition2;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.NullTest2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
@@ -196,27 +195,27 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
     
     @Test
     public void test06() {
-        EntityResultQueryModel<TgOrgUnit2> subqry = select(ORG2).where().prop("parent").eq().extProp("id").model();
+        final EntityResultQueryModel<TgOrgUnit2> subqry = select(ORG2).where().prop("parent").eq().extProp("id").model();
         final EntQuery2 actQry = qryCountAll(select(ORG1).where().exists(subqry).or().notExists(subqry));  
 
         final QrySource2BasedOnPersistentType source = source("3", ORG1);
         final QrySource2BasedOnPersistentType subQrySource1 = source("1", ORG2);
         final QrySource2BasedOnPersistentType subQrySource2 = source("2", ORG2);
 
-        final Sources2 sources1 = sources(source);
+        final Sources2 sources = sources(source);
         final Sources2 subQrySources1 = sources(subQrySource1);
         final Sources2 subQrySources2 = sources(subQrySource2);
         final Conditions2 subQryConditions1 = or(eq(prop(subQrySource1, pi(ORG2, "parent")), prop(source, pi(ORG1, "id"))));
         final Conditions2 subQryConditions2 = or(eq(prop(subQrySource2, pi(ORG2, "parent")), prop(source, pi(ORG1, "id"))));
         final Conditions2 conditions = or(exists(subQrySources1, subQryConditions1, ORG2), notExists(subQrySources2, subQryConditions2, ORG2));
 
-        final EntQuery2 expQry = qryCountAll(sources1, conditions);
+        final EntQuery2 expQry = qryCountAll(sources, conditions);
 
         assertEquals(expQry, actQry);
     }
     
     @Test
-    public void test_18() {
+    public void test07() {
         final EntQuery2 actQry = qryCountAll(//
         select(ORG1).where().exists( //
         select(ORG2).where().prop("parent").eq().extProp("id").and().exists( //
@@ -227,11 +226,35 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         model()). //
         model()). //
         model()));
+
+        final QrySource2BasedOnPersistentType source = source("5", ORG1);
+        final QrySource2BasedOnPersistentType sub1QrySource = source("4", ORG2);
+        final QrySource2BasedOnPersistentType sub2QrySource = source("3", ORG3);
+        final QrySource2BasedOnPersistentType sub3QrySource = source("2", ORG4);
+        final QrySource2BasedOnPersistentType sub4QrySource = source("1", ORG5);
+
+        final Sources2 sources = sources(source);
+        final Sources2 sub1QrySources = sources(sub1QrySource);
+        final Sources2 sub2QrySources = sources(sub2QrySource);
+        final Sources2 sub3QrySources = sources(sub3QrySource);
+        final Sources2 sub4QrySources = sources(sub4QrySource);
+
+
+        final Conditions2 subQryConditions4 = or(and(eq(prop(sub4QrySource, pi(ORG5, "parent")), prop(sub3QrySource, pi(ORG4, "id"))), isNotNull(prop(sub4QrySource, pi(ORG5, "key")))));
+        final Conditions2 subQryConditions3 = or(and(eq(prop(sub3QrySource, pi(ORG4, "parent")), prop(sub2QrySource, pi(ORG3, "id"))), exists(sub4QrySources, subQryConditions4, ORG5)));
+        final Conditions2 subQryConditions2 = or(and(eq(prop(sub2QrySource, pi(ORG3, "parent")), prop(sub1QrySource, pi(ORG2, "id"))), exists(sub3QrySources, subQryConditions3, ORG4)));
+        final Conditions2 subQryConditions1 = or(and(eq(prop(sub1QrySource, pi(ORG2, "parent")), prop(source, pi(ORG1, "id"))), exists(sub2QrySources, subQryConditions2, ORG3)));
+        
+        final Conditions2 conditions = or(exists(sub1QrySources, subQryConditions1, ORG2));
+
+        final EntQuery2 expQry = qryCountAll(sources, conditions);
+
+        assertEquals(expQry, actQry);
     }
 
     @Test
-    public void test_19() {
-        qryCountAll(//
+    public void test08() {
+        final EntQuery2 actQry = qryCountAll(//
         select(ORG1).as("L1").where().exists( //
         select(ORG2).as("L2").where().prop("parent").eq().prop("L1.id").and().exists( //
         select(ORG3).as("L3").where().prop("parent").eq().prop("L2.id").and().exists( // 
@@ -241,11 +264,35 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         model()). //
         model()). //
         model()));
+        
+        final QrySource2BasedOnPersistentType source = source("5", ORG1, "L1");
+        final QrySource2BasedOnPersistentType sub1QrySource = source("4", ORG2, "L2");
+        final QrySource2BasedOnPersistentType sub2QrySource = source("3", ORG3, "L3");
+        final QrySource2BasedOnPersistentType sub3QrySource = source("2", ORG4, "L4");
+        final QrySource2BasedOnPersistentType sub4QrySource = source("1", ORG5, "L5");
+
+        final Sources2 sources = sources(source);
+        final Sources2 sub1QrySources = sources(sub1QrySource);
+        final Sources2 sub2QrySources = sources(sub2QrySource);
+        final Sources2 sub3QrySources = sources(sub3QrySource);
+        final Sources2 sub4QrySources = sources(sub4QrySource);
+
+
+        final Conditions2 subQryConditions4 = or(and(eq(prop(sub4QrySource, pi(ORG5, "parent")), prop(sub3QrySource, pi(ORG4, "id"))), isNotNull(prop(sub4QrySource, pi(ORG5, "key")))));
+        final Conditions2 subQryConditions3 = or(and(eq(prop(sub3QrySource, pi(ORG4, "parent")), prop(sub2QrySource, pi(ORG3, "id"))), exists(sub4QrySources, subQryConditions4, ORG5)));
+        final Conditions2 subQryConditions2 = or(and(eq(prop(sub2QrySource, pi(ORG3, "parent")), prop(sub1QrySource, pi(ORG2, "id"))), exists(sub3QrySources, subQryConditions3, ORG4)));
+        final Conditions2 subQryConditions1 = or(and(eq(prop(sub1QrySource, pi(ORG2, "parent")), prop(source, pi(ORG1, "id"))), exists(sub2QrySources, subQryConditions2, ORG3)));
+        
+        final Conditions2 conditions = or(exists(sub1QrySources, subQryConditions1, ORG2));
+
+        final EntQuery2 expQry = qryCountAll(sources, conditions);
+
+        assertEquals(expQry, actQry);
     }
 
     @Test
-    public void test_20() {
-        qryCountAll(//
+    public void test09() {
+        final EntQuery2 actQry = qryCountAll(//
         select(ORG1).as("L1").where().exists( //
         select(ORG2).as("L2").where().prop("parent").eq().prop("L1").and().exists( //
         select(ORG3).as("L3").where().prop("parent").eq().prop("L2").and().exists( // 
@@ -255,12 +302,35 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         model()). //
         model()). //
         model()));
+        
+        final QrySource2BasedOnPersistentType source = source("5", ORG1, "L1");
+        final QrySource2BasedOnPersistentType sub1QrySource = source("4", ORG2, "L2");
+        final QrySource2BasedOnPersistentType sub2QrySource = source("3", ORG3, "L3");
+        final QrySource2BasedOnPersistentType sub3QrySource = source("2", ORG4, "L4");
+        final QrySource2BasedOnPersistentType sub4QrySource = source("1", ORG5, "L5");
+
+        final Sources2 sources = sources(source);
+        final Sources2 sub1QrySources = sources(sub1QrySource);
+        final Sources2 sub2QrySources = sources(sub2QrySource);
+        final Sources2 sub3QrySources = sources(sub3QrySource);
+        final Sources2 sub4QrySources = sources(sub4QrySource);
+
+
+        final Conditions2 subQryConditions4 = or(and(eq(prop(sub4QrySource, pi(ORG5, "parent")), prop(sub3QrySource, pi(ORG4, "id"))), isNotNull(prop(sub4QrySource, pi(ORG5, "key")))));
+        final Conditions2 subQryConditions3 = or(and(eq(prop(sub3QrySource, pi(ORG4, "parent")), prop(sub2QrySource, pi(ORG3, "id"))), exists(sub4QrySources, subQryConditions4, ORG5)));
+        final Conditions2 subQryConditions2 = or(and(eq(prop(sub2QrySource, pi(ORG3, "parent")), prop(sub1QrySource, pi(ORG2, "id"))), exists(sub3QrySources, subQryConditions3, ORG4)));
+        final Conditions2 subQryConditions1 = or(and(eq(prop(sub1QrySource, pi(ORG2, "parent")), prop(source, pi(ORG1, "id"))), exists(sub2QrySources, subQryConditions2, ORG3)));
+        
+        final Conditions2 conditions = or(exists(sub1QrySources, subQryConditions1, ORG2));
+
+        final EntQuery2 expQry = qryCountAll(sources, conditions);
+
+        assertEquals(expQry, actQry);
     }
 
-
     @Test
-    public void test_21() {
-        qryCountAll(//
+    public void test10() {
+        final EntQuery2 actQry = qryCountAll(//
         select(ORG1).as("L1").where().exists( //
         select(ORG2).as("L2").where().prop("parent").eq().extProp("L1.id").and().exists( //
         select(ORG3).as("L3").where().prop("parent").eq().prop("L1.id").and().exists( // 
@@ -270,22 +340,58 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         model()). //
         model()). //
         model()));
+        
+        final QrySource2BasedOnPersistentType source = source("5", ORG1, "L1");
+        final QrySource2BasedOnPersistentType sub1QrySource = source("4", ORG2, "L2");
+        final QrySource2BasedOnPersistentType sub2QrySource = source("3", ORG3, "L3");
+        final QrySource2BasedOnPersistentType sub3QrySource = source("2", ORG4, "L4");
+        final QrySource2BasedOnPersistentType sub4QrySource = source("1", ORG5, "L5");
+
+        final Sources2 sources = sources(source);
+        final Sources2 sub1QrySources = sources(sub1QrySource);
+        final Sources2 sub2QrySources = sources(sub2QrySource);
+        final Sources2 sub3QrySources = sources(sub3QrySource);
+        final Sources2 sub4QrySources = sources(sub4QrySource);
+
+
+        final Conditions2 subQryConditions4 = or(and(eq(prop(sub4QrySource, pi(ORG5, "parent")), prop(source, pi(ORG1, "id"))), isNotNull(prop(sub4QrySource, pi(ORG5, "key")))));
+        final Conditions2 subQryConditions3 = or(and(eq(prop(sub3QrySource, pi(ORG4, "parent")), prop(source, pi(ORG1, "id"))), exists(sub4QrySources, subQryConditions4, ORG5)));
+        final Conditions2 subQryConditions2 = or(and(eq(prop(sub2QrySource, pi(ORG3, "parent")), prop(source, pi(ORG1, "id"))), exists(sub3QrySources, subQryConditions3, ORG4)));
+        final Conditions2 subQryConditions1 = or(and(eq(prop(sub1QrySource, pi(ORG2, "parent")), prop(source, pi(ORG1, "id"))), exists(sub2QrySources, subQryConditions2, ORG3)));
+        
+        final Conditions2 conditions = or(exists(sub1QrySources, subQryConditions1, ORG2));
+
+        final EntQuery2 expQry = qryCountAll(sources, conditions);
+
+        assertEquals(expQry, actQry);
     }
 
-
     @Test
-    public void test_02() {
-        qryCountAll(select(TgAuthorship.class).where().exists(select(AUTHOR).where().prop("lastRoyalty").isNotNull().model()));
+    public void test11() {
+        final EntQuery2 actQry = qryCountAll(select(MODEL).where().prop("make").eq().iVal(null));
+        
+        final QrySource2BasedOnPersistentType source = source("1", MODEL);
+        final Sources2 sources = sources(source);
+        final EntQuery2 expQry = qryCountAll(sources);
+
+        assertEquals(expQry, actQry);
     }
-
+    
     @Test
-    public void test_03() {
-        qryCountAll(select(TgAuthorship.class).where().prop("author.surname").eq().val("Date").or().prop("author.name.key").eq().val("Chris"));
-    }
+    public void test12() {
+        final EntQuery2 actQry = qryCountAll(select(ORG1).where().exists(select(ORG2).where().prop("parent").isNotNull().model()));  
 
-    @Test
-    public void test_04() {
-        qryCountAll(select(TgAuthorRoyalty.class).as("ar").where().prop("authorship.author.surname").eq().val("Date").or().prop("ar.authorship.author.name.key").eq().val("Chris"));
+        final QrySource2BasedOnPersistentType source1 = source("2", ORG1);
+        final QrySource2BasedOnPersistentType source2 = source("1", ORG2);
+
+        final Sources2 sources1 = sources(source1);
+        final Sources2 sources2 = sources(source2);
+        final Conditions2 conditions2 = or(isNotNull(prop(source2, pi(ORG2, "parent"))));
+        final Conditions2 conditions1 = or(exists(sources2, conditions2, ORG2));
+
+        final EntQuery2 expQry = qryCountAll(sources1, conditions1);
+
+        assertEquals(expQry, actQry);
     }
 
     @Test
@@ -309,7 +415,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
     }
 
     @Test
-    public void test09() {
+    public void test_09() {
         qryCountAll(select(select(TgAuthorRoyalty.class).where().prop("authorship.author.surname").isNotNull().yield().prop("authorship.author").modelAsEntity(TgAuthorship.class)).where().prop("author.surname").eq().val("Date").or().prop("author.name.key").eq().val("Chris"));
     }
 
@@ -322,7 +428,6 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
     public void test_11() {
         qryCountAll(select(TgAuthorship.class).where().beginExpr().val(100).mult().model(select(AUTHOR).yield().countAll().modelAsPrimitive()).endExpr().ge().val(1000));
     }
-
 
     @Test
     @Ignore
