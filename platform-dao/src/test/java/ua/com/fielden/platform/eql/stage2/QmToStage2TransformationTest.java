@@ -20,6 +20,7 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.eql.meta.EqlStage2TestCase;
 import ua.com.fielden.platform.eql.stage2.elements.EntQueryBlocks2;
 import ua.com.fielden.platform.eql.stage2.elements.GroupBy2;
@@ -41,6 +42,7 @@ import ua.com.fielden.platform.sample.domain.TgAuthorRoyalty;
 import ua.com.fielden.platform.sample.domain.TgAuthorship;
 import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgEntityWithLoopedCalcProps;
+import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
 import ua.com.fielden.platform.sample.domain.TgPersonName;
 import ua.com.fielden.platform.sample.domain.TgWorkshop;
 
@@ -176,7 +178,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
     }
     
     @Test
-    public void test_18_1() {
+    public void test05() {
         final EntQuery2 actQry = qryCountAll(select(ORG1).where().exists(select(ORG2).where().prop("parent").eq().extProp("id").model()));  
 
         final QrySource2BasedOnPersistentType source1 = source("2", ORG1);
@@ -185,12 +187,91 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final Sources2 sources1 = sources(source1);
         final Sources2 sources2 = sources(source2);
         final Conditions2 conditions2 = or(eq(prop(source2, pi(ORG2, "parent")), prop(source1, pi(ORG1, "id"))));
-        final Conditions2 conditions1 = or(new ExistenceTest2(false, new EntQuery2(qb2(sources2, conditions2), ORG2, SUB_QUERY)));
+        final Conditions2 conditions1 = or(exists(sources2, conditions2, ORG2));
 
         final EntQuery2 expQry = qryCountAll(sources1, conditions1);
 
         assertEquals(expQry, actQry);
     }
+    
+    @Test
+    public void test06() {
+        EntityResultQueryModel<TgOrgUnit2> subqry = select(ORG2).where().prop("parent").eq().extProp("id").model();
+        final EntQuery2 actQry = qryCountAll(select(ORG1).where().exists(subqry).or().notExists(subqry));  
+
+        final QrySource2BasedOnPersistentType source = source("3", ORG1);
+        final QrySource2BasedOnPersistentType subQrySource1 = source("1", ORG2);
+        final QrySource2BasedOnPersistentType subQrySource2 = source("2", ORG2);
+
+        final Sources2 sources1 = sources(source);
+        final Sources2 subQrySources1 = sources(subQrySource1);
+        final Sources2 subQrySources2 = sources(subQrySource2);
+        final Conditions2 subQryConditions1 = or(eq(prop(subQrySource1, pi(ORG2, "parent")), prop(source, pi(ORG1, "id"))));
+        final Conditions2 subQryConditions2 = or(eq(prop(subQrySource2, pi(ORG2, "parent")), prop(source, pi(ORG1, "id"))));
+        final Conditions2 conditions = or(exists(subQrySources1, subQryConditions1, ORG2), notExists(subQrySources2, subQryConditions2, ORG2));
+
+        final EntQuery2 expQry = qryCountAll(sources1, conditions);
+
+        assertEquals(expQry, actQry);
+    }
+    
+    @Test
+    public void test_18() {
+        final EntQuery2 actQry = qryCountAll(//
+        select(ORG1).where().exists( //
+        select(ORG2).where().prop("parent").eq().extProp("id").and().exists( //
+        select(ORG3).where().prop("parent").eq().extProp("id").and().exists( // 
+        select(ORG4).where().prop("parent").eq().extProp("id").and().exists( //
+        select(ORG5).where().prop("parent").eq().extProp("id").and().prop("key").isNotNull(). //
+        model()). //
+        model()). //
+        model()). //
+        model()));
+    }
+
+    @Test
+    public void test_19() {
+        qryCountAll(//
+        select(ORG1).as("L1").where().exists( //
+        select(ORG2).as("L2").where().prop("parent").eq().prop("L1.id").and().exists( //
+        select(ORG3).as("L3").where().prop("parent").eq().prop("L2.id").and().exists( // 
+        select(ORG4).as("L4").where().prop("parent").eq().prop("L3.id").and().exists( //
+        select(ORG5).as("L5").where().prop("parent").eq().prop("L4.id").and().prop("key").isNotNull(). //
+        model()). //
+        model()). //
+        model()). //
+        model()));
+    }
+
+    @Test
+    public void test_20() {
+        qryCountAll(//
+        select(ORG1).as("L1").where().exists( //
+        select(ORG2).as("L2").where().prop("parent").eq().prop("L1").and().exists( //
+        select(ORG3).as("L3").where().prop("parent").eq().prop("L2").and().exists( // 
+        select(ORG4).as("L4").where().prop("parent").eq().prop("L3").and().exists( //
+        select(ORG5).as("L5").where().prop("parent").eq().prop("L4").and().prop("key").isNotNull(). //
+        model()). //
+        model()). //
+        model()). //
+        model()));
+    }
+
+
+    @Test
+    public void test_21() {
+        qryCountAll(//
+        select(ORG1).as("L1").where().exists( //
+        select(ORG2).as("L2").where().prop("parent").eq().extProp("L1.id").and().exists( //
+        select(ORG3).as("L3").where().prop("parent").eq().prop("L1.id").and().exists( // 
+        select(ORG4).as("L4").where().prop("parent").eq().extProp("L1").and().exists( //
+        select(ORG5).as("L5").where().prop("parent").eq().prop("L1.id").and().prop("key").isNotNull(). //
+        model()). //
+        model()). //
+        model()). //
+        model()));
+    }
+
 
     @Test
     public void test_02() {
@@ -298,62 +379,6 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
 //        System.out.println(qry3.item.sql(DbVersion.H2));
     }
     
-    @Test
-    public void test_18() {
-        qryCountAll(//
-        select(ORG1).where().exists( //
-        select(ORG2).where().prop("parent").eq().extProp("id").and().exists( //
-        select(ORG3).where().prop("parent").eq().extProp("id").and().exists( // 
-        select(ORG4).where().prop("parent").eq().extProp("id").and().exists( //
-        select(ORG5).where().prop("parent").eq().extProp("id").and().prop("key").isNotNull(). //
-        model()). //
-        model()). //
-        model()). //
-        model()));
-    }
-
-    @Test
-    public void test_19() {
-        qryCountAll(//
-        select(ORG1).as("L1").where().exists( //
-        select(ORG2).as("L2").where().prop("parent").eq().extProp("L1.id").and().exists( //
-        select(ORG3).as("L3").where().prop("parent").eq().extProp("L2.id").and().exists( // 
-        select(ORG4).as("L4").where().prop("parent").eq().extProp("L3.id").and().exists( //
-        select(ORG5).as("L5").where().prop("parent").eq().extProp("L4.id").and().prop("key").isNotNull(). //
-        model()). //
-        model()). //
-        model()). //
-        model()));
-    }
-
-    @Test
-    public void test_20() {
-        qryCountAll(//
-        select(ORG1).as("L1").where().exists( //
-        select(ORG2).as("L2").where().prop("parent").eq().extProp("L1.id").and().exists( //
-        select(ORG3).as("L3").where().prop("parent").eq().extProp("L2.id").and().exists( // 
-        select(ORG4).as("L4").where().prop("parent").eq().extProp("L3.id").and().exists( //
-        select(ORG5).as("L5").where().prop("parent").eq().extProp("L4").and().prop("key").isNotNull(). //
-        model()). //
-        model()). //
-        model()). //
-        model()));
-    }
-
-
-    @Test
-    public void test_21() {
-        qryCountAll(//
-        select(ORG1).as("L1").where().exists( //
-        select(ORG2).as("L2").where().prop("parent").eq().extProp("L1.id").and().exists( //
-        select(ORG3).as("L3").where().prop("parent").eq().extProp("L1.id").and().exists( // 
-        select(ORG4).as("L4").where().prop("parent").eq().extProp("L1.id").and().exists( //
-        select(ORG5).as("L5").where().prop("parent").eq().extProp("L1.id").and().prop("key").isNotNull(). //
-        model()). //
-        model()). //
-        model()). //
-        model()));
-    }
 
     @Test
     @Ignore
@@ -392,7 +417,6 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         
         assertEquals(exp, actQry);
     }
-
     
     @Test
     @Ignore

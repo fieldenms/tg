@@ -7,6 +7,7 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperat
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.IJ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.LJ;
 import static ua.com.fielden.platform.eql.meta.QueryCategory.RESULT_QUERY;
+import static ua.com.fielden.platform.eql.meta.QueryCategory.SUB_QUERY;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +25,7 @@ import ua.com.fielden.platform.eql.stage2.elements.Yield2;
 import ua.com.fielden.platform.eql.stage2.elements.Yields2;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.ComparisonTest2;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.Conditions2;
+import ua.com.fielden.platform.eql.stage2.elements.conditions.ExistenceTest2;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.ICondition2;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.NullTest2;
 import ua.com.fielden.platform.eql.stage2.elements.functions.CountAll2;
@@ -34,9 +36,14 @@ import ua.com.fielden.platform.eql.stage2.elements.sources.CompoundSource2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.QrySource2BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage2.elements.sources.Sources2;
+import ua.com.fielden.platform.eql.stage3.elements.EntQueryBlocks3;
+import ua.com.fielden.platform.eql.stage3.elements.Yields3;
+import ua.com.fielden.platform.eql.stage3.elements.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.ICondition3;
+import ua.com.fielden.platform.eql.stage3.elements.operands.EntQuery3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySource3;
+import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySources3;
 
 public class EqlStage2TestCase extends EqlTestCase {
 
@@ -135,6 +142,14 @@ public class EqlStage2TestCase extends EqlTestCase {
         return new Conditions2(false, asList(conditions));
     }
     
+    protected static ExistenceTest2 exists(final Sources2 sources, final Conditions2 conditions, final Class<? extends AbstractEntity<?>> resultType) {
+        return new ExistenceTest2(false, subqry(sources, conditions, resultType));
+    }
+
+    protected static ExistenceTest2 notExists(final Sources2 sources, final Conditions2 conditions, final Class<? extends AbstractEntity<?>> resultType) {
+        return new ExistenceTest2(true, subqry(sources, conditions, resultType));
+    }
+
     protected static NullTest2 isNull(final ISingleOperand2<? extends ISingleOperand3> operand) {
         return new NullTest2(operand, false);
     }
@@ -165,5 +180,13 @@ public class EqlStage2TestCase extends EqlTestCase {
     
     protected static EntQuery2 qryCountAll(final Sources2 sources, final Conditions2 conditions) {
         return new EntQuery2(qb2(sources, conditions, yields(yieldCountAll("KOUNT"))), EntityAggregates.class, RESULT_QUERY);
+    }
+    
+    private static EntQuery2 qry(final Sources2 sources, final Conditions2 conditions, final QueryCategory queryCategory, final Class<? extends AbstractEntity<?>> resultType) {
+        return new EntQuery2(qb2(sources, conditions), resultType, queryCategory);
+    }
+
+    protected static EntQuery2 subqry(final Sources2 sources, final Conditions2 conditions, final Class<? extends AbstractEntity<?>> resultType) {
+        return qry(sources, conditions, SUB_QUERY, resultType);
     }
 }
