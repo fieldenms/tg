@@ -187,14 +187,7 @@ Polymer({
     },
 
     attached: function () {
-        this.async(() => {
-            const width = this.$.chartContainer.offsetWidth;
-            const height = this.$.chartContainer.offsetHeight;
-            this._chart.options({
-                width: width,
-                height: height
-            });
-        }, 1);
+        this._waitForDimensions();
     },
     
     selectEntity: function (entity, select) {
@@ -207,6 +200,21 @@ Polymer({
         if (this._chart) {
             this._chart.repaint();
         }
+    },
+
+    _waitForDimensions: function (time) {
+        this.async(() => {
+            const width = this.$.chartContainer.offsetWidth
+            const height = this.$.chartContainer.offsetHeight
+            if (width && height && this._chart) {
+                this._chart.options({
+                    width: width,
+                    height: height
+                });
+            } else {
+                this._waitForDimensions(100);
+            }
+        }, time);
     },
 
     _dataChanged: function (newData, oldData) {
@@ -246,11 +254,13 @@ Polymer({
         const width = this.$.chartContainer.offsetWidth;
         const height = this.$.chartContainer.offsetHeight;
         if (this._chart && width && height) {
-            this._chart.options({
-                width: width,
-                height: height
-            });
+            const oldOptions = this._chart.options();
+            if (oldOptions.width !== width || oldOptions.height !== height) {
+                this._chart.options({
+                    width: width,
+                    height: height
+                });
+            }
         }
     }
 });
-        

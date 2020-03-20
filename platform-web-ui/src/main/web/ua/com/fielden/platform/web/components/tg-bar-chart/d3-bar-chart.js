@@ -188,6 +188,7 @@ class BarChart {
     }
 
     repaint(resetState) {
+        //console.time(this._options.label + " bar chart repaint");
         //The old position of origin point.Needed to update the position of viewpoint after resizing.
         let oldY = this._yAxis.scale().invert(0);
         //Calculate new width and height without margins.
@@ -226,17 +227,30 @@ class BarChart {
         this._chartLabel.call(this._setChartLabelData.bind(this));
         this._xAxisLabel.call(this._setXAxisLabelData.bind(this));
         this._yAxisLabel.call(this._setYAxisLabelData.bind(this));
+
+        //console.log("Drawing axis and grid: ")
+        //console.timeLog(this._options.label + " bar chart repaint");
         // Update bars.
         this._drawBars();
+        //console.log("Drawing bars: ")
+        //console.timeLog(this._options.label + " bar chart repaint");
         //update lines
         this._drawLines();
+        //console.log("Drawing lines: ")
+        //console.timeLog(this._options.label + " bar chart repaint");
         //update markers after bars
         this._drawBarLabels();
+        //console.log("Drawing bar labels: ")
+        //console.timeLog(this._options.label + " bar chart repaint");
         //Update zoom behavior 
         this._zoom.translateExtent([[0, 0], [0, this._actualHeight]])
             .extent([[0, 0], [0, this._actualHeight]]);
+        //console.log("Correcting zoom: ")
+        //console.timeLog(this._options.label + " bar chart repaint");
         //Unscale nodes
         this._unscale();
+        //console.log("unscaling nodes: ")
+        //console.timeLog(this._options.label + " bar chart repaint");
 
         //Update the container translation in order to remain current translate position when window size was changed
         let newH = this._yAxis.scale()(oldY);
@@ -245,6 +259,7 @@ class BarChart {
         } else if (newH) {
             this._chartArea.call(this._zoom.translateBy, 0, (0 - newH) / this._currentTransform.k);
         }
+        console.timeEnd(this._options.label + " bar chart repaint");
     }
 
     set options(val) {
@@ -671,7 +686,7 @@ class BarChart {
                 }
                 return "auto";
             }).text(d => self._options.barLabel(d.data, d.idx));
-            d3.select(this).style("display", !!text.text() ? "auto" : "none");
+            d3.select(this).style("display", !!text.text() ? "initial" : "none");
             self._updateMarkerPosition(rect, text);
         });
     }
