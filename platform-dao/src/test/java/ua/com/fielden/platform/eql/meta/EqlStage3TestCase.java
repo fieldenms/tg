@@ -13,6 +13,7 @@ import static ua.com.fielden.platform.eql.stage2.elements.PathsToTreeTransformat
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.type.LongType;
 import org.hibernate.type.StringType;
@@ -52,12 +53,21 @@ public class EqlStage3TestCase extends EqlTestCase {
     protected static <T extends AbstractEntity<?>> EntQuery3 qryCountAll(final ICompoundCondition0<T> unfinishedQry) {
         final AggregatedResultQueryModel countQry = unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate();
 
-        final PropsResolutionContext resolutionContext = new PropsResolutionContext(metadata);
+        final PropsResolutionContext resolutionContext = new PropsResolutionContext(metadata());
         final ua.com.fielden.platform.eql.stage1.elements.TransformationResult<EntQuery2> s1tr = qb().generateEntQueryAsResultQuery(countQry, null).transform(resolutionContext);
-        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> s2tr = s1tr.item.transform(new TransformationContext(tables, groupChildren(s1tr.item.collectProps(), metadata)));
+        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> s2tr = s1tr.item.transform(new TransformationContext(tables, groupChildren(s1tr.item.collectProps(), metadata())));
         return s2tr.item;
     }
     
+    protected static <T extends AbstractEntity<?>> EntQuery3 qryCountAll(final ICompoundCondition0<T> unfinishedQry, final Map<String, Object> paramValues) {
+        final AggregatedResultQueryModel countQry = unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate();
+
+        final PropsResolutionContext resolutionContext = new PropsResolutionContext(metadata(paramValues));
+        final ua.com.fielden.platform.eql.stage1.elements.TransformationResult<EntQuery2> s1tr = qb(paramValues).generateEntQueryAsResultQuery(countQry, null).transform(resolutionContext);
+        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> s2tr = s1tr.item.transform(new TransformationContext(tables, groupChildren(s1tr.item.collectProps(), metadata(paramValues))));
+        return s2tr.item;
+    }
+
     protected static QrySource3BasedOnTable source(final Class<? extends AbstractEntity<?>> sourceType, final String sourceForContextId) {
         return new QrySource3BasedOnTable(tables.get(sourceType.getName()), sourceForContextId);
     }
@@ -236,6 +246,10 @@ public class EqlStage3TestCase extends EqlTestCase {
 
     protected static EntQuery3 qryCountAll(final IQrySources3 sources, final Conditions3 conditions) {
         return qry(sources, conditions, yields(yieldCountAll("KOUNT")), RESULT_QUERY, EntityAggregates.class);
+    }
+
+    protected static EntQuery3 qryCountAll(final IQrySources3 sources) {
+        return qry(sources, new Conditions3(false, emptyList()), yields(yieldCountAll("KOUNT")), RESULT_QUERY, EntityAggregates.class);
     }
     
     protected static EntQuery3 qry(final IQrySources3 sources, final Yields3 yields, final Class<?> resultType) {

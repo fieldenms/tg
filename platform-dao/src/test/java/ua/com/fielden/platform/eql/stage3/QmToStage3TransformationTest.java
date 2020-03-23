@@ -7,6 +7,8 @@ import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
+import java.util.HashMap;
+
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -855,6 +857,35 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
                 isNotNull(expr(stringProp(KEY, ou2eou1))))));
         final EntQuery3 expQry = qryCountAll(sources, conditions);
 
+        assertEquals(expQry, actQry);
+    }
+    
+    @Test
+    public void condition_is_correctly_ignored_01() {
+        final EntQuery3 actQry = qryCountAll(select(MODEL).where().prop(KEY).eq().iVal(null));
+        final String model1 = "1";
+
+        final QrySource3BasedOnTable model = source(MODEL, model1);
+
+        final IQrySources3 sources = sources(model);
+        final EntQuery3 expQry = qryCountAll(sources);
+        
+        assertEquals(expQry, actQry);
+    }
+    
+    @Test
+    public void condition_is_correctly_ignored_02() {
+        final HashMap<String,Object> paramValues = new HashMap<String, Object>();
+        paramValues.put(KEY, null);
+        
+        final EntQuery3 actQry = qryCountAll(select(MODEL).where().prop(KEY).eq().iParam("keyValue"), paramValues);
+        final String model1 = "1";
+
+        final QrySource3BasedOnTable model = source(MODEL, model1);
+
+        final IQrySources3 sources = sources(model);
+        final EntQuery3 expQry = qryCountAll(sources);
+        
         assertEquals(expQry, actQry);
     }
  }

@@ -14,9 +14,11 @@ import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
 
 import com.google.inject.Guice;
+import com.google.inject.Injector;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.generation.ioc.HelperIocModule;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
@@ -75,27 +77,61 @@ public class EqlTestCase {
     protected static final TypeResolver typeResolver = new TypeResolver();
 
     public static final Map<Class, Class> hibTypeDefaults = new HashMap<>();
-    public static final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> metadata = new HashMap<>();
-    protected static final DomainMetadata DOMAIN_METADATA = new DomainMetadata(hibTypeDefaults, 
-            Guice.createInjector(new HibernateUserTypesModule()), 
-            PlatformTestDomainTypes.entityTypes, 
-            DbVersion.H2);
+    private static Injector injector = Guice.createInjector(new HibernateUserTypesModule(), new HelperIocModule());//Guice.createInjector(new HibernateUserTypesModule());
+    
+    protected static final DomainMetadata DOMAIN_METADATA;
 
-    public static final MetadataGenerator mdg = new MetadataGenerator(DOMAIN_METADATA);
     public static final Map<String, Table> tables = new HashMap<>();
-
-    protected static final EntQueryGenerator qb() {
-        return new EntQueryGenerator(new DomainMetadataAnalyser(DOMAIN_METADATA), null, null, Guice.createInjector(new HibernateUserTypesModule(), new HelperIocModule()).getInstance(IDates.class), emptyMap());
-    }
+    public static final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> metadata = new HashMap<>();
 
     static {
         hibTypeDefaults.put(Date.class, DateTimeType.class);
         hibTypeDefaults.put(Money.class, SimpleMoneyType.class);
+        
+        DOMAIN_METADATA = new DomainMetadata(hibTypeDefaults, 
+                injector, 
+                PlatformTestDomainTypes.entityTypes, 
+                DbVersion.H2);
+
+        final MetadataGenerator mdg = new MetadataGenerator(DOMAIN_METADATA, null, null, injector.getInstance(IDates.class), emptyMap());
+        
         try {
             metadata.putAll(mdg.generate(new HashSet<>(PlatformTestDomainTypes.entityTypes)));
             tables.putAll(mdg.generateTables(PlatformTestDomainTypes.entityTypes));
         } catch (final Exception e) {
             e.printStackTrace();
         }
+    }
+    
+    protected static final EntQueryGenerator qb() {
+        return qb(null, null, injector.getInstance(IDates.class), emptyMap());
+    }
+
+    protected static final EntQueryGenerator qb(final Map<String, Object> paramValues) {
+        return qb(null, null, injector.getInstance(IDates.class), paramValues);
+    }
+    
+    protected static final EntQueryGenerator qb(final IFilter filter, final String username, final IDates dates, final Map<String, Object> paramValues) {
+        return new EntQueryGenerator(new DomainMetadataAnalyser(DOMAIN_METADATA), filter, username, dates, paramValues);
+    }
+    
+    protected static final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> metadata() {
+        return metadata(null, null, injector.getInstance(IDates.class), emptyMap());
+    }
+
+    protected static final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> metadata(final Map<String, Object> paramValues) {
+        return metadata(null, null, injector.getInstance(IDates.class), paramValues);
+    }
+
+    protected static final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> metadata(final IFilter filter, final String username, final IDates dates, final Map<String, Object> paramValues) {
+        final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> result = new HashMap<>();
+        final MetadataGenerator mdg = new MetadataGenerator(DOMAIN_METADATA, filter, username, dates, paramValues);
+        try {
+            result.putAll(mdg.generate(new HashSet<>(PlatformTestDomainTypes.entityTypes)));    
+        } catch (final Exception e) {
+            e.printStackTrace();
+        }
+        
+        return result;
     }
 }

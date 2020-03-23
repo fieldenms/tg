@@ -140,14 +140,14 @@ public class EntityContainerFetcher {
             Map<String, Table> tables = null;
             
             try {
-                final MetadataGenerator mtg = new MetadataGenerator(executionContext.getDomainMetadata());
+                final MetadataGenerator mtg = new MetadataGenerator(executionContext.getDomainMetadata(), filter, username, executionContext.dates(), qem.getParamValues());
                 domainInfo = mtg.generate(executionContext.getDomainMetadata().getPersistedEntityMetadataMap().keySet());
                 tables = mtg.generateTables(executionContext.getDomainMetadata().getPersistedEntityMetadataMap().keySet());
             } catch (final Exception e) {
                 e.printStackTrace();
             }
             
-            final PropsResolutionContext resolutionContext = new PropsResolutionContext(domainInfo );
+            final PropsResolutionContext resolutionContext = new PropsResolutionContext(domainInfo);
             final ua.com.fielden.platform.eql.stage1.elements.TransformationResult<EntQuery2> s1tr = gen1.generateEntQueryAsResultQuery(qem.queryModel, qem.orderModel).transform(resolutionContext);
             final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> s2tr = s1tr.item.transform(new TransformationContext(tables, groupChildren(s1tr.item.collectProps(), domainInfo)));
             final EntQuery3 entQuery3 = s2tr.item;

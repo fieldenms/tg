@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.eql.meta;
 
 import static java.lang.String.format;
-import static java.util.Collections.emptyMap;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toMap;
@@ -42,6 +41,7 @@ import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
+import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.metadata.CompositeKeyEqlExpressionGenerator;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
@@ -56,18 +56,26 @@ import ua.com.fielden.platform.eql.stage3.elements.Table;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.utils.IDates;
 
 public class MetadataGenerator {
     protected final DomainMetadata dm;
+    private final IDates dates;
+    private final IFilter filter;
+    private final String username;
+    private final Map<String, Object> paramValues = new HashMap<>();
 
-    public MetadataGenerator(final DomainMetadata dm) {
+    public MetadataGenerator(final DomainMetadata dm, final IFilter filter, final String username, final IDates dates, final Map<String, Object> paramValues) {
         this.dm = dm;
+        this.filter = filter;
+        this.dates = dates;
+        this.username = username;
+        this.paramValues.putAll(paramValues);
     }
     
     protected final EntQueryGenerator qb() {
-        return new EntQueryGenerator(new DomainMetadataAnalyser(dm), null, null, null, emptyMap());
+        return new EntQueryGenerator(new DomainMetadataAnalyser(dm), filter, username, dates, paramValues);
     }
-
 
     public final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> generate(final Set<Class<? extends AbstractEntity<?>>> entities) throws Exception {
         final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> result = entities.stream()
