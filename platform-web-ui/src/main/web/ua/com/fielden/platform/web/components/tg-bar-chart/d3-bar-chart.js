@@ -188,7 +188,8 @@ class BarChart {
     }
 
     repaint(resetState) {
-        //console.time(this._options.label + " bar chart repaint");
+        //Hide bar labels for better performance
+        this._markerContainer.style("display", "none");
         //The old position of origin point.Needed to update the position of viewpoint after resizing.
         let oldY = this._yAxis.scale().invert(0);
         //Calculate new width and height without margins.
@@ -228,29 +229,13 @@ class BarChart {
         this._xAxisLabel.call(this._setXAxisLabelData.bind(this));
         this._yAxisLabel.call(this._setYAxisLabelData.bind(this));
 
-        //console.log("Drawing axis and grid: ")
-        //console.timeLog(this._options.label + " bar chart repaint");
         // Update bars.
         this._drawBars();
-        //console.log("Drawing bars: ")
-        //console.timeLog(this._options.label + " bar chart repaint");
         //update lines
         this._drawLines();
-        //console.log("Drawing lines: ")
-        //console.timeLog(this._options.label + " bar chart repaint");
-        //update markers after bars
-        this._drawBarLabels();
-        //console.log("Drawing bar labels: ")
-        //console.timeLog(this._options.label + " bar chart repaint");
         //Update zoom behavior 
         this._zoom.translateExtent([[0, 0], [0, this._actualHeight]])
             .extent([[0, 0], [0, this._actualHeight]]);
-        //console.log("Correcting zoom: ")
-        //console.timeLog(this._options.label + " bar chart repaint");
-        //Unscale nodes
-        this._unscale();
-        //console.log("unscaling nodes: ")
-        //console.timeLog(this._options.label + " bar chart repaint");
 
         //Update the container translation in order to remain current translate position when window size was changed
         let newH = this._yAxis.scale()(oldY);
@@ -259,7 +244,14 @@ class BarChart {
         } else if (newH) {
             this._chartArea.call(this._zoom.translateBy, 0, (0 - newH) / this._currentTransform.k);
         }
-        console.timeEnd(this._options.label + " bar chart repaint");
+        setTimeout(() => {
+            //update markers after bars
+            this._drawBarLabels();
+            //Unscale nodes
+            this._unscale();
+            //Show previously hidden bar labels
+            this._markerContainer.style("display", "initial");
+        });
     }
 
     set options(val) {
@@ -633,7 +625,6 @@ class BarChart {
                 newData.push({data: elem, idx: -1});
             }
         });
-        
         const updateSelection = self._markerContainer.selectAll(".marker").data(newData);
         const insertSelection = updateSelection.enter();
         const removeSelection = updateSelection.exit();
@@ -720,8 +711,10 @@ class BarChart {
     _updateMarkerPosition(rect, text) {
         if (!!text.text()) {
             let textBox = text.node().getBBox();
-            if (textBox.width !== 0 && textBox.height !== 0) {
-                rect.attr("x", textBox.x - 5).attr("y", textBox.y - 1).attr("width", textBox.width + 10).attr("height", textBox.height + 2);
+            let textBoxWidth = textBox.width;
+            let textBoxHeight = textBox.height;
+            if (textBoxWidth !== 0 && textBoxHeight !== 0) {
+                rect.attr("x", textBox.x - 5).attr("y", textBox.y - 1).attr("width", textBoxWidth + 10).attr("height", textBoxHeight + 2);
             } else {
                 setTimeout(() => this._updateMarkerPosition(rect, text), 100);
             }
