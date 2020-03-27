@@ -54,20 +54,11 @@ const template = html`
         .chart-label {
             font-weight: bold;
         }
-        .marker[selected] .mark-rect {
-            fill: white;
-        }
         .mark-text {
             font-family: sans-serif;
             font-size: 10px;
             stroke: none;
             fill: #000;
-            pointer-events: none;
-        }
-        .mark-rect {
-            fill: #d8d7ba;
-            stroke: #e3e3e3;
-            vector-effect: non-scaling-stroke;
             pointer-events: none;
         }
         /*Legend related style*/
