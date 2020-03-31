@@ -3,10 +3,6 @@ package ua.com.fielden.platform.eql.meta;
 import static java.lang.String.format;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
-import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.COMPONENT_DETAILS;
-import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.COMPONENT_HEADER;
-import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.SYNTHETIC_COMPONENT_DETAILS;
-import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.SYNTHETIC_COMPONENT_HEADER;
 import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.UNION_ENTITY_HEADER;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 
@@ -82,35 +78,30 @@ public class LongPropertyMetadata implements Comparable<LongPropertyMetadata> {
         }
     }
 
-    public Set<LongPropertyMetadata> getCompositeTypeSubprops() {
+    public Set<LongPropertyMetadata> getCompositeTypeSubprops(final ICompositeUserTypeInstantiate hibTypeP) {
         final Set<LongPropertyMetadata> result = new HashSet<LongPropertyMetadata>();
         final List<PropColumn> columns = new ArrayList<>();
-        final PropertyCategory category = null;
-        if (COMPONENT_HEADER == category || SYNTHETIC_COMPONENT_HEADER == category || getHibTypeAsCompositeUserType() != null) {
-            // logger.debug("=== (COMPONENT_HEADER == category) = " + (COMPONENT_HEADER == category) + "=== (SYNTHETIC_COMPONENT_HEADER == category) = " + (SYNTHETIC_COMPONENT_HEADER == category) + " ---- (getHibTypeAsCompositeUserType() != null) = " + (getHibTypeAsCompositeUserType() != null));
-            final List<String> subprops = Arrays.asList(((ICompositeUserTypeInstantiate) hibType).getPropertyNames());
-            final List<Object> subpropsTypes = Arrays.asList(((ICompositeUserTypeInstantiate) hibType).getPropertyTypes());
-            final PropertyCategory detailsPropCategory = COMPONENT_HEADER == category ?  COMPONENT_DETAILS : SYNTHETIC_COMPONENT_DETAILS;
-            if (subprops.size() == 1) {
-                final Object hibType = subpropsTypes.get(0);
-                if (expressionModel != null) {
-                    result.add(new LongPropertyMetadata.Builder(name + "." + subprops.get(0), ((Type) hibType).getReturnedClass(), nullable).expression(getExpressionModel()).aggregatedExpression(aggregatedExpression).hibType(hibType).build());
-                } else if (columns.size() == 0) {
-                    result.add(new LongPropertyMetadata.Builder(name + "." + subprops.get(0), ((Type) hibType).getReturnedClass(), nullable).aggregatedExpression(aggregatedExpression).hibType(hibType).build());
-                } else {
-                    result.add(new LongPropertyMetadata.Builder(name + "." + subprops.get(0), ((Type) subpropsTypes.get(0)).getReturnedClass(), nullable).column(columns.get(0)).hibType(subpropsTypes.get(0)).build());
-                }
+        final List<String> subprops = Arrays.asList(hibTypeP.getPropertyNames());
+        final List<Object> subpropsTypes = Arrays.asList(hibTypeP.getPropertyTypes());
+        if (subprops.size() == 1) {
+            final Object hibType = subpropsTypes.get(0);
+            if (expressionModel != null) {
+                result.add(new LongPropertyMetadata.Builder(name + "." + subprops.get(0), ((Type) hibType).getReturnedClass(), nullable).expression(getExpressionModel()).aggregatedExpression(aggregatedExpression).hibType(hibType).build());
+            } else if (columns.size() == 0) { // synthetic entity context
+                result.add(new LongPropertyMetadata.Builder(name + "." + subprops.get(0), ((Type) hibType).getReturnedClass(), nullable).aggregatedExpression(aggregatedExpression).hibType(hibType).build());
             } else {
-                int index = 0;
-                for (final String subpropName : subprops) {
-                    final PropColumn column = columns.get(index);
-                    final Object hibType = subpropsTypes.get(index);
-                    result.add(new LongPropertyMetadata.Builder(name + "." + subpropName, ((Type) hibType).getReturnedClass(), nullable).column(column).hibType(hibType).build());
-                    index = index + 1;
-                }
+                result.add(new LongPropertyMetadata.Builder(name + "." + subprops.get(0), ((Type) subpropsTypes.get(0)).getReturnedClass(), nullable).column(columns.get(0)).hibType(subpropsTypes.get(0)).build());
             }
-
+        } else {
+            int index = 0;
+            for (final String subpropName : subprops) {
+                final PropColumn column = columns.get(index);
+                final Object hibType = subpropsTypes.get(index);
+                result.add(new LongPropertyMetadata.Builder(name + "." + subpropName, ((Type) hibType).getReturnedClass(), nullable).column(column).hibType(hibType).build());
+                index = index + 1;
+            }
         }
+
         return result;
     }
 
@@ -134,7 +125,7 @@ public class LongPropertyMetadata implements Comparable<LongPropertyMetadata> {
     public PropColumn getColumn() {
         return column;
     }
-    
+
     public String getName() {
         return name;
     }
@@ -265,7 +256,7 @@ public class LongPropertyMetadata implements Comparable<LongPropertyMetadata> {
             this.column = column;
             return this;
         }
-        
+
         public Builder subitems(final List<LongPropertyMetadata> subitems) {
             this.subitems.addAll(subitems);
             return this;

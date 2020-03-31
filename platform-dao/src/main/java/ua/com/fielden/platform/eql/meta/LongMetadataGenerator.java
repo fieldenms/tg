@@ -19,6 +19,7 @@ import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.VIR
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.types.tuples.T3.t3;
 import static ua.com.fielden.platform.utils.CollectionUtil.unmodifiableListOf;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 
@@ -43,13 +44,15 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
+import ua.com.fielden.platform.entity.query.IUserTypeInstantiate;
+import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.metadata.EntityTypeInfo;
 import ua.com.fielden.platform.entity.query.metadata.PropertyCategory;
-import ua.com.fielden.platform.entity.query.metadata.PropertyColumn;
 import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.meta.model.PropColumn;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.types.tuples.T3;
 
 public class LongMetadataGenerator {
     
@@ -78,7 +81,7 @@ public class LongMetadataGenerator {
     private Injector hibTypesInjector;
 
     public LongMetadataGenerator(//
-            final Map<Class, Class> hibTypesDefaults, //
+            final Map<Class<?>, Class<?>> hibTypesDefaults, //
             final Injector hibTypesInjector, //
             final List<Class<? extends AbstractEntity<?>>> entityTypes, //
             final DbVersion dbVersion) {
@@ -99,7 +102,7 @@ public class LongMetadataGenerator {
 
         // carry on with other stuff
         if (hibTypesDefaults != null) {
-            for (final Entry<Class, Class> entry : hibTypesDefaults.entrySet()) {
+            for (final Entry<Class<?>, Class<?>> entry : hibTypesDefaults.entrySet()) {
                 try {
                     this.hibTypesDefaults.put(entry.getKey(), entry.getValue().newInstance());
                 } catch (final Exception e) {
@@ -122,45 +125,62 @@ public class LongMetadataGenerator {
      * @throws Exception
      * @throws
      */
-    private Object getHibernateType(final Class<?> propType, final String propName, final Class<? extends AbstractEntity<?>> parentType) {
+    private Object getHibernateType(final Field propField) {
+        final String propName = propField.getName();
+        final Class<?> propType = propField.getType();
+        
         if (isPersistedEntityType(propType)) {
             return H_LONG;
         }
 
-        final PersistentType persistentType = getPropertyAnnotation(PersistentType.class, parentType, propName);
-        final String hibernateTypeName = persistentType != null ? persistentType.value() : null;
-        final Class<?> hibernateUserTypeImplementor = persistentType != null ? persistentType.userType() : Void.class;
-
-        if (isNotEmpty(hibernateTypeName)) {
-            return typeResolver.basic(hibernateTypeName);
-        }
-
-        if (hibTypesInjector != null && !Void.class.equals(hibernateUserTypeImplementor)) { // Hibernate type is definitely either IUserTypeInstantiate or ICompositeUserTypeInstantiate
-            return hibTypesInjector.getInstance(hibernateUserTypeImplementor);
-        } else {
+        final PersistentType persistentType = getAnnotation(propField, PersistentType.class);
+        
+        if (persistentType == null) {
             final Object defaultHibType = hibTypesDefaults.get(propType);
             if (defaultHibType != null) { // default is provided for given property java type
                 return defaultHibType;
             } else { // trying to mimic hibernate logic when no type has been specified - use hibernate's map of defaults
                 return typeResolver.basic(propType.getName());
             }
+        } else {
+            final String hibernateTypeName = persistentType.value();
+            final Class<?> hibernateUserTypeImplementor = persistentType.userType();
+            if (isNotEmpty(hibernateTypeName)) {
+                return typeResolver.basic(hibernateTypeName);
+            } else if (hibTypesInjector != null && !Void.class.equals(hibernateUserTypeImplementor)) { // Hibernate type is definitely either IUserTypeInstantiate or ICompositeUserTypeInstantiate
+                return hibTypesInjector.getInstance(hibernateUserTypeImplementor);
+            } else {
+                throw new EqlException("Persistent annotation doen't provide intended information.");
+            }
         }
     }
     
-    private List<PropertyColumn> getPropColumns(final Field field, final IsProperty isProperty, final MapTo mapTo, final Object hibernateType) throws Exception {
+    private T3<Type, IUserTypeInstantiate, ICompositeUserTypeInstantiate> getHibernateConverter(final Object instance) {
+        if (instance instanceof ICompositeUserTypeInstantiate) {
+            return t3(null, null, (ICompositeUserTypeInstantiate) instance);
+        } else if (instance instanceof IUserTypeInstantiate) {
+            return t3(null, (IUserTypeInstantiate) instance, null);
+        } else if (instance instanceof Type) {
+            return t3((Type) instance, null, null);
+        } else {
+            throw new EqlException("Can't determine propert hibernate converter"); 
+        }
+    }
+    
+    private List<PropColumn> getPropColumns(final Field field, final IsProperty isProperty, final MapTo mapTo, final Object hibernateType) throws Exception {
         final String columnName = isNotEmpty(mapTo.value()) ? mapTo.value() : field.getName().toUpperCase() + "_";
-        final Integer length = isProperty.length() > 0 ? isProperty.length() : null;
-        final Integer precision = isProperty.precision() >= 0 ? isProperty.precision() : null;
-        final Integer scale = isProperty.scale() >= 0 ? isProperty.scale() : null;
 
-        final List<PropertyColumn> result = new ArrayList<>();
+        final List<PropColumn> result = new ArrayList<>();
         if (hibernateType instanceof ICompositeUserTypeInstantiate) {
             final ICompositeUserTypeInstantiate hibCompositeUSerType = (ICompositeUserTypeInstantiate) hibernateType;
-            for (final PropertyColumn column : getCompositeUserTypeColumns(hibCompositeUSerType, columnName)) {
+            for (final PropColumn column : getCompositeUserTypeColumns(hibCompositeUSerType, columnName)) {
                 result.add(column);
             }
         } else {
-            result.add(new PropertyColumn(columnName, length, precision, scale));
+            final Integer length = isProperty.length() > 0 ? isProperty.length() : null;
+            final Integer precision = isProperty.precision() >= 0 ? isProperty.precision() : null;
+            final Integer scale = isProperty.scale() >= 0 ? isProperty.scale() : null;
+            result.add(new PropColumn(columnName, length, precision, scale));
         }
         return result;
     }
@@ -169,13 +189,13 @@ public class LongMetadataGenerator {
      * Generates list of column names for mapping of CompositeUserType implementors.
      *
      * @param hibType
-     * @param parentColumn
+     * @param parentColumnPrefix
      * @return
      * @throws Exception
      */
-    private List<PropertyColumn> getCompositeUserTypeColumns(final ICompositeUserTypeInstantiate hibType, final String parentColumn) throws Exception {
+    private List<PropColumn> getCompositeUserTypeColumns(final ICompositeUserTypeInstantiate hibType, final String parentColumnPrefix) throws Exception {
         final String[] propNames = hibType.getPropertyNames();
-        final List<PropertyColumn> result = new ArrayList<>();
+        final List<PropColumn> result = new ArrayList<>();
         for (final String propName : propNames) {
             final MapTo mapTo = getPropertyAnnotation(MapTo.class, hibType.returnedClass(), propName);
             final IsProperty isProperty = getPropertyAnnotation(IsProperty.class, hibType.returnedClass(), propName);
@@ -183,26 +203,28 @@ public class LongMetadataGenerator {
             final Integer length = isProperty.length() > 0 ? isProperty.length() : null;
             final Integer precision = isProperty.precision() >= 0 ? isProperty.precision() : null;
             final Integer scale = isProperty.scale() >= 0 ? isProperty.scale() : null;
-            final String columnName = propNames.length == 1 ? parentColumn
-                    : (parentColumn + (parentColumn.endsWith("_") ? "" : "_") + (isEmpty(mapToColumn) ? propName.toUpperCase() : mapToColumn));
-            result.add(new PropertyColumn(columnName, length, precision, scale));
+            final String columnName = propNames.length == 1 ? parentColumnPrefix
+                    : (parentColumnPrefix + (parentColumnPrefix.endsWith("_") ? "" : "_") + (isEmpty(mapToColumn) ? propName.toUpperCase() : mapToColumn));
+            result.add(new PropColumn(columnName, length, precision, scale));
         }
         return result;
     }
     
     private LongPropertyMetadata getCommonPropInfo(final Field propField, final Class<? extends AbstractEntity<?>> entityType) throws Exception {
         final String propName = propField.getName();
-        final Class<?> javaType = propField.getType();
+        final Class<?> propType = propField.getType();
 
         final boolean nullable = !PropertyTypeDeterminator.isRequiredByDefinition(propField, entityType);
 
-        final Object hibernateType = getHibernateType(javaType, propName, entityType);
+        final T3<Type, IUserTypeInstantiate, ICompositeUserTypeInstantiate> hibernateType = getHibernateConverter(getHibernateType(propField));
 
-        final MapTo mapTo = getPropertyAnnotation(MapTo.class, entityType, propName);
-        final IsProperty isProperty = getPropertyAnnotation(IsProperty.class, entityType, propName);
+        final MapTo mapTo = getAnnotation(propField, MapTo.class);
+        final IsProperty isProperty = getAnnotation(propField, IsProperty.class);
+        final Calculated calculated = getAnnotation(propField, Calculated.class);
+        
         
         return new LongPropertyMetadata.
-                Builder(propName, javaType, nullable).
+                Builder(propName, propType, nullable).
                 hibType(hibernateType).
                 //columns(getPropColumns(propField, isProperty, mapTo, hibernateType)).
                 build();
@@ -217,7 +239,7 @@ public class LongMetadataGenerator {
         final boolean aggregatedExpression = (AGGREGATED_EXPRESSION == getAnnotation(propField, Calculated.class).category());
         
         final Class<?> javaType = propField.getType();
-        final Object hibernateType = getHibernateType(javaType, propName, parentInfo.entityType);
+        final Object hibernateType = getHibernateType(propField);
 
         final ExpressionModel expressionModel = extractExpressionModelFromCalculatedProperty(parentInfo.entityType, propField);
         final PropertyCategory propCat = hibernateType instanceof ICompositeUserTypeInstantiate ? COMPONENT_HEADER : EXPRESSION;
@@ -233,7 +255,7 @@ public class LongMetadataGenerator {
     private PropertyMetadata getOneToOnePropInfo(final Field propField, final EntityTypeInfo <? extends AbstractEntity<?>> parentInfo) throws Exception {
         final String propName = propField.getName();
         final Class<?> javaType = propField.getType();
-        final Object hibernateType = getHibernateType(javaType, propName, parentInfo.entityType);
+        final Object hibernateType = getHibernateType(propField);
 
         // 1-2-1 is not required to exist -- that's why need longer formula -- that's why 1-2-1 is in fact implicitly calculated nullable prop
         final ExpressionModel expressionModel = expr().model(select((Class<? extends AbstractEntity<?>>) propField.getType()).where().prop(KEY).eq().extProp(ID).model()).model();
@@ -248,7 +270,7 @@ public class LongMetadataGenerator {
     private PropertyMetadata getSyntheticPropInfo(final Field propField, final EntityTypeInfo <? extends AbstractEntity<?>> parentInfo) throws Exception {
         final String propName = propField.getName();
         final Class<?> javaType = propField.getType();
-        final Object hibernateType = getHibernateType(javaType, propName, parentInfo.entityType);
+        final Object hibernateType = getHibernateType(propField);
         final PropertyCategory propCat = hibernateType instanceof ICompositeUserTypeInstantiate ? SYNTHETIC_COMPONENT_HEADER : SYNTHETIC;
         return new PropertyMetadata.
                 Builder(propField.getName(), propField.getType(), true, parentInfo).
