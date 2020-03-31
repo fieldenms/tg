@@ -58,6 +58,8 @@ import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder0Checkb
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1Toolbar;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aScroll;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1bPageCapacity;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cHeaderLines;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cMaxHeaderLines;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cVisibleRows;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1dFitBehaviour;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1eRowHeight;
@@ -527,7 +529,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IResultSetBuilder1cVisibleRows<T> setPageCapacity(final int pageCapacity) {
+    public IResultSetBuilder1cMaxHeaderLines<T> setPageCapacity(final int pageCapacity) {
         this.builder.pageCapacity = pageCapacity;
         return this;
     }
@@ -601,5 +603,23 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     public IResultSetBuilder3Ordering<T> skipValidation() {
         this.widget.ifPresent(widget -> widget.skipValidation());
         return this;
+    }
+
+    @Override
+    public IResultSetBuilder1bPageCapacity<T> setMaxPageCapacity(final int pageCapacity) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public IResultSetBuilder1cHeaderLines<T> setMaxHeaderLineNumber(final int headerLineNumber) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public IResultSetBuilder1cVisibleRows<T> setHeaderLineNumber(final int headerLineNumber) {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

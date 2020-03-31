@@ -10,7 +10,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  *
  * @param <T>
  */
-public interface IResultSetBuilder1bPageCapacity<T extends AbstractEntity<?>> extends IResultSetBuilder1cVisibleRows<T> {
+public interface IResultSetBuilder1bPageCapacity<T extends AbstractEntity<?>> extends IResultSetBuilder1cMaxHeaderLines<T> {
 
-    IResultSetBuilder1cVisibleRows<T> setPageCapacity(int pageCapacity);
+    IResultSetBuilder1cMaxHeaderLines<T> setPageCapacity(int pageCapacity);
+
 }
