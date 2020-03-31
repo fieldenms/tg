@@ -101,23 +101,23 @@ const getParentsPath = function (entity) {
     return path.reverse();
 };
 
-const getChildrenToAdd = function (entity, shouldFireLoad) {
+const getChildrenToAdd = function (entity, shouldFireLoad, expandAll) {
     const childrenToAdd = [];
     if (entity.opened && entity.entity.hasChildren) {
         if (entity.children.length === 1 && entity.children[0].loaderIndicator && shouldFireLoad) {
-            this.fire("tg-load-subtree", {parentPath: getParentsPath(entity), loadAll: false});
+            this.fire("tg-load-subtree", {parentPath: getParentsPath(entity), loadAll: expandAll});
         }
-        childrenToAdd.push(...composeChildren.bind(this)(entity.children, shouldFireLoad));
+        childrenToAdd.push(...composeChildren.bind(this)(entity.children, shouldFireLoad, expandAll));
     }
     return childrenToAdd;
 };
 
-const composeChildren = function (entities, shouldFireLoad) {
+const composeChildren = function (entities, shouldFireLoad, expandAll) {
     const list = [];
     entities.filter(entity => entity.visible).forEach(entity => {
         list.push(entity);
         list.push(...entity.additionalInfoNodes);
-        list.push(...getChildrenToAdd.bind(this)(entity, shouldFireLoad));
+        list.push(...getChildrenToAdd.bind(this)(entity, shouldFireLoad, expandAll));
     });
     return list;
 };
@@ -262,13 +262,46 @@ Polymer({
         this.debounce("refreshTree", refreshTree.bind(this));
     },
 
-    expandSubTree: function(parentItem) {
+    expandSubTree: function(parentItem, refreshLoaded) {
         parentItem.opened = true;
+        if (parentItem.entity.hasChildren && refreshLoaded && parentItem.entity.subtreeRefreshable) {
+            parentItem.children = [generateLoadingIndicator(parentItem)];
+        }
         parentItem.children.forEach(treeEntity => {
-            if (treeEntity.entity.hasChildren && wasLoaded(treeEntity)) {
-                this.expandSubTree(treeEntity);
+            if (treeEntity.entity.hasChildren && (refreshLoaded || wasLoaded(treeEntity))) {
+                this.expandSubTree(treeEntity, refreshLoaded);
             }
         });
+    },
+
+    expandSubTreeView: function (idx, parentItem) {
+        if (parentItem.entity.hasChildren) {
+            const numOfItemsToDelete = calculateNumberOfOpenedItems(parentItem);
+            this.expandSubTree(parentItem, true);
+            this.notifyPath("_entities." + idx + ".opened", true);
+            this.splice("_entities", idx + 1 + parentItem.additionalInfoNodes.length, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(parentItem, true, true));
+            this.debounce("refreshTree", refreshTree.bind(this));
+        }
+    },
+
+    collapseSubTree: function (parentItem) {
+        if (parentItem.entity.hasChildren) {
+            if (parentItem.entity.subtreeRefreshable) {
+                parentItem.children = [generateLoadingIndicator(parentItem)];
+            } else {
+                parentItem.children.forEach(child => this.collapseSubTree(child));
+            }
+            parentItem.opened = false;
+        }
+    },
+
+    collapseSubTreeView: function(idx, parentItem) {
+        if (parentItem.entity.hasChildren && parentItem.opened) {
+            const numOfItemsToDelete = calculateNumberOfOpenedItems(parentItem);
+            parentItem.children.forEach(child => this.collapseSubTree(child));
+            this.splice("_entities", idx + 1 + parentItem.additionalInfoNodes.length, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(parentItem, true, false));
+            this.debounce("refreshTree", refreshTree.bind(this));
+        }
     },
     
     reloadSubtreeFull: function (idx, entity) {
@@ -278,7 +311,7 @@ Polymer({
             if (!entity.opened) {
                 this.set("_entities." + idx + ".opened", true);
             }
-            this.splice("_entities", idx + 1 + entity.additionalInfoNodes.length, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(entity, false));
+            this.splice("_entities", idx + 1 + entity.additionalInfoNodes.length, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(entity, false, false));
             this.fire("tg-load-subtree", {parentPath: getParentsPath(entity), loadAll: true});
         }
     },
@@ -288,7 +321,7 @@ Polymer({
             if (entity.opened) {
                 const numOfItemsToDelete = calculateNumberOfOpenedItems(entity);
                 entity.children = [generateLoadingIndicator(entity)];
-                this.splice("_entities", idx + 1 + entity.additionalInfoNodes.length, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(entity, true));
+                this.splice("_entities", idx + 1 + entity.additionalInfoNodes.length, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(entity, true, false));
             }
         }
     },
@@ -329,19 +362,24 @@ Polymer({
 
     _getBaseEntityIdx: function (idx) {
         const entity = this._entities[idx];
-        if (entity.isAdditionalInfo) {
-            const additionalInfoIdx = entity.relatedTo.additionalInfoNodes.indexOf(entity);
-            return idx - additionalInfoIdx - 1;
+        if (entity) {
+            if (entity.isAdditionalInfo) {
+                const additionalInfoIdx = entity.relatedTo.additionalInfoNodes.indexOf(entity);
+                return idx - additionalInfoIdx - 1;
+            }
+            return idx;
         }
-        return idx;
+        return -1;
     },
 
     _setOver: function (idx, over) {
         const entity = this._entities[idx];
-        this.set("_entities." + idx + ".over", over);
-        entity.additionalInfoNodes.forEach((item, additionalInfoIdx) => {
-            this.set("_entities." + (additionalInfoIdx + idx + 1) + ".over", over);
-        });
+        if (entity) {
+            this.set("_entities." + idx + ".over", over);
+            entity.additionalInfoNodes && entity.additionalInfoNodes.forEach((item, additionalInfoIdx) => {
+                this.set("_entities." + (additionalInfoIdx + idx + 1) + ".over", over);
+            });
+        }
     },
     
     _filterSubTree: function (text, subtree, expand) {
@@ -389,7 +427,8 @@ Polymer({
                 this._lastFilterText && this._filterSubTree(this._lastFilterText, parentItem.children, false);
                 this.fire("tg-tree-model-changed", parentItem);
                 if (typeof modelIdx !== 'undefined') {
-                    this.splice("_entities", modelIdx + 1 + parentItem.additionalInfoNodes.length, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(parentItem, true));
+                    this.splice("_entities", modelIdx + 1 + parentItem.additionalInfoNodes.length, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(parentItem, true, false));
+                    this.$.treeList.notifyResize();
                 }
             }
         }
@@ -404,7 +443,7 @@ Polymer({
             this.set("_entities." + idx + ".opened", false);
         } else {
             this.set("_entities." + idx + ".opened", true);
-            this.splice("_entities", idx + 1 + entity.additionalInfoNodes.length, 0, ...getChildrenToAdd.bind(this)(entity, true));
+            this.splice("_entities", idx + 1 + entity.additionalInfoNodes.length, 0, ...getChildrenToAdd.bind(this)(entity, true, false));
         }
     },
 
