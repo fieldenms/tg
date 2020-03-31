@@ -378,6 +378,7 @@ Polymer({
             if (this._lastFilterText) {
                 this.filter(this._lastFilterText);
             }
+            this.fire("tg-tree-root-model-changed", this);
         } else if (change.path && change.path.endsWith("children")) {
             const path = change.path.substring(0, change.path.lastIndexOf(".")).replace("model", "_treeModel").replace(/#/g, "");
             const parentItem = this.get(path);
