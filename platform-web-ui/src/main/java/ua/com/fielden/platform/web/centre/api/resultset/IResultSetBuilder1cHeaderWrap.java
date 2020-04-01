@@ -10,7 +10,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 *
 * @param <T>
 */
-public interface IResultSetBuilder1cHeaderLines<T extends AbstractEntity<?>> extends IResultSetBuilder1cVisibleRows<T> {
+public interface IResultSetBuilder1cHeaderWrap<T extends AbstractEntity<?>> extends IResultSetBuilder1cVisibleRows<T> {
 
     /**
      * Set the number of text lines in EGI header.
@@ -18,5 +18,5 @@ public interface IResultSetBuilder1cHeaderLines<T extends AbstractEntity<?>> ext
      * @param headerLineNumber
      * @return
      */
-    IResultSetBuilder1cVisibleRows<T> setHeaderLineNumber(int headerLineNumber);
+    IResultSetBuilder1cVisibleRows<T> wrapHeader(int headerLineNumber);
 }
