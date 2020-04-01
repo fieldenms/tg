@@ -177,6 +177,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
                 scrollConfig,
                 pageCapacity,
                 visibleRowsCount,
+                headerLineNumber,
                 egiHeight,
                 fitToHeight,
                 rowHeight,

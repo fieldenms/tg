@@ -322,6 +322,18 @@ const template = html`
             overflow: hidden;
             text-overflow: ellipsis;
         }
+        .truncate-with-line-number {
+            --egi-number-of-header-lines: 1;
+            --egi-header-line-height: 1.2em;
+            line-height: var(--egi-header-line-height);
+            max-height: calc(var(--egi-header-line-height) * var(--egi-number-of-header-lines));
+            position: relative;
+            overflow: hidden;
+            /* overflow: hidden;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: var(--egi-number-of-header-lines, 1); */
+        }
         tg-egi-cell.with-action {
             cursor: pointer;
         }
@@ -454,7 +466,7 @@ const template = html`
                         <template is="dom-repeat" items="[[fixedColumns]]">
                             <div class="table-cell cell" fixed style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, item.shouldAddDynamicWidth, 'true')]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                                 <div class="table-header-column-content">
-                                    <div class="truncate table-header-column-title" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
+                                    <div class="truncate-with-line-number table-header-column-title" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
                                     <iron-icon class="header-icon indicator-icon" hidden$="[[!item.editable]]" tooltip-text="This column is editable" icon="icons:create"></iron-icon>
                                     <div class="header-icon sorting-group" hidden$="[[!_isSortingVisible(item.sortable, item.sorting)]]">
                                         <iron-icon class="indicator-icon" icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_computeSortingIconStyle(item.sorting)]]"></iron-icon>
@@ -477,7 +489,7 @@ const template = html`
                         <template is="dom-repeat" items="[[columns]]">
                             <div class="table-cell cell" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, item.shouldAddDynamicWidth, 'false')]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                                 <div class="table-header-column-content">
-                                    <div class="truncate table-header-column-title" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
+                                    <div class="truncate-with-line-number table-header-column-title" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
                                     <iron-icon class="header-icon indicator-icon" hidden="[[!item.editable]]" tooltip-text="This column is editable" icon="icons:create"></iron-icon>
                                     <div class="header-icon sorting-group" hidden$="[[!_isSortingVisible(item.sortable, item.sorting)]]">
                                         <iron-icon class="indicator-icon" icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_computeSortingIconStyle(item.sorting)]]"></iron-icon>
@@ -758,6 +770,15 @@ Polymer({
         showMarginAround: {
             type: Boolean,
             value: true
+        },
+        /**
+         * Defines the number of wrapped lines in egi
+         */
+        numberOfHeaderLines: {
+            type: Number,
+            value: 1,
+            //TODO implement observer
+            observer: "_numberOfHeaderLinesChanged"
         },
         /**
          * Defines the number of visible rows.
@@ -1838,6 +1859,12 @@ Polymer({
 
     _rowHeightChanged: function (newValue) {
         this.updateStyles({"--egi-row-height": newValue});
+    },
+
+    _numberOfHeaderLinesChanged: function (newValue) {
+        if (newValue > 0 && newValue < 4) {
+            this.updateStyles({"--egi-number-of-header-lines": newValue});
+        }
     },
 
     _sortIndicatorWidthChanged: function (newValue) {

@@ -126,6 +126,8 @@ public class CentreConfigurationWebUiConfig {
                                     + "            master.$.editor_4_pageCapacity.commit();\n"
                                     + "            master.$.editor_4_visibleRows._editingValue = self.$.egi.visibleRowCount + '';\n"
                                     + "            master.$.editor_4_visibleRows.commit();\n"
+                                    + "            master.$.editor_4_numberOfHeaderLines._editingValue = self.$.egi.numberOfHeaderLines + '';\n"
+                                    + "            master.$.editor_4_numberOfHeaderLines.commit();\n"
                                     +"         });\n"
                                     + "    }\n"
                                     + ""))
@@ -134,6 +136,7 @@ public class CentreConfigurationWebUiConfig {
                                    + "     const shouldRunCentre = functionalEntity.get('sortingChanged') === true || self.$.selection_criteria.pageCapacity !== functionalEntity.get('pageCapacity');\n"
                                     + "    self.$.selection_criteria.pageCapacity = functionalEntity.get('pageCapacity');\n"
                                     + "    self.$.egi.visibleRowCount = functionalEntity.get('visibleRows');\n"
+                                    + "    self.$.egi.numberOfHeaderLines = functionalEntity.get('numberOfHeaderLines');\n"
                                     + "    if (shouldRunCentre) {\n"
                                     + "        return self.retrieve().then(function () { self.run(undefined, true); });\n"
                                     + "    } else {\n"
