@@ -65,6 +65,22 @@ public class CentreConfigUpdater extends AbstractFunctionalEntityForCollectionMo
     @BeforeChange({@Handler(value = GreaterOrEqualValidator.class, str = {@StrParam(name = "limit", value = "0")})})
     private Integer visibleRows;
 
+    @IsProperty
+    @Title(value = "Number of Header Lines", desc = "The maximum number of wrapped lines in table header. Minumum is 1 and maximum is 3.")
+    @BeforeChange({@Handler(value = GreaterValidator.class, str = {@StrParam(name = "limit", value = "0")}),
+                   @Handler(value = MaxValueValidator.class, str = {@StrParam(name = "limit", value = "3")})})
+    private Integer numberOfHeaderLines;
+
+    @Observable
+    public CentreConfigUpdater setNumberOfHeaderLines(final Integer numberOfHeaderLines) {
+        this.numberOfHeaderLines = numberOfHeaderLines;
+        return this;
+    }
+
+    public Integer getNumberOfHeaderLines() {
+        return numberOfHeaderLines;
+    }
+
     @Observable
     public CentreConfigUpdater setVisibleRows(final Integer visibleRows) {
         this.visibleRows = visibleRows;

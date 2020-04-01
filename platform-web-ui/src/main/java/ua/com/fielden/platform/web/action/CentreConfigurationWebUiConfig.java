@@ -61,7 +61,7 @@ public class CentreConfigurationWebUiConfig {
     public final EntityMaster<OverrideCentreConfig> overrideCentreConfigMaster;
 
     public CentreConfigurationWebUiConfig(final Injector injector) {
-        centreConfigUpdater = createCentreConfigUpdater(injector, "['padding:20px', 'height: 100%', 'box-sizing: border-box', ['flex', ['flex']], [['flex', 'padding-right:20px'], ['flex']]]");
+        centreConfigUpdater = createCentreConfigUpdater(injector, "['padding:20px', 'height: 100%', 'box-sizing: border-box', ['flex', ['flex']], [], [], []]");
         centreColumnWidthConfigUpdater = createCentreColumnWidthConfigUpdater(injector);
         centreConfigNewActionMaster = createCentreConfigNewActionMaster(injector);
         centreConfigDuplicateActionMaster = createCentreConfigDuplicateActionMaster(injector);
@@ -85,8 +85,8 @@ public class CentreConfigurationWebUiConfig {
                 .forEntity(CentreConfigUpdater.class)
                 .addProp("customisableColumns").asCollectionalEditor().reorderable().withHeader("title").also()
                 .addProp("pageCapacity").asSpinner().also()
-                .addProp("visibleRows").asSpinner()
-                .also()
+                .addProp("visibleRows").asSpinner().also()
+                .addProp("numberOfHeaderLines").asSpinner().also()
                 .addAction(REFRESH).shortDesc("CANCEL").longDesc("Cancel not applied changes and close the dialog.")
                 .addAction(SAVE).shortDesc("APPLY").longDesc("Apply changes.").keepMasterOpenAfterExecution()
                 .setActionBarLayoutFor(DESKTOP, empty(), actionLayout)
