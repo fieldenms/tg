@@ -176,7 +176,6 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> implements ICentreTopL
 
     @Override
     public IResultSetBuilder1cVisibleRows<T> wrapHeader(final int headerLineNumber) {
-        // TODO Auto-generated method stub
-        return null;
+        return new ResultSetBuilder<>(builder).wrapHeader(headerLineNumber);
     }
 }

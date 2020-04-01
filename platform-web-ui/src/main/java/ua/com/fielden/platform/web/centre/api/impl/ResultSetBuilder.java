@@ -606,7 +606,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
 
     @Override
     public IResultSetBuilder1cVisibleRows<T> wrapHeader(final int headerLineNumber) {
-        // TODO Auto-generated method stub
-        return null;
+        this.builder.setHeaderLineNumber(headerLineNumber);
+        return this;
     }
 }
