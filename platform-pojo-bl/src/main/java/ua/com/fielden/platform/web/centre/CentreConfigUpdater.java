@@ -63,7 +63,7 @@ public class CentreConfigUpdater extends AbstractFunctionalEntityForCollectionMo
     @Title(value = "Visible Rows", desc = "The number of visible rows. Value 0 (zero) stands for \"display all data retrieved\".")
     @Required
     @BeforeChange({@Handler(value = GreaterOrEqualValidator.class, str = {@StrParam(name = "limit", value = "0")})})
-    private Integer visibleRows;
+    private Integer visibleRowsCount;
 
     @IsProperty
     @Title(value = "Number of Header Lines", desc = "The maximum number of wrapped lines in table header. Minumum is 1 and maximum is 3.")
@@ -82,13 +82,13 @@ public class CentreConfigUpdater extends AbstractFunctionalEntityForCollectionMo
     }
 
     @Observable
-    public CentreConfigUpdater setVisibleRows(final Integer visibleRows) {
-        this.visibleRows = visibleRows;
+    public CentreConfigUpdater setVisibleRowsCount(final Integer visibleRowsCount) {
+        this.visibleRowsCount = visibleRowsCount;
         return this;
     }
 
-    public Integer getVisibleRows() {
-        return visibleRows;
+    public Integer getVisibleRowsCount() {
+        return visibleRowsCount;
     }
 
     @Observable

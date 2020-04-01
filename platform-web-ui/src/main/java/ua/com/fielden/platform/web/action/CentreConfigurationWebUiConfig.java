@@ -88,7 +88,7 @@ public class CentreConfigurationWebUiConfig {
                 .forEntity(CentreConfigUpdater.class)
                 .addProp("customisableColumns").asCollectionalEditor().reorderable().withHeader("title").also()
                 .addProp("pageCapacity").asSpinner().also()
-                .addProp("visibleRows").asSpinner().also()
+                .addProp("visibleRowsCount").asSpinner().also()
                 .addProp("numberOfHeaderLines").asSpinner().also()
                 .addAction(REFRESH).shortDesc("CANCEL").longDesc("Cancel not applied changes and close the dialog.")
                 .addAction(SAVE).shortDesc("APPLY").longDesc("Apply changes.").keepMasterOpenAfterExecution()
@@ -124,8 +124,8 @@ public class CentreConfigurationWebUiConfig {
                                     + "        action.modifyFunctionalEntity = (function (bindingEntity, master) {\n"
                                     + "            master.$.editor_4_pageCapacity._editingValue = self.$.selection_criteria.pageCapacity + '';\n"
                                     + "            master.$.editor_4_pageCapacity.commit();\n"
-                                    + "            master.$.editor_4_visibleRows._editingValue = self.$.egi.visibleRowCount + '';\n"
-                                    + "            master.$.editor_4_visibleRows.commit();\n"
+                                    + "            master.$.editor_4_visibleRowsCount._editingValue = self.$.egi.visibleRowsCount + '';\n"
+                                    + "            master.$.editor_4_visibleRowsCount.commit();\n"
                                     + "            master.$.editor_4_numberOfHeaderLines._editingValue = self.$.egi.numberOfHeaderLines + '';\n"
                                     + "            master.$.editor_4_numberOfHeaderLines.commit();\n"
                                     +"         });\n"
@@ -135,7 +135,7 @@ public class CentreConfigurationWebUiConfig {
                                 new JsCode(""
                                    + "     const shouldRunCentre = functionalEntity.get('sortingChanged') === true || self.$.selection_criteria.pageCapacity !== functionalEntity.get('pageCapacity');\n"
                                     + "    self.$.selection_criteria.pageCapacity = functionalEntity.get('pageCapacity');\n"
-                                    + "    self.$.egi.visibleRowCount = functionalEntity.get('visibleRows');\n"
+                                    + "    self.$.egi.visibleRowsCount = functionalEntity.get('visibleRowsCount');\n"
                                     + "    self.$.egi.numberOfHeaderLines = functionalEntity.get('numberOfHeaderLines');\n"
                                     + "    if (shouldRunCentre) {\n"
                                     + "        return self.retrieve().then(function () { self.run(undefined, true); });\n"
