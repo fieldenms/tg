@@ -61,7 +61,9 @@ public class CentreConfigurationWebUiConfig {
     public final EntityMaster<OverrideCentreConfig> overrideCentreConfigMaster;
 
     public CentreConfigurationWebUiConfig(final Injector injector) {
-        centreConfigUpdater = createCentreConfigUpdater(injector, "['padding:20px', 'height: 100%', 'box-sizing: border-box', ['flex', ['flex']], [], [], []]");
+        centreConfigUpdater = createCentreConfigUpdater(injector,
+                "['padding:20px', 'height: 100%', 'box-sizing: border-box', ['flex', ['flex']], [['flex', 'padding-right:20px'], ['flex', 'padding-right:20px'], ['flex']]]",
+                "['padding:20px', 'height: 100%', 'box-sizing: border-box', ['flex', ['flex']], [], [], []]");
         centreColumnWidthConfigUpdater = createCentreColumnWidthConfigUpdater(injector);
         centreConfigNewActionMaster = createCentreConfigNewActionMaster(injector);
         centreConfigDuplicateActionMaster = createCentreConfigDuplicateActionMaster(injector);
@@ -75,10 +77,11 @@ public class CentreConfigurationWebUiConfig {
 
     /**
      * Creates entity master for {@link CentreConfigUpdater}.
+     * @param masterMobileLayout
      *
      * @return
      */
-    private static EntityMaster<CentreConfigUpdater> createCentreConfigUpdater(final Injector injector, final String masterLayout) {
+    private static EntityMaster<CentreConfigUpdater> createCentreConfigUpdater(final Injector injector, final String masterLayout, final String masterMobileLayout) {
         final FlexLayoutConfig horizontal = layout().withClass("wrap").withStyle("padding", "10px").horizontal().centerJustified().end();
         final String actionLayout = cell(cell().cell().layoutForEach(layout().withStyle("width", MASTER_ACTION_DEFAULT_WIDTH + "px").withStyle("margin", "0px 10px 10px 10px").end()), horizontal).toString();
         final IMaster<CentreConfigUpdater> masterConfig = new SimpleMasterBuilder<CentreConfigUpdater>()
@@ -94,7 +97,7 @@ public class CentreConfigurationWebUiConfig {
                 .setActionBarLayoutFor(MOBILE, empty(), actionLayout)
                 .setLayoutFor(DESKTOP, empty(), masterLayout)
                 .setLayoutFor(TABLET, empty(), masterLayout)
-                .setLayoutFor(MOBILE, empty(), masterLayout)
+                .setLayoutFor(MOBILE, empty(), masterMobileLayout)
                 .withDimensions(mkDim("'30%'", "'50%'"))
                 .done();
         return new EntityMaster<>(CentreConfigUpdater.class, CentreConfigUpdaterProducer.class, masterConfig, injector);
