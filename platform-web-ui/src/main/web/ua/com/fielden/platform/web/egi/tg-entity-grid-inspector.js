@@ -323,16 +323,16 @@ const template = html`
             text-overflow: ellipsis;
         }
         .truncate-with-line-number {
-            --egi-number-of-header-lines: 1;
+            /* --egi-number-of-header-lines: 1;
             --egi-header-line-height: 1.2em;
             line-height: var(--egi-header-line-height);
             max-height: calc(var(--egi-header-line-height) * var(--egi-number-of-header-lines));
             position: relative;
+            overflow: hidden; */
             overflow: hidden;
-            /* overflow: hidden;
             display: -webkit-box;
             -webkit-box-orient: vertical;
-            -webkit-line-clamp: var(--egi-number-of-header-lines, 1); */
+            -webkit-line-clamp: var(--egi-number-of-header-lines, 1);
         }
         tg-egi-cell.with-action {
             cursor: pointer;
