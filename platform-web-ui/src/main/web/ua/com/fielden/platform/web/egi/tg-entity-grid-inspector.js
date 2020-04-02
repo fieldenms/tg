@@ -137,6 +137,7 @@ const template = html`
              cursor: col-resize;
         }
         .table-header-row {
+            line-height: 1rem;
             font-size: 0.9rem;
             font-weight: 400;
             color: #757575;
