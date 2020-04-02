@@ -778,7 +778,7 @@ Polymer({
         /**
          * Defines the number of visible rows.
          */
-        visibleRowCount: {
+        visibleRowsCount: {
             type: Number,
             value: 0
         },
@@ -898,7 +898,7 @@ Polymer({
 
     observers: [
         "_columnsChanged(columns, fixedColumns)",
-        "_heightRelatedPropertiesChanged(visibleRowCount, rowHeight, constantHeight, fitToHeight, summaryFixed, _totalsRowCount)"
+        "_heightRelatedPropertiesChanged(visibleRowsCount, rowHeight, constantHeight, fitToHeight, summaryFixed, _totalsRowCount)"
     ],
 
     created: function () {
@@ -1911,7 +1911,7 @@ Polymer({
         this._totalsRows = gridSummary;
     },
 
-    _heightRelatedPropertiesChanged: function (visibleRowCount, rowHeight, constantHeight, fitToHeight, summaryFixed, _totalsRowCount) {
+    _heightRelatedPropertiesChanged: function (visibleRowsCount, rowHeight, constantHeight, fitToHeight, summaryFixed, _totalsRowCount) {
         //Constant height take precedence over visible row count which takes precedence over default behaviour that extends the EGI's height to it's content height
         this.$.paperMaterial.style.removeProperty("height");
         this.$.paperMaterial.style.removeProperty("min-height");
@@ -1919,9 +1919,9 @@ Polymer({
         this.$.scrollableContainer.style.removeProperty("max-height");
         if (constantHeight) { //Set the height for the egi
             this.$.paperMaterial.style["height"] = "calc(" + constantHeight + " - 20px)";
-        } else if (visibleRowCount > 0) { //Set the height or max height for the scroll container so that only specified number of rows become visible.
+        } else if (visibleRowsCount > 0) { //Set the height or max height for the scroll container so that only specified number of rows become visible.
             this.$.paperMaterial.style["min-height"] = "fit-content";
-            const rowCount = visibleRowCount + (summaryFixed ? _totalsRowCount : 0);
+            const rowCount = visibleRowsCount + (summaryFixed ? _totalsRowCount : 0);
             const bottomMargin = this.getComputedStyleValue('--egi-bottom-margin').trim() || "15px";
             const height = "calc(3rem + " + rowCount + " * " + rowHeight + " + " + rowCount + "px" + (summaryFixed && _totalsRowCount > 0 ? (" + " + bottomMargin) : "") + ")";
             if (fitToHeight) {

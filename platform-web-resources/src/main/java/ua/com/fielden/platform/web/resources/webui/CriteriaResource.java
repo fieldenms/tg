@@ -203,6 +203,7 @@ public class CriteriaResource extends AbstractWebResource {
                     createCriteriaMetaValuesCustomObject(
                             createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)),
                             isFreshCentreChanged(updatedFreshCentre, updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder)),
+                            updatedFreshCentre.getSecondTick().getPageCapacity(),
                             createStaleCriteriaMessage((String) modifiedPropertiesHolder.get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, userProvider, companionFinder, critGenerator, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion)
                     )//
             );
@@ -230,6 +231,7 @@ public class CriteriaResource extends AbstractWebResource {
                 createCriteriaMetaValuesCustomObjectWithSaveAsInfo(
                         createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)),
                         isFreshCentreChanged(updatedFreshCentre, updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder)),
+                        updatedFreshCentre.getSecondTick().getPageCapacity(),
                         of(saveAsName),
                         of(ofNullable(saveAsDesc)),
                         empty()
@@ -259,6 +261,7 @@ public class CriteriaResource extends AbstractWebResource {
                 createCriteriaMetaValuesCustomObjectWithSaveAsInfo(
                         createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)),
                         false,
+                        updatedFreshCentre.getSecondTick().getPageCapacity(),
                         empty(),
                         saveAsDesc,
                         of(ofNullable(staleCriteriaMessage))

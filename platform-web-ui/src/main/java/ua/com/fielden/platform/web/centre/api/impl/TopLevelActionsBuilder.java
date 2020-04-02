@@ -17,7 +17,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1Toolba
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aScroll;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1bPageCapacity;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cHeaderWrap;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cVisibleRows;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cVisibleRowsCount;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1dFitBehaviour;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1eRowHeight;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2Properties;
@@ -175,7 +175,7 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> implements ICentreTopL
     }
 
     @Override
-    public IResultSetBuilder1cVisibleRows<T> wrapHeader(final int headerLineNumber) {
+    public IResultSetBuilder1cVisibleRowsCount<T> wrapHeader(final int headerLineNumber) {
         return new ResultSetBuilder<>(builder).wrapHeader(headerLineNumber);
     }
 }
