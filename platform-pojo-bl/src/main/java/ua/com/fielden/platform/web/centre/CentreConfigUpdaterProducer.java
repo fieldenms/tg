@@ -4,9 +4,9 @@ import static java.util.stream.Collectors.toCollection;
 import static ua.com.fielden.platform.web.centre.CentreConfigUpdaterUtils.createCustomisableColumns;
 import static ua.com.fielden.platform.web.centre.CentreConfigUpdaterUtils.createSortingVals;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.checkedPropertiesWithoutSummaries;
+
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 import com.google.inject.Inject;
@@ -74,6 +74,11 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
         
         // provide sorting values into the action
         entity.setSortingVals(createSortingVals(customisableColumns));
+        
+        // provide pageCapacity, visibleRowsCount and numberOfHeaderLines into the action
+        entity.setPageCapacity(previouslyRunCentre.getSecondTick().getPageCapacity());
+        entity.setVisibleRowsCount(previouslyRunCentre.getSecondTick().getVisibleRowsCount());
+        entity.setNumberOfHeaderLines(previouslyRunCentre.getSecondTick().getNumberOfHeaderLines());
         return entity;
     }
     

@@ -118,19 +118,6 @@ public class CentreConfigurationWebUiConfig {
             public EntityActionConfig mkAction() {
                 return action(CentreConfigUpdater.class)
                         .withContext(context().withSelectionCrit().build())
-                        .preAction(() ->
-                            new JsCode(""
-                                    + "    if (!action.modifyFunctionalEntity) {\n"
-                                    + "        action.modifyFunctionalEntity = (function (bindingEntity, master) {\n"
-                                    + "            master.$.editor_4_pageCapacity._editingValue = self.$.selection_criteria.pageCapacity + '';\n"
-                                    + "            master.$.editor_4_pageCapacity.commit();\n"
-                                    + "            master.$.editor_4_visibleRowsCount._editingValue = self.$.egi.visibleRowsCount + '';\n"
-                                    + "            master.$.editor_4_visibleRowsCount.commit();\n"
-                                    + "            master.$.editor_4_numberOfHeaderLines._editingValue = self.$.egi.numberOfHeaderLines + '';\n"
-                                    + "            master.$.editor_4_numberOfHeaderLines.commit();\n"
-                                    +"         });\n"
-                                    + "    }\n"
-                                    + ""))
                         .postActionSuccess(() ->// self.run should be invoked with isSortingAction=true parameter (and isAutoRunning=undefined). See tg-entity-centre-behavior 'run' property for more details.
                                 new JsCode(""
                                    + "     const shouldRunCentre = functionalEntity.get('sortingChanged') === true || self.$.selection_criteria.pageCapacity !== functionalEntity.get('pageCapacity');\n"

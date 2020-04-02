@@ -413,7 +413,11 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 }
             }
         }
-
+        
+        cdtmae.getSecondTick().setPageCapacity(dslDefaultConfig.getPageCapacity());
+        cdtmae.getSecondTick().setVisibleRowsCount(dslDefaultConfig.getVisibleRowsCount());
+        cdtmae.getSecondTick().setNumberOfHeaderLines(dslDefaultConfig.getNumberOfHeaderLines());
+        
         return postCentreCreated == null ? cdtmae : postCentreCreated.apply(cdtmae);
     }
 

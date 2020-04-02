@@ -786,6 +786,38 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
             base().setWidthsAndGrowFactors(widthsAndGrowFactors);
         }
 
+        @Override
+        public int getPageCapacity() {
+            return base().getPageCapacity();
+        }
+
+        @Override
+        public IAddToResultTickManager setPageCapacity(final int pageCapacity) {
+            base().setPageCapacity(pageCapacity);
+            return this;
+        }
+
+        @Override
+        public int getVisibleRowsCount() {
+            return base().getVisibleRowsCount();
+        }
+
+        @Override
+        public IAddToResultTickManager setVisibleRowsCount(final int visibleRowsCount) {
+            base().setVisibleRowsCount(visibleRowsCount);
+            return this;
+        }
+
+        @Override
+        public int getNumberOfHeaderLines() {
+            return base().getNumberOfHeaderLines();
+        }
+
+        @Override
+        public IAddToResultTickManager setNumberOfHeaderLines(final int numberOfHeaderLines) {
+            base().setNumberOfHeaderLines(numberOfHeaderLines);
+            return this;
+        }
     }
 
     @Override

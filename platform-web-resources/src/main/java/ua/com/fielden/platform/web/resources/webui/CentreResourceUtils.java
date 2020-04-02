@@ -76,6 +76,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.CentreContext;
+import ua.com.fielden.platform.web.centre.CentreUpdater;
 import ua.com.fielden.platform.web.centre.CentreUtils;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
@@ -119,32 +120,41 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
 
     ///////////////////////////////// CUSTOM OBJECTS /////////////////////////////////
     /**
-     * Creates the 'custom object' that contain 'critMetaValues' and 'isCentreChanged' flag.
+     * Creates the 'custom object' that contains 'critMetaValues', 'isCentreChanged' flag and 'pageCapacity'.
+     * <p>
+     * This custom object will contain current value for 'pageCapacity' as per {@link CentreUpdater#FRESH_CENTRE_NAME} surrogate centre
+     * that is always synchronised with corresponding value in {@link CentreUpdater#PREVIOUSLY_RUN_CENTRE_NAME} surrogate centre.
+     * The only reason why this property can not be send to client-side after running is that running itself requires this property. This is 
+     * unlike other user-driven persistent properties like 'visibleRowsCount' and 'numberOfHeaderLines'.
      *
      * @param criteriaMetaValues
      * @param isCentreChanged
+     * @param pageCapacity
      * @return
      */
-    static Map<String, Object> createCriteriaMetaValuesCustomObject(final Map<String, Map<String, Object>> criteriaMetaValues, final boolean isCentreChanged) {
+    static Map<String, Object> createCriteriaMetaValuesCustomObject(final Map<String, Map<String, Object>> criteriaMetaValues, final boolean isCentreChanged, final int pageCapacity) {
         final Map<String, Object> customObject = new LinkedHashMap<>();
         customObject.put("isCentreChanged", isCentreChanged);
         customObject.put("metaValues", criteriaMetaValues);
+        customObject.put("pageCapacity", pageCapacity);
         return customObject;
     }
 
     /**
-     * Creates the 'custom object' that contains 'critMetaValues', 'isCentreChanged' flag, optional 'saveAsName' value and optional 'saveAsDesc' value.
+     * Creates the 'custom object' that contains 'critMetaValues', 'isCentreChanged' flag and 'pageCapacity' (see {@link #createCriteriaMetaValuesCustomObject(Map, boolean, int)},
+     * optional 'saveAsName' value and optional 'saveAsDesc' value.
      *
      * @param criteriaMetaValues
      * @param isCentreChanged
+     * @param pageCapacity
      * @param saveAsName -- represents a configuration title to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
      * @param saveAsDesc -- represents a configuration title's tooltip to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
      * @param staleCriteriaMessage
      *
      * @return
      */
-    static Map<String, Object> createCriteriaMetaValuesCustomObjectWithSaveAsInfo(final Map<String, Map<String, Object>> criteriaMetaValues, final boolean isCentreChanged, final Optional<Optional<String>> saveAsName, final Optional<Optional<String>> saveAsDesc, final Optional<Optional<String>> staleCriteriaMessage) {
-        final Map<String, Object> customObject = createCriteriaMetaValuesCustomObject(criteriaMetaValues, isCentreChanged);
+    static Map<String, Object> createCriteriaMetaValuesCustomObjectWithSaveAsInfo(final Map<String, Map<String, Object>> criteriaMetaValues, final boolean isCentreChanged, final int pageCapacity, final Optional<Optional<String>> saveAsName, final Optional<Optional<String>> saveAsDesc, final Optional<Optional<String>> staleCriteriaMessage) {
+        final Map<String, Object> customObject = createCriteriaMetaValuesCustomObject(criteriaMetaValues, isCentreChanged, pageCapacity);
         saveAsName.ifPresent(name -> {
             customObject.put("saveAsName", name.orElse(""));
         });
@@ -158,18 +168,19 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     }
 
     /**
-     * Creates the 'custom object' that contain 'critMetaValues' and 'isCentreChanged' flag.
+     * Creates the 'custom object' that contain 'critMetaValues', 'isCentreChanged' flag, 'pageCapacity' (see {@link #createCriteriaMetaValuesCustomObject(Map, boolean, int)}) and 'staleCriteriaMessage'.
      *
      * @param criteriaMetaValues
      * @param isCentreChanged
+     * @param pageCapacity
      * @param staleCriteriaMessage
      *            -- if not <code>null</code> then the criteria is stale and the user will be informed about that ('orange' config button), otherwise (if <code>null</code>) -- the
      *            criteria were not changed and the user will be informed about that ('black' config button).
      *
      * @return
      */
-    static Map<String, Object> createCriteriaMetaValuesCustomObject(final Map<String, Map<String, Object>> criteriaMetaValues, final boolean isCentreChanged, final String staleCriteriaMessage) {
-        final Map<String, Object> customObject = createCriteriaMetaValuesCustomObject(criteriaMetaValues, isCentreChanged);
+    static Map<String, Object> createCriteriaMetaValuesCustomObject(final Map<String, Map<String, Object>> criteriaMetaValues, final boolean isCentreChanged, final int pageCapacity, final String staleCriteriaMessage) {
+        final Map<String, Object> customObject = createCriteriaMetaValuesCustomObject(criteriaMetaValues, isCentreChanged, pageCapacity);
         customObject.put("staleCriteriaMessage", staleCriteriaMessage);
         return customObject;
     }
@@ -278,6 +289,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final Map<String, Object> resultConfigObject = new LinkedHashMap<>();
         resultConfigObject.put("visibleColumnsWithOrder", criteriaEntity.getCentreDomainTreeMangerAndEnhancer().getSecondTick().usedProperties(criteriaEntity.getEntityClass()));
         resultConfigObject.put("orderingConfig", createOrderingProperties(criteriaEntity.getCentreDomainTreeMangerAndEnhancer().getSecondTick().orderedProperties(criteriaEntity.getEntityClass())));
+        resultConfigObject.put("pageCapacity", criteriaEntity.getCentreDomainTreeMangerAndEnhancer().getSecondTick().getPageCapacity());
+        resultConfigObject.put("visibleRowsCount", criteriaEntity.getCentreDomainTreeMangerAndEnhancer().getSecondTick().getVisibleRowsCount());
+        resultConfigObject.put("numberOfHeaderLines", criteriaEntity.getCentreDomainTreeMangerAndEnhancer().getSecondTick().getNumberOfHeaderLines());
         return resultConfigObject;
     }
 
@@ -508,6 +522,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final Map<String, Object> customObject = createCriteriaMetaValuesCustomObjectWithSaveAsInfo(
                 createCriteriaMetaValues(freshCentre, getEntityType(miType)),
                 isFreshCentreChanged(freshCentre, updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, customObjectSaveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder)),
+                freshCentre.getSecondTick().getPageCapacity(),
                 of(customObjectSaveAsName),
                 of(validationPrototype.centreTitleAndDesc(customObjectSaveAsName).map(titleDesc -> titleDesc._2)),
                 empty()

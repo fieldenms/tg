@@ -525,6 +525,9 @@ const TgEntityCentreBehaviorImpl = {
                 this.selectionCriteriaEntity = criteriaEntity;
                 this.$.egi.renderingHints = renderingHints;
                 this.$.egi.adjustColumnWidths(columnWidths);
+                this.$.selection_criteria.pageCapacity = resultConfig.pageCapacity;
+                this.$.egi.visibleRowsCount = resultConfig.visibleRowsCount;
+                this.$.egi.numberOfHeaderLines = resultConfig.numberOfHeaderLines;
                 this.$.egi.adjustColumnsVisibility(resultConfig.visibleColumnsWithOrder.map(column => column === "this" ? "" : column));
                 this.$.egi.adjustColumnsSorting(resultConfig.orderingConfig.map(propOrder => {
                    if (propOrder.property === "this") {

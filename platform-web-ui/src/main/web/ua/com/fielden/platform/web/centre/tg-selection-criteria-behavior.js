@@ -86,7 +86,7 @@ const TgSelectionCriteriaBehaviorImpl = {
         },
 
         /**
-         * Currently immutable capacity of the page.
+         * Capacity of the page.
          */
         pageCapacity: {
             type: Number
@@ -346,6 +346,7 @@ const TgSelectionCriteriaBehaviorImpl = {
         }
         this._setPropertyModel(customObject.metaValues);
         this._centreChanged = customObject.isCentreChanged;
+        this.pageCapacity = customObject.pageCapacity; // this user-configurable persistent property must be loaded from current FRESH surrogate centre configuration, which is synced with PREVIOUSLY_RUN one; this is to have actual user-configurable pageCapacity set before first running
         if (typeof customObject.saveAsDesc !== 'undefined') {
             this.saveAsDesc = customObject.saveAsDesc;
         }
@@ -565,8 +566,8 @@ const TgSelectionCriteriaBehaviorImpl = {
             resolve(
                 self._runModifiedProperties(
                     self._createContextHolderForRunning(function () {
-                        return action === RunActions.run ? self._reset(_persistedModifiedPropertiesHolder) : null;
-                    },
+                            return action === RunActions.run ? self._reset(_persistedModifiedPropertiesHolder) : null;
+                        },
                         action,
                         isAutoRunning,
                         isSortingAction,
