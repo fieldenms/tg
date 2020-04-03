@@ -768,17 +768,19 @@ Polymer({
             value: true
         },
         /**
-         * Defines the number of wrapped lines in egi
+         * Defines the number of wrapped lines in EGI.
          */
         numberOfHeaderLines: {
             type: Number,
+            value: 1,
             observer: "_numberOfHeaderLinesChanged"
         },
         /**
          * Defines the number of visible rows.
          */
         visibleRowsCount: {
-            type: Number
+            type: Number,
+            value: 0
         },
         rowHeight: {
             type: String,
