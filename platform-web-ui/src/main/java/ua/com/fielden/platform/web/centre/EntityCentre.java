@@ -173,7 +173,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private static final String EGI_SECONDARY_ACTION_FIXED = "@secondaryActionsFixed";
     private static final String EGI_HEADER_FIXED = "@headerFixed";
     private static final String EGI_SUMMARY_FIXED = "@summaryFixed";
-    private static final String EGI_VISIBLE_ROWS_COUNT = "@visibleRowsCount";
     private static final String EGI_NUMBER_OF_HEADER_LINES = "@numberOfHeaderLines";
     private static final String EGI_HEIGHT = "@egiHeight";
     private static final String EGI_FIT_TO_HEIGHT = "@fitToHeight";
@@ -1136,7 +1135,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace(EGI_SECONDARY_ACTION_FIXED, SECONDARY_ACTION_FIXED.eval(dslDefaultConfig.getScrollConfig().isSecondaryActionsFixed())).
                 replace(EGI_HEADER_FIXED, HEADER_FIXED.eval(dslDefaultConfig.getScrollConfig().isHeaderFixed())).
                 replace(EGI_SUMMARY_FIXED, SUMMARY_FIXED.eval(dslDefaultConfig.getScrollConfig().isSummaryFixed())).
-                replace(EGI_VISIBLE_ROWS_COUNT, dslDefaultConfig.getVisibleRowsCount() + "").
                 replace(EGI_NUMBER_OF_HEADER_LINES, dslDefaultConfig.getNumberOfHeaderLines() + "").
                 replace(EGI_HEIGHT, dslDefaultConfig.getEgiHeight()).
                 replace(EGI_ROW_HEIGHT, dslDefaultConfig.getRowHeight()).

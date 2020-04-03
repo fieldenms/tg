@@ -780,8 +780,7 @@ Polymer({
          * Defines the number of visible rows.
          */
         visibleRowsCount: {
-            type: Number,
-            value: 0
+            type: Number
         },
         rowHeight: {
             type: String,
