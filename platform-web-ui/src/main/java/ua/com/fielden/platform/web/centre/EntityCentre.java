@@ -178,7 +178,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private static final String EGI_HEIGHT = "@egiHeight";
     private static final String EGI_FIT_TO_HEIGHT = "@fitToHeight";
     private static final String EGI_ROW_HEIGHT = "@egiRowHeight";
-    private static final String EGI_PAGE_CAPACITY = "@pageCapacity";
     private static final String EGI_ACTIONS = "//generatedActionObjects";
     private static final String EGI_PRIMARY_ACTION = "//generatedPrimaryAction";
     private static final String EGI_SECONDARY_ACTIONS = "//generatedSecondaryActions";
@@ -1147,7 +1146,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace(TOOLBAR_JS, dslDefaultConfig.getToolbarConfig().code(entityType).toString()).
                 replace(TOOLBAR_STYLES, dslDefaultConfig.getToolbarConfig().styles().toString()).
                 replace(FULL_MI_TYPE, miType.getName()).
-                replace(EGI_PAGE_CAPACITY, Integer.toString(dslDefaultConfig.getPageCapacity())).
                 replace(QUERY_ENHANCER_CONFIG, queryEnhancerContextConfigString()).
                 replace(CRITERIA_DOM, editorContainer.toString()).
                 replace(EGI_DOM, egiColumns.toString()).

@@ -86,7 +86,11 @@ const TgSelectionCriteriaBehaviorImpl = {
         },
 
         /**
-         * Capacity of the page.
+         * Page capacity taken from PREVIOUSLY_RUN surrogate centre after run / refresh / navigate action (see tg-entity-centre-behavior._postRun).
+         * 
+         * This is used for two purposes:
+         *  1. update information on EDIT/NAVIGATE action dialogs (see EntityNavigationPreAction);
+         *  2. check whether pageCapacity has been changed (Customise Columns) and trigger running if true.
          */
         pageCapacity: {
             type: Number
@@ -346,7 +350,6 @@ const TgSelectionCriteriaBehaviorImpl = {
         }
         this._setPropertyModel(customObject.metaValues);
         this._centreChanged = customObject.isCentreChanged;
-        this.pageCapacity = customObject.pageCapacity; // this user-configurable persistent property must be loaded from current FRESH surrogate centre configuration, which is synced with PREVIOUSLY_RUN one; this is to have actual user-configurable pageCapacity set before first running
         if (typeof customObject.saveAsDesc !== 'undefined') {
             this.saveAsDesc = customObject.saveAsDesc;
         }
@@ -682,7 +685,7 @@ const TgSelectionCriteriaBehaviorImpl = {
     },
 
     /**
-     * Create context holder for running with custom '@@pageCapacity', "@@pageNumber" and other properties for running, page retrieval or
+     * Create context holder for running with custom "@@pageNumber" and other properties for running, page retrieval or
      *   concrete entities refresh processes.
      *
      * In this method selection criteria modifHolder should be sent every time -- it is required to actually 'run' the query.
@@ -702,7 +705,6 @@ const TgSelectionCriteriaBehaviorImpl = {
             self._reflector().setCustomProperty(contextHolder, "@@forceRegeneration", true);
         }
         self._reflector().setCustomProperty(contextHolder, "@@action", action);
-        self._reflector().setCustomProperty(contextHolder, "@@pageCapacity", self.pageCapacity);
         if (self.pageCount !== null) {
             self._reflector().setCustomProperty(contextHolder, "@@pageNumber", self.pageNumber);
         } else {

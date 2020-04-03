@@ -41,13 +41,9 @@ public class CentreConfigUpdaterDao extends CommonEntityDao<CentreConfigUpdater>
         final EnhancedCentreEntityQueryCriteria<?, ?> criteriaEntityBeingUpdated = actionAndCriteriaBeingUpdated._2;
         final Class<?> root = criteriaEntityBeingUpdated.getEntityClass();
 
-        // use centreAdjuster to update centre managers ('fresh' and 'previously_run') with columns visibility / order / sorting information; also commit them to the database
+        // use centreAdjuster to update centre managers ('fresh' and 'previously_run') with columns visibility / order / sorting / pageCapacity / visibleRowsCount / numberOfHeaderLines information; also commit them to the database
         criteriaEntityBeingUpdated.adjustCentre(centreManager -> {
             applyNewOrderVisibilityAndSorting(centreManager.getSecondTick(), root, actionToSave.getChosenIds(), actionToSave.getSortingVals());
-        });
-        
-        // use centreAdjuster to update centre managers ('fresh' and 'previously_run') with pageCapacity, visibleRowsCount and numberOfHeaderLines information; also commit them to the database
-        criteriaEntityBeingUpdated.adjustCentre(centreManager -> {
             centreManager.getSecondTick().setPageCapacity(actionToSave.getPageCapacity());
             centreManager.getSecondTick().setVisibleRowsCount(actionToSave.getVisibleRowsCount());
             centreManager.getSecondTick().setNumberOfHeaderLines(actionToSave.getNumberOfHeaderLines());
