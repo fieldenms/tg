@@ -348,6 +348,12 @@ const TgEgiMasterBehaviorImpl = {
         return queryElements(this.egi, FOCUSABLE_ELEMENTS_SELECTOR).filter(element => !element.disabled && element.offsetParent !== null);
     },
 
+    /**
+     * @override of _postEntityReceived method from TgEntityBinderBehavior in order to change the save button state if entity is not persistent.
+     * 
+     * @param {Object} entity  - the received entity
+     * @param {Boolean} isRefreshingProcess was master canceled or not
+     */
     _postEntityReceived: function (entity, isRefreshingProcess) {
         TgEntityBinderBehavior._postEntityReceived.call(this, entity, isRefreshingProcess);
         this._bindingEntityNotPersistentOrNotPersistedOrModified = !this._currBindingEntity.isPersisted() || this._bindingEntityModified;
