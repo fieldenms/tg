@@ -121,10 +121,9 @@ public class CentreConfigurationWebUiConfig {
                         .postActionSuccess(() ->// self.run should be invoked with isSortingAction=true parameter (and isAutoRunning=undefined). See tg-entity-centre-behavior 'run' property for more details.
                                 new JsCode(""
                                     // if pageCapacity has been changed then self.$.selection_criteria.pageCapacity will be updated after re-running in tg-entity-centre-behavior._postRun; otherwise -- no need to update it
-                                    + "    const shouldRunCentre = functionalEntity.get('sortingChanged') === true || self.$.selection_criteria.pageCapacity !== functionalEntity.get('pageCapacity');\n"
                                     + "    self.$.egi.visibleRowsCount = functionalEntity.get('visibleRowsCount');\n"
                                     + "    self.$.egi.numberOfHeaderLines = functionalEntity.get('numberOfHeaderLines');\n"
-                                    + "    if (shouldRunCentre) {\n"
+                                    + "    if (functionalEntity.get('triggerRerun') === true) {\n"
                                     + "        return self.retrieve().then(function () { self.run(undefined, true); });\n"
                                     + "    } else {\n"
                                     + "        self.$.egi.adjustColumnsVisibility(functionalEntity.get('chosenIds').map(column => column === 'this' ? '' : column));\n"

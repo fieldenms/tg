@@ -88,9 +88,7 @@ const TgSelectionCriteriaBehaviorImpl = {
         /**
          * Page capacity taken from PREVIOUSLY_RUN surrogate centre after run / refresh / navigate action (see tg-entity-centre-behavior._postRun).
          * 
-         * This is used for two purposes:
-         *  1. update information on EDIT/NAVIGATE action dialogs (see EntityNavigationPreAction);
-         *  2. check whether pageCapacity has been changed (Customise Columns) and trigger running if true.
+         * This is used for single purpose: update information on EDIT/NAVIGATE action dialogs (see EntityNavigationPreAction).
          */
         pageCapacity: {
             type: Number
