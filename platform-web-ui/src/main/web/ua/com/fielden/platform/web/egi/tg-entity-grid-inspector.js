@@ -772,8 +772,6 @@ Polymer({
          */
         numberOfHeaderLines: {
             type: Number,
-            value: 1,
-            //TODO implement observer
             observer: "_numberOfHeaderLinesChanged"
         },
         /**
