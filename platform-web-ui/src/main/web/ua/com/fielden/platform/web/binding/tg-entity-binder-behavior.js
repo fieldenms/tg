@@ -844,7 +844,8 @@ export const TgEntityBinderBehavior = {
         if (self._reflector().isEntity(bindingEntity)) {
             modPropHolder["id"] = bindingEntity.get('id');
             modPropHolder["version"] = bindingEntity["version"];
-            modPropHolder["@@touchedProps"] = bindingEntity["@@touchedProps"].names;
+            modPropHolder["@@touchedProps"] = bindingEntity["@@touchedProps"].names && bindingEntity["@@touchedProps"].names.slice();
+            console.trace('modPropHolder["@@touchedProps"]', modPropHolder["@@touchedProps"]);
 
             bindingEntity.traverseProperties(function (propertyName) {
                 var value = bindingEntity.get(propertyName);

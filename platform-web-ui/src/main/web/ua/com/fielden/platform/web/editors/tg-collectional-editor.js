@@ -847,7 +847,6 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
     } 
     
     moveItem (fromIndex, toIndex) {
-        const chosenIds = this.entity.get("chosenIds");
         this._disableSelectionListeners = true;
         const removedItems = this.splice("_entities", fromIndex, 1);
         if (removedItems.length > 0) {
@@ -855,7 +854,6 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
             this.$.input.updateSizeForIndex(toIndex);
             this.$.input.selectIndex(toIndex);
         }
-        this.entity.set("chosenIds", this._entities.filter(entity => chosenIds.indexOf(this.idOrKey(entity)) >= 0).map(entity => this.idOrKey(entity)));
         this._disableSelectionListeners = false;
     }
     
@@ -912,8 +910,12 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
     }
 
     _endItemReordering (e) {
+        const chosenIds = this.entity.get("chosenIds");
+        this.entity.setAndRegisterPropertyTouch("chosenIds", this._entities.filter(entity => chosenIds.indexOf(this.idOrKey(entity)) >= 0).map(entity => this.idOrKey(entity)));
         delete this._reorderingObject;
         this._draggingItem = null;
+        // invoke validation after user has completed item reordering
+        this._invokeValidation.bind(this)();
     }
     
     _getIndexForElement (element) {
