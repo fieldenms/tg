@@ -28,6 +28,7 @@ import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityExportAction;
 import ua.com.fielden.platform.entity.EntityNavigationAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
+import ua.com.fielden.platform.entity.ReferenceHierarchy;
 import ua.com.fielden.platform.menu.Menu;
 import ua.com.fielden.platform.menu.MenuSaveAction;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
@@ -96,7 +97,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         allResourcePaths.addAll(Arrays.asList(externalResourcePaths));
         this.resourcePaths = new ArrayList<>(Collections.unmodifiableSet(allResourcePaths));
         Collections.reverse(this.resourcePaths);
-        
+
         final ObjectMapper objectMapper = new ObjectMapper();
         try {
             checksums = objectMapper.readValue(getStream(generateFileName(resourcePaths, "checksums.json")), LinkedHashMap.class);
@@ -112,12 +113,13 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     public AbstractWebUiConfig(final String title, final Workflows workflow, final String[] externalResourcePaths) {
             this(title, workflow, externalResourcePaths, false);
     }
-    
+
     @Override
     public void initConfiguration() {
         final EntityMaster<EntityNewAction> genericEntityNewActionMaster = StandardMastersWebUiConfig.createEntityNewMaster(injector());
         final EntityMaster<EntityEditAction> genericEntityEditActionMaster = StandardMastersWebUiConfig.createEntityEditMaster(injector());
         final EntityMaster<EntityNavigationAction> genericEntityNavigationActionMaster = StandardMastersWebUiConfig.createEntityNavigationMaster(injector());
+        final EntityMaster<ReferenceHierarchy> genericReferenceHierarchyMaster = StandardMastersWebUiConfig.createReferenceHierarchyMaster(injector());
         final EntityMaster<EntityExportAction> genericEntityExportActionMaster = StandardMastersWebUiConfig.createExportMaster(injector());
         final EntityMaster<AttachmentPreviewEntityAction> attachmentPreviewMaster = StandardMastersWebUiConfig.createAttachmentPreviewMaster(injector());
         final EntityMaster<EntityDeleteAction> genericEntityDeleteActionMaster = EntityMaster.noUiFunctionalMaster(EntityDeleteAction.class, EntityDeleteActionProducer.class, injector());
@@ -131,6 +133,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         .addMaster(genericEntityNewActionMaster)
         .addMaster(genericEntityEditActionMaster)
         .addMaster(genericEntityNavigationActionMaster)
+        .addMaster(genericReferenceHierarchyMaster)
         .addMaster(attachmentPreviewMaster)
         .addMaster(genericEntityDeleteActionMaster)
         .addMaster(genericEntityExportActionMaster)
@@ -248,15 +251,15 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     public Menu getMenuEntity(final DeviceProfile deviceProfile) {
         return DeviceProfile.DESKTOP.equals(deviceProfile) ? desktopMainMenuConfig.getMenu() : mobileMainMenuConfig.getMenu();
     }
-    
+
     @Override
     public Optional<String> checksum(final String resourceURI) {
         return ofNullable(checksums.get(resourceURI));
     }
-    
+
     @Override
     public boolean independentTimeZone() {
         return independentTimeZone;
     }
-    
+
 }

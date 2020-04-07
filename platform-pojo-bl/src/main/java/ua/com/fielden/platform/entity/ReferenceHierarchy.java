@@ -10,7 +10,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @EntityTitle("Reference Hierarchy")
 @KeyType(NoKey.class)
 @CompanionObject(IReferenceHierarchy.class)
-public class ReferenceHierarchy extends AbstractEntity<NoKey> {
+public class ReferenceHierarchy extends AbstractFunctionalEntityWithCentreContext<NoKey> {
 
     @IsProperty
     @Title(value = "Referenced Entity ID", desc = "Referenced Entity Id for which type level of hierarchy should be build")
@@ -23,6 +23,20 @@ public class ReferenceHierarchy extends AbstractEntity<NoKey> {
     @IsProperty
     @Title(value = "Entity Type", desc = "The type of entity that references the Referenced Entity ID'")
     private String entityType;
+
+    @IsProperty
+    @Title(value = "Reference Hierarchy Filter", desc = "Text to match entity types or entity instances")
+    private String referenceHierarchyFilter;
+
+    @Observable
+    public ReferenceHierarchy setReferenceHierarchyFilter(final String referenceHierarchyFilter) {
+        this.referenceHierarchyFilter = referenceHierarchyFilter;
+        return this;
+    }
+
+    public String getReferenceHierarchyFilter() {
+        return referenceHierarchyFilter;
+    }
 
     @Observable
     public ReferenceHierarchy setRefEntityId(final Long refEntityId) {
