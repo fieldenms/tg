@@ -28,6 +28,7 @@ import ua.com.fielden.platform.entity.EntityNavigationActionProducer;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.entity.EntityNewActionProducer;
 import ua.com.fielden.platform.entity.ReferenceHierarchy;
+import ua.com.fielden.platform.entity.ReferenceHierarchyProducer;
 import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.layout.api.impl.FlexLayoutConfig;
@@ -83,7 +84,7 @@ public class StandardMastersWebUiConfig {
 
     public static EntityMaster<ReferenceHierarchy> createReferenceHierarchyMaster(final Injector injector) {
         return new EntityMaster<>(ReferenceHierarchy.class,
-                null,
+                ReferenceHierarchyProducer.class,
                 new ReferenceHierarchyMaster(),
                 injector);
     }

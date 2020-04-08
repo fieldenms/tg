@@ -3,14 +3,12 @@ package ua.com.fielden.platform.entity;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
-@KeyType(String.class)
 @KeyTitle("Entity key")
 @DescTitle("Entity Description")
-public class InstanceLevelHierarchyEntry extends AbstractEntity<String> {
+public class InstanceLevelHierarchyEntry extends ReferenceHierarchyEntry{
 
     @IsProperty
     @Title(value = "Entity", desc = "Entity refrence")

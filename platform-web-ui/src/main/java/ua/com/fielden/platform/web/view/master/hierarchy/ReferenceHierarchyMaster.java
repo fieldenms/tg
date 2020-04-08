@@ -46,7 +46,7 @@ public class ReferenceHierarchyMaster implements IMaster<ReferenceHierarchy> {
                 .attr("prop-desc", "Display types or instances those matched entered text")
                 .attr("current-state", "[[currentState]]");
 
-        final DomElement referenceHierarchyDom = new DomElement("tg-refernce-hierarchy")
+        final DomElement referenceHierarchyDom = new DomElement("tg-reference-hierarchy")
                 .attr("id", "refrenceHierarchy")
                 .attr("entity", "{{_currBindingEntity}}")
                 .attr("on-tg-load-refrence-hierarchy", "_loadSubReferenceHierarchy")
@@ -93,11 +93,11 @@ public class ReferenceHierarchyMaster implements IMaster<ReferenceHierarchy> {
         return "self.classList.add('layout');\n"
                 + "self.classList.add('vertical');\n"
                 + "self.canLeave = function () {\n"
-                + "    return true;\n"
+                + "    return null;\n"
                 + "}.bind(self);\n"
                 + "//Need for security marix editors binding.\n"
                 + "self._isNecessaryForConversion = function (propertyName) { \n"
-                + "    return ['referenceHierarchyFilter','refEntityId', 'refEntityType', 'entityType'].indexOf(propertyName) >= 0; \n"
+                + "    return ['referenceHierarchyFilter','refEntityId', 'refEntityType', 'entityType', 'loadedHierarchy'].indexOf(propertyName) >= 0; \n"
                 + "}; \n"
                 + "self.$.referenceHierarchyFilter._onInput = function () {\n"
                 + "    // clear hierarchy filter timer if it is in progress.\n"

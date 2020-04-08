@@ -38,10 +38,27 @@ const template = html`
         <div class="editor-container">
             <slot name="filter-element"></slot>
         </div>
-        <tg-tree id="referenceHierarchyTree" class="reference-hierarchy-tree" model="[[treeModel]]" content-builder="[[_buildContent]]" action-builder="[[_buildActions]]" action-runner="[[_runAction]]" on-tg-load-subtree="_loadSubtree"></tg-tree>
+        <tg-tree id="referenceHierarchyTree" class="reference-hierarchy-tree" model="[[treeModel]]" content-builder="[[_buildContent]]" additional-info-cb="[[_buildAdditionalInfo]]" action-builder="[[_buildActions]]" action-runner="[[_runAction]]" on-tg-load-subtree="_loadSubtree"></tg-tree>
     </div>`;
 
 template.setAttribute('strip-whitespace', '');
+
+const generatePath = function(treeModel, loadedHierarchy) {
+    let path = "treeModel";
+    let model = treeModel;
+    loadedHierarchy.forEach((entityIndex, index) => {
+        const treeEntry = model[entityIndex];
+        if (treeEntry) {
+            path += "." + entityIndex + ".children";
+        } else {
+            throw {
+                msg: "The hierarchy wasn't detecteted for id: " + id + " at level: " + (index + 1)
+            };
+        }
+        model = model[treeEntryIndex].children;
+    });
+    return path;
+};
 
 Polymer({
     _template: template,
@@ -75,7 +92,10 @@ Polymer({
         this._saveInProgress = false;
 
         this._buildContent = function(entity, opened) {
-            return "<div>" + this.$.reflector.convert(entity) + "</div>";
+            return "<div>" + this.$.reflector.convert(entity.entity) + "</div>";
+        }.bind(this);
+        this._buildAdditionalInfo = function(entity) {
+            return [];
         }.bind(this);
         this._buildActions = function (entity) {
             //TODO build actions as icons return html string of those actions 
@@ -90,7 +110,17 @@ Polymer({
     _entityChanged: function(newBindingEntity) {
         const newEntity = newBindingEntity ? newBindingEntity['@@origin'] : null;
         if (newEntity) {
-            //TODO do s-mth on data loaded
+            const path = generatePath(this.treeModel, newEntity.loadedHierarchy);
+            const childrenIndex = path.lastIndexOf(".children");
+            if (childrenIndex >= 0) {
+                const pathWithoutChildren = path.substring(0, childrenIndex);
+                parent = this.get(pathWithoutChildren);
+                newEntity.generatedHierarchy.forEach(entity => {
+                    entity.parent = parent;
+                })
+            }
+            this.set(path, newEntity.generatedHierarchy);
+            newEntity.set("generatedHierarchy", []);
         }
         if (this._saveInProgress) {
             this._saveInProgress = false;

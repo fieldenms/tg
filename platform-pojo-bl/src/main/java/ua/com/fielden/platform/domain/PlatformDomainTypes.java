@@ -13,9 +13,12 @@ import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityExportAction;
 import ua.com.fielden.platform.entity.EntityNavigationAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
+import ua.com.fielden.platform.entity.InstanceLevelHierarchyEntry;
+import ua.com.fielden.platform.entity.ReferenceHierarchy;
 import ua.com.fielden.platform.entity.SecurityMatrixInsertionPoint;
 import ua.com.fielden.platform.entity.SecurityMatrixSaveAction;
 import ua.com.fielden.platform.entity.SecurityTokenTreeNodeEntity;
+import ua.com.fielden.platform.entity.TypeLevelHierarchyEntry;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarnings;
@@ -119,6 +122,9 @@ public class PlatformDomainTypes {
         types.add(SecurityMatrixSaveAction.class);
         types.add(EntityNavigationAction.class);
         types.add(AttachmentPreviewEntityAction.class);
+        types.add(ReferenceHierarchy.class);
+        types.add(TypeLevelHierarchyEntry.class);
+        types.add(InstanceLevelHierarchyEntry.class);
 
     }
 }
