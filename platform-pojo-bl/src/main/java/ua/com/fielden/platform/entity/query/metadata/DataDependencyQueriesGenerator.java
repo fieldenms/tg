@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.entity.query.metadata;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -22,6 +24,7 @@ import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
@@ -43,11 +46,10 @@ public class DataDependencyQueriesGenerator {
         final AggregatedResultQueryModel qry = select(detailsType).
                 where().
                 anyOfProps(dependenciesMetadata.get(detailsType).get(entityType).toArray(new String[] {})).eq().val(entityId).
-                yield().prop("key").as("entityKey").
-                yield().prop("id").as("entity").
+                yield().model(select(detailsType).where().prop("id").eq().extProp("id").model()).as("entity").
                 yield().expr(hasDependencies).as("hasDependencies").
                 modelAsAggregate();
-        return from(qry).with(orderBy().yield("entityKey").asc().model()).model();
+        return from(qry).with(fetchAggregates().with("hasDependencies").with("entity", fetchKeyAndDescOnly(detailsType))).with(orderBy().prop("key").asc().model()).model();
     }
 
     @SuppressWarnings("unchecked")
