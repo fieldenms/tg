@@ -844,8 +844,7 @@ export const TgEntityBinderBehavior = {
         if (self._reflector().isEntity(bindingEntity)) {
             modPropHolder["id"] = bindingEntity.get('id');
             modPropHolder["version"] = bindingEntity["version"];
-            modPropHolder["@@touchedProps"] = bindingEntity["@@touchedProps"].names && bindingEntity["@@touchedProps"].names.slice();
-            console.trace('modPropHolder["@@touchedProps"]', modPropHolder["@@touchedProps"]);
+            modPropHolder["@@touchedProps"] = bindingEntity["@@touchedProps"].names;
 
             bindingEntity.traverseProperties(function (propertyName) {
                 var value = bindingEntity.get(propertyName);
@@ -1003,15 +1002,11 @@ export const TgEntityBinderBehavior = {
         // this property of the bindingView will hold the reference to fully-fledged entity,
         //   this entity can be used effectively to process 'dot-notated' properties (for e.g. retrieving the values)
         bindingView["@@origin"] = entity;
-        bindingView["@@touchedProps"] = (prevCurrBindingEntity && prevCurrBindingEntity["@@touchedProps"]) ? {
-            names: prevCurrBindingEntity["@@touchedProps"].names.slice(),
-            values: prevCurrBindingEntity["@@touchedProps"].values.slice(),
-            counts: prevCurrBindingEntity["@@touchedProps"].counts.slice()
-        } : {
+        bindingView["@@touchedProps"] = (prevCurrBindingEntity && prevCurrBindingEntity["@@touchedProps"]) ? prevCurrBindingEntity["@@touchedProps"] : {
             names: [],
             values: [],
             counts: []
-        };   console.trace('_extractBindingView: touched = ', bindingView["@@touchedProps"] && bindingView["@@touchedProps"].names.slice(), 'prevCurrBindingEntity.touched = ', prevCurrBindingEntity && prevCurrBindingEntity["@@touchedProps"].names.slice());
+        };
 
         entity.traverseProperties(function (propertyName) {
             // value conversion of property value performs here only for specialised properties (see method '_isNecessaryForConversion');
@@ -1034,7 +1029,7 @@ export const TgEntityBinderBehavior = {
                 bindingView["@" + propertyName + "_uppercase"] = true;
             }
             bindingView["@" + propertyName + "_editable"] = entity.prop(propertyName).isEditable();
-        });console.trace('_extractBindingView2: touched = ', bindingView["@@touchedProps"] && bindingView["@@touchedProps"].names.slice());
+        });
 
         // console.log("       entity + bindingView", entity, bindingView);
         return bindingView;

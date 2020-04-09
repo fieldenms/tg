@@ -84,9 +84,7 @@ public class CentreConfigurationWebUiConfig {
     private static EntityMaster<CentreConfigUpdater> createCentreConfigUpdater(final Injector injector, final String masterLayout, final String masterMobileLayout) {
         final FlexLayoutConfig horizontal = layout().withClass("wrap").withStyle("padding", "10px").horizontal().centerJustified().end();
         final String actionLayout = cell(cell().cell().layoutForEach(layout().withStyle("width", MASTER_ACTION_DEFAULT_WIDTH + "px").withStyle("margin", "0px 10px 10px 10px").end()), horizontal).toString();
-        final SimpleMasterBuilder<CentreConfigUpdater> simpleMasterBuilder = new SimpleMasterBuilder<>();
-        simpleMasterBuilder.injectCustomCodeOnAttach(new JsCode("this.$.editor_4_customisableColumns.master = this;\n"));
-        final IMaster<CentreConfigUpdater> masterConfig = simpleMasterBuilder
+        final IMaster<CentreConfigUpdater> masterConfig = new SimpleMasterBuilder<CentreConfigUpdater>()
                 .forEntity(CentreConfigUpdater.class)
                 .addProp("customisableColumns").asCollectionalEditor().reorderable().withHeader("title").also()
                 .addProp("pageCapacity").asSpinner().also()

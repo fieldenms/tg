@@ -910,22 +910,12 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
     }
 
     _endItemReordering (e) {
+        const chosenIds = this.entity.get("chosenIds");
+        this.entity.setAndRegisterPropertyTouch("chosenIds", this._entities.filter(entity => chosenIds.indexOf(this.idOrKey(entity)) >= 0).map(entity => this.idOrKey(entity)));
         delete this._reorderingObject;
         this._draggingItem = null;
-        const self = this;
-        if (this.master._validationPromise) {
-            this.master._validationPromise.then(function() {
-                const chosenIds = self.entity.get("chosenIds");
-                self.entity.setAndRegisterPropertyTouch("chosenIds", self._entities.filter(entity => chosenIds.indexOf(self.idOrKey(entity)) >= 0).map(entity => self.idOrKey(entity)));
-                // invoke validation after user has completed item reordering
-                self._invokeValidation.bind(self)();
-            });
-        } else {
-            const chosenIds = this.entity.get("chosenIds");
-            this.entity.setAndRegisterPropertyTouch("chosenIds", this._entities.filter(entity => chosenIds.indexOf(this.idOrKey(entity)) >= 0).map(entity => this.idOrKey(entity)));
-            // invoke validation after user has completed item reordering
-            this._invokeValidation.bind(this)();
-        }
+        // invoke validation after user has completed item reordering
+        this._invokeValidation.bind(this)();
     }
     
     _getIndexForElement (element) {
