@@ -43,6 +43,11 @@ const template = html`
 
 template.setAttribute('strip-whitespace', '');
 
+const referenceHierarchyLevel = {
+    TYPE: "TYPE",
+    INSTANCE: "INSTANCE",
+};
+
 const generatePath = function(treeModel, loadedHierarchy) {
     let path = "treeModel";
     let model = treeModel;
@@ -55,7 +60,7 @@ const generatePath = function(treeModel, loadedHierarchy) {
                 msg: "The hierarchy wasn't detecteted for id: " + id + " at level: " + (index + 1)
             };
         }
-        model = model[treeEntryIndex].children;
+        model = model[entityIndex].children;
     });
     return path;
 };
@@ -92,21 +97,37 @@ Polymer({
         this._saveInProgress = false;
 
         this._buildContent = function(entity, opened) {
-            return "<div>" + this.$.reflector.convert(entity.entity) + "</div>";
+            return "<div style='height:28px;font-size:16px;display:flex;flex-direction:row;align-items:center;'>" + 
+                        "<span class='part-to-highlight'>" + this._getTitlte(entity) + "</span>" + this._getAdditionalInfo(entity) +
+                    "</div>";
         }.bind(this);
         this._buildAdditionalInfo = function(entity) {
             return [];
         }.bind(this);
         this._buildActions = function (entity) {
-            //TODO build actions as icons return html string of those actions 
-            return "";
+           return "";
         }.bind(this);
         this._runAction = function (e) {
             e.stopPropagation();
             //TODO invoke action for tree item
         }.bind(this);
     },
-    
+
+    _getTitlte: function (entity) {
+        if (entity.entity.level === referenceHierarchyLevel.INSTANCE) {
+            //TODO this should be enhanced so that key components will be returned
+            return entity.entity.key;
+        } 
+        return entity.entity.key;
+    },
+
+    _getAdditionalInfo: function (entity) {
+        if (entity.entity.level === referenceHierarchyLevel.TYPE) {
+            return "<span style='color:#737373'>&nbsp;(" + entity.entity.numberOfEntities + ")</span>";
+        }
+        return  entity.entity.desc ? "<span style='color:#737373'>&nbsp;&ndash;&nbsp;<i>" + entity.entity.desc + "</i></span>" : "";       
+    },
+
     _entityChanged: function(newBindingEntity) {
         const newEntity = newBindingEntity ? newBindingEntity['@@origin'] : null;
         if (newEntity) {
@@ -130,8 +151,36 @@ Polymer({
         }
     },
 
+    _loadSubtree: function(e) {
+        if (this._saveQueue.length !== 0 || this._saveInProgress) {
+            this._saveQueue.push(e);
+        } else {
+            this._processEvent(e);
+        }
+    },
+
     _processEvent: function (e) {
-        //TODO Process another action in queue.
+        const parentsPath = e.detail.parentPath;
+        const indexes = parentsPath.map(entity =>  {
+            const parentList = entity.parent ? entity.children: this.treeModel;
+            return parentList.indexOf(entity);
+        });
+        this.entity.setAndRegisterPropertyTouch("loadedHierarchy", indexes);
+        const lastEntity = parentsPath[parentsPath.length - 1];
+        if (lastEntity.level === referenceHierarchyLevel.TYPE) {
+            this.entity.setAndRegisterPropertyTouch("pageSize", lastEntity.pageSize);
+            this.entity.setAndRegisterPropertyTouch("pageNumber", lastEntity.pageNumber);
+            this.entity.setAndRegisterPropertyTouch("entityType", lastEntity.entityType);
+            this.entity.setAndRegisterPropertyTouch("refEntityType", lastEntity.parent ? lastEntity.parent.entity.type().fullClassName() : this.entity.get("refEntityType"));
+            this.entity.setAndRegisterPropertyTouch("refEntityId", lastEntity.parent ? lastEntity.parent.entity.get("id") : this.entity.get("refEntityId"));
+        } else {
+            this.entity.setAndRegisterPropertyTouch("pageSize", 0);
+            this.entity.setAndRegisterPropertyTouch("pageNumber", 0);
+            this.entity.setAndRegisterPropertyTouch("entityType", null);
+            this.entity.setAndRegisterPropertyTouch("refEntityType", lastEntity.entity.type().fullClassName());
+            this.entity.setAndRegisterPropertyTouch("refEntityId", lastEntity.entity.get("id"));
+        }
+        this._saveInProgress = true;
         this.fire("tg-load-refrence-hierarchy", this.entity);
     },
 

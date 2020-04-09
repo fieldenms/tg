@@ -97,7 +97,7 @@ public class ReferenceHierarchyMaster implements IMaster<ReferenceHierarchy> {
                 + "}.bind(self);\n"
                 + "//Need for security marix editors binding.\n"
                 + "self._isNecessaryForConversion = function (propertyName) { \n"
-                + "    return ['referenceHierarchyFilter','refEntityId', 'refEntityType', 'entityType', 'loadedHierarchy'].indexOf(propertyName) >= 0; \n"
+                + "    return ['referenceHierarchyFilter','refEntityId', 'refEntityType', 'entityType', 'loadedHierarchy', 'pageSize', 'pageNumber', 'pageCount'].indexOf(propertyName) >= 0; \n"
                 + "}; \n"
                 + "self.$.referenceHierarchyFilter._onInput = function () {\n"
                 + "    // clear hierarchy filter timer if it is in progress.\n"

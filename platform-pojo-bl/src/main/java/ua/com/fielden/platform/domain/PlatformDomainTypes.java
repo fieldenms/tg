@@ -125,6 +125,5 @@ public class PlatformDomainTypes {
         types.add(ReferenceHierarchy.class);
         types.add(TypeLevelHierarchyEntry.class);
         types.add(InstanceLevelHierarchyEntry.class);
-
     }
 }

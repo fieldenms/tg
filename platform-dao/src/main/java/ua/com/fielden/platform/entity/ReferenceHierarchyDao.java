@@ -12,12 +12,15 @@ import com.google.inject.Inject;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.IEntityAggregatesOperations;
+import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.metadata.DataDependencyQueriesGenerator;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.utils.Pair;
 /**
@@ -49,12 +52,38 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
         } else {
             entity.setGeneratedHierarchy(generateInstanceLevelHierarchy(entity));
         }
-        return super.save(entity);
+        return entity;
     }
 
     private List<InstanceLevelHierarchyEntry> generateInstanceLevelHierarchy(final ReferenceHierarchy entity) {
-        // TODO Auto-generated method stub
-        return null;
+        try {
+            final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> qem = DataDependencyQueriesGenerator.queryForDependentTypeDetails(dependenciesMetadata, entity.getRefEntityId(), entity.getRefEntityClass(), entity.getEntityClass());
+            final IPage<EntityAggregates> loadedPage;
+            if (entity.getPageNumber() == 1) {
+                loadedPage = coAggregates.firstPage(qem, entity.getPageSize());
+            } else {
+                loadedPage = coAggregates.getPage(qem, entity.getPageNumber(), entity.getPageSize());
+            }
+            entity.setPageCount(loadedPage.numberOfPages());
+            entity.setPageNumber(loadedPage.no());
+            return createInstanceHierarchy(loadedPage.data());
+        } catch (final ClassNotFoundException e) {
+            throw Result.failuref("The entity types: %s or %s can not be found", entity.getRefEntityType(), entity.getEntityType());
+        }
+    }
+
+    private List<InstanceLevelHierarchyEntry> createInstanceHierarchy(final List<EntityAggregates> instanceAggregates) {
+        return instanceAggregates.stream().map(instanceAggregate -> createInstanceHierarchyEntry(instanceAggregate)).collect(toList());
+    }
+
+    private InstanceLevelHierarchyEntry createInstanceHierarchyEntry(final EntityAggregates instanceAggregate) {
+        final InstanceLevelHierarchyEntry instanceEntry = new InstanceLevelHierarchyEntry();
+        instanceEntry.setKey(instanceAggregate.get("entityKey"));
+        //instanceEntry.setDesc(instanceAggregate.get("entityDesc"));
+        instanceEntry.setId(instanceAggregate.get("entity"));
+        instanceEntry.setHierarchyLevel(ReferenceHierarchyLevel.INSTANCE);
+        instanceEntry.setHasChildren(instanceAggregate.get("hasDependencies").toString() == "Y");
+        return instanceEntry;
     }
 
     private List<TypeLevelHierarchyEntry> generateTypeLevelHierarchy(final ReferenceHierarchy entity) {
@@ -78,9 +107,11 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
     private TypeLevelHierarchyEntry createTypeHierarchyEntry(final EntityAggregates typeAggregate) {
         try {
             final TypeLevelHierarchyEntry typeEntry = new TypeLevelHierarchyEntry();
-            final Pair<String, String> titleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc((Class<? extends AbstractEntity<?>>) Class.forName(typeAggregate.get("type")));
+            final String entityType = typeAggregate.get("type");
+            final Pair<String, String> titleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc((Class<? extends AbstractEntity<?>>) Class.forName(entityType));
             typeEntry.setKey(titleAndDesc.getKey());
             typeEntry.setDesc(titleAndDesc.getValue());
+            typeEntry.setEntityType(entityType);
             typeEntry.setNumberOfEntities(typeAggregate.get("qty"));
             typeEntry.setHierarchyLevel(TYPE);
             typeEntry.setHasChildren(true);

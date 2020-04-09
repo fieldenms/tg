@@ -11,8 +11,18 @@ import ua.com.fielden.platform.entity.annotation.Title;
 public class InstanceLevelHierarchyEntry extends ReferenceHierarchyEntry{
 
     @IsProperty
-    @Title(value = "Entity", desc = "Entity refrence")
-    private AbstractEntity<?> entity;
+    @Title(value = "Key object", desc = "Desc")
+    private Object entityKey;
+
+    @Observable
+    public InstanceLevelHierarchyEntry setEntityKey(final Object entityKey) {
+        this.entityKey = entityKey;
+        return this;
+    }
+
+    public Object getEntityKey() {
+        return entityKey;
+    }
 
     @IsProperty
     @Title("Has Dependencies?")
@@ -28,13 +38,4 @@ public class InstanceLevelHierarchyEntry extends ReferenceHierarchyEntry{
         return hasDependencies;
     }
 
-    @Observable
-    public InstanceLevelHierarchyEntry setEntity(final AbstractEntity<?> entity) {
-        this.entity = entity;
-        return this;
-    }
-
-    public AbstractEntity<?> getEntity() {
-        return entity;
-    }
 }

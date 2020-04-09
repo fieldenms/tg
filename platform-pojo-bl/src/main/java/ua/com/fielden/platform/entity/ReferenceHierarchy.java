@@ -38,18 +38,60 @@ public class ReferenceHierarchy extends AbstractFunctionalEntityWithCentreContex
     @Title(value = "Generated Hierarchy", desc = "Generated type or instance level of hierarchy")
     private List<AbstractEntity<?>> generatedHierarchy = new ArrayList<>();
 
-    @IsProperty(Integer.class)
+    @IsProperty(Long.class)
     @Title(value = "Loaded hiererchy", desc = "The indexes of tree items on each level where returned hieararchy should be inserted")
-    private List<Integer> loadedHierarchy = new ArrayList<>();
+    private List<Long> loadedHierarchy = new ArrayList<>();
+
+    @IsProperty
+    @Title(value = "Page Size", desc = "Page size of inctances to load")
+    private Integer pageSize;
+
+    @IsProperty
+    @Title(value = "Page Number", desc = "Page number of instances to load")
+    private Integer pageNumber;
+
+    @IsProperty
+    @Title(value = "Page Count", desc = "The data page count")
+    private Integer pageCount;
 
     @Observable
-    protected ReferenceHierarchy setLoadedHierarchy(final List<Integer> loadedHierarchy) {
+    public ReferenceHierarchy setPageCount(final Integer pageCount) {
+        this.pageCount = pageCount;
+        return this;
+    }
+
+    public Integer getPageCount() {
+        return pageCount;
+    }
+
+    @Observable
+    public ReferenceHierarchy setPageNumber(final Integer pageNumber) {
+        this.pageNumber = pageNumber;
+        return this;
+    }
+
+    public Integer getPageNumber() {
+        return pageNumber;
+    }
+
+    @Observable
+    public ReferenceHierarchy setPageSize(final Integer pageSize) {
+        this.pageSize = pageSize;
+        return this;
+    }
+
+    public Integer getPageSize() {
+        return pageSize;
+    }
+
+    @Observable
+    protected ReferenceHierarchy setLoadedHierarchy(final List<Long> loadedHierarchy) {
         this.loadedHierarchy.clear();
         this.loadedHierarchy.addAll(loadedHierarchy);
         return this;
     }
 
-    public List<Integer> getLoadedHierarchy() {
+    public List<Long> getLoadedHierarchy() {
         return Collections.unmodifiableList(loadedHierarchy);
     }
 
@@ -98,8 +140,14 @@ public class ReferenceHierarchy extends AbstractFunctionalEntityWithCentreContex
         return refEntityType;
     }
 
+    @SuppressWarnings("unchecked")
     public Class<? extends AbstractEntity<?>> getRefEntityClass() throws ClassNotFoundException {
         return (Class<? extends AbstractEntity<?>>) Class.forName(refEntityType);
+    }
+
+    @SuppressWarnings("unchecked")
+    public Class<? extends AbstractEntity<?>> getEntityClass() throws ClassNotFoundException {
+        return (Class<? extends AbstractEntity<?>>) Class.forName(entityType);
     }
 
     @Observable
