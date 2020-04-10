@@ -21,11 +21,14 @@ import org.junit.Test;
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.eql.meta.EqlStage2TestCase;
+import ua.com.fielden.platform.eql.meta.PrimTypePropInfo;
 import ua.com.fielden.platform.eql.stage2.elements.EntQueryBlocks2;
 import ua.com.fielden.platform.eql.stage2.elements.GroupBy2;
 import ua.com.fielden.platform.eql.stage2.elements.GroupBys2;
 import ua.com.fielden.platform.eql.stage2.elements.OrderBys2;
+import ua.com.fielden.platform.eql.stage2.elements.Yields2;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.ComparisonTest2;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.ICondition2;
@@ -36,7 +39,10 @@ import ua.com.fielden.platform.eql.stage2.elements.operands.EntValue2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.Expression2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.CompoundSource2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.QrySource2BasedOnPersistentType;
+import ua.com.fielden.platform.eql.stage2.elements.sources.QrySource2BasedOnSubqueries;
 import ua.com.fielden.platform.eql.stage2.elements.sources.Sources2;
+import ua.com.fielden.platform.sample.domain.TeVehicle;
+import ua.com.fielden.platform.sample.domain.TeVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgAuthorRoyalty;
 import ua.com.fielden.platform.sample.domain.TgAuthorship;
 import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
@@ -47,6 +53,77 @@ import ua.com.fielden.platform.sample.domain.TgWorkshop;
 
 public class QmToStage2TransformationTest extends EqlStage2TestCase {
     
+    @Test
+    public void correlated_source_query_works() {
+        final AggregatedResultQueryModel sourceSubQry = select(TeVehicle.class).where().prop("model").eq().extProp("id").yield().countAll().as("qty").modelAsAggregate();
+        final PrimitiveResultQueryModel qtySubQry = select(sourceSubQry).yield().prop("qty").modelAsPrimitive();
+        final AggregatedResultQueryModel qry = select(TeVehicleModel.class).yield().model(qtySubQry).as("qty").modelAsAggregate();
+
+        final EntQuery2 actQry = qry(qry);
+        
+        final QrySource2BasedOnPersistentType modelSource = source("3", MODEL);
+        
+        final QrySource2BasedOnPersistentType vehSource = source("1", VEHICLE);
+        final Sources2 vehSources = sources(vehSource);
+        final EntProp2 vehModelProp = prop(vehSource, pi(VEHICLE, "model"));
+        final EntProp2 modelIdProp = prop(modelSource, pi(MODEL, "id"));
+        final Conditions2 vehConditions = cond(eq(vehModelProp, modelIdProp));
+        final Yields2 vehYields = yields(yieldCountAll("qty"));
+
+        final EntQuery2 vehSourceSubQry = srcqry(vehSources, vehConditions, vehYields);
+        
+        final QrySource2BasedOnSubqueries qtyQrySource = source("2", vehSourceSubQry);
+        final Sources2 qtyQrySources = sources(qtyQrySource);
+        final Yields2 qtyQryYields = yields(yield(prop(qtyQrySource, new PrimTypePropInfo<Long>("qty", H_BIG_DECIMAL, Long.class)), ""));
+        
+        
+        final Yields2 modelQryYields = yields(yield(subqry(qtyQrySources, qtyQryYields), "qty"));
+        
+        final EntQuery2 expQry = qry(sources(modelSource), modelQryYields);
+        assertEquals(expQry, actQry);
+    }
+    
+    @Test
+    public void correlated_source_queries_work() {
+        final AggregatedResultQueryModel sourceSubQry1 = select(TeVehicle.class).where().prop("id").isNotNull().and().prop("model").eq().extProp("id").yield().countAll().as("qty").modelAsAggregate();
+        final AggregatedResultQueryModel sourceSubQry2 = select(TeVehicle.class).where().prop("id").isNull().and().prop("model").eq().extProp("id").yield().countAll().as("qty").modelAsAggregate();
+        final PrimitiveResultQueryModel qtyQry = select(sourceSubQry1, sourceSubQry2).yield().prop("qty").modelAsPrimitive();
+        final AggregatedResultQueryModel qry = select(TeVehicleModel.class).yield().model(qtyQry).as("qty").modelAsAggregate();
+
+        final EntQuery2 actQry = qry(qry);
+        
+        final QrySource2BasedOnPersistentType modelSource = source("4", MODEL);
+        final EntProp2 modelIdProp = prop(modelSource, pi(MODEL, "id"));
+        
+        final QrySource2BasedOnPersistentType vehSource1 = source("1", VEHICLE);
+        final Sources2 vehSources1 = sources(vehSource1);
+        final EntProp2 vehModelProp1 = prop(vehSource1, pi(VEHICLE, "model"));
+        final EntProp2 vehIdProp1 = prop(vehSource1, pi(VEHICLE, "id"));
+        final Conditions2 vehConditions1 = or(and(isNotNull(vehIdProp1), eq(vehModelProp1, modelIdProp)));
+        final Yields2 vehYields1 = yields(yieldCountAll("qty"));
+
+        final EntQuery2 vehSourceSubQry1 = srcqry(vehSources1, vehConditions1, vehYields1);
+
+        final QrySource2BasedOnPersistentType vehSource2 = source("2", VEHICLE);
+        final Sources2 vehSources2 = sources(vehSource2);
+        final EntProp2 vehModelProp2 = prop(vehSource2, pi(VEHICLE, "model"));
+        final EntProp2 vehIdProp2 = prop(vehSource2, pi(VEHICLE, "id"));
+        final Conditions2 vehConditions2 = or(and(isNull(vehIdProp2), eq(vehModelProp2, modelIdProp)));
+        final Yields2 vehYields2 = yields(yieldCountAll("qty"));
+
+        final EntQuery2 vehSourceSubQry2 = srcqry(vehSources2, vehConditions2, vehYields2);
+
+        final QrySource2BasedOnSubqueries qtyQrySource = source("3", vehSourceSubQry1, vehSourceSubQry2);
+        final Sources2 qtyQrySources = sources(qtyQrySource);
+        final Yields2 qtyQryYields = yields(yield(prop(qtyQrySource, new PrimTypePropInfo<Long>("qty", H_BIG_DECIMAL, Long.class)), ""));
+        
+        
+        final Yields2 modelQryYields = yields(yield(subqry(qtyQrySources, qtyQryYields), "qty"));
+        
+        final EntQuery2 expQry = qry(sources(modelSource), modelQryYields);
+        assertEquals(expQry, actQry);
+    }
+
     @Test
     public void test01() {
         final EntQuery2 actQry = qryCountAll(select(MODEL).where().prop("make").isNotNull());

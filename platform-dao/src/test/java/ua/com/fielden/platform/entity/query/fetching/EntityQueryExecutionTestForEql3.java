@@ -19,6 +19,7 @@ import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.sample.domain.ITeVehicleModel;
 import ua.com.fielden.platform.sample.domain.TeVehicle;
 import ua.com.fielden.platform.sample.domain.TeVehicleFuelUsage;
@@ -550,6 +551,17 @@ public class EntityQueryExecutionTestForEql3 extends AbstractDaoTestCase {
             fail("Should have failed while trying to resolve property [lastFuelUsage.qty]");
         } catch (final Exception e) {
         }
+    }
+    
+    @Test
+    @Ignore // h2 doesn't allow correlated subqueries in FROM stmt
+    public void eql3_query_executes_correctly56() {
+
+        final PrimitiveResultQueryModel qtyQry = select(select(TeVehicle.class).where().prop("model").eq().extProp("id").yield().countAll().as("qty").modelAsAggregate()).yield().prop("qty").modelAsPrimitive();
+        //final PrimitiveResultQueryModel qtyQry = select(TeVehicle.class).where().prop("model").eq().extProp("id").yield().countAll().modelAsPrimitive();
+        final AggregatedResultQueryModel qry = select(TeVehicleModel.class).yield().prop("key").as("key").yield().model(qtyQry).as("qty").modelAsAggregate();
+
+        run(qry);
     }
     
     @Override

@@ -7,15 +7,18 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperat
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.IJ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.LJ;
 import static ua.com.fielden.platform.eql.meta.QueryCategory.RESULT_QUERY;
+import static ua.com.fielden.platform.eql.meta.QueryCategory.SOURCE_QUERY;
 import static ua.com.fielden.platform.eql.meta.QueryCategory.SUB_QUERY;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage1.elements.operands.EntProp1;
 import ua.com.fielden.platform.eql.stage2.elements.EntQueryBlocks2;
@@ -35,6 +38,7 @@ import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.CompoundSource2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.QrySource2BasedOnPersistentType;
+import ua.com.fielden.platform.eql.stage2.elements.sources.QrySource2BasedOnSubqueries;
 import ua.com.fielden.platform.eql.stage2.elements.sources.Sources2;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.ICondition3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
@@ -57,6 +61,16 @@ public class EqlStage2TestCase extends EqlTestCase {
         return qb().generateEntQueryAsResultQuery(countQry, null).transform(resolutionContext).item;
     }
     
+    protected static <T extends AbstractEntity<?>> EntQuery2 qry(final EntityResultQueryModel<T> qry) {
+        final PropsResolutionContext resolutionContext = new PropsResolutionContext(metadata);
+        return qb().generateEntQueryAsResultQuery(qry, null).transform(resolutionContext).item;
+    }
+
+    protected static EntQuery2 qry(final AggregatedResultQueryModel qry) {
+        final PropsResolutionContext resolutionContext = new PropsResolutionContext(metadata);
+        return qb().generateEntQueryAsResultQuery(qry, null).transform(resolutionContext).item;
+    }
+    
     protected static EntQueryBlocks2 qb2(final Sources2 sources, final Conditions2 conditions) {
         return new EntQueryBlocks2(sources, conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
     }
@@ -73,6 +87,10 @@ public class EqlStage2TestCase extends EqlTestCase {
         return new Yield2(new CountAll2(), alias, false);
     }
     
+    protected static Yield2 yield(final ISingleOperand2<? extends ISingleOperand3> operand, final String alias) {
+        return new Yield2(operand, alias, false);
+    }
+
     protected static EntProp2 prop(final IQrySource2<? extends IQrySource3> source, final AbstractPropInfo<?> ... propInfos) {
         return new EntProp2(source, asList(propInfos));
     }
@@ -174,19 +192,41 @@ public class EqlStage2TestCase extends EqlTestCase {
         return new QrySource2BasedOnPersistentType(sourceType, metadata.get(sourceType), contextId);
     }
     
+    protected static QrySource2BasedOnSubqueries source(final String contextId, final EntQuery2 ... queries) {
+        return new QrySource2BasedOnSubqueries(Arrays.asList(queries), null, metadata, contextId);
+    }
+
     protected static EntQuery2 qryCountAll(final Sources2 sources, final Conditions2 conditions) {
         return new EntQuery2(qb2(sources, conditions, yields(yieldCountAll("KOUNT"))), EntityAggregates.class, RESULT_QUERY);
     }
 
+    protected static EntQuery2 qry(final Sources2 sources, final Conditions2 conditions, final Yields2 yields) {
+        return new EntQuery2(qb2(sources, conditions, yields), EntityAggregates.class, RESULT_QUERY);
+    }
+
+    protected static EntQuery2 srcqry(final Sources2 sources, final Conditions2 conditions, final Yields2 yields) {
+        return new EntQuery2(qb2(sources, conditions, yields), EntityAggregates.class, SOURCE_QUERY);
+    }
+
+    protected static EntQuery2 qry(final Sources2 sources, final Yields2 yields) {
+        return new EntQuery2(qb2(sources, emptyConditions2, yields), EntityAggregates.class, RESULT_QUERY);
+    }
+
+    
     protected static EntQuery2 qryCountAll(final Sources2 sources) {
         return new EntQuery2(qb2(sources, emptyConditions2, yields(yieldCountAll("KOUNT"))), EntityAggregates.class, RESULT_QUERY);
     }
 
-    private static EntQuery2 qry(final Sources2 sources, final Conditions2 conditions, final QueryCategory queryCategory, final Class<? extends AbstractEntity<?>> resultType) {
-        return new EntQuery2(qb2(sources, conditions), resultType, queryCategory);
+    private static EntQuery2 qry(final Sources2 sources, final Conditions2 conditions, final Yields2 yields, final QueryCategory queryCategory, final Class<? extends AbstractEntity<?>> resultType) {
+        return new EntQuery2(qb2(sources, conditions, yields), resultType, queryCategory);
     }
 
     protected static EntQuery2 subqry(final Sources2 sources, final Conditions2 conditions, final Class<? extends AbstractEntity<?>> resultType) {
-        return qry(sources, conditions, SUB_QUERY, resultType);
+        return qry(sources, conditions, emptyYields2, SUB_QUERY, resultType);
     }
+    
+    protected static EntQuery2 subqry(final Sources2 sources, final Yields2 yields) {
+        return qry(sources, emptyConditions2, yields, SUB_QUERY, null);
+    }
+
 }

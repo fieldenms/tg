@@ -86,7 +86,7 @@ public class LongPropertyMetadata implements Comparable<LongPropertyMetadata> {
         if (subprops.size() == 1) {
             final Object hibType = subpropsTypes.get(0);
             if (expressionModel != null) {
-                result.add(new LongPropertyMetadata.Builder(name + "." + subprops.get(0), ((Type) hibType).getReturnedClass(), nullable).expression(getExpressionModel()).aggregatedExpression(aggregatedExpression).hibType(hibType).build());
+                result.add(new LongPropertyMetadata.Builder(name + "." + subprops.get(0), ((Type) hibType).getReturnedClass(), nullable).expression(expressionModel).aggregatedExpression(aggregatedExpression).hibType(hibType).build());
             } else if (columns.size() == 0) { // synthetic entity context
                 result.add(new LongPropertyMetadata.Builder(name + "." + subprops.get(0), ((Type) hibType).getReturnedClass(), nullable).aggregatedExpression(aggregatedExpression).hibType(hibType).build());
             } else {
