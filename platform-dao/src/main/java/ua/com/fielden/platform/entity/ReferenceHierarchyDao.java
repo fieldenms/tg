@@ -59,7 +59,7 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
         try {
             final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> qem = DataDependencyQueriesGenerator.queryForDependentTypeDetails(dependenciesMetadata, entity.getRefEntityId(), entity.getRefEntityClass(), entity.getEntityClass());
             final IPage<EntityAggregates> loadedPage;
-            if (entity.getPageNumber() == 1) {
+            if (entity.getPageNumber() == 0) {
                 loadedPage = coAggregates.firstPage(qem, entity.getPageSize());
             } else {
                 loadedPage = coAggregates.getPage(qem, entity.getPageNumber(), entity.getPageSize());
@@ -78,11 +78,12 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
 
     private InstanceLevelHierarchyEntry createInstanceHierarchyEntry(final EntityAggregates instanceAggregate) {
         final InstanceLevelHierarchyEntry instanceEntry = new InstanceLevelHierarchyEntry();
-        instanceEntry.setKey(instanceAggregate.get("entityKey"));
-        //instanceEntry.setDesc(instanceAggregate.get("entityDesc"));
-        instanceEntry.setId(instanceAggregate.get("entity"));
+        instanceEntry.setId(((AbstractEntity<?>)instanceAggregate.get("entity")).getId());
+        instanceEntry.setKey(instanceAggregate.get("entity").toString());
+        instanceEntry.setDesc(instanceAggregate.get("entity.desc"));
+        instanceEntry.setEntity(instanceAggregate.get("entity"));
         instanceEntry.setHierarchyLevel(ReferenceHierarchyLevel.INSTANCE);
-        instanceEntry.setHasChildren(instanceAggregate.get("hasDependencies").toString() == "Y");
+        instanceEntry.setHasChildren("Y".equals(instanceAggregate.get("hasDependencies")));
         return instanceEntry;
     }
 
@@ -93,18 +94,18 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
                 final Pair<String, String> titleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(entity.getRefEntityClass());
                 throw Result.failuref("The %s entity with %s id is not referenced yet", titleAndDesc.getKey(), entity.getRefEntityId());
             }
-            return createTypeHierarchyEntries(result);
+            return createTypeHierarchyEntries(entity, result);
         } catch (final ClassNotFoundException e) {
             throw Result.failuref("The entity type: %s can not be found", entity.getRefEntityType());
         }
     }
 
-    private List<TypeLevelHierarchyEntry> createTypeHierarchyEntries(final List<EntityAggregates> typeAggregates) {
-        return typeAggregates.stream().map(typeAggregate -> createTypeHierarchyEntry(typeAggregate)).collect(toList());
+    private List<TypeLevelHierarchyEntry> createTypeHierarchyEntries(final ReferenceHierarchy entity, final List<EntityAggregates> typeAggregates) {
+        return typeAggregates.stream().map(typeAggregate -> createTypeHierarchyEntry(entity, typeAggregate)).collect(toList());
     }
 
     @SuppressWarnings("unchecked")
-    private TypeLevelHierarchyEntry createTypeHierarchyEntry(final EntityAggregates typeAggregate) {
+    private TypeLevelHierarchyEntry createTypeHierarchyEntry(final ReferenceHierarchy entity, final EntityAggregates typeAggregate) {
         try {
             final TypeLevelHierarchyEntry typeEntry = new TypeLevelHierarchyEntry();
             final String entityType = typeAggregate.get("type");
@@ -112,6 +113,8 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
             typeEntry.setKey(titleAndDesc.getKey());
             typeEntry.setDesc(titleAndDesc.getValue());
             typeEntry.setEntityType(entityType);
+            typeEntry.setRefId(entity.getRefEntityId());
+            typeEntry.setRefEntityType(entity.getRefEntityType());
             typeEntry.setNumberOfEntities(typeAggregate.get("qty"));
             typeEntry.setHierarchyLevel(TYPE);
             typeEntry.setHasChildren(true);

@@ -15,6 +15,14 @@ public class TypeLevelHierarchyEntry extends ReferenceHierarchyEntry{
     private String entityType;
 
     @IsProperty
+    @Title("Refernced Entity ID")
+    private Long refId;
+
+    @IsProperty
+    @Title("Referenced Entity Type")
+    private String refEntityType;
+
+    @IsProperty
     @Title(value = "Number of Entities", desc = "The number of entities of this type those refrences the entity of upper level entity")
     private Integer numberOfEntities;
 
@@ -24,7 +32,7 @@ public class TypeLevelHierarchyEntry extends ReferenceHierarchyEntry{
 
     @IsProperty
     @Title(value = "Page Number", desc = "Page number of instances to load")
-    private Integer pageNumber = 1;
+    private Integer pageNumber = 0;
 
     @Observable
     public TypeLevelHierarchyEntry setEntityType(final String entityType) {
@@ -34,6 +42,26 @@ public class TypeLevelHierarchyEntry extends ReferenceHierarchyEntry{
 
     public String getEntityType() {
         return entityType;
+    }
+
+    @Observable
+    public TypeLevelHierarchyEntry setRefEntityType(final String refEntityType) {
+        this.refEntityType = refEntityType;
+        return this;
+    }
+
+    public String getRefEntityType() {
+        return refEntityType;
+    }
+
+    @Observable
+    public TypeLevelHierarchyEntry setRefId(final Long refId) {
+        this.refId = refId;
+        return this;
+    }
+
+    public Long getRefId() {
+        return refId;
     }
 
     @Observable

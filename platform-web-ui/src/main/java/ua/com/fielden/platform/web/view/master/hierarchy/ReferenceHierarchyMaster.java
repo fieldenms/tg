@@ -71,7 +71,8 @@ public class ReferenceHierarchyMaster implements IMaster<ReferenceHierarchy> {
         prefDimBuilder.append("{'width': function() {return '50%'}, 'height': function() {return '70%'}, 'widthUnit': '', 'heightUnit': ''}");
 
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
-                .replace(IMPORTS, createImports(importPaths))
+                .replace(IMPORTS, createImports(importPaths)+
+                        "\nimport { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';\n")
                 .replace(ENTITY_TYPE, flattenedNameOf(ReferenceHierarchy.class))
                 .replace("<!--@tg-entity-master-content-->", referenceHierarchyDom.toString())
 //                .replace("//generatedPrimaryActions", customActionObjectsString.length() > prefixLength ? customActionObjectsString.substring(prefixLength)
@@ -94,6 +95,33 @@ public class ReferenceHierarchyMaster implements IMaster<ReferenceHierarchy> {
                 + "self.classList.add('vertical');\n"
                 + "self.canLeave = function () {\n"
                 + "    return null;\n"
+                + "}.bind(self);\n"
+                + "self._showDataLoadingPromt = function (msg) {\n"
+                + "    this.$.refrenceHierarchy.lock = true;\n"
+                + "    this._toastGreeting().text = msg;\n"
+                + "    this._toastGreeting().hasMore = false;\n"
+                + "    this._toastGreeting().showProgress = true;\n"
+                + "    this._toastGreeting().msgHeading = 'Info';\n"
+                + "    this._toastGreeting().isCritical = false;\n"
+                + "    this._toastGreeting().show();\n"
+                + "}.bind(self);\n"
+                + "self._showDataLoadedPromt = function (msg) {\n"
+                + "    this.$.refrenceHierarchy.lock = false;\n"
+                + "    this._toastGreeting().text = msg;\n"
+                + "    this._toastGreeting().hasMore = false;\n"
+                + "    this._toastGreeting().showProgress = false;\n"
+                + "    this._toastGreeting().msgHeading = 'Info';\n"
+                + "    this._toastGreeting().isCritical = false;\n"
+                + "    this._toastGreeting().show();\n"
+                + "}.bind(self);\n"
+                +"//Locks/Unlocks tg-reference-hierarchy's lock layer during insertion point activation\n"
+                + "self.disableViewForDescendants = function () {\n"
+                + "    TgEntityBinderBehavior.disableViewForDescendants.call(this);\n"
+                + "    self._showDataLoadingPromt('Loading reference hierarchy...');\n"
+                + "}.bind(self);\n"
+                + "self.enableViewForDescendants = function () {\n"
+                + "    TgEntityBinderBehavior.enableViewForDescendants.call(this);\n"
+                + "    self._showDataLoadedPromt('Loading completed successfully');\n"
                 + "}.bind(self);\n"
                 + "//Need for security marix editors binding.\n"
                 + "self._isNecessaryForConversion = function (propertyName) { \n"

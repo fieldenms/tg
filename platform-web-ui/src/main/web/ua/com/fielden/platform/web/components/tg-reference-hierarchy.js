@@ -13,6 +13,7 @@ import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js'
 const template = html`
     <style>
         :host {
+            position: relative;
             @apply --layout-horizontal;
             width: 100%;
             height: 100%;
@@ -31,6 +32,17 @@ const template = html`
 
         .reference-hierarchy-tree {
             @apply --layout-flex;
+            min-height: 0;
+        }
+
+        .lock-layer {
+            @apply --layout-fit;
+            opacity: 0.5;
+            display: none;
+            background-color: white;
+        }
+        .lock-layer[lock] {
+            display: initial;
         }
     </style>
     <tg-reflector id="reflector"></tg-reflector>
@@ -38,8 +50,9 @@ const template = html`
         <div class="editor-container">
             <slot name="filter-element"></slot>
         </div>
-        <tg-tree id="referenceHierarchyTree" class="reference-hierarchy-tree" model="[[treeModel]]" content-builder="[[_buildContent]]" additional-info-cb="[[_buildAdditionalInfo]]" action-builder="[[_buildActions]]" action-runner="[[_runAction]]" on-tg-load-subtree="_loadSubtree"></tg-tree>
-    </div>`;
+        <tg-tree id="referenceHierarchyTree" class="reference-hierarchy-tree" model="[[treeModel]]" content-builder="[[_buildContent]]" tree-item-action="[[_loadMoreAction]]" additional-info-cb="[[_buildAdditionalInfo]]" action-builder="[[_buildActions]]" action-runner="[[_runAction]]" on-tg-load-subtree="_loadSubtree"></tg-tree>
+    </div>
+    <div class="lock-layer" lock$="[[lock]]"></div>`;
 
 template.setAttribute('strip-whitespace', '');
 
@@ -57,12 +70,30 @@ const generatePath = function(treeModel, loadedHierarchy) {
             path += "." + entityIndex + ".children";
         } else {
             throw {
-                msg: "The hierarchy wasn't detecteted for id: " + id + " at level: " + (index + 1)
+                msg: "The hierarchy wasn't detecteted for entity index: " + entityIndex + " at level: " + (index + 1)
             };
         }
         model = model[entityIndex].children;
     });
     return path;
+};
+
+const getPathItem = function(treeModel, loadedHierarchy) {
+    let parent = null;
+    loadedHierarchy.forEach(entityIndex => {
+        parent = ((parent && parent.children) || treeModel)[entityIndex];
+    });
+    return parent;
+};
+
+const getParentsPath = function (entity) {
+    const path = [];
+    let parent = entity;
+    while (parent) {
+        path.push(parent);
+        parent = parent.parent;
+    }
+    return path.reverse();
 };
 
 Polymer({
@@ -78,6 +109,14 @@ Polymer({
         entity: {
             type: Object,
             observer: "_entityChanged"
+        },
+
+        /**
+         * Need for locking reference hierarchy component during data loading.
+         */
+        lock: {
+            type: Boolean,
+            value: false
         },
         
         _customActions: {
@@ -101,6 +140,13 @@ Polymer({
                         "<span class='part-to-highlight'>" + this._getTitlte(entity) + "</span>" + this._getAdditionalInfo(entity) +
                     "</div>";
         }.bind(this);
+        this._loadMoreAction = function (e) {
+            const entity = e.model.entity.entity;
+            if (entity.isLoadMore) {
+                entity.parent.pageNumber += 1;
+                this.fire("tg-load-subtree", {parentPath: getParentsPath(entity.parent), loadAll: false});
+            }
+        }
         this._buildAdditionalInfo = function(entity) {
             return [];
         }.bind(this);
@@ -132,15 +178,27 @@ Polymer({
         const newEntity = newBindingEntity ? newBindingEntity['@@origin'] : null;
         if (newEntity) {
             const path = generatePath(this.treeModel, newEntity.loadedHierarchy);
-            const childrenIndex = path.lastIndexOf(".children");
-            if (childrenIndex >= 0) {
-                const pathWithoutChildren = path.substring(0, childrenIndex);
-                parent = this.get(pathWithoutChildren);
-                newEntity.generatedHierarchy.forEach(entity => {
-                    entity.parent = parent;
-                })
+            const parent = getPathItem(this.treeModel, newEntity.loadedHierarchy);
+            newEntity.generatedHierarchy.forEach(entity => {
+                entity.parent = parent;
+            });
+            if (parent && parent.level === referenceHierarchyLevel.TYPE) {
+                parent.pageSize = newEntity.pageSize;
+                parent.pageNumber = newEntity.pageNumber;
+                parent.pageCount = newEntity.pageCount;
+                if (parent.pageNumber === 0) {// Loading first page of instances
+                    if (parent.pageCount > 1) {//Add load more if there are more pages
+                        newEntity.generatedHierarchy.push({key: "Load more", desc: "", parent: parent, entity: null, isLoadMore: true, level: referenceHierarchyLevel.INSTANCE, hasChildren: false, children: []});
+                    }
+                    this.set(path, newEntity.generatedHierarchy);
+                } else if (parent.pageNumber + 1 < parent.pageCount) { // Loading page that and there are more pages (children already have load more action)
+                    this.splice(path, parent.children.length - 1, 0, ...newEntity.generatedHierarchy);
+                } else if (parent.pageNumber + 1 >= parent.pageCount) {//Loading last page (remove load more action)
+                    this.splice(path, parent.children.length - 1, 1, ...newEntity.generatedHierarchy);
+                }
+            } else {
+                this.set(path, newEntity.generatedHierarchy);
             }
-            this.set(path, newEntity.generatedHierarchy);
             newEntity.set("generatedHierarchy", []);
         }
         if (this._saveInProgress) {
@@ -162,7 +220,7 @@ Polymer({
     _processEvent: function (e) {
         const parentsPath = e.detail.parentPath;
         const indexes = parentsPath.map(entity =>  {
-            const parentList = entity.parent ? entity.children: this.treeModel;
+            const parentList = entity.parent ? entity.parent.children: this.treeModel;
             return parentList.indexOf(entity);
         });
         this.entity.setAndRegisterPropertyTouch("loadedHierarchy", indexes);
@@ -171,8 +229,8 @@ Polymer({
             this.entity.setAndRegisterPropertyTouch("pageSize", lastEntity.pageSize);
             this.entity.setAndRegisterPropertyTouch("pageNumber", lastEntity.pageNumber);
             this.entity.setAndRegisterPropertyTouch("entityType", lastEntity.entityType);
-            this.entity.setAndRegisterPropertyTouch("refEntityType", lastEntity.parent ? lastEntity.parent.entity.type().fullClassName() : this.entity.get("refEntityType"));
-            this.entity.setAndRegisterPropertyTouch("refEntityId", lastEntity.parent ? lastEntity.parent.entity.get("id") : this.entity.get("refEntityId"));
+            this.entity.setAndRegisterPropertyTouch("refEntityType", lastEntity.refEntityType);
+            this.entity.setAndRegisterPropertyTouch("refEntityId", lastEntity.refId);
         } else {
             this.entity.setAndRegisterPropertyTouch("pageSize", 0);
             this.entity.setAndRegisterPropertyTouch("pageNumber", 0);
