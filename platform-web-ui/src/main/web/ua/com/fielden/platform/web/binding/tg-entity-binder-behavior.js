@@ -178,6 +178,9 @@ export const TgEntityBinderBehavior = {
 
         /**
          * Default implementation for postValidated callback.
+         * 
+         * Note, that this method is not intended for overriding.
+         * Use custom postValidated function for these purposes.
          */
         _postValidatedDefault: {
             type: Function
@@ -299,6 +302,26 @@ export const TgEntityBinderBehavior = {
         _validationPromise: {
             type: Object,
             observer: '_validationPromiseChanged'
+        },
+
+        /**
+         * Current number of initiated requests as per validate() method.
+         * 
+         * This property counts only validation requests, not saving / running (other requests that apply values).
+         * This is used to check whether returning validation results correspond to most recent validation request.
+         * If not, these results should simply be ignored in favour to more fresh results.
+         * 
+         * There are four situations:
+         * 1. Two validations: close enough to be debounced (< 50ms)
+         * 2. Two validations: first is started, second is started and first aborted (in sense of iron-ajax request)
+         * 3. Two validations: first is started, second is started, first returned and ignored, second returned
+         * 4. Two validations: first is started, first returned, second is started, second returned
+         * 
+         * This property is used to detect third situation.
+         */
+        _validationCounter: {
+            type: Number,
+            value: 0
         },
 
         /**
@@ -552,24 +575,24 @@ export const TgEntityBinderBehavior = {
 
         // calbacks, that will be bound by editor child elements:
         self.validate = (function () {
-            var slf = this;
-
+            const slf = this;
+            slf._validationCounter += 1;
+            console.log('validate initiated (', slf._validationCounter, ')');
             // it is extremely important to create 'holder' outside of the debouncing construction to create immutable data
-            //   and pass it to debouncing function. The main reson for that is the following:
+            //   and pass it to debouncing function. The main reason for that is the following:
             //     'slf._currBindingEntity' instance inside the debounced function can be altered by the results
             //     of previous validations!
-            var holder = slf._extractModifiedPropertiesHolder(slf._currBindingEntity, slf._originalBindingEntity);
-
+            const holder = slf._extractModifiedPropertiesHolder(slf._currBindingEntity, slf._originalBindingEntity);
+            holder['@validationCounter'] = slf._validationCounter;
             // After the first 'validate' invocation arrives -- debouncer will wait 50 milliseconds
             //   for the next 'validate' invocation, and if it arrives -- the recent one will become as active ( and
             //   again will start waiting for 50 millis and so on).
             this.debounce('invoke-validation', function () {
-                console.log("validate");
+                console.log('validate (', holder['@validationCounter'], ')');
                 // cancel the 'invoke-validation' debouncer if there is any active one:
                 this.cancelDebouncer('invoke-validation');
                 // cancel previous validation before starting new one! The results of previous validation are irrelevant!
                 slf._validator().abortValidationIfAny();
-
                 // IMPORTANT: no need to check whether the _hasModified(holder) === true -- because the error recovery should happen!
                 // (if the entity was not modified -- _validate(holder) will start the error recovery process)
                 slf._validationPromise = slf._validateForDescendants(slf._reset(holder));
@@ -664,20 +687,27 @@ export const TgEntityBinderBehavior = {
         }).bind(self);
         // 				validation:
         self._postValidatedDefault = (function (entityAndCustomObject) {
-            var validatedEntity = entityAndCustomObject[0];
-            var customObject = this._reflector().customObject(entityAndCustomObject);
-
-            var msg = this._toastMsg("Validation", validatedEntity);
+            const validatedEntity = entityAndCustomObject[0];
+            const customObject = this._reflector().customObject(entityAndCustomObject);
+            if (customObject['@validationCounter'] < this._validationCounter) { // ignore results that do not correspond to most recent validation request
+                // note that _postValidatedDefault is used as customHandlerFor _processResponse;
+                //  _processResponse has its own handling for error / warning Result instances;
+                //  but in most cases the Result will be successful but the entity inside can be valid or not;
+                //  that's why we believe that _postValidatedDefault method is sufficient for this logic to cover majority of cases;
+                //  for the same reason, there is no need to ignore error results in _postValidatedDefaultError or its caller _processError.
+                console.warn('Old validation results with number [' + customObject['@validationCounter'] + '] appeared and will be ignored. New results with number [' + this._validationCounter + '] are pending.');
+                return;
+            }
+            console.log('validate received (', customObject['@validationCounter'], ')');
+            const msg = this._toastMsg("Validation", validatedEntity);
             if (!validatedEntity.isValid()) {
                 this._openToast(validatedEntity, msg, !validatedEntity.isValid() || validatedEntity.isValidWithWarning(), msg, false);
             }
-
             // in case where _continuations property exists (only in tg-entity-master) there is a need to reset continuations (they become stale after any change in initiating entity)
             if (typeof this._continuations === 'object') {
                 this._continuations = {};
             }
-
-            var newBindingEntity = this._postEntityReceived(validatedEntity, false);
+            const newBindingEntity = this._postEntityReceived(validatedEntity, false);
             // custom external action
             if (this.postValidated) {
                 this.postValidated(validatedEntity, newBindingEntity, customObject);
@@ -837,41 +867,41 @@ export const TgEntityBinderBehavior = {
     },
 
     _extractModifiedPropertiesHolder: function (bindingEntity, _originalBindingEntity) {
-        var modPropHolder = {
-            "@modified": false
+        const modPropHolder = {
+            '@modified': false
         };
-        var self = this;
+        const self = this;
         if (self._reflector().isEntity(bindingEntity)) {
-            modPropHolder["id"] = bindingEntity.get('id');
-            modPropHolder["version"] = bindingEntity["version"];
-            modPropHolder["@@touchedProps"] = bindingEntity["@@touchedProps"].names;
-
+            modPropHolder['id'] = bindingEntity.get('id');
+            modPropHolder['version'] = bindingEntity['version'];
+            modPropHolder['@@touchedProps'] = bindingEntity['@@touchedProps'].names.slice(); // need to perform array copy because bindingEntity['@@touchedProps'].names is mutable array (see tg-reflector.setAndRegisterPropertyTouch/convertPropertyValue for more details of how it can be mutated)
+            
             bindingEntity.traverseProperties(function (propertyName) {
-                var value = bindingEntity.get(propertyName);
-                var originalValue = _originalBindingEntity.get(propertyName);
-                var valId = bindingEntity['@' + propertyName + '_id'];
-                var origValId = _originalBindingEntity['@' + propertyName + '_id'];
-
+                const value = bindingEntity.get(propertyName);
+                const originalValue = _originalBindingEntity.get(propertyName);
+                const valId = bindingEntity['@' + propertyName + '_id'];
+                const origValId = _originalBindingEntity['@' + propertyName + '_id'];
+                
                 // VERY IMPORTANT: the property is considered to be 'modified'
                 //                 in the case when its value does not equal to original value.
                 //
-                //                 The "modified" property is marked by existence of "val" sub-property.
+                //                 The 'modified' property is marked by existence of 'val' sub-property.
                 //
                 //                 All modified properties will be applied on the server upon the validation prototype.
                 if (!self._reflector().equalsEx(value, originalValue)) {
                     // the property is 'modified'
                     modPropHolder[propertyName] = {
-                        "val": value,
-                        "origVal": originalValue
+                        'val': value,
+                        'origVal': originalValue
                     };
-                    modPropHolder["@modified"] = true;
+                    modPropHolder['@modified'] = true;
                     if (typeof valId !== 'undefined') {
                         modPropHolder[propertyName]['valId'] = valId;
                     }
                 } else {
                     // the property is 'unmodified'
                     modPropHolder[propertyName] = {
-                        "origVal": originalValue
+                        'origVal': originalValue
                     };
                 }
                 if (typeof origValId !== 'undefined') {
@@ -879,7 +909,7 @@ export const TgEntityBinderBehavior = {
                 }
             });
         }
-        console.log("       _extractModifiedPropertiesHolder: modPropHolder", modPropHolder);
+        console.log('       _extractModifiedPropertiesHolder: modPropHolder', modPropHolder);
         return modPropHolder;
     },
 
@@ -995,43 +1025,43 @@ export const TgEntityBinderBehavior = {
      *                                            this container is always null for brand new entity instances that arrive from the sever for the first time (i.e. further client-server conversation re new instances should populate this container).
      */
     _extractBindingView: function (entity, previousModifiedPropertiesHolder, prevCurrBindingEntity) {
-        var self = this;
-        var bindingView = self._reflector().newEntity(entity.type().fullClassName());
-        bindingView["id"] = entity.get('id');
-        bindingView["version"] = entity["version"];
+        const self = this;
+        const bindingView = self._reflector().newEntity(entity.type().fullClassName());
+        bindingView['id'] = entity.get('id');
+        bindingView['version'] = entity['version'];
         // this property of the bindingView will hold the reference to fully-fledged entity,
         //   this entity can be used effectively to process 'dot-notated' properties (for e.g. retrieving the values)
-        bindingView["@@origin"] = entity;
-        bindingView["@@touchedProps"] = (prevCurrBindingEntity && prevCurrBindingEntity["@@touchedProps"]) ? prevCurrBindingEntity["@@touchedProps"] : {
+        bindingView['@@origin'] = entity;
+        // We use exactly the same object for touchedProps over long period of time up until saving (see tg-selection-criteria-behavior/tg-entity-master-behavior._postSavedDefault) -- then new object with empty arrays will be created;
+        //  this single object resides in current version of currBindingEntity;
+        //  mutation of this object's arrays occurs in tg-reflector.setAndRegisterPropertyTouch/convertPropertyValue;
+        //  we must copy these arrays (using .slice()) when using; at this stage the only place is _extractModifiedPropertiesHolder.
+        bindingView['@@touchedProps'] = prevCurrBindingEntity ? prevCurrBindingEntity['@@touchedProps'] : {
             names: [],
             values: [],
             counts: []
         };
-
         entity.traverseProperties(function (propertyName) {
             // value conversion of property value performs here only for specialised properties (see method '_isNecessaryForConversion');
             // conversion for other properties performs in corresponding editors (tg-editor-behavior).
             if (self._isNecessaryForConversion(propertyName)) {
                 self._reflector().convertPropertyValue(bindingView, propertyName, entity, previousModifiedPropertiesHolder);
             }
-
             // meta-state is provided for all properties, not only specialised
             if (self._reflector().isError(entity.prop(propertyName).validationResult())) {
-                bindingView["@" + propertyName + "_error"] = entity.prop(propertyName).validationResult();
+                bindingView['@' + propertyName + '_error'] = entity.prop(propertyName).validationResult();
             } else {
                 if (self._reflector().isWarning(entity.prop(propertyName).validationResult())) {
-                    bindingView["@" + propertyName + "_warning"] = entity.prop(propertyName).validationResult();
+                    bindingView['@' + propertyName + '_warning'] = entity.prop(propertyName).validationResult();
                 }
-                bindingView["@" + propertyName + "_required"] = entity.prop(propertyName).isRequired();
+                bindingView['@' + propertyName + '_required'] = entity.prop(propertyName).isRequired();
             }
             // the following logic is required in both cases: property with error and without error
             if (entity.type().prop(propertyName).isUpperCase()) {
-                bindingView["@" + propertyName + "_uppercase"] = true;
+                bindingView['@' + propertyName + '_uppercase'] = true;
             }
-            bindingView["@" + propertyName + "_editable"] = entity.prop(propertyName).isEditable();
+            bindingView['@' + propertyName + '_editable'] = entity.prop(propertyName).isEditable();
         });
-
-        // console.log("       entity + bindingView", entity, bindingView);
         return bindingView;
     },
 
