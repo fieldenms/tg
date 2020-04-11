@@ -143,6 +143,13 @@ public class CriteriaGenerator implements ICriteriaGenerator {
     }
 
     /**
+     * Clears the state and caches from this {@link CriteriaGenerator} instance.
+     */
+    public void clear() {
+        generatedClasses.clear();
+    }
+
+    /**
      * Generates criteria properties for specified list of properties and their root type.
      *
      * @param root
