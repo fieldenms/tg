@@ -20,8 +20,6 @@ import com.google.inject.Injector;
 
 import ua.com.fielden.platform.attachment.AttachmentPreviewEntityAction;
 import ua.com.fielden.platform.basic.config.Workflows;
-import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
-import ua.com.fielden.platform.criteria.generator.impl.CriteriaGenerator;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.EntityDeleteAction;
@@ -243,8 +241,6 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         this.webUiBuilder = new WebUiBuilder(this);
         this.desktopMainMenuConfig = new MainMenuBuilder(this);
         this.mobileMainMenuConfig = new MainMenuBuilder(this);
-        final CriteriaGenerator criteriaGenerator = (CriteriaGenerator) this.injector.getInstance(ICriteriaGenerator.class);
-        criteriaGenerator.clear();
         logger.error("Clearing configurations...done");
     }
 
