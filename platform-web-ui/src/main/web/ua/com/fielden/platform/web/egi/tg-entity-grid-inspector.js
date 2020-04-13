@@ -323,8 +323,9 @@ const template = html`
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        .truncate-with-line-number {
+        .truncate[multiple-line] {
             overflow: hidden;
+            white-space: normal;
             word-break: break-word;
             display: -webkit-box;
             -webkit-box-orient: vertical;
@@ -462,7 +463,7 @@ const template = html`
                         <template is="dom-repeat" items="[[fixedColumns]]">
                             <div class="table-cell cell" fixed style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, item.shouldAddDynamicWidth, 'true')]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                                 <div class="table-header-column-content">
-                                    <div class="truncate-with-line-number table-header-column-title" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
+                                    <div class="truncate table-header-column-title" multiple-line$="[[_multipleHeaderLines]]" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
                                     <iron-icon class="header-icon indicator-icon" hidden$="[[!item.editable]]" tooltip-text="This column is editable" icon="icons:create"></iron-icon>
                                     <div class="header-icon sorting-group" hidden$="[[!_isSortingVisible(item.sortable, item.sorting)]]">
                                         <iron-icon class="indicator-icon" icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_computeSortingIconStyle(item.sorting)]]"></iron-icon>
@@ -485,7 +486,7 @@ const template = html`
                         <template is="dom-repeat" items="[[columns]]">
                             <div class="table-cell cell" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, item.shouldAddDynamicWidth, 'false')]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                                 <div class="table-header-column-content">
-                                    <div class="truncate-with-line-number table-header-column-title" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
+                                    <div class="truncate table-header-column-title" multiple-line$="[[_multipleHeaderLines]]" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
                                     <iron-icon class="header-icon indicator-icon" hidden="[[!item.editable]]" tooltip-text="This column is editable" icon="icons:create"></iron-icon>
                                     <div class="header-icon sorting-group" hidden$="[[!_isSortingVisible(item.sortable, item.sorting)]]">
                                         <iron-icon class="indicator-icon" icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_computeSortingIconStyle(item.sorting)]]"></iron-icon>
@@ -774,6 +775,13 @@ Polymer({
             type: Number,
             value: 1,
             observer: "_numberOfHeaderLinesChanged"
+        },
+        /**
+         * Property needed for differentiating styles between multiple row header or single line header 
+         */
+        _multipleHeaderLines: {
+            type: Boolean,
+            value: false
         },
         /**
          * Defines the number of visible rows.
@@ -1859,6 +1867,7 @@ Polymer({
     _numberOfHeaderLinesChanged: function (newValue) {
         if (newValue > 0 && newValue < 4) {
             this.updateStyles({"--egi-number-of-header-lines": newValue});
+            this._multipleHeaderLines = newValue > 1;
         }
     },
 
