@@ -6,9 +6,11 @@ const styleElement = document.createElement('dom-module');
 styleElement.innerHTML = `
     <template>
         <style>
-            .left-insertion-point, .right-insertion-point {
+            .left-insertion-point, .right-insertion-point, .bottom-insertion-point, .top-insertion-point {
                 @apply --layout-vertical;
-                @apply --layout-start;
+            }
+            .left-insertion-point, .right-insertion-point {
+                @apply --layout-start-justified;
             }
             paper-icon-button.revers {
                 transform: scale(-1, 1);

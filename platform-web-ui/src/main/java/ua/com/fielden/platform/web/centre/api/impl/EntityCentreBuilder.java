@@ -61,6 +61,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
 
     private final Map<String, Class<? extends IValueMatcherWithContext<T, ?>>> valueMatcherForProps = new HashMap<>();
 
+    protected boolean egiHidden = false;
     protected boolean draggable = false;
     protected boolean hideCheckboxes = false;
     protected IToolbarConfig toolbarConfig = new CentreToolbar();
@@ -168,6 +169,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
         resultSetOrdering.forEach((k, v) -> properResultSetOrdering.put(v.getKey(), v.getValue()));
 
         return new EntityCentreConfig<>(
+                egiHidden,
                 draggable,
                 hideCheckboxes,
                 toolbarConfig,
