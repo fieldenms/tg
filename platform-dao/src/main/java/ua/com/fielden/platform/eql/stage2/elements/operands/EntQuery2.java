@@ -55,7 +55,7 @@ public class EntQuery2 implements ISingleOperand2<EntQuery3> {
         this.groups = queryBlocks.groups;
         this.orderings = queryBlocks.orderings;
         this.resultType = enhance(resultType);
-        this.hibType = resultType == null ? yields.getYields().iterator().next().javaType() : LongType.INSTANCE;
+        this.hibType = resultType == null ? yields.getYields().iterator().next().operand.hibType() : LongType.INSTANCE;
     }
 
     private Class<?> enhance(final Class<? extends AbstractEntity<?>> resultType) {

@@ -7,20 +7,60 @@ import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
+import java.math.BigInteger;
 import java.util.HashMap;
 
 import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.eql.meta.EqlStage3TestCase;
+import ua.com.fielden.platform.eql.stage3.elements.Yield3;
+import ua.com.fielden.platform.eql.stage3.elements.Yields3;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.EntQuery3;
+import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySources3;
+import ua.com.fielden.platform.eql.stage3.elements.sources.QrySource3BasedOnSubqueries;
 import ua.com.fielden.platform.eql.stage3.elements.sources.QrySource3BasedOnTable;
+import ua.com.fielden.platform.sample.domain.TeVehicle;
+import ua.com.fielden.platform.sample.domain.TeVehicleModel;
 
 public class QmToStage3TransformationTest extends EqlStage3TestCase {
 
+    @Test
+    public void correlated_source_query_works() {
+        final AggregatedResultQueryModel sourceSubQry = select(TeVehicle.class).where().prop("model").eq().extProp("id").yield().countAll().as("qty").modelAsAggregate();
+        final PrimitiveResultQueryModel qtySubQry = select(sourceSubQry).yield().prop("qty").modelAsPrimitive();
+        final AggregatedResultQueryModel qry = select(TeVehicleModel.class).yield().model(qtySubQry).as("qty").modelAsAggregate();
+
+        final EntQuery3 actQry = qry(qry);
+        
+        final QrySource3BasedOnTable modelSource = source(MODEL, "3");
+        
+        final QrySource3BasedOnTable vehSource = source(VEHICLE, "1");
+        final IQrySources3 vehSources = sources(vehSource);
+        final ISingleOperand3 vehModelProp = entityProp("model", vehSource, MODEL);
+        final ISingleOperand3 modelIdProp = entityProp("id", modelSource, MODEL);
+        final Conditions3 vehConditions = or(eq(expr(vehModelProp), expr(modelIdProp)));
+        final Yields3 vehYields = yields(yieldCountAll("qty"));
+
+        final EntQuery3 vehSourceSubQry = srcqry(vehSources, vehConditions, vehYields);
+        
+        final QrySource3BasedOnSubqueries qtyQrySource = source("2", vehSourceSubQry);
+        final IQrySources3 qtyQrySources = sources(qtyQrySource);
+        final Yields3 qtyQryYields = yields(yieldPropExpr("qty", qtyQrySource, "", BigInteger.class, H_BIG_INTEGER));
+        
+        final Yields3 modelQryYields = yields(yieldModel(subqry(qtyQrySources, qtyQryYields, BigInteger.class), "qty"));
+        
+        final EntQuery3 expQry = qry(sources(modelSource), modelQryYields);
+        final Yield3 a = actQry.yields.getYields().iterator().next();
+        final Yield3 e = expQry.yields.getYields().iterator().next();
+        assertEquals(expQry, actQry);
+    }
+    
     @Test
     public void calc_prop_is_correctly_transformed_10() {
         final EntQuery3 actQry = qryCountAll(select(WORK_ORDER).where().anyOfProps("vehicle.modelMakeKey", "vehicle.model.make.key").isNotNull());

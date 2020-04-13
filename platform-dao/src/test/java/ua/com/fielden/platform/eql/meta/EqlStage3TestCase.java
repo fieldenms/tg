@@ -11,12 +11,14 @@ import static ua.com.fielden.platform.eql.meta.QueryCategory.SUB_QUERY;
 import static ua.com.fielden.platform.eql.stage2.elements.PathsToTreeTransformator.groupChildren;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 import org.hibernate.type.LongType;
 import org.hibernate.type.StringType;
+import org.hibernate.type.Type;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
@@ -45,6 +47,7 @@ import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySource3;
 import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySources3;
 import ua.com.fielden.platform.eql.stage3.elements.sources.JoinedQrySource3;
+import ua.com.fielden.platform.eql.stage3.elements.sources.QrySource3BasedOnSubqueries;
 import ua.com.fielden.platform.eql.stage3.elements.sources.QrySource3BasedOnTable;
 import ua.com.fielden.platform.eql.stage3.elements.sources.SingleQrySource3;
 
@@ -55,6 +58,13 @@ public class EqlStage3TestCase extends EqlTestCase {
 
         final PropsResolutionContext resolutionContext = new PropsResolutionContext(metadata());
         final ua.com.fielden.platform.eql.stage1.elements.TransformationResult<EntQuery2> s1tr = qb().generateEntQueryAsResultQuery(countQry, null).transform(resolutionContext);
+        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> s2tr = s1tr.item.transform(new TransformationContext(tables, groupChildren(s1tr.item.collectProps(), metadata())));
+        return s2tr.item;
+    }
+    
+    protected static EntQuery3 qry(final AggregatedResultQueryModel qry) {
+        final PropsResolutionContext resolutionContext = new PropsResolutionContext(metadata());
+        final ua.com.fielden.platform.eql.stage1.elements.TransformationResult<EntQuery2> s1tr = qb().generateEntQueryAsResultQuery(qry, null).transform(resolutionContext);
         final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> s2tr = s1tr.item.transform(new TransformationContext(tables, groupChildren(s1tr.item.collectProps(), metadata())));
         return s2tr.item;
     }
@@ -72,6 +82,10 @@ public class EqlStage3TestCase extends EqlTestCase {
         return new QrySource3BasedOnTable(tables.get(sourceType.getName()), sourceForContextId);
     }
 
+    protected static QrySource3BasedOnSubqueries source(final String sourceForContextId, final EntQuery3 ... sourceQueries) {
+        return new QrySource3BasedOnSubqueries(Arrays.asList(sourceQueries), sourceForContextId);
+    }
+    
     protected static QrySource3BasedOnTable source(final Class<? extends AbstractEntity<?>> sourceType, final String sourceForContextId, final String subcontextId) {
         return new QrySource3BasedOnTable(tables.get(sourceType.getName()), sourceForContextId + "_" + subcontextId);
     }
@@ -96,6 +110,11 @@ public class EqlStage3TestCase extends EqlTestCase {
         return new EntProp3(name, source, String.class, StringType.INSTANCE);
     }
 
+    protected static ISingleOperand3 prop(final String name, final IQrySource3 source, final Class<?> type, final Type hibType) {
+        return new EntProp3(name, source, type, hibType);
+    }
+
+    
     protected static ISingleOperand3 dateProp(final String name, final IQrySource3 source) {
         return new EntProp3(name, source, Date.class, StringType.INSTANCE);
     }
@@ -255,9 +274,21 @@ public class EqlStage3TestCase extends EqlTestCase {
     protected static EntQuery3 qry(final IQrySources3 sources, final Yields3 yields, final Class<?> resultType) {
         return qry(sources, yields, RESULT_QUERY, resultType);
     }
+    
+    protected static EntQuery3 qry(final IQrySources3 sources, final Yields3 yields) {
+        return qry(sources, yields, RESULT_QUERY, EntityAggregates.class);
+    }
 
     protected static EntQuery3 qry(final IQrySources3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType) {
         return qry(sources, conditions, yields, RESULT_QUERY, resultType);
+    }
+
+    protected static EntQuery3 srcqry(final IQrySources3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType) {
+        return qry(sources, conditions, yields, QueryCategory.SOURCE_QUERY, resultType);
+    }
+
+    protected static EntQuery3 srcqry(final IQrySources3 sources, final Conditions3 conditions, final Yields3 yields) {
+        return qry(sources, conditions, yields, QueryCategory.SOURCE_QUERY, EntityAggregates.class);
     }
 
     protected static EntQuery3 subqry(final IQrySources3 sources, final Class<?> resultType) {
@@ -271,7 +302,7 @@ public class EqlStage3TestCase extends EqlTestCase {
     protected static EntQuery3 subqry(final IQrySources3 sources, final Yields3 yields, final Class<?> resultType) {
         return qry(sources, yields, SUB_QUERY, resultType);
     }
-
+   
     protected static EntQuery3 subqry(final IQrySources3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType) {
         return qry(sources, conditions, yields, SUB_QUERY, resultType);
     }
@@ -296,8 +327,16 @@ public class EqlStage3TestCase extends EqlTestCase {
         return new Yield3(expr(stringProp(propName, source)), alias);
     }
 
+    protected static Yield3 yieldPropExpr(final String propName, final IQrySource3 source, final String alias, final Class<?> type, final Type hibType) {
+        return new Yield3(expr(prop(propName, source, type, hibType)), alias);
+    }
+
     protected static Yield3 yieldProp(final String propName, final IQrySource3 source, final String alias) {
         return new Yield3(prop(propName, source), alias);
+    }
+    
+    protected static Yield3 yieldModel(final EntQuery3 model, final String alias) {
+        return new Yield3(model, alias);
     }
 
     protected static Yield3 yieldSingleExpr(final String propName, final IQrySource3 source, final Class<? extends AbstractEntity<?>> propType) {

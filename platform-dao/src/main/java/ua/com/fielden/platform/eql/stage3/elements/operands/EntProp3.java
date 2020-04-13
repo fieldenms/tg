@@ -38,7 +38,7 @@ public class EntProp3 implements ISingleOperand3 {
     @Override
     public int hashCode() {
         final int prime = 31;
-        int result = super.hashCode();
+        int result = 1;
         result = prime * result + name.hashCode();
         result = prime * result + source.hashCode();
         result = prime * result + hibType.hashCode();
