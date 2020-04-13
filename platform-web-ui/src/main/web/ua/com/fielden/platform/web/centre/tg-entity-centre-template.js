@@ -59,7 +59,7 @@ const entityCentreTemplate = html`
 
         <!--@custom-front-actions-->
         
-        <tg-entity-grid-inspector id="egi" slot="custom-egi" class="entity-grid-inspector" centre-selection="[[centreSelection]]" column-properties-mapper="{{columnPropertiesMapper}}" custom-shortcuts="@customShortcuts" constant-height="@egiHeight" row-height="@egiRowHeight" @fitToHeight @canDragFrom @toolbarVisible @checkboxVisible @dragAnchorFixed @checkboxesFixed @checkboxesWithPrimaryActionsFixed num-of-fixed-cols="@numOfFixedCols" @secondaryActionsFixed @headerFixed @summaryFixed @gridLayout>
+        <tg-entity-grid-inspector id="egi" slot="custom-egi" class="entity-grid-inspector" centre-selection="[[centreSelection]]" column-properties-mapper="{{columnPropertiesMapper}}" custom-shortcuts="@customShortcuts" constant-height="@egiHeight" row-height="@egiRowHeight" @hidden @fitToHeight @canDragFrom @toolbarVisible @checkboxVisible @dragAnchorFixed @checkboxesFixed @checkboxesWithPrimaryActionsFixed num-of-fixed-cols="@numOfFixedCols" @secondaryActionsFixed @headerFixed @summaryFixed @gridLayout>
             <!-- EGI COLUMNS DOM (GENERATED) -->
             
             <!--@egi_columns-->
@@ -79,10 +79,10 @@ const entityCentreTemplate = html`
         <div slot="right-insertion-point" class="right-insertion-point">
             <!--@right_insertion_points-->
         </div>
-        <div slot="bottom-insertion-point">
+        <div slot="bottom-insertion-point" class="bottom-insertion-point">
             <!--@bottom_insertion_points-->
         </div>
-        <div slot="top-insertion-point">
+        <div slot="top-insertion-point" class="top-insertion-point">
             <!--@top_insertion_points-->
         </div>
     </tg-entity-centre>

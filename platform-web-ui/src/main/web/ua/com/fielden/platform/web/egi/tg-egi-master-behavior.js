@@ -1,6 +1,7 @@
 import '/resources/components/postal-lib.js';
 
 import { TgEntityMasterBehavior, selectEnabledEditor} from '/resources/master/tg-entity-master-behavior.js';
+import { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';
 import { queryElements } from '/resources/components/tg-element-selector-behavior.js';
 import { IronA11yKeysBehavior } from '/resources/polymer/@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
 import { tearDownEvent, deepestActiveElement, getParentAnd, getActiveParentAnd, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
@@ -345,6 +346,18 @@ const TgEgiMasterBehaviorImpl = {
 
     _getEgiCurrentFocusableElements: function () {
         return queryElements(this.egi, FOCUSABLE_ELEMENTS_SELECTOR).filter(element => !element.disabled && element.offsetParent !== null);
+    },
+
+    /**
+     * @override of _postEntityReceived method from TgEntityBinderBehavior in order to change the save button state if entity is not persistent.
+     * 
+     * @param {Object} entity  - the received entity
+     * @param {Boolean} isRefreshingProcess was master canceled or not
+     */
+    _postEntityReceived: function (entity, isRefreshingProcess) {
+        TgEntityBinderBehavior._postEntityReceived.call(this, entity, isRefreshingProcess);
+        this._bindingEntityNotPersistentOrNotPersistedOrModified = !this._currBindingEntity.isPersisted() || this._bindingEntityModified;
+        return this._currBindingEntity;
     },
 
     _masterDom: function () {
