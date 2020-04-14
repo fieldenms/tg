@@ -60,6 +60,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder0HideEg
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1Toolbar;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aScroll;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1bPageCapacity;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1bPageCapacityMaxValue;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cHeaderWrap;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cVisibleRowsCount;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1dFitBehaviour;
@@ -542,8 +543,14 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IResultSetBuilder1cHeaderWrap<T> setPageCapacity(final int pageCapacity) {
+    public IResultSetBuilder1bPageCapacityMaxValue<T> setPageCapacity(final int pageCapacity) {
         this.builder.pageCapacity = pageCapacity;
+        return this;
+    }
+
+    @Override
+    public IResultSetBuilder1cHeaderWrap<T> setMaxPageCapacity(final int maxPageCapacity) {
+        this.builder.maxPageCapacity = maxPageCapacity;
         return this;
     }
 

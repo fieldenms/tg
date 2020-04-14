@@ -75,8 +75,9 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
         // provide sorting values into the action
         entity.setSortingVals(createSortingVals(customisableColumns));
         
-        // provide pageCapacity, visibleRowsCount and numberOfHeaderLines into the action
+        // provide pageCapacity, maxPageCapacity, visibleRowsCount and numberOfHeaderLines into the action
         entity.setPageCapacity(previouslyRunCentre.getSecondTick().getPageCapacity());
+        entity.setMaxPageCapacity(previouslyRunCentre.getSecondTick().getMaxPageCapacity());
         entity.setVisibleRowsCount(previouslyRunCentre.getSecondTick().getVisibleRowsCount());
         entity.setNumberOfHeaderLines(previouslyRunCentre.getSecondTick().getNumberOfHeaderLines());
         return entity;

@@ -16,6 +16,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.IDynamicColumnBuilder;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1Toolbar;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aScroll;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1bPageCapacity;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1bPageCapacityMaxValue;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cHeaderWrap;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cVisibleRowsCount;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1dFitBehaviour;
@@ -130,8 +131,13 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> implements ICentreTopL
     }
 
     @Override
-    public IResultSetBuilder1cHeaderWrap<T> setPageCapacity(final int pageCapacity) {
+    public IResultSetBuilder1bPageCapacityMaxValue<T> setPageCapacity(final int pageCapacity) {
         return new ResultSetBuilder<>(builder).setPageCapacity(pageCapacity);
+    }
+
+    @Override
+    public IResultSetBuilder1cHeaderWrap<T> setMaxPageCapacity(final int maxPageCapacity) {
+        return new ResultSetBuilder<>(builder).setMaxPageCapacity(maxPageCapacity);
     }
 
     @Override
