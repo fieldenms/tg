@@ -236,10 +236,12 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     }
 
     public EntityCentreBuilder<T> setHeaderLineNumber(final int headerLineNumber) {
-        if (headerLineNumber > 0 && headerLineNumber < 4) {
-            this.headerLineNumber = headerLineNumber;
-            return this;
+        // let's validate the argument
+        if (headerLineNumber < 1 || 3 < headerLineNumber) {
+            throw new CentreConfigException("The number of lines in EGI headers should be between 1 and 3.");
         }
-        throw new CentreConfigException("The number of wrapped lines in EGI header can not be less then 0 or greater then 3.");
+
+        this.headerLineNumber = headerLineNumber;
+        return this;
     }
 }
