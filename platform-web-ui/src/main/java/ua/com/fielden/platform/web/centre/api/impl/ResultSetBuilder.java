@@ -60,7 +60,8 @@ import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder0HideEg
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1Toolbar;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aScroll;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1bPageCapacity;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cVisibleRows;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cHeaderWrap;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cVisibleRowsCount;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1dFitBehaviour;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1eRowHeight;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2Properties;
@@ -541,7 +542,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IResultSetBuilder1cVisibleRows<T> setPageCapacity(final int pageCapacity) {
+    public IResultSetBuilder1cHeaderWrap<T> setPageCapacity(final int pageCapacity) {
         this.builder.pageCapacity = pageCapacity;
         return this;
     }
@@ -614,6 +615,12 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     @Override
     public IResultSetBuilder3Ordering<T> skipValidation() {
         this.widget.ifPresent(widget -> widget.skipValidation());
+        return this;
+    }
+
+    @Override
+    public IResultSetBuilder1cVisibleRowsCount<T> wrapHeader(final int headerLineNumber) {
+        this.builder.setHeaderLineNumber(headerLineNumber);
         return this;
     }
 }

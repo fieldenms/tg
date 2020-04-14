@@ -66,6 +66,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     private final IScrollConfig scrollConfig;
     private final int pageCapacity;
     private final int visibleRowsCount;
+    private final int numberOfHeaderLines;
     private final String egiHeight;
     private final boolean fitToHeight;
     private final String rowHeight;
@@ -362,6 +363,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final IScrollConfig scrollConfig,
             final int pageCapacity,
             final int visibleRowsCount,
+            final int numberOfHeaderLines,
             final String egiHeight,
             final boolean fitToHeight,
             final String rowHeight,
@@ -430,6 +432,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         this.scrollConfig = scrollConfig;
         this.pageCapacity = pageCapacity;
         this.visibleRowsCount = visibleRowsCount;
+        this.numberOfHeaderLines = numberOfHeaderLines;
         this.egiHeight = egiHeight;
         this.fitToHeight = fitToHeight;
         this.rowHeight = rowHeight;
@@ -859,6 +862,10 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     public int getVisibleRowsCount() {
         return visibleRowsCount;
+    }
+
+    public int getNumberOfHeaderLines() {
+        return numberOfHeaderLines;
     }
 
     public String getEgiHeight() {

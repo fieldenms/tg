@@ -175,11 +175,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private static final String EGI_SECONDARY_ACTION_FIXED = "@secondaryActionsFixed";
     private static final String EGI_HEADER_FIXED = "@headerFixed";
     private static final String EGI_SUMMARY_FIXED = "@summaryFixed";
-    private static final String EGI_VISIBLE_ROW_COUNT = "@visibleRowCount";
     private static final String EGI_HEIGHT = "@egiHeight";
     private static final String EGI_FIT_TO_HEIGHT = "@fitToHeight";
     private static final String EGI_ROW_HEIGHT = "@egiRowHeight";
-    private static final String EGI_PAGE_CAPACITY = "@pageCapacity";
     private static final String EGI_ACTIONS = "//generatedActionObjects";
     private static final String EGI_PRIMARY_ACTION = "//generatedPrimaryAction";
     private static final String EGI_SECONDARY_ACTIONS = "//generatedSecondaryActions";
@@ -414,7 +412,11 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 }
             }
         }
-
+        
+        cdtmae.getSecondTick().setPageCapacity(dslDefaultConfig.getPageCapacity());
+        cdtmae.getSecondTick().setVisibleRowsCount(dslDefaultConfig.getVisibleRowsCount());
+        cdtmae.getSecondTick().setNumberOfHeaderLines(dslDefaultConfig.getNumberOfHeaderLines());
+        
         return postCentreCreated == null ? cdtmae : postCentreCreated.apply(cdtmae);
     }
 
@@ -1135,7 +1137,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace(EGI_SECONDARY_ACTION_FIXED, SECONDARY_ACTION_FIXED.eval(dslDefaultConfig.getScrollConfig().isSecondaryActionsFixed())).
                 replace(EGI_HEADER_FIXED, HEADER_FIXED.eval(dslDefaultConfig.getScrollConfig().isHeaderFixed())).
                 replace(EGI_SUMMARY_FIXED, SUMMARY_FIXED.eval(dslDefaultConfig.getScrollConfig().isSummaryFixed())).
-                replace(EGI_VISIBLE_ROW_COUNT, dslDefaultConfig.getVisibleRowsCount() + "").
                 replace(EGI_HEIGHT, dslDefaultConfig.getEgiHeight()).
                 replace(EGI_ROW_HEIGHT, dslDefaultConfig.getRowHeight()).
                 replace(EGI_FIT_TO_HEIGHT, FIT_TO_HEIGHT.eval(dslDefaultConfig.isFitToHeight())).
@@ -1144,7 +1145,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace(TOOLBAR_JS, dslDefaultConfig.getToolbarConfig().code(entityType).toString()).
                 replace(TOOLBAR_STYLES, dslDefaultConfig.getToolbarConfig().styles().toString()).
                 replace(FULL_MI_TYPE, miType.getName()).
-                replace(EGI_PAGE_CAPACITY, Integer.toString(dslDefaultConfig.getPageCapacity())).
                 replace(QUERY_ENHANCER_CONFIG, queryEnhancerContextConfigString()).
                 replace(CRITERIA_DOM, editorContainer.toString()).
                 replace(EGI_DOM, egiColumns.toString()).

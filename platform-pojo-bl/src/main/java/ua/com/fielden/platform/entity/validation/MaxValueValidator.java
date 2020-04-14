@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.validation;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
 
@@ -18,6 +19,8 @@ import ua.com.fielden.platform.types.Money;
  *
  */
 public class MaxValueValidator implements IBeforeChangeEventHandler<Object> {
+    public static final String ERR_VALUE_SHOULD_NOT_EXCEED_MAX = "Value should be less or equal to %S.";
+
     protected String limit;
 
     protected MaxValueValidator() { }
@@ -35,9 +38,9 @@ public class MaxValueValidator implements IBeforeChangeEventHandler<Object> {
         final String strValue = (newValue instanceof Money) ? ((Money) newValue).getAmount().toString() : newValue.toString();
         final BigDecimal numValue = new BigDecimal(strValue);
 
-        return numValue.compareTo(new BigDecimal(limit)) > 0
-                ? failure(property.getEntity(), "Value '" + numValue + "' is greater than the maximum limit of " + limit + ".") //
-                : successful(property.getEntity());
+        return numValue.compareTo(new BigDecimal(limit)) <= 0
+               ? successful(property.getEntity())
+               : failure(property.getEntity(), format(ERR_VALUE_SHOULD_NOT_EXCEED_MAX, limit));
     }
 
 }

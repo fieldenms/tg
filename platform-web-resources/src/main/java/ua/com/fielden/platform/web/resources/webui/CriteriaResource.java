@@ -329,6 +329,9 @@ public class CriteriaResource extends AbstractWebResource {
                     final List<Pair<String, Ordering>> previousSortingProps = previousFreshCentre.getSecondTick().orderedProperties(root);
                     final List<String> previousUsedProps = previousFreshCentre.getSecondTick().usedProperties(root);
                     final T2<EnhancementPropertiesMap<Integer>, EnhancementPropertiesMap<Integer>> previousWidthsAndGrowFactors = previousFreshCentre.getSecondTick().getWidthsAndGrowFactors();
+                    final int previousPageCapacity = previousFreshCentre.getSecondTick().getPageCapacity();
+                    final int previousVisibleRowsCount = previousFreshCentre.getSecondTick().getVisibleRowsCount();
+                    final int previousNumberOfHeaderLines = previousFreshCentre.getSecondTick().getNumberOfHeaderLines();
 
                     // clear all surrogate centres
                     removeCentres(user, miType, device(), saveAsName, eccCompanion, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME);
@@ -338,6 +341,10 @@ public class CriteriaResource extends AbstractWebResource {
                     emptyFreshCentre.getSecondTick().setWidthsAndGrowFactors(previousWidthsAndGrowFactors);
                     // then apply order, visibility and sorting
                     applyNewOrderVisibilityAndSorting(emptyFreshCentre.getSecondTick(), root, previousUsedProps, previousSortingProps);
+                    // also pageCapacity, visibleRowsCount and numberOfHeaderLines
+                    emptyFreshCentre.getSecondTick().setPageCapacity(previousPageCapacity);
+                    emptyFreshCentre.getSecondTick().setVisibleRowsCount(previousVisibleRowsCount);
+                    emptyFreshCentre.getSecondTick().setNumberOfHeaderLines(previousNumberOfHeaderLines);
                     // save the centre into the database
                     updatedFreshCentre = commitCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device(), emptyFreshCentre, null /* newDesc */, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
 

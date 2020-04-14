@@ -10,7 +10,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  *
  * @param <T>
  */
-public interface IResultSetBuilder1cVisibleRows<T extends AbstractEntity<?>> extends IResultSetBuilder1dFitBehaviour<T> {
+public interface IResultSetBuilder1cVisibleRowsCount<T extends AbstractEntity<?>> extends IResultSetBuilder1dFitBehaviour<T> {
 
     IResultSetBuilder1dFitBehaviour<T> setVisibleRowsCount(int visibleRowsCount);
 

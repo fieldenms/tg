@@ -33,6 +33,7 @@ import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.RangeCritD
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.RangeCritOtherValueMnemonic;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritDateValueMnemonic;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritOtherValueMnemonic;
+import ua.com.fielden.platform.web.centre.api.exceptions.CentreConfigException;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
@@ -69,6 +70,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     protected IScrollConfig scrollConfig = ScrollConfig.configScroll().done();
     protected int pageCapacity = 30;
     //EGI height related properties
+    private int headerLineNumber = 1;
     protected int visibleRowsCount = 0;
     protected String egiHeight = "";
     protected boolean fitToHeight = false;
@@ -177,6 +179,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
                 scrollConfig,
                 pageCapacity,
                 visibleRowsCount,
+                headerLineNumber,
                 egiHeight,
                 fitToHeight,
                 rowHeight,
@@ -230,5 +233,15 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
 
     public Class<T> getEntityType() {
         return entityType;
+    }
+
+    public EntityCentreBuilder<T> setHeaderLineNumber(final int headerLineNumber) {
+        // let's validate the argument
+        if (headerLineNumber < 1 || 3 < headerLineNumber) {
+            throw new CentreConfigException("The number of lines in EGI headers should be between 1 and 3.");
+        }
+
+        this.headerLineNumber = headerLineNumber;
+        return this;
     }
 }

@@ -528,6 +528,10 @@ const TgEntityCentreBehaviorImpl = {
                 this.selectionCriteriaEntity = criteriaEntity;
                 this.$.egi.renderingHints = renderingHints;
                 this.$.egi.adjustColumnWidths(columnWidths);
+                const pageCapacity = resultConfig.pageCapacity;
+                this.$.selection_criteria.pageCapacity = pageCapacity;
+                this.$.egi.visibleRowsCount = resultConfig.visibleRowsCount;
+                this.$.egi.numberOfHeaderLines = resultConfig.numberOfHeaderLines;
                 this.$.egi.adjustColumnsVisibility(resultConfig.visibleColumnsWithOrder.map(column => column === "this" ? "" : column));
                 this.$.egi.adjustColumnsSorting(resultConfig.orderingConfig.map(propOrder => {
                    if (propOrder.property === "this") {
@@ -547,7 +551,7 @@ const TgEntityCentreBehaviorImpl = {
                     this.$.selection_criteria._wasRun = 'yes';
                     console.debug('_wasRun has been changed to: ', this.$.selection_criteria._wasRun);
                 }
-                self.fire("tg-entity-centre-refreshed", { entities: resultEntities, pageCount: pageCount, pageNumber: this.$.selection_criteria.pageNumber, pageCapacity: this.$.selection_criteria.pageCapacity });
+                self.fire("tg-entity-centre-refreshed", { entities: resultEntities, pageCount: pageCount, pageNumber: this.$.selection_criteria.pageNumber, pageCapacity: pageCapacity });
             }
         }).bind(self);
 
