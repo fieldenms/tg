@@ -10,6 +10,8 @@ import '/app/tg-reflector.js';
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
+import { composeDefaultEntityValue } from '/resources/editors/tg-entity-formatter.js';
+
 const template = html`
     <style>
         :host {
@@ -168,10 +170,11 @@ Polymer({
     },
 
     _getAdditionalInfo: function (entity) {
+        let additionalInfo = "<span style='color:#737373'>";
         if (entity.entity.level === referenceHierarchyLevel.TYPE) {
-            return "<span style='color:#737373'>&nbsp;(" + entity.entity.numberOfEntities + ")</span>";
+            additionalInfo += "&nbsp;(" + entity.entity.numberOfEntities + ")";
         }
-        return  entity.entity.desc ? "<span style='color:#737373'>&nbsp;&ndash;&nbsp;<i>" + entity.entity.desc + "</i></span>" : "";       
+        return  additionalInfo + (entity.entity.desc ? "&nbsp;&ndash;&nbsp;<i>" + entity.entity.desc + "</i>" : "") + "</span>";       
     },
 
     _entityChanged: function(newBindingEntity) {
