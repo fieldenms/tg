@@ -9,7 +9,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  *
  * @param <T>
  */
-public interface IResultSetBuilder1bPageCapacityMaxValue<T extends AbstractEntity<?>> extends IResultSetBuilder1cHeaderWrap<T> {
+public interface IResultSetBuilder1gMaxPageCapacity<T extends AbstractEntity<?>> extends IResultSetBuilder1hHeaderWrap<T> {
     
     /**
      * Defines maximum value for result-set page capacity (aka max number of retrieved entities on page). If not set -- 300 is used.
@@ -17,6 +17,6 @@ public interface IResultSetBuilder1bPageCapacityMaxValue<T extends AbstractEntit
      * @param maxPageCapacity
      * @return
      */
-    IResultSetBuilder1cHeaderWrap<T> setMaxPageCapacity(final int maxPageCapacity);
+    IResultSetBuilder1hHeaderWrap<T> setMaxPageCapacity(final int maxPageCapacity);
     
 }
