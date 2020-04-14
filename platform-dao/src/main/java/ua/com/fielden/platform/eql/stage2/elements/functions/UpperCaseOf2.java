@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.elements.functions;
 
+import org.hibernate.type.StringType;
+
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
@@ -17,6 +19,11 @@ public class UpperCaseOf2 extends SingleOperandFunction2<UpperCaseOf3> {
     }
 
     @Override
+    public Object hibType() {
+        return StringType.INSTANCE;
+    }   
+    
+    @Override
     public TransformationResult<UpperCaseOf3> transform(final TransformationContext context) {
         final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);
         return new TransformationResult<UpperCaseOf3>(new UpperCaseOf3(operandTransformationResult.item), operandTransformationResult.updatedContext);
@@ -32,5 +39,5 @@ public class UpperCaseOf2 extends SingleOperandFunction2<UpperCaseOf3> {
     @Override
     public boolean equals(final Object obj) {
         return this == obj || super.equals(obj) && obj instanceof UpperCaseOf2;
-    }   
+    }
 }

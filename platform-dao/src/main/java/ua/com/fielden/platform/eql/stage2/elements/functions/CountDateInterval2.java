@@ -1,7 +1,8 @@
 package ua.com.fielden.platform.eql.stage2.elements.functions;
 
-import java.math.BigDecimal;
 import java.util.Objects;
+
+import org.hibernate.type.IntegerType;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.DateIntervalUnit;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
@@ -20,8 +21,13 @@ public class CountDateInterval2 extends TwoOperandsFunction2<CountDateInterval3>
     }
 
     @Override
-    public Class<BigDecimal> type() {
-        return BigDecimal.class; //TODO
+    public Class<Integer> type() {
+        return Integer.class; 
+    }
+
+    @Override
+    public Object hibType() {
+        return IntegerType.INSTANCE;
     }
 
     @Override

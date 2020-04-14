@@ -2,6 +2,8 @@ package ua.com.fielden.platform.eql.stage2.elements.functions;
 
 import java.math.BigDecimal;
 
+import org.hibernate.type.BigDecimalType;
+
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
@@ -21,6 +23,11 @@ public class AverageOf2 extends SingleOperandFunction2<AverageOf3> {
         return BigDecimal.class;
     }
 
+    @Override
+    public Object hibType() {
+        return BigDecimalType.INSTANCE;
+    }
+    
     @Override
     public TransformationResult<AverageOf3> transform(final TransformationContext context) {
         final TransformationResult<? extends ISingleOperand3> operandTr = operand.transform(context);

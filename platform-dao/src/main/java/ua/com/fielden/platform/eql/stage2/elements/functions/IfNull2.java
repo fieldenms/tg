@@ -14,8 +14,13 @@ public class IfNull2 extends TwoOperandsFunction2<IfNull3> {
 
     @Override
     public Class<?> type() {
-        return operand1.type(); //TODO
+        return operand1.type();
     }
+
+    @Override
+    public Object hibType() {
+        return operand1.hibType();
+    } 
 
     @Override
     public TransformationResult<IfNull3> transform(final TransformationContext context) {
@@ -34,5 +39,5 @@ public class IfNull2 extends TwoOperandsFunction2<IfNull3> {
     @Override
     public boolean equals(final Object obj) {
         return this == obj || super.equals(obj) && obj instanceof IfNull2;
-    } 
+    }
 }

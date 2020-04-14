@@ -19,9 +19,14 @@ public class AddDateInterval2 extends TwoOperandsFunction2<AddDateInterval3> {
 
     @Override
     public Class<?> type() {
-        return operand2.type(); //TODO
+        return operand2.type();
     }
 
+    @Override
+    public Object hibType() {
+        return operand2.hibType();
+    }
+    
     @Override
     public TransformationResult<AddDateInterval3> transform(final TransformationContext context) {
         final TransformationResult<? extends ISingleOperand3> firstOperandTr = operand1.transform(context);

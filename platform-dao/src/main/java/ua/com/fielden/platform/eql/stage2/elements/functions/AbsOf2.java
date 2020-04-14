@@ -14,9 +14,14 @@ public class AbsOf2 extends SingleOperandFunction2<AbsOf3> {
 
     @Override
     public Class<?> type() {
-        return operand.type(); //TODO
+        return operand.type();
     }
 
+    @Override
+    public Object hibType() {
+        return operand.hibType();
+    }
+    
     @Override
     public TransformationResult<AbsOf3> transform(final TransformationContext context) {
         final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);

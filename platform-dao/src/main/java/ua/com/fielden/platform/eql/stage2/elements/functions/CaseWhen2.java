@@ -38,6 +38,12 @@ public class CaseWhen2 extends AbstractFunction2<CaseWhen3> {
     }
 
     @Override
+    public Object hibType() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+    
+    @Override
     public TransformationResult<CaseWhen3> transform(final TransformationContext context) {
         final List<T2<ICondition3, ISingleOperand3>> transformedWhenThenPairs = new ArrayList<>();
         TransformationContext currentContext = context;

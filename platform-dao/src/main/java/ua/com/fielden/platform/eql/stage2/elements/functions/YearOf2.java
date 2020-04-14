@@ -6,15 +6,10 @@ import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.elements.functions.YearOf3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 
-public class YearOf2 extends SingleOperandFunction2<YearOf3> {
+public class YearOf2 extends DatePartFunction2<YearOf3> {
 
     public YearOf2(final ISingleOperand2<? extends ISingleOperand3> operand) {
         super(operand);
-    }
-
-    @Override
-    public Class<Integer> type() {
-        return Integer.class;
     }
 
     @Override
@@ -33,5 +28,5 @@ public class YearOf2 extends SingleOperandFunction2<YearOf3> {
     @Override
     public boolean equals(final Object obj) {
         return this == obj || super.equals(obj) && obj instanceof YearOf2;
-    }  
+    }
 }

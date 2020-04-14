@@ -7,6 +7,7 @@ import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.elements.functions.DateOf3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
+import ua.com.fielden.platform.persistence.types.DateTimeType;
 
 public class DateOf2 extends SingleOperandFunction2<DateOf3> {
 
@@ -19,6 +20,11 @@ public class DateOf2 extends SingleOperandFunction2<DateOf3> {
         return Date.class; // TODO
     }
 
+    @Override
+    public Object hibType() {
+        return new DateTimeType();
+    }
+    
     @Override
     public TransformationResult<DateOf3> transform(final TransformationContext context) {
         final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);

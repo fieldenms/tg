@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.elements.functions;
 
+import org.hibernate.type.IntegerType;
+
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
@@ -17,6 +19,11 @@ public class DayOfWeekOf2 extends SingleOperandFunction2<DayOfWeekOf3> {
         return Integer.class; //TODO
     }
 
+    @Override
+    public Object hibType() {
+        return IntegerType.INSTANCE;
+    }
+    
     @Override
     public TransformationResult<DayOfWeekOf3> transform(final TransformationContext context) {
         final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);

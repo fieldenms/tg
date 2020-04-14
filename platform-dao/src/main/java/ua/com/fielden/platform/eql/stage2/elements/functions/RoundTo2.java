@@ -2,6 +2,8 @@ package ua.com.fielden.platform.eql.stage2.elements.functions;
 
 import java.math.BigDecimal;
 
+import org.hibernate.type.BigDecimalType;
+
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
@@ -19,6 +21,11 @@ public class RoundTo2 extends TwoOperandsFunction2<RoundTo3> {
         return BigDecimal.class; //TODO
     }
 
+    @Override
+    public Object hibType() {
+        return BigDecimalType.INSTANCE;
+    }
+    
     @Override
     public TransformationResult<RoundTo3> transform(final TransformationContext context) {
         final TransformationResult<? extends ISingleOperand3> firstOperandTransformationResult = operand1.transform(context);

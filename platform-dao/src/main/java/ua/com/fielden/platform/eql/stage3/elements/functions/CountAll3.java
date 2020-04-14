@@ -15,7 +15,7 @@ public class CountAll3 extends AbstractFunction3 {
     }
    
     @Override
-    public Class<?> type() {
+    public Class<BigInteger> type() {
         return BigInteger.class;
     }
     

@@ -19,7 +19,6 @@ import org.hibernate.type.Type;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
-import ua.com.fielden.platform.entity.query.IUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.metadata.PropertyCategory;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
@@ -45,37 +44,6 @@ public class LongPropertyMetadata implements Comparable<LongPropertyMetadata> {
         nullable = builder.nullable;
         expressionModel = builder.expressionModel;
         aggregatedExpression = builder.aggregatedExpression;
-    }
-
-    public IUserTypeInstantiate getHibTypeAsUserType() {
-        return hibType instanceof IUserTypeInstantiate ? (IUserTypeInstantiate) hibType : null;
-    }
-
-    public ICompositeUserTypeInstantiate getHibTypeAsCompositeUserType() {
-        return hibType instanceof ICompositeUserTypeInstantiate ? (ICompositeUserTypeInstantiate) hibType : null;
-    }
-
-    public String getSinglePropertyOfCompositeUserType() {
-        final ICompositeUserTypeInstantiate compositeUserTypeInstance = getHibTypeAsCompositeUserType();
-        if (compositeUserTypeInstance != null) {
-            final String[] propNames = compositeUserTypeInstance.getPropertyNames();
-            if (propNames.length == 1) {
-                return propNames[0];
-            }
-        }
-        return null;
-    }
-
-    public boolean isCompositeProperty() {
-        return getHibTypeAsCompositeUserType() != null;
-    }
-
-    public String getTypeString() {
-        if (hibType != null) {
-            return hibType.getClass().getName();
-        } else {
-            return null;
-        }
     }
 
     public Set<LongPropertyMetadata> getCompositeTypeSubprops(final ICompositeUserTypeInstantiate hibTypeP) {
@@ -115,39 +83,11 @@ public class LongPropertyMetadata implements Comparable<LongPropertyMetadata> {
                 if (mapTo == null) {
                     throw new EqlException(format("Property [%s] in union entity type [%s] has no @MapTo.", subpropField.getName(), javaType));
                 }
-                final PropColumn column = new PropColumn(getColumn() + "_" + (isEmpty(mapTo.value()) ? subpropField.getName() : mapTo.value()));
+                final PropColumn column = new PropColumn(this.column + "_" + (isEmpty(mapTo.value()) ? subpropField.getName() : mapTo.value()));
                 result.add(new LongPropertyMetadata.Builder(name + "." + subpropField.getName(), subpropField.getType(), true).column(column).hibType(LongType.INSTANCE).build());
             }
         }
         return result;
-    }
-
-    public PropColumn getColumn() {
-        return column;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public Class<?> getJavaType() {
-        return javaType;
-    }
-
-    public Object getHibType() {
-        return hibType;
-    }
-
-    public boolean isNullable() {
-        return nullable;
-    }
-
-    public ExpressionModel getExpressionModel() {
-        return expressionModel;
-    }
-
-    public boolean isAggregatedExpression() {
-        return aggregatedExpression;
     }
 
     @Override

@@ -1,5 +1,9 @@
 package ua.com.fielden.platform.eql.stage2.elements.functions;
 
+import java.math.BigInteger;
+
+import org.hibernate.type.BigIntegerType;
+
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
@@ -15,8 +19,13 @@ public class CountOf2 extends SingleOperandFunction2<CountOf3> {
     }
 
     @Override
-    public Class<Long> type() {
-        return Long.class;
+    public Class<BigInteger> type() {
+        return BigInteger.class;
+    }
+
+    @Override
+    public Object hibType() {
+        return BigIntegerType.INSTANCE;
     }
 
     @Override

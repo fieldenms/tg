@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import org.hibernate.type.StringType;
+
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
@@ -24,6 +26,11 @@ public class Concat2 extends AbstractFunction2<Concat3> {
     @Override
     public Class<String> type() {
         return String.class;
+    }
+
+    @Override
+    public Object hibType() {
+        return StringType.INSTANCE;
     }
 
     @Override

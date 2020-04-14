@@ -71,7 +71,7 @@ public class EntValue2 implements ISingleOperand2<EntValue3> {
     }
 
     @Override
-    public Class type() {
+    public Class<?> type() {
         // TODO EQL
         return value != null ? value.getClass() : null;
     }

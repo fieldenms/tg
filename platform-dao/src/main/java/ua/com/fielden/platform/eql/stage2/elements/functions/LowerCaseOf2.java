@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.elements.functions;
 
+import org.hibernate.type.StringType;
+
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
@@ -16,6 +18,11 @@ public class LowerCaseOf2 extends SingleOperandFunction2<LowerCaseOf3> {
         return String.class;
     }
 
+    @Override
+    public Object hibType() {
+        return StringType.INSTANCE;
+    }
+    
     @Override
     public TransformationResult<LowerCaseOf3> transform(final TransformationContext context) {
         final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);

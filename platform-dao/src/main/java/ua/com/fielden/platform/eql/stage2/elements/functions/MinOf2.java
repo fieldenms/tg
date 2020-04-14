@@ -18,6 +18,11 @@ public class MinOf2 extends SingleOperandFunction2<MinOf3> {
     }
 
     @Override
+    public Object hibType() {
+        return operand.hibType();
+    } 
+    
+    @Override
     public TransformationResult<MinOf3> transform(final TransformationContext context) {
         final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);
         return new TransformationResult<MinOf3>(new MinOf3(operandTransformationResult.item), operandTransformationResult.updatedContext);
@@ -33,5 +38,5 @@ public class MinOf2 extends SingleOperandFunction2<MinOf3> {
     @Override
     public boolean equals(final Object obj) {
         return this == obj || super.equals(obj) && obj instanceof MinOf2;
-    } 
+    }
 }
