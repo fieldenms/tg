@@ -54,6 +54,20 @@ public class ReferenceHierarchy extends AbstractFunctionalEntityWithCentreContex
     @Title(value = "Page Count", desc = "The data page count")
     private Integer pageCount;
 
+    @IsProperty
+    @Title("Title")
+    private String title;
+
+    @Observable
+    public ReferenceHierarchy setTitle(final String title) {
+        this.title = title;
+        return this;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
     @Observable
     public ReferenceHierarchy setPageCount(final Integer pageCount) {
         this.pageCount = pageCount;

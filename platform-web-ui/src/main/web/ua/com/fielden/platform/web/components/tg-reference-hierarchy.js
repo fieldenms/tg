@@ -177,6 +177,7 @@ Polymer({
     _entityChanged: function(newBindingEntity) {
         const newEntity = newBindingEntity ? newBindingEntity['@@origin'] : null;
         if (newEntity) {
+            this.fire('tg-dynamic-title-changed', newEntity.title);
             const path = generatePath(this.treeModel, newEntity.loadedHierarchy);
             const parent = getPathItem(this.treeModel, newEntity.loadedHierarchy);
             newEntity.generatedHierarchy.forEach(entity => {

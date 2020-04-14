@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity;
 
+import org.apache.commons.lang.StringUtils;
+
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -15,8 +17,10 @@ public class ReferenceHierarchyProducer extends DefaultEntityProducerWithContext
     @Override
     protected ReferenceHierarchy provideDefaultValues(final ReferenceHierarchy entity) {
         if (selectedEntitiesNotEmpty()) {
-            entity.setRefEntityId(selectedEntities().get(0).getId());
-            entity.setRefEntityType(selectedEntities().get(0).getType().getName());
+            final AbstractEntity<?> selectedEntity = selectedEntities().get(0);
+            entity.setRefEntityId(selectedEntity.getId());
+            entity.setRefEntityType(selectedEntity.getType().getName());
+            entity.setTitle(selectedEntity.getKey() + (StringUtils.isEmpty(selectedEntity.getDesc()) ? "" : ": " + selectedEntity.getDesc()));
         }
         return entity;
     }
