@@ -113,7 +113,7 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
             typeEntry.setKey(titleAndDesc.getKey());
             typeEntry.setDesc(titleAndDesc.getValue());
             typeEntry.setEntityType(entityType);
-            typeEntry.setRefId(entity.getRefEntityId());
+            typeEntry.setRefEntityId(entity.getRefEntityId());
             typeEntry.setRefEntityType(entity.getRefEntityType());
             typeEntry.setNumberOfEntities(typeAggregate.get("qty"));
             typeEntry.setHierarchyLevel(TYPE);

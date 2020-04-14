@@ -16,7 +16,7 @@ public class TypeLevelHierarchyEntry extends ReferenceHierarchyEntry{
 
     @IsProperty
     @Title("Refernced Entity ID")
-    private Long refId;
+    private Long refEntityId;
 
     @IsProperty
     @Title("Referenced Entity Type")
@@ -55,13 +55,13 @@ public class TypeLevelHierarchyEntry extends ReferenceHierarchyEntry{
     }
 
     @Observable
-    public TypeLevelHierarchyEntry setRefId(final Long refId) {
-        this.refId = refId;
+    public TypeLevelHierarchyEntry setRefEntityId(final Long refEntityId) {
+        this.refEntityId = refEntityId;
         return this;
     }
 
-    public Long getRefId() {
-        return refId;
+    public Long getRefEntityId() {
+        return refEntityId;
     }
 
     @Observable

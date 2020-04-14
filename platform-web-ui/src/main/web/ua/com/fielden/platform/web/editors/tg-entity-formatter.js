@@ -3,7 +3,7 @@ import {TgReflector} from '/app/tg-reflector.js';
 const states = {
     's0': (entity, template, idx, reflector, titles) => {
         if (!template) {
-            return createCompositeTitleWithoutTemplate(entity, reflector, titles);
+            return createCompositeTitleWithoutTemplate(entity, titles, reflector);
         } else if (template && template.length === 1 && template[0] === 'z') {
             return composeDefaultValueObject(entity, reflector, titles);
         } else if (template && template[idx] === '#') {
@@ -116,10 +116,19 @@ export function composeDefaultEntityValue(entity) {
     const reflector = new TgReflector();
     if (entity.type().isCompositeEntity()) {
         const titles = [];
-        createCompositeTitleWithoutTemplate(entity, reflector, titles);
+        createCompositeTitleWithoutTemplate(entity, titles, reflector);
         return titles;
     }
     return createSimpleTitle(entity, reflector);
+}
+
+export function composeDefaultUnconvertedEntityValue(entity) {
+    if (entity.type().isCompositeEntity()) {
+        const titles = [];
+        createCompositeTitleWithoutTemplate(entity, titles);
+        return titles;
+    }
+    return createSimpleTitle(entity);
 }
 
 function createCompositeTitle (entity, template, reflector) {
@@ -149,13 +158,13 @@ function composeDefaultValueObject(entity, reflector, titles) {
     }
 }
 
-function createCompositeTitleWithoutTemplate (entity, reflector, titles) {
+function createCompositeTitleWithoutTemplate (entity, titles, reflector) {
     const entityType = entity.type();
     entityType.compositeKeyNames().forEach(keyName => {
         if (entity.get(keyName)) {
             titles.push({
                 title: entityType.prop(keyName).title(),
-                value: reflector.convert(entity.get(keyName))
+                value: reflector ? reflector.convert(entity.get(keyName)) : entity.get(keyName)
             });
         }
     });
@@ -165,5 +174,5 @@ function createCompositeTitleWithoutTemplate (entity, reflector, titles) {
 }
 
 function createSimpleTitle (entity, reflector) {
-    return [{value: reflector.convert(entity)}];
+    return [{value: reflector ? reflector.convert(entity): entity.get("key")}];
 }

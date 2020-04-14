@@ -10,7 +10,7 @@ import '/app/tg-reflector.js';
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
-import { composeDefaultEntityValue } from '/resources/editors/tg-entity-formatter.js';
+import { composeDefaultUnconvertedEntityValue } from '/resources/editors/tg-entity-formatter.js';
 
 const template = html`
     <style>
@@ -98,6 +98,40 @@ const getParentsPath = function (entity) {
     return path.reverse();
 };
 
+const getKeys = function (entity, entityWithKey) {
+    let titleObject = filterKeys(entity, composeDefaultUnconvertedEntityValue(entityWithKey)).map(keyValue => {
+        return {
+            title: keyValue.title,
+            value: typeof keyValue.value.type === 'function' ? getKeys(entity, keyValue.value) : keyValue.value
+        };
+    });
+    if (titleObject.length === 1) {
+        delete titleObject[0].title;
+    }
+    return titleObject;
+}
+
+const filterKeys = function (entity, keyValues) {
+    return keyValues.filter(key => 
+        typeof key.value.type === 'undefined' ||
+        (typeof key.value.type === 'function' && 
+        (key.value.type().fullClassName() !== entity.entity.parent.refEntityType || key.value.get("id") !== entity.entity.parent.refEntityId)));
+};
+
+const buildTitles = function (titleObject, reflector) {
+    return titleObject.reduce((accum, curr, idx) => {
+        const valueStyle = "font-size:16px;display:flex;flex-direction:row;align-items:center;" + (idx < titleObject.length - 1 ? "padding-right: 5px;" : "");
+        accum += curr.title ? "<span style='font-size:0.8em;color:#737373;font-weight:bold;padding-right:2px;'>" + curr.title + ":&nbsp;</span>": "";
+        accum += "<span class='part-to-highlight' style='" + valueStyle + "'>" + (curr.title && Array.isArray(curr.value) && curr.value.length > 1 ? "(" : "")
+            + (Array.isArray(curr.value) ? buildTitles(curr.value, reflector) : reflector.convert(curr.value)) + (curr.title && Array.isArray(curr.value) && curr.value.length > 1 ? ")" : "") + "</span>";
+        return accum;
+    }, "");
+};
+
+const buildFilteringKey = function(titleObject) {
+    return titleObject.map(curr => (Array.isArray(curr.value) ? buildFilteringKey(curr.value) : curr.value)).join(" ");
+};
+
 Polymer({
     _template: template,
 
@@ -139,7 +173,7 @@ Polymer({
 
         this._buildContent = function(entity, opened) {
             return "<div style='height:28px;font-size:16px;display:flex;flex-direction:row;align-items:center;'>" + 
-                        "<span class='part-to-highlight'>" + this._getTitlte(entity) + "</span>" + this._getAdditionalInfo(entity) +
+                        this._getTitle(entity) + this._getAdditionalInfo(entity) +
                     "</div>";
         }.bind(this);
         this._loadMoreAction = function (e) {
@@ -161,12 +195,13 @@ Polymer({
         }.bind(this);
     },
 
-    _getTitlte: function (entity) {
-        if (entity.entity.level === referenceHierarchyLevel.INSTANCE) {
-            //TODO this should be enhanced so that key components will be returned
-            return entity.entity.key;
+    _getTitle: function (entity) {
+        if (entity.entity.level === referenceHierarchyLevel.INSTANCE && !entity.entity.isLoadMore) {
+            const titleObject = getKeys(entity, entity.entity.entity);
+            entity.entity.key = buildFilteringKey(titleObject);
+            return buildTitles(titleObject, this.$.reflector);
         } 
-        return entity.entity.key;
+        return "<span class='part-to-highlight'>" + entity.entity.key + "</span>";
     },
 
     _getAdditionalInfo: function (entity) {
@@ -234,7 +269,7 @@ Polymer({
             this.entity.setAndRegisterPropertyTouch("pageNumber", lastEntity.pageNumber);
             this.entity.setAndRegisterPropertyTouch("entityType", lastEntity.entityType);
             this.entity.setAndRegisterPropertyTouch("refEntityType", lastEntity.refEntityType);
-            this.entity.setAndRegisterPropertyTouch("refEntityId", lastEntity.refId);
+            this.entity.setAndRegisterPropertyTouch("refEntityId", lastEntity.refEntityId);
         } else {
             this.entity.setAndRegisterPropertyTouch("pageSize", 0);
             this.entity.setAndRegisterPropertyTouch("pageNumber", 0);
