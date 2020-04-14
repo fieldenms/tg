@@ -33,12 +33,12 @@ public class CentreConfigUpdater extends AbstractFunctionalEntityForCollectionMo
 
     @IsProperty(CustomisableColumn.class)
     @Title("Customisable Columns")
-    private Set<CustomisableColumn> customisableColumns = new LinkedHashSet<>();
+    private final Set<CustomisableColumn> customisableColumns = new LinkedHashSet<>();
 
     @IsProperty(value = String.class)
     @Title(value = "Sorting values", desc = "Values of sorting properties -- 'asc', 'desc' or 'none' (the order is important and should be strictly the same as in 'sortingIds' property)")
     @AfterChange(CentreConfigUpdaterSortingValsDefiner.class)
-    private List<String> sortingVals = new ArrayList<>(); // this list should not contain duplicates, please ensure that when setSortingVals invocation is performing
+    private final List<String> sortingVals = new ArrayList<>(); // this list should not contain duplicates, please ensure that when setSortingVals invocation is performing
 
     @IsProperty
     @Title(value = "Trigger Re-run", desc = "Indicates whether successful saving of this entity should trigger re-run.")
@@ -58,6 +58,12 @@ public class CentreConfigUpdater extends AbstractFunctionalEntityForCollectionMo
     @BeforeChange({@Handler(value = GreaterValidator.class, str = {@StrParam(name = "limit", value = "0")}),
                    @Handler(value = MaxValueValidator.class, str = {@StrParam(name = "limit", value = "300")})})
     private Integer pageCapacity;
+    
+    @IsProperty
+    @Title(value = "Max Page Capacity", desc = "The maximum possible value for page capacity.")
+    @Required
+    @BeforeChange({@Handler(value = GreaterValidator.class, str = {@StrParam(name = "limit", value = "0")})})
+    private Integer maxPageCapacity;
 
     @IsProperty
     @Title(value = "Visible Rows", desc = "The number of visible rows. Value 0 (zero) stands for \"display all data retrieved\".")
@@ -89,6 +95,16 @@ public class CentreConfigUpdater extends AbstractFunctionalEntityForCollectionMo
 
     public Integer getVisibleRowsCount() {
         return visibleRowsCount;
+    }
+
+    @Observable
+    public CentreConfigUpdater setMaxPageCapacity(final Integer maxPageCapacity) {
+        this.maxPageCapacity = maxPageCapacity;
+        return this;
+    }
+
+    public Integer getMaxPageCapacity() {
+        return maxPageCapacity;
     }
 
     @Observable

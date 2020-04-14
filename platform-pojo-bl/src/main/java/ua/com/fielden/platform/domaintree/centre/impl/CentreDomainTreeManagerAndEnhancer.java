@@ -798,6 +798,17 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
         }
 
         @Override
+        public int getMaxPageCapacity() {
+            return base().getMaxPageCapacity();
+        }
+
+        @Override
+        public IAddToResultTickManager setMaxPageCapacity(final int maxPageCapacity) {
+            base().setMaxPageCapacity(maxPageCapacity);
+            return this;
+        }
+
+        @Override
         public int getVisibleRowsCount() {
             return base().getVisibleRowsCount();
         }
