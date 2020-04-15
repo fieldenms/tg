@@ -2,10 +2,8 @@ package ua.com.fielden.platform.eql.stage3.elements.operands;
 
 import java.util.Objects;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySource3;
-import ua.com.fielden.platform.utils.EntityUtils;
 
 public class EntProp3 implements ISingleOperand3 {
     public final String name;
@@ -16,7 +14,7 @@ public class EntProp3 implements ISingleOperand3 {
     public EntProp3(final String name, final IQrySource3 source, final Class<?> type, final Object hibType) {
         this.name = name;
         this.source = source;
-        this.type = AbstractEntity.ID.equals(name) && (EntityUtils.isPersistedEntityType(type) || EntityUtils.isSyntheticBasedOnPersistentEntityType((Class<? extends AbstractEntity<?>>) type))  ? Long.class : type;
+        this.type = type;
         this.hibType = hibType;
     }
 

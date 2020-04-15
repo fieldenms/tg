@@ -31,6 +31,25 @@ import ua.com.fielden.platform.sample.domain.TeVehicleModel;
 public class QmToStage3TransformationTest extends EqlStage3TestCase {
 
     @Test
+    public void yielding_entity_id_under_different_alias_preserves_entity_type_info() {
+        final AggregatedResultQueryModel qry = select(TeVehicleModel.class).
+                yield().prop("id").as("model").
+                yield().prop("make").as("make").
+                modelAsAggregate();
+        
+        final EntQuery3 actQry = qry(qry);
+        
+        final QrySource3BasedOnTable source = source(MODEL, "1");
+        
+        final Yield3 modelYield = yieldPropExpr("id", source, "model", MODEL, H_LONG);
+        final Yield3 makeYield = yieldPropExpr("make", source, "make", MAKE, H_LONG);
+        final Yields3 yields = yields(modelYield, makeYield);
+        
+        final EntQuery3 expQry = qry(sources(source), yields);
+        assertEquals(expQry, actQry);
+    }
+    
+    @Test
     public void correlated_source_query_works() {
         final AggregatedResultQueryModel sourceSubQry = select(TeVehicle.class).where().prop("model").eq().extProp("id").yield().countAll().as("qty").modelAsAggregate();
         final PrimitiveResultQueryModel qtySubQry = select(sourceSubQry).yield().prop("qty").modelAsPrimitive();
@@ -56,8 +75,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Yields3 modelQryYields = yields(yieldModel(subqry(qtyQrySources, qtyQryYields, BigInteger.class), "qty"));
         
         final EntQuery3 expQry = qry(sources(modelSource), modelQryYields);
-        final Yield3 a = actQry.yields.getYields().iterator().next();
-        final Yield3 e = expQry.yields.getYields().iterator().next();
+
         assertEquals(expQry, actQry);
     }
     

@@ -108,7 +108,7 @@ public class Sources2  {
             currentContext = expTr.updatedContext;
         }
         
-        final EntProp3 ro = new EntProp3(ID, addedSource, Long.class, LongType.INSTANCE);
+        final EntProp3 ro = new EntProp3(ID, addedSource, child.source.sourceType()/*Long.class*/, LongType.INSTANCE);
         final ComparisonTest3 ct = new ComparisonTest3(lo, EQ, ro);
         final Conditions3 jc = new Conditions3(false, asList(asList(ct)));
         final T2<IQrySources3, TransformationContext> res = attachChildren(addedSource, child.items, currentContext);

@@ -38,6 +38,7 @@ import ua.com.fielden.platform.eql.stage3.elements.Yield3;
 import ua.com.fielden.platform.eql.stage3.elements.Yields3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.EntQuery3;
 import ua.com.fielden.platform.streaming.SequentialGroupingStream;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 public class EntityContainerFetcher {
     private final QueryExecutionContext executionContext;    
@@ -167,7 +168,8 @@ public class EntityContainerFetcher {
     private SortedSet<ResultQueryYieldDetails> getResultPropsInfos(final Yields3 model) {
         final SortedSet<ResultQueryYieldDetails> result = new TreeSet<>();
         for (final Yield3 yield : model.getYields()) {
-            result.add(new ResultQueryYieldDetails(yield.alias, yield.operand.type(), yield.operand.hibType(), yield.column.name, YieldDetailsType.USUAL_PROP));
+            final Class<?> yieldType = AbstractEntity.ID.equals(yield.alias) && (EntityUtils.isPersistedEntityType(yield.operand.type()) || EntityUtils.isSyntheticBasedOnPersistentEntityType((Class<? extends AbstractEntity<?>>) yield.operand.type()))  ? Long.class : yield.operand.type();
+            result.add(new ResultQueryYieldDetails(yield.alias, yieldType, yield.operand.hibType(), yield.column.name, YieldDetailsType.USUAL_PROP));
         }
         return result;
     }
