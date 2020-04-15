@@ -52,6 +52,7 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
         } else {
             entity.setGeneratedHierarchy(generateInstanceLevelHierarchy(entity));
         }
+        entity.setResetFilter(false);
         return entity;
     }
 

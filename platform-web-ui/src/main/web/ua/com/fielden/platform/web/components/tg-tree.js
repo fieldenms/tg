@@ -442,8 +442,8 @@ Polymer({
             parentItem.children = generateChildrenModel(change.value, parentItem, this.additionalInfoCb);
             this._lastFilterText && this._filterSubTree(this._lastFilterText, parentItem.children, false);
             this.fire("tg-tree-model-changed", parentItem);
-                    this.splice("_entities", modelIdx + 1 + parentItem.additionalInfoNodes.length, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(parentItem, true, false));
-                    this.$.treeList.notifyResize();
+            this.splice("_entities", modelIdx + 1 + parentItem.additionalInfoNodes.length, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(parentItem, true, false));
+            this.$.treeList.notifyResize();
         }
     },
 
@@ -457,7 +457,8 @@ Polymer({
                 parentItem.children.splice(splice.index, splice.removed.length, ...generateChildrenModel(splice.object.slice(splice.index, splice.index + splice.addedCount), parentItem, this.additionalInfoCb));
                 this._lastFilterText && this._filterSubTree(this._lastFilterText, parentItem.children.slice(splice.index, splice.index + splice.addedCount), false);
                 this.fire("tg-tree-model-changed", parentItem);
-                this.splice("_entities", indexForSplice, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(parentItem, true, splice.index, splice.addedCount));
+                this.splice("_entities", indexForSplice, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(parentItem, true, false, splice.index, splice.addedCount));
+                this.$.treeList.notifyResize();
             });
         }
     },

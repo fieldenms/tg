@@ -58,6 +58,21 @@ public class ReferenceHierarchy extends AbstractFunctionalEntityWithCentreContex
     @Title("Title")
     private String title;
 
+
+    @IsProperty
+    @Title(value = "Reset Filter?", desc = "Indicates whether filter should be reset or not")
+    private boolean resetFilter = true;
+
+    @Observable
+    public ReferenceHierarchy setResetFilter(final boolean resetFilter) {
+        this.resetFilter = resetFilter;
+        return this;
+    }
+
+    public boolean getResetFilter() {
+        return resetFilter;
+    }
+
     @Observable
     public ReferenceHierarchy setTitle(final String title) {
         this.title = title;

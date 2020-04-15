@@ -216,6 +216,9 @@ Polymer({
         const newEntity = newBindingEntity ? newBindingEntity['@@origin'] : null;
         if (newEntity) {
             this.fire('tg-dynamic-title-changed', newEntity.title);
+            if (newEntity.resetFilter) {
+                this.$.referenceHierarchyTree._lastFilterText = "";
+            }
             const path = generatePath(this.treeModel, newEntity.loadedHierarchy);
             const parent = getPathItem(this.treeModel, newEntity.loadedHierarchy);
             newEntity.generatedHierarchy.forEach(entity => {
