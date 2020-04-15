@@ -26,6 +26,7 @@ import static ua.com.fielden.platform.web.centre.EgiConfigurations.DRAGGABLE;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.DRAG_ANCHOR_FIXED;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.FIT_TO_HEIGHT;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.HEADER_FIXED;
+import static ua.com.fielden.platform.web.centre.EgiConfigurations.HIDDEN;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.SECONDARY_ACTION_FIXED;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.SUMMARY_FIXED;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.TOOLBAR_VISIBLE;
@@ -164,6 +165,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private static final String EGI_LAYOUT_CONFIG = "//gridLayoutConfig";
     private static final String EGI_SHORTCUTS = "@customShortcuts";
     private static final String EGI_TOOLBAR_VISIBLE = "@toolbarVisible";
+    private static final String EGI_HIDDEN = "@hidden";
     private static final String EGI_DRAGGABLE = "@canDragFrom";
     private static final String EGI_DRAG_ANCHOR_FIXED = "@dragAnchorFixed";
     private static final String EGI_CHECKBOX_VISIBILITY = "@checkboxVisible";
@@ -1124,6 +1126,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace(MI_TYPE, flattenedNameOf(miType)).
                 //egi related properties
                 replace(EGI_SHORTCUTS, shortcuts).
+                replace(EGI_HIDDEN, HIDDEN.eval(dslDefaultConfig.isEgiHidden())).
                 replace(EGI_DRAGGABLE, DRAGGABLE.eval(dslDefaultConfig.isDraggable())).
                 replace(EGI_TOOLBAR_VISIBLE, TOOLBAR_VISIBLE.eval(!dslDefaultConfig.shouldHideToolbar())).
                 replace(EGI_CHECKBOX_VISIBILITY, CHECKBOX_VISIBLE.eval(!dslDefaultConfig.shouldHideCheckboxes())).

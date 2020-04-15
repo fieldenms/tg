@@ -13,7 +13,8 @@ public class InsertionPointConfig {
 
     private final EntityActionConfig insertionPointAction;
     private final boolean hasPaginationButtons;
-    
+    private boolean flex = false;
+
     /**
      * Initiates the insertion point configuration object with action configuration and pagination indicator 
      * 
@@ -51,5 +52,14 @@ public class InsertionPointConfig {
 
     public boolean hasPaginationButtons() {
         return hasPaginationButtons;
+    }
+
+    public InsertionPointConfig setFlex(final boolean flex) {
+        this.flex = flex;
+        return this;
+    }
+
+    public boolean isFlex() {
+        return flex;
     }
 }
