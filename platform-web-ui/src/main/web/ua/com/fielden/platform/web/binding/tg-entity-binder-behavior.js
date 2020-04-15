@@ -311,13 +311,19 @@ export const TgEntityBinderBehavior = {
          * This is used to check whether returning validation results correspond to most recent validation request.
          * If not, these results should simply be ignored in favour to more fresh results.
          * 
-         * There are four situations:
-         * 1. Two validations: close enough to be debounced (< 50ms)
-         * 2. Two validations: first is started, second is started and first aborted (in sense of iron-ajax request)
-         * 3. Two validations: first is started, second is started, first returned and ignored, second returned
-         * 4. Two validations: first is started, first returned, second is started, second returned
+         * There are 5 situations were several validation requests may occur:
+         * 1. Two validations: close enough in time to be debounced (< 50ms), resulting in only one actual request;
+         * 2. Two validations: first is started, second is started and first is aborted (in the sense of iron-ajax requests);
+         * 3. Two validations: first is started, second is started, first returned and needs to be ignored due to the second request pending;
+         * 4. Two validations: first is started, first returned, second is started, second returned;
+         * 5. Two validations: first is started, second is started, second is returned, first is returned and needs to be ignored.
          * 
-         * This property is used to detect third situation.
+         * Counting the number of validation requests is used to ensure that only the result of the latest validation result is applied, which is most pertinent in cases 3 and 5 above.
+         * This is needed to ensure consistency of the state for the entity being modified.
+         *
+         * There can be situations where the last (or any for that matter) validation request does not return (e.g. due to communication failure).
+         * In such situations no intermediate validation results would be applied and entity would appear as if no validation was performed at all.
+         * This should not be a problem per se due to validation that is performed as part of the save request.
          */
         _validationCounter: {
             type: Number,
@@ -699,8 +705,8 @@ export const TgEntityBinderBehavior = {
                 return;
             }
             console.log('validate received (', customObject['@validationCounter'], ')');
-            const msg = this._toastMsg("Validation", validatedEntity);
             if (!validatedEntity.isValid()) {
+                const msg = this._toastMsg("Validation", validatedEntity);
                 this._openToast(validatedEntity, msg, !validatedEntity.isValid() || validatedEntity.isValidWithWarning(), msg, false);
             }
             // in case where _continuations property exists (only in tg-entity-master) there is a need to reset continuations (they become stale after any change in initiating entity)
@@ -1035,7 +1041,7 @@ export const TgEntityBinderBehavior = {
         // We use exactly the same object for touchedProps over long period of time up until saving (see tg-selection-criteria-behavior/tg-entity-master-behavior._postSavedDefault) -- then new object with empty arrays will be created;
         //  this single object resides in current version of currBindingEntity;
         //  mutation of this object's arrays occurs in tg-reflector.setAndRegisterPropertyTouch/convertPropertyValue;
-        //  we must copy these arrays (using .slice()) when using; at this stage the only place is _extractModifiedPropertiesHolder.
+        //  we must copy these arrays (array.slice()) when using; at this stage the only place where they are used is function _extractModifiedPropertiesHolder.
         bindingView['@@touchedProps'] = prevCurrBindingEntity ? prevCurrBindingEntity['@@touchedProps'] : {
             names: [],
             values: [],
