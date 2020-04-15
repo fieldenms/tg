@@ -61,7 +61,9 @@ public class CentreConfigurationWebUiConfig {
     public final EntityMaster<OverrideCentreConfig> overrideCentreConfigMaster;
 
     public CentreConfigurationWebUiConfig(final Injector injector) {
-        centreConfigUpdater = createCentreConfigUpdater(injector, "['padding:20px', 'height: 100%', 'box-sizing: border-box', ['flex', ['flex']], [['flex', 'padding-right:20px'], ['flex']]]");
+        centreConfigUpdater = createCentreConfigUpdater(injector,
+                "['padding:20px', 'height: 100%', 'box-sizing: border-box', ['flex', ['flex']], [['flex', 'padding-right:20px'], ['flex', 'padding-right:20px'], ['flex']]]",
+                "['padding:20px', 'height: 100%', 'box-sizing: border-box', ['flex', ['flex']], [], [], []]");
         centreColumnWidthConfigUpdater = createCentreColumnWidthConfigUpdater(injector);
         centreConfigNewActionMaster = createCentreConfigNewActionMaster(injector);
         centreConfigDuplicateActionMaster = createCentreConfigDuplicateActionMaster(injector);
@@ -75,18 +77,19 @@ public class CentreConfigurationWebUiConfig {
 
     /**
      * Creates entity master for {@link CentreConfigUpdater}.
+     * @param masterMobileLayout
      *
      * @return
      */
-    private static EntityMaster<CentreConfigUpdater> createCentreConfigUpdater(final Injector injector, final String masterLayout) {
+    private static EntityMaster<CentreConfigUpdater> createCentreConfigUpdater(final Injector injector, final String masterLayout, final String masterMobileLayout) {
         final FlexLayoutConfig horizontal = layout().withClass("wrap").withStyle("padding", "10px").horizontal().centerJustified().end();
         final String actionLayout = cell(cell().cell().layoutForEach(layout().withStyle("width", MASTER_ACTION_DEFAULT_WIDTH + "px").withStyle("margin", "0px 10px 10px 10px").end()), horizontal).toString();
         final IMaster<CentreConfigUpdater> masterConfig = new SimpleMasterBuilder<CentreConfigUpdater>()
                 .forEntity(CentreConfigUpdater.class)
                 .addProp("customisableColumns").asCollectionalEditor().reorderable().withHeader("title").also()
                 .addProp("pageCapacity").asSpinner().also()
-                .addProp("visibleRows").asSpinner()
-                .also()
+                .addProp("visibleRowsCount").asSpinner().also()
+                .addProp("numberOfHeaderLines").asSpinner().also()
                 .addAction(REFRESH).shortDesc("CANCEL").longDesc("Cancel not applied changes and close the dialog.")
                 .addAction(SAVE).shortDesc("APPLY").longDesc("Apply changes.").keepMasterOpenAfterExecution()
                 .setActionBarLayoutFor(DESKTOP, empty(), actionLayout)
@@ -94,7 +97,7 @@ public class CentreConfigurationWebUiConfig {
                 .setActionBarLayoutFor(MOBILE, empty(), actionLayout)
                 .setLayoutFor(DESKTOP, empty(), masterLayout)
                 .setLayoutFor(TABLET, empty(), masterLayout)
-                .setLayoutFor(MOBILE, empty(), masterLayout)
+                .setLayoutFor(MOBILE, empty(), masterMobileLayout)
                 .withDimensions(mkDim("'30%'", "'50%'"))
                 .done();
         return new EntityMaster<>(CentreConfigUpdater.class, CentreConfigUpdaterProducer.class, masterConfig, injector);
@@ -115,23 +118,12 @@ public class CentreConfigurationWebUiConfig {
             public EntityActionConfig mkAction() {
                 return action(CentreConfigUpdater.class)
                         .withContext(context().withSelectionCrit().build())
-                        .preAction(() ->
-                            new JsCode(""
-                                    + "    if (!action.modifyFunctionalEntity) {\n"
-                                    + "        action.modifyFunctionalEntity = (function (bindingEntity, master) {\n"
-                                    + "            master.$.editor_4_pageCapacity._editingValue = self.$.selection_criteria.pageCapacity + '';\n"
-                                    + "            master.$.editor_4_pageCapacity.commit();\n"
-                                    + "            master.$.editor_4_visibleRows._editingValue = self.$.egi.visibleRowCount + '';\n"
-                                    + "            master.$.editor_4_visibleRows.commit();\n"
-                                    +"         });\n"
-                                    + "    }\n"
-                                    + ""))
                         .postActionSuccess(() ->// self.run should be invoked with isSortingAction=true parameter (and isAutoRunning=undefined). See tg-entity-centre-behavior 'run' property for more details.
                                 new JsCode(""
-                                   + "     const shouldRunCentre = functionalEntity.get('sortingChanged') === true || self.$.selection_criteria.pageCapacity !== functionalEntity.get('pageCapacity');\n"
-                                    + "    self.$.selection_criteria.pageCapacity = functionalEntity.get('pageCapacity');\n"
-                                    + "    self.$.egi.visibleRowCount = functionalEntity.get('visibleRows');\n"
-                                    + "    if (shouldRunCentre) {\n"
+                                    // if pageCapacity has been changed then self.$.selection_criteria.pageCapacity will be updated after re-running in tg-entity-centre-behavior._postRun; otherwise -- no need to update it
+                                    + "    self.$.egi.visibleRowsCount = functionalEntity.get('visibleRowsCount');\n"
+                                    + "    self.$.egi.numberOfHeaderLines = functionalEntity.get('numberOfHeaderLines');\n"
+                                    + "    if (functionalEntity.get('triggerRerun') === true) {\n"
                                     + "        return self.retrieve().then(function () { self.run(undefined, true); });\n"
                                     + "    } else {\n"
                                     + "        self.$.egi.adjustColumnsVisibility(functionalEntity.get('chosenIds').map(column => column === 'this' ? '' : column));\n"

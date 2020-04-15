@@ -58,6 +58,7 @@ import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
  */
 public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
+    private final boolean egiHidden;
     private final boolean draggable;
     private final boolean hideCheckboxes;
     private final IToolbarConfig toolbarConfig;
@@ -65,6 +66,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     private final IScrollConfig scrollConfig;
     private final int pageCapacity;
     private final int visibleRowsCount;
+    private final int numberOfHeaderLines;
     private final String egiHeight;
     private final boolean fitToHeight;
     private final String rowHeight;
@@ -353,6 +355,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     ///////// CONSTRUCTOR /////////////
     ///////////////////////////////////
     public EntityCentreConfig(
+            final boolean egiHidden,
             final boolean draggable,
             final boolean hideCheckboxes,
             final IToolbarConfig toolbarConfig,
@@ -360,6 +363,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final IScrollConfig scrollConfig,
             final int pageCapacity,
             final int visibleRowsCount,
+            final int numberOfHeaderLines,
             final String egiHeight,
             final boolean fitToHeight,
             final String rowHeight,
@@ -420,6 +424,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>> queryEnhancerConfig,
             final Pair<Class<?>, Class<?>> generatorTypes,
             final IFetchProvider<T> fetchProvider) {
+        this.egiHidden = egiHidden;
         this.draggable = draggable;
         this.hideCheckboxes = hideCheckboxes;
         this.toolbarConfig = toolbarConfig;
@@ -427,6 +432,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         this.scrollConfig = scrollConfig;
         this.pageCapacity = pageCapacity;
         this.visibleRowsCount = visibleRowsCount;
+        this.numberOfHeaderLines = numberOfHeaderLines;
         this.egiHeight = egiHeight;
         this.fitToHeight = fitToHeight;
         this.rowHeight = rowHeight;
@@ -826,6 +832,10 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         return Optional.ofNullable(sseUri);
     }
 
+    public boolean isEgiHidden() {
+        return egiHidden;
+    }
+
     public boolean shouldHideCheckboxes() {
         return hideCheckboxes;
     }
@@ -852,6 +862,10 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     public int getVisibleRowsCount() {
         return visibleRowsCount;
+    }
+
+    public int getNumberOfHeaderLines() {
+        return numberOfHeaderLines;
     }
 
     public String getEgiHeight() {
