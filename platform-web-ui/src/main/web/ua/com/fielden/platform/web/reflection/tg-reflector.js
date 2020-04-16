@@ -1130,7 +1130,6 @@ const _convertToString = function (bindingValue, parentType, property) {
         // TODO for number value -- add conversion logic the same as in editors (date, integer and decimal editors)
         return '' + bindingValue;
     } else if (typeof bindingValue === 'boolean') {
-        // TODO for boolean value -- add conversion logic the same as in boolean editor
         return '' + bindingValue;
     } else if (typeof bindingValue === 'object' && bindingValue.hasOwnProperty('amount') && bindingValue.hasOwnProperty('currency') && bindingValue.hasOwnProperty('taxPercent')) {
         // TODO for money value -- add conversion logic the same as in money editor
@@ -1389,6 +1388,17 @@ export const TgReflector = Polymer({
      */
     convert: function (value) {
         return _convert(value);
+    },
+
+    /**
+     * Converts property value, converted to editor binding representation ('bindingValue'), to string.
+     * 
+     * @param bindingValue -- binding representation of property value; for entity-typed property it is string; for array of entities it is array of strings; for null it is null, for all other values -- it is the same value
+     * @param parentType -- the type of entity holding this property
+     * @param property -- property name of the property
+     */
+    _convertToString: function (bindingValue, parentType, property) {
+        return _convertToString(bindingValue, parentType, property);
     },
 
     /**
