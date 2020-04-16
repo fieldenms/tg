@@ -200,7 +200,8 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
                 if (timeZone != null) {
                     entityTypeProp.set_timeZone(timeZone);
                 }
-
+                entityTypeProp.set_typeName(convertTypeToStringRepresentation(prop));
+                
                 props.put(name, entityTypeProp);
             }
             entityTypeInfo.set_props(props);
@@ -208,6 +209,10 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         final EntityType registered = entityTypeInfoGetter.register(entityTypeInfo);
         registered.set_identifier(serialisationTypeEncoder.encode(type));
         return registered;
+    }
+    
+    private static String convertTypeToStringRepresentation(final CachedProperty prop) {
+        return prop.getPropertyType() == null ? null : (prop.isEntityTyped() ? ":" + prop.getPropertyType().getName() : prop.getPropertyType().getSimpleName());
     }
 
     public EntityType getEntityTypeInfo() {
@@ -237,7 +242,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
                     properties.add(prop);
                     final Class<?> fieldType = AnnotationReflector.getKeyType(type);
                     final int modifiers = fieldType.getModifiers();
-                    if (!Modifier.isAbstract(modifiers) && !Modifier.isInterface(modifiers)) {
+                    if (boolean.class == fieldType /* TODO this is needed because boolean.class has abstract modifier; investigate impact */ || !Modifier.isAbstract(modifiers) && !Modifier.isInterface(modifiers)) {
                         prop.setPropertyType(fieldType);
                     }
                 }
@@ -246,7 +251,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
                 properties.add(prop);
                 final Class<?> fieldType = PropertyTypeDeterminator.stripIfNeeded(propertyField.getType());
                 final int modifiers = fieldType.getModifiers();
-                if (!Modifier.isAbstract(modifiers) && !Modifier.isInterface(modifiers)) {
+                if (boolean.class == fieldType /* TODO this is needed because boolean.class has abstract modifier; investigate impact */ || !Modifier.isAbstract(modifiers) && !Modifier.isInterface(modifiers)) {
                     prop.setPropertyType(fieldType);
                 }
             }

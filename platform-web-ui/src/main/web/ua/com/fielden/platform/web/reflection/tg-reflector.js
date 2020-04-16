@@ -67,6 +67,16 @@ var _createEntityTypePropPrototype = function () {
     EntityTypeProp.prototype.constructor = EntityTypeProp;
 
     /**
+     * Returns property type.
+     */
+    EntityTypeProp.prototype.type = function () {
+        if (this._typeName === null) {
+            throw 'type name is not known for some reason';
+        }
+        return this._typeName.indexOf(':') > -1 ? _typeTable[this._typeName.substring(1)] : this._typeName;
+    }
+
+    /**
      * Returns specific time-zone for the property of type date.
      *
      * IMPORTANT: do not use '_timeZone' field directly!
@@ -1115,11 +1125,28 @@ const _convert = function (value) {
 };
 
 /**
+ * Determines the type of property from 'entityType' and 'property'.
+ * 
+ * @param entityType -- entity type
+ * @param property -- property name; can be dot-notated
+ */
+const _determinePropertyType = function (entityType, property) {
+    const dotIndex = property.indexOf('.');
+    if (dotIndex > -1) {
+        const first = property.slice(0, dotIndex);
+        const rest = property.slice(dotIndex + 1);
+        return _determinePropertyType(entityType.prop(first).type(), rest);
+    } else {
+        return entityType.prop(property).type();
+    }
+};
+
+/**
  * Converts property value, converted to editor binding representation ('bindingValue'), to string.
  * 
  * @param bindingValue -- binding representation of property value; for entity-typed property it is string; for array of entities it is array of strings; for null it is null, for all other values -- it is the same value
  * @param parentType -- the type of entity holding this property
- * @param property -- property name of the property
+ * @param property -- property name of the property; can be dot-notated
  */
 const _convertToString = function (bindingValue, parentType, property) {
     if (bindingValue === null) {
@@ -1139,11 +1166,11 @@ const _convertToString = function (bindingValue, parentType, property) {
     } else if (typeof bindingValue === 'object' && (bindingValue.hasOwnProperty('hashlessUppercasedColourValue') || bindingValue.hasOwnProperty('value'))) {
         // TODO for Colour and Hyperlink values -- add conversion logic the same as in corresponding editors
         return bindingValue;
-    } else if (typeof value === 'object' && Object.getOwnPropertyNames(value).length === 0) {
+    } else if (typeof bindingValue === 'object' && Object.getOwnPropertyNames(bindingValue).length === 0) {
         // TODO investigate where empty object is actually used to ensure proper conversion here
         return '';
     } else {
-        throw new _UCEPrototype(value);
+        throw new _UCEPrototype(bindingValue);
     }
 };
 
@@ -1395,7 +1422,7 @@ export const TgReflector = Polymer({
      * 
      * @param bindingValue -- binding representation of property value; for entity-typed property it is string; for array of entities it is array of strings; for null it is null, for all other values -- it is the same value
      * @param parentType -- the type of entity holding this property
-     * @param property -- property name of the property
+     * @param property -- property name of the property; can be dot-notated
      */
     _convertToString: function (bindingValue, parentType, property) {
         return _convertToString(bindingValue, parentType, property);

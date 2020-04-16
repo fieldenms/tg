@@ -79,6 +79,20 @@ public class EntityTypeProp extends AbstractEntity<String> {
     @Title(value = "Display  pattern", desc = "Pattern that is used to display value for entity type property")
     private String _displayAs;
 
+    @IsProperty
+    @Title(value = "Type Name", desc = "Name of property type")
+    private String _typeName;
+
+    @Observable
+    public EntityTypeProp set_typeName(final String _typeName) {
+        this._typeName = _typeName;
+        return this;
+    }
+
+    public String get_typeName() {
+        return _typeName;
+    }
+
     @Observable
     public EntityTypeProp set_displayAs(final String _displayAs) {
         this._displayAs = _displayAs;
