@@ -20,6 +20,7 @@ import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.metadata.DataDependencyQueriesGenerator;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.master.IMasterInfoProvider;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.utils.Pair;
@@ -34,12 +35,14 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
 
     private final IEntityAggregatesOperations coAggregates;
     private final Map<Class<? extends AbstractEntity<?>>, Map<Class<? extends AbstractEntity<?>>, Set<String>>> dependenciesMetadata;
+    private final IMasterInfoProvider masterInfoProvider;
 
     @Inject
-    public ReferenceHierarchyDao(final IFilter filter, final IEntityAggregatesOperations coAggregates, final IApplicationDomainProvider applicationDomainProvider) {
+    public ReferenceHierarchyDao(final IFilter filter, final IEntityAggregatesOperations coAggregates, final IApplicationDomainProvider applicationDomainProvider, final IMasterInfoProvider masterInfoProvider) {
         super(filter);
         this.coAggregates = coAggregates;
         this.dependenciesMetadata = DataDependencyQueriesGenerator.produceDependenciesMetadata(applicationDomainProvider.entityTypes());
+        this.masterInfoProvider = masterInfoProvider;
     }
 
     @Override
@@ -110,7 +113,8 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
         try {
             final TypeLevelHierarchyEntry typeEntry = new TypeLevelHierarchyEntry();
             final String entityType = typeAggregate.get("type");
-            final Pair<String, String> titleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc((Class<? extends AbstractEntity<?>>) Class.forName(entityType));
+            final Class<? extends AbstractEntity<?>> entityTypeClass = (Class<? extends AbstractEntity<?>>) Class.forName(entityType);
+            final Pair<String, String> titleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(entityTypeClass);
             typeEntry.setKey(titleAndDesc.getKey());
             typeEntry.setDesc(titleAndDesc.getValue());
             typeEntry.setEntityType(entityType);
@@ -119,6 +123,7 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
             typeEntry.setNumberOfEntities(typeAggregate.get("qty"));
             typeEntry.setHierarchyLevel(TYPE);
             typeEntry.setHasChildren(true);
+            //typeEntry.setMasterInfo(masterInfoProvider.getMasterInfo(entityTypeClass));
             return typeEntry;
         } catch (final ClassNotFoundException e) {
             throw Result.failuref("The entity type: %s can not be found", typeAggregate.get("type"));

@@ -5,6 +5,7 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.master.MasterInfo;
 
 @KeyTitle("Entity Type Title")
 @DescTitle("Entity Type Description")
@@ -33,6 +34,20 @@ public class TypeLevelHierarchyEntry extends ReferenceHierarchyEntry{
     @IsProperty
     @Title(value = "Page Number", desc = "Page number of instances to load")
     private Integer pageNumber = 0;
+
+    @IsProperty
+    @Title(value = "Open Master Action", desc = "Open Action Master Configuration")
+    private MasterInfo masterInfo;
+
+    @Observable
+    public TypeLevelHierarchyEntry setMasterInfo(final MasterInfo masterInfo) {
+        this.masterInfo = masterInfo;
+        return this;
+    }
+
+    public MasterInfo getMasterInfo() {
+        return masterInfo;
+    }
 
     @Observable
     public TypeLevelHierarchyEntry setEntityType(final String entityType) {

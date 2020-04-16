@@ -200,7 +200,10 @@ Polymer({
             const titleObject = getKeys(entity, entity.entity.entity);
             entity.entity.key = buildFilteringKey(titleObject);
             return buildTitles(titleObject, this.$.reflector);
-        } 
+        } else if (entity.entity.isLoadMore) {
+            return "<div style='padding:3px;color:#03a9f4;-moz-user-select: none;-ms-user-select: none;-webkit-user-select: none;"+
+                    "user-select: none;cursor: pointer;text-transform: uppercase;'>More</div";
+        }
         return "<span class='part-to-highlight'>" + entity.entity.key + "</span>";
     },
 
