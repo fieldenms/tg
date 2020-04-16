@@ -12,6 +12,16 @@ public class AbsOf3 extends SingleOperandFunction3 {
     }
 
     @Override
+    public Class<?> type() {
+        return operand.type();
+    }
+
+    @Override
+    public Object hibType() {
+        return operand.hibType();
+    }
+    
+    @Override
     public String sql(final DbVersion dbVersion) {
         switch (dbVersion) {
         case H2:

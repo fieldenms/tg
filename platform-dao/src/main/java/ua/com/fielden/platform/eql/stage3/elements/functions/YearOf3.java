@@ -5,7 +5,7 @@ import static java.lang.String.format;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 
-public class YearOf3 extends SingleOperandFunction3 {
+public class YearOf3 extends DatePartFunction3 {
 
     public YearOf3(final ISingleOperand3 operand) {
         super(operand);

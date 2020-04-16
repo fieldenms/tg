@@ -17,6 +17,16 @@ public class AddDateInterval3 extends TwoOperandsFunction3 {
     }
 
     @Override
+    public Class<?> type() {
+        return operand2.type();
+    }
+
+    @Override
+    public Object hibType() {
+        return operand2.hibType();
+    }
+    
+    @Override
     public String sql(final DbVersion dbVersion) {
         switch (dbVersion) {
         case POSTGRESQL:

@@ -2,6 +2,10 @@ package ua.com.fielden.platform.eql.stage3.elements.functions;
 
 import static java.lang.String.format;
 
+import java.math.BigDecimal;
+
+import org.hibernate.type.BigDecimalType;
+
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 
@@ -13,6 +17,16 @@ public class AverageOf3 extends SingleOperandFunction3 {
         this.distinct = distinct;
     }
 
+    @Override
+    public Class<BigDecimal> type() {
+        return BigDecimal.class;
+    }
+
+    @Override
+    public Object hibType() {
+        return BigDecimalType.INSTANCE;
+    }
+    
     @Override
     public String sql(final DbVersion dbVersion) {
         final String distinctClause = distinct ? "DISTINCT " : "";

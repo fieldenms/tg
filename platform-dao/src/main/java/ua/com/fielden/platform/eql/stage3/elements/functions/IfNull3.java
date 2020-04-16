@@ -12,6 +12,16 @@ public class IfNull3 extends TwoOperandsFunction3 {
     }
 
     @Override
+    public Class<?> type() {
+        return operand1.type();
+    }
+
+    @Override
+    public Object hibType() {
+        return operand1.hibType();
+    } 
+    
+    @Override
     public String sql(final DbVersion dbVersion) {
         return format("COALESCE(%s, %s)", operand1.sql(dbVersion), operand2.sql(dbVersion));
     }

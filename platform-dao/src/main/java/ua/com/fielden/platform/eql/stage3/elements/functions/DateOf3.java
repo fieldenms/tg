@@ -2,13 +2,26 @@ package ua.com.fielden.platform.eql.stage3.elements.functions;
 
 import static java.lang.String.format;
 
+import java.util.Date;
+
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
+import ua.com.fielden.platform.persistence.types.DateTimeType;
 
 public class DateOf3 extends SingleOperandFunction3 {
 
     public DateOf3(final ISingleOperand3 operand) {
         super(operand);
+    }
+    
+    @Override
+    public Class<Date> type() {
+        return Date.class; // TODO
+    }
+
+    @Override
+    public Object hibType() {
+        return new DateTimeType();
     }
 
     @Override

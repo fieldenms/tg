@@ -39,8 +39,8 @@ public class CaseWhen2 extends AbstractFunction2<CaseWhen3> {
 
     @Override
     public Object hibType() {
-        // TODO Auto-generated method stub
-        return null;
+        // TODO EQL
+        return whenThenPairs.get(0)._2.hibType();
     }
     
     @Override

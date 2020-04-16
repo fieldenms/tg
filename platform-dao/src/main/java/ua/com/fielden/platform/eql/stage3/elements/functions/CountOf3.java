@@ -2,6 +2,10 @@ package ua.com.fielden.platform.eql.stage3.elements.functions;
 
 import static java.lang.String.format;
 
+import java.math.BigInteger;
+
+import org.hibernate.type.BigIntegerType;
+
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 
@@ -11,6 +15,16 @@ public class CountOf3 extends SingleOperandFunction3 {
     public CountOf3(final ISingleOperand3 operand, final boolean distinct) {
         super(operand);
         this.distinct = distinct;
+    }
+    
+    @Override
+    public Class<BigInteger> type() {
+        return BigInteger.class;
+    }
+
+    @Override
+    public Object hibType() {
+        return BigIntegerType.INSTANCE;
     }
 
     @Override

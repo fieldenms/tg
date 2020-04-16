@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.elements.functions;
 
-import java.sql.Date;
+
+import java.util.Date;
 
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;

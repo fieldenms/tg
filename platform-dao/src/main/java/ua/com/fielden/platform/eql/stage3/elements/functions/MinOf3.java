@@ -10,6 +10,16 @@ public class MinOf3 extends SingleOperandFunction3 {
     public MinOf3(final ISingleOperand3 operand) {
         super(operand);
     }
+    
+    @Override
+    public Class<?> type() {
+        return operand.type();
+    }
+
+    @Override
+    public Object hibType() {
+        return operand.hibType();
+    } 
 
     @Override
     public String sql(final DbVersion dbVersion) {

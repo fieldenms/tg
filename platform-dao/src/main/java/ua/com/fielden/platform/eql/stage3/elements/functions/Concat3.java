@@ -6,6 +6,8 @@ import static java.util.stream.Collectors.joining;
 import java.util.List;
 import java.util.Objects;
 
+import org.hibernate.type.StringType;
+
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 
@@ -17,6 +19,16 @@ public class Concat3 extends AbstractFunction3 {
         this.operands = operands;
     }
 
+    @Override
+    public Class<String> type() {
+        return String.class;
+    }
+
+    @Override
+    public Object hibType() {
+        return StringType.INSTANCE;
+    }
+    
     @Override
     public String sql(final DbVersion dbVersion) {
         switch (dbVersion) {

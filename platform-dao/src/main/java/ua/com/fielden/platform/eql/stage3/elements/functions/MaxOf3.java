@@ -12,6 +12,16 @@ public class MaxOf3 extends SingleOperandFunction3 {
     }
 
     @Override
+    public Class<?> type() {
+        return operand.type();
+    }
+
+    @Override
+    public Object hibType() {
+        return operand.hibType();
+    } 
+    
+    @Override
     public String sql(final DbVersion dbVersion) {
         return format("MAX(%s)", operand.sql(dbVersion));
     }

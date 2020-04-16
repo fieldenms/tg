@@ -3,8 +3,11 @@ package ua.com.fielden.platform.eql.stage3.elements.operands;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.joining;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
+
+import org.hibernate.type.BigDecimalType;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
 
@@ -24,14 +27,12 @@ public class Expression3 implements ISingleOperand3 {
     
     @Override
     public Class<?> type() {
-        // TODO EQL
-        return items.isEmpty() ? first.type() : null;
+        return items.isEmpty() ? first.type() :  BigDecimal.class;
     }
 
     @Override
     public Object hibType() {
-        // TODO EQL
-        return items.isEmpty() ? first.hibType() : null;
+        return items.isEmpty() ? first.hibType() : BigDecimalType.INSTANCE;
     }
 
     @Override

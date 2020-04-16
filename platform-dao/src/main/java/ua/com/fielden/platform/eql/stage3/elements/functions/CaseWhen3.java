@@ -25,6 +25,18 @@ public class CaseWhen3 extends AbstractFunction3 {
     }
 
     @Override
+    public Class<?> type() {
+        // TODO EQL
+        return whenThenPairs.get(0)._2.type();
+    }
+
+    @Override
+    public Object hibType() {
+        // TODO EQL
+        return whenThenPairs.get(0)._2.hibType();
+    }
+    
+    @Override
     public String sql(final DbVersion dbVersion) {
         final StringBuffer sb = new StringBuffer();
         sb.append("CASE");
