@@ -1115,6 +1115,40 @@ const _convert = function (value) {
 };
 
 /**
+ * Converts property value, converted to editor binding representation ('bindingValue'), to string.
+ * 
+ * @param bindingValue -- binding representation of property value; for entity-typed property it is string; for array of entities it is array of strings; for null it is null, for all other values -- it is the same value
+ * @param parentType -- the type of entity holding this property
+ * @param property -- property name of the property
+ */
+const _convertToString = function (bindingValue, parentType, property) {
+    if (bindingValue === null) {
+        return '';
+    } else if (typeof bindingValue === 'string') {
+        return bindingValue; // this covers converted entity-typed properties and string properties -- no further conversion required
+    } else if (typeof bindingValue === 'number') {
+        // TODO for number value -- add conversion logic the same as in editors (date, integer and decimal editors)
+        return '' + bindingValue;
+    } else if (typeof bindingValue === 'boolean') {
+        // TODO for boolean value -- add conversion logic the same as in boolean editor
+        return '' + bindingValue;
+    } else if (typeof bindingValue === 'object' && bindingValue.hasOwnProperty('amount') && bindingValue.hasOwnProperty('currency') && bindingValue.hasOwnProperty('taxPercent')) {
+        // TODO for money value -- add conversion logic the same as in money editor
+        return '' + bindingValue;
+    } else if (Array.isArray(bindingValue)) {
+        return bindingValue.join(','); // TODO see tg-entity-editor to apply custom separator; for EGI apply ', '
+    } else if (typeof bindingValue === 'object' && (bindingValue.hasOwnProperty('hashlessUppercasedColourValue') || bindingValue.hasOwnProperty('value'))) {
+        // TODO for Colour and Hyperlink values -- add conversion logic the same as in corresponding editors
+        return bindingValue;
+    } else if (typeof value === 'object' && Object.getOwnPropertyNames(value).length === 0) {
+        // TODO investigate where empty object is actually used to ensure proper conversion here
+        return '';
+    } else {
+        throw new _UCEPrototype(value);
+    }
+};
+
+/**
  * Completes the process of type table preparation -- creates instances of EntityType objects for each entity type in type table.
  */
 var _providePrototypes = function (typeTable, EntityType) {
