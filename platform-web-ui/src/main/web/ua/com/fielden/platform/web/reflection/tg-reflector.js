@@ -1149,14 +1149,15 @@ const _determinePropertyType = function (entityType, property) {
  * @param property -- property name of the property; can be dot-notated
  */
 const _convertToString = function (bindingValue, parentType, property) {
-    if (bindingValue === null) {
+    const propertyType = _determinePropertyType(parentType, property);
+    if (propertyType === 'boolean') {
+        return bindingValue === null ? 'false' : '' + bindingValue;
+    } else if (bindingValue === null) {
         return '';
     } else if (typeof bindingValue === 'string') {
         return bindingValue; // this covers converted entity-typed properties and string properties -- no further conversion required
     } else if (typeof bindingValue === 'number') {
         // TODO for number value -- add conversion logic the same as in editors (date, integer and decimal editors)
-        return '' + bindingValue;
-    } else if (typeof bindingValue === 'boolean') {
         return '' + bindingValue;
     } else if (typeof bindingValue === 'object' && bindingValue.hasOwnProperty('amount') && bindingValue.hasOwnProperty('currency') && bindingValue.hasOwnProperty('taxPercent')) {
         // TODO for money value -- add conversion logic the same as in money editor
