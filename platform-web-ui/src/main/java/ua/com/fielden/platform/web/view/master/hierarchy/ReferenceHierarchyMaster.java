@@ -29,9 +29,18 @@ public class ReferenceHierarchyMaster implements IMaster<ReferenceHierarchy> {
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
         importPaths.add("components/tg-reference-hierarchy");
         importPaths.add("editors/tg-singleline-text-editor");
+        importPaths.add("actions/tg-ui-action");
 
 //        this.actions.clear();
 //        this.actions.addAll(actions);
+        final DomElement editAction = new DomElement("tg-ui-action")
+                .attr("ui-role", "ICON")
+                .attr("number-of-action", "0")
+                .attr("action-kind", "PRIMARY_RESULT_SET")
+                .attr("show-dialog", "[[_showDialog]]")
+                .attr("create-context-holder", "[[_createContextHolder]]")
+                .attr("slot", "edit-action")
+                .attr("hidden", true);
 
         final DomElement hierarchyFilter = new DomElement("tg-singleline-text-editor")
                 .attr("id", "referenceHierarchyFilter")
@@ -50,7 +59,8 @@ public class ReferenceHierarchyMaster implements IMaster<ReferenceHierarchy> {
                 .attr("id", "refrenceHierarchy")
                 .attr("entity", "{{_currBindingEntity}}")
                 .attr("on-tg-load-refrence-hierarchy", "_loadSubReferenceHierarchy")
-                .add(hierarchyFilter);
+                .attr("centre-uuid", "[[centreUuid]]")
+                .add(hierarchyFilter, editAction);
 
         //Generating action's DOM and JS functions
 //        final StringBuilder customActionObjects = new StringBuilder();

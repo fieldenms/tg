@@ -1,8 +1,10 @@
 package ua.com.fielden.platform.entity;
 
 import static java.util.stream.Collectors.toList;
+import static ua.com.fielden.platform.entity.ReferenceHierarchyActions.EDIT;
 import static ua.com.fielden.platform.entity.ReferenceHierarchyLevel.TYPE;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -82,12 +84,19 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
 
     private InstanceLevelHierarchyEntry createInstanceHierarchyEntry(final EntityAggregates instanceAggregate) {
         final InstanceLevelHierarchyEntry instanceEntry = new InstanceLevelHierarchyEntry();
+        final Class<? extends AbstractEntity<?>> entityType = ((AbstractEntity<?>)instanceAggregate.get("entity")).getType();
         instanceEntry.setId(((AbstractEntity<?>)instanceAggregate.get("entity")).getId());
         instanceEntry.setKey(instanceAggregate.get("entity").toString());
         instanceEntry.setDesc(instanceAggregate.get("entity.desc"));
         instanceEntry.setEntity(instanceAggregate.get("entity"));
         instanceEntry.setHierarchyLevel(ReferenceHierarchyLevel.INSTANCE);
         instanceEntry.setHasChildren("Y".equals(instanceAggregate.get("hasDependencies")));
+        instanceEntry.setMasterInfo(masterInfoProvider.getMasterInfo(entityType));
+        final List<ReferenceHierarchyActions> actions = new ArrayList<>();
+        if (instanceEntry.getMasterInfo() != null) {
+            actions.add(EDIT);
+        }
+        instanceEntry.setHierarchyActions(actions.toArray(new ReferenceHierarchyActions[0]));
         return instanceEntry;
     }
 
@@ -123,7 +132,6 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
             typeEntry.setNumberOfEntities(typeAggregate.get("qty"));
             typeEntry.setHierarchyLevel(TYPE);
             typeEntry.setHasChildren(true);
-            //typeEntry.setMasterInfo(masterInfoProvider.getMasterInfo(entityTypeClass));
             return typeEntry;
         } catch (final ClassNotFoundException e) {
             throw Result.failuref("The entity type: %s can not be found", typeAggregate.get("type"));

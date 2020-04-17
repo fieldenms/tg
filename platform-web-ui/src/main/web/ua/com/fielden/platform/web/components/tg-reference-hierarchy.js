@@ -48,6 +48,7 @@ const template = html`
         }
     </style>
     <tg-reflector id="reflector"></tg-reflector>
+    <slot id="editAction" name="edit-action"></slot>
     <div class="hierarchy-container">
         <div class="editor-container">
             <slot name="filter-element"></slot>
@@ -61,6 +62,10 @@ template.setAttribute('strip-whitespace', '');
 const referenceHierarchyLevel = {
     TYPE: "TYPE",
     INSTANCE: "INSTANCE",
+};
+
+const referenceHierarchyActions = {
+    EDIT: "EDIT"
 };
 
 const generatePath = function(treeModel, loadedHierarchy) {
@@ -147,6 +152,10 @@ Polymer({
             observer: "_entityChanged"
         },
 
+        centreUuid: {
+            type: String
+        },
+
         /**
          * Need for locking reference hierarchy component during data loading.
          */
@@ -171,6 +180,11 @@ Polymer({
         this._saveQueue = [];
         this._saveInProgress = false;
 
+        //Configure action functions
+        this._actions = {};
+        this._actionBuilder = {};
+        this._actionBuilder[referenceHierarchyActions.EDIT] = this._buildEditAction.bind(this)(this.$.editAction.assignedNodes()[0], referenceHierarchyActions.EDIT);
+
         this._buildContent = function(entity, opened) {
             return "<div style='height:28px;font-size:16px;display:flex;flex-direction:row;align-items:center;'>" + 
                         this._getTitle(entity) + this._getAdditionalInfo(entity) +
@@ -187,12 +201,50 @@ Polymer({
             return [];
         }.bind(this);
         this._buildActions = function (entity) {
-           return "";
+            let actionsStr = "";
+            entity.entity && entity.entity.actions && entity.entity.actions.forEach(action => {
+                actionsStr += this._actionBuilder[action](entity);
+            });
+            return actionsStr;
         }.bind(this);
         this._runAction = function (e) {
             e.stopPropagation();
-            //TODO invoke action for tree item
+            const target = e.target || e.srcElement;
+            this._actions[target.getAttribute("action-attr")](e);
         }.bind(this);
+    },
+
+    _buildEditAction: function(action, id) {
+        const self = this;
+        this._actions[id] = (e) => {
+            const masterInfo = e.model.entity.entity.masterInfo;
+            action.elementName = masterInfo.key;
+            action.componentUri = masterInfo.desc;
+            action.attrs = {
+                entityType: masterInfo.entityType, 
+                currentState:'EDIT', 
+                centreUuid: self.centreUuid,
+                prefDim: masterInfo.width && masterInfo.height && masterInfo.widthUnit && masterInfo.heightUnit && {
+                    width: () => masterInfo.width,
+                    height: () => masterInfo.height,
+                    widthUnit: masterInfo.widthUnit,
+                    heightUnit: masterInfo.heightUnit
+                }
+            };
+            action.requireSelectionCriteria = masterInfo.requireSelectionCriteria;
+            action.requireSelectedEntities = masterInfo.requireSelectedEntities;
+            action.requireMasterEntity = masterInfo.requireMasterEntity;
+            action.shouldRefreshParentCentreAfterSave = masterInfo.shouldRefreshParentCentreAfterSave;
+            action.currentEntity = e.model.entity.entity.entity;
+            action._run();
+        };
+        return (entity) => {    
+            return this._generateIconForAction(entity.entity.masterInfo, id);
+        }
+    },
+
+    _generateIconForAction: function (action, attrValue) {
+        return "<iron-icon style='" + action.iconStyle + "' icon='" + action.icon + "' action-attr='" + attrValue + "' tooltip-text='" + action.longDesc + "'></iron-icon>";
     },
 
     _getTitle: function (entity) {

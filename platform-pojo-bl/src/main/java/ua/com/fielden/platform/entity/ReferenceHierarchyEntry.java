@@ -1,5 +1,11 @@
 package ua.com.fielden.platform.entity;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
@@ -11,6 +17,26 @@ public class ReferenceHierarchyEntry extends AbstractTreeEntry<String> {
     @IsProperty
     @Title(value = "Reference Hierarchy Level", desc = "One of two available reference hierarchy levels: TYPE or INSTANCE")
     private String level;
+
+    @IsProperty(String.class)
+    @Title(value = "Actions", desc = "Action list")
+    private List<String> actions = new ArrayList<String>();
+
+    @Observable
+    protected ReferenceHierarchyEntry setActions(final List<String> actions) {
+        this.actions.clear();
+        this.actions.addAll(actions);
+        return this;
+    }
+
+    public ReferenceHierarchyEntry setHierarchyActions(final ReferenceHierarchyActions... actions) {
+        setActions(Arrays.asList(actions).stream().map(action -> action.name()).collect(Collectors.toList()));
+        return this;
+    }
+
+    public List<String> getActions() {
+        return Collections.unmodifiableList(actions);
+    }
 
     @Observable
     public ReferenceHierarchyEntry setLevel(final String level) {

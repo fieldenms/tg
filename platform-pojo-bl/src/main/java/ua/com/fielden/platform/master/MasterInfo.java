@@ -31,11 +31,11 @@ public class MasterInfo extends AbstractEntity<String> {
 
     @IsProperty
     @Title(value = "Short Description", desc = "Action's short description")
-    private String shortDescription;
+    private String shortDesc;
 
     @IsProperty
     @Title(value = "Long Description", desc = "Action's long description")
-    private String longDescription;
+    private String longDesc;
 
     @IsProperty
     @Title("Refresh parent centre after save?")
@@ -52,6 +52,48 @@ public class MasterInfo extends AbstractEntity<String> {
     @IsProperty
     @Title("Require Master Entity")
     private String requireMasterEntity;
+
+    @IsProperty
+    @Title("Icon")
+    private String icon;
+
+    @IsProperty
+    @Title("Icon Style")
+    private String iconStyle;
+
+    @IsProperty
+    @Title(value = "Entity Type", desc = "Desc")
+    private String entityType;
+
+    @Observable
+    public MasterInfo setEntityType(final String entityType) {
+        this.entityType = entityType;
+        return this;
+    }
+
+    public String getEntityType() {
+        return entityType;
+    }
+
+    @Observable
+    public MasterInfo setIconStyle(final String iconStyle) {
+        this.iconStyle = iconStyle;
+        return this;
+    }
+
+    public String getIconStyle() {
+        return iconStyle;
+    }
+
+    @Observable
+    public MasterInfo setIcon(final String icon) {
+        this.icon = icon;
+        return this;
+    }
+
+    public String getIcon() {
+        return icon;
+    }
 
     @Observable
     public MasterInfo setRequireMasterEntity(final String requireMasterEntity) {
@@ -94,23 +136,23 @@ public class MasterInfo extends AbstractEntity<String> {
     }
 
     @Observable
-    public MasterInfo setLongDescription(final String longDescription) {
-        this.longDescription = longDescription;
+    public MasterInfo setLongDesc(final String longDesc) {
+        this.longDesc = longDesc;
         return this;
     }
 
-    public String getLongDescription() {
-        return longDescription;
+    public String getLongDesc() {
+        return longDesc;
     }
 
     @Observable
-    public MasterInfo setShortDescription(final String shortDescription) {
-        this.shortDescription = shortDescription;
+    public MasterInfo setShortDesc(final String shortDesc) {
+        this.shortDesc = shortDesc;
         return this;
     }
 
-    public String getShortDescription() {
-        return shortDescription;
+    public String getShortDesc() {
+        return shortDesc;
     }
 
     @Observable
