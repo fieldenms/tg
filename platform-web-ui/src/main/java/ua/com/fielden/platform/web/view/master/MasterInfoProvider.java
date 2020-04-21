@@ -56,7 +56,7 @@ public class MasterInfoProvider implements IMasterInfoProvider {
     }
 
     private MasterInfo buildDefaultMasterConfiguration(final Class<? extends AbstractEntity<?>> type) {
-        if (webUiConfig.getMasters().containsKey(type)) {
+        return webUiConfig.configApp().getMaster(type).map(master -> {
             final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(type).getKey();
             final MasterInfo  info = new MasterInfo();
             info.setKey("tg-EntityEditAction-master");
@@ -70,8 +70,7 @@ public class MasterInfoProvider implements IMasterInfoProvider {
             info.setIconStyle("");
             info.setEntityType(EntityEditAction.class.getName());
             return info;
-        }
-        return null;
+        }).orElse(null);
     }
 
 }

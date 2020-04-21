@@ -23,6 +23,7 @@ import ua.com.fielden.platform.entity.query.metadata.DataDependencyQueriesGenera
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.master.IMasterInfoProvider;
+import ua.com.fielden.platform.master.MasterInfo;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.utils.Pair;
@@ -63,7 +64,8 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
 
     private List<InstanceLevelHierarchyEntry> generateInstanceLevelHierarchy(final ReferenceHierarchy entity) {
         try {
-            final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> qem = DataDependencyQueriesGenerator.queryForDependentTypeDetails(dependenciesMetadata, entity.getRefEntityId(), entity.getRefEntityClass(), entity.getEntityClass());
+            final Class<? extends AbstractEntity<?>> entityClass = entity.getEntityClass();
+            final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> qem = DataDependencyQueriesGenerator.queryForDependentTypeDetails(dependenciesMetadata, entity.getRefEntityId(), entity.getRefEntityClass(), entityClass);
             final IPage<EntityAggregates> loadedPage;
             if (entity.getPageNumber() == 0) {
                 loadedPage = coAggregates.firstPage(qem, entity.getPageSize());
@@ -72,17 +74,17 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
             }
             entity.setPageCount(loadedPage.numberOfPages());
             entity.setPageNumber(loadedPage.no());
-            return createInstanceHierarchy(loadedPage.data());
+            return createInstanceHierarchy(loadedPage.data(), masterInfoProvider.getMasterInfo(entityClass));
         } catch (final ClassNotFoundException e) {
             throw Result.failuref("The entity types: %s or %s can not be found", entity.getRefEntityType(), entity.getEntityType());
         }
     }
 
-    private List<InstanceLevelHierarchyEntry> createInstanceHierarchy(final List<EntityAggregates> instanceAggregates) {
-        return instanceAggregates.stream().map(instanceAggregate -> createInstanceHierarchyEntry(instanceAggregate)).collect(toList());
+    private List<InstanceLevelHierarchyEntry> createInstanceHierarchy(final List<EntityAggregates> instanceAggregates, final MasterInfo masterInfo) {
+        return instanceAggregates.stream().map(instanceAggregate -> createInstanceHierarchyEntry(instanceAggregate, masterInfo)).collect(toList());
     }
 
-    private InstanceLevelHierarchyEntry createInstanceHierarchyEntry(final EntityAggregates instanceAggregate) {
+    private InstanceLevelHierarchyEntry createInstanceHierarchyEntry(final EntityAggregates instanceAggregate, final MasterInfo masterInfo) {
         final InstanceLevelHierarchyEntry instanceEntry = new InstanceLevelHierarchyEntry();
         final Class<? extends AbstractEntity<?>> entityType = ((AbstractEntity<?>)instanceAggregate.get("entity")).getType();
         instanceEntry.setId(((AbstractEntity<?>)instanceAggregate.get("entity")).getId());
@@ -91,7 +93,7 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
         instanceEntry.setEntity(instanceAggregate.get("entity"));
         instanceEntry.setHierarchyLevel(ReferenceHierarchyLevel.INSTANCE);
         instanceEntry.setHasChildren("Y".equals(instanceAggregate.get("hasDependencies")));
-        instanceEntry.setMasterInfo(masterInfoProvider.getMasterInfo(entityType));
+        instanceEntry.setMasterInfo(masterInfo);
         final List<ReferenceHierarchyActions> actions = new ArrayList<>();
         if (instanceEntry.getMasterInfo() != null) {
             actions.add(EDIT);
