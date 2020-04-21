@@ -2,7 +2,6 @@ package ua.com.fielden.platform.eql.stage3;
 
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -433,7 +432,6 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         assertEquals(expQry, actQry);   
     }
 
-
     @Test
     public void veh_calc_prop_is_correctly_transformed_07() {
         final EntQuery3 actQry = qryCountAll(select(VEHICLE).where().anyOfProps("modelMakeKey2", "make.key").isNotNull());
@@ -441,28 +439,27 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         
         final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
         final QrySource3BasedOnTable model = source(MODEL, veh1, "model");
-        //final QrySource3BasedOnTable make = source(MAKE, veh1, "model_make");
+        final QrySource3BasedOnTable make = source(MAKE, veh1, "model_make");
         final QrySource3BasedOnTable makeA = source(MAKE, veh1, "make");
-        final QrySource3BasedOnTable make = source(MAKE, veh1, "make");
         
         final IQrySources3 sources =
                 ij(
                         lj(
                                 veh,
                                 makeA,
-                                eq(prop("make", veh), prop(ID, makeA))
+                                eq(entityProp("make", veh, MAKE), entityProp(ID, makeA, MAKE))
                           ),
                         ij(
                                 model,
                                 make,
-                                eq(prop("make", model), prop(ID, make))
+                                eq(entityProp("make", model, MAKE), entityProp(ID, make, MAKE))
                           ),
-                        eq(prop("model", veh), prop(ID, model))
+                        eq(entityProp("model", veh, MODEL), entityProp(ID, model, MODEL))
                   );
-        final Conditions3 conditions = or(and(or(isNotNull(expr(expr(expr(prop(KEY, make))))), isNotNull(expr(prop(KEY, make))))));
+        final Conditions3 conditions = or(and(or(isNotNull(expr(expr(expr(stringProp(KEY, make))))), isNotNull(expr(stringProp(KEY, makeA))))));
         final EntQuery3 expQry = qryCountAll(sources, conditions);
         
-        assertNotEquals(expQry, actQry);
+        assertEquals(expQry, actQry);
     }
     
     @Test
