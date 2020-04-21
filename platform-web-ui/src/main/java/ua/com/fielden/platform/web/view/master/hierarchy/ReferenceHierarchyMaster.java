@@ -35,7 +35,7 @@ public class ReferenceHierarchyMaster implements IMaster<ReferenceHierarchy> {
 //        this.actions.addAll(actions);
         final DomElement editAction = new DomElement("tg-ui-action")
                 .attr("ui-role", "ICON")
-                .attr("number-of-action", "0")
+                //.attr("number-of-action", "0")
                 .attr("action-kind", "PRIMARY_RESULT_SET")
                 .attr("show-dialog", "[[_showDialog]]")
                 .attr("create-context-holder", "[[_createContextHolder]]")
@@ -59,7 +59,7 @@ public class ReferenceHierarchyMaster implements IMaster<ReferenceHierarchy> {
                 .attr("id", "refrenceHierarchy")
                 .attr("entity", "{{_currBindingEntity}}")
                 .attr("on-tg-load-refrence-hierarchy", "_loadSubReferenceHierarchy")
-                .attr("centre-uuid", "[[centreUuid]]")
+                .attr("centre-uuid", "[[uuid]]")
                 .add(hierarchyFilter, editAction);
 
         //Generating action's DOM and JS functions

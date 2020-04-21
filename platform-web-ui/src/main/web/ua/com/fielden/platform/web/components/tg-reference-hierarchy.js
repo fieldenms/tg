@@ -220,6 +220,8 @@ Polymer({
             const masterInfo = e.model.entity.entity.masterInfo;
             action.elementName = masterInfo.key;
             action.componentUri = masterInfo.desc;
+            action.shortDesc = masterInfo.shortDesc;
+            action.longDesc = masterInfo.longDesc;
             action.attrs = {
                 entityType: masterInfo.entityType, 
                 currentState:'EDIT', 
