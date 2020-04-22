@@ -804,7 +804,10 @@ export class TgEntityEditor extends TgEditor {
         // there are cases where value might be null even for MULTI selection criteria
         // this happens when a crit-only property changes from type SINGLE to MULTI
         // joining on an empty array evaluates to an empty string
-        return value === null ? "" : (this.multi === true ? value.join(this.separator) : "" + value);
+        // null converts to '' in majority of cases in reflector.tg_toString... family of methods and this is the case for this editor (String or Arrays of String types)
+        return this.multi === true
+            ? this.reflector().tg_toStringForCollection(value, this.entity.type(), this.propertyName, this.separator)
+            : this.reflector().tg_toString             (value, this.entity.type(), this.propertyName);
     }
 
     /**

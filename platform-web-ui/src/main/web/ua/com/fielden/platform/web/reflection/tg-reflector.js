@@ -70,10 +70,17 @@ var _createEntityTypePropPrototype = function () {
      * Returns property type.
      */
     EntityTypeProp.prototype.type = function () {
-        if (this._typeName === null) {
-            throw 'type name is not known for some reason';
+        if (typeof this._typeName === 'undefined') {
+            return null; // the type is unknown; collectional properties are the example
         }
         return this._typeName.indexOf(':') > -1 ? _typeTable[this._typeName.substring(1)] : this._typeName;
+    }
+
+    /**
+     * Returns short collection's key for the property of "short collection" type.
+     */
+    EntityTypeProp.prototype.shortCollectionKey = function () {
+        return typeof this._shortCollectionKey === 'undefined' ? null : this._shortCollectionKey;
     }
 
     /**
@@ -1108,13 +1115,8 @@ const _convert = function (value) {
         return value;
     } else if (typeof value === "string") { // for string value -- return the same value for editors
         return value;
-    } else if (Array.isArray(value)) { // for Array value -- return the same value for tg-entity-search-criteria editor
-        // Array items should be converted one-by-one (no entity-typed items should remain being entity-typed)
-        var convertedArray = [];
-        for (var index = 0; index < value.length; index++) {
-            convertedArray.push(_convert(value[index]));
-        }
-        return convertedArray;
+    } else if (Array.isArray(value)) { // for Array value -- return the same value for tg-entity-editor and tg-collectional-representor
+        return value;
     } else if (typeof value === "object" && (value.hasOwnProperty("hashlessUppercasedColourValue") || value.hasOwnProperty("value"))) {
         return value;
     } else if (typeof value === "object" && Object.getOwnPropertyNames(value).length === 0) {
@@ -1125,31 +1127,41 @@ const _convert = function (value) {
 };
 
 /**
+ * Finds EntityTypeProp meta-info instance from 'entityType' and 'property'.
+ * 
+ * @param entityType -- entity type
+ * @param property -- property name; can be dot-notated
+ */
+const _findProperty = function (entityType, property) {
+    const dotIndex = property.indexOf('.');
+    if (dotIndex > -1) {
+        const first = property.slice(0, dotIndex);
+        const rest = property.slice(dotIndex + 1);
+        return _findProperty(entityType.prop(first).type(), rest);
+    } else {
+        return entityType.prop(property);
+    }
+};
+
+/**
  * Determines the type of property from 'entityType' and 'property'.
  * 
  * @param entityType -- entity type
  * @param property -- property name; can be dot-notated
  */
 const _determinePropertyType = function (entityType, property) {
-    const dotIndex = property.indexOf('.');
-    if (dotIndex > -1) {
-        const first = property.slice(0, dotIndex);
-        const rest = property.slice(dotIndex + 1);
-        return _determinePropertyType(entityType.prop(first).type(), rest);
-    } else {
-        return entityType.prop(property).type();
-    }
+    return _findProperty(entityType, property).type();
 };
 
 /**
  * Converts property value, converted to editor binding representation ('bindingValue'), to string.
  * 
  * @param bindingValue -- binding representation of property value; for entity-typed property it is string; for array of entities it is array of strings; for null it is null, for all other values -- it is the same value
- * @param parentType -- the type of entity holding this property
+ * @param rootEntityType -- the type of entity holding this property
  * @param property -- property name of the property; can be dot-notated
  */
-const _convertToString = function (bindingValue, parentType, property) {
-    const propertyType = _determinePropertyType(parentType, property);
+const _toString = function (bindingValue, rootEntityType, property) {
+    const propertyType = _determinePropertyType(rootEntityType, property);
     if (propertyType === 'boolean') {
         return bindingValue === null ? 'false' : '' + bindingValue;
     } else if (bindingValue === null) {
@@ -1163,7 +1175,9 @@ const _convertToString = function (bindingValue, parentType, property) {
         // TODO for money value -- add conversion logic the same as in money editor
         return '' + bindingValue;
     } else if (Array.isArray(bindingValue)) {
-        return bindingValue.join(','); // TODO see tg-entity-editor to apply custom separator; for EGI apply ', '
+        // Here we have standard logic of converting collections using the most common ', ' separator.
+        // To apply custom separator please use _toStringForCollection method (see tg-entity-editor.convertToString).
+        return _toStringForCollection(bindingValue, rootEntityType, property, ', ');
     } else if (typeof bindingValue === 'object' && (bindingValue.hasOwnProperty('hashlessUppercasedColourValue') || bindingValue.hasOwnProperty('value'))) {
         // TODO for Colour and Hyperlink values -- add conversion logic the same as in corresponding editors
         return bindingValue;
@@ -1173,6 +1187,48 @@ const _convertToString = function (bindingValue, parentType, property) {
     } else {
         throw new _UCEPrototype(bindingValue);
     }
+};
+
+/**
+ * Converts collectional property value, converted to editor binding representation ('bindingValue'), to string.
+ * 
+ * @param bindingValue -- binding representation of property value that is the same as fully-fledged value; this can be null or array of entities or numbers or strings etc.
+ * @param rootEntityType -- the type of entity holding this property
+ * @param property -- property name of the property; can be dot-notated
+ * @param separator -- string value to glue string representations of values with
+ * @param mappingFunction -- maps resulting elements before actual element-by-element toString conversion and glueing them all together; this is optional
+ */
+const _toStringForCollection = function (bindingValue, rootEntityType, property, separator, mappingFunction) {
+    if (bindingValue === null || bindingValue.length === 0) {
+        return '';
+    } else {
+        let resultingCollection = bindingValue;
+        const entityTypeProp = _findProperty(rootEntityType, property);
+        const shortCollectionKey = entityTypeProp.shortCollectionKey();
+        if (shortCollectionKey) { // existence of shortCollectionKey indicates that the property is indeed "short collection"
+            resultingCollection = bindingValue.map(entity => entity.get(shortCollectionKey));
+        }
+        return resultingCollection
+            .map(element => _toString(_convert(mappingFunction ? mappingFunction(element) : element), rootEntityType, property))
+            .filter(str => str !== '') // filter out empty strings not to include them into resulting string (especially important for functions that use 'mappingFunction')
+            .join(separator);
+    }
+};
+
+/**
+ * Converts collectional property value, converted to editor binding representation ('bindingValue'), to tooltip's string representation.
+ * 
+ * @param bindingValue -- binding representation of property value that is the same as fully-fledged value; array of entities
+ * @param rootEntityType -- the type of entity holding this property
+ * @param property -- property name of the property; can be dot-notated
+ */
+const _toStringForCollectionAsTooltip = function (bindingValue, rootEntityType, property) {
+    const convertedCollection = _toString(bindingValue, rootEntityType, property);
+    if (convertedCollection === '') {
+        return '';
+    }
+    const desc = _toStringForCollection(bindingValue, rootEntityType, property, ', ', entity => entity.get('desc')); // maps entity descriptions; this includes descs from short collection sub-keys
+    return '<b>' + convertedCollection + '</b>' + (desc !== '' ? '<br>' + desc : '');
 };
 
 /**
@@ -1422,11 +1478,35 @@ export const TgReflector = Polymer({
      * Converts property value, converted to editor binding representation ('bindingValue'), to string.
      * 
      * @param bindingValue -- binding representation of property value; for entity-typed property it is string; for array of entities it is array of strings; for null it is null, for all other values -- it is the same value
-     * @param parentType -- the type of entity holding this property
+     * @param rootEntityType -- the type of entity holding this property
      * @param property -- property name of the property; can be dot-notated
      */
-    _convertToString: function (bindingValue, parentType, property) {
-        return _convertToString(bindingValue, parentType, property);
+    tg_toString: function (bindingValue, rootEntityType, property) {
+        return _toString(bindingValue, rootEntityType, property);
+    },
+
+    /**
+     * Converts collectional property value, converted to editor binding representation ('bindingValue'), to string.
+     * 
+     * @param bindingValue -- binding representation of property value that is the same as fully-fledged value; this can be array of entities or numbers or strings etc.
+     * @param rootEntityType -- the type of entity holding this property
+     * @param property -- property name of the property; can be dot-notated
+     * @param separator -- string value to glue string representations of values with
+     * @param mappingFunction -- maps resulting elements before actual element-by-element toString conversion and glueing them all together; this is optional
+     */
+    tg_toStringForCollection: function (bindingValue, rootEntityType, property, separator, mappingFunction) {
+        return _toStringForCollection(bindingValue, rootEntityType, property, separator, mappingFunction);
+    },
+    
+    /**
+     * Converts collectional property value, converted to editor binding representation ('bindingValue'), to tooltip's string representation.
+     * 
+     * @param bindingValue -- binding representation of property value that is the same as fully-fledged value; array of entities
+     * @param rootEntityType -- the type of entity holding this property
+     * @param property -- property name of the property; can be dot-notated
+     */
+    tg_toStringForCollectionAsTooltip: function (bindingValue, rootEntityType, property) {
+        return _toStringForCollectionAsTooltip(bindingValue, rootEntityType, property);
     },
 
     /**

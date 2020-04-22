@@ -98,10 +98,10 @@ export class TgBooleanEditor extends TgEditor {
     }
     
     /**
-     * Converts the value into string representation (which is used in edititing / comm values).
+     * Converts the value into string representation (which is used in editing / comm values).
      */
     convertToString (value) {
-        return this.reflector()._convertToString(value, this.entity.type(), this.propertyName);
+        return this.reflector().tg_toString(value, this.entity.type(), this.propertyName);
     }
 
     /**

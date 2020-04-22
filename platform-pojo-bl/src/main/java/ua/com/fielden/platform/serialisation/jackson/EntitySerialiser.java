@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.serialisation.jackson;
 
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isShortCollection;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.shortCollectionKey;
 import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getTimeZone;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isCompositeKeySeparatorDefault;
@@ -202,6 +204,9 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
                 }
                 entityTypeProp.set_typeName(convertTypeToStringRepresentation(prop));
                 
+                if (isShortCollection(type, name)) {
+                    entityTypeProp.set_shortCollectionKey(shortCollectionKey(type, name));
+                }
                 props.put(name, entityTypeProp);
             }
             entityTypeInfo.set_props(props);

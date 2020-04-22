@@ -1,4 +1,3 @@
-import { generateShortCollection } from '/resources/reflection/tg-polymer-utils.js';
 import { _millisDateRepresentation } from '/resources/reflection/tg-date-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import { TgAppConfig } from '/app/tg-app-config.js';
@@ -71,10 +70,7 @@ export const TgEgiDataRetrievalBehavior = {
             return "";
         } else if (this._reflector.findTypeByName(type)) {
             var propertyValue = this.getValueFromEntity(entity, {property: property});
-            if (Array.isArray(propertyValue)) {
-                propertyValue = generateShortCollection(entity, property, this._reflector.findTypeByName(type));
-            }
-            return Array.isArray(propertyValue) ? this._reflector.convert(propertyValue).join(", ") : this._reflector.convert(propertyValue);
+            return Array.isArray(propertyValue) ? this._reflector.tg_toString(this._reflector.convert(propertyValue), entity.type(), property) : this._reflector.convert(propertyValue);
         } else if (type.lastIndexOf('Date', 0) === 0) { // check whether type startsWith 'Date'. Type can be like 'Date', 'Date:UTC:' or 'Date:Europe/London:'
             var splitedType = type.split(':');
             return _millisDateRepresentation(entity.get(property), splitedType[1] || null, splitedType[2] || null);
