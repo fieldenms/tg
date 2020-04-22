@@ -18,8 +18,6 @@ import ua.com.fielden.platform.entity.validation.test_entities.definers.MakeProp
 @KeyType(String.class)
 public class EntityWithDynamicRequiredness extends AbstractEntity<String> {
 
-    private static final long serialVersionUID = 1L;
-
     @IsProperty
     @MapTo
     @Title(value = "Prop 1", desc = "With dynamic requiredness")
@@ -56,7 +54,6 @@ public class EntityWithDynamicRequiredness extends AbstractEntity<String> {
         return prop4;
     }
 
-
     @Observable
     public EntityWithDynamicRequiredness setProp3(final Integer prop3) {
         this.prop3 = prop3;
@@ -66,7 +63,6 @@ public class EntityWithDynamicRequiredness extends AbstractEntity<String> {
     public Integer getProp3() {
         return prop3;
     }
-
 
     @Observable
     public EntityWithDynamicRequiredness setProp2(final Integer prop2) {
@@ -87,9 +83,5 @@ public class EntityWithDynamicRequiredness extends AbstractEntity<String> {
     public Integer getProp1() {
         return prop1;
     }
-
-
-
-
 
 }

@@ -495,7 +495,7 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
         if (typeof this['@' + propertyName + '_id'] !== 'undefined') {
             delete this['@' + propertyName + '_id'];
         }
-        console.debug('Just TOUCHED', propertyName, '(', counts[counts.length - 1], ' time). Result:', touched);
+        console.debug('Just TOUCHED', propertyName, '(', counts[counts.length - 1], ' time). Names =', names.slice(), 'Values =', values.slice(), 'Counts =', counts.slice());
 
         return result;
     }

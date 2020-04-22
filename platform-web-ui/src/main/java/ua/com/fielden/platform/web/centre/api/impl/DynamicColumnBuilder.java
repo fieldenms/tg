@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
-import static java.lang.String.valueOf;
 import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_DESC;
 import static ua.com.fielden.platform.web.centre.api.impl.DynamicColumn.DYN_COL_DISPLAY_PROP;
@@ -72,7 +71,7 @@ public class DynamicColumnBuilder<T extends AbstractEntity<?>> implements IDynam
     }
 
     @Override
-    public List<Map<String, String>> build() {
+    public List<Map<String, Object>> build() {
         final Class<?> collectionalPropertyType = PropertyTypeDeterminator.determinePropertyType(type, collectionalPropertyName);
         final Class<?> propertyType = PropertyTypeDeterminator.determinePropertyType(collectionalPropertyType, displayProp);
         final String type = EntityCentre.egiRepresentationFor(
@@ -81,7 +80,7 @@ public class DynamicColumnBuilder<T extends AbstractEntity<?>> implements IDynam
                 Optional.ofNullable(EntityUtils.isDate(propertyType) ? DefaultValueContract.getTimePortionToDisplay(collectionalPropertyType, displayProp) : null));
 
         return dynamicColumns.stream().map(dynamicProp -> {
-            final Map<String, String> res = new HashMap<>();
+            final Map<String, Object> res = new HashMap<>();
             res.put(DYN_COL_GROUP_PROP_VALUE, dynamicProp.getGroupPropValue());
             res.put(DYN_COL_TYPE, type);
             res.put(DYN_COL_GROUP_PROP, groupProp);
@@ -89,9 +88,9 @@ public class DynamicColumnBuilder<T extends AbstractEntity<?>> implements IDynam
             res.put(DYN_COL_TOOLTIP_PROP, tooltipProp.orElse(""));
             res.put(DYN_COL_TITLE, dynamicProp.getTitle());
             res.put(DYN_COL_DESC, dynamicProp.getDesc().orElse(dynamicProp.getTitle()));
-            res.put(DYN_COL_WIDTH, valueOf(dynamicProp.getWidth()));
-            res.put(DYN_COL_MIN_WIDTH, valueOf(dynamicProp.getMinWidth()));
-            res.put(DYN_COL_GROW_FACTOR, valueOf(dynamicProp.getGrowFactor()));
+            res.put(DYN_COL_WIDTH, dynamicProp.getWidth());
+            res.put(DYN_COL_MIN_WIDTH, dynamicProp.getMinWidth());
+            res.put(DYN_COL_GROW_FACTOR, dynamicProp.getGrowFactor());
             return res;
         }).collect(toList());
     }

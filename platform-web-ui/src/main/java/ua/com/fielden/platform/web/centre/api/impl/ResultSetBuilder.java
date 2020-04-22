@@ -46,6 +46,7 @@ import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.extra_fetch.IExtraFetchProviderSetter;
 import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPoints;
+import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPointsFlexible;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
 import ua.com.fielden.platform.web.centre.api.query_enhancer.IQueryEnhancerSetter;
 import ua.com.fielden.platform.web.centre.api.resultset.IAlsoProp;
@@ -55,10 +56,12 @@ import ua.com.fielden.platform.web.centre.api.resultset.IDynamicColumnBuilder;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetAutocompleterConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder0Checkbox;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder0HideEgi;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1Toolbar;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aScroll;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1bPageCapacity;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cVisibleRows;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cHeaderWrap;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cVisibleRowsCount;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1dFitBehaviour;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1eRowHeight;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2Properties;
@@ -100,7 +103,7 @@ import ua.com.fielden.platform.web.view.master.api.widgets.spinner.impl.SpinnerW
  *
  * @param <T>
  */
-class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilderAlsoDynamicProps<T>, IResultSetBuilderWidgetSelector<T>, IResultSetBuilder3Ordering<T>, IResultSetBuilder0Checkbox<T>, IResultSetBuilder4OrderingDirection<T>, IResultSetBuilder7SecondaryAction<T>, IExpandedCardLayoutConfig<T>, ISummaryCardLayout<T> {
+class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilderAlsoDynamicProps<T>, IResultSetBuilderWidgetSelector<T>, IResultSetBuilder3Ordering<T>, IResultSetBuilder0HideEgi<T>, IResultSetBuilder4OrderingDirection<T>, IResultSetBuilder7SecondaryAction<T>, IExpandedCardLayoutConfig<T>, ISummaryCardLayout<T>, IInsertionPointsFlexible<T> {
 
     private final EntityCentreBuilder<T> builder;
     private final ResultSetSecondaryActionsBuilder secondaryActionBuilder = new ResultSetSecondaryActionsBuilder();
@@ -480,26 +483,38 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         }
 
         @Override
-        public IInsertionPoints<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
+        public IInsertionPointsFlexible<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
             return ResultSetBuilder.this.addInsertionPoint(actionConfig, whereToInsertView);
         }
 
         @Override
-        public IInsertionPoints<T> addInsertionPointWithPagination(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
+        public IInsertionPointsFlexible<T> addInsertionPointWithPagination(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
             return ResultSetBuilder.this.addInsertionPointWithPagination(actionConfig, whereToInsertView);
         }
 
     }
 
     @Override
-    public IInsertionPoints<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
+    public IInsertionPointsFlexible<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
         this.builder.insertionPointConfigs.add(configInsertionPoint(mkInsertionPoint(actionConfig, whereToInsertView)));
         return this;
     }
 
     @Override
-    public IInsertionPoints<T> addInsertionPointWithPagination(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
+    public IInsertionPointsFlexible<T> addInsertionPointWithPagination(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
         this.builder.insertionPointConfigs.add(configInsertionPointWithPagination(mkInsertionPoint(actionConfig, whereToInsertView)));
+        return this;
+    }
+
+    @Override
+    public IInsertionPoints<T> flex() {
+        this.builder.insertionPointConfigs.get(this.builder.insertionPointConfigs.size() - 1).setFlex(true);
+        return this;
+    }
+
+    @Override
+    public IResultSetBuilder0Checkbox<T> hideEgi() {
+        this.builder.egiHidden = true;
         return this;
     }
 
@@ -527,7 +542,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IResultSetBuilder1cVisibleRows<T> setPageCapacity(final int pageCapacity) {
+    public IResultSetBuilder1cHeaderWrap<T> setPageCapacity(final int pageCapacity) {
         this.builder.pageCapacity = pageCapacity;
         return this;
     }
@@ -600,6 +615,12 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     @Override
     public IResultSetBuilder3Ordering<T> skipValidation() {
         this.widget.ifPresent(widget -> widget.skipValidation());
+        return this;
+    }
+
+    @Override
+    public IResultSetBuilder1cVisibleRowsCount<T> wrapHeader(final int headerLineNumber) {
+        this.builder.setHeaderLineNumber(headerLineNumber);
         return this;
     }
 }

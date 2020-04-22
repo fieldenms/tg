@@ -11,6 +11,7 @@ import org.restlet.security.Authenticator;
 
 import com.google.inject.Injector;
 
+import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebResourceLoader;
@@ -120,7 +121,7 @@ public abstract class AbstractWebUiResources extends Application {
         final RestServerUtil restUtil = injector.getInstance(RestServerUtil.class);
 
         // Attach main application resource.
-        router.attach("/", new AppIndexResourceFactory(webResourceLoader, webApp, userProvider, deviceProvider, dates));
+        router.attach("/", new AppIndexResourceFactory(webResourceLoader, webApp, userProvider, deviceProvider, dates, injector.getInstance(ICriteriaGenerator.class)));
         router.attach("/app/tg-app-config.js", new WebUiPreferencesResourceFactory(webResourceLoader, deviceProvider, dates));
         router.attach("/app/tg-app.js", new MainWebUiComponentResourceFactory(webResourceLoader, deviceProvider, dates));
         // type meta info resource
