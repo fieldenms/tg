@@ -1116,7 +1116,7 @@ const _convert = function (value) {
     } else if (typeof value === "string") { // for string value -- return the same value for editors
         return value;
     } else if (Array.isArray(value)) { // for Array value -- return the same value for tg-entity-editor and tg-collectional-representor
-        return value;
+        return value.slice(); // binding value must return a new shallow array copy to get distinct instances for _currBindingEntity and _originalBindingEntity; this is because binding value may be altered directly inside some editors (e.g. tg-collectional-editor)
     } else if (typeof value === "object" && (value.hasOwnProperty("hashlessUppercasedColourValue") || value.hasOwnProperty("value"))) {
         return value;
     } else if (typeof value === "object" && Object.getOwnPropertyNames(value).length === 0) {
