@@ -1,6 +1,8 @@
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
+import '/resources/polymer/@polymer/iron-ajax/iron-ajax.js';
+
 import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 import '/resources/polymer/@polymer/paper-button/paper-button.js';
 import '/resources/polymer/@polymer/paper-spinner/paper-spinner.js';
@@ -10,8 +12,9 @@ import '/resources/components/postal-lib.js';
 
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
-import { tearDownEvent, allDefined } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
+import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 
 const template = html`
     <style>
@@ -55,6 +58,8 @@ const template = html`
             padding: var(--tg-ui-action-icon-button-padding, 8px);
         }
     </style>
+    <iron-ajax id="masterRetriever" headers="[[_headers]]" url="[[_masterUrl]]" method="GET" handle-as="json" on-response="_processMasterRetriever" on-error="_processMasterError">
+    </iron-ajax>
     <paper-icon-button id="iActionButton" hidden$="[[!isIconButton]]" icon="[[icon]]" on-tap="_run" disabled$="[[_computeDisabled(isActionInProgress, disabled)]]" tooltip-text$="[[longDesc]]"></paper-icon-button>
     <paper-button id="bActionButton" hidden$="[[isIconButton]]" raised roll="button" on-tap="_run" style="width:100%" disabled$="[[_computeDisabled(isActionInProgress, disabled)]]" tooltip-text$="[[longDesc]]">
         <span>[[shortDesc]]</span>
@@ -372,6 +377,22 @@ Polymer({
             value: false
         },
 
+        _masterUrl: {
+            type: String,
+            value: ""
+        },
+
+        /**
+         * Additional headers for every 'iron-ajax' client-side requests. These only contain 
+         * our custom 'Time-Zone' header that indicates real time-zone for the client application.
+         * The time-zone then is to be assigned to threadlocal 'IDates.timeZone' to be able
+         * to compute 'Now' moment properly.
+         */
+        _headers: {
+            type: String,
+            value: _timeZoneHeader
+        },
+
         /**
          * In case where this tg-ui-action represents continuation action, continuationProperty uniquely identifies continuation in saving session of parent initiating entity (will be set into companion object).
          */
@@ -403,21 +424,42 @@ Polymer({
         self._run = (function (event) {
             console.log(this.shortDesc + ": execute");
 
+            const postMasterRetrieve = function () {
+                if (this.preAction) {
+                    const result = this.preAction(this)
+                    const promise = result instanceof Promise ? result : Promise.resolve(result);
+    
+                    promise.then(function (value) {
+                        self.showDialog(self);
+                    }, function (error) {
+                        self.restoreActionState();
+                        console.log("The action was rejected with error: " + error);
+                    });
+                } else {
+                    this.showDialog(this);
+                }
+            }.bind(this);
+
             self.persistActiveElement();
 
-            if (this.preAction) {
-                const result = this.preAction(this)
-                const promise = result instanceof Promise ? result : Promise.resolve(result);
-
-                promise.then(function (value) {
-                    self.showDialog(self);
-                }, function (error) {
-                    self.restoreActionState();
-                    console.log("The action was rejected with error: " + error);
-                });
-            } else {
-                this.showDialog(this);
+            if (!this.elementName || !this.componentUri) {
+                if (this.currentEntity) {
+                    this._masterUri = '/master/' + this.currentEntity.type().fullClassName() + '/' + this.currentEntity.get("id");
+                    this.isActionInProgress = true;
+                    this.$.masterRetriever.generateRequest().completes
+                        .then(function (res) {
+                            postMasterRetrieve();
+                        }).catch( function(error) {
+                            this.isActionInProgress = false;
+                            this.restoreActionState();
+                            console.log("The action was rejected with error: " + error);
+                        });
+                } else {
+                    this.restoreActionState();
+                    throw {msg: "The action should have current entity or element name and  uri"};
+                }
             }
+
             tearDownEvent(event);
         }).bind(self);
 
@@ -625,5 +667,13 @@ Polymer({
 
     _computeDisabled: function (isActionInProgress, disabled) {
         return isActionInProgress || disabled;
+    },
+
+    _processMasterRetriever: function(e) {
+
+    }, 
+    
+    _processMasterError: function (e) {
+
     }
 });
