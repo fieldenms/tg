@@ -1110,7 +1110,7 @@ export const TgEntityBinderBehavior = {
             // value conversion of original property value performs here only for specialised properties (see method '_isNecessaryForConversion');
             // conversion for other properties performs in corresponding editors (tg-editor-behavior).
             if (self._isNecessaryForConversion(propertyName)) {
-                self._reflector().convertOriginalPropertyValue(originalBindingView, propertyName, originalBindingView["@@origin"]);
+                self._reflector().tg_convertOriginalPropertyValue(originalBindingView, propertyName, originalBindingView["@@origin"]);
             }
         });
 

@@ -655,7 +655,7 @@ export class TgEditor extends PolymerElement {
     _originalEntityChanged (newValue, oldValue) {
         if (this.reflector().isEntity(newValue)) {
             // lazy conversion of original property value performs here (previusly it was done for all properties inside tg-entity-binder-behavior)
-            this.reflector().convertOriginalPropertyValue(newValue, this.propertyName, newValue["@@origin"]);
+            this.reflector().tg_convertOriginalPropertyValue(newValue, this.propertyName, newValue["@@origin"]);
         }
     }
 
