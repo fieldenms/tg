@@ -39,13 +39,13 @@
             
             /////////////////////// entity.get('key') tests ///////////////////////
             test('test empty object convertion should be fine', function (done) {
-                assert.deepEqual(reflector.convert({}), {});
+                assert.deepEqual(reflector.tg_convert({}), {});
                 done();
             });
             
             test('test object with arbitrary properties convertion should not be acceptable', function (done) {
                 try {
-                    reflector.convert({testProp: "testProp"});
+                    reflector.tg_convert({testProp: "testProp"});
                 } catch (ex) {
                     done();
                 }
@@ -93,7 +93,7 @@
             test('simple entity: conversion is forbidden if key is not fetched', function (done) {
                 const entity1 = reflector.newEntity(typeName1);
                 try {
-                    reflector.convert(entity1);
+                    reflector.tg_convert(entity1);
                     assert.fail('Strict proxy exception is required.');
                 } catch (ex) {
                     done();
@@ -104,7 +104,7 @@
                 const entity1 = reflector.newEntity(typeName1);
                 entity1.key = 'DEMO01';
                 
-                assert.strictEqual(reflector.convert(entity1), 'DEMO01');
+                assert.strictEqual(reflector.tg_convert(entity1), 'DEMO01');
                 done();
             });
             
@@ -162,7 +162,7 @@
                 const entity1 = reflector.newEntity(typeName2);
                 entity1.key2 = 7; // key1 is not fetched
                 try {
-                    reflector.convert(entity1);
+                    reflector.tg_convert(entity1);
                     assert.fail('Strict proxy exception is required.');
                 } catch (ex) {
                     done();
@@ -176,7 +176,7 @@
                 entity1.key1 = e1;
                 entity1.key2 = 7;
                 
-                assert.strictEqual(reflector.convert(entity1), 'DEMO01 7');
+                assert.strictEqual(reflector.tg_convert(entity1), 'DEMO01 7');
                 done();
             });
             
@@ -196,7 +196,7 @@
             
             test('union entity: conversion succeeds for empty union entity', function (done) {
                 const uEntity1 = reflector.newEntity(typeName3); // TgBogieLocation union entity (no active entity)
-                assert.strictEqual(reflector.convert(uEntity1), null);
+                assert.strictEqual(reflector.tg_convert(uEntity1), null);
                 done();
             });
             
@@ -230,7 +230,7 @@
                 workshop1.key = 'W1';
                 uEntity1.workshop = workshop1;
                 
-                assert.strictEqual(reflector.convert(uEntity1), 'W1');
+                assert.strictEqual(reflector.tg_convert(uEntity1), 'W1');
                 done();
             });
             
@@ -276,7 +276,7 @@
                 wagonSlot1.position = 7;
                 uEntity1.wagonSlot = wagonSlot1;
                 
-                assert.strictEqual(reflector.convert(uEntity1), 'WAG1 7');
+                assert.strictEqual(reflector.tg_convert(uEntity1), 'WAG1 7');
                 done();
             });
             
@@ -316,7 +316,7 @@
                 uEntity1.workshop = workshop1;
                 
                 try {
-                    reflector.convert(uEntity1);
+                    reflector.tg_convert(uEntity1);
                     assert.fail('Strict proxy exception is required.');
                 } catch (ex) {
                     done();
@@ -361,7 +361,7 @@
                 uEntity1.wagonSlot = wagonSlot1;
                 
                 try {
-                    reflector.convert(uEntity1);
+                    reflector.tg_convert(uEntity1);
                     assert.fail('Strict proxy exception is required.');
                 } catch (ex) {
                     done();

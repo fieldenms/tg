@@ -21,7 +21,7 @@ const states = {
             titles[titles.length - 1].title = entityType.prop(titles[titles.length - 1].keyName).title();
             return 's3'
         } else if (template[idx] === 'v') {
-            titles[titles.length - 1].value = reflector.convert(entity.get(titles[titles.length - 1].keyName));
+            titles[titles.length - 1].value = reflector.tg_convert(entity.get(titles[titles.length - 1].keyName));
             if (template.length - 1 === idx) {
                 return;
             }
@@ -70,7 +70,7 @@ const states = {
 
 function parseValueAndReturnState(entity, template, idx, reflector, titles, state) {
     if (template[idx] === 'v') {
-        titles[titles.length - 1].value = reflector.convert(entity.get(titles[titles.length - 1].keyName));
+        titles[titles.length - 1].value = reflector.tg_convert(entity.get(titles[titles.length - 1].keyName));
         if (template.length - 1 === idx) {
             return;
         }
@@ -139,7 +139,7 @@ function composeDefaultValueObject(entity, reflector, titles) {
     entityType.compositeKeyNames().forEach(keyName => {
         if (entity.get(keyName)) {
             titles.push({
-                value: reflector.convert(entity.get(keyName)),
+                value: reflector.tg_convert(entity.get(keyName)),
                 separator: compositeKeySeparator
             });
         }
@@ -155,7 +155,7 @@ function createCompositeTitleWithoutTemplate (entity, reflector, titles) {
         if (entity.get(keyName)) {
             titles.push({
                 title: entityType.prop(keyName).title(),
-                value: reflector.convert(entity.get(keyName))
+                value: reflector.tg_convert(entity.get(keyName))
             });
         }
     });
@@ -165,5 +165,5 @@ function createCompositeTitleWithoutTemplate (entity, reflector, titles) {
 }
 
 function createSimpleTitle (entity, reflector) {
-    return [{value: reflector.convert(entity)}];
+    return [{value: reflector.tg_convert(entity)}];
 }

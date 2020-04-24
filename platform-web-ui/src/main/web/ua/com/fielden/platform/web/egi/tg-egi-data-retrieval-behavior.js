@@ -70,7 +70,7 @@ export const TgEgiDataRetrievalBehavior = {
             return "";
         } else if (this._reflector.findTypeByName(type)) {
             var propertyValue = this.getValueFromEntity(entity, {property: property});
-            return Array.isArray(propertyValue) ? this._reflector.tg_toString(this._reflector.convert(propertyValue), entity.type(), property) : this._reflector.convert(propertyValue);
+            return Array.isArray(propertyValue) ? this._reflector.tg_toString(this._reflector.tg_convert(propertyValue), entity.type(), property) : this._reflector.tg_convert(propertyValue);
         } else if (type.lastIndexOf('Date', 0) === 0) { // check whether type startsWith 'Date'. Type can be like 'Date', 'Date:UTC:' or 'Date:Europe/London:'
             var splitedType = type.split(':');
             return _millisDateRepresentation(entity.get(property), splitedType[1] || null, splitedType[2] || null);

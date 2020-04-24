@@ -1470,7 +1470,7 @@ export const TgReflector = Polymer({
     /**
      * Converts the property value, that has got from deserialised entity instance, to the form, that is suitable for editors binding.
      */
-    convert: function (value) {
+    tg_convert: function (value) {
         return _convert(value);
     },
 
@@ -1583,14 +1583,14 @@ export const TgReflector = Polymer({
      * Converts property's 'fullValue' into binding entity value representation. Takes care of id-based value conversion for entity-typed properties. Also takes care about entity's description.
      */
     _convertFullPropertyValue: function (bindingView, propertyName, fullValue) {
-        bindingView[propertyName] = this.convert(fullValue);
+        bindingView[propertyName] = this.tg_convert(fullValue);
         if (this.isEntity(fullValue)) {
             if (fullValue.get('id') !== null) {
                 bindingView['@' + propertyName + '_id'] = fullValue.get('id');
             }
             try {
                 const desc = fullValue.get('desc');
-                bindingView['@' + propertyName + '_desc'] = this.convert(desc);
+                bindingView['@' + propertyName + '_desc'] = this.tg_convert(desc);
             } catch (strictProxyError) {
                 console.warn('Extend fetch provider to see description in tooltip of entity-typed value. Original error: [' + strictProxyError + '].');
             }
@@ -1638,7 +1638,7 @@ export const TgReflector = Polymer({
      * This supports the retrieval of binding value for dot-notation properties with the use of bindingEntity's '@@origin'.
      */
     getBindingValue: function (bindingEntity, dotNotatedName) {
-        return this.isDotNotated(dotNotatedName) ? this.convert(this._getValueFor(bindingEntity, dotNotatedName)) : bindingEntity.get(dotNotatedName);
+        return this.isDotNotated(dotNotatedName) ? this.tg_convert(this._getValueFor(bindingEntity, dotNotatedName)) : bindingEntity.get(dotNotatedName);
     },
 
     /**
@@ -1647,7 +1647,7 @@ export const TgReflector = Polymer({
      * This supports the retrieval of binding value for dot-notation properties with the use of bindingEntity's '@@origin'.
      */
     getPropertyValue: function (fullyFledgedEntity, dotNotatedName) {
-        return this.convert(fullyFledgedEntity.get(dotNotatedName));
+        return this.tg_convert(fullyFledgedEntity.get(dotNotatedName));
     },
 
     /**

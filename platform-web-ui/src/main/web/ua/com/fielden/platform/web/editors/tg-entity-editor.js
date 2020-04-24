@@ -516,7 +516,7 @@ export class TgEntityEditor extends TgEditor {
         for (let index = 0; index < entities.length; index++) {
             // Entity is converted to a string representation of its key.
             // This includes correct conversion of simple, composite and union entities
-            const key = this.reflector().convert(entities[index]);
+            const key = this.reflector().tg_convert(entities[index]);
             entities[index].key = key;
             const isNew = this.result.pushValue(entities[index]);
             // if a new value was observed for the first time then capture its index
@@ -899,7 +899,7 @@ export class TgEntityEditor extends TgEditor {
     _createEntityTooltip (entity) {
         const titles = this._createEntityTitleObject(entity);
         if (titles.length === 1) {
-            return "<b>" + this.reflector().convert(entity) + "</b>" + (entity.get('desc') ? "<br>" + entity.get('desc') : "");
+            return "<b>" + this.reflector().tg_convert(entity) + "</b>" + (entity.get('desc') ? "<br>" + entity.get('desc') : "");
         } else {
             return "<table style='border-collapse: collapse;'>" +
                 titles.map(entry => "<tr><td valign='top' style='padding-left:0'>" + entry.title + ": </td><td valign='top' style='padding-right:0'><b>" + entry.value + "</b></td></tr>").join("") +
@@ -950,7 +950,7 @@ export class TgEntityEditor extends TgEditor {
             if (entityValue.get(keyName)) {
                 titles.push({
                     title: entityType.prop(keyName).title(),
-                    value: this.reflector().convert(entityValue.get(keyName))
+                    value: this.reflector().tg_convert(entityValue.get(keyName))
                 });
             }
         });
@@ -961,7 +961,7 @@ export class TgEntityEditor extends TgEditor {
     }
 
     _createSimpleTitle (entityValue) {
-        return [{value: this.reflector().convert(entityValue)}];
+        return [{value: this.reflector().tg_convert(entityValue)}];
     }
 
     _hasDesc (entity) {
@@ -990,7 +990,7 @@ export class TgEntityEditor extends TgEditor {
         }
         if (entity !== null) {
             var entityValue = this.reflector()._getValueFor(entity, this.propertyName);
-            this._hasLayer = entityValue !== null && this.convertToString(this.reflector().convert(entityValue)) === _editingValue && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription();
+            this._hasLayer = entityValue !== null && this.convertToString(this.reflector().tg_convert(entityValue)) === _editingValue && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription();
         } else {
             this._hasLayer = false;
         }

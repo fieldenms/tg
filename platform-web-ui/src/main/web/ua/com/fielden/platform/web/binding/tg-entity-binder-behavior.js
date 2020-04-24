@@ -885,7 +885,7 @@ export const TgEntityBinderBehavior = {
             // this is needed to provide modifHolder with flatten 'val' and 'origVal' arrays that do not contain fully-fledged entities but rather string representations of those;
             // this is because modifHolder deserialises as simple LinkedHashMap on server and inner values will not be deserialised as entities but rather as simple Java bean objects;
             // also, we do not support conversion of array of entities on the server side -- such properties are immutable from client-side editor perspective (see EntityResourceUtils.convert method with isEntityType+isCollectional conditions)
-            const convert = value => Array.isArray(value) ? value.map(el => self._reflector().convert(el)) : value;
+            const convert = value => Array.isArray(value) ? value.map(el => self._reflector().tg_convert(el)) : value;
             
             bindingEntity.traverseProperties(function (propertyName) {
                 const value = convert(bindingEntity.get(propertyName));
