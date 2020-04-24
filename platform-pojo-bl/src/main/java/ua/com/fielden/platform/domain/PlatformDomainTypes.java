@@ -21,6 +21,7 @@ import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarnings;
 import ua.com.fielden.platform.entity.functional.master.PropertyWarning;
 import ua.com.fielden.platform.keygen.KeyNumber;
+import ua.com.fielden.platform.master.MasterInfo;
 import ua.com.fielden.platform.menu.CustomView;
 import ua.com.fielden.platform.menu.EntityCentreView;
 import ua.com.fielden.platform.menu.EntityMasterView;
@@ -119,6 +120,7 @@ public class PlatformDomainTypes {
         types.add(SecurityMatrixSaveAction.class);
         types.add(EntityNavigationAction.class);
         types.add(AttachmentPreviewEntityAction.class);
+        types.add(MasterInfo.class);
 
     }
 }

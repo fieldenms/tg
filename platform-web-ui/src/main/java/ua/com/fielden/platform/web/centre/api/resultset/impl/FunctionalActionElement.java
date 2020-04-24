@@ -6,7 +6,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import ua.com.fielden.platform.dom.DomElement;
-import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.crit.impl.AbstractCriterionWidget;
 import ua.com.fielden.platform.web.interfaces.IImportable;
@@ -118,8 +117,8 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         attrs.put("icon", getIcon());
         attrs.put("icon-style", getIconStyle());
         attrs.put("should-refresh-parent-centre-after-save", conf().shouldRefreshParentCentreAfterSave);
-        attrs.put("component-uri", "/master_ui/" + conf().functionalEntity.get().getName());
-        final String elementName = "tg-" + conf().functionalEntity.get().getSimpleName() + "-master";
+        attrs.put("component-uri", generateComponentUri());
+        final String elementName = generateElementName();
         attrs.put("element-name", elementName);
         attrs.put("number-of-action", numberOfAction);
         attrs.put("action-kind", functionalActionKind);
@@ -162,8 +161,16 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         return attrs;
     }
 
+    private String generateElementName() {
+        return conf().functionalEntity.map(entityType -> "tg-" + entityType.getSimpleName() + "-master").orElse("");
+    }
+
+    private String generateComponentUri() {
+        return conf().functionalEntity.map(entityType -> "/master_ui/" + entityType.getName()).orElse("");
+    }
+
     public String getDataRoute() {
-        return conf().functionalEntity.get().getSimpleName();
+        return conf().functionalEntity.map(entityType -> entityType.getSimpleName()).orElse("");
     }
 
     public String getIcon() {
@@ -240,20 +247,23 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         attrs.append("},\n");
 
         attrs.append("attrs: {\n");
-        attrs.append("    entityType:'" + conf().functionalEntity.get().getName() + "', currentState:'EDIT', centreUuid: self.uuid,\n");
+        conf().functionalEntity.ifPresent(entityType -> {
+            attrs.append("    entityType:'" + entityType.getName() + "',\n");
+        });
+        attrs.append("    currentState:'EDIT', centreUuid: self.uuid,\n");
 
-        if (conf().prefDimForView.isPresent()) {
-            final PrefDim prefDim = conf().prefDimForView.get();
+        conf().prefDimForView.ifPresent(prefDim -> {
             attrs.append(format("    prefDim: {'width': function() {return %s}, 'height': function() {return %s}, 'widthUnit': '%s', 'heightUnit': '%s'},\n", prefDim.width, prefDim.height, prefDim.widthUnit.value, prefDim.heightUnit.value));
-        }
+        });
 
         attrs.append("},\n");
 
         attrs.append("postActionError: function (functionalEntity, action, master) {\n");
         attrs.append("    console.log('postActionError: " + conf().shortDesc.orElse("noname") + "', functionalEntity);\n");
-        if (conf().errorPostAction.isPresent()) {
-            attrs.append(conf().errorPostAction.get().build().toString());
-        }
+        conf().errorPostAction.ifPresent(postAction -> {
+            attrs.append(postAction.build().toString());
+        });
+
         attrs.append("}\n");
         return attrs.append("}\n").toString();
     }

@@ -54,11 +54,7 @@ public final class EntityActionConfig {
             final InsertionPoints whereToInsertView,
             final UI_ROLE role) {
 
-        if (!noAction && functionalEntity == null) {
-            throw new IllegalArgumentException("A functional entity type should be provided.");
-        }
-
-        if (functionalEntity != null && context == null) {
+        if (!noAction && context == null) {
             throw new IllegalArgumentException("Any functional entity requires some execution context to be specified.");
         }
 

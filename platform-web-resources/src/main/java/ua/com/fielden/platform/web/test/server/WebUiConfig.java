@@ -14,6 +14,7 @@ import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MAST
 import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.okCancel;
 import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.yesNo;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
+import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.editAction;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.multi;
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.single;
@@ -1836,13 +1837,20 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //                .also()
                 //                .addProp(mkProp("Custom Prop 2", "Custom property 2 with concrete value", "OK2"))
 
-                        .addPrimaryAction(action(EntityEditAction.class).withContext(context().withCurrentEntity().withSelectionCrit().build())
-                                .icon("editor:mode-edit")
-                                .withStyle("color: green")
-                                .shortDesc("Edit entity")
-                                .longDesc("Opens master for editing this entity")
-                                .withNoParentCentreRefresh()
-                                .build())
+                .addPrimaryAction(editAction().withContext(context().withCurrentEntity().withSelectionCrit().build())
+                        .icon("editor:mode-edit")
+                        .withStyle("color: green")
+                        .shortDesc("Edit entity")
+                        .longDesc("Opens master for editing this entity")
+                        .withNoParentCentreRefresh()
+                        .build())
+//                .addPrimaryAction(action(EntityEditAction.class).withContext(context().withCurrentEntity().withSelectionCrit().build())
+//                        .icon("editor:mode-edit")
+//                        .withStyle("color: green")
+//                        .shortDesc("Edit entity")
+//                        .longDesc("Opens master for editing this entity")
+//                        .withNoParentCentreRefresh()
+//                        .build())
                 //                .addPrimaryAction(
                 //                        EntityActionConfig.createMasterInvocationActionConfig()
                 //EntityActionConfig.createMasterInDialogInvocationActionConfig()

@@ -14,6 +14,7 @@ import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restorat
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
+import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 
 const template = html`
@@ -58,7 +59,7 @@ const template = html`
             padding: var(--tg-ui-action-icon-button-padding, 8px);
         }
     </style>
-    <iron-ajax id="masterRetriever" headers="[[_headers]]" url="[[_masterUrl]]" method="GET" handle-as="json" on-response="_processMasterRetriever" on-error="_processMasterError">
+    <iron-ajax id="masterRetriever" headers="[[_headers]]" url="[[_masterUri]]" method="GET" handle-as="json" on-response="_processMasterRetriever" on-error="_processMasterError">
     </iron-ajax>
     <paper-icon-button id="iActionButton" hidden$="[[!isIconButton]]" icon="[[icon]]" on-tap="_run" disabled$="[[_computeDisabled(isActionInProgress, disabled)]]" tooltip-text$="[[longDesc]]"></paper-icon-button>
     <paper-button id="bActionButton" hidden$="[[isIconButton]]" raised roll="button" on-tap="_run" style="width:100%" disabled$="[[_computeDisabled(isActionInProgress, disabled)]]" tooltip-text$="[[longDesc]]">
@@ -377,7 +378,7 @@ Polymer({
             value: false
         },
 
-        _masterUrl: {
+        _masterUri: {
             type: String,
             value: ""
         },
@@ -421,6 +422,11 @@ Polymer({
     created: function () {
         const self = this;
         this._reflector = new TgReflector();
+        this._serialiser = new TgSerialiser();
+
+        this._processMasterRetriever = this._processMasterRetriever.bind(this);
+        this._processMasterError = this._processMasterError.bind(this);
+
         self._run = (function (event) {
             console.log(this.shortDesc + ": execute");
 
@@ -444,12 +450,12 @@ Polymer({
 
             if (!this.elementName || !this.componentUri) {
                 if (this.currentEntity) {
-                    this._masterUri = '/master/' + this.currentEntity.type().fullClassName() + '/' + this.currentEntity.get("id");
+                    this._masterUri = '/master/' + this.currentEntity.type().notEnhancedFullClassName() + '/' + this.currentEntity.get("id");
                     this.isActionInProgress = true;
                     this.$.masterRetriever.generateRequest().completes
-                        .then(function (res) {
+                        .then(res => {
                             postMasterRetrieve();
-                        }).catch( function(error) {
+                        }).catch(error => {
                             this.isActionInProgress = false;
                             this.restoreActionState();
                             console.log("The action was rejected with error: " + error);
@@ -458,6 +464,8 @@ Polymer({
                     this.restoreActionState();
                     throw {msg: "The action should have current entity or element name and  uri"};
                 }
+            } else {
+                postMasterRetrieve();
             }
 
             tearDownEvent(event);
@@ -670,10 +678,40 @@ Polymer({
     },
 
     _processMasterRetriever: function(e) {
-
+        console.log("PROCESS MASTER INFO RETRIEVE:");
+        console.log("Master info retrieve: iron-response: status = ", e.detail.xhr.status, ", e.detail.response = ", e.detail.response);
+        if (e.detail.xhr.status === 200) { // successful execution of the request
+            const deserialisedResult = this._serialiser.deserialise(e.detail.response);
+            
+            // TODO Need to open toast message in case where result is unsuccessful
+            if (this._reflector.isError(deserialisedResult)) {
+                console.log('deserialisedResult: ', deserialisedResult);
+                throw {msg: deserialisedResult};
+            }
+            const masterInfo = deserialisedResult.instance;
+            this.elementName = masterInfo.key;
+            this.componentUri = masterInfo.desc;
+            this.attrs = Object.assign({}, this.attrs, {
+                entityType: masterInfo.entityType,
+                entityId: masterInfo.entityId, 
+                currentState:'EDIT',
+                prefDim: masterInfo.width && masterInfo.height && masterInfo.widthUnit && masterInfo.heightUnit && {
+                    width: () => masterInfo.width,
+                    height: () => masterInfo.height,
+                    widthUnit: masterInfo.widthUnit,
+                    heightUnit: masterInfo.heightUnit
+                }
+            });
+            this.requireSelectionCriteria = masterInfo.requireSelectionCriteria;
+            this.requireSelectedEntities = masterInfo.requireSelectedEntities;
+            this.requireMasterEntity = masterInfo.requireMasterEntity;
+            this.shouldRefreshParentCentreAfterSave = masterInfo.shouldRefreshParentCentreAfterSave;
+        } else { // other codes
+            throw {msg: 'Request could not be dispatched.'};
+        }
     }, 
     
     _processMasterError: function (e) {
-
+        throw {msg: e.detail.error};
     }
 });
