@@ -880,7 +880,7 @@ export const TgEntityBinderBehavior = {
         if (self._reflector().isEntity(bindingEntity)) {
             modPropHolder['id'] = bindingEntity.get('id');
             modPropHolder['version'] = bindingEntity['version'];
-            modPropHolder['@@touchedProps'] = bindingEntity['@@touchedProps'].names.slice(); // need to perform array copy because bindingEntity['@@touchedProps'].names is mutable array (see tg-reflector.setAndRegisterPropertyTouch/convertPropertyValue for more details of how it can be mutated)
+            modPropHolder['@@touchedProps'] = bindingEntity['@@touchedProps'].names.slice(); // need to perform array copy because bindingEntity['@@touchedProps'].names is mutable array (see tg-reflector.setAndRegisterPropertyTouch/tg_convertPropertyValue for more details of how it can be mutated)
             // function that converts arrays of entities to array of strings or otherwise return the same (or equal value);
             // this is needed to provide modifHolder with flatten 'val' and 'origVal' arrays that do not contain fully-fledged entities but rather string representations of those;
             // this is because modifHolder deserialises as simple LinkedHashMap on server and inner values will not be deserialised as entities but rather as simple Java bean objects;
@@ -1045,7 +1045,7 @@ export const TgEntityBinderBehavior = {
         bindingView['@@origin'] = entity;
         // We use exactly the same object for touchedProps over long period of time up until saving (see tg-selection-criteria-behavior/tg-entity-master-behavior._postSavedDefault) -- then new object with empty arrays will be created;
         //  this single object resides in current version of currBindingEntity;
-        //  mutation of this object's arrays occurs in tg-reflector.setAndRegisterPropertyTouch/convertPropertyValue;
+        //  mutation of this object's arrays occurs in tg-reflector.setAndRegisterPropertyTouch/tg_convertPropertyValue;
         //  we must copy these arrays (array.slice()) when using; at this stage the only place where they are used is function _extractModifiedPropertiesHolder.
         bindingView['@@touchedProps'] = prevCurrBindingEntity ? prevCurrBindingEntity['@@touchedProps'] : {
             names: [],
@@ -1056,7 +1056,7 @@ export const TgEntityBinderBehavior = {
             // value conversion of property value performs here only for specialised properties (see method '_isNecessaryForConversion');
             // conversion for other properties performs in corresponding editors (tg-editor-behavior).
             if (self._isNecessaryForConversion(propertyName)) {
-                self._reflector().convertPropertyValue(bindingView, propertyName, entity, previousModifiedPropertiesHolder);
+                self._reflector().tg_convertPropertyValue(bindingView, propertyName, entity, previousModifiedPropertiesHolder);
             }
             // meta-state is provided for all properties, not only specialised
             if (self._reflector().isError(entity.prop(propertyName).validationResult())) {

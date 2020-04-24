@@ -1525,7 +1525,7 @@ export const TgReflector = Polymer({
      * This implementation takes care of the aspect of property validity and, in case where the property is invalid, then the values are taken from previously bound property ('previousModifiedPropertiesHolder').
      * This ensures that corresponding editor will show invalid value, that was edited by the user and did not pass server-side validation (fully fledged entity contains previous valid value in this case + validation error).
      */
-    convertPropertyValue: function (bindingView, propertyName, entity, previousModifiedPropertiesHolder) {
+    tg_convertPropertyValue: function (bindingView, propertyName, entity, previousModifiedPropertiesHolder) {
         if (this.isError(entity.prop(propertyName).validationResult())) {
             if (previousModifiedPropertiesHolder === null) { // is a brand new instance just received from server?
                 // bind the received from server property value
