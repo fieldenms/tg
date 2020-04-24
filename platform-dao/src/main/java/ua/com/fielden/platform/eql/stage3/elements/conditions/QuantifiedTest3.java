@@ -5,16 +5,16 @@ import java.util.Objects;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
 import ua.com.fielden.platform.eql.meta.Quantifier;
-import ua.com.fielden.platform.eql.stage3.elements.operands.EntQuery3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
+import ua.com.fielden.platform.eql.stage3.elements.operands.SubQuery3;
 
 public class QuantifiedTest3 implements ICondition3 {
     public final ISingleOperand3 leftOperand;
-    public final EntQuery3 rightOperand;
+    public final SubQuery3 rightOperand;
     public final Quantifier quantifier;
     public final ComparisonOperator operator;
 
-    public QuantifiedTest3(final ISingleOperand3 leftOperand, final ComparisonOperator operator, final Quantifier quantifier, final EntQuery3 rightOperand) {
+    public QuantifiedTest3(final ISingleOperand3 leftOperand, final ComparisonOperator operator, final Quantifier quantifier, final SubQuery3 rightOperand) {
         this.leftOperand = leftOperand;
         this.rightOperand = rightOperand;
         this.operator = operator;

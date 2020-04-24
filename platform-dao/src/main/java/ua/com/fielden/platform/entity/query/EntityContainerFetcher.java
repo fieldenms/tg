@@ -32,11 +32,11 @@ import ua.com.fielden.platform.eql.meta.EntityInfo;
 import ua.com.fielden.platform.eql.meta.MetadataGenerator;
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
-import ua.com.fielden.platform.eql.stage2.elements.operands.EntQuery2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.ResultQuery2;
 import ua.com.fielden.platform.eql.stage3.elements.Table;
 import ua.com.fielden.platform.eql.stage3.elements.Yield3;
 import ua.com.fielden.platform.eql.stage3.elements.Yields3;
-import ua.com.fielden.platform.eql.stage3.elements.operands.EntQuery3;
+import ua.com.fielden.platform.eql.stage3.elements.operands.ResultQuery3;
 import ua.com.fielden.platform.streaming.SequentialGroupingStream;
 import ua.com.fielden.platform.utils.EntityUtils;
 
@@ -149,9 +149,9 @@ public class EntityContainerFetcher {
             }
             
             final PropsResolutionContext resolutionContext = new PropsResolutionContext(domainInfo);
-            final ua.com.fielden.platform.eql.stage1.elements.TransformationResult<EntQuery2> s1tr = gen1.generateEntQueryAsResultQuery(qem.queryModel, qem.orderModel).transform(resolutionContext);
-            final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> s2tr = s1tr.item.transform(new TransformationContext(tables, groupChildren(s1tr.item.collectProps(), domainInfo)));
-            final EntQuery3 entQuery3 = s2tr.item;
+            final ua.com.fielden.platform.eql.stage1.elements.TransformationResult<ResultQuery2> s1tr = gen1.generateEntQueryAsResultQuery(qem.queryModel, qem.orderModel).transform(resolutionContext);
+            final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<ResultQuery3> s2tr = s1tr.item.transform(new TransformationContext(tables, groupChildren(s1tr.item.collectProps(), domainInfo)));
+            final ResultQuery3 entQuery3 = s2tr.item;
             final String sql3 = entQuery3.sql(domainMetadataAnalyser.getDbVersion());
             return new QueryModelResult<>((Class<E>)entQuery3.resultType, sql3, getResultPropsInfos(entQuery3.yields), s2tr.updatedContext.getParamValues(), qem.fetchModel);
         }

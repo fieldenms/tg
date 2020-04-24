@@ -11,14 +11,14 @@ import java.util.Objects;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.stage3.elements.Column;
 import ua.com.fielden.platform.eql.stage3.elements.Yield3;
-import ua.com.fielden.platform.eql.stage3.elements.operands.EntQuery3;
+import ua.com.fielden.platform.eql.stage3.elements.operands.SourceQuery3;
 
 public class QrySource3BasedOnSubqueries implements IQrySource3 {
-    private final List<EntQuery3> models = new ArrayList<>();
+    private final List<SourceQuery3> models = new ArrayList<>();
     public final String contextId;
     private final Map<String, Column> columns = new HashMap<>();
     
-    public QrySource3BasedOnSubqueries(final List<EntQuery3> models, final String contextId) {
+    public QrySource3BasedOnSubqueries(final List<SourceQuery3> models, final String contextId) {
         this.models.addAll(models);
         this.contextId = contextId;
         for (final Yield3 entry : models.get(0).yields.getYields()) {

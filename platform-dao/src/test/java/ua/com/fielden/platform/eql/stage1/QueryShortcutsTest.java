@@ -5,18 +5,25 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.eql.meta.EqlStage1TestCase;
-import ua.com.fielden.platform.eql.stage1.elements.operands.EntQuery1;
+import ua.com.fielden.platform.eql.stage1.elements.operands.ResultQuery1;
 import ua.com.fielden.platform.sample.domain.TeVehicleModel;
 
 public class QueryShortcutsTest extends EqlStage1TestCase {
 
 
-    public static void assertModelsEquals(final QueryModel shortcutModel, final QueryModel explicitModel) {
-        final EntQuery1 shortcutQry = entResultQry(shortcutModel);
-        final EntQuery1 explicitQry = entResultQry(explicitModel);
+    public static <T extends AbstractEntity<?>> void assertModelsEquals(final EntityResultQueryModel<T> shortcutModel, final EntityResultQueryModel<T> explicitModel) {
+        final ResultQuery1 shortcutQry = resultQry(shortcutModel);
+        final ResultQuery1 explicitQry = resultQry(explicitModel);
+        assertTrue(("Query models are different!\nShortcut:\n" + shortcutQry.toString() + "\nExplicit:\n" + explicitQry.toString()), shortcutQry.equals(explicitQry));
+    }
+    
+    public static void assertModelsEquals(final AggregatedResultQueryModel shortcutModel, final AggregatedResultQueryModel explicitModel) {
+        final ResultQuery1 shortcutQry = resultQry(shortcutModel);
+        final ResultQuery1 explicitQry = resultQry(explicitModel);
         assertTrue(("Query models are different!\nShortcut:\n" + shortcutQry.toString() + "\nExplicit:\n" + explicitQry.toString()), shortcutQry.equals(explicitQry));
     }
     

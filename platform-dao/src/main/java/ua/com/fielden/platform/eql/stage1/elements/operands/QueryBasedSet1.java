@@ -4,19 +4,19 @@ import java.util.Objects;
 
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage1.elements.TransformationResult;
-import ua.com.fielden.platform.eql.stage2.elements.operands.EntQuery2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.QueryBasedSet2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.SubQuery2;
 
 public class QueryBasedSet1 implements ISetOperand1<QueryBasedSet2> {
-    private final EntQuery1 model;
+    private final SubQuery1 model;
 
-    public QueryBasedSet1(final EntQuery1 model) {
+    public QueryBasedSet1(final SubQuery1 model) {
         this.model = model;
     }
 
     @Override
     public TransformationResult<QueryBasedSet2> transform(final PropsResolutionContext context) {
-        final TransformationResult<EntQuery2> modelTr = model.transform(context);
+        final TransformationResult<SubQuery2> modelTr = model.transform(context);
         return new TransformationResult<QueryBasedSet2>(new QueryBasedSet2(modelTr.item), modelTr.updatedContext);
     }
 

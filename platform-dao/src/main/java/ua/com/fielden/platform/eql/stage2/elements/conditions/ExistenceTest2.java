@@ -6,15 +6,15 @@ import java.util.Set;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
-import ua.com.fielden.platform.eql.stage2.elements.operands.EntQuery2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.SubQuery2;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.ExistenceTest3;
-import ua.com.fielden.platform.eql.stage3.elements.operands.EntQuery3;
+import ua.com.fielden.platform.eql.stage3.elements.operands.SubQuery3;
 
 public class ExistenceTest2 extends AbstractCondition2<ExistenceTest3> {
     private final boolean negated;
-    private final EntQuery2 subQuery;
+    private final SubQuery2 subQuery;
 
-    public ExistenceTest2(final boolean negated, final EntQuery2 subQuery) {
+    public ExistenceTest2(final boolean negated, final SubQuery2 subQuery) {
         this.negated = negated;
         this.subQuery = subQuery;
     }
@@ -26,7 +26,7 @@ public class ExistenceTest2 extends AbstractCondition2<ExistenceTest3> {
 
     @Override
     public TransformationResult<ExistenceTest3> transform(final TransformationContext context) {
-        final TransformationResult<EntQuery3> subQueryTr = subQuery.transform(context);
+        final TransformationResult<SubQuery3> subQueryTr = subQuery.transform(context);
         return new TransformationResult<ExistenceTest3>(new ExistenceTest3(negated, subQueryTr.item), subQueryTr.updatedContext);
     }
     

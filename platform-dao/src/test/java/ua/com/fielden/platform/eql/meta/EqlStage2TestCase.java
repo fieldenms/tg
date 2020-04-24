@@ -6,9 +6,6 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperat
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.NE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.IJ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.LJ;
-import static ua.com.fielden.platform.eql.meta.QueryCategory.RESULT_QUERY;
-import static ua.com.fielden.platform.eql.meta.QueryCategory.SOURCE_QUERY;
-import static ua.com.fielden.platform.eql.meta.QueryCategory.SUB_QUERY;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,8 +30,10 @@ import ua.com.fielden.platform.eql.stage2.elements.conditions.ICondition2;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.NullTest2;
 import ua.com.fielden.platform.eql.stage2.elements.functions.CountAll2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
-import ua.com.fielden.platform.eql.stage2.elements.operands.EntQuery2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.ResultQuery2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.SourceQuery2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.SubQuery2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.CompoundSource2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.QrySource2BasedOnPersistentType;
@@ -55,18 +54,18 @@ public class EqlStage2TestCase extends EqlTestCase {
         return metadata.get(type).getProps().get(propName);
     }
     
-    protected static <T extends AbstractEntity<?>> EntQuery2 qryCountAll(final ICompoundCondition0<T> unfinishedQry) {
+    protected static <T extends AbstractEntity<?>> ResultQuery2 qryCountAll(final ICompoundCondition0<T> unfinishedQry) {
         final AggregatedResultQueryModel countQry = unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate();
         final PropsResolutionContext resolutionContext = new PropsResolutionContext(metadata);
         return qb().generateEntQueryAsResultQuery(countQry, null).transform(resolutionContext).item;
     }
     
-    protected static <T extends AbstractEntity<?>> EntQuery2 qry(final EntityResultQueryModel<T> qry) {
+    protected static <T extends AbstractEntity<?>> ResultQuery2 qry(final EntityResultQueryModel<T> qry) {
         final PropsResolutionContext resolutionContext = new PropsResolutionContext(metadata);
         return qb().generateEntQueryAsResultQuery(qry, null).transform(resolutionContext).item;
     }
 
-    protected static EntQuery2 qry(final AggregatedResultQueryModel qry) {
+    protected static ResultQuery2 qry(final AggregatedResultQueryModel qry) {
         final PropsResolutionContext resolutionContext = new PropsResolutionContext(metadata);
         return qb().generateEntQueryAsResultQuery(qry, null).transform(resolutionContext).item;
     }
@@ -192,41 +191,36 @@ public class EqlStage2TestCase extends EqlTestCase {
         return new QrySource2BasedOnPersistentType(sourceType, metadata.get(sourceType), contextId);
     }
     
-    protected static QrySource2BasedOnSubqueries source(final String contextId, final EntQuery2 ... queries) {
+    protected static QrySource2BasedOnSubqueries source(final String contextId, final SourceQuery2 ... queries) {
         return new QrySource2BasedOnSubqueries(Arrays.asList(queries), null, metadata, contextId);
     }
 
-    protected static EntQuery2 qryCountAll(final Sources2 sources, final Conditions2 conditions) {
-        return new EntQuery2(qb2(sources, conditions, yields(yieldCountAll("KOUNT"))), EntityAggregates.class, RESULT_QUERY);
+    protected static ResultQuery2 qryCountAll(final Sources2 sources, final Conditions2 conditions) {
+        return new ResultQuery2(qb2(sources, conditions, yields(yieldCountAll("KOUNT"))), EntityAggregates.class);
     }
 
-    protected static EntQuery2 qry(final Sources2 sources, final Conditions2 conditions, final Yields2 yields) {
-        return new EntQuery2(qb2(sources, conditions, yields), EntityAggregates.class, RESULT_QUERY);
+    protected static ResultQuery2 qry(final Sources2 sources, final Conditions2 conditions, final Yields2 yields) {
+        return new ResultQuery2(qb2(sources, conditions, yields), EntityAggregates.class);
     }
 
-    protected static EntQuery2 srcqry(final Sources2 sources, final Conditions2 conditions, final Yields2 yields) {
-        return new EntQuery2(qb2(sources, conditions, yields), EntityAggregates.class, SOURCE_QUERY);
+    protected static SourceQuery2 srcqry(final Sources2 sources, final Conditions2 conditions, final Yields2 yields) {
+        return new SourceQuery2(qb2(sources, conditions, yields), EntityAggregates.class);
     }
 
-    protected static EntQuery2 qry(final Sources2 sources, final Yields2 yields) {
-        return new EntQuery2(qb2(sources, emptyConditions2, yields), EntityAggregates.class, RESULT_QUERY);
+    protected static ResultQuery2 qry(final Sources2 sources, final Yields2 yields) {
+        return new ResultQuery2(qb2(sources, emptyConditions2, yields), EntityAggregates.class);
     }
 
-    
-    protected static EntQuery2 qryCountAll(final Sources2 sources) {
-        return new EntQuery2(qb2(sources, emptyConditions2, yields(yieldCountAll("KOUNT"))), EntityAggregates.class, RESULT_QUERY);
+    protected static ResultQuery2 qryCountAll(final Sources2 sources) {
+        return new ResultQuery2(qb2(sources, emptyConditions2, yields(yieldCountAll("KOUNT"))), EntityAggregates.class);
     }
 
-    private static EntQuery2 qry(final Sources2 sources, final Conditions2 conditions, final Yields2 yields, final QueryCategory queryCategory, final Class<? extends AbstractEntity<?>> resultType) {
-        return new EntQuery2(qb2(sources, conditions, yields), resultType, queryCategory);
-    }
-
-    protected static EntQuery2 subqry(final Sources2 sources, final Conditions2 conditions, final Yields2 yields, final Class<? extends AbstractEntity<?>> resultType) {
-        return qry(sources, conditions, yields, SUB_QUERY, resultType);
+    protected static SubQuery2 subqry(final Sources2 sources, final Conditions2 conditions, final Yields2 yields, final Class<? extends AbstractEntity<?>> resultType) {
+        return new SubQuery2(qb2(sources, conditions, yields), resultType);
     }
     
-    protected static EntQuery2 subqry(final Sources2 sources, final Yields2 yields) {
-        return qry(sources, emptyConditions2, yields, SUB_QUERY, null);
+    protected static SubQuery2 subqry(final Sources2 sources, final Yields2 yields) {
+        return new SubQuery2(qb2(sources, emptyConditions2, yields), null);
     }
 
 }

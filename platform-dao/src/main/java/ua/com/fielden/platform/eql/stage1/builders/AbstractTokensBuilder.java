@@ -32,12 +32,12 @@ import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.eql.stage1.elements.functions.CountAll1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.EntProp1;
-import ua.com.fielden.platform.eql.stage1.elements.operands.EntQuery1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.EntValue1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.ISetOperand1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.OperandsBasedSet1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.QueryBasedSet1;
+import ua.com.fielden.platform.eql.stage1.elements.operands.SubQuery1;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISetOperand2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -417,7 +417,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
             singleCat = EXPR_TOKENS;
             break;
         case EQUERY_TOKENS:
-            return new QueryBasedSet1((EntQuery1) getModelForSingleOperand(cat, value));
+            return new QueryBasedSet1((SubQuery1) getModelForSingleOperand(cat, value));
         default:
             throw new RuntimeException("Unrecognised token category for SingleOperand: " + cat);
         }

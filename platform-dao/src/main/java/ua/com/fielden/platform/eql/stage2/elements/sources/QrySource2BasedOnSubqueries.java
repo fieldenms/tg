@@ -24,17 +24,17 @@ import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.Yield2;
 import ua.com.fielden.platform.eql.stage2.elements.Yields2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
-import ua.com.fielden.platform.eql.stage2.elements.operands.EntQuery2;
-import ua.com.fielden.platform.eql.stage3.elements.operands.EntQuery3;
+import ua.com.fielden.platform.eql.stage2.elements.operands.SourceQuery2;
+import ua.com.fielden.platform.eql.stage3.elements.operands.SourceQuery3;
 import ua.com.fielden.platform.eql.stage3.elements.sources.QrySource3BasedOnSubqueries;
 
 public class QrySource2BasedOnSubqueries extends AbstractElement2 implements IQrySource2<QrySource3BasedOnSubqueries> {
-    private final List<EntQuery2> models = new ArrayList<>();
+    private final List<SourceQuery2> models = new ArrayList<>();
     private final Map<String, List<Yield2>> yieldsMatrix;
     private final EntityInfo<?> entityInfo;
     private final String alias;
 
-    public QrySource2BasedOnSubqueries(final List<EntQuery2> models, final String alias, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo, final String contextId) {
+    public QrySource2BasedOnSubqueries(final List<SourceQuery2> models, final String alias, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo, final String contextId) {
         super(contextId);
         if (models == null || models.isEmpty()) {
             throw new EqlStage1ProcessingException("Couldn't produce instance of QueryBasedSource due to zero models passed to constructor!");
@@ -47,9 +47,9 @@ public class QrySource2BasedOnSubqueries extends AbstractElement2 implements IQr
         this.entityInfo = produceEntityInfoFrom(domainInfo);
     }
 
-    private static Map<String, List<Yield2>> populateYieldMatrixFromQueryModels(final List<EntQuery2> models) {
+    private static Map<String, List<Yield2>> populateYieldMatrixFromQueryModels(final List<SourceQuery2> models) {
         final Map<String, List<Yield2>> yieldsMatrix = new HashMap<>();
-        for (final EntQuery2 entQuery : models) {
+        for (final SourceQuery2 entQuery : models) {
             for (final Yield2 yield : entQuery.yields.getYields()) {
                 final List<Yield2> foundYields = yieldsMatrix.get(yield.alias);
                 if (foundYields != null) {
@@ -64,7 +64,7 @@ public class QrySource2BasedOnSubqueries extends AbstractElement2 implements IQr
         return yieldsMatrix;
     }
 
-    private EntQuery2 firstModel() {
+    private SourceQuery2 firstModel() {
         return models.get(0);
     }
 
@@ -78,7 +78,7 @@ public class QrySource2BasedOnSubqueries extends AbstractElement2 implements IQr
 
     @Override
     public Class<? extends AbstractEntity<?>> sourceType() {
-        return (Class<? extends AbstractEntity<?>>) firstModel().type();
+        return (Class<? extends AbstractEntity<?>>) firstModel().resultType;
     }
 
     public Yields2 getYields() {
@@ -115,10 +115,6 @@ public class QrySource2BasedOnSubqueries extends AbstractElement2 implements IQr
         return true;
     }
 
-    public List<EntQuery2> getModels() {
-        return models;
-    }
-
     @Override
     public EntityInfo<?> entityInfo() {
         return entityInfo;
@@ -152,11 +148,11 @@ public class QrySource2BasedOnSubqueries extends AbstractElement2 implements IQr
     @Override
     public TransformationResult<QrySource3BasedOnSubqueries> transform(final TransformationContext context) {
         
-        final List<EntQuery3> transformedQueries = new ArrayList<>();
+        final List<SourceQuery3> transformedQueries = new ArrayList<>();
         TransformationContext currentResolutionContext = context;
 
-        for (final EntQuery2 model : models) {
-            final TransformationResult<EntQuery3> modelTr = model.transform(currentResolutionContext/*.produceNewOne() // as already invoked as part of EntQuery1.transform(..)*/);
+        for (final SourceQuery2 model : models) {
+            final TransformationResult<SourceQuery3> modelTr = model.transform(currentResolutionContext/*.produceNewOne() // as already invoked as part of EntQuery1.transform(..)*/);
             transformedQueries.add(modelTr.item);
             currentResolutionContext = modelTr.updatedContext; // TODO should be just resolutionContext with propsResolutions added from this model transformation   
         }
@@ -168,7 +164,7 @@ public class QrySource2BasedOnSubqueries extends AbstractElement2 implements IQr
     @Override
     public Set<EntProp2> collectProps() {
         final Set<EntProp2> result = new HashSet<>();
-        for (final EntQuery2 model : models) {
+        for (final SourceQuery2 model : models) {
             result.addAll(model.collectProps());
         }
         return result;

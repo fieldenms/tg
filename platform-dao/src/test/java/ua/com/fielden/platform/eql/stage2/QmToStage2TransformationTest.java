@@ -6,8 +6,6 @@ import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.LJ;
-import static ua.com.fielden.platform.eql.meta.QueryCategory.RESULT_QUERY;
-import static ua.com.fielden.platform.eql.meta.QueryCategory.SUB_QUERY;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -35,9 +33,11 @@ import ua.com.fielden.platform.eql.stage2.elements.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.ICondition2;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.NullTest2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
-import ua.com.fielden.platform.eql.stage2.elements.operands.EntQuery2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntValue2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.Expression2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.ResultQuery2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.SourceQuery2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.SubQuery2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.CompoundSource2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.QrySource2BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage2.elements.sources.QrySource2BasedOnSubqueries;
@@ -60,7 +60,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final PrimitiveResultQueryModel qtySubQry = select(sourceSubQry).yield().prop("qty").modelAsPrimitive();
         final AggregatedResultQueryModel qry = select(TeVehicleModel.class).yield().model(qtySubQry).as("qty").modelAsAggregate();
 
-        final EntQuery2 actQry = qry(qry);
+        final ResultQuery2 actQry = qry(qry);
         
         final QrySource2BasedOnPersistentType modelSource = source("3", MODEL);
         
@@ -71,7 +71,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final Conditions2 vehConditions = cond(eq(vehModelProp, modelIdProp));
         final Yields2 vehYields = yields(yieldCountAll("qty"));
 
-        final EntQuery2 vehSourceSubQry = srcqry(vehSources, vehConditions, vehYields);
+        final SourceQuery2 vehSourceSubQry = srcqry(vehSources, vehConditions, vehYields);
         
         final QrySource2BasedOnSubqueries qtyQrySource = source("2", vehSourceSubQry);
         final Sources2 qtyQrySources = sources(qtyQrySource);
@@ -80,7 +80,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         
         final Yields2 modelQryYields = yields(yield(subqry(qtyQrySources, qtyQryYields), "qty"));
         
-        final EntQuery2 expQry = qry(sources(modelSource), modelQryYields);
+        final ResultQuery2 expQry = qry(sources(modelSource), modelQryYields);
         assertEquals(expQry, actQry);
     }
     
@@ -91,7 +91,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final PrimitiveResultQueryModel qtyQry = select(sourceSubQry1, sourceSubQry2).yield().prop("qty").modelAsPrimitive();
         final AggregatedResultQueryModel qry = select(TeVehicleModel.class).yield().model(qtyQry).as("qty").modelAsAggregate();
 
-        final EntQuery2 actQry = qry(qry);
+        final ResultQuery2 actQry = qry(qry);
         
         final QrySource2BasedOnPersistentType modelSource = source("4", MODEL);
         final EntProp2 modelIdProp = prop(modelSource, pi(MODEL, "id"));
@@ -103,7 +103,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final Conditions2 vehConditions1 = or(and(isNotNull(vehIdProp1), eq(vehModelProp1, modelIdProp)));
         final Yields2 vehYields1 = yields(yieldCountAll("qty"));
 
-        final EntQuery2 vehSourceSubQry1 = srcqry(vehSources1, vehConditions1, vehYields1);
+        final SourceQuery2 vehSourceSubQry1 = srcqry(vehSources1, vehConditions1, vehYields1);
 
         final QrySource2BasedOnPersistentType vehSource2 = source("2", VEHICLE);
         final Sources2 vehSources2 = sources(vehSource2);
@@ -112,7 +112,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final Conditions2 vehConditions2 = or(and(isNull(vehIdProp2), eq(vehModelProp2, modelIdProp)));
         final Yields2 vehYields2 = yields(yieldCountAll("qty"));
 
-        final EntQuery2 vehSourceSubQry2 = srcqry(vehSources2, vehConditions2, vehYields2);
+        final SourceQuery2 vehSourceSubQry2 = srcqry(vehSources2, vehConditions2, vehYields2);
 
         final QrySource2BasedOnSubqueries qtyQrySource = source("3", vehSourceSubQry1, vehSourceSubQry2);
         final Sources2 qtyQrySources = sources(qtyQrySource);
@@ -121,52 +121,52 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         
         final Yields2 modelQryYields = yields(yield(subqry(qtyQrySources, qtyQryYields), "qty"));
         
-        final EntQuery2 expQry = qry(sources(modelSource), modelQryYields);
+        final ResultQuery2 expQry = qry(sources(modelSource), modelQryYields);
         assertEquals(expQry, actQry);
     }
 
     @Test
     public void test01() {
-        final EntQuery2 actQry = qryCountAll(select(MODEL).where().prop("make").isNotNull());
+        final ResultQuery2 actQry = qryCountAll(select(MODEL).where().prop("make").isNotNull());
         
         final QrySource2BasedOnPersistentType source = source("1", MODEL);
         final Sources2 sources = sources(source);
         final EntProp2 makeProp = prop(source, pi(MODEL, "make"));
         final Conditions2 conditions = cond(isNotNull(makeProp));
-        final EntQuery2 expQry = qryCountAll(sources, conditions);
+        final ResultQuery2 expQry = qryCountAll(sources, conditions);
 
         assertEquals(expQry, actQry);
     }
 
     @Test
     public void test02() {
-        final EntQuery2 actQry = qryCountAll(select(MODEL).where().prop("make.id").isNotNull());
+        final ResultQuery2 actQry = qryCountAll(select(MODEL).where().prop("make.id").isNotNull());
         
         final QrySource2BasedOnPersistentType source = source("1", MODEL);
         final Sources2 sources = sources(source);
         final EntProp2 makeProp = prop(source, pi(MODEL, "make"));
         final Conditions2 conditions = cond(isNotNull(makeProp));
-        final EntQuery2 expQry = qryCountAll(sources, conditions);
+        final ResultQuery2 expQry = qryCountAll(sources, conditions);
 
         assertEquals(expQry, actQry);
     }
     
     @Test
     public void test03() {
-        final EntQuery2 actQry = qryCountAll(select(MODEL).where().prop("make.key").isNotNull());
+        final ResultQuery2 actQry = qryCountAll(select(MODEL).where().prop("make.key").isNotNull());
         
         final QrySource2BasedOnPersistentType source = source("1", MODEL);
         final Sources2 sources = sources(source);
         final EntProp2 makeProp = prop(source, pi(MODEL, "make"), pi(MAKE, "key"));
         final Conditions2 conditions = cond(isNotNull(makeProp));
-        final EntQuery2 expQry = qryCountAll(sources, conditions);
+        final ResultQuery2 expQry = qryCountAll(sources, conditions);
 
         assertEquals(expQry, actQry);
     }
     
     @Test
     public void prop_paths_are_correctly_resolved() {
-        final EntQuery2 actQry = qryCountAll(select(VEHICLE).where().anyOfProps("initDate", "station.name", "station.parent.name", "replacedBy.initDate").isNotNull());
+        final ResultQuery2 actQry = qryCountAll(select(VEHICLE).where().anyOfProps("initDate", "station.name", "station.parent.name", "replacedBy.initDate").isNotNull());
 
         final QrySource2BasedOnPersistentType source = source("1", VEHICLE);
         final Sources2 sources = sources(source);
@@ -181,14 +181,14 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
                 isNotNull(station_parent_name), 
                 isNotNull(replacedBy_initDate)
                 )));
-        final EntQuery2 expQry = qryCountAll(sources, conditions);
+        final ResultQuery2 expQry = qryCountAll(sources, conditions);
 
         assertEquals(expQry, actQry);
     }
     
     @Test
     public void prop_paths_without_aliases_with_aliased_source_are_correctly_resolved() {
-        final EntQuery2 actQry = qryCountAll(select(VEHICLE).as("v").where().anyOfProps("initDate", "station.name", "station.parent.name", "replacedBy.initDate").isNotNull());
+        final ResultQuery2 actQry = qryCountAll(select(VEHICLE).as("v").where().anyOfProps("initDate", "station.name", "station.parent.name", "replacedBy.initDate").isNotNull());
         
         final QrySource2BasedOnPersistentType source = source("1", VEHICLE, "v");
         final Sources2 sources = sources(source);
@@ -203,14 +203,14 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
                 isNotNull(station_parent_name), 
                 isNotNull(replacedBy_initDate)
                 )));
-        final EntQuery2 expQry = qryCountAll(sources, conditions);
+        final ResultQuery2 expQry = qryCountAll(sources, conditions);
 
         assertEquals(expQry, actQry);
     }
 
     @Test
     public void prop_paths_with_some_aliases_with_aliased_source_are_correctly_resolved() {
-        final EntQuery2 actQry = qryCountAll(select(VEHICLE).as("v").where().anyOfProps("v.initDate", "station.name", "station.parent.name", "v.replacedBy.initDate").isNotNull());
+        final ResultQuery2 actQry = qryCountAll(select(VEHICLE).as("v").where().anyOfProps("v.initDate", "station.name", "station.parent.name", "v.replacedBy.initDate").isNotNull());
         
         final QrySource2BasedOnPersistentType source = source("1", VEHICLE, "v");
         final Sources2 sources = sources(source);
@@ -225,14 +225,14 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
                 isNotNull(station_parent_name), 
                 isNotNull(replacedBy_initDate)
                 )));
-        final EntQuery2 expQry = qryCountAll(sources, conditions);
+        final ResultQuery2 expQry = qryCountAll(sources, conditions);
 
         assertEquals(expQry, actQry);
     }
     
     @Test
     public void prop_paths_in_qry_with_two_sources_are_correctly_resolved() {
-        final EntQuery2 actQry = qryCountAll(select(VEHICLE).as("v").join(VEHICLE).as("rv").on().prop("v.replacedBy").eq().prop("rv.id").
+        final ResultQuery2 actQry = qryCountAll(select(VEHICLE).as("v").join(VEHICLE).as("rv").on().prop("v.replacedBy").eq().prop("rv.id").
                 where().anyOfProps("v.initDate", "rv.station.name", "v.station.parent.name", "rv.replacedBy.initDate").isNotNull());
 
         final QrySource2BasedOnPersistentType source = source("1", VEHICLE, "v");
@@ -249,14 +249,14 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
                 isNotNull(station_parent_name), 
                 isNotNull(replacedBy_initDate)
                 )));
-        final EntQuery2 expQry = qryCountAll(sources, conditions);
+        final ResultQuery2 expQry = qryCountAll(sources, conditions);
 
         assertEquals(expQry, actQry);
     }
     
     @Test
     public void test05() {
-        final EntQuery2 actQry = qryCountAll(select(ORG1).where().exists(select(ORG2).where().prop("parent").eq().extProp("id").model()));  
+        final ResultQuery2 actQry = qryCountAll(select(ORG1).where().exists(select(ORG2).where().prop("parent").eq().extProp("id").model()));  
 
         final QrySource2BasedOnPersistentType source = source("2", ORG1);
         final QrySource2BasedOnPersistentType subQrySource = source("1", ORG2);
@@ -267,7 +267,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final Yields2 subQryYields = yields(yield(prop(subQrySource, pi(ORG2, "id")), ""));
         final Conditions2 conditions = or(exists(subQrySources, subQryConditions, subQryYields, ORG2));
 
-        final EntQuery2 expQry = qryCountAll(sources, conditions);
+        final ResultQuery2 expQry = qryCountAll(sources, conditions);
 
         assertEquals(expQry, actQry);
     }
@@ -275,7 +275,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
     @Test
     public void test06() {
         final EntityResultQueryModel<TgOrgUnit2> subqry = select(ORG2).where().prop("parent").eq().extProp("id").model();
-        final EntQuery2 actQry = qryCountAll(select(ORG1).where().exists(subqry).or().notExists(subqry));  
+        final ResultQuery2 actQry = qryCountAll(select(ORG1).where().exists(subqry).or().notExists(subqry));  
 
         final QrySource2BasedOnPersistentType source = source("3", ORG1);
         final QrySource2BasedOnPersistentType subQrySource1 = source("1", ORG2);
@@ -290,14 +290,14 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final Yields2 subQryYields2 = yields(yield(prop(subQrySource2, pi(ORG2, "id")), ""));
         final Conditions2 conditions = or(exists(subQrySources1, subQryConditions1, subQryYields1, ORG2), notExists(subQrySources2, subQryConditions2, subQryYields2, ORG2));
 
-        final EntQuery2 expQry = qryCountAll(sources, conditions);
+        final ResultQuery2 expQry = qryCountAll(sources, conditions);
 
         assertEquals(expQry, actQry);
     }
     
     @Test
     public void test07() {
-        final EntQuery2 actQry = qryCountAll(//
+        final ResultQuery2 actQry = qryCountAll(//
         select(ORG1).where().exists( //
         select(ORG2).where().prop("parent").eq().extProp("id").and().exists( //
         select(ORG3).where().prop("parent").eq().extProp("id").and().exists( // 
@@ -332,14 +332,14 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         
         final Conditions2 conditions = or(exists(sub1QrySources, subQryConditions1, sub1QryYields, ORG2));
 
-        final EntQuery2 expQry = qryCountAll(sources, conditions);
+        final ResultQuery2 expQry = qryCountAll(sources, conditions);
 
         assertEquals(expQry, actQry);
     }
 
     @Test
     public void test08() {
-        final EntQuery2 actQry = qryCountAll(//
+        final ResultQuery2 actQry = qryCountAll(//
         select(ORG1).as("L1").where().exists( //
         select(ORG2).as("L2").where().prop("parent").eq().prop("L1.id").and().exists( //
         select(ORG3).as("L3").where().prop("parent").eq().prop("L2.id").and().exists( // 
@@ -374,14 +374,14 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         
         final Conditions2 conditions = or(exists(sub1QrySources, subQryConditions1, sub1QryYields, ORG2));
 
-        final EntQuery2 expQry = qryCountAll(sources, conditions);
+        final ResultQuery2 expQry = qryCountAll(sources, conditions);
 
         assertEquals(expQry, actQry);
     }
 
     @Test
     public void test09() {
-        final EntQuery2 actQry = qryCountAll(//
+        final ResultQuery2 actQry = qryCountAll(//
         select(ORG1).as("L1").where().exists( //
         select(ORG2).as("L2").where().prop("parent").eq().prop("L1").and().exists( //
         select(ORG3).as("L3").where().prop("parent").eq().prop("L2").and().exists( // 
@@ -416,14 +416,14 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         
         final Conditions2 conditions = or(exists(sub1QrySources, subQryConditions1, sub1QryYields, ORG2));
 
-        final EntQuery2 expQry = qryCountAll(sources, conditions);
+        final ResultQuery2 expQry = qryCountAll(sources, conditions);
 
         assertEquals(expQry, actQry);
     }
 
     @Test
     public void test10() {
-        final EntQuery2 actQry = qryCountAll(//
+        final ResultQuery2 actQry = qryCountAll(//
         select(ORG1).as("L1").where().exists( //
         select(ORG2).as("L2").where().prop("parent").eq().extProp("L1.id").and().exists( //
         select(ORG3).as("L3").where().prop("parent").eq().prop("L1.id").and().exists( // 
@@ -459,25 +459,25 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         
         final Conditions2 conditions = or(exists(sub1QrySources, subQryConditions1, sub1QryYields, ORG2));
 
-        final EntQuery2 expQry = qryCountAll(sources, conditions);
+        final ResultQuery2 expQry = qryCountAll(sources, conditions);
 
         assertEquals(expQry, actQry);
     }
 
     @Test
     public void test11() {
-        final EntQuery2 actQry = qryCountAll(select(MODEL).where().prop("make").eq().iVal(null));
+        final ResultQuery2 actQry = qryCountAll(select(MODEL).where().prop("make").eq().iVal(null));
         
         final QrySource2BasedOnPersistentType source = source("1", MODEL);
         final Sources2 sources = sources(source);
-        final EntQuery2 expQry = qryCountAll(sources);
+        final ResultQuery2 expQry = qryCountAll(sources);
 
         assertEquals(expQry, actQry);
     }
     
     @Test
     public void test12() {
-        final EntQuery2 actQry = qryCountAll(select(ORG1).where().exists(select(ORG2).where().prop("parent").isNotNull().model()));  
+        final ResultQuery2 actQry = qryCountAll(select(ORG1).where().exists(select(ORG2).where().prop("parent").isNotNull().model()));  
 
         final QrySource2BasedOnPersistentType source = source("2", ORG1);
         final QrySource2BasedOnPersistentType subQrySource = source("1", ORG2);
@@ -489,7 +489,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         
         final Conditions2 conditions = or(exists(subQrySources, subQryConditions, subQryYields, ORG2));
 
-        final EntQuery2 expQry = qryCountAll(sources, conditions);
+        final ResultQuery2 expQry = qryCountAll(sources, conditions);
 
         assertEquals(expQry, actQry);
     }
@@ -588,7 +588,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
     @Test
     @Ignore
     public void test_that_prop_name_is_without_alias_at_stage2() {
-        final EntQuery2 actQry = qryCountAll(select(TgWorkshop.class).as("w").where().prop("w.key").isNotNull());
+        final ResultQuery2 actQry = qryCountAll(select(TgWorkshop.class).as("w").where().prop("w.key").isNotNull());
 
         final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(TgWorkshop.class, metadata.get(WORKSHOP), "w", "0");
         
@@ -600,14 +600,14 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
 
         final Conditions2 conditions = new Conditions2(false, allConditions);
         final EntQueryBlocks2 parts = new EntQueryBlocks2(new Sources2(source, emptyList()), conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
-        final EntQuery2 exp = new EntQuery2(parts, TgWorkshop.class, RESULT_QUERY);
+        final ResultQuery2 exp = new ResultQuery2(parts, TgWorkshop.class);
         assertEquals(exp, actQry);
     }
 
     @Test
     @Ignore
     public void test_q2() {
-        final EntQuery2 actQry = qryCountAll(select(AUTHOR).where().prop("surname").isNotNull());
+        final ResultQuery2 actQry = qryCountAll(select(AUTHOR).where().prop("surname").isNotNull());
 
         final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(AUTHOR, metadata.get(AUTHOR), null, "0");
         final Sources2 sources = new Sources2(source, emptyList());
@@ -618,7 +618,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final Conditions2 conditions = new Conditions2(false, allConditions);
 
         final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
-        final EntQuery2 exp = new EntQuery2(parts, AUTHOR, RESULT_QUERY);
+        final ResultQuery2 exp = new ResultQuery2(parts, AUTHOR);
         
         assertEquals(exp, actQry);
     }
@@ -626,7 +626,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
     @Test
     @Ignore
     public void test_q3() {
-        final EntQuery2 actQry = qryCountAll(select(AUTHOR).as("a").where().prop("a.surname").isNotNull());
+        final ResultQuery2 actQry = qryCountAll(select(AUTHOR).as("a").where().prop("a.surname").isNotNull());
 
         final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(AUTHOR, metadata.get(AUTHOR), "a", "0");
         final Sources2 sources = new Sources2(source, Collections.<CompoundSource2> emptyList());
@@ -637,7 +637,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final Conditions2 conditions = new Conditions2(false, allConditions);
 
         final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
-        final EntQuery2 exp = new EntQuery2(parts, AUTHOR, RESULT_QUERY);
+        final ResultQuery2 exp = new ResultQuery2(parts, AUTHOR);
 
         assertEquals(exp, actQry); 
     }
@@ -645,7 +645,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
     @Test
     @Ignore
     public void test_q4() {
-        final EntQuery2 actQry = qryCountAll(select(AUTHOR).where().prop("surname").isNotNull().and().prop("name").eq().iVal(null));
+        final ResultQuery2 actQry = qryCountAll(select(AUTHOR).where().prop("surname").isNotNull().and().prop("name").eq().iVal(null));
 
         final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(AUTHOR, metadata.get(AUTHOR), null, "0");
         final Sources2 sources = new Sources2(source, Collections.<CompoundSource2> emptyList());
@@ -656,7 +656,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final Conditions2 conditions = new Conditions2(false, allConditions);
 
         final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
-        final EntQuery2 exp = new EntQuery2(parts, AUTHOR, RESULT_QUERY);
+        final ResultQuery2 exp = new ResultQuery2(parts, AUTHOR);
 
         assertEquals(exp, actQry); 
     }
@@ -664,7 +664,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
     @Test
     @Ignore
     public void test_q5() {
-        final EntQuery2 actQry = qryCountAll(select(AUTHOR).where().prop("surname").isNotNull().and().prop("name").eq().iParam("param"));
+        final ResultQuery2 actQry = qryCountAll(select(AUTHOR).where().prop("surname").isNotNull().and().prop("name").eq().iParam("param"));
 
         final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(AUTHOR, metadata.get(AUTHOR), null, "0");
         final Sources2 sources = new Sources2(source, Collections.<CompoundSource2> emptyList());
@@ -675,7 +675,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final Conditions2 conditions = new Conditions2(false, allConditions);
 
         final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
-        final EntQuery2 exp = new EntQuery2(parts, AUTHOR, RESULT_QUERY);
+        final ResultQuery2 exp = new ResultQuery2(parts, AUTHOR);
 
         assertEquals(exp, actQry); 
     }
@@ -683,7 +683,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
     @Test
     @Ignore
     public void test_q6() {
-        final EntQuery2 actQry = qryCountAll(select(AUTHOR).where().prop("surname").eq().param("param"));
+        final ResultQuery2 actQry = qryCountAll(select(AUTHOR).where().prop("surname").eq().param("param"));
         final Map<String, Object> params = new HashMap<>();
         params.put("param", 1);
 
@@ -696,7 +696,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final Conditions2 conditions = new Conditions2(false, allConditions);
 
         final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
-        final EntQuery2 exp = new EntQuery2(parts, AUTHOR, RESULT_QUERY);
+        final ResultQuery2 exp = new ResultQuery2(parts, AUTHOR);
 
         assertEquals(exp, actQry); 
     }
@@ -704,7 +704,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
     @Test
     @Ignore
     public void test_q7() {
-        final EntQuery2 actQry = qryCountAll(select(AUTHOR).leftJoin(TgPersonName.class).as("pn").on().prop("name").eq().prop("pn.id"). //
+        final ResultQuery2 actQry = qryCountAll(select(AUTHOR).leftJoin(TgPersonName.class).as("pn").on().prop("name").eq().prop("pn.id"). //
         where().prop("surname").eq().val(1));
 
         final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(AUTHOR, metadata.get(AUTHOR), null, "0");
@@ -729,7 +729,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final Conditions2 conditions = new Conditions2(false, allConditions2);
 
         final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
-        final EntQuery2 exp = new EntQuery2(parts, AUTHOR, RESULT_QUERY);
+        final ResultQuery2 exp = new ResultQuery2(parts, AUTHOR);
 
         assertEquals(exp, actQry); 
     }
@@ -737,7 +737,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
     @Test
     @Ignore
     public void test_q8() {
-        final EntQuery2 actQry = qryCountAll(select(AUTHOR).leftJoin(TgPersonName.class).as("pn").on().prop("name").eq().prop("pn.id"). //
+        final ResultQuery2 actQry = qryCountAll(select(AUTHOR).leftJoin(TgPersonName.class).as("pn").on().prop("name").eq().prop("pn.id"). //
         where().prop("lastRoyalty").eq().val(1));
 
         final QrySource2BasedOnPersistentType sourceAuthor = new QrySource2BasedOnPersistentType(AUTHOR, metadata.get(AUTHOR), null, "0");
@@ -752,7 +752,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final Conditions2 lrConditions = new Conditions2(false, lrAllConditions2);
 
         final EntQueryBlocks2 lastRoyaltyParts = new EntQueryBlocks2(new Sources2(sourceAuthorRoyalty, emptyList()), lrConditions, emptyYields2, new GroupBys2(Collections.<GroupBy2> emptyList()), new OrderBys2(null));
-        final EntQuery2 lastRoyaltySubqry = new EntQuery2(lastRoyaltyParts, TgAuthorRoyalty.class, SUB_QUERY);
+        final SubQuery2 lastRoyaltySubqry = new SubQuery2(lastRoyaltyParts, TgAuthorRoyalty.class);
 
         final QrySource2BasedOnPersistentType sourcePersonName = new QrySource2BasedOnPersistentType(TgPersonName.class, metadata.get(TgPersonName.class), "pn", "0");
 
@@ -775,7 +775,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final Conditions2 conditions = new Conditions2(false, allConditions2);
 
         final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
-        final EntQuery2 exp = new EntQuery2(parts, AUTHOR, RESULT_QUERY);
+        final ResultQuery2 exp = new ResultQuery2(parts, AUTHOR);
 
         assertEquals(exp, actQry); 
     }

@@ -5,9 +5,9 @@ import java.util.Objects;
 import ua.com.fielden.platform.entity.query.DbVersion;
 
 public class QueryBasedSet3 implements ISetOperand3 {
-    private final EntQuery3 model;
+    private final SubQuery3 model;
 
-    public QueryBasedSet3(final EntQuery3 model) {
+    public QueryBasedSet3(final SubQuery3 model) {
         this.model = model;
     }
 

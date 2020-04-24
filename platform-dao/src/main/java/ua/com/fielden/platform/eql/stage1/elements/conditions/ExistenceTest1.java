@@ -4,22 +4,22 @@ import java.util.Objects;
 
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage1.elements.TransformationResult;
-import ua.com.fielden.platform.eql.stage1.elements.operands.EntQuery1;
+import ua.com.fielden.platform.eql.stage1.elements.operands.SubQuery1;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.ExistenceTest2;
-import ua.com.fielden.platform.eql.stage2.elements.operands.EntQuery2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.SubQuery2;
 
 public class ExistenceTest1 implements ICondition1<ExistenceTest2> {
     private final boolean negated;
-    private final EntQuery1 subQuery;
+    private final SubQuery1 subQuery;
 
-    public ExistenceTest1(final boolean negated, final EntQuery1 subQuery) {
+    public ExistenceTest1(final boolean negated, final SubQuery1 subQuery) {
         this.negated = negated;
         this.subQuery = subQuery;
     }
 
     @Override
     public TransformationResult<ExistenceTest2> transform(final PropsResolutionContext context) {
-        final TransformationResult<EntQuery2> subQueryTr = subQuery.transform(context);
+        final TransformationResult<SubQuery2> subQueryTr = subQuery.transform(context);
         return new TransformationResult<ExistenceTest2>(new ExistenceTest2(negated, subQueryTr.item), subQueryTr.updatedContext);
     }
 

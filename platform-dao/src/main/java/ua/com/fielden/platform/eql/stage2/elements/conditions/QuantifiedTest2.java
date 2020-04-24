@@ -9,19 +9,19 @@ import ua.com.fielden.platform.eql.meta.Quantifier;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
-import ua.com.fielden.platform.eql.stage2.elements.operands.EntQuery2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.SubQuery2;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.QuantifiedTest3;
-import ua.com.fielden.platform.eql.stage3.elements.operands.EntQuery3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
+import ua.com.fielden.platform.eql.stage3.elements.operands.SubQuery3;
 
 public class QuantifiedTest2 extends AbstractCondition2<QuantifiedTest3> {
     public final ISingleOperand2<? extends ISingleOperand3> leftOperand;
-    public final EntQuery2 rightOperand;
+    public final SubQuery2 rightOperand;
     public final Quantifier quantifier;
     public final ComparisonOperator operator;
 
-    public QuantifiedTest2(final ISingleOperand2<? extends ISingleOperand3> leftOperand, final ComparisonOperator operator, final Quantifier quantifier, final EntQuery2 rightOperand) {
+    public QuantifiedTest2(final ISingleOperand2<? extends ISingleOperand3> leftOperand, final ComparisonOperator operator, final Quantifier quantifier, final SubQuery2 rightOperand) {
         this.leftOperand = leftOperand;
         this.rightOperand = rightOperand;
         this.operator = operator;
@@ -36,7 +36,7 @@ public class QuantifiedTest2 extends AbstractCondition2<QuantifiedTest3> {
     @Override
     public TransformationResult<QuantifiedTest3> transform(final TransformationContext context) {
         final TransformationResult<? extends ISingleOperand3> leftOperandTr = leftOperand.transform(context);
-        final TransformationResult<EntQuery3> rightOperandTr = rightOperand.transform(leftOperandTr.updatedContext);
+        final TransformationResult<SubQuery3> rightOperandTr = rightOperand.transform(leftOperandTr.updatedContext);
         
         return new TransformationResult<QuantifiedTest3>(new QuantifiedTest3(leftOperandTr.item, operator, quantifier, rightOperandTr.item), rightOperandTr.updatedContext);
     }

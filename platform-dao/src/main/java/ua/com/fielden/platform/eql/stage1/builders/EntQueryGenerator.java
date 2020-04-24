@@ -4,9 +4,6 @@ import static java.util.Collections.unmodifiableMap;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ORDER_TOKENS;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.QUERY_TOKEN;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.SORT_ORDER;
-import static ua.com.fielden.platform.eql.meta.QueryCategory.RESULT_QUERY;
-import static ua.com.fielden.platform.eql.meta.QueryCategory.SOURCE_QUERY;
-import static ua.com.fielden.platform.eql.meta.QueryCategory.SUB_QUERY;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.IFilter;
@@ -24,10 +20,11 @@ import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
-import ua.com.fielden.platform.eql.meta.QueryCategory;
 import ua.com.fielden.platform.eql.stage1.elements.EntQueryBlocks1;
 import ua.com.fielden.platform.eql.stage1.elements.OrderBys1;
-import ua.com.fielden.platform.eql.stage1.elements.operands.EntQuery1;
+import ua.com.fielden.platform.eql.stage1.elements.operands.ResultQuery1;
+import ua.com.fielden.platform.eql.stage1.elements.operands.SourceQuery1;
+import ua.com.fielden.platform.eql.stage1.elements.operands.SubQuery1;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -61,21 +58,17 @@ public class EntQueryGenerator {
         contextId = contextId + increment;
         return contextId;
     }
-
-    public <T extends AbstractEntity<?>, Q extends QueryModel<T>> EntQuery1 generateEntQueryAsResultQuery(final QueryExecutionModel<T, Q> qem) {
-        return generateEntQuery(qem.getQueryModel(), qem.getOrderModel(), Optional.empty(), RESULT_QUERY);
-    }
     
-    public <T extends AbstractEntity<?>, Q extends QueryModel<T>> EntQuery1 generateEntQueryAsResultQuery(final QueryModel<T> qm, final OrderingModel orderModel) {
-        return generateEntQuery(qm, orderModel, Optional.empty(), RESULT_QUERY);
+    public <T extends AbstractEntity<?>, Q extends QueryModel<T>> ResultQuery1 generateEntQueryAsResultQuery(final QueryModel<T> qm, final OrderingModel orderModel) {
+        return new ResultQuery1(parseTokensIntoComponents(qm, orderModel), qm.getResultType());
     }
 
-    public <T extends AbstractEntity<?>> EntQuery1 generateEntQueryAsSourceQuery(final QueryModel<T> qryModel, final Optional<Class<T>> resultType) {
-        return generateEntQuery(qryModel, null, resultType, SOURCE_QUERY);
+    public <T extends AbstractEntity<?>> SourceQuery1 generateEntQueryAsSourceQuery(final QueryModel<T> qryModel, final Optional<Class<T>> resultType) {
+        return new SourceQuery1(parseTokensIntoComponents(qryModel, null), qryModel.getResultType());
     }
 
-    public EntQuery1 generateEntQueryAsSubquery(final QueryModel<?> qryModel) {
-        return generateEntQuery(qryModel, null, Optional.empty(), SUB_QUERY);
+    public SubQuery1 generateEntQueryAsSubquery(final QueryModel<?> qryModel) {
+        return new SubQuery1(parseTokensIntoComponents(qryModel, null), qryModel.getResultType());
     }
 
     private EntQueryBlocks1 parseTokensIntoComponents(final QueryModel<?> qryModel, final OrderingModel orderModel) {
@@ -115,17 +108,6 @@ public class EntQueryGenerator {
         }
 
         return new EntQueryBlocks1(from.getModel(), where.getModel(), select.getModel(), groupBy.getModel(), produceOrderBys(orderModel), qryModel.isYieldAll());
-    }
-
-    private <T extends AbstractEntity<?>> EntQuery1 generateEntQuery(final QueryModel<T> qryModel, 
-            final OrderingModel orderModel, 
-            final Optional<Class<T>> resultType, 
-            final QueryCategory category) {
-
-        return new EntQuery1( 
-        parseTokensIntoComponents(qryModel, orderModel), 
-        resultType.orElse(qryModel.getResultType()), 
-        category);
     }
 
     private List<Pair<TokenCategory, Object>> linearizeTokens(final List<Pair<TokenCategory, Object>> tokens) {

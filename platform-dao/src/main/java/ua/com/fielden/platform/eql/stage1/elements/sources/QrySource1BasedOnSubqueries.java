@@ -11,15 +11,15 @@ import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingExcept
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage1.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage1.elements.Yield1;
-import ua.com.fielden.platform.eql.stage1.elements.operands.EntQuery1;
-import ua.com.fielden.platform.eql.stage2.elements.operands.EntQuery2;
+import ua.com.fielden.platform.eql.stage1.elements.operands.SourceQuery1;
+import ua.com.fielden.platform.eql.stage2.elements.operands.SourceQuery2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.QrySource2BasedOnSubqueries;
 
 public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2BasedOnSubqueries> {
-    private final List<EntQuery1> models = new ArrayList<>();
+    private final List<SourceQuery1> models = new ArrayList<>();
     private final Map<String, List<Yield1>> yieldsMatrix;
 
-    public QrySource1BasedOnSubqueries(final String alias, final List<EntQuery1> models, final int contextId) {
+    public QrySource1BasedOnSubqueries(final String alias, final List<SourceQuery1> models, final int contextId) {
         super(alias, contextId);
         if (models.isEmpty()) {
             throw new IllegalArgumentException("Couldn't produce instance of QueryBasedSource due to zero models passed to constructor!");
@@ -30,9 +30,9 @@ public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2Ba
         validateYieldsMatrix();
     }
     
-    private static Map<String, List<Yield1>> populateYieldMatrixFromQueryModels(final List<EntQuery1> models) {
+    private static Map<String, List<Yield1>> populateYieldMatrixFromQueryModels(final List<SourceQuery1> models) {
         final Map<String, List<Yield1>> yieldsMatrix = new HashMap<>();        
-        for (final EntQuery1 entQuery : models) {
+        for (final SourceQuery1 entQuery : models) {
             for (final Yield1 yield : entQuery.yields.getYields()) {
                 final List<Yield1> foundYields = yieldsMatrix.get(yield.alias);
                 if (foundYields != null) {
@@ -58,11 +58,11 @@ public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2Ba
     @Override
     public TransformationResult<QrySource2BasedOnSubqueries> transform(final PropsResolutionContext resolutionContext) {
         
-        final List<EntQuery2> transformedQueries = new ArrayList<>();
+        final List<SourceQuery2> transformedQueries = new ArrayList<>();
         PropsResolutionContext currentResolutionContext = resolutionContext;
 
-        for (final EntQuery1 model : models) {
-            final TransformationResult<EntQuery2> modelTr = model.transform(currentResolutionContext/*.produceNewOne() // as already invoked as part of EntQuery1.transform(..)*/);
+        for (final SourceQuery1 model : models) {
+            final TransformationResult<SourceQuery2> modelTr = model.transform(currentResolutionContext/*.produceNewOne() // as already invoked as part of EntQuery1.transform(..)*/);
             transformedQueries.add(modelTr.item);
             currentResolutionContext = modelTr.updatedContext; // TODO should be just resolutionContext with propsResolutions added from this model transformation   
         }
@@ -71,13 +71,13 @@ public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2Ba
         return new TransformationResult<QrySource2BasedOnSubqueries>(transformedSource, /*currentResolutionContext*/resolutionContext.cloneWithAdded(transformedSource));
     }
     
-    private EntQuery1 firstModel() {
+    private SourceQuery1 firstModel() {
         return models.get(0);
     }
     
     @Override
     public Class<? extends AbstractEntity<?>> sourceType() {
-        return firstModel().type();
+        return firstModel().resultType;
     }
 
     @Override
@@ -105,9 +105,5 @@ public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2Ba
         final QrySource1BasedOnSubqueries other = (QrySource1BasedOnSubqueries) obj;
 
         return Objects.equals(models, other.models);
-    }
-
-    public List<EntQuery1> getModels() {
-        return models;
     }
 }

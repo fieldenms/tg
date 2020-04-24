@@ -6,8 +6,6 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperat
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.NE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.IJ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.LJ;
-import static ua.com.fielden.platform.eql.meta.QueryCategory.RESULT_QUERY;
-import static ua.com.fielden.platform.eql.meta.QueryCategory.SUB_QUERY;
 import static ua.com.fielden.platform.eql.stage2.elements.PathsToTreeTransformator.groupChildren;
 
 import java.util.ArrayList;
@@ -27,7 +25,7 @@ import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
-import ua.com.fielden.platform.eql.stage2.elements.operands.EntQuery2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.ResultQuery2;
 import ua.com.fielden.platform.eql.stage3.elements.EntQueryBlocks3;
 import ua.com.fielden.platform.eql.stage3.elements.GroupBy3;
 import ua.com.fielden.platform.eql.stage3.elements.GroupBys3;
@@ -41,9 +39,11 @@ import ua.com.fielden.platform.eql.stage3.elements.conditions.ICondition3;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.NullTest3;
 import ua.com.fielden.platform.eql.stage3.elements.functions.CountAll3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.EntProp3;
-import ua.com.fielden.platform.eql.stage3.elements.operands.EntQuery3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.Expression3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
+import ua.com.fielden.platform.eql.stage3.elements.operands.ResultQuery3;
+import ua.com.fielden.platform.eql.stage3.elements.operands.SourceQuery3;
+import ua.com.fielden.platform.eql.stage3.elements.operands.SubQuery3;
 import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySource3;
 import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySources3;
 import ua.com.fielden.platform.eql.stage3.elements.sources.JoinedQrySource3;
@@ -53,28 +53,28 @@ import ua.com.fielden.platform.eql.stage3.elements.sources.SingleQrySource3;
 
 public class EqlStage3TestCase extends EqlTestCase {
 
-    protected static <T extends AbstractEntity<?>> EntQuery3 qryCountAll(final ICompoundCondition0<T> unfinishedQry) {
+    protected static <T extends AbstractEntity<?>> ResultQuery3 qryCountAll(final ICompoundCondition0<T> unfinishedQry) {
         final AggregatedResultQueryModel countQry = unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate();
 
         final PropsResolutionContext resolutionContext = new PropsResolutionContext(metadata());
-        final ua.com.fielden.platform.eql.stage1.elements.TransformationResult<EntQuery2> s1tr = qb().generateEntQueryAsResultQuery(countQry, null).transform(resolutionContext);
-        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> s2tr = s1tr.item.transform(new TransformationContext(tables, groupChildren(s1tr.item.collectProps(), metadata())));
+        final ua.com.fielden.platform.eql.stage1.elements.TransformationResult<ResultQuery2> s1tr = qb().generateEntQueryAsResultQuery(countQry, null).transform(resolutionContext);
+        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<ResultQuery3> s2tr = s1tr.item.transform(new TransformationContext(tables, groupChildren(s1tr.item.collectProps(), metadata())));
         return s2tr.item;
     }
     
-    protected static EntQuery3 qry(final AggregatedResultQueryModel qry) {
+    protected static ResultQuery3 qry(final AggregatedResultQueryModel qry) {
         final PropsResolutionContext resolutionContext = new PropsResolutionContext(metadata());
-        final ua.com.fielden.platform.eql.stage1.elements.TransformationResult<EntQuery2> s1tr = qb().generateEntQueryAsResultQuery(qry, null).transform(resolutionContext);
-        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> s2tr = s1tr.item.transform(new TransformationContext(tables, groupChildren(s1tr.item.collectProps(), metadata())));
+        final ua.com.fielden.platform.eql.stage1.elements.TransformationResult<ResultQuery2> s1tr = qb().generateEntQueryAsResultQuery(qry, null).transform(resolutionContext);
+        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<ResultQuery3> s2tr = s1tr.item.transform(new TransformationContext(tables, groupChildren(s1tr.item.collectProps(), metadata())));
         return s2tr.item;
     }
     
-    protected static <T extends AbstractEntity<?>> EntQuery3 qryCountAll(final ICompoundCondition0<T> unfinishedQry, final Map<String, Object> paramValues) {
+    protected static <T extends AbstractEntity<?>> ResultQuery3 qryCountAll(final ICompoundCondition0<T> unfinishedQry, final Map<String, Object> paramValues) {
         final AggregatedResultQueryModel countQry = unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate();
 
         final PropsResolutionContext resolutionContext = new PropsResolutionContext(metadata(paramValues));
-        final ua.com.fielden.platform.eql.stage1.elements.TransformationResult<EntQuery2> s1tr = qb(paramValues).generateEntQueryAsResultQuery(countQry, null).transform(resolutionContext);
-        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> s2tr = s1tr.item.transform(new TransformationContext(tables, groupChildren(s1tr.item.collectProps(), metadata(paramValues))));
+        final ua.com.fielden.platform.eql.stage1.elements.TransformationResult<ResultQuery2> s1tr = qb(paramValues).generateEntQueryAsResultQuery(countQry, null).transform(resolutionContext);
+        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<ResultQuery3> s2tr = s1tr.item.transform(new TransformationContext(tables, groupChildren(s1tr.item.collectProps(), metadata(paramValues))));
         return s2tr.item;
     }
 
@@ -82,7 +82,7 @@ public class EqlStage3TestCase extends EqlTestCase {
         return new QrySource3BasedOnTable(tables.get(sourceType.getName()), sourceForContextId);
     }
 
-    protected static QrySource3BasedOnSubqueries source(final String sourceForContextId, final EntQuery3 ... sourceQueries) {
+    protected static QrySource3BasedOnSubqueries source(final String sourceForContextId, final SourceQuery3 ... sourceQueries) {
         return new QrySource3BasedOnSubqueries(Arrays.asList(sourceQueries), sourceForContextId);
     }
     
@@ -239,74 +239,86 @@ public class EqlStage3TestCase extends EqlTestCase {
         return new SingleQrySource3(main);
     }
 
-    private static EntQuery3 qry(final IQrySources3 sources, final QueryCategory queryCategory, final Class<?> resultType) {
-        return new EntQuery3(new EntQueryBlocks3(sources, new Conditions3(false, emptyList()), yields(), groups(), orders()), queryCategory, resultType);
+//    private static EntQuery3 qry(final IQrySources3 sources, final QueryCategory queryCategory, final Class<?> resultType) {
+//        return new EntQuery3(new EntQueryBlocks3(sources, new Conditions3(false, emptyList()), yields(), groups(), orders()), queryCategory, resultType);
+//    }
+//
+//    private static EntQuery3 qry(final IQrySources3 sources, final Conditions3 conditions, final QueryCategory queryCategory, final Class<?> resultType) {
+//        return new EntQuery3(new EntQueryBlocks3(sources, conditions, yields(), groups(), orders()), queryCategory, resultType);
+//    }
+//
+//    private static EntQuery3 qry(final IQrySources3 sources, final Yields3 yields, final QueryCategory queryCategory, final Class<?> resultType) {
+//        return new EntQuery3(new EntQueryBlocks3(sources, new Conditions3(false, emptyList()), yields, groups(), orders()), queryCategory, resultType);
+//    }
+
+    protected static SubQuery3 subqry(final IQrySources3 sources, final Yields3 yields, final Class<?> resultType) {
+        return new SubQuery3(new EntQueryBlocks3(sources, new Conditions3(false, emptyList()), yields, groups(), orders()), resultType);
     }
 
-    private static EntQuery3 qry(final IQrySources3 sources, final Conditions3 conditions, final QueryCategory queryCategory, final Class<?> resultType) {
-        return new EntQuery3(new EntQueryBlocks3(sources, conditions, yields(), groups(), orders()), queryCategory, resultType);
+    protected static SubQuery3 subqry(final IQrySources3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType) {
+        return new SubQuery3(new EntQueryBlocks3(sources, conditions, yields, groups(), orders()), resultType);
     }
 
-    private static EntQuery3 qry(final IQrySources3 sources, final Yields3 yields, final QueryCategory queryCategory, final Class<?> resultType) {
-        return new EntQuery3(new EntQueryBlocks3(sources, new Conditions3(false, emptyList()), yields, groups(), orders()), queryCategory, resultType);
+    private static ResultQuery3 resultQry(final IQrySources3 sources, final Yields3 yields, final Class<?> resultType) {
+        return new ResultQuery3(new EntQueryBlocks3(sources, new Conditions3(false, emptyList()), yields, groups(), orders()), resultType);
     }
 
-    private static EntQuery3 qry(final IQrySources3 sources, final Conditions3 conditions, final Yields3 yields, final QueryCategory queryCategory, final Class<?> resultType) {
-        return new EntQuery3(new EntQueryBlocks3(sources, conditions, yields, groups(), orders()), queryCategory, resultType);
+    private static ResultQuery3 resultQry(final IQrySources3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType) {
+        return new ResultQuery3(new EntQueryBlocks3(sources, conditions, yields, groups(), orders()), resultType);
+    }
+
+//    private static EntQuery3 qry(final IQrySources3 sources, final Conditions3 conditions, final Yields3 yields, final QueryCategory queryCategory, final Class<?> resultType) {
+//        return new EntQuery3(new EntQueryBlocks3(sources, conditions, yields, groups(), orders()), queryCategory, resultType);
+//    }
+
+    private static SourceQuery3 sourceQry(final IQrySources3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType) {
+        return new SourceQuery3(new EntQueryBlocks3(sources, conditions, yields, groups(), orders()), resultType);
+    }
+
+//    protected static EntQuery3 qry(final IQrySources3 sources, final Class<?> resultType) {
+//        return qry(sources, RESULT_QUERY, resultType);
+//    }
+//
+//    protected static EntQuery3 qry(final IQrySources3 sources, final Conditions3 conditions, final Class<?> resultType) {
+//        return qry(sources, conditions, RESULT_QUERY, resultType);
+//    }
+
+    protected static ResultQuery3 qryCountAll(final IQrySources3 sources, final Conditions3 conditions) {
+        return resultQry(sources, conditions, yields(yieldCountAll("KOUNT")), EntityAggregates.class);
+    }
+
+    protected static ResultQuery3 qryCountAll(final IQrySources3 sources) {
+        return resultQry(sources, new Conditions3(false, emptyList()), yields(yieldCountAll("KOUNT")), EntityAggregates.class);
     }
     
-    protected static EntQuery3 qry(final IQrySources3 sources, final Class<?> resultType) {
-        return qry(sources, RESULT_QUERY, resultType);
-    }
-
-    protected static EntQuery3 qry(final IQrySources3 sources, final Conditions3 conditions, final Class<?> resultType) {
-        return qry(sources, conditions, RESULT_QUERY, resultType);
-    }
-
-    protected static EntQuery3 qryCountAll(final IQrySources3 sources, final Conditions3 conditions) {
-        return qry(sources, conditions, yields(yieldCountAll("KOUNT")), RESULT_QUERY, EntityAggregates.class);
-    }
-
-    protected static EntQuery3 qryCountAll(final IQrySources3 sources) {
-        return qry(sources, new Conditions3(false, emptyList()), yields(yieldCountAll("KOUNT")), RESULT_QUERY, EntityAggregates.class);
+    protected static ResultQuery3 qry(final IQrySources3 sources, final Yields3 yields, final Class<?> resultType) {
+        return resultQry(sources, yields, resultType);
     }
     
-    protected static EntQuery3 qry(final IQrySources3 sources, final Yields3 yields, final Class<?> resultType) {
-        return qry(sources, yields, RESULT_QUERY, resultType);
-    }
-    
-    protected static EntQuery3 qry(final IQrySources3 sources, final Yields3 yields) {
-        return qry(sources, yields, RESULT_QUERY, EntityAggregates.class);
+    protected static ResultQuery3 qry(final IQrySources3 sources, final Yields3 yields) {
+        return qry(sources, yields, EntityAggregates.class);
     }
 
-    protected static EntQuery3 qry(final IQrySources3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType) {
-        return qry(sources, conditions, yields, RESULT_QUERY, resultType);
+//    protected static EntQuery3 qry(final IQrySources3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType) {
+//        return qry(sources, conditions, yields, RESULT_QUERY, resultType);
+//    }
+//
+//    protected static EntQuery3 srcqry(final IQrySources3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType) {
+//        return qry(sources, conditions, yields, QueryCategory.SOURCE_QUERY, resultType);
+//    }
+
+    protected static SourceQuery3 srcqry(final IQrySources3 sources, final Conditions3 conditions, final Yields3 yields) {
+        return sourceQry(sources, conditions, yields, EntityAggregates.class);
     }
 
-    protected static EntQuery3 srcqry(final IQrySources3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType) {
-        return qry(sources, conditions, yields, QueryCategory.SOURCE_QUERY, resultType);
-    }
+//    protected static EntQuery3 subqry(final IQrySources3 sources, final Class<?> resultType) {
+//        return qry(sources, SUB_QUERY, resultType);
+//    }
+//
+//    protected static EntQuery3 subqry(final IQrySources3 sources, final Conditions3 conditions, final Class<?> resultType) {
+//        return qry(sources, conditions, SUB_QUERY, resultType);
+//    }
 
-    protected static EntQuery3 srcqry(final IQrySources3 sources, final Conditions3 conditions, final Yields3 yields) {
-        return qry(sources, conditions, yields, QueryCategory.SOURCE_QUERY, EntityAggregates.class);
-    }
-
-    protected static EntQuery3 subqry(final IQrySources3 sources, final Class<?> resultType) {
-        return qry(sources, SUB_QUERY, resultType);
-    }
-
-    protected static EntQuery3 subqry(final IQrySources3 sources, final Conditions3 conditions, final Class<?> resultType) {
-        return qry(sources, conditions, SUB_QUERY, resultType);
-    }
-
-    protected static EntQuery3 subqry(final IQrySources3 sources, final Yields3 yields, final Class<?> resultType) {
-        return qry(sources, yields, SUB_QUERY, resultType);
-    }
-   
-    protected static EntQuery3 subqry(final IQrySources3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType) {
-        return qry(sources, conditions, yields, SUB_QUERY, resultType);
-    }
-    
     protected static Yields3 yields(final Yield3 ... yields) {
         return new Yields3(asList(yields));
     }
@@ -335,7 +347,7 @@ public class EqlStage3TestCase extends EqlTestCase {
         return new Yield3(prop(propName, source), alias);
     }
     
-    protected static Yield3 yieldModel(final EntQuery3 model, final String alias) {
+    protected static Yield3 yieldModel(final SubQuery3 model, final String alias) {
         return new Yield3(model, alias);
     }
 

@@ -18,7 +18,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
-import ua.com.fielden.platform.eql.stage1.elements.operands.EntQuery1;
+import ua.com.fielden.platform.eql.stage1.elements.operands.SourceQuery1;
 import ua.com.fielden.platform.eql.stage1.elements.sources.QrySource1BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage1.elements.sources.QrySource1BasedOnSubqueries;
 import ua.com.fielden.platform.utils.Pair;
@@ -78,7 +78,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
     }
 
     private Pair<TokenCategory, Object> buildResultForQrySourceBasedOnSubqueries() {
-        final List<EntQuery1> queries = new ArrayList<>();
+        final List<SourceQuery1> queries = new ArrayList<>();
         final String alias = secondValue();
         final List<QueryModel<AbstractEntity<?>>> models = firstValue();
         for (final QueryModel<AbstractEntity<?>> qryModel : models) {
