@@ -156,12 +156,12 @@ public class EqlStage2TestCase extends EqlTestCase {
         return new Conditions2(false, asList(conditions));
     }
     
-    protected static ExistenceTest2 exists(final Sources2 sources, final Conditions2 conditions, final Class<? extends AbstractEntity<?>> resultType) {
-        return new ExistenceTest2(false, subqry(sources, conditions, resultType));
+    protected static ExistenceTest2 exists(final Sources2 sources, final Conditions2 conditions, final Yields2 yields, final Class<? extends AbstractEntity<?>> resultType) {
+        return new ExistenceTest2(false, subqry(sources, conditions, yields, resultType));
     }
 
-    protected static ExistenceTest2 notExists(final Sources2 sources, final Conditions2 conditions, final Class<? extends AbstractEntity<?>> resultType) {
-        return new ExistenceTest2(true, subqry(sources, conditions, resultType));
+    protected static ExistenceTest2 notExists(final Sources2 sources, final Conditions2 conditions, final Yields2 yields, final Class<? extends AbstractEntity<?>> resultType) {
+        return new ExistenceTest2(true, subqry(sources, conditions, yields, resultType));
     }
 
     protected static NullTest2 isNull(final ISingleOperand2<? extends ISingleOperand3> operand) {
@@ -221,8 +221,8 @@ public class EqlStage2TestCase extends EqlTestCase {
         return new EntQuery2(qb2(sources, conditions, yields), resultType, queryCategory);
     }
 
-    protected static EntQuery2 subqry(final Sources2 sources, final Conditions2 conditions, final Class<? extends AbstractEntity<?>> resultType) {
-        return qry(sources, conditions, emptyYields2, SUB_QUERY, resultType);
+    protected static EntQuery2 subqry(final Sources2 sources, final Conditions2 conditions, final Yields2 yields, final Class<? extends AbstractEntity<?>> resultType) {
+        return qry(sources, conditions, yields, SUB_QUERY, resultType);
     }
     
     protected static EntQuery2 subqry(final Sources2 sources, final Yields2 yields) {

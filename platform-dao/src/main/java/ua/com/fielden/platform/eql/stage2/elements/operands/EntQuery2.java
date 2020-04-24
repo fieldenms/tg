@@ -1,30 +1,20 @@
 package ua.com.fielden.platform.eql.stage2.elements.operands;
 
 import static java.util.Collections.emptySet;
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.eql.meta.QueryCategory.RESULT_QUERY;
-import static ua.com.fielden.platform.eql.meta.QueryCategory.SOURCE_QUERY;
-import static ua.com.fielden.platform.eql.meta.QueryCategory.SUB_QUERY;
-import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 
 import org.hibernate.type.LongType;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.meta.QueryCategory;
 import ua.com.fielden.platform.eql.stage2.elements.EntQueryBlocks2;
 import ua.com.fielden.platform.eql.stage2.elements.GroupBys2;
 import ua.com.fielden.platform.eql.stage2.elements.OrderBys2;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
-import ua.com.fielden.platform.eql.stage2.elements.Yield2;
 import ua.com.fielden.platform.eql.stage2.elements.Yields2;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.Sources2;
@@ -51,7 +41,7 @@ public class EntQuery2 implements ISingleOperand2<EntQuery3> {
         this.category = category;
         this.sources = queryBlocks.sources;
         this.conditions = queryBlocks.conditions;
-        this.yields = enhanceYields(queryBlocks.yields, queryBlocks.sources, category);
+        this.yields = queryBlocks.yields;
         this.groups = queryBlocks.groups;
         this.orderings = queryBlocks.orderings;
         this.resultType = enhance(resultType);
@@ -61,27 +51,6 @@ public class EntQuery2 implements ISingleOperand2<EntQuery3> {
     private Class<?> enhance(final Class<? extends AbstractEntity<?>> resultType) {
         // TODO EQL (if resultType == null, then take it should be PrimitiveResultQuery -- just take resultType of its single yield
         return resultType == null ? yields.getYields().iterator().next().javaType() : resultType;
-    }
-
-    private Yields2 enhanceYields(final Yields2 yields, final Sources2 sources2, final QueryCategory category) {
-        if (yields.getYields().isEmpty()) {
-            if (category == SUB_QUERY) {
-                if (sources2.main.entityInfo().getProps().containsKey(ID)) {
-                    return new Yields2(listOf(new Yield2(new EntProp2(sources2.main, listOf(sources2.main.entityInfo().getProps().get(ID))), "", false)));
-                } else {
-                    return new Yields2(listOf(new Yield2(new EntValue2(0), "", false)));
-                }
-            } else {
-                final List<Yield2> enhancedYields = new ArrayList<>();
-                for (final Entry<String, AbstractPropInfo<?>> el : sources2.main.entityInfo().getProps().entrySet()) {
-                    if (!el.getValue().hasExpression() && category == SOURCE_QUERY || category == RESULT_QUERY) {
-                        enhancedYields.add(new Yield2(new EntProp2(sources2.main, listOf(el.getValue())), el.getKey(), false));
-                    }
-                }
-                return new Yields2(enhancedYields);
-            }
-        }
-        return yields;
     }
     
     @Override

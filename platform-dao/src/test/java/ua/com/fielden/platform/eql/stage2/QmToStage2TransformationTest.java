@@ -258,15 +258,16 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
     public void test05() {
         final EntQuery2 actQry = qryCountAll(select(ORG1).where().exists(select(ORG2).where().prop("parent").eq().extProp("id").model()));  
 
-        final QrySource2BasedOnPersistentType source1 = source("2", ORG1);
-        final QrySource2BasedOnPersistentType source2 = source("1", ORG2);
+        final QrySource2BasedOnPersistentType source = source("2", ORG1);
+        final QrySource2BasedOnPersistentType subQrySource = source("1", ORG2);
 
-        final Sources2 sources1 = sources(source1);
-        final Sources2 sources2 = sources(source2);
-        final Conditions2 conditions2 = or(eq(prop(source2, pi(ORG2, "parent")), prop(source1, pi(ORG1, "id"))));
-        final Conditions2 conditions1 = or(exists(sources2, conditions2, ORG2));
+        final Sources2 sources = sources(source);
+        final Sources2 subQrySources = sources(subQrySource);
+        final Conditions2 subQryConditions = or(eq(prop(subQrySource, pi(ORG2, "parent")), prop(source, pi(ORG1, "id"))));
+        final Yields2 subQryYields = yields(yield(prop(subQrySource, pi(ORG2, "id")), ""));
+        final Conditions2 conditions = or(exists(subQrySources, subQryConditions, subQryYields, ORG2));
 
-        final EntQuery2 expQry = qryCountAll(sources1, conditions1);
+        final EntQuery2 expQry = qryCountAll(sources, conditions);
 
         assertEquals(expQry, actQry);
     }
@@ -285,7 +286,9 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final Sources2 subQrySources2 = sources(subQrySource2);
         final Conditions2 subQryConditions1 = or(eq(prop(subQrySource1, pi(ORG2, "parent")), prop(source, pi(ORG1, "id"))));
         final Conditions2 subQryConditions2 = or(eq(prop(subQrySource2, pi(ORG2, "parent")), prop(source, pi(ORG1, "id"))));
-        final Conditions2 conditions = or(exists(subQrySources1, subQryConditions1, ORG2), notExists(subQrySources2, subQryConditions2, ORG2));
+        final Yields2 subQryYields1 = yields(yield(prop(subQrySource1, pi(ORG2, "id")), ""));
+        final Yields2 subQryYields2 = yields(yield(prop(subQrySource2, pi(ORG2, "id")), ""));
+        final Conditions2 conditions = or(exists(subQrySources1, subQryConditions1, subQryYields1, ORG2), notExists(subQrySources2, subQryConditions2, subQryYields2, ORG2));
 
         final EntQuery2 expQry = qryCountAll(sources, conditions);
 
@@ -317,13 +320,17 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final Sources2 sub3QrySources = sources(sub3QrySource);
         final Sources2 sub4QrySources = sources(sub4QrySource);
 
-
-        final Conditions2 subQryConditions4 = or(and(eq(prop(sub4QrySource, pi(ORG5, "parent")), prop(sub3QrySource, pi(ORG4, "id"))), isNotNull(prop(sub4QrySource, pi(ORG5, "key")))));
-        final Conditions2 subQryConditions3 = or(and(eq(prop(sub3QrySource, pi(ORG4, "parent")), prop(sub2QrySource, pi(ORG3, "id"))), exists(sub4QrySources, subQryConditions4, ORG5)));
-        final Conditions2 subQryConditions2 = or(and(eq(prop(sub2QrySource, pi(ORG3, "parent")), prop(sub1QrySource, pi(ORG2, "id"))), exists(sub3QrySources, subQryConditions3, ORG4)));
-        final Conditions2 subQryConditions1 = or(and(eq(prop(sub1QrySource, pi(ORG2, "parent")), prop(source, pi(ORG1, "id"))), exists(sub2QrySources, subQryConditions2, ORG3)));
+        final Yields2 sub4QryYields = yields(yield(prop(sub4QrySource, pi(ORG5, "id")), ""));
+        final Yields2 sub3QryYields = yields(yield(prop(sub3QrySource, pi(ORG4, "id")), ""));
+        final Yields2 sub2QryYields = yields(yield(prop(sub2QrySource, pi(ORG3, "id")), ""));
+        final Yields2 sub1QryYields = yields(yield(prop(sub1QrySource, pi(ORG2, "id")), ""));
         
-        final Conditions2 conditions = or(exists(sub1QrySources, subQryConditions1, ORG2));
+        final Conditions2 subQryConditions4 = or(and(eq(prop(sub4QrySource, pi(ORG5, "parent")), prop(sub3QrySource, pi(ORG4, "id"))), isNotNull(prop(sub4QrySource, pi(ORG5, "key")))));
+        final Conditions2 subQryConditions3 = or(and(eq(prop(sub3QrySource, pi(ORG4, "parent")), prop(sub2QrySource, pi(ORG3, "id"))), exists(sub4QrySources, subQryConditions4, sub4QryYields, ORG5)));
+        final Conditions2 subQryConditions2 = or(and(eq(prop(sub2QrySource, pi(ORG3, "parent")), prop(sub1QrySource, pi(ORG2, "id"))), exists(sub3QrySources, subQryConditions3, sub3QryYields, ORG4)));
+        final Conditions2 subQryConditions1 = or(and(eq(prop(sub1QrySource, pi(ORG2, "parent")), prop(source, pi(ORG1, "id"))), exists(sub2QrySources, subQryConditions2, sub2QryYields, ORG3)));
+        
+        final Conditions2 conditions = or(exists(sub1QrySources, subQryConditions1, sub1QryYields, ORG2));
 
         final EntQuery2 expQry = qryCountAll(sources, conditions);
 
@@ -355,13 +362,17 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final Sources2 sub3QrySources = sources(sub3QrySource);
         final Sources2 sub4QrySources = sources(sub4QrySource);
 
+        final Yields2 sub4QryYields = yields(yield(prop(sub4QrySource, pi(ORG5, "id")), ""));
+        final Yields2 sub3QryYields = yields(yield(prop(sub3QrySource, pi(ORG4, "id")), ""));
+        final Yields2 sub2QryYields = yields(yield(prop(sub2QrySource, pi(ORG3, "id")), ""));
+        final Yields2 sub1QryYields = yields(yield(prop(sub1QrySource, pi(ORG2, "id")), ""));
 
         final Conditions2 subQryConditions4 = or(and(eq(prop(sub4QrySource, pi(ORG5, "parent")), prop(sub3QrySource, pi(ORG4, "id"))), isNotNull(prop(sub4QrySource, pi(ORG5, "key")))));
-        final Conditions2 subQryConditions3 = or(and(eq(prop(sub3QrySource, pi(ORG4, "parent")), prop(sub2QrySource, pi(ORG3, "id"))), exists(sub4QrySources, subQryConditions4, ORG5)));
-        final Conditions2 subQryConditions2 = or(and(eq(prop(sub2QrySource, pi(ORG3, "parent")), prop(sub1QrySource, pi(ORG2, "id"))), exists(sub3QrySources, subQryConditions3, ORG4)));
-        final Conditions2 subQryConditions1 = or(and(eq(prop(sub1QrySource, pi(ORG2, "parent")), prop(source, pi(ORG1, "id"))), exists(sub2QrySources, subQryConditions2, ORG3)));
+        final Conditions2 subQryConditions3 = or(and(eq(prop(sub3QrySource, pi(ORG4, "parent")), prop(sub2QrySource, pi(ORG3, "id"))), exists(sub4QrySources, subQryConditions4, sub4QryYields, ORG5)));
+        final Conditions2 subQryConditions2 = or(and(eq(prop(sub2QrySource, pi(ORG3, "parent")), prop(sub1QrySource, pi(ORG2, "id"))), exists(sub3QrySources, subQryConditions3, sub3QryYields, ORG4)));
+        final Conditions2 subQryConditions1 = or(and(eq(prop(sub1QrySource, pi(ORG2, "parent")), prop(source, pi(ORG1, "id"))), exists(sub2QrySources, subQryConditions2, sub2QryYields, ORG3)));
         
-        final Conditions2 conditions = or(exists(sub1QrySources, subQryConditions1, ORG2));
+        final Conditions2 conditions = or(exists(sub1QrySources, subQryConditions1, sub1QryYields, ORG2));
 
         final EntQuery2 expQry = qryCountAll(sources, conditions);
 
@@ -393,13 +404,17 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final Sources2 sub3QrySources = sources(sub3QrySource);
         final Sources2 sub4QrySources = sources(sub4QrySource);
 
+        final Yields2 sub4QryYields = yields(yield(prop(sub4QrySource, pi(ORG5, "id")), ""));
+        final Yields2 sub3QryYields = yields(yield(prop(sub3QrySource, pi(ORG4, "id")), ""));
+        final Yields2 sub2QryYields = yields(yield(prop(sub2QrySource, pi(ORG3, "id")), ""));
+        final Yields2 sub1QryYields = yields(yield(prop(sub1QrySource, pi(ORG2, "id")), ""));
 
         final Conditions2 subQryConditions4 = or(and(eq(prop(sub4QrySource, pi(ORG5, "parent")), prop(sub3QrySource, pi(ORG4, "id"))), isNotNull(prop(sub4QrySource, pi(ORG5, "key")))));
-        final Conditions2 subQryConditions3 = or(and(eq(prop(sub3QrySource, pi(ORG4, "parent")), prop(sub2QrySource, pi(ORG3, "id"))), exists(sub4QrySources, subQryConditions4, ORG5)));
-        final Conditions2 subQryConditions2 = or(and(eq(prop(sub2QrySource, pi(ORG3, "parent")), prop(sub1QrySource, pi(ORG2, "id"))), exists(sub3QrySources, subQryConditions3, ORG4)));
-        final Conditions2 subQryConditions1 = or(and(eq(prop(sub1QrySource, pi(ORG2, "parent")), prop(source, pi(ORG1, "id"))), exists(sub2QrySources, subQryConditions2, ORG3)));
+        final Conditions2 subQryConditions3 = or(and(eq(prop(sub3QrySource, pi(ORG4, "parent")), prop(sub2QrySource, pi(ORG3, "id"))), exists(sub4QrySources, subQryConditions4, sub4QryYields, ORG5)));
+        final Conditions2 subQryConditions2 = or(and(eq(prop(sub2QrySource, pi(ORG3, "parent")), prop(sub1QrySource, pi(ORG2, "id"))), exists(sub3QrySources, subQryConditions3, sub3QryYields, ORG4)));
+        final Conditions2 subQryConditions1 = or(and(eq(prop(sub1QrySource, pi(ORG2, "parent")), prop(source, pi(ORG1, "id"))), exists(sub2QrySources, subQryConditions2, sub2QryYields, ORG3)));
         
-        final Conditions2 conditions = or(exists(sub1QrySources, subQryConditions1, ORG2));
+        final Conditions2 conditions = or(exists(sub1QrySources, subQryConditions1, sub1QryYields, ORG2));
 
         final EntQuery2 expQry = qryCountAll(sources, conditions);
 
@@ -430,14 +445,19 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final Sources2 sub2QrySources = sources(sub2QrySource);
         final Sources2 sub3QrySources = sources(sub3QrySource);
         final Sources2 sub4QrySources = sources(sub4QrySource);
+        
+        final Yields2 sub4QryYields = yields(yield(prop(sub4QrySource, pi(ORG5, "id")), ""));
+        final Yields2 sub3QryYields = yields(yield(prop(sub3QrySource, pi(ORG4, "id")), ""));
+        final Yields2 sub2QryYields = yields(yield(prop(sub2QrySource, pi(ORG3, "id")), ""));
+        final Yields2 sub1QryYields = yields(yield(prop(sub1QrySource, pi(ORG2, "id")), ""));
 
 
         final Conditions2 subQryConditions4 = or(and(eq(prop(sub4QrySource, pi(ORG5, "parent")), prop(source, pi(ORG1, "id"))), isNotNull(prop(sub4QrySource, pi(ORG5, "key")))));
-        final Conditions2 subQryConditions3 = or(and(eq(prop(sub3QrySource, pi(ORG4, "parent")), prop(source, pi(ORG1, "id"))), exists(sub4QrySources, subQryConditions4, ORG5)));
-        final Conditions2 subQryConditions2 = or(and(eq(prop(sub2QrySource, pi(ORG3, "parent")), prop(source, pi(ORG1, "id"))), exists(sub3QrySources, subQryConditions3, ORG4)));
-        final Conditions2 subQryConditions1 = or(and(eq(prop(sub1QrySource, pi(ORG2, "parent")), prop(source, pi(ORG1, "id"))), exists(sub2QrySources, subQryConditions2, ORG3)));
+        final Conditions2 subQryConditions3 = or(and(eq(prop(sub3QrySource, pi(ORG4, "parent")), prop(source, pi(ORG1, "id"))), exists(sub4QrySources, subQryConditions4, sub4QryYields, ORG5)));
+        final Conditions2 subQryConditions2 = or(and(eq(prop(sub2QrySource, pi(ORG3, "parent")), prop(source, pi(ORG1, "id"))), exists(sub3QrySources, subQryConditions3, sub3QryYields, ORG4)));
+        final Conditions2 subQryConditions1 = or(and(eq(prop(sub1QrySource, pi(ORG2, "parent")), prop(source, pi(ORG1, "id"))), exists(sub2QrySources, subQryConditions2, sub2QryYields, ORG3)));
         
-        final Conditions2 conditions = or(exists(sub1QrySources, subQryConditions1, ORG2));
+        final Conditions2 conditions = or(exists(sub1QrySources, subQryConditions1, sub1QryYields, ORG2));
 
         final EntQuery2 expQry = qryCountAll(sources, conditions);
 
@@ -459,15 +479,17 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
     public void test12() {
         final EntQuery2 actQry = qryCountAll(select(ORG1).where().exists(select(ORG2).where().prop("parent").isNotNull().model()));  
 
-        final QrySource2BasedOnPersistentType source1 = source("2", ORG1);
-        final QrySource2BasedOnPersistentType source2 = source("1", ORG2);
+        final QrySource2BasedOnPersistentType source = source("2", ORG1);
+        final QrySource2BasedOnPersistentType subQrySource = source("1", ORG2);
 
-        final Sources2 sources1 = sources(source1);
-        final Sources2 sources2 = sources(source2);
-        final Conditions2 conditions2 = or(isNotNull(prop(source2, pi(ORG2, "parent"))));
-        final Conditions2 conditions1 = or(exists(sources2, conditions2, ORG2));
+        final Sources2 sources = sources(source);
+        final Sources2 subQrySources = sources(subQrySource);
+        final Conditions2 subQryConditions = or(isNotNull(prop(subQrySource, pi(ORG2, "parent"))));
+        final Yields2 subQryYields = yields(yield(prop(subQrySource, pi(ORG2, "id")), ""));
+        
+        final Conditions2 conditions = or(exists(subQrySources, subQryConditions, subQryYields, ORG2));
 
-        final EntQuery2 expQry = qryCountAll(sources1, conditions1);
+        final EntQuery2 expQry = qryCountAll(sources, conditions);
 
         assertEquals(expQry, actQry);
     }
