@@ -1127,6 +1127,24 @@ const _convert = function (value) {
 };
 
 /**
+ * Converts property's 'fullValue' into binding entity value representation. Takes care of id-based value conversion for entity-typed properties. Also takes care about entity's description.
+ */
+const _convertFullPropertyValue = function (bindingView, propertyName, fullValue) {
+    bindingView[propertyName] = _convert(fullValue);
+    if (_isEntity(fullValue)) {
+        if (fullValue.get('id') !== null) {
+            bindingView['@' + propertyName + '_id'] = fullValue.get('id');
+        }
+        try {
+            const desc = fullValue.get('desc');
+            bindingView['@' + propertyName + '_desc'] = _convert(desc);
+        } catch (strictProxyError) {
+            console.warn('Extend fetch provider to see description in tooltip of entity-typed value. Original error: [' + strictProxyError + '].');
+        }
+    }
+};
+
+/**
  * Finds EntityTypeProp meta-info instance from 'entityType' and 'property'.
  * 
  * @param entityType -- entity type
@@ -1529,7 +1547,7 @@ export const TgReflector = Polymer({
         if (this.isError(entity.prop(propertyName).validationResult())) {
             if (previousModifiedPropertiesHolder === null) { // is a brand new instance just received from server?
                 // bind the received from server property value
-                this._convertFullPropertyValue(bindingView, propertyName, this._getErroneousFullPropertyValue(entity, propertyName));
+                _convertFullPropertyValue(bindingView, propertyName, this._getErroneousFullPropertyValue(entity, propertyName));
             } else { // otherwise, this entity instance has already been received before and should be handled accordingly
                 if (typeof previousModifiedPropertiesHolder[propertyName].val === 'undefined') {
                     // EDGE-CASE: if the value becomes invalid not because the action done upon this property -- 
@@ -1548,7 +1566,7 @@ export const TgReflector = Polymer({
             }
         } else {
             var fullValue = entity.get(propertyName);
-            this._convertFullPropertyValue(bindingView, propertyName, fullValue);
+            _convertFullPropertyValue(bindingView, propertyName, fullValue);
 
             const touchedProps = bindingView['@@touchedProps'];
             const touchedPropIndex = touchedProps.names.indexOf(propertyName);
@@ -1568,7 +1586,7 @@ export const TgReflector = Polymer({
      * Converts original value of property with 'propertyName' name from fully-fledged entity 'entity' into the 'originalBindingView' binding entity.
      */
     tg_convertOriginalPropertyValue: function (originalBindingView, propertyName, entity) {
-        this._convertFullPropertyValue(originalBindingView, propertyName, entity.getOriginal(propertyName));
+        _convertFullPropertyValue(originalBindingView, propertyName, entity.getOriginal(propertyName));
     },
 
     /**
@@ -1577,24 +1595,6 @@ export const TgReflector = Polymer({
     _getErroneousFullPropertyValue: function (entity, propertyName) {
         const lastInvalidValue = entity.prop(propertyName).lastInvalidValue();
         return this.isMockNotFoundEntity(lastInvalidValue) ? lastInvalidValue.get('desc') : lastInvalidValue;
-    },
-    
-    /**
-     * Converts property's 'fullValue' into binding entity value representation. Takes care of id-based value conversion for entity-typed properties. Also takes care about entity's description.
-     */
-    _convertFullPropertyValue: function (bindingView, propertyName, fullValue) {
-        bindingView[propertyName] = this.tg_convert(fullValue);
-        if (this.isEntity(fullValue)) {
-            if (fullValue.get('id') !== null) {
-                bindingView['@' + propertyName + '_id'] = fullValue.get('id');
-            }
-            try {
-                const desc = fullValue.get('desc');
-                bindingView['@' + propertyName + '_desc'] = this.tg_convert(desc);
-            } catch (strictProxyError) {
-                console.warn('Extend fetch provider to see description in tooltip of entity-typed value. Original error: [' + strictProxyError + '].');
-            }
-        }
     },
 
     /**
