@@ -1642,11 +1642,11 @@ export const TgReflector = Polymer({
     },
 
     /**
-     * Returns the binding value for the specified 'bindingEntity' and 'dotNotatedName' of the property.
+     * Returns the binding value for the specified 'fullyFledgedEntity' and 'dotNotatedName' of the property.
      *
-     * This supports the retrieval of binding value for dot-notation properties with the use of bindingEntity's '@@origin'.
+     * This supports the retrieval of binding value for dot-notation properties.
      */
-    getPropertyValue: function (fullyFledgedEntity, dotNotatedName) {
+    tg_getBindingValueFromFullEntity: function (fullyFledgedEntity, dotNotatedName) {
         return this.tg_convert(fullyFledgedEntity.get(dotNotatedName));
     },
 

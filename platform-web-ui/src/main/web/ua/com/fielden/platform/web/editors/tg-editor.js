@@ -722,8 +722,8 @@ export class TgEditor extends PolymerElement {
         this._editingValue = newEditingValue;
     }
     
-    assignValue (entity, propertyName, getPropertyValue) {
-        var convertedValue = getPropertyValue(entity, propertyName);
+    assignValue (entity, propertyName, tg_getBindingValueFromFullEntity) {
+        var convertedValue = tg_getBindingValueFromFullEntity(entity, propertyName);
         this._assignConvertedValue(convertedValue);
     }
     
