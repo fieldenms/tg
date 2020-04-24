@@ -67,7 +67,7 @@ export class TgCollectionalRepresentor extends TgEditor {
             if (this.reflector().isError(fullEntity.prop(this.propertyName).validationResult())) {
                 valueToFormat = _editingValue;
             } else {
-                valueToFormat = this.reflector()._getValueFor(entity, this.propertyName);
+                valueToFormat = fullEntity.get(this.propertyName);
             }
             return super._getTooltip(valueToFormat);
         }

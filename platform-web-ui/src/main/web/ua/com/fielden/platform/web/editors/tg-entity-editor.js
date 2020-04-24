@@ -874,7 +874,7 @@ export class TgEntityEditor extends TgEditor {
             if (this.reflector().isError(fullEntity.prop(this.propertyName).validationResult())) {
                 valueToFormat = _editingValue; // Here we can take fullEntity.prop(this.propertyName).lastInvalidValue(); to show also description of invalid values. However, 'not found mocks' need to be properly supported. Also description layer for unfocused editor can be enhanced in a similar way too.
             } else {
-                valueToFormat = this.reflector()._getValueFor(entity, this.propertyName);
+                valueToFormat = fullEntity.get(this.propertyName);
             }
             return super._getTooltip(valueToFormat);
         }
@@ -922,7 +922,7 @@ export class TgEntityEditor extends TgEditor {
 
     _createTitleObject (entity) {
         if (entity !== null) {
-            const entityValue = this.reflector()._getValueFor(entity, this.propertyName);
+            const entityValue = this.reflector().tg_getFullValue(entity, this.propertyName);
             const metaProp = this.reflector().getEntityTypeProp(entity["@@origin"], this.propertyName);
             if (entityValue !== null && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription()) {
                 try {
@@ -966,7 +966,7 @@ export class TgEntityEditor extends TgEditor {
 
     _hasDesc (entity) {
         if (entity !== null) {
-            var entityValue = this.reflector()._getValueFor(entity, this.propertyName);
+            var entityValue = this.reflector().tg_getFullValue(entity, this.propertyName);
             if (entityValue !== null && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription()) {
                 return !!entityValue.get('desc');
             }
@@ -976,7 +976,7 @@ export class TgEntityEditor extends TgEditor {
 
     _formatDesc (entity) {
         if (entity !== null) {
-            var entityValue = this.reflector()._getValueFor(entity, this.propertyName);
+            var entityValue = this.reflector().tg_getFullValue(entity, this.propertyName);
             if (entityValue !== null && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription() && entityValue.get('desc')) {
                 return entityValue.get('desc');
             }
@@ -989,7 +989,7 @@ export class TgEntityEditor extends TgEditor {
             return;
         }
         if (entity !== null) {
-            var entityValue = this.reflector()._getValueFor(entity, this.propertyName);
+            var entityValue = this.reflector().tg_getFullValue(entity, this.propertyName);
             this._hasLayer = entityValue !== null && this.convertToString(this.reflector().tg_convert(entityValue)) === _editingValue && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription();
         } else {
             this._hasLayer = false;
