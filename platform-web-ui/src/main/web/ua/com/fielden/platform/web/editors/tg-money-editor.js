@@ -88,7 +88,7 @@ export class TgMoneyEditor extends TgEditor {
     _formatText (valueToFormat) {
         var value = this.convertFromString(valueToFormat);
         if (value !== null) {
-            const metaProp = this.reflector().getEntityTypeProp(this.reflector()._getValueFor(this.entity, ''), this.propertyName);
+            const metaProp = this.reflector().getEntityTypeProp(this.reflector().tg_getFullEntity(this.entity), this.propertyName);
             return this.reflector().formatMoney(value, this.$.appConfig.locale, metaProp && metaProp.scale(), metaProp && metaProp.trailingZeros());
         }
         return '';

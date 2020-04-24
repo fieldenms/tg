@@ -870,7 +870,7 @@ export class TgEntityEditor extends TgEditor {
         }
         var valueToFormat, fullEntity;
         if (!focused && entity !== null) {
-            fullEntity = this.reflector()._getValueFor(entity, "");
+            fullEntity = this.reflector().tg_getFullEntity(entity);
             if (this.reflector().isError(fullEntity.prop(this.propertyName).validationResult())) {
                 valueToFormat = _editingValue; // Here we can take fullEntity.prop(this.propertyName).lastInvalidValue(); to show also description of invalid values. However, 'not found mocks' need to be properly supported. Also description layer for unfocused editor can be enhanced in a similar way too.
             } else {

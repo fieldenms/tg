@@ -1651,12 +1651,19 @@ export const TgReflector = Polymer({
     },
 
     /**
+     * Returns fully-fledged entity from which 'bindingEntity' has been originated.
+     */
+    tg_getFullEntity: function (bindingEntity) {
+        return bindingEntity['@@origin'];
+    },
+
+    /**
      * Returns the full value for the specified 'bindingEntity' and 'dotNotatedName' of the property.
      *
      * This method does no conversion of the value to 'binding' representation.
      */
     _getValueFor: function (bindingEntity, dotNotatedName) {
-        return bindingEntity["@@origin"].get(dotNotatedName);
+        return this.tg_getFullEntity(bindingEntity).get(dotNotatedName);
     },
 
     /**

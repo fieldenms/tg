@@ -62,7 +62,7 @@ export class TgCollectionalRepresentor extends TgEditor {
             return "";
         }
         if (entity !== null) {
-            const fullEntity = this.reflector()._getValueFor(entity, "");
+            const fullEntity = this.reflector().tg_getFullEntity(entity);
             let valueToFormat = "";
             if (this.reflector().isError(fullEntity.prop(this.propertyName).validationResult())) {
                 valueToFormat = _editingValue;
