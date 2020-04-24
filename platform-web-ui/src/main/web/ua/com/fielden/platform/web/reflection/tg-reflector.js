@@ -1637,7 +1637,7 @@ export const TgReflector = Polymer({
      *
      * This supports the retrieval of binding value for dot-notation properties with the use of bindingEntity's '@@origin'.
      */
-    getBindingValue: function (bindingEntity, dotNotatedName) {
+    tg_getBindingValue: function (bindingEntity, dotNotatedName) {
         return this.isDotNotated(dotNotatedName) ? this.tg_convert(this._getValueFor(bindingEntity, dotNotatedName)) : bindingEntity.get(dotNotatedName);
     },
 

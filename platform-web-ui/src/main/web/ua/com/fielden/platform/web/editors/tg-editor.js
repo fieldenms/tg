@@ -583,7 +583,7 @@ export class TgEditor extends PolymerElement {
      * Erroneous values are considered here too. Binding entities creation contains such logic.
      */
     _extractOriginalEditingValue (bindingEntity, propertyName) {
-        return this.convertToString(this.reflector().getBindingValue.bind(this.reflector())(bindingEntity, propertyName));
+        return this.convertToString(this.reflector().tg_getBindingValue.bind(this.reflector())(bindingEntity, propertyName));
     }
     
     _editedPropsChanged (editedProps) {
@@ -677,14 +677,14 @@ export class TgEditor extends PolymerElement {
                 this.reflector().convertPropertyValue(newValue, this.propertyName, newValue["@@origin"], this.previousModifiedPropertiesHolder);
             }
             
-            var convertedValue = this.reflector().getBindingValue.bind(this.reflector())(newValue, this.propertyName);
+            var convertedValue = this.reflector().tg_getBindingValue.bind(this.reflector())(newValue, this.propertyName);
             var newEditingValue = this.convertToString(convertedValue);
             if (newEditingValue === this._editingValue) {
                 this._refreshCycleStarted = false;
                 this._updateMessagesForEntity(newValue);
             } else {
                 var editingValueAfterPreviousRefreshCycleChanged = oldValue 
-                    ? this.convertToString(this.reflector().getBindingValue.bind(this.reflector())(oldValue, this.propertyName)) !== newEditingValue 
+                    ? this.convertToString(this.reflector().tg_getBindingValue.bind(this.reflector())(oldValue, this.propertyName)) !== newEditingValue 
                     : true;
                 
                 if (!editingValueAfterPreviousRefreshCycleChanged) {
