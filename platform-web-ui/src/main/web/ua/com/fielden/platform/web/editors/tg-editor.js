@@ -655,7 +655,7 @@ export class TgEditor extends PolymerElement {
     _originalEntityChanged (newValue, oldValue) {
         if (this.reflector().isEntity(newValue)) {
             // lazy conversion of original property value performs here (previusly it was done for all properties inside tg-entity-binder-behavior)
-            this.reflector().tg_convertOriginalPropertyValue(newValue, this.propertyName, newValue["@@origin"]);
+            this.reflector().tg_convertOriginalPropertyValue(newValue, this.propertyName, this.reflector().tg_getFullEntity(newValue));
         }
     }
 
@@ -674,7 +674,7 @@ export class TgEditor extends PolymerElement {
             
             // lazy conversion of property value performs here (previusly it was done for all properties inside tg-entity-binder-behavior)
             if (!this.reflector().isDotNotated(this.propertyName)) {
-                this.reflector().tg_convertPropertyValue(newValue, this.propertyName, newValue["@@origin"], this.previousModifiedPropertiesHolder);
+                this.reflector().tg_convertPropertyValue(newValue, this.propertyName, this.reflector().tg_getFullEntity(newValue), this.previousModifiedPropertiesHolder);
             }
             
             var convertedValue = this.reflector().tg_getBindingValue.bind(this.reflector())(newValue, this.propertyName);

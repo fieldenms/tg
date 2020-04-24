@@ -1095,25 +1095,25 @@ export const TgEntityBinderBehavior = {
      * In case of stale entity (previousEntity has been passed into this method), original values should be taken from the previous version of the entity to be able to mimic restoration of stale instance.
      */
     _extractOriginalBindingView: function (entity, previousOriginalBindingEntity) {
-        var stale = previousOriginalBindingEntity !== null;
-        var self = this;
-        var originalBindingView = self._reflector().newEntityEmpty();
-
-        originalBindingView["_type"] = entity["_type"];
-        originalBindingView["id"] = entity.get('id');
-        originalBindingView["version"] = entity["version"];
+        const stale = previousOriginalBindingEntity !== null;
+        const self = this;
+        const originalBindingView = self._reflector().newEntityEmpty();
+        
+        originalBindingView['_type'] = entity['_type'];
+        originalBindingView['id'] = entity.get('id');
+        originalBindingView['version'] = entity['version'];
         // this property of the bindingView will hold the reference to fully-fledged entity,
         //   this entity can be used effectively to process 'dot-notated' properties (for e.g. retrieving the values)
-        originalBindingView["@@origin"] = (stale === true ? previousOriginalBindingEntity['@@origin'] : entity);
-
+        originalBindingView['@@origin'] = (stale === true ? self._reflector().tg_getFullEntity(previousOriginalBindingEntity) : entity);
+        
         entity.traverseProperties(function (propertyName) {
             // value conversion of original property value performs here only for specialised properties (see method '_isNecessaryForConversion');
             // conversion for other properties performs in corresponding editors (tg-editor-behavior).
             if (self._isNecessaryForConversion(propertyName)) {
-                self._reflector().tg_convertOriginalPropertyValue(originalBindingView, propertyName, originalBindingView["@@origin"]);
+                self._reflector().tg_convertOriginalPropertyValue(originalBindingView, propertyName, self._reflector().tg_getFullEntity(originalBindingView));
             }
         });
-
+        
         // console.log("       entity + originalBindingView", entity, bindingView);
         return originalBindingView;
     },

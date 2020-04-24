@@ -923,7 +923,7 @@ export class TgEntityEditor extends TgEditor {
     _createTitleObject (entity) {
         if (entity !== null) {
             const entityValue = this.reflector().tg_getFullValue(entity, this.propertyName);
-            const metaProp = this.reflector().getEntityTypeProp(entity["@@origin"], this.propertyName);
+            const metaProp = this.reflector().getEntityTypeProp(this.reflector().tg_getFullEntity(entity), this.propertyName);
             if (entityValue !== null && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription()) {
                 try {
                     return composeEntityValue(entityValue, metaProp.displayAs());
