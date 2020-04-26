@@ -12,6 +12,7 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 
 import ua.com.fielden.platform.basic.config.Workflows;
+import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.IDates;
@@ -31,6 +32,7 @@ public class AppIndexResource extends AbstractWebResource {
     private final IWebUiConfig webUiConfig;
     private final IUserProvider userProvider;
     private final IWebResourceLoader webResourceLoader;
+    private final ICriteriaGenerator criteriaGenerator;
     
     /**
      * Creates {@link AppIndexResource} instance.
@@ -45,6 +47,7 @@ public class AppIndexResource extends AbstractWebResource {
             final IUserProvider userProvider,
             final IDeviceProvider deviceProvider,
             final IDates dates,
+            final ICriteriaGenerator criteriaGenerator,
             final Context context, 
             final Request request, 
             final Response response) {
@@ -52,6 +55,7 @@ public class AppIndexResource extends AbstractWebResource {
         this.webUiConfig = webUiConfig;
         this.userProvider = userProvider;
         this.webResourceLoader = webResourceLoader;
+        this.criteriaGenerator = criteriaGenerator;
     }
 
     @Get
@@ -63,6 +67,8 @@ public class AppIndexResource extends AbstractWebResource {
             //  changing Web UI configurations (all configurations should exist in scope of IWebUiConfig.initConfiguration() method).
             webUiConfig.clearConfiguration();
             webUiConfig.initConfiguration();
+            // clears inner state in criteria generator, e.g. cached generated types
+            criteriaGenerator.clear();
         }
         return createRepresentation(webResourceLoader, TEXT_HTML, "/app/tg-app-index.html", getReference().getRemainingPart());
     }
