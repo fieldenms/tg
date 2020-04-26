@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.query.metadata;
 
 import static java.util.Arrays.asList;
+import static java.util.Optional.empty;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
@@ -19,6 +20,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 
 import ua.com.fielden.platform.dao.QueryExecutionModel;
@@ -35,12 +37,15 @@ import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 
 public class DataDependencyQueriesGenerator {
 
-    public static QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> queryForDependentTypesSummary(final Map<Class<? extends AbstractEntity<?>>, Map<Class<? extends AbstractEntity<?>>, Set<String>>> dependenciesMetadata, final Long entityId, final Class<? extends AbstractEntity<?>> entityType) {
+    public static Optional<QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel>> queryForDependentTypesSummary(final Map<Class<? extends AbstractEntity<?>>, Map<Class<? extends AbstractEntity<?>>, Set<String>>> dependenciesMetadata, final Long entityId, final Class<? extends AbstractEntity<?>> entityType) {
         final AggregatedResultQueryModel[] queries = produceQueries(dependenciesMetadata, entityType, entityId).toArray(new AggregatedResultQueryModel[] {});
+        // if no property references to the specified entity type exists, then there is nothing to query
+        if (queries.length == 0) {
+            return empty();
+        }
 
         final AggregatedResultQueryModel qry = select(queries).groupBy().prop("type").yield().prop("type").as("type").yield().countAll().as("qty").modelAsAggregate();
-
-        return from(qry).with(orderBy().yield("qty").desc().model()).model();
+        return Optional.of(from(qry).with(orderBy().yield("qty").desc().model()).model());
     }
 
     public static QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> queryForDependentTypeDetails(final Map<Class<? extends AbstractEntity<?>>, Map<Class<? extends AbstractEntity<?>>, Set<String>>> dependenciesMetadata, final Long entityId, final Class<? extends AbstractEntity<?>> entityType, final Class<? extends AbstractEntity<?>> detailsType) {
