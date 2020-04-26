@@ -33,15 +33,15 @@ public class GreaterOrEqualValidator implements IBeforeChangeEventHandler<Object
     @Override
     public Result handle(final MetaProperty<Object> property, final Object newValue, final Set<Annotation> mutatorAnnotations) {
         if (newValue == null) { // no violation
-            return successful("Value is null.");
+            return successful("Value is null and thus not applicable for validation.");
         }
         // Money new value should be correctly converted :
         final String strValue = newValue instanceof Money ? ((Money) newValue).getAmount().toString() : newValue.toString();
         final BigDecimal numValue = new BigDecimal(strValue);
 
-        return numValue.compareTo(new BigDecimal(limit)) < 0
-                ? failure(property.getEntity(), format(ERR_VALUE_SHOULD_BE_GREATER_THAN_OR_EQUAL_TO, limit))
-                : successful(property.getEntity());
+        return numValue.compareTo(new BigDecimal(limit)) >= 0
+               ? successful(property.getEntity())
+               : failure(property.getEntity(), format(ERR_VALUE_SHOULD_BE_GREATER_THAN_OR_EQUAL_TO, limit));
     }
 
 }
