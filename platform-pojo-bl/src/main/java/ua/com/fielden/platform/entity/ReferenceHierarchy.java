@@ -1,10 +1,13 @@
 package ua.com.fielden.platform.entity;
 
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static ua.com.fielden.platform.entity.NoKey.NO_KEY;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.EntityTitle;
@@ -169,14 +172,34 @@ public class ReferenceHierarchy extends AbstractFunctionalEntityWithCentreContex
         return refEntityType;
     }
 
+    /**
+     * Returns an optional value of property {@code refEntityType} represented as a {@code class}.
+     * Empty value indicates an error when trying to instantiate a {@code class} from its string representation.
+     * 
+     * @return
+     */
     @SuppressWarnings("unchecked")
-    public Class<? extends AbstractEntity<?>> getRefEntityClass() throws ClassNotFoundException {
-        return (Class<? extends AbstractEntity<?>>) Class.forName(refEntityType);
+    public Optional<Class<? extends AbstractEntity<?>>> getRefEntityClass() {
+        try {
+            return of((Class<? extends AbstractEntity<?>>) Class.forName(refEntityType));
+        } catch (final ClassNotFoundException e) {
+            return empty();
+        }
     }
 
+    /**
+     * Returns an optional value of property {@code entityType} represented as a {@code class}.
+     * Empty value indicates an error when trying to instantiate a {@code class} from its string representation.
+     * 
+     * @return
+     */
     @SuppressWarnings("unchecked")
-    public Class<? extends AbstractEntity<?>> getEntityClass() throws ClassNotFoundException {
-        return (Class<? extends AbstractEntity<?>>) Class.forName(entityType);
+    public Optional<Class<? extends AbstractEntity<?>>> getEntityClass() {
+        try {
+            return of((Class<? extends AbstractEntity<?>>) Class.forName(entityType));
+        } catch (final ClassNotFoundException e) {
+            return empty();
+        }
     }
 
     @Observable

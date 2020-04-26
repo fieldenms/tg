@@ -1,12 +1,18 @@
 package ua.com.fielden.platform.entity;
 
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.entity.ReferenceHierarchyActions.EDIT;
 import static ua.com.fielden.platform.entity.ReferenceHierarchyLevel.TYPE;
+import static ua.com.fielden.platform.entity.query.metadata.DataDependencyQueriesGenerator.queryForDependentTypeDetails;
+import static ua.com.fielden.platform.entity.query.metadata.DataDependencyQueriesGenerator.queryForDependentTypesSummary;
+import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.error.Result.failuref;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import com.google.inject.Inject;
@@ -21,7 +27,6 @@ import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.metadata.DataDependencyQueriesGenerator;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
-import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.master.IMasterInfoProvider;
 import ua.com.fielden.platform.master.MasterInfo;
 import ua.com.fielden.platform.pagination.IPage;
@@ -35,6 +40,7 @@ import ua.com.fielden.platform.utils.Pair;
  */
 @EntityType(ReferenceHierarchy.class)
 public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> implements IReferenceHierarchy {
+    public static final String ERR_ENTITY_TYPE_NOT_FOUND = "Entity type [%s] could not be found.";
 
     private final IEntityAggregatesOperations coAggregates;
     private final Map<Class<? extends AbstractEntity<?>>, Map<Class<? extends AbstractEntity<?>>, Set<String>>> dependenciesMetadata;
@@ -52,7 +58,7 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
     @SessionRequired
     public ReferenceHierarchy save(final ReferenceHierarchy entity) {
         if (entity.getRefEntityId() == null) {
-            throw Result.failuref("Please select at least one entity to open reference hierarchy.");
+            throw failuref("Please select at least one entity to open reference hierarchy.");
         } else if (entity.getEntityType() == null) {
             entity.setGeneratedHierarchy(generateTypeLevelHierarchy(entity));
         } else {
@@ -63,21 +69,18 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
     }
 
     private List<InstanceLevelHierarchyEntry> generateInstanceLevelHierarchy(final ReferenceHierarchy entity) {
-        try {
-            final Class<? extends AbstractEntity<?>> entityClass = entity.getEntityClass();
-            final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> qem = DataDependencyQueriesGenerator.queryForDependentTypeDetails(dependenciesMetadata, entity.getRefEntityId(), entity.getRefEntityClass(), entityClass);
-            final IPage<EntityAggregates> loadedPage;
-            if (entity.getPageNumber() == 0) {
-                loadedPage = coAggregates.firstPage(qem, entity.getPageSize());
-            } else {
-                loadedPage = coAggregates.getPage(qem, entity.getPageNumber(), entity.getPageSize());
-            }
-            entity.setPageCount(loadedPage.numberOfPages());
-            entity.setPageNumber(loadedPage.no());
-            return createInstanceHierarchy(loadedPage.data(), masterInfoProvider.getMasterInfo(entityClass));
-        } catch (final ClassNotFoundException e) {
-            throw Result.failuref("The entity types: %s or %s can not be found", entity.getRefEntityType(), entity.getEntityType());
+        final Class<? extends AbstractEntity<?>> entityClass = entity.getEntityClass().orElseThrow(() -> failuref(ERR_ENTITY_TYPE_NOT_FOUND, entity.getEntityType()));
+        final Class<? extends AbstractEntity<?>> refEntityClass = entity.getRefEntityClass().orElseThrow(() -> failuref(ERR_ENTITY_TYPE_NOT_FOUND, entity.getRefEntityType()));
+        final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> qem = queryForDependentTypeDetails(dependenciesMetadata, entity.getRefEntityId(), refEntityClass, entityClass);
+        final IPage<EntityAggregates> loadedPage;
+        if (entity.getPageNumber() == 0) {
+            loadedPage = coAggregates.firstPage(qem, entity.getPageSize());
+        } else {
+            loadedPage = coAggregates.getPage(qem, entity.getPageNumber(), entity.getPageSize());
         }
+        entity.setPageCount(loadedPage.numberOfPages());
+        entity.setPageNumber(loadedPage.no());
+        return createInstanceHierarchy(loadedPage.data(), masterInfoProvider.getMasterInfo(entityClass));
     }
 
     private List<InstanceLevelHierarchyEntry> createInstanceHierarchy(final List<EntityAggregates> instanceAggregates, final MasterInfo masterInfo) {
@@ -103,16 +106,14 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
     }
 
     private List<TypeLevelHierarchyEntry> generateTypeLevelHierarchy(final ReferenceHierarchy entity) {
-        try {
-            final List<EntityAggregates> result = coAggregates.getAllEntities(DataDependencyQueriesGenerator.queryForDependentTypesSummary(dependenciesMetadata, entity.getRefEntityId(), entity.getRefEntityClass()));
-            if (result.isEmpty()) {
-                final Pair<String, String> titleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(entity.getRefEntityClass());
-                throw Result.failuref("The %s entity with %s id is not referenced yet", titleAndDesc.getKey(), entity.getRefEntityId());
-            }
-            return createTypeHierarchyEntries(entity, result);
-        } catch (final ClassNotFoundException e) {
-            throw Result.failuref("The entity type: %s can not be found", entity.getRefEntityType());
+        final Class<? extends AbstractEntity<?>> entityType = entity.getRefEntityClass().orElseThrow(() -> failuref(ERR_ENTITY_TYPE_NOT_FOUND, entity.getRefEntityType()));
+        final Optional<QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel>> model = queryForDependentTypesSummary(dependenciesMetadata, entity.getRefEntityId(), entityType);
+        final List<EntityAggregates> result = model.map(qem -> coAggregates.getAllEntities(qem)).orElse(emptyList());
+        if (result.isEmpty()) {
+            throw failure("This entity has no references.");
         }
+        return createTypeHierarchyEntries(entity, result);
+
     }
 
     private List<TypeLevelHierarchyEntry> createTypeHierarchyEntries(final ReferenceHierarchy entity, final List<EntityAggregates> typeAggregates) {
@@ -136,7 +137,7 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
             typeEntry.setHasChildren(true);
             return typeEntry;
         } catch (final ClassNotFoundException e) {
-            throw Result.failuref("The entity type: %s can not be found", typeAggregate.get("type"));
+            throw failuref(ERR_ENTITY_TYPE_NOT_FOUND, typeAggregate.get("type"));
         }
     }
 }
