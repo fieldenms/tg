@@ -950,7 +950,7 @@ export class TgEntityEditor extends TgEditor {
             if (entityValue.get(keyName)) {
                 titles.push({
                     title: entityType.prop(keyName).title(),
-                    value: this.reflector().tg_convert(entityValue.get(keyName))
+                    value: this.reflector().tg_toString(this.reflector().tg_convert(entityValue.get(keyName)), entityType, keyName)
                 });
             }
         });
