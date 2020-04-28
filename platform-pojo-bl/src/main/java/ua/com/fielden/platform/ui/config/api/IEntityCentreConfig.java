@@ -1,6 +1,10 @@
 package ua.com.fielden.platform.ui.config.api;
 
+import java.util.function.Function;
+import java.util.function.Supplier;
+
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 
 /**
@@ -32,4 +36,11 @@ public interface IEntityCentreConfig extends IEntityDao<EntityCentreConfig> {
      */
     Long saveWithConflicts(final EntityCentreConfig entity);
     
+    /**
+     * Runs function {@code fun} with the {@link DbVersion} as the argument.
+     * @param fun
+     * @return
+     */
+    <T> T withDbVersion(final Function<DbVersion, T> fun);
+
 }
