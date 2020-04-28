@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.ui.config.api;
 
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.query.DbVersion;
