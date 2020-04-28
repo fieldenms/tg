@@ -899,7 +899,7 @@ export class TgEntityEditor extends TgEditor {
     _createEntityTooltip (entity) {
         const titles = this._createEntityTitleObject(entity);
         if (titles.length === 1) {
-            return "<b>" + this.reflector().tg_convert(entity) + "</b>" + (entity.get('desc') ? "<br>" + entity.get('desc') : "");
+            return "<b>" + titles[0].value + "</b>" + (entity.get('desc') ? "<br>" + entity.get('desc') : "");
         } else {
             return "<table style='border-collapse: collapse;'>" +
                 titles.map(entry => "<tr><td valign='top' style='padding-left:0'>" + entry.title + ": </td><td valign='top' style='padding-right:0'><b>" + entry.value + "</b></td></tr>").join("") +
