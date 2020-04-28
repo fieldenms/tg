@@ -1145,7 +1145,7 @@ const _convertFullPropertyValue = function (bindingView, propertyName, fullValue
 };
 
 /**
- * Finds EntityTypeProp meta-info instance from 'entityType' and 'property'.
+ * Finds EntityTypeProp meta-info instance from 'entityType' and 'property'. Returns 'null' for property '' meaning there is no EntityTypeProp for "entity itself".
  * 
  * @param entityType -- entity type
  * @param property -- property name; can be dot-notated
@@ -1165,10 +1165,10 @@ const _findProperty = function (entityType, property) {
  * Determines the type of property from 'entityType' and 'property'.
  * 
  * @param entityType -- entity type
- * @param property -- property name; can be dot-notated
+ * @param property -- property name; can be dot-notated or '' meaning "entity itself"
  */
 const _determinePropertyType = function (entityType, property) {
-    return _findProperty(entityType, property).type();
+    return '' === property ? entityType : _findProperty(entityType, property).type();
 };
 
 /**
