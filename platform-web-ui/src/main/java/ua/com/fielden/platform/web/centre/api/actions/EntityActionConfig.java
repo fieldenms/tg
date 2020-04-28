@@ -58,6 +58,10 @@ public final class EntityActionConfig {
             throw new IllegalArgumentException("Any functional entity requires some execution context to be specified.");
         }
 
+        if (functionalEntity == null && !context.withCurrentEtity) {
+            throw new IllegalArgumentException("Dynamic action can be created only if action's context has current entity.");
+        }
+
         this.shouldRefreshParentCentreAfterSave = shouldRefreshParentCentreAfterSave;
         this.functionalEntity = Optional.ofNullable(functionalEntity);
         this.context = Optional.ofNullable(context);

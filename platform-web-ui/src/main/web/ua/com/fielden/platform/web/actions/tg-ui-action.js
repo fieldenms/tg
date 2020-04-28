@@ -316,6 +316,15 @@ Polymer({
             type: Function
         },
 
+        /**
+         * Property that indicates whether element-name and import uri are defined from current entity and, if exists, chosen property.
+         */
+        dynamicAction : {
+            type: Boolean,
+            reflectToAttribute: true,
+            value: false,
+        },
+
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
         //////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -324,6 +333,14 @@ Polymer({
         // Also, these properties are designed to be bound to children element properties -- it is necessary to//
         //   populate their default values in ready callback (to have these values populated in children)!     //
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        /**
+         * The type of entity for which dynamic action was invoked previous time.
+         */
+        _previousEntityType: {
+            type: String,
+            value: ""
+        },
         /**
          * Executes the action in context of 'currentEntity'. 
          *
@@ -448,22 +465,19 @@ Polymer({
 
             self.persistActiveElement();
 
-            if (!this.elementName || !this.componentUri) {
-                if (this.currentEntity) {
-                    this._masterUri = '/master/' + this.currentEntity.type().notEnhancedFullClassName() + '/' + this.currentEntity.get("id");
-                    this.isActionInProgress = true;
-                    this.$.masterRetriever.generateRequest().completes
-                        .then(res => {
-                            postMasterRetrieve();
-                        }).catch(error => {
-                            this.isActionInProgress = false;
-                            this.restoreActionState();
-                            console.log("The action was rejected with error: " + error);
-                        });
-                } else {
-                    this.restoreActionState();
-                    throw {msg: "The action should have current entity or element name and  uri"};
-                }
+            const currentEntityType = this._calculateCurrentEntityType();
+            if (this.dynamicAction && this.currentEntity && this._previousEntityType !== currentEntityType) {
+                this._masterUri = '/master/' + currentEntityType + '/' + this.currentEntity.get("id");
+                this.isActionInProgress = true;
+                this.$.masterRetriever.generateRequest().completes
+                    .then(res => {
+                        this._previousEntityType = currentEntityType;
+                        postMasterRetrieve();
+                    }).catch(error => {
+                        this.isActionInProgress = false;
+                        this.restoreActionState();
+                        console.log("The action was rejected with error: " + error);
+                    });
             } else {
                 postMasterRetrieve();
             }
@@ -675,6 +689,21 @@ Polymer({
 
     _computeDisabled: function (isActionInProgress, disabled) {
         return isActionInProgress || disabled;
+    },
+
+    _calculateCurrentEntityType: function () {
+        if (this.currentEntity && this.chosenProperty) {
+            let currentProperty = this.chosenProperty;
+            let currentValue = this.currentEntity(currentProperty);
+            while (!this._reflector.isEntity(currentValue)) {
+                const lastDotIndex = currentProperty.lastIndexOf(".");
+                currentProperty = lastDotIndex >=0 ? currentProperty.substring(0, lastDotIndex) : "";
+                currentValue = currentProperty ? this.currentEntity.get(currentProperty) : this.currentEntity;
+            }
+            return currentValue.type().notEnhancedFullClassName(); 
+        } else if (this.currentEntity) {
+            return this.currentEntity.type().notEnhancedFullClassName();
+        }
     },
 
     _processMasterRetriever: function(e) {

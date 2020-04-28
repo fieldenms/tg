@@ -120,6 +120,11 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         attrs.put("component-uri", generateComponentUri());
         final String elementName = generateElementName();
         attrs.put("element-name", elementName);
+        //If action has no functional entity type and it's noAction property is false then
+        //it is dynamic action that determines it's element name and import uri by current entity and if exists chosen property.
+        if (!conf().functionalEntity.isPresent()) {
+            attrs.put("dynamic-action", true);
+        }
         attrs.put("number-of-action", numberOfAction);
         attrs.put("action-kind", functionalActionKind);
         attrs.put("element-alias", elementName + "_" + numberOfAction + "_" + functionalActionKind);

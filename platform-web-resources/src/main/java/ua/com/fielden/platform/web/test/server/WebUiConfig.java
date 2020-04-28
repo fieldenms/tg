@@ -133,6 +133,7 @@ import ua.com.fielden.platform.web.PrefDim.Unit;
 import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig.CentreConfigActions;
 import ua.com.fielden.platform.web.action.StandardMastersWebUiConfig;
 import ua.com.fielden.platform.web.action.post.FileSaverPostAction;
+import ua.com.fielden.platform.web.action.pre.EntityNavigationPreAction;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.EntityCentre;
@@ -1838,6 +1839,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //                .addProp(mkProp("Custom Prop 2", "Custom property 2 with concrete value", "OK2"))
 
                 .addPrimaryAction(editAction().withContext(context().withCurrentEntity().withSelectionCrit().build())
+                        .preAction(new EntityNavigationPreAction("Cool entity"))
                         .icon("editor:mode-edit")
                         .withStyle("color: green")
                         .shortDesc("Edit entity")

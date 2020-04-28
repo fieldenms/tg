@@ -71,6 +71,17 @@ const template = html`
             require-selected-entities='NONE'
             require-master-entity='false'>
         </tg-ui-action>
+        <tg-ui-action
+            id="openMasterAction"
+            ui-role='ICON'
+            show-dialog='[[_showDialog]]'
+            create-context-holder='[[_createContextHolder]]'
+            dynamic-action
+            attrs='[[_openMasterAttrs]]'
+            require-selection-criteria='false'
+            require-selected-entities='ONE'
+            require-master-entity='false'>
+        </tg-ui-action>
     </tg-entity-master>`;
 
 template.setAttribute('strip-whitespace', '');
@@ -202,6 +213,22 @@ Polymer({
             tearDownEvent(event);
         }
     },
+
+    _openMasterAction: function () {
+        const entityInfo = this._selectedSubmodule.substring(1).split('/');
+        if (entityInfo.length !== 2) {
+            this._openToastForError("Uri Error:", "The URI for master is incorrect. It should contain entity type and id seperated with '/', but it has: " + this._selectedSubmodule + ".", true);
+        } else if (!this._reflector().findTypeByName(entityInfo[0])) {
+            this._openToastForError("Master entity type error:", "The entity type: " + entityInfo[0] + " is not registered, please make sure that entity type to open is correct.", true);
+        } else if (isNaN(Number(entityInfo[1]))) {
+            this._openToastForError("Master entity ID error:", "The entity ID should be an integer number, but was: " + entityInfo[1] + ".", true);
+        } else {
+            const entity = this._reflector().newEntity(entityInfo[0]);
+            entity["id"] = parseInt(entityInfo[1]);
+            this.$.openMasterAction.currentEntity = entity;
+            this.$.openMasterAction._run();
+        }
+    },
     
     _restoreLastFocusedElement: function (event) {
         this.restoreActiveElement();
@@ -212,6 +239,10 @@ Polymer({
         if (typeof this.currentHistoryState === "undefined") {
             this._loadApplicationInfrastructureIntoHistory();
         } else {
+            if (!window.history.state) {
+                //This logic might be invoked in case when someone changes hash by typing it in to address bar.
+                this._replaceStateWithNumber();
+            }
             const currentOverlay = this._findFirstClosableDialog();
             const historySteps = this.currentHistoryState - window.history.state.currIndex; //Determine history steps (i.e whether user pressed back or forward or multiple back or forward or changed history in some other way. One should take into account that if history steps are greater than 0 then user went backward. If the history steps are less than 0 then user went forward. If history steps are equal to 0 then user chnaged history by clicking menu item it search menu or module menu etc.)
             if (historySteps !== 0 && currentOverlay) { // if user went backward or forward and there is overlay open and 'root' page (for e.g. https://tgdev.com:8091) is not opening
@@ -335,28 +366,30 @@ Polymer({
     },
 
     _setSelected: function (selected) {
-        var currentlySelected, currentlySelectedElement, elementToSelect;
         if (this.menuConfig) {
-            currentlySelected = this.$.pages.selected;
-            currentlySelectedElement = currentlySelected && this.shadowRoot.querySelector("[name='" + currentlySelected + "']");
-            if (currentlySelected === selected) {
-                if (this._selectedSubmodule === this._subroute.path) {
+            const moduleToSelect = findModule(selected, this.menuConfig);
+            const currentlySelected = this.$.pages.selected;
+            const currentlySelectedElement = currentlySelected && this.shadowRoot.querySelector("[name='" + currentlySelected + "']");
+            if (currentlySelected === moduleToSelect) {
+                if (selected === 'master') {
+                    this._selectedSubmodule = this._subroute.path;
+                    this. _openMasterAction();
+                } else if (this._selectedSubmodule === this._subroute.path) {
                     if (currentlySelectedElement && currentlySelectedElement.selectSubroute) {
                         currentlySelectedElement.selectSubroute(this._subroute.path.substring(1).split("?")[0]);
                     }
                 } else {
-                    this._selectedSubmodule = this._subroute.path
+                    this._selectedSubmodule = this._subroute.path;
                 }
                 return;
             }
-            selected = findModule(selected, this.menuConfig)
-            elementToSelect = selected && this.shadowRoot.querySelector("[name='" + selected + "']");
+            const elementToSelect = moduleToSelect && this.shadowRoot.querySelector("[name='" + moduleToSelect + "']");
             if (currentlySelectedElement) {
-                currentlySelectedElement.configureExitAnimation(selected);
+                currentlySelectedElement.configureExitAnimation(moduleToSelect);
             }
             if (elementToSelect) {
                 elementToSelect.configureEntryAnimation(currentlySelected);
-                this.$.pages.selected = selected;
+                this.$.pages.selected = moduleToSelect;
                 if (elementToSelect.getSelectedPageTitle()) {
                     document.title = elementToSelect.getSelectedPageTitle();
                 }
@@ -376,7 +409,10 @@ Polymer({
         var target = e.target || e.srcElement;
         if (target === this.$.pages){
             this._selectedModule = this._routeData.moduleName;
-            if (this._selectedSubmodule === this._subroute.path) {
+            if (this._routeData.moduleName === 'master') {
+                this._selectedSubmodule = this._subroute.path;
+                this. _openMasterAction();
+            } else if (this._selectedSubmodule === this._subroute.path) {
                 if (detail.toPage.selectSubroute) {
                     detail.toPage.selectSubroute(this._subroute.path.substring(1).split("?")[0]);
                 }
@@ -438,6 +474,7 @@ Polymer({
         //setting the uuid for this master.
         this.uuid = this.is + '/' + generateUUID();
         this._attrs = {entityType: "ua.com.fielden.platform.menu.MenuSaveAction", currentState: "EDIT", centreUuid: this.uuid};
+        this._openMasterAttrs = {currentState: "EDIT", centreUuid: this.uuid};
         //Binding to 'this' functions those are used outside the scope of this component.
         this._checkWhetherCanLeave = this._checkWhetherCanLeave.bind(this);
         this._saveMenuVisibilityChanges = function (visibleItems, invisibleItems) {
