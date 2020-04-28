@@ -69,7 +69,7 @@ export const TgEgiDataRetrievalBehavior = {
         if (entity === null || property === null || type === null || this.getValueFromEntity(entity, {property: property}) === null) {
             return "";
         } else if (this._reflector.findTypeByName(type)) {
-            var propertyValue = this.getValueFromEntity(entity, {property: property});
+            const propertyValue = this.getValueFromEntity(entity, {property: property});
             return this._reflector.tg_toString(this._reflector.tg_convert(propertyValue), entity.type(), property);
         } else if (type.lastIndexOf('Date', 0) === 0) { // check whether type startsWith 'Date'. Type can be like 'Date', 'Date:UTC:' or 'Date:Europe/London:'
             var splitedType = type.split(':');

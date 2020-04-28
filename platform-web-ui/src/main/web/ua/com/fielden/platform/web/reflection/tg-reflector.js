@@ -1176,7 +1176,7 @@ const _determinePropertyType = function (entityType, property) {
  * 
  * @param bindingValue -- binding representation of property value; for entity-typed property it is string; for array of entities it is array of strings; for null it is null, for all other values -- it is the same value
  * @param rootEntityType -- the type of entity holding this property
- * @param property -- property name of the property; can be dot-notated
+ * @param property -- property name of the property; can be dot-notated or '' meaning "entity itself"
  */
 const _toString = function (bindingValue, rootEntityType, property) {
     const propertyType = _determinePropertyType(rootEntityType, property);
