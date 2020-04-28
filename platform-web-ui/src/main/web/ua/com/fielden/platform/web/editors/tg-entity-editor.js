@@ -903,7 +903,7 @@ export class TgEntityEditor extends TgEditor {
         } else {
             return "<table style='border-collapse: collapse;'>" +
                 titles.map(entry => "<tr><td valign='top' style='padding-left:0'>" + entry.title + ": </td><td valign='top' style='padding-right:0'><b>" + entry.value + "</b></td></tr>").join("") +
-            "</table>"  + (entity.get('desc') ? "<br>" + entity.get('desc') : "");
+            "</table>"  + (entity.get('desc') ? entity.get('desc') : "");
         }
     }
 
