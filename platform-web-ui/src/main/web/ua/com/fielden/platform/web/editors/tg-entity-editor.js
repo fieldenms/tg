@@ -961,7 +961,7 @@ export class TgEntityEditor extends TgEditor {
     }
 
     _createSimpleTitle (entityValue) {
-        return [{value: this.reflector().tg_convert(entityValue)}];
+        return [{value: entityValue.toString()}]; // entityValue never empty
     }
 
     _hasDesc (entity) {
