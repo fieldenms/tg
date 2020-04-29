@@ -88,7 +88,7 @@ export const TgEgiDataRetrievalBehavior = {
                 const metaProp = this._reflector.getEntityTypeProp(entity, property);
                 return this._reflector.formatMoney(value, this._appConfig.locale, metaProp && metaProp.scale(), metaProp && metaProp.trailingZeros());
             } else if (type === 'Colour') {
-                return '#' + value['hashlessUppercasedColourValue'];
+                return this._reflector.tg_toStringForDisplay(this._reflector.tg_convert(value), entity.type(), property);
             } else if (type === 'Hyperlink') {
                 return value['value'];
             } else {

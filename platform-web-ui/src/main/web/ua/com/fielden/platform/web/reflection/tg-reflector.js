@@ -1174,7 +1174,7 @@ const _determinePropertyType = function (entityType, property) {
 /**
  * Converts property value, converted to editor binding representation ('bindingValue'), to string.
  * 
- * @param bindingValue -- binding representation of property value; for entity-typed property it is string; for array of entities it is array of strings; for null it is null, for all other values -- it is the same value
+ * @param bindingValue -- binding representation of property value; for entity-typed property it is string; for array it is shallow array copy; for all other values -- it is the same value
  * @param rootEntityType -- the type of entity holding this property
  * @param property -- property name of the property; can be dot-notated or '' meaning "entity itself"
  */
@@ -1206,6 +1206,25 @@ const _toString = function (bindingValue, rootEntityType, property) {
         return '';
     } else {
         throw new _UCEPrototype(bindingValue);
+    }
+};
+
+/**
+ * Converts property value, converted to editor binding representation ('bindingValue'), to string for display purposes.
+ * 
+ * @param bindingValue -- binding representation of property value; for entity-typed property it is string; for array it is shallow array copy; for all other values -- it is the same value
+ * @param rootEntityType -- the type of entity holding this property
+ * @param property -- property name of the property; can be dot-notated or '' meaning "entity itself"
+ */
+const _toStringForDisplay = function (bindingValue, rootEntityType, property) {
+    const propertyType = _determinePropertyType(rootEntityType, property);
+    // for all numeric types and Colour we have non-standard display formatting; all other types will be displayed the same fashion as it is in standard conversion
+    if (propertyType === 'Colour') {
+        return bindingValue === null ? '' : '#' + _toString(bindingValue, rootEntityType, property);
+    } else if (propertyType === 'BigDecimal' || propertyType === 'Integer' || propertyType === 'Long' || propertyType === 'Money') {
+        return _toString(bindingValue, rootEntityType, property); // TODO
+    } else {
+        return _toString(bindingValue, rootEntityType, property);
     }
 };
 
@@ -1497,12 +1516,23 @@ export const TgReflector = Polymer({
     /**
      * Converts property value, converted to editor binding representation ('bindingValue'), to string.
      * 
-     * @param bindingValue -- binding representation of property value; for entity-typed property it is string; for array of entities it is array of strings; for null it is null, for all other values -- it is the same value
+     * @param bindingValue -- binding representation of property value; for entity-typed property it is string; for array it is shallow array copy; for all other values -- it is the same value
      * @param rootEntityType -- the type of entity holding this property
      * @param property -- property name of the property; can be dot-notated
      */
     tg_toString: function (bindingValue, rootEntityType, property) {
         return _toString(bindingValue, rootEntityType, property);
+    },
+    
+    /**
+     * Converts property value, converted to editor binding representation ('bindingValue'), to string for display purposes.
+     * 
+     * @param bindingValue -- binding representation of property value; for entity-typed property it is string; for array it is shallow array copy; for all other values -- it is the same value
+     * @param rootEntityType -- the type of entity holding this property
+     * @param property -- property name of the property; can be dot-notated or '' meaning "entity itself"
+     */
+    tg_toStringForDisplay: function (bindingValue, rootEntityType, property) {
+        return _toStringForDisplay(bindingValue, rootEntityType, property);
     },
 
     /**
