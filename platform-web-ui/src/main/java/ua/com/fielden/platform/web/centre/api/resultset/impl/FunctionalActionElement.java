@@ -135,6 +135,8 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         } else if (FunctionalActionKind.MENU_ITEM != functionalActionKind) {
             attrs.put("show-dialog", "[[_showDialog]]");
         }
+        //Specify taoster to show error message via the toast
+        attrs.put("toaster", "[[toaster]]");
 
         // in case of an action that models a menu item for an entity master with menu, context gets assigned
         // only after the main entity is saved at the client side as part of tg-master-menu logic.

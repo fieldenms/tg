@@ -1726,7 +1726,14 @@ public class WebUiConfig extends AbstractWebUiConfig {
         }
 
         IResultSetBuilder2Properties<TgPersistentEntityWithProperties> beforeAddProp = afterSummary.
-                withAction(EDIT_ACTION.mkAction(TgPersistentEntityWithProperties.class))
+                withAction(editAction().withContext(context().withCurrentEntity().withSelectionCrit().build())
+                        .preAction(new EntityNavigationPreAction("Cool entity"))
+                        .icon("editor:mode-edit")
+                        .withStyle("color: green")
+                        .shortDesc("Edit entity")
+                        .longDesc("Opens master for editing this entity")
+                        .withNoParentCentreRefresh()
+                        .build())
                 .also()
                 .addEditableProp("desc")
                 .also();
@@ -1789,6 +1796,14 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 beforeSummaryConfForBigDecimalProp)
                 .also()
                 .addEditableProp("entityProp").asAutocompleter().withMatcher(ContextMatcher.class).minWidth(40)
+                    .withAction(editAction().withContext(context().withCurrentEntity().withSelectionCrit().build())
+                    .preAction(new EntityNavigationPreAction("Cool entity"))
+                    .icon("editor:mode-edit")
+                    .withStyle("color: green")
+                    .shortDesc("Edit entity")
+                    .longDesc("Opens master for editing this entity")
+                    .withNoParentCentreRefresh()
+                    .build())
                 .also()
                 .addEditableProp("booleanProp").minWidth(49)
                 .also()

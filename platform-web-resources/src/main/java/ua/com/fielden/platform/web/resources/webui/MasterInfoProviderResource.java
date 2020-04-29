@@ -29,7 +29,7 @@ public class MasterInfoProviderResource extends AbstractWebResource {
     @Get
     @Override
     public Representation get() {
-        return handleUndesiredExceptions(getResponse(), () -> restUtil.singleJsonRepresentation(masterInfoProvider.getMasterInfo(getEntityType(), getEntityId())), restUtil);
+        return handleUndesiredExceptions(getResponse(), () -> restUtil.singleJsonMasterRepresentation(masterInfoProvider.getMasterInfo(getEntityType(), getEntityId()), getRequest().getAttributes().get("entityType").toString()), restUtil);
     }
 
     private Long getEntityId() {

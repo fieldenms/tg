@@ -65,6 +65,7 @@ const template = html`
             component-uri='/master_ui/ua.com.fielden.platform.menu.MenuSaveAction'
             element-name='tg-MenuSaveAction-master'
             show-dialog='[[_showDialog]]'
+            toaster='[[toaster]]'
             create-context-holder='[[_createContextHolder]]'
             attrs='[[_attrs]]'
             require-selection-criteria='false'
@@ -75,6 +76,7 @@ const template = html`
             id="openMasterAction"
             ui-role='ICON'
             show-dialog='[[_showDialog]]'
+            toaster='[[toaster]]'
             create-context-holder='[[_createContextHolder]]'
             dynamic-action
             attrs='[[_openMasterAttrs]]'

@@ -19,7 +19,6 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.log4j.Logger;
-import org.joda.time.DateTime;
 import org.restlet.Message;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -234,7 +233,7 @@ public class RestServerUtil {
         // logger.debug("SIZE: " + bytes.length);
         return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON);
     }
-    
+
     /**
      * Composes representation of a list of entities, serialising them without id / version properties.
      *
@@ -362,7 +361,27 @@ public class RestServerUtil {
         final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
         return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON);
     }
-    
+
+    /**
+     * Composes JACKSON representation of an master information entity.
+     *
+     * @return
+     * @throws JsonProcessingException
+     */
+    public <T extends AbstractEntity<?>> Representation singleJsonMasterRepresentation(final T entity, final String entityType) {
+        // create a Result enclosing entity list
+        final Result result;
+        if (entity != null) {
+            // valid and invalid entities: both kinds are represented using successful result. Use client-side isValid() method
+            //   in 'tg-reflector' to differentiate them
+            result = new Result(entity, "OK");
+        } else {
+            result = new Result(null, new Exception(format("Could not find master for entity type: %s.", entityType)));
+        }
+        final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
+        return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON);
+    }
+
     /**
      * Composes JACKSON representation of an entity with exception.
      *
@@ -378,12 +397,12 @@ public class RestServerUtil {
                 if (thrownResult.isSuccessful()) {
                     throw failure(format("The successful result [%s] was thrown during unsuccesful saving of entity with id [%s] of type [%s]. This is most likely programming error.", thrownResult, entity.getId(), entity.getClass().getSimpleName()));
                 }
-                
+
                 // iterate over properties in search of the first invalid one (without required checks)
                 final Optional<Result> firstFailure = entity.nonProxiedProperties()
                 .filter(mp -> mp.getFirstFailure() != null)
                 .findFirst().map(mp -> mp.getFirstFailure());
-                
+
                 // returns first failure if exists or successful result if there was no failure.
                 final Result isValid = firstFailure.orElse(successful(entity));
                 if (ex != isValid) {
@@ -496,7 +515,7 @@ public class RestServerUtil {
     public Map<?, ?> restoreJsonMap(final Representation representation) {
         return serialiser.deserialise(getStream(representation), Map.class, SerialiserEngines.JACKSON);
     }
-    
+
     private final static InputStream getStream(final Representation representation) {
         try {
             return representation.getStream();
@@ -504,7 +523,7 @@ public class RestServerUtil {
             throw new StreamCouldNotBeResolvedException(String.format("The stream could not be resolved from representation [%s].", representation), ioException);
         }
     }
-    
+
     public ISerialiser getSerialiser() {
         return serialiser;
     }

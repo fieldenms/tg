@@ -59,7 +59,7 @@ const template = html`
             padding: var(--tg-ui-action-icon-button-padding, 8px);
         }
     </style>
-    <iron-ajax id="masterRetriever" headers="[[_headers]]" url="[[_masterUri]]" method="GET" handle-as="json" on-response="_processMasterRetriever" on-error="_processMasterError">
+    <iron-ajax id="masterRetriever" headers="[[_headers]]" url="[[_masterUri]]" method="GET" handle-as="json" on-error="_processMasterError">
     </iron-ajax>
     <paper-icon-button id="iActionButton" hidden$="[[!isIconButton]]" icon="[[icon]]" on-tap="_run" disabled$="[[_computeDisabled(isActionInProgress, disabled)]]" tooltip-text$="[[longDesc]]"></paper-icon-button>
     <paper-button id="bActionButton" hidden$="[[isIconButton]]" raised roll="button" on-tap="_run" style="width:100%" disabled$="[[_computeDisabled(isActionInProgress, disabled)]]" tooltip-text$="[[longDesc]]">
@@ -274,6 +274,12 @@ Polymer({
             type: Function
         },
 
+        /**
+         * The object that has function to open toast.
+         */
+        toaster: {
+            type: Object
+        },
 
         /** Sequential action number as provided by Java API. */
         numberOfAction: {
@@ -441,13 +447,12 @@ Polymer({
         this._reflector = new TgReflector();
         this._serialiser = new TgSerialiser();
 
-        this._processMasterRetriever = this._processMasterRetriever.bind(this);
         this._processMasterError = this._processMasterError.bind(this);
 
         self._run = (function (event) {
             console.log(this.shortDesc + ": execute");
 
-            const postMasterRetrieve = function () {
+            const postMasterInfoRetrieve = function () {
                 if (this.preAction) {
                     const result = this.preAction(this)
                     const promise = result instanceof Promise ? result : Promise.resolve(result);
@@ -471,15 +476,22 @@ Polymer({
                 this.isActionInProgress = true;
                 this.$.masterRetriever.generateRequest().completes
                     .then(res => {
-                        this._previousEntityType = currentEntityType;
-                        postMasterRetrieve();
+                        try {
+                            this._processMasterRetriever(res);
+                            this._previousEntityType = currentEntityType;
+                            postMasterInfoRetrieve();
+                        }catch (e) {
+                            this.isActionInProgress = false;
+                            this.restoreActionState();
+                            console.log("The action was rejected with error: " + error);
+                        }
                     }).catch(error => {
                         this.isActionInProgress = false;
                         this.restoreActionState();
                         console.log("The action was rejected with error: " + error);
                     });
             } else {
-                postMasterRetrieve();
+                postMasterInfoRetrieve();
             }
 
             tearDownEvent(event);
@@ -694,7 +706,7 @@ Polymer({
     _calculateCurrentEntityType: function () {
         if (this.currentEntity && this.chosenProperty) {
             let currentProperty = this.chosenProperty;
-            let currentValue = this.currentEntity(currentProperty);
+            let currentValue = this.currentEntity.get(currentProperty);
             while (!this._reflector.isEntity(currentValue)) {
                 const lastDotIndex = currentProperty.lastIndexOf(".");
                 currentProperty = lastDotIndex >=0 ? currentProperty.substring(0, lastDotIndex) : "";
@@ -708,13 +720,14 @@ Polymer({
 
     _processMasterRetriever: function(e) {
         console.log("PROCESS MASTER INFO RETRIEVE:");
-        console.log("Master info retrieve: iron-response: status = ", e.detail.xhr.status, ", e.detail.response = ", e.detail.response);
-        if (e.detail.xhr.status === 200) { // successful execution of the request
-            const deserialisedResult = this._serialiser.deserialise(e.detail.response);
+        console.log("Master info retrieve: iron-response: status = ", e.xhr.status, ", e.response = ", e.response);
+        if (e.xhr.status === 200) { // successful execution of the request
+            const deserialisedResult = this._serialiser.deserialise(e.response);
             
             // TODO Need to open toast message in case where result is unsuccessful
             if (this._reflector.isError(deserialisedResult)) {
                 console.log('deserialisedResult: ', deserialisedResult);
+                this.toaster && this.toaster.openToastForError(deserialisedResult.message, this._toastMsgForError(deserialisedResult), true);
                 throw {msg: deserialisedResult};
             }
             const masterInfo = deserialisedResult.instance;
@@ -736,11 +749,36 @@ Polymer({
             this.requireMasterEntity = masterInfo.requireMasterEntity;
             this.shouldRefreshParentCentreAfterSave = masterInfo.shouldRefreshParentCentreAfterSave;
         } else { // other codes
+            this.toaster && this.toaster.openToastForError('Master load error: ', 'Request could not be dispatched.', true);
             throw {msg: 'Request could not be dispatched.'};
         }
     }, 
     
     _processMasterError: function (e) {
-        throw {msg: e.detail.error};
-    }
+        console.log('PROCESS ERROR', e.error);
+        const xhr = e.detail.request.xhr;
+        if (xhr.status === 500) { // internal server error, which could either be due to business rules or have some other cause due to a bug or db connectivity issue
+            const deserialisedResult = this._serialiser.deserialise(xhr.response);
+
+            if (this._reflector.isError(deserialisedResult)) {
+                // throw the toast message about the server-side error
+                this.toaster && this.toaster.openToastForError(this._reflector.exceptionMessage(deserialisedResult.ex), this._toastMsgForError(deserialisedResult), true);
+            } else {
+                //throw new Error('Responses with status code 500 suppose to carry an error cause!');
+                this.toaster && this.toaster.openToastForError('Master load error: ', 'Responses with status code 500 suppose to carry an error cause!', true);
+            }
+        } else if (xhr.status === 403) { // forbidden!
+            this.toaster && this.toaster.openToastForError('Access denied.', 'The current session has expired. Please login and try again.', true);
+        } else if (xhr.status === 503) { // service unavailable
+            this.toaster && this.toaster.openToastForError('Service Unavailable.', 'Server responded with error 503 (Service Unavailable).', true);
+        } else if (xhr.status >= 400) { // other client or server error codes
+            this.toaster && this.toaster.openToastForError('Service Error (' + xhr.status + ').', 'Server responded with error code ' + xhr.status, true);
+        } else { // for other codes just log the code
+            console.warn('Server responded with error code ', xhr.status);
+        }
+    },
+
+    _toastMsgForError: function (errorResult) {
+        return this._reflector.stackTrace(errorResult.ex);
+    },
 });

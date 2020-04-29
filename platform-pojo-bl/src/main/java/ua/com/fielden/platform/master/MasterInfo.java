@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.master;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
@@ -11,6 +12,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @KeyType(String.class)
 @KeyTitle("Element Name")
 @DescTitle("Element URI")
+@CompanionObject(IMasterInfo.class)
 public class MasterInfo extends AbstractEntity<String> {
 
     @IsProperty
