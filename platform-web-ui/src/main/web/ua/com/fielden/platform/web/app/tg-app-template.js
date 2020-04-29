@@ -175,7 +175,7 @@ Polymer({
          * Please, not that history also always contains 'zero' entry which represents 'New Tab'.
          */
         currentHistoryState: {
-            type: Number
+            type: Object
         }
     },
 
@@ -215,6 +215,9 @@ Polymer({
     },
 
     _openMasterAction: function () {
+        if (this.$.openMasterAction.isActionInProgress || this.disableNextHistoryChange) {
+            return;
+        }
         const entityInfo = this._selectedSubmodule.substring(1).split('/');
         if (entityInfo.length !== 2) {
             this._openToastForError("Uri Error:", "The URI for master is incorrect. It should contain entity type and id seperated with '/', but it has: " + this._selectedSubmodule + ".", true);
@@ -244,7 +247,7 @@ Polymer({
                 this._replaceStateWithNumber();
             }
             const currentOverlay = this._findFirstClosableDialog();
-            const historySteps = this.currentHistoryState - window.history.state.currIndex; //Determine history steps (i.e whether user pressed back or forward or multiple back or forward or changed history in some other way. One should take into account that if history steps are greater than 0 then user went backward. If the history steps are less than 0 then user went forward. If history steps are equal to 0 then user chnaged history by clicking menu item it search menu or module menu etc.)
+            const historySteps = this.currentHistoryState.currIndex - window.history.state.currIndex; //Determine history steps (i.e whether user pressed back or forward or multiple back or forward or changed history in some other way. One should take into account that if history steps are greater than 0 then user went backward. If the history steps are less than 0 then user went forward. If history steps are equal to 0 then user chnaged history by clicking menu item it search menu or module menu etc.)
             if (historySteps !== 0 && currentOverlay) { // if user went backward or forward and there is overlay open and 'root' page (for e.g. https://tgdev.com:8091) is not opening
                 // disableNextHistoryChange flag is needed to avoid history movements cycling
                 if (!this.disableNextHistoryChange) {
@@ -268,7 +271,7 @@ Polymer({
                 this._changePage();
                 this.disableNextHistoryChange = false;
             }
-            this.currentHistoryState = window.history.state && window.history.state.currIndex;
+            this.currentHistoryState = window.history.state;
         }
     },
     
@@ -279,8 +282,8 @@ Polymer({
             const urlToOpen = new URL(this._getUrl(), window.location.protocol + '//' + window.location.host).href;
             window.history.replaceState({currIndex: 0}, '', urlForRoot);
             window.history.pushState({currIndex: 1}, '', urlForMenu);
-            window.history.pushState({currIndex: 2}, '', urlToOpen);
-            this.currentHistoryState = 2;
+            this.currentHistoryState = {currIndex: 2};
+            window.history.pushState(this.currentHistoryState, '', urlToOpen);
             this._routeChanged();
         }
     },
@@ -310,7 +313,7 @@ Polymer({
             }
         }
         for (let i = overlays.length - 1; i >= 0; i--) {
-            if (!overlays[i].skipHistoryAction) {
+            if (!overlays[i].skipHistoryAction && overlays[i].opened) {
                 return false;
             }
         }
@@ -331,7 +334,7 @@ Polymer({
     _findFirstClosableDialog: function () {
         const overlays = this._manager._overlays;
         for (let i = overlays.length - 1; i >= 0; i--) {
-            if (!overlays[i].skipHistoryAction) {
+            if (!overlays[i].skipHistoryAction && overlays[i].opened) {
                 return overlays[i];
             }
         }
@@ -556,9 +559,10 @@ Polymer({
         // the URI for history state rewrite
         const fullNewUrl = new URL(this._getUrl(), window.location.protocol + '//' + window.location.host).href;
         // currentHistoryState should be updated first. If it is not yet defined then make it 0 otherwise increment it;
-        this.currentHistoryState = typeof this.currentHistoryState !== "undefined"? this.currentHistoryState + 1 : 0;
+        const newCurrentHistoryIndex = typeof this.currentHistoryState !== "undefined"? this.currentHistoryState.currIndex + 1 : 0;
+        this.currentHistoryState = {currIndex: newCurrentHistoryIndex}
         // rewrite history state by providing concrete number of last history state
-        window.history.replaceState({currIndex: this.currentHistoryState}, '', fullNewUrl);
+        window.history.replaceState(this.currentHistoryState, '', fullNewUrl);
     },
     
     _getUrl: function() {
