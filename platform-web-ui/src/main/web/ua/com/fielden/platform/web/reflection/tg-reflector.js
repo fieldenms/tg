@@ -1,6 +1,7 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
-
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
+
+import { _millisDateRepresentation } from '/resources/reflection/tg-date-utils.js';
 
 /**
  * Used for decimal and money formatting. If the scale value for formatting wasn't specified then the default one is used.
@@ -126,6 +127,13 @@ var _createEntityTypePropPrototype = function () {
      */
     EntityTypeProp.prototype.isTime = function () {
         return typeof this._time === 'undefined' ? false : this._time;
+    }
+
+    /**
+     * Returns 'DATE', 'TIME' or null (means both) for the portion to be displayed for this property.
+     */
+    EntityTypeProp.prototype.datePortion = function () {
+        return this.isDate() ? 'DATE' : (this.isTime() ? 'TIME' : null);
     }
 
     /** 
@@ -1187,7 +1195,11 @@ const _toString = function (bindingValue, rootEntityType, property) {
     } else if (typeof bindingValue === 'string') {
         return bindingValue; // this covers converted entity-typed properties and string properties -- no further conversion required
     } else if (typeof bindingValue === 'number') {
-        // TODO for number value -- add conversion logic the same as in editors (date, integer and decimal editors)
+        if (propertyType === 'Date') {
+            const prop = _findProperty(rootEntityType, property);
+            return _millisDateRepresentation(bindingValue, prop.timeZone(), prop.datePortion());
+        }
+        // TODO for number value -- add conversion logic the same as in editors (integer and decimal editors)
         return '' + bindingValue;
     } else if (typeof bindingValue === 'object' && bindingValue.hasOwnProperty('amount') && bindingValue.hasOwnProperty('currency') && bindingValue.hasOwnProperty('taxPercent')) {
         // TODO for money value -- add conversion logic the same as in money editor
