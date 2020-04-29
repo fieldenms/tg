@@ -1107,19 +1107,19 @@ const _convert = function (value) {
         return value._convertDynamicEntityKey();
     } else if (value instanceof _EPrototype) {
         return _convert(value.get('key'));
-    } else if (typeof value === "number") { // for number value -- return the same value for editors (includes date, integer, decimal number editors)
+    } else if (typeof value === 'number') { // for number value -- return the same value for editors (includes date, integer, decimal number editors)
         return value;
-    } else if (typeof value === "boolean") { // for boolean value -- return the same value for editors
+    } else if (typeof value === 'boolean') { // for boolean value -- return the same value for editors
         return value;
-    } else if (typeof value === "object" && value.hasOwnProperty("amount") && value.hasOwnProperty("currency") && value.hasOwnProperty("taxPercent")) { // for money related value -- return the same value for editors
+    } else if (typeof value === 'object' && value.hasOwnProperty('amount') && value.hasOwnProperty('currency') && value.hasOwnProperty('taxPercent')) { // for money related value -- return the same value for editors
         return value;
-    } else if (typeof value === "string") { // for string value -- return the same value for editors
+    } else if (typeof value === 'string') { // for string value -- return the same value for editors
         return value;
     } else if (Array.isArray(value)) { // for Array value -- return the same value for tg-entity-editor and tg-collectional-representor
         return value.slice(); // binding value must return a new shallow array copy to get distinct instances for _currBindingEntity and _originalBindingEntity; this is because binding value may be altered directly inside some editors (e.g. tg-collectional-editor)
-    } else if (typeof value === "object" && (value.hasOwnProperty("hashlessUppercasedColourValue") || value.hasOwnProperty("value"))) {
+    } else if (typeof value === 'object' && (value.hasOwnProperty('hashlessUppercasedColourValue') || value.hasOwnProperty('value'))) {
         return value;
-    } else if (typeof value === "object" && Object.getOwnPropertyNames(value).length === 0) {
+    } else if (typeof value === 'object' && Object.getOwnPropertyNames(value).length === 0) {
         return value;
     } else {
         throw new _UCEPrototype(value);
@@ -1196,8 +1196,10 @@ const _toString = function (bindingValue, rootEntityType, property) {
         // Here we have standard logic of converting collections using the most common ', ' separator.
         // To apply custom separator please use _toStringForCollection method (see tg-entity-editor.convertToString).
         return _toStringForCollection(bindingValue, rootEntityType, property, ', ');
-    } else if (typeof bindingValue === 'object' && (bindingValue.hasOwnProperty('hashlessUppercasedColourValue') || bindingValue.hasOwnProperty('value'))) {
-        // TODO for Colour and Hyperlink values -- add conversion logic the same as in corresponding editors
+    } else if (typeof bindingValue === 'object' && bindingValue.hasOwnProperty('hashlessUppercasedColourValue')) {
+        return bindingValue.hashlessUppercasedColourValue;
+    } else if (typeof bindingValue === 'object' && bindingValue.hasOwnProperty('value')) {
+        // TODO for Hyperlink values -- add conversion logic the same as in corresponding editor
         return bindingValue;
     } else if (typeof bindingValue === 'object' && Object.getOwnPropertyNames(bindingValue).length === 0) {
         // TODO investigate where empty object is actually used to ensure proper conversion here

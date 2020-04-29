@@ -141,11 +141,7 @@ export class TgColourPicker extends TgEditor {
     }
 
     convertToString (value) {
-        if (value === null) {
-            return "";
-        } else {
-            return value.hashlessUppercasedColourValue;
-        }
+        return this.reflector().tg_toString(value, this.entity.type(), this.propertyName);
     }
 
     convertFromString (strValue) {
