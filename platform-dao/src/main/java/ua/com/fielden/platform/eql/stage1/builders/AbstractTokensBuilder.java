@@ -37,7 +37,6 @@ import ua.com.fielden.platform.eql.stage1.elements.operands.ISetOperand1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.OperandsBasedSet1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.QueryBasedSet1;
-import ua.com.fielden.platform.eql.stage1.elements.operands.SubQuery1;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISetOperand2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -340,9 +339,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         case EXPR_TOKENS:
             return (ISingleOperand1<? extends ISingleOperand2<?>>) new StandAloneExpressionBuilder(queryBuilder, (ExpressionModel) value).getResult().getValue();
         case EQUERY_TOKENS:
-        case ALL_OPERATOR:
-        case ANY_OPERATOR:
-            return queryBuilder.generateEntQueryAsSubquery((QueryModel) value);
+            return queryBuilder.generateEntQueryAsSubquery((QueryModel<?>) value);
         default:
             throw new RuntimeException("Unrecognised token category for SingleOperand: " + cat);
         }
@@ -417,7 +414,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
             singleCat = EXPR_TOKENS;
             break;
         case EQUERY_TOKENS:
-            return new QueryBasedSet1((SubQuery1) getModelForSingleOperand(cat, value));
+            return new QueryBasedSet1(queryBuilder.generateEntQueryAsSubquery((QueryModel) value));
         default:
             throw new RuntimeException("Unrecognised token category for SingleOperand: " + cat);
         }

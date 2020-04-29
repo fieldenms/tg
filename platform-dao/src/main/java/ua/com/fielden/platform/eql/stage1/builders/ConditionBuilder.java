@@ -217,14 +217,14 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 
     private ICondition1<? extends ICondition2<?>> getPlainQuantifiedTest() {
         final ISingleOperand1<? extends ISingleOperand2<?>> firstOperand = getModelForSingleOperand(firstCat(), firstValue());
-        final SubQuery1 secondOperand = (SubQuery1) getModelForSingleOperand(thirdCat(), thirdValue());
+        final SubQuery1 secondOperand = getQueryBuilder().generateEntQueryAsSubquery((QueryModel<?>) thirdValue());
         final Quantifier quantifier = ANY_OPERATOR == thirdCat() ? ANY : ALL;
         return new QuantifiedTest1(firstOperand, (ComparisonOperator) secondValue(), quantifier, secondOperand);
     }
 
     private Conditions1 getMultipleQuantifiedTest() {
         final List<ISingleOperand1<? extends ISingleOperand2<?>>> operands = getModelForMultipleOperands(firstCat(), firstValue());
-        final SubQuery1 secondOperand = (SubQuery1) getModelForSingleOperand(thirdCat(), thirdValue());
+        final SubQuery1 secondOperand = getQueryBuilder().generateEntQueryAsSubquery((QueryModel<?>) thirdValue());
         final Quantifier quantifier = ANY_OPERATOR == thirdCat() ? ANY : ALL;
         final List<ICondition1<? extends ICondition2<?>>> conditions = new ArrayList<>();
         for (final ISingleOperand1<? extends ISingleOperand2<?>> operand : operands) {
@@ -387,10 +387,9 @@ public class ConditionBuilder extends AbstractTokensBuilder {
     }
 
     private Conditions1 getMultipleExistenceTest() {
-        final List<ISingleOperand1<? extends ISingleOperand2<?>>> operands = getModelForMultipleOperands(secondCat(), secondValue());
         final List<ICondition1<? extends ICondition2<?>>> conditions = new ArrayList<>();
-        for (final ISingleOperand1<? extends ISingleOperand2<?>> operand : operands) {
-            conditions.add(new ExistenceTest1((Boolean) firstValue(), (SubQuery1) operand));
+        for (final QueryModel<?> qm : (List<QueryModel<?>>) secondValue()) {
+            conditions.add(new ExistenceTest1((Boolean) firstValue(), getQueryBuilder().generateEntQueryAsSubquery(qm)));
         }
         final LogicalOperator logicalOperator = ANY_OF_EQUERY_TOKENS == secondCat() ? OR : AND;
         return getGroup(conditions, logicalOperator);

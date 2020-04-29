@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
@@ -63,7 +62,7 @@ public class EntQueryGenerator {
         return new ResultQuery1(parseTokensIntoComponents(qm, orderModel), qm.getResultType());
     }
 
-    public <T extends AbstractEntity<?>> SourceQuery1 generateEntQueryAsSourceQuery(final QueryModel<T> qryModel, final Optional<Class<T>> resultType) {
+    public <T extends AbstractEntity<?>> SourceQuery1 generateEntQueryAsSourceQuery(final QueryModel<T> qryModel) {
         return new SourceQuery1(parseTokensIntoComponents(qryModel, null), qryModel.getResultType());
     }
 

@@ -12,7 +12,6 @@ import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
@@ -82,7 +81,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
         final String alias = secondValue();
         final List<QueryModel<AbstractEntity<?>>> models = firstValue();
         for (final QueryModel<AbstractEntity<?>> qryModel : models) {
-            queries.add(getQueryBuilder().generateEntQueryAsSourceQuery(qryModel, /*resultType = */ Optional.empty()));
+            queries.add(getQueryBuilder().generateEntQueryAsSourceQuery(qryModel));
         }
 
         return pair(QRY_SOURCE, new QrySource1BasedOnSubqueries(alias, queries, getQueryBuilder().nextCondtextId()));
