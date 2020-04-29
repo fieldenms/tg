@@ -724,7 +724,6 @@ Polymer({
         if (e.xhr.status === 200) { // successful execution of the request
             const deserialisedResult = this._serialiser.deserialise(e.response);
             
-            // TODO Need to open toast message in case where result is unsuccessful
             if (this._reflector.isError(deserialisedResult)) {
                 console.log('deserialisedResult: ', deserialisedResult);
                 this.toaster && this.toaster.openToastForError(deserialisedResult.message, this._toastMsgForError(deserialisedResult), true);
@@ -733,6 +732,8 @@ Polymer({
             const masterInfo = deserialisedResult.instance;
             this.elementName = masterInfo.key;
             this.componentUri = masterInfo.desc;
+            this.shortDesc = this.shortDesc || masterInfo.shortDesc;
+            this.longDesc = this.longDesc || masterInfo.longDesc;
             this.attrs = Object.assign({}, this.attrs, {
                 entityType: masterInfo.entityType,
                 entityId: masterInfo.entityId, 

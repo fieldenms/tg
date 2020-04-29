@@ -59,7 +59,7 @@ public final class EntityActionConfig {
         }
 
         if (functionalEntity == null && !context.withCurrentEtity) {
-            throw new IllegalArgumentException("Dynamic action can be created only if action's context has current entity.");
+            throw new IllegalArgumentException("Dynamic action can be created only with current entity in context.");
         }
 
         this.shouldRefreshParentCentreAfterSave = shouldRefreshParentCentreAfterSave;

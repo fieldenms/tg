@@ -55,6 +55,14 @@ public class MasterInfo extends AbstractEntity<String> {
     @Title(value = "Entity Id", desc = "Desc")
     private Long entityId;
 
+    @IsProperty
+    @Title(value = "Short Description", desc = "Action's short description")
+    private String shortDesc;
+
+    @IsProperty
+    @Title(value = "Long Description", desc = "Action's long description")
+    private String longDesc;
+
     @Observable
     public MasterInfo setEntityId(final Long entityId) {
         this.entityId = entityId;
@@ -153,5 +161,25 @@ public class MasterInfo extends AbstractEntity<String> {
 
     public String getWidth() {
         return width;
+    }
+
+    @Observable
+    public MasterInfo setLongDesc(final String longDesc) {
+        this.longDesc = longDesc;
+        return this;
+    }
+
+    public String getLongDesc() {
+        return longDesc;
+    }
+
+    @Observable
+    public MasterInfo setShortDesc(final String shortDesc) {
+        this.shortDesc = shortDesc;
+        return this;
+    }
+
+    public String getShortDesc() {
+        return shortDesc;
     }
 }
