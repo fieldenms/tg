@@ -75,8 +75,7 @@ export const TgEgiDataRetrievalBehavior = {
             } else if (this._reflector.findTypeByName(type)) {
                 return this._reflector.tg_toString(this._reflector.tg_convert(value), entity.type(), property);
             } else if (type.lastIndexOf('Date', 0) === 0) { // check whether type startsWith 'Date'. Type can be like 'Date', 'Date:UTC:' or 'Date:Europe/London:'
-                var splitedType = type.split(':');
-                return _millisDateRepresentation(value, splitedType[1] || null, splitedType[2] || null);
+                return this._reflector.tg_toString(this._reflector.tg_convert(value), entity.type(), property);
             } else if (typeof value === 'number') {
                 if (type === 'BigDecimal') {
                     const metaProp = this._reflector.getEntityTypeProp(entity, property);
