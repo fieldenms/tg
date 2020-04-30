@@ -1654,7 +1654,7 @@ export const TgReflector = Polymer({
     /**
      * Formates numbers with floating point in to string based on locales. If the value is null then returns empty string.
      */
-    formatDecimal: function (value, locale, scale, trailingZeros) {
+    tg_formatDecimal: function (value, locale, scale, trailingZeros) {
         if (value !== null) {
             const definedScale = typeof scale === 'undefined' || scale === null || scale < 0 || scale > 20 /* 0 and 20 are allowed bounds for scale*/ ? DEFAULT_SCALE : scale;
             const options = { maximumFractionDigits: definedScale };
@@ -1671,7 +1671,7 @@ export const TgReflector = Polymer({
      */
     formatMoney: function (value, locale, scale, trailingZeros) {
         if (value !== null) {
-            return '$' + this.formatDecimal(value.amount, locale, scale, trailingZeros);
+            return '$' + this.tg_formatDecimal(value.amount, locale, scale, trailingZeros);
         }
         return '';
     },

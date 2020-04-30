@@ -113,7 +113,7 @@ const TgChartDeckerTemplateBehaviorImpl = {
         if (typeof entity.get(property) === 'number') {
             if (type === 'BigDecimal') {
                 const metaProp = this._reflector().getEntityTypeProp(entity, property);
-                return this._reflector().formatDecimal(value, this.appConfig.locale, metaProp && metaProp.scale(), metaProp && metaProp.trailingZeros());
+                return this._reflector().tg_formatDecimal(value, this.appConfig.locale, metaProp && metaProp.scale(), metaProp && metaProp.trailingZeros());
             } else {
                 return this._reflector().formatNumber(value, this.appConfig.locale);
             }

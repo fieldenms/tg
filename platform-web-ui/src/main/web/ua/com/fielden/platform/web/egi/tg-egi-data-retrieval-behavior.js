@@ -79,7 +79,7 @@ export const TgEgiDataRetrievalBehavior = {
             } else if (typeof value === 'number') {
                 if (type === 'BigDecimal') {
                     const metaProp = this._reflector.getEntityTypeProp(entity, property);
-                    return this._reflector.formatDecimal(value, this._appConfig.locale, metaProp && metaProp.scale(), metaProp && metaProp.trailingZeros());
+                    return this._reflector.tg_formatDecimal(value, this._appConfig.locale, metaProp && metaProp.scale(), metaProp && metaProp.trailingZeros());
                 } else {
                     return this._reflector.formatNumber(value, this._appConfig.locale);
                 }
