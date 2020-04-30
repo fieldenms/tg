@@ -82,11 +82,9 @@ export class TgDecimalEditor extends TgEditor {
         return (+strValue);
     }
 
-    _formatText (valueToFormat) {
-        var value = this.convertFromString(valueToFormat);
-        if (value !== null) {
-            const metaProp = this.reflector().getEntityTypeProp(this.reflector().tg_getFullEntity(this.entity), this.propertyName);
-            return this.reflector().tg_formatDecimal(value, this.$.appConfig.locale, metaProp && metaProp.scale(), metaProp && metaProp.trailingZeros());
+    _formatText (_editingValue) {
+        if (this.reflector().isEntity(this.entity)) {
+            return this.reflector().tg_toStringForDisplay(this.convertFromString(_editingValue), this.entity.type(), this.propertyName, this.$.appConfig.locale);
         }
         return '';
     }

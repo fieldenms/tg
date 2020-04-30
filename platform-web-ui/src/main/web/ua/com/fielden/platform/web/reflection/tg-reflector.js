@@ -1227,13 +1227,17 @@ const _toString = function (bindingValue, rootEntityType, property) {
  * @param bindingValue -- binding representation of property value; for entity-typed property it is string; for array it is shallow array copy; for all other values -- it is the same value
  * @param rootEntityType -- the type of entity holding this property
  * @param property -- property name of the property; can be dot-notated or '' meaning "entity itself"
+ * @param locale -- application-wide server-driven locale; this is to be used for number properties conversion (BigDecimal, Integer / Long, Money)
  */
-const _toStringForDisplay = function (bindingValue, rootEntityType, property) {
+const _toStringForDisplay = function (bindingValue, rootEntityType, property, locale) {
     const propertyType = _determinePropertyType(rootEntityType, property);
     // for all numeric types and Colour we have non-standard display formatting; all other types will be displayed the same fashion as it is in standard conversion
     if (propertyType === 'Colour') {
         return bindingValue === null ? '' : '#' + _toString(bindingValue, rootEntityType, property);
-    } else if (propertyType === 'BigDecimal' || propertyType === 'Integer' || propertyType === 'Long' || propertyType === 'Money') {
+    } else if (propertyType === 'BigDecimal') {
+        const prop = _findProperty(rootEntityType, property);
+        return _formatDecimal(bindingValue, locale, prop.scale(), prop.trailingZeros());
+    } else if (propertyType === 'Integer' || propertyType === 'Long' || propertyType === 'Money') {
         return _toString(bindingValue, rootEntityType, property); // TODO
     } else {
         return _toString(bindingValue, rootEntityType, property);
