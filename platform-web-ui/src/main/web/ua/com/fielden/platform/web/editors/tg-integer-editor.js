@@ -81,7 +81,7 @@ export class TgIntegerEditor extends TgEditor {
     _formatText (valueToFormat) {
         var value = this.convertFromString(valueToFormat);
         if (value !== null) {
-            return this.reflector().formatNumber(value, this.$.appConfig.locale);
+            return this.reflector().tg_formatInteger(value, this.$.appConfig.locale);
         }
         return '';
     }

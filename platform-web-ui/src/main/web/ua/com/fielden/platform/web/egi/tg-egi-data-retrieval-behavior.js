@@ -81,7 +81,7 @@ export const TgEgiDataRetrievalBehavior = {
                     const metaProp = this._reflector.getEntityTypeProp(entity, property);
                     return this._reflector.tg_formatDecimal(value, this._appConfig.locale, metaProp && metaProp.scale(), metaProp && metaProp.trailingZeros());
                 } else {
-                    return this._reflector.formatNumber(value, this._appConfig.locale);
+                    return this._reflector.tg_formatInteger(value, this._appConfig.locale);
                 }
             } else if (type === 'Money') {
                 const metaProp = this._reflector.getEntityTypeProp(entity, property);

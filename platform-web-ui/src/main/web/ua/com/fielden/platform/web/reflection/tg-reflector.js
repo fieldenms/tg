@@ -1644,7 +1644,7 @@ export const TgReflector = Polymer({
     /**
      * Formates the numbers in to string based on specified loacles. If the value is null then returns empty string.
      */
-    formatNumber: function (value, locale) {
+    tg_formatInteger: function (value, locale) {
         if (value !== null) {
             return value.toLocaleString(locale);
         }

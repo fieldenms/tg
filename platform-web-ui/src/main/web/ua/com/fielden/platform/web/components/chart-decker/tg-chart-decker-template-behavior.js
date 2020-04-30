@@ -115,7 +115,7 @@ const TgChartDeckerTemplateBehaviorImpl = {
                 const metaProp = this._reflector().getEntityTypeProp(entity, property);
                 return this._reflector().tg_formatDecimal(value, this.appConfig.locale, metaProp && metaProp.scale(), metaProp && metaProp.trailingZeros());
             } else {
-                return this._reflector().formatNumber(value, this.appConfig.locale);
+                return this._reflector().tg_formatInteger(value, this.appConfig.locale);
             }
         } else if (type === 'Money') {
             const metaProp = this._reflector().getEntityTypeProp(entity, property);
