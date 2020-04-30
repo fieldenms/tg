@@ -42,8 +42,8 @@ export class TgHyperlinkEditor extends TgEditor {
         return createEditorTemplate(additionalTemplate, html``, customInputTemplate, html``, customIconButtonsTemplate, propertyActionTemplate);
     }
     
-    convertToString (link) {
-        return link === null ? "" : link.value;
+    convertToString (value) {
+        return this.reflector().tg_toString(value, this.entity.type(), this.propertyName);
     }
 
     /**

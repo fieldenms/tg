@@ -1211,8 +1211,7 @@ const _toString = function (bindingValue, rootEntityType, property) {
     } else if (typeof bindingValue === 'object' && bindingValue.hasOwnProperty('hashlessUppercasedColourValue')) {
         return bindingValue.hashlessUppercasedColourValue;
     } else if (typeof bindingValue === 'object' && bindingValue.hasOwnProperty('value')) {
-        // TODO for Hyperlink values -- add conversion logic the same as in corresponding editor
-        return bindingValue;
+        return bindingValue.value;
     } else if (typeof bindingValue === 'object' && Object.getOwnPropertyNames(bindingValue).length === 0) {
         // TODO investigate where empty object is actually used to ensure proper conversion here
         return '';
