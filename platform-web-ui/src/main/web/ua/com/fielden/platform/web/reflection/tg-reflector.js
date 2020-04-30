@@ -1283,6 +1283,41 @@ const _toStringForCollectionAsTooltip = function (bindingValue, rootEntityType, 
 };
 
 /**
+ * Formats integer number in to string based on locale. If the value is null then returns empty string.
+ */
+const _formatInteger = function (value, locale) {
+    if (value !== null) {
+        return value.toLocaleString(locale);
+    }
+    return '';
+};
+
+/**
+ * Formats number with floating point in to string based on locale. If the value is null then returns empty string.
+ */
+const _formatDecimal = function (value, locale, scale, trailingZeros) {
+    if (value !== null) {
+        const definedScale = typeof scale === 'undefined' || scale === null || scale < 0 || scale > 20 /* 0 and 20 are allowed bounds for scale*/ ? DEFAULT_SCALE : scale;
+        const options = { maximumFractionDigits: definedScale };
+        if (trailingZeros !== false) {
+            options.minimumFractionDigits = definedScale;
+        }
+        return value.toLocaleString(locale, options);
+    }
+    return '';
+};
+
+/**
+ * Formats money number in to string based on locale. If the value is null then returns empty string.
+ */
+const _formatMoney = function (value, locale, scale, trailingZeros) {
+    if (value !== null) {
+        return '$' + _formatDecimal(value.amount, locale, scale, trailingZeros);
+    }
+    return '';
+};
+
+/**
  * Completes the process of type table preparation -- creates instances of EntityType objects for each entity type in type table.
  */
 var _providePrototypes = function (typeTable, EntityType) {
@@ -1642,38 +1677,24 @@ export const TgReflector = Polymer({
     },
 
     /**
-     * Formates the numbers in to string based on specified loacles. If the value is null then returns empty string.
+     * Formats integer number in to string based on locale. If the value is null then returns empty string.
      */
     tg_formatInteger: function (value, locale) {
-        if (value !== null) {
-            return value.toLocaleString(locale);
-        }
-        return '';
+        return _formatInteger(value, locale);
     },
 
     /**
-     * Formates numbers with floating point in to string based on locales. If the value is null then returns empty string.
+     * Formats number with floating point in to string based on locale. If the value is null then returns empty string.
      */
     tg_formatDecimal: function (value, locale, scale, trailingZeros) {
-        if (value !== null) {
-            const definedScale = typeof scale === 'undefined' || scale === null || scale < 0 || scale > 20 /* 0 and 20 are allowed bounds for scale*/ ? DEFAULT_SCALE : scale;
-            const options = { maximumFractionDigits: definedScale };
-            if (trailingZeros !== false) {
-                options.minimumFractionDigits = definedScale;
-            }
-            return value.toLocaleString(locale, options);
-        }
-        return '';
+        return _formatDecimal(value, locale, scale, trailingZeros);
     },
 
     /**
-     * Format money numbers in to string based on locales. If the value is null then returns empty string.
+     * Formats money number in to string based on locale. If the value is null then returns empty string.
      */
     tg_formatMoney: function (value, locale, scale, trailingZeros) {
-        if (value !== null) {
-            return '$' + this.tg_formatDecimal(value.amount, locale, scale, trailingZeros);
-        }
-        return '';
+        return _formatMoney(value, locale, scale, trailingZeros);
     },
 
     /**
