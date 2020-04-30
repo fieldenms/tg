@@ -1199,7 +1199,7 @@ const _toString = function (bindingValue, rootEntityType, property) {
             const prop = _findProperty(rootEntityType, property);
             return _millisDateRepresentation(bindingValue, prop.timeZone(), prop.datePortion());
         }
-        // TODO for number value -- add conversion logic the same as in editors (integer and decimal editors)
+        // TODO for number value -- add conversion logic the same as in editors (integer editors)
         return '' + bindingValue;
     } else if (typeof bindingValue === 'object' && bindingValue.hasOwnProperty('amount') && bindingValue.hasOwnProperty('currency') && bindingValue.hasOwnProperty('taxPercent')) {
         // TODO for money value -- add conversion logic the same as in money editor
