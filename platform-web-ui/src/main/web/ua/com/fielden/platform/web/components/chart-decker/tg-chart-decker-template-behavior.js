@@ -119,7 +119,7 @@ const TgChartDeckerTemplateBehaviorImpl = {
             }
         } else if (type === 'Money') {
             const metaProp = this._reflector().getEntityTypeProp(entity, property);
-            return this._reflector().formatMoney(value, this.appConfig.locale, metaProp && metaProp.scale(), metaProp && metaProp.trailingZeros());
+            return this._reflector().tg_formatMoney(value, this.appConfig.locale, metaProp && metaProp.scale(), metaProp && metaProp.trailingZeros());
         }
     },
 

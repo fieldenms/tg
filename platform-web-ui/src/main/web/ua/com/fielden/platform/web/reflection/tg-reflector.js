@@ -1669,7 +1669,7 @@ export const TgReflector = Polymer({
     /**
      * Format money numbers in to string based on locales. If the value is null then returns empty string.
      */
-    formatMoney: function (value, locale, scale, trailingZeros) {
+    tg_formatMoney: function (value, locale, scale, trailingZeros) {
         if (value !== null) {
             return '$' + this.tg_formatDecimal(value.amount, locale, scale, trailingZeros);
         }
