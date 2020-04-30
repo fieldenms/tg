@@ -80,7 +80,7 @@ export const TgEgiDataRetrievalBehavior = {
                 if (type === 'BigDecimal') {
                     return this._reflector.tg_toStringForDisplay(this._reflector.tg_convert(value), entity.type(), property, this._appConfig.locale);
                 } else {
-                    return this._reflector.tg_formatInteger(value, this._appConfig.locale);
+                    return this._reflector.tg_toStringForDisplay(this._reflector.tg_convert(value), entity.type(), property, this._appConfig.locale);
                 }
             } else if (type === 'Money') {
                 const metaProp = this._reflector.getEntityTypeProp(entity, property);
