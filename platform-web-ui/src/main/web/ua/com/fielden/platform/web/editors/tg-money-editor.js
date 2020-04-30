@@ -64,7 +64,7 @@ export class TgMoneyEditor extends TgEditor {
      * Converts the value into string representation (which is used in editing / comm values).
      */
     convertToString (value) {
-        return value === null ? "" : "" + value.amount;
+        return this.reflector().tg_toString(value, this.entity.type(), this.propertyName);
     }
     
     /**

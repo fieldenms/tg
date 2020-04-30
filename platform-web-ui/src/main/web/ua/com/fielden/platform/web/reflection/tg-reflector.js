@@ -1202,8 +1202,7 @@ const _toString = function (bindingValue, rootEntityType, property) {
             return '' + bindingValue; // Integer value (or Long, but very rare)
         }
     } else if (typeof bindingValue === 'object' && bindingValue.hasOwnProperty('amount') && bindingValue.hasOwnProperty('currency') && bindingValue.hasOwnProperty('taxPercent')) {
-        // TODO for money value -- add conversion logic the same as in money editor
-        return '' + bindingValue;
+        return '' + bindingValue.amount;
     } else if (Array.isArray(bindingValue)) {
         // Here we have standard logic of converting collections using the most common ', ' separator.
         // To apply custom separator please use _toStringForCollection method (see tg-entity-editor.convertToString).
