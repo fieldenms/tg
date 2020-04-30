@@ -1238,7 +1238,7 @@ const _toStringForDisplay = function (bindingValue, rootEntityType, property, lo
     } else if (propertyType === 'Integer' || propertyType === 'Long') {
         return _formatInteger(bindingValue, locale);
     } else if (propertyType === 'Money') {
-        return _toString(bindingValue, rootEntityType, property); // TODO
+        return _formatMoney(bindingValue, locale, prop.scale(), prop.trailingZeros());
     } else {
         return _toString(bindingValue, rootEntityType, property);
     }
