@@ -1230,13 +1230,15 @@ const _toString = function (bindingValue, rootEntityType, property) {
  */
 const _toStringForDisplay = function (bindingValue, rootEntityType, property, locale) {
     const propertyType = _determinePropertyType(rootEntityType, property);
+    const prop = _findProperty(rootEntityType, property);
     // for all numeric types and Colour we have non-standard display formatting; all other types will be displayed the same fashion as it is in standard conversion
     if (propertyType === 'Colour') {
         return bindingValue === null ? '' : '#' + _toString(bindingValue, rootEntityType, property);
     } else if (propertyType === 'BigDecimal') {
-        const prop = _findProperty(rootEntityType, property);
         return _formatDecimal(bindingValue, locale, prop.scale(), prop.trailingZeros());
-    } else if (propertyType === 'Integer' || propertyType === 'Long' || propertyType === 'Money') {
+    } else if (propertyType === 'Integer' || propertyType === 'Long') {
+        return _formatInteger(bindingValue, locale);
+    } else if (propertyType === 'Money') {
         return _toString(bindingValue, rootEntityType, property); // TODO
     } else {
         return _toString(bindingValue, rootEntityType, property);

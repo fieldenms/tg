@@ -74,10 +74,9 @@ export class TgIntegerEditor extends TgEditor {
         return strValue === '' ? null : parseInt(strValue);
     }
     
-    _formatText (valueToFormat) {
-        var value = this.convertFromString(valueToFormat);
-        if (value !== null) {
-            return this.reflector().tg_formatInteger(value, this.$.appConfig.locale);
+    _formatText (_editingValue) {
+        if (this.reflector().isEntity(this.entity)) {
+            return this.reflector().tg_toStringForDisplay(this.convertFromString(_editingValue), this.entity.type(), this.propertyName, this.$.appConfig.locale);
         }
         return '';
     }
