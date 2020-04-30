@@ -64,11 +64,7 @@ export class TgIntegerEditor extends TgEditor {
      * Converts the value into string representation (which is used in edititing / comm values).
      */
     convertToString (value) {
-        // NOTE: consider the follwing example, of how 'super' method can be invoked.
-        //   Just use concrete name of the 'super' behavior and call the function excplicitly:            		
-        // TgEditorBehaviorImpl.convertToString(value);
-        
-        return value === null ? "" : "" + value;
+        return this.reflector().tg_toString(value, this.entity.type(), this.propertyName);
     }
 
     /**
