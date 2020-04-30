@@ -1227,7 +1227,7 @@ const _toString = function (bindingValue, rootEntityType, property) {
  * @param bindingValue -- binding representation of property value; for entity-typed property it is string; for array it is shallow array copy; for all other values -- it is the same value
  * @param rootEntityType -- the type of entity holding this property
  * @param property -- property name of the property; can be dot-notated or '' meaning "entity itself"
- * @param locale -- application-wide server-driven locale; this is to be used for number properties conversion (BigDecimal, Integer / Long, Money)
+ * @param locale -- optional; application-wide server-driven locale; this is to be used for number properties conversion (BigDecimal, Integer / Long, Money) and can be omitted for other types
  */
 const _toStringForDisplay = function (bindingValue, rootEntityType, property, locale) {
     const propertyType = _determinePropertyType(rootEntityType, property);
@@ -1581,9 +1581,10 @@ export const TgReflector = Polymer({
      * @param bindingValue -- binding representation of property value; for entity-typed property it is string; for array it is shallow array copy; for all other values -- it is the same value
      * @param rootEntityType -- the type of entity holding this property
      * @param property -- property name of the property; can be dot-notated or '' meaning "entity itself"
+     * @param locale -- optional; application-wide server-driven locale; this is to be used for number properties conversion (BigDecimal, Integer / Long, Money) and can be omitted for other types
      */
-    tg_toStringForDisplay: function (bindingValue, rootEntityType, property) {
-        return _toStringForDisplay(bindingValue, rootEntityType, property);
+    tg_toStringForDisplay: function (bindingValue, rootEntityType, property, locale) {
+        return _toStringForDisplay(bindingValue, rootEntityType, property, locale);
     },
 
     /**
