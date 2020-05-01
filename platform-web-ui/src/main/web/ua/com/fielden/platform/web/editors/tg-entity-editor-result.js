@@ -332,7 +332,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
      * Obtains a value of the specified by name property for the passed in entity.
      */
     _propValueByName (entity, propName) {
-        return this.reflector.tg_toString(this.reflector.tg_convert(entity.get(propName)), entity.type(), propName);
+        return this.reflector.tg_toStringFull(entity.get(propName), entity.type(), propName);
     }
 
     /**

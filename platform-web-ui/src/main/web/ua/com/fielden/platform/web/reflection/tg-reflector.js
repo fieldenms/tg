@@ -1220,6 +1220,17 @@ const _toString = function (bindingValue, rootEntityType, property) {
 };
 
 /**
+ * Converts property value to string.
+ * 
+ * @param fullyFledgedValue -- fully-fledged property value (not binding representation)
+ * @param rootEntityType -- the type of entity holding this property
+ * @param property -- property name of the property; can be dot-notated
+ */
+const _toStringFull = function (fullyFledgedValue, rootEntityType, property) {
+    return _toString(_convert(fullyFledgedValue), rootEntityType, property);
+};
+
+/**
  * Converts property value, converted to editor binding representation ('bindingValue'), to string for display purposes.
  * 
  * @param bindingValue -- binding representation of property value; for entity-typed property it is string; for array it is shallow array copy; for all other values -- it is the same value
@@ -1563,7 +1574,7 @@ export const TgReflector = Polymer({
     tg_convert: function (value) {
         return _convert(value);
     },
-
+    
     /**
      * Converts property value, converted to editor binding representation ('bindingValue'), to string.
      * 
@@ -1573,6 +1584,17 @@ export const TgReflector = Polymer({
      */
     tg_toString: function (bindingValue, rootEntityType, property) {
         return _toString(bindingValue, rootEntityType, property);
+    },
+    
+    /**
+     * Converts property value to string.
+     * 
+     * @param fullyFledgedValue -- fully-fledged property value (not binding representation)
+     * @param rootEntityType -- the type of entity holding this property
+     * @param property -- property name of the property; can be dot-notated
+     */
+    tg_toStringFull: function (fullyFledgedValue, rootEntityType, property) {
+        return _toStringFull(fullyFledgedValue, rootEntityType, property);
     },
     
     /**
@@ -1586,7 +1608,7 @@ export const TgReflector = Polymer({
     tg_toStringForDisplay: function (bindingValue, rootEntityType, property, locale) {
         return _toStringForDisplay(bindingValue, rootEntityType, property, locale);
     },
-
+    
     /**
      * Converts collectional property value, converted to editor binding representation ('bindingValue'), to string.
      * 
@@ -1610,7 +1632,7 @@ export const TgReflector = Polymer({
     tg_toStringForCollectionAsTooltip: function (bindingValue, rootEntityType, property) {
         return _toStringForCollectionAsTooltip(bindingValue, rootEntityType, property);
     },
-
+    
     /**
      * Returns indication whether 'obj' represents 'mock not found entity'. Synced with 'EntityResourceUtils.isMockNotFoundEntity' method.
      */
