@@ -41,10 +41,6 @@ export class TgHyperlinkEditor extends TgEditor {
     static get template() { 
         return createEditorTemplate(additionalTemplate, html``, customInputTemplate, html``, customIconButtonsTemplate, propertyActionTemplate);
     }
-    
-    convertToString (value) {
-        return this.reflector().tg_toString(value, this.entity.type(), this.propertyName);
-    }
 
     /**
      * Converts the value from string representation into a JSON object that is used for representing value of Java type Hyperlink.

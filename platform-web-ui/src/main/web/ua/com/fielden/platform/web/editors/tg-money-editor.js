@@ -59,13 +59,6 @@ export class TgMoneyEditor extends TgEditor {
         super();
         this._hasLayer = true;
     }
-
-    /**
-     * Converts the value into string representation (which is used in editing / comm values).
-     */
-    convertToString (value) {
-        return this.reflector().tg_toString(value, this.entity.type(), this.propertyName);
-    }
     
     /**
      * Converts the value from string representation (which is used in editing / comm values) into concrete type of this editor component (Number).

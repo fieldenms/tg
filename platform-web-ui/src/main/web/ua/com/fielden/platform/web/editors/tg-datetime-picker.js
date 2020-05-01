@@ -230,13 +230,6 @@ export class TgDatetimePicker extends TgEditor {
         }
     }
 
-    /**
-     * Converts the value into string representation (which is used in editing / comm values).
-     */
-    convertToString (value) {
-        return this.reflector().tg_toString(value, this.entity.type(), this.propertyName);
-    }
-
     _showCalendar (e) {
         if (!this._isCalendarOpen) {
             this._isCalendarOpen = true;

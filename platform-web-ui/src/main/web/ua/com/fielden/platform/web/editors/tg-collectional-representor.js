@@ -40,7 +40,7 @@ export class TgCollectionalRepresentor extends TgEditor {
         if (value && !Array.isArray(value)) {
             throw 'Unsupported value has appeared inside collectional representor: ' + value;
         }
-        return this.reflector().tg_toString(value, this.entity.type(), this.propertyName);
+        return super.convertToString(value);
     }
 
     /**

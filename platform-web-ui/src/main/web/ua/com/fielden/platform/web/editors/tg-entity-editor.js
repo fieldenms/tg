@@ -807,7 +807,7 @@ export class TgEntityEditor extends TgEditor {
         // null converts to '' in majority of cases in reflector.tg_toString... family of methods and this is the case for this editor (String or Arrays of String types)
         return this.multi === true
             ? this.reflector().tg_toStringForCollection(value, this.entity.type(), this.propertyName, this.separator)
-            : this.reflector().tg_toString             (value, this.entity.type(), this.propertyName);
+            : super.convertToString(value);
     }
 
     /**

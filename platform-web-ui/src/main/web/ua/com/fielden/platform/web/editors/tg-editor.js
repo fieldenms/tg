@@ -805,11 +805,10 @@ export class TgEditor extends PolymerElement {
     _skipValidationAction () {}
 
     /**
-     * Converts the value into string representation (which is used in editing / comm values). Please implement this method in descendant editor.
+     * Converts the value into string representation (which is used in editing / comm values). Override this method in descendant editor to get some specific behavior.
      */
     convertToString (value) {
-        // return "" + value;
-        throw "Conversion to string is not specified for this editor.";
+        return this.reflector().tg_toString(value, this.entity.type(), this.propertyName);
     }
 
     /**

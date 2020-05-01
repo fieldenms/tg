@@ -61,13 +61,6 @@ export class TgIntegerEditor extends TgEditor {
     }
     
     /**
-     * Converts the value into string representation (which is used in edititing / comm values).
-     */
-    convertToString (value) {
-        return this.reflector().tg_toString(value, this.entity.type(), this.propertyName);
-    }
-
-    /**
      * Converts the value from string representation (which is used in edititing / comm values) into concrete type of this editor component (Number).
      */
     convertFromString (strValue) {
