@@ -311,8 +311,11 @@ export class TgColourPicker extends TgEditor {
         return style;
     }
 
-    _formatText (value) {
-        return value && '#' + value;
+    _formatText (_editingValue) {
+        if (this.reflector().isEntity(this.entity)) {
+            return this.reflector().tg_toStringForDisplay(this.convertFromString(_editingValue), this.entity.type(), this.propertyName);
+        }
+        return '';
     }
 }
 
