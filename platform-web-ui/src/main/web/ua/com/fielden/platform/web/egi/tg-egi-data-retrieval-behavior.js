@@ -88,8 +88,8 @@ export const TgEgiDataRetrievalBehavior = {
                 return this._reflector.tg_toStringForDisplay(this._reflector.tg_convert(value), entity.type(), property);
             } else if (type === 'Hyperlink') {
                 return this._reflector.tg_toString(this._reflector.tg_convert(value), entity.type(), property);
-            } else {
-                return value;
+            } else { // the following case represents string; booleans are treated separately, see tg-egi-cell._propertyChangeHandler for more details
+                return this._reflector.tg_toString(this._reflector.tg_convert(value), entity.type(), property);
             }
         }
     }

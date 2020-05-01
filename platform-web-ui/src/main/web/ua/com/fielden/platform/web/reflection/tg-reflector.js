@@ -1207,9 +1207,9 @@ const _toString = function (bindingValue, rootEntityType, property) {
         // Here we have standard logic of converting collections using the most common ', ' separator.
         // To apply custom separator please use _toStringForCollection method (see tg-entity-editor.convertToString).
         return _toStringForCollection(bindingValue, rootEntityType, property, ', ');
-    } else if (typeof bindingValue === 'object' && bindingValue.hasOwnProperty('hashlessUppercasedColourValue')) {
+    } else if (typeof bindingValue === 'object' && bindingValue.hasOwnProperty('hashlessUppercasedColourValue')) { // Colour
         return bindingValue.hashlessUppercasedColourValue;
-    } else if (typeof bindingValue === 'object' && bindingValue.hasOwnProperty('value')) {
+    } else if (typeof bindingValue === 'object' && bindingValue.hasOwnProperty('value')) { // Hyperlink
         return bindingValue.value;
     } else if (typeof bindingValue === 'object' && Object.getOwnPropertyNames(bindingValue).length === 0) {
         // TODO investigate where empty object is actually used to ensure proper conversion here
