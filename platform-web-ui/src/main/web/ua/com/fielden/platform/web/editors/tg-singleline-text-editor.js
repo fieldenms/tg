@@ -39,7 +39,7 @@ export class TgSinglelineTextEditor extends TgEditor {
      * Converts the value into string representation (which is used in edititing / comm values).
      */
     convertToString (value) {
-        return value === null ? "" : "" + value;
+        return this.reflector().tg_toString(value, this.entity.type(), this.propertyName);
     }
     
     /**
