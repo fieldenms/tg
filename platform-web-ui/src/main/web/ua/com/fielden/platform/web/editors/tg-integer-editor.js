@@ -5,8 +5,8 @@ import '/app/tg-app-config.js';
 
 import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
-import { TgEditor,  createEditorTemplate} from '/resources/editors/tg-editor.js';
-import { truncateInsignificantZeros } from '/resources/reflection/tg-numeric-utils.js';
+import { createEditorTemplate } from '/resources/editors/tg-editor.js';
+import { TgNumericEditor } from '/resources/editors/tg-numeric-editor.js';
 
 const additionalTemplate = html`
     <style>
@@ -49,40 +49,19 @@ const customInputTemplate = html`
 const inputLayerTemplate = html`<div class="input-layer" tooltip-text$="[[_getTooltip(_editingValue)]]">[[_formatText(_editingValue)]]</div>`;
 const propertyActionTemplate = html`<slot name="property-action"></slot>`;
 
-export class TgIntegerEditor extends TgEditor {
+export class TgIntegerEditor extends TgNumericEditor {
 
     static get template () { 
         return createEditorTemplate(additionalTemplate, html``, customInputTemplate, inputLayerTemplate, html``, propertyActionTemplate);
     }
 
-    constructor() {
-        super();
-        this._hasLayer = true;
-    }
-    
     /**
      * Converts the value from string representation (which is used in edititing / comm values) into concrete type of this editor component (Number).
      */
     convertFromString (strValue) {
         return strValue === '' ? null : parseInt(strValue);
     }
-    
-    _formatText (_editingValue) {
-        if (this.reflector().isEntity(this.entity)) {
-            return this.reflector().tg_toStringForDisplay(this.convertFromString(_editingValue), this.entity.type(), this.propertyName, this.$.appConfig.locale);
-        }
-        return '';
-    }
-    
-    /**
-     * Overridden to provide value corrections.
-     */
-    _commitForDescendants () {
-        const correctedValue = truncateInsignificantZeros(this._editingValue);
-        if (!this.reflector().equalsEx(correctedValue, this._editingValue)) {
-            this._editingValue = correctedValue;
-        }
-    }
+
 }
 
 customElements.define('tg-integer-editor', TgIntegerEditor);
