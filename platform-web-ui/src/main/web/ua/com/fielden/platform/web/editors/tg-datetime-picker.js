@@ -271,7 +271,7 @@ export class TgDatetimePicker extends TgEditor {
                 .minute(this.$.datePicker.selectedMinute)
                 .seconds(this.$.datePicker.seconds)
                 .milliseconds(this.$.datePicker.milis);
-            self._editingValue = self.reflector().tg_toString(acceptedMoment.valueOf(), self.entity.type(), self.propertyName);
+            self._editingValue = self.convertToString(acceptedMoment.valueOf());
             //self.decoratedInput().focus();
         }.bind(domBind);
 
@@ -389,19 +389,19 @@ export class TgDatetimePicker extends TgEditor {
             } else if (this._isLiteral(dateEditingValue)) {
                 this._validMoment = this._tryLiterals(dateEditingValue);
                 if (this._validMoment !== null) {
-                    return this.reflector().tg_toString(this._validMoment.valueOf(), this.entity.type(), this.propertyName);
+                    return this.convertToString(this._validMoment.valueOf());
                 }
             } else if (this.timeZone === 'UTC' && dateEditingValue.indexOf('-') >= 0) { //As the last resort try utc formatting
                 this._validMoment = this._tryUTCFormats(dateEditingValue);
                 if (this._validMoment !== null) {
-                    return this.reflector().tg_toString(this._validMoment.valueOf(), this.entity.type(), this.propertyName);
+                    return this.convertToString(this._validMoment.valueOf());
                 }
             } else {
                 const value = dateEditingValue.replace(new RegExp(' ', 'g'), '').trim();
                 if (value) {
                     this._validMoment = this._tryTimePortionFormats(value, this._timePortionFormats.slice() /* the copy is made  */);
                     if (this._validMoment !== null) {
-                        return this.reflector().tg_toString(this._validMoment.valueOf(), this.entity.type(), this.propertyName);
+                        return this.convertToString(this._validMoment.valueOf());
                     }
                 }
             }
@@ -439,7 +439,7 @@ export class TgDatetimePicker extends TgEditor {
         if (value) {
             this._validMoment = this._tryFormats(value, this._formats.slice() /* the copy is made  */);
             if (this._validMoment !== null) {
-                return this.reflector().tg_toString(this._validMoment.valueOf(), this.entity.type(), this.propertyName);
+                return this.convertToString(this._validMoment.valueOf());
             }
         }
         return undefined;
