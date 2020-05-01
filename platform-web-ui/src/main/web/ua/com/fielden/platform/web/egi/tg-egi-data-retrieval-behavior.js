@@ -69,28 +69,7 @@ export const TgEgiDataRetrievalBehavior = {
         if (entity === null || property === null || type === null) {
             return '';
         } else {
-            const value = entity.get(property);
-            if (value === null) {
-                return "";
-            } else if (this._reflector.findTypeByName(type)) {
-                return this._reflector.tg_toString(this._reflector.tg_convert(value), entity.type(), property);
-            } else if (type.lastIndexOf('Date', 0) === 0) { // check whether type startsWith 'Date'. Type can be like 'Date', 'Date:UTC:' or 'Date:Europe/London:'
-                return this._reflector.tg_toString(this._reflector.tg_convert(value), entity.type(), property);
-            } else if (typeof value === 'number') {
-                if (type === 'BigDecimal') {
-                    return this._reflector.tg_toStringForDisplay(this._reflector.tg_convert(value), entity.type(), property, this._appConfig.locale);
-                } else {
-                    return this._reflector.tg_toStringForDisplay(this._reflector.tg_convert(value), entity.type(), property, this._appConfig.locale);
-                }
-            } else if (type === 'Money') {
-                return this._reflector.tg_toStringForDisplay(this._reflector.tg_convert(value), entity.type(), property, this._appConfig.locale);
-            } else if (type === 'Colour') {
-                return this._reflector.tg_toStringForDisplay(this._reflector.tg_convert(value), entity.type(), property);
-            } else if (type === 'Hyperlink') {
-                return this._reflector.tg_toString(this._reflector.tg_convert(value), entity.type(), property);
-            } else { // the following case represents string; booleans are treated separately, see tg-egi-cell._propertyChangeHandler for more details
-                return this._reflector.tg_toString(this._reflector.tg_convert(value), entity.type(), property);
-            }
+            return this._reflector.tg_toStringForDisplay(this._reflector.tg_convert(entity.get(property)), entity.type(), property, this._appConfig.locale);
         }
     }
 
