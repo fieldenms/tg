@@ -141,8 +141,10 @@ export class TgColourPicker extends TgEditor {
     }
 
     convertFromString (strValue) {
-        if (strValue.length !== 3 && strValue.length !== 6 && strValue !== "") {
-            throw "The entered value [ #" + strValue + "] is not a valid colour (use only [0-9; A-F], 3 or 6 characters).";
+        if (strValue === '') {
+            return null;
+        } else if (strValue.length !== 3 && strValue.length !== 6) {
+            throw 'The entered value [ #' + strValue + '] is not a valid colour (use only [0-9; A-F], 3 or 6 characters).';
         } else {
             return {
                 hashlessUppercasedColourValue: strValue
