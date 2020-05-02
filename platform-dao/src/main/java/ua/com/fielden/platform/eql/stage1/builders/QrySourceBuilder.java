@@ -20,6 +20,7 @@ import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.eql.stage1.elements.operands.SourceQuery1;
 import ua.com.fielden.platform.eql.stage1.elements.sources.QrySource1BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage1.elements.sources.QrySource1BasedOnSubqueries;
+import ua.com.fielden.platform.eql.stage1.elements.sources.QrySource1BasedOnVoid;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -94,7 +95,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
         } else if (isSubqueriesAsSource() || isSubqueriesAsSourceWithoutAlias()) {
             return buildResultForQrySourceBasedOnSubqueries();
         } else if (isNothingAsSourceWithoutAlias()) {
-            return pair(QRY_SOURCE, null);
+            return pair(QRY_SOURCE, new QrySource1BasedOnVoid());
         } else {
             throw new RuntimeException("Unable to get result - unrecognised state.");
         }

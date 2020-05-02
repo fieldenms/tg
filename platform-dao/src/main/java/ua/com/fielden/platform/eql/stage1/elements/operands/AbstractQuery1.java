@@ -36,7 +36,7 @@ public abstract class AbstractQuery1 {
         result = prime * result + groups.hashCode();
         result = prime * result + orderings.hashCode();
         result = prime * result + ((resultType == null) ? 0 : resultType.hashCode());
-        result = prime * result + ((sources == null) ? 0 : sources.hashCode());
+        result = prime * result + sources.hashCode();
         result = prime * result + yields.hashCode();
         return result;
     }

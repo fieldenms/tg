@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.eql.stage2.elements.operands;
 
-import static java.util.Collections.emptySet;
-
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -39,7 +37,7 @@ public abstract class AbstractQuery2 {
     
     public Set<EntProp2> collectProps() {
         final Set<EntProp2> result = new HashSet<>();
-        result.addAll(sources != null ? sources.collectProps() : emptySet());
+        result.addAll(sources.collectProps());
         result.addAll(conditions.collectProps());
         result.addAll(yields.collectProps());
         result.addAll(groups.collectProps());
@@ -54,8 +52,8 @@ public abstract class AbstractQuery2 {
         int result = 1;
         result = prime * result + conditions.hashCode();
         result = prime * result + groups.hashCode();
-        result = prime * result + ((resultType == null) ? 0 : resultType.hashCode());
-        result = prime * result + ((sources == null) ? 0 : sources.hashCode());
+        result = prime * result + resultType.hashCode();
+        result = prime * result + sources.hashCode();
         result = prime * result + yields.hashCode();
         result = prime * result + orderings.hashCode();
         return result;

@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.stage3.elements.sources;
 
 import java.util.Objects;
 
+import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import ua.com.fielden.platform.entity.query.DbVersion;
 
 public class SingleQrySource3 implements IQrySources3 {
@@ -13,7 +14,8 @@ public class SingleQrySource3 implements IQrySources3 {
 
     @Override
     public String sql(final DbVersion dbVersion, final boolean atFromStmt) {
-        return (atFromStmt ? "\nFROM\n" : "") + source.sql(dbVersion);
+        final String sql = source.sql(dbVersion);
+        return (atFromStmt && isNotEmpty(sql) ? "\nFROM\n" : "") + sql;
     }
     
     @Override

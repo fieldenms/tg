@@ -33,13 +33,13 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableToS2<S
     public TransformationResult<SourceQuery2> transform(final PropsResolutionContext context) {
         final PropsResolutionContext localResolutionContext = context.produceForCorrelatedSubquery();//isSubQuery() ? context.produceForCorrelatedSubquery() : context.produceForUncorrelatedSubquery();
         // .produceForUncorrelatedSubquery() should be used only for cases of synthetic entities (where source query can only be uncorrelated) -- simple queries as source queries are accessible for correlation
-        final TransformationResult<Sources2> sourcesTr = sources != null ? sources.transform(localResolutionContext) : null;
-        final TransformationResult<Conditions2> conditionsTr = conditions.transform(sourcesTr != null ? sourcesTr.updatedContext : localResolutionContext);
+        final TransformationResult<Sources2> sourcesTr = sources.transform(localResolutionContext);
+        final TransformationResult<Conditions2> conditionsTr = conditions.transform(sourcesTr.updatedContext);
         final TransformationResult<Yields2> yieldsTr = yields.transform(conditionsTr.updatedContext);
         final TransformationResult<GroupBys2> groupsTr = groups.transform(yieldsTr.updatedContext);
         final TransformationResult<OrderBys2> orderingsTr = orderings.transform(groupsTr.updatedContext);
-        final Yields2 enhancedYields = sources != null ? enhanceYields(yieldsTr.item, sourcesTr.item) : yieldsTr.item;
-        final EntQueryBlocks2 entQueryBlocks = new EntQueryBlocks2(sourcesTr != null ? sourcesTr.item : null, conditionsTr.item, enhancedYields/*yieldsTr.item*/, groupsTr.item, orderingsTr.item);
+        final Yields2 enhancedYields = enhanceYields(yieldsTr.item, sourcesTr.item);
+        final EntQueryBlocks2 entQueryBlocks = new EntQueryBlocks2(sourcesTr.item, conditionsTr.item, enhancedYields, groupsTr.item, orderingsTr.item);
 
         final PropsResolutionContext resultResolutionContext = new PropsResolutionContext(orderingsTr.updatedContext.getDomainInfo(), orderingsTr.updatedContext.getSources().subList(1, orderingsTr.updatedContext.getSources().size()), orderingsTr.updatedContext.sourceId);
         return new TransformationResult<SourceQuery2>(new SourceQuery2(entQueryBlocks, resultType), resultResolutionContext);

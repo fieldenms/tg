@@ -42,9 +42,9 @@ public class PropsResolutionContext {
         return new PropsResolutionContext(domainInfo, buildSourcesStackForNewQuery(sources), sourceId);
     }
 
-    public PropsResolutionContext produceForUncorrelatedSubquery() {
-        return new PropsResolutionContext(domainInfo, buildSourcesStackForNewQuery(emptyList()), sourceId);
-    }
+//    public PropsResolutionContext produceForUncorrelatedSubquery() {
+//        return new PropsResolutionContext(domainInfo, buildSourcesStackForNewQuery(emptyList()) /*???*/, sourceId);
+//    }
     
     public PropsResolutionContext cloneWithAdded(final IQrySource2<? extends IQrySource3> transformedSource) {
         final List<List<IQrySource2<? extends IQrySource3>>> srcs = new ArrayList<>();

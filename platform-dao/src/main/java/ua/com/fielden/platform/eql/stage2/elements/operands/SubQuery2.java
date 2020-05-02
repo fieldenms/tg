@@ -27,13 +27,13 @@ public class SubQuery2 extends AbstractQuery2 implements ISingleOperand2<SubQuer
 
     @Override
     public TransformationResult<SubQuery3> transform(final TransformationContext context) {
-        final TransformationResult<IQrySources3> sourcesTr = sources != null ? sources.transform(context) : null;
-        final TransformationResult<Conditions3> conditionsTr = conditions.transform(sourcesTr != null ? sourcesTr.updatedContext : context);
+        final TransformationResult<IQrySources3> sourcesTr = sources.transform(context);
+        final TransformationResult<Conditions3> conditionsTr = conditions.transform(sourcesTr.updatedContext);
         final TransformationResult<Yields3> yieldsTr = yields.transform(conditionsTr.updatedContext);
         final TransformationResult<GroupBys3> groupsTr = groups.transform(yieldsTr.updatedContext);
         final TransformationResult<OrderBys3> orderingsTr = orderings.transform(groupsTr.updatedContext);
 
-        final EntQueryBlocks3 entQueryBlocks = new EntQueryBlocks3(sourcesTr != null ? sourcesTr.item : null, conditionsTr.item, yieldsTr.item, groupsTr.item, orderingsTr.item);
+        final EntQueryBlocks3 entQueryBlocks = new EntQueryBlocks3(sourcesTr.item, conditionsTr.item, yieldsTr.item, groupsTr.item, orderingsTr.item);
 
         return new TransformationResult<SubQuery3>(new SubQuery3(entQueryBlocks, resultType), orderingsTr.updatedContext);
     }
