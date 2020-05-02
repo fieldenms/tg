@@ -24,7 +24,7 @@ public class JoinedQrySource3 implements IQrySources3 {
     @Override
     public String sql(final DbVersion dbVersion, final boolean atFromStmt) {
         final String joinConditionsSql = joinConditions.sql(dbVersion);
-        return (atFromStmt ? "" : "(") + leftSource.sql(dbVersion, false) + "\n  " + joinType + "\n" + rightSource.sql(dbVersion, false) + (isNotEmpty(joinConditionsSql) ? "  ON " : "") + joinConditionsSql + (atFromStmt ? "" : ")");
+        return (atFromStmt ? "\nFROM\n" : "(") + leftSource.sql(dbVersion, false) + "\n  " + joinType + "\n" + rightSource.sql(dbVersion, false) + (isNotEmpty(joinConditionsSql) ? "  ON " : "") + joinConditionsSql + (atFromStmt ? "" : ")");
     }
     
     @Override

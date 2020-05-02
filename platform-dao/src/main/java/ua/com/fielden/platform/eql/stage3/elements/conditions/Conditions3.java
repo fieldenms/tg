@@ -19,11 +19,18 @@ public class Conditions3 implements ICondition3 {
 
     @Override
     public String sql(final DbVersion dbVersion) {
-        if (allConditionsAsDnf.isEmpty()) {
-            return "";
-        } else {
-            return allConditionsAsDnf.stream().map(dl -> dl.stream().map(cond -> cond.sql(dbVersion)).collect(joining(" AND "))).collect(joining(" OR "));
+        return sql(dbVersion, false);
+    }
+    
+    public String sql(final DbVersion dbVersion, final boolean atWhere) {
+        final StringBuffer sb = new StringBuffer();
+        if (!allConditionsAsDnf.isEmpty()) {
+            if (atWhere) {
+                sb.append("\nWHERE ");    
+            }
+            sb.append(allConditionsAsDnf.stream().map(dl -> dl.stream().map(cond -> cond.sql(dbVersion)).collect(joining(" AND "))).collect(joining(" OR ")));
         }
+        return sb.toString();    
     }
     
     @Override

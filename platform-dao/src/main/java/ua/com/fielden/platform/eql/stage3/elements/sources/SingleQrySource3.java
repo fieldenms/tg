@@ -13,7 +13,7 @@ public class SingleQrySource3 implements IQrySources3 {
 
     @Override
     public String sql(final DbVersion dbVersion, final boolean atFromStmt) {
-        return source.sql(dbVersion);
+        return (atFromStmt ? "\nFROM\n" : "") + source.sql(dbVersion);
     }
     
     @Override

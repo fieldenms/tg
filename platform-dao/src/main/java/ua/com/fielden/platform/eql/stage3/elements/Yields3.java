@@ -24,7 +24,7 @@ public class Yields3 {
     }
 
     public String sql(final DbVersion dbVersion) {
-        return getYields().stream().map(y -> y.sql(dbVersion)).collect(joining(", "));
+        return "SELECT\n" + getYields().stream().map(y -> y.sql(dbVersion)).collect(joining(", "));
     }
     
     @Override

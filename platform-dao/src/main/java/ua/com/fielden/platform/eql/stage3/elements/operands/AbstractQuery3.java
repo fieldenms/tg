@@ -29,16 +29,24 @@ public abstract class AbstractQuery3 {
         this.orderings = queryBlocks.orderings;
         this.resultType = resultType;
     }
+    
+    public String sql(final DbVersion dbVersion) {
+        final StringBuffer sb = new StringBuffer();
+        sb.append(yields.sql(dbVersion));
+        sb.append(sourcesSql(dbVersion));
+        sb.append(conditions.sql(dbVersion, true));
+        sb.append(groups.sql(dbVersion));
+        sb.append(orderings.sql(dbVersion));
+        return sb.toString();
+    }
 
     protected String sourcesSql(final DbVersion dbVersion) {
         if (sources == null) {
             return dbVersion == ORACLE ? " FROM DUAL " : " ";
         } else {
-            return "\nFROM\n" + sources.sql(dbVersion, true);
+            return sources.sql(dbVersion, true);
         }
     }
-
-    abstract String sql(final DbVersion dbVersion);
 
     @Override
     public String toString() {
