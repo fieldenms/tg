@@ -53,7 +53,7 @@ import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
 
-public class EntityQueryExecutionTestForEql3 extends AbstractDaoTestCase {
+public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     private final IEntityAggregatesOperations aggregateDao = getInstance(IEntityAggregatesOperations.class);
 
     private List<EntityAggregates> run(final AggregatedResultQueryModel qry) {
