@@ -61,10 +61,32 @@ public class ReferenceHierarchy extends AbstractFunctionalEntityWithCentreContex
     @Title("Title")
     private String title;
 
-
     @IsProperty
     @Title(value = "Reset Filter?", desc = "Indicates whether filter should be reset or not")
     private boolean resetFilter = true;
+
+    @IsProperty
+    @Title(value = "Loaded Reference Hierarchy Level", desc = "The refernce hierarchy level that was loaded on previous call")
+    private String loadedLevel;
+
+    public String getLoadedLevel() {
+        return loadedLevel;
+    }
+
+    @Observable
+    public ReferenceHierarchy setLoadedLevel(final String loadedLevel) {
+        this.loadedLevel = loadedLevel;
+        return this;
+    }
+
+    public ReferenceHierarchy setLoadedHierarchyLevel(final ReferenceHierarchyLevel level) {
+        setLoadedLevel(level.name());
+        return this;
+    }
+
+    public ReferenceHierarchyLevel getLoadedHierarchyLevel() {
+        return ReferenceHierarchyLevel.valueOf(this.loadedLevel);
+    }
 
     @Observable
     public ReferenceHierarchy setResetFilter(final boolean resetFilter) {
@@ -175,7 +197,7 @@ public class ReferenceHierarchy extends AbstractFunctionalEntityWithCentreContex
     /**
      * Returns an optional value of property {@code refEntityType} represented as a {@code class}.
      * Empty value indicates an error when trying to instantiate a {@code class} from its string representation.
-     * 
+     *
      * @return
      */
     @SuppressWarnings("unchecked")
@@ -190,7 +212,7 @@ public class ReferenceHierarchy extends AbstractFunctionalEntityWithCentreContex
     /**
      * Returns an optional value of property {@code entityType} represented as a {@code class}.
      * Empty value indicates an error when trying to instantiate a {@code class} from its string representation.
-     * 
+     *
      * @return
      */
     @SuppressWarnings("unchecked")

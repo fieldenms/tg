@@ -48,7 +48,7 @@ const template = html`
         }
     </style>
     <tg-reflector id="reflector"></tg-reflector>
-    <slot id="editAction" name="edit-action"></slot>
+    <slot id="actions" name="reference-hierarchy-action"></slot>
     <div class="hierarchy-container">
         <div class="editor-container">
             <slot name="filter-element"></slot>
@@ -61,11 +61,16 @@ template.setAttribute('strip-whitespace', '');
 
 const referenceHierarchyLevel = {
     TYPE: "TYPE",
-    INSTANCE: "INSTANCE",
+    REFERENCE_INSTANCE: "REFERENCE_INSTANCE",
+    REFERENCE_BY_INSTANCE: "REFERENCE_BY_INSTANCE",
+    REFERENCES: "REFERENCES",
+    REFERENCED_BY: "REFERENCED_BY",
+    LOAD_MORE: "LOAD_MORE"
 };
 
 const referenceHierarchyActions = {
-    EDIT: "EDIT"
+    EDIT: "EDIT",
+    REFERENCE_HIERARCHY: "REFERENCE_HIERARCHY"
 };
 
 const generatePath = function(treeModel, loadedHierarchy) {
@@ -183,7 +188,8 @@ Polymer({
         //Configure action functions
         this._actions = {};
         this._actionBuilder = {};
-        this._actionBuilder[referenceHierarchyActions.EDIT] = this._buildEditAction.bind(this)(this.$.editAction.assignedNodes()[0], referenceHierarchyActions.EDIT);
+        this._actionBuilder[referenceHierarchyActions.EDIT] = this._buildEditAction.bind(this)(this.$.actions.assignedNodes()[0]);
+        this._actionBuilder[referenceHierarchyActions.REFERENCE_HIERARCHY] = this._buildReferenceHierarchyAction.bind(this)(this.$.actions.assignedNodes()[1]);
 
         this._buildContent = function(entity, opened) {
             return "<div style='height:28px;font-size:16px;display:flex;flex-direction:row;align-items:center;'>" + 
@@ -192,7 +198,7 @@ Polymer({
         }.bind(this);
         this._loadMoreAction = function (e) {
             const entity = e.model.entity.entity;
-            if (entity.isLoadMore) {
+            if (entity.level === referenceHierarchyLevel.LOAD_MORE) {
                 entity.parent.pageNumber += 1;
                 this.fire("tg-load-subtree", {parentPath: getParentsPath(entity.parent), loadAll: false});
             }
@@ -214,9 +220,9 @@ Polymer({
         }.bind(this);
     },
 
-    _buildEditAction: function(action, id) {
+    _buildEditAction: function(action) {
         const self = this;
-        this._actions[id] = (e) => {
+        this._actions[referenceHierarchyActions.EDIT] = (e) => {
             const masterInfo = e.model.entity.entity.masterInfo;
             action.elementName = masterInfo.key;
             action.componentUri = masterInfo.desc;
@@ -241,7 +247,18 @@ Polymer({
             action._run();
         };
         return (entity) => {    
-            return this._generateIconForAction(entity.entity.masterInfo, id);
+            return this._generateIconForAction(entity.entity.masterInfo, referenceHierarchyActions.EDIT);
+        }
+    },
+
+    _buildReferenceHierarchyAction: function(action) {
+        const self = this;
+        this._actions[referenceHierarchyActions.REFERENCE_HIERARCHY] = (e) => {
+            action.currentEntity = e.model.entity.entity.entity;
+            action._run();
+        }
+        return (entity) => {    
+            return this._generateIconForAction(action, referenceHierarchyActions.REFERENCE_HIERARCHY);
         }
     },
 
@@ -250,11 +267,13 @@ Polymer({
     },
 
     _getTitle: function (entity) {
-        if (entity.entity.level === referenceHierarchyLevel.INSTANCE && !entity.entity.isLoadMore) {
+        if (entity.entity.level === referenceHierarchyLevel.REFERENCE_BY_INSTANCE || entity.entity.level === referenceHierarchyLevel.REFERENCE_INSTANCE) {
             const titleObject = getKeys(entity, entity.entity.entity);
-            entity.entity.key = buildFilteringKey(titleObject);
-            return buildTitles(titleObject, this.$.reflector);
-        } else if (entity.entity.isLoadMore) {
+            entity.entity.key = (entity.entity.level === referenceHierarchyLevel.REFERENCE_INSTANCE ? entity.entity.propertyTitle + ":" : "") 
+                                + buildFilteringKey(titleObject);
+            return (entity.entity.level === referenceHierarchyLevel.REFERENCE_INSTANCE ? "<span class='part-to-highlight'>" + entity.entity.propertyTitle + ":&nbsp;</span>" : "") 
+                    + buildTitles(titleObject, this.$.reflector);
+        } else if (entity.entity.level === referenceHierarchyLevel.LOAD_MORE) {
             return "<div style='padding:3px;color:#03a9f4;-moz-user-select: none;-ms-user-select: none;-webkit-user-select: none;"+
                     "user-select: none;cursor: pointer;text-transform: uppercase;' tooltip-text='Load more data'>More</div";
         }
@@ -265,8 +284,10 @@ Polymer({
         let additionalInfo = "<span style='color:#737373'>";
         if (entity.entity.level === referenceHierarchyLevel.TYPE) {
             additionalInfo += "&nbsp;(" + entity.entity.numberOfEntities + ")";
+        } else if (entity.entity.level === referenceHierarchyLevel.REFERENCED_BY) {
+            additionalInfo += "&nbsp;(" + entity.entity.desc + ")";
         }
-        return  additionalInfo + (entity.entity.desc ? "&nbsp;&ndash;&nbsp;<i>" + entity.entity.desc + "</i>" : "") + "</span>";       
+        return  additionalInfo + (entity.entity.level !== referenceHierarchyLevel.REFERENCED_BY && entity.entity.desc ? "&nbsp;&ndash;&nbsp;<i>" + entity.entity.desc + "</i>" : "") + "</span>";       
     },
 
     _entityChanged: function(newBindingEntity) {
@@ -287,7 +308,7 @@ Polymer({
                 parent.pageCount = newEntity.pageCount;
                 if (parent.pageNumber === 0) {// Loading first page of instances
                     if (parent.pageCount > 1) {//Add load more if there are more pages
-                        newEntity.generatedHierarchy.push({key: "Load more", desc: "", parent: parent, entity: null, isLoadMore: true, level: referenceHierarchyLevel.INSTANCE, hasChildren: false, children: []});
+                        newEntity.generatedHierarchy.push({key: "Load more", desc: "", parent: parent, entity: null, level: referenceHierarchyLevel.LOAD_MORE, hasChildren: false, children: []});
                     }
                     this.set(path, newEntity.generatedHierarchy);
                 } else if (parent.pageNumber + 1 < parent.pageCount) { // Loading page that and there are more pages (children already have load more action)
@@ -324,6 +345,7 @@ Polymer({
         });
         this.entity.setAndRegisterPropertyTouch("loadedHierarchy", indexes);
         const lastEntity = parentsPath[parentsPath.length - 1];
+        this.entity.setAndRegisterPropertyTouch("loadedLevel", lastEntity.level);
         if (lastEntity.level === referenceHierarchyLevel.TYPE) {
             this.entity.setAndRegisterPropertyTouch("pageSize", lastEntity.pageSize);
             this.entity.setAndRegisterPropertyTouch("pageNumber", lastEntity.pageNumber);

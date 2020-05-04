@@ -7,7 +7,6 @@ import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -31,6 +30,7 @@ import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
@@ -48,7 +48,7 @@ public class DataDependencyQueriesGenerator {
         return Optional.of(from(qry).with(orderBy().yield("qty").desc().model()).model());
     }
 
-    public static QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> queryForDependentTypeDetails(final Map<Class<? extends AbstractEntity<?>>, Map<Class<? extends AbstractEntity<?>>, Set<String>>> dependenciesMetadata, final Long entityId, final Class<? extends AbstractEntity<?>> entityType, final Class<? extends AbstractEntity<?>> detailsType) {
+    public static QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> queryForDependentTypeDetails(final Map<Class<? extends AbstractEntity<?>>, Map<Class<? extends AbstractEntity<?>>, Set<String>>> dependenciesMetadata, final Long entityId, final Class<? extends AbstractEntity<?>> entityType, final Class<? extends AbstractEntity<?>> detailsType, final fetch<? extends AbstractEntity<?>> fetchModel) {
         final PrimitiveResultQueryModel[] detailsQueries = produceDetailsQueries(dependenciesMetadata, detailsType).toArray(new PrimitiveResultQueryModel[] {});
         final ExpressionModel hasDependencies = detailsQueries.length > 0 ? expr().caseWhen().existsAnyOf(detailsQueries).then().val("Y").otherwise().val("N").end().model()
                 : expr().val("N").model();
@@ -58,12 +58,12 @@ public class DataDependencyQueriesGenerator {
                 yield().model(select(detailsType).where().prop(ID).eq().extProp(ID).model()).as("entity").
                 yield().expr(hasDependencies).as("hasDependencies").
                 modelAsAggregate();
-        return from(qry).with(fetchAggregates().with("hasDependencies").with("entity", fetchKeyAndDescOnly(detailsType))).with(orderBy().prop("key").asc().model()).model();
+        return from(qry).with(fetchAggregates().with("hasDependencies").with("entity", fetchModel)).with(orderBy().prop("key").asc().model()).model();
     }
-    
+
     /**
-     * Generates map between persistent entity types and persistent entity types referenced by its properties (represented as map between types and set of prop names (as type can contain several props of the same type)). 
-     *   
+     * Generates map between persistent entity types and persistent entity types referenced by its properties (represented as map between types and set of prop names (as type can contain several props of the same type)).
+     *
      * @param entityTypes
      * @return
      */
@@ -72,14 +72,14 @@ public class DataDependencyQueriesGenerator {
         final Map<Class<? extends AbstractEntity<?>>, Map<Class<? extends AbstractEntity<?>>, Set<String>>> result = new HashMap<>();
         for (final Class<? extends AbstractEntity<?>> entityType : entityTypes) {
             if (entityType.isAnnotationPresent(MapEntityTo.class) && AbstractPersistentEntity.class.isAssignableFrom(entityType) && !WithCreatedByUser.class.isAssignableFrom(entityType)) {
-                
+
                 final Map<Class<? extends AbstractEntity<?>>, Set<String>> pmd = new HashMap<>();
-                
-                for (Field ep : getRealProperties(entityType)) {
+
+                for (final Field ep : getRealProperties(entityType)) {
                     if (ep.isAnnotationPresent(MapTo.class) && !KEY.equals(ep.getName()) && (AbstractPersistentEntity.class.isAssignableFrom(ep.getType()) || AbstractUnionEntity.class.isAssignableFrom(ep.getType()))) {
-                        final boolean isUnionEntityProp = AbstractUnionEntity.class.isAssignableFrom(ep.getType());                        
+                        final boolean isUnionEntityProp = AbstractUnionEntity.class.isAssignableFrom(ep.getType());
                         final List<Field> props = isUnionEntityProp ? unionProperties((Class<? extends AbstractUnionEntity>) ep.getType()) : asList(ep);
-                        for (Field subProp : props) {
+                        for (final Field subProp : props) {
                             Set<String> existing = pmd.get(subProp.getType());
                             if (existing == null) {
                                 existing = new HashSet<String>();

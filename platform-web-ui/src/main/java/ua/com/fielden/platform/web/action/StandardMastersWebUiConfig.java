@@ -27,8 +27,6 @@ import ua.com.fielden.platform.entity.EntityNavigationAction;
 import ua.com.fielden.platform.entity.EntityNavigationActionProducer;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.entity.EntityNewActionProducer;
-import ua.com.fielden.platform.entity.ReferenceHierarchy;
-import ua.com.fielden.platform.entity.ReferenceHierarchyProducer;
 import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.layout.api.impl.FlexLayoutConfig;
@@ -40,7 +38,6 @@ import ua.com.fielden.platform.web.view.master.api.with_master.impl.EntityManipu
 import ua.com.fielden.platform.web.view.master.api.with_master.impl.EntityNavigationMaster;
 import ua.com.fielden.platform.web.view.master.attachments.AttachmentPreviewEntityMaster;
 import ua.com.fielden.platform.web.view.master.attachments.AttachmentsUploadActionMaster;
-import ua.com.fielden.platform.web.view.master.hierarchy.ReferenceHierarchyMaster;
 
 /**
  * A set of factory methods for various standard platform-level entity masters such as Export to Excel.
@@ -79,13 +76,6 @@ public class StandardMastersWebUiConfig {
         return new EntityMaster<>(EntityNavigationAction.class,
                 EntityNavigationActionProducer.class,
                 new EntityNavigationMaster(EntityNavigationAction.class, true),
-                injector);
-    }
-
-    public static EntityMaster<ReferenceHierarchy> createReferenceHierarchyMaster(final Injector injector) {
-        return new EntityMaster<>(ReferenceHierarchy.class,
-                ReferenceHierarchyProducer.class,
-                new ReferenceHierarchyMaster(),
                 injector);
     }
 

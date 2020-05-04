@@ -35,6 +35,7 @@ import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig;
+import ua.com.fielden.platform.web.action.ReferenceHierarchyWebUiConfig;
 import ua.com.fielden.platform.web.action.StandardMastersWebUiConfig;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
@@ -119,7 +120,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         final EntityMaster<EntityNewAction> genericEntityNewActionMaster = StandardMastersWebUiConfig.createEntityNewMaster(injector());
         final EntityMaster<EntityEditAction> genericEntityEditActionMaster = StandardMastersWebUiConfig.createEntityEditMaster(injector());
         final EntityMaster<EntityNavigationAction> genericEntityNavigationActionMaster = StandardMastersWebUiConfig.createEntityNavigationMaster(injector());
-        final EntityMaster<ReferenceHierarchy> genericReferenceHierarchyMaster = StandardMastersWebUiConfig.createReferenceHierarchyMaster(injector());
+        final EntityMaster<ReferenceHierarchy> genericReferenceHierarchyMaster = ReferenceHierarchyWebUiConfig.createReferenceHierarchyMaster(injector());
         final EntityMaster<EntityExportAction> genericEntityExportActionMaster = StandardMastersWebUiConfig.createExportMaster(injector());
         final EntityMaster<AttachmentPreviewEntityAction> attachmentPreviewMaster = StandardMastersWebUiConfig.createAttachmentPreviewMaster(injector());
         final EntityMaster<EntityDeleteAction> genericEntityDeleteActionMaster = EntityMaster.noUiFunctionalMaster(EntityDeleteAction.class, EntityDeleteActionProducer.class, injector());

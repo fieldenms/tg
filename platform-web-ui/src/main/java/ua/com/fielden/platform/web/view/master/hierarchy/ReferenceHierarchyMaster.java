@@ -2,11 +2,14 @@ package ua.com.fielden.platform.web.view.master.hierarchy;
 
 import static java.util.Optional.empty;
 import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
+import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
 import static ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder.createImports;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Optional;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
@@ -14,13 +17,16 @@ import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.entity.ReferenceHierarchy;
 import ua.com.fielden.platform.utils.ResourceLoader;
+import ua.com.fielden.platform.web.action.ReferenceHierarchyWebUiConfig;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
+import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 
 public class ReferenceHierarchyMaster implements IMaster<ReferenceHierarchy> {
 
+    private final List<EntityActionConfig> actions = new ArrayList<>();
     private final IRenderable renderable;
 
     public ReferenceHierarchyMaster () {
@@ -36,8 +42,10 @@ public class ReferenceHierarchyMaster implements IMaster<ReferenceHierarchy> {
                 .attr("action-kind", "PRIMARY_RESULT_SET")
                 .attr("show-dialog", "[[_showDialog]]")
                 .attr("create-context-holder", "[[_createContextHolder]]")
-                .attr("slot", "edit-action")
+                .attr("slot", "reference-hierarchy-action")
                 .attr("hidden", true);
+
+        this.actions.add(ReferenceHierarchyWebUiConfig.mkAction(context().withCurrentEntity().build()));
 
         final DomElement hierarchyFilter = new DomElement("tg-singleline-text-editor")
                 .attr("id", "referenceHierarchyFilter")
@@ -59,6 +67,21 @@ public class ReferenceHierarchyMaster implements IMaster<ReferenceHierarchy> {
                 .attr("centre-uuid", "[[uuid]]")
                 .add(hierarchyFilter, editAction);
 
+        //Generating action's DOM and JS functions
+        final StringBuilder customActionObjects = new StringBuilder();
+        final String prefix = ",\n";
+        final int prefixLength = prefix.length();
+        for (int actionIdx = 0; actionIdx < this.actions.size(); actionIdx++) {
+            final EntityActionConfig action = this.actions.get(actionIdx);
+            if (!action.isNoAction()) {
+                final FunctionalActionElement el = FunctionalActionElement.newEntityActionForMaster(action, actionIdx);
+                importPaths.add(el.importPath());
+                referenceHierarchyDom.add(el.render().attr("hidden", null).clazz("primary-action").attr("slot", "reference-hierarchy-action"));
+                customActionObjects.append(prefix + el.createActionObject());
+            }
+        }
+        final String customActionObjectsString = customActionObjects.toString();
+
         final StringBuilder prefDimBuilder = new StringBuilder();
         prefDimBuilder.append("{'width': function() {return '50%'}, 'height': function() {return '70%'}, 'widthUnit': '', 'heightUnit': ''}");
 
@@ -67,6 +90,8 @@ public class ReferenceHierarchyMaster implements IMaster<ReferenceHierarchy> {
                         "\nimport { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';\n")
                 .replace(ENTITY_TYPE, flattenedNameOf(ReferenceHierarchy.class))
                 .replace("<!--@tg-entity-master-content-->", referenceHierarchyDom.toString())
+                .replace("//generatedPrimaryActions", customActionObjectsString.length() > prefixLength ? customActionObjectsString.substring(prefixLength)
+                        : customActionObjectsString)
                 .replace("//@ready-callback", readyCallback())
                 .replace("@prefDim", prefDimBuilder.toString())
                 .replace("@noUiValue", "false")
@@ -115,7 +140,7 @@ public class ReferenceHierarchyMaster implements IMaster<ReferenceHierarchy> {
                 + "}.bind(self);\n"
                 + "//Need for security marix editors binding.\n"
                 + "self._isNecessaryForConversion = function (propertyName) { \n"
-                + "    return ['referenceHierarchyFilter','refEntityId', 'refEntityType', 'entityType', 'loadedHierarchy', 'pageSize', 'pageNumber', 'pageCount'].indexOf(propertyName) >= 0; \n"
+                + "    return ['referenceHierarchyFilter','refEntityId', 'refEntityType', 'entityType', 'loadedHierarchy', 'pageSize', 'pageNumber', 'pageCount', 'loadedLevel'].indexOf(propertyName) >= 0; \n"
                 + "}; \n"
                 + "self.$.referenceHierarchyFilter._onInput = function () {\n"
                 + "    // clear hierarchy filter timer if it is in progress.\n"
@@ -148,6 +173,9 @@ public class ReferenceHierarchyMaster implements IMaster<ReferenceHierarchy> {
 
     @Override
     public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
+        if (FunctionalActionKind.PRIMARY_RESULT_SET == actionKind) {
+            return this.actions.get(actionNumber);
+        }
         throw new UnsupportedOperationException("Getting of action configuration is not supported.");
     }
 

@@ -9,7 +9,7 @@ import ua.com.fielden.platform.master.MasterInfo;
 
 @KeyTitle("Entity key")
 @DescTitle("Entity Description")
-public class InstanceLevelHierarchyEntry extends ReferenceHierarchyEntry{
+public class ReferencedByLevelHierarchyEntry extends ReferenceHierarchyEntry {
 
     @IsProperty
     @Title(value = "Entity", desc = "Entity refrence")
@@ -20,7 +20,7 @@ public class InstanceLevelHierarchyEntry extends ReferenceHierarchyEntry{
     private MasterInfo masterInfo;
 
     @Observable
-    public InstanceLevelHierarchyEntry setMasterInfo(final MasterInfo masterInfo) {
+    public ReferencedByLevelHierarchyEntry setMasterInfo(final MasterInfo masterInfo) {
         this.masterInfo = masterInfo;
         return this;
     }
@@ -30,7 +30,7 @@ public class InstanceLevelHierarchyEntry extends ReferenceHierarchyEntry{
     }
 
     @Observable
-    public InstanceLevelHierarchyEntry setEntity(final AbstractEntity<?> entity) {
+    public ReferencedByLevelHierarchyEntry setEntity(final AbstractEntity<?> entity) {
         this.entity = entity;
         return this;
     }
