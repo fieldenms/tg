@@ -1282,13 +1282,14 @@ const _toStringForCollection = function (bindingValue, rootEntityType, property,
 };
 
 /**
- * Converts collectional property value, converted to editor binding representation ('bindingValue'), to tooltip's string representation.
+ * Converts collectional property value to tooltip's string representation.
  * 
- * @param bindingValue -- binding representation of property value that is the same as fully-fledged value; array of entities
+ * @param fullyFledgedValue -- fully-fledged property value (not binding representation); array of entities
  * @param rootEntityType -- the type of entity holding this property
  * @param property -- property name of the property; can be dot-notated
  */
-const _toStringForCollectionAsTooltip = function (bindingValue, rootEntityType, property) {
+const _toStringForCollectionAsTooltip = function (fullyFledgedValue, rootEntityType, property) {
+    const bindingValue = _convert(fullyFledgedValue);
     const convertedCollection = _toString(bindingValue, rootEntityType, property);
     if (convertedCollection === '') {
         return '';
@@ -1623,14 +1624,14 @@ export const TgReflector = Polymer({
     },
     
     /**
-     * Converts collectional property value, converted to editor binding representation ('bindingValue'), to tooltip's string representation.
+     * Converts collectional property value to tooltip's string representation.
      * 
-     * @param bindingValue -- binding representation of property value that is the same as fully-fledged value; array of entities
+     * @param fullyFledgedValue -- fully-fledged property value (not binding representation); array of entities
      * @param rootEntityType -- the type of entity holding this property
      * @param property -- property name of the property; can be dot-notated
      */
-    tg_toStringForCollectionAsTooltip: function (bindingValue, rootEntityType, property) {
-        return _toStringForCollectionAsTooltip(bindingValue, rootEntityType, property);
+    tg_toStringForCollectionAsTooltip: function (fullyFledgedValue, rootEntityType, property) {
+        return _toStringForCollectionAsTooltip(fullyFledgedValue, rootEntityType, property);
     },
     
     /**
