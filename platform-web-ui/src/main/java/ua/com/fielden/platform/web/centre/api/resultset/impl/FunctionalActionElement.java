@@ -127,7 +127,9 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         }
         attrs.put("number-of-action", numberOfAction);
         attrs.put("action-kind", functionalActionKind);
-        attrs.put("element-alias", elementName + "_" + numberOfAction + "_" + functionalActionKind);
+        conf().functionalEntity.ifPresent(funcType ->  {
+            attrs.put("element-alias", elementName + "_" + numberOfAction + "_" + functionalActionKind);
+        });
 
         // in case of an menu item action show-dialog assignment happens within tg-master-menu
         if (FunctionalActionKind.INSERTION_POINT == functionalActionKind) {

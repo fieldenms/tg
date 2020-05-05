@@ -231,6 +231,7 @@ Polymer({
             const entity = this._reflector().newEntity(entityInfo[0]);
             entity["id"] = parseInt(entityInfo[1]);
             this.$.openMasterAction.currentEntity = entity;
+            this.$.openMasterAction.shortDesc = "";
             this.$.openMasterAction._run();
         }
     },
