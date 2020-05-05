@@ -10,7 +10,9 @@ import ua.com.fielden.platform.entity.ReferenceHierarchy;
 import ua.com.fielden.platform.entity.ReferenceHierarchyProducer;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
+import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
+import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.hierarchy.ReferenceHierarchyMaster;
 
 public class ReferenceHierarchyWebUiConfig {
@@ -31,6 +33,7 @@ public class ReferenceHierarchyWebUiConfig {
     public static EntityActionConfig mkAction() {
         return action(ReferenceHierarchy.class)
             .withContext(context().withSelectedEntities().build())
+            .preAction(new ReferenceHierarchyPreAction())
             .icon("tg-reference-hierarchy:hierarchy")
             .shortDesc("Reference Hierarchy")
             .longDesc("Opens Reference Hierarchy")
@@ -49,10 +52,25 @@ public class ReferenceHierarchyWebUiConfig {
         }
         return action(ReferenceHierarchy.class)
             .withContext(ccConfig)
+            .preAction(new ReferenceHierarchyPreAction())
             .icon("tg-reference-hierarchy:hierarchy")
             .shortDesc("Reference Hierarchy")
             .longDesc("Opens Reference Hierarchy")
             .withNoParentCentreRefresh()
             .build();
+    }
+
+    private static class ReferenceHierarchyPreAction implements IPreAction {
+
+        @Override
+        public JsCode build() {
+            return new JsCode(
+                    "if (action.requireSelectedEntities === 'ONE') {\n"
+                    + "    action.shortDesc = sction.currentEntity.type().entityTitle();\n"
+                    + "} else if (action.requireSelectedEntities === 'ALL' && self.$.egi.getSelectedEntities().length > 0) {\n"
+                    + "    action.shortDesc = self.$.egi.getSelectedEntities()[0].type().entityTitle();\n"
+                    + "}\n");
+        }
+
     }
 }
