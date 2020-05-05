@@ -66,9 +66,9 @@ public class ReferenceHierarchyWebUiConfig {
         public JsCode build() {
             return new JsCode(
                     "if (action.requireSelectedEntities === 'ONE') {\n"
-                    + "    action.shortDesc = sction.currentEntity.type().entityTitle();\n"
+                    + "    action.shortDesc = self._reflector.getType(action.currentEntity.type().notEnhancedFullClassName()).entityTitle();\n"
                     + "} else if (action.requireSelectedEntities === 'ALL' && self.$.egi.getSelectedEntities().length > 0) {\n"
-                    + "    action.shortDesc = self.$.egi.getSelectedEntities()[0].type().entityTitle();\n"
+                    + "    action.shortDesc = self._reflector.getType(self.$.egi.getSelectedEntities()[0].type().notEnhancedFullClassName()).entityTitle();\n"
                     + "}\n");
         }
 

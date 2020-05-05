@@ -8,11 +8,12 @@ import static ua.com.fielden.platform.entity.ReferenceHierarchyLevel.REFERENCES;
 import static ua.com.fielden.platform.entity.ReferenceHierarchyLevel.REFERENCE_BY_INSTANCE;
 import static ua.com.fielden.platform.entity.ReferenceHierarchyLevel.REFERENCE_GROUP;
 import static ua.com.fielden.platform.entity.ReferenceHierarchyLevel.TYPE;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 import static ua.com.fielden.platform.entity.query.metadata.DataDependencyQueriesGenerator.queryForDependentTypeDetails;
 import static ua.com.fielden.platform.entity.query.metadata.DataDependencyQueriesGenerator.queryForDependentTypesSummary;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.failuref;
-import static ua.com.fielden.platform.utils.EntityUtils.fetchWithKeyAndDesc;
+import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -34,11 +35,9 @@ import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.annotation.MapTo;
-import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.entity.fetch.IFetchProvider;
-import ua.com.fielden.platform.entity.proxy.StrictProxyException;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.metadata.DataDependencyQueriesGenerator;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.master.IMasterInfoProvider;
@@ -58,16 +57,14 @@ import ua.com.fielden.platform.utils.Pair;
 public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> implements IReferenceHierarchy {
     public static final String ERR_ENTITY_TYPE_NOT_FOUND = "Entity type [%s] could not be found.";
 
-    private final ICompanionObjectFinder coFinder;
     private final IEntityAggregatesOperations coAggregates;
     private final Map<Class<? extends AbstractEntity<?>>, Map<Class<? extends AbstractEntity<?>>, Set<String>>> dependenciesMetadata;
     private final IMasterInfoProvider masterInfoProvider;
     private final Map<ReferenceHierarchyLevel, Function<ReferenceHierarchy, List<? extends AbstractEntity<?>>>> generateFunctions;
 
     @Inject
-    public ReferenceHierarchyDao(final IFilter filter, final ICompanionObjectFinder coFinder, final IEntityAggregatesOperations coAggregates, final IApplicationDomainProvider applicationDomainProvider, final IMasterInfoProvider masterInfoProvider) {
+    public ReferenceHierarchyDao(final IFilter filter, final IEntityAggregatesOperations coAggregates, final IApplicationDomainProvider applicationDomainProvider, final IMasterInfoProvider masterInfoProvider) {
         super(filter);
-        this.coFinder = coFinder;
         this.coAggregates = coAggregates;
         this.dependenciesMetadata = DataDependencyQueriesGenerator.produceDependenciesMetadata(applicationDomainProvider.entityTypes());
         this.masterInfoProvider = masterInfoProvider;
@@ -131,8 +128,8 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
     private List<ReferenceLevelHierarchyEntry> generateReferences(final ReferenceHierarchy entity) {
         final Class<? extends AbstractEntity<?>> entityType = entity.getRefEntityClass().orElseThrow(() -> failuref(ERR_ENTITY_TYPE_NOT_FOUND, entity.getRefEntityType()));
         final List<Field> entityFields = getReferenceProperties(entityType);
-        final IFetchProvider<AbstractEntity<?>> fetchProvider = (IFetchProvider<AbstractEntity<?>>)generateReferenceFetchProvider(entityType, entityFields);
-        final Optional<? extends AbstractEntity<?>> optionalEntity = coFinder.find(entityType, true).findByIdOptional(entity.getRefEntityId(), fetchProvider.fetchModel());
+        final fetch<AbstractEntity<?>> fetchModel = (fetch<AbstractEntity<?>>)generateReferenceFetchModel(entityType, entityFields);
+        final Optional<? extends AbstractEntity<?>> optionalEntity = co$(entityType).findByIdOptional(entity.getRefEntityId(), fetchModel);
         return optionalEntity.map(refEntity -> generateReferencesFor(refEntity, getExistentReferenceProperties(refEntity, entityFields))).orElse(new ArrayList<>());
     }
 
@@ -141,12 +138,14 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
     }
 
     @SuppressWarnings("unchecked")
-    private IFetchProvider<? extends AbstractEntity<?>> generateReferenceFetchProvider(final Class<? extends AbstractEntity<?>> entityType, final List<Field> entityFields) {
-        IFetchProvider<? extends AbstractEntity<?>> fetchProvider = fetchWithKeyAndDesc(entityType);
+    private fetch<? extends AbstractEntity<?>> generateReferenceFetchModel(final Class<? extends AbstractEntity<?>> entityType, final List<Field> entityFields) {
+        fetch<? extends AbstractEntity<?>> fetch = fetchKeyAndDescOnly(entityType);
         for (final Field propField: entityFields) {
-            fetchProvider = fetchProvider.with(propField.getName(), fetchWithKeyAndDesc((Class<? extends AbstractEntity<?>>) propField.getType()));
+            final Class<? extends AbstractEntity<?>> propertyType = (Class<? extends AbstractEntity<?>>)propField.getType();
+            final fetch<? extends AbstractEntity<?>> innerFetchModel = fetchKeyAndDescOnly(propertyType);
+            fetch = fetch.with(propField.getName(), hasDescProperty(propertyType) ? innerFetchModel.with("desc") : innerFetchModel);
         }
-        return fetchProvider;
+        return fetch;
     }
 
     private List<Field> getReferenceProperties(final Class<? extends AbstractEntity<?>> entityType) {
@@ -165,12 +164,8 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
         final ReferenceLevelHierarchyEntry entry = new ReferenceLevelHierarchyEntry();
         entry.setId(value.getId());
         entry.setKey(propTitle + ":" + value.toString());
-        try {
-            if (EntityUtils.hasDescProperty(value.getType())) {
-                entry.setDesc(value.getDesc());
-            }
-        } catch(final StrictProxyException e) {
-            //TODO This is temporal solution until calculated descs will be fetched properly.
+        if (EntityUtils.hasDescProperty(value.getType())) {
+            entry.setDesc(value.getDesc());
         }
         entry.setPropertyTitle(propTitle);
         entry.setEntity(value);
@@ -190,7 +185,7 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
         final Class<? extends AbstractEntity<?>> entityClass = entity.getEntityClass().orElseThrow(() -> failuref(ERR_ENTITY_TYPE_NOT_FOUND, entity.getEntityType()));
         final Class<? extends AbstractEntity<?>> refEntityClass = entity.getRefEntityClass().orElseThrow(() -> failuref(ERR_ENTITY_TYPE_NOT_FOUND, entity.getRefEntityType()));
         final List<Field> propFields = getReferenceProperties(entityClass);
-        final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> qem = queryForDependentTypeDetails(dependenciesMetadata, entity.getRefEntityId(), refEntityClass, entityClass, generateReferenceFetchProvider(entityClass, propFields).fetchModel());
+        final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> qem = queryForDependentTypeDetails(dependenciesMetadata, entity.getRefEntityId(), refEntityClass, entityClass, generateReferenceFetchModel(entityClass, propFields));
         final IPage<EntityAggregates> loadedPage;
         if (entity.getPageNumber() == 0) {
             loadedPage = coAggregates.firstPage(qem, entity.getPageSize());
