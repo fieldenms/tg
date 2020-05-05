@@ -19,6 +19,7 @@ import ua.com.fielden.platform.entity.ReferenceHierarchy;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.action.ReferenceHierarchyWebUiConfig;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
+import ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
@@ -37,14 +38,11 @@ public class ReferenceHierarchyMaster implements IMaster<ReferenceHierarchy> {
         importPaths.add("actions/tg-ui-action");
 
 
-        final DomElement editAction = new DomElement("tg-ui-action")
-                .attr("ui-role", "ICON")
-                .attr("action-kind", "PRIMARY_RESULT_SET")
-                .attr("show-dialog", "[[_showDialog]]")
-                .attr("create-context-holder", "[[_createContextHolder]]")
-                .attr("slot", "reference-hierarchy-action")
-                .attr("hidden", true);
-
+        this.actions.add(EntityActionBuilder.editAction().withContext(context().withCurrentEntity().build())
+                .icon("editor:mode-edit")
+                .longDesc("Opens master for editing this entity")
+                .withNoParentCentreRefresh()
+                .build());
         this.actions.add(ReferenceHierarchyWebUiConfig.mkAction(context().withCurrentEntity().build()));
 
         final DomElement hierarchyFilter = new DomElement("tg-singleline-text-editor")
@@ -65,7 +63,7 @@ public class ReferenceHierarchyMaster implements IMaster<ReferenceHierarchy> {
                 .attr("entity", "{{_currBindingEntity}}")
                 .attr("on-tg-load-refrence-hierarchy", "_loadSubReferenceHierarchy")
                 .attr("centre-uuid", "[[uuid]]")
-                .add(hierarchyFilter, editAction);
+                .add(hierarchyFilter);
 
         //Generating action's DOM and JS functions
         final StringBuilder customActionObjects = new StringBuilder();

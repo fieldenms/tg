@@ -65,10 +65,11 @@ public class ReferenceHierarchyWebUiConfig {
         @Override
         public JsCode build() {
             return new JsCode(
-                    "if (action.requireSelectedEntities === 'ONE') {\n"
-                    + "    action.shortDesc = self._reflector.getType(action.currentEntity.type().notEnhancedFullClassName()).entityTitle();\n"
+                    "const reflector = typeof self._reflector === 'function' ? self._reflector() : self._reflector;\n"
+                    + "if (action.requireSelectedEntities === 'ONE') {\n"
+                    + "    action.shortDesc = reflector.getType(action.currentEntity.type().notEnhancedFullClassName()).entityTitle();\n"
                     + "} else if (action.requireSelectedEntities === 'ALL' && self.$.egi.getSelectedEntities().length > 0) {\n"
-                    + "    action.shortDesc = self._reflector.getType(self.$.egi.getSelectedEntities()[0].type().notEnhancedFullClassName()).entityTitle();\n"
+                    + "    action.shortDesc = reflector.getType(self.$.egi.getSelectedEntities()[0].type().notEnhancedFullClassName()).entityTitle();\n"
                     + "}\n");
         }
 

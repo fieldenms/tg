@@ -221,38 +221,19 @@ Polymer({
     },
 
     _buildEditAction: function(action) {
-        const self = this;
         this._actions[referenceHierarchyActions.EDIT] = (e) => {
-            const masterInfo = e.model.entity.entity.masterInfo;
-            action.elementName = masterInfo.key;
-            action.componentUri = masterInfo.desc;
-            action.shortDesc = masterInfo.shortDesc;
-            action.longDesc = masterInfo.longDesc;
-            action.attrs = {
-                entityType: masterInfo.entityType, 
-                currentState:'EDIT', 
-                centreUuid: self.centreUuid,
-                prefDim: masterInfo.width && masterInfo.height && masterInfo.widthUnit && masterInfo.heightUnit && {
-                    width: () => masterInfo.width,
-                    height: () => masterInfo.height,
-                    widthUnit: masterInfo.widthUnit,
-                    heightUnit: masterInfo.heightUnit
-                }
-            };
-            action.requireSelectionCriteria = masterInfo.requireSelectionCriteria;
-            action.requireSelectedEntities = masterInfo.requireSelectedEntities;
-            action.requireMasterEntity = masterInfo.requireMasterEntity;
-            action.shouldRefreshParentCentreAfterSave = masterInfo.shouldRefreshParentCentreAfterSave;
             action.currentEntity = e.model.entity.entity.entity;
+            action.shortDesc = "";
             action._run();
         };
-        return (entity) => {    
-            return this._generateIconForAction(entity.entity.masterInfo, referenceHierarchyActions.EDIT);
+        return (entity) => {
+            const typeTitle = this.$.reflector.getType(entity.entity.entity.type().notEnhancedFullClassName()).entityTitle();
+            action.longDesc = "Edit " + typeTitle;  
+            return this._generateIconForAction(action, referenceHierarchyActions.EDIT);
         }
     },
 
     _buildReferenceHierarchyAction: function(action) {
-        const self = this;
         this._actions[referenceHierarchyActions.REFERENCE_HIERARCHY] = (e) => {
             action.currentEntity = e.model.entity.entity.entity;
             action._run();

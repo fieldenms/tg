@@ -8,7 +8,6 @@ import com.google.inject.binder.AnnotatedBindingBuilder;
 import ua.com.fielden.platform.entity.EntityExportActionDao;
 import ua.com.fielden.platform.entity.IEntityExportAction;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
-import ua.com.fielden.platform.master.IMasterInfoProvider;
 import ua.com.fielden.platform.menu.IMenuRetriever;
 import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -31,7 +30,6 @@ import ua.com.fielden.platform.web.resources.webui.AbstractWebUiConfig;
 import ua.com.fielden.platform.web.test.server.TgTestWebApplicationServerModule;
 import ua.com.fielden.platform.web.utils.CriteriaEntityRestorer;
 import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
-import ua.com.fielden.platform.web.view.master.MasterInfoProvider;
 
 /**
  * This interface defines <code>Web UI</code> specific IoC binding contract,
@@ -77,9 +75,6 @@ public interface IBasicWebApplicationServerModule {
         bindType(ICentreConfigLoadAction.class).to(CentreConfigLoadActionDao.class);
         bindType(ICentreConfigEditAction.class).to(CentreConfigEditActionDao.class);
         bindType(ICentreConfigSaveAction.class).to(CentreConfigSaveActionDao.class);
-
-        //Master info provider
-        bindType(IMasterInfoProvider.class).to(MasterInfoProvider.class);
     }
 
     /**
