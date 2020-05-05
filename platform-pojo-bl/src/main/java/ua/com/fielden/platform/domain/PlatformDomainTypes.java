@@ -125,6 +125,7 @@ public class PlatformDomainTypes {
         types.add(SecurityMatrixSaveAction.class);
         types.add(EntityNavigationAction.class);
         types.add(AttachmentPreviewEntityAction.class);
+        types.add(MasterInfo.class);
         types.add(ReferenceHierarchy.class);
         types.add(ReferenceHierarchyEntry.class);
         types.add(TypeLevelHierarchyEntry.class);

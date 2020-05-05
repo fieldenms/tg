@@ -1,6 +1,8 @@
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
+import '/resources/polymer/@polymer/iron-ajax/iron-ajax.js';
+
 import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 import '/resources/polymer/@polymer/paper-button/paper-button.js';
 import '/resources/polymer/@polymer/paper-spinner/paper-spinner.js';
@@ -10,8 +12,10 @@ import '/resources/components/postal-lib.js';
 
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
-import { tearDownEvent, allDefined } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
+import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
+import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 
 const template = html`
     <style>
@@ -55,6 +59,8 @@ const template = html`
             padding: var(--tg-ui-action-icon-button-padding, 8px);
         }
     </style>
+    <iron-ajax id="masterRetriever" headers="[[_headers]]" url="[[_masterUri]]" method="GET" handle-as="json" on-error="_processMasterError">
+    </iron-ajax>
     <paper-icon-button id="iActionButton" hidden$="[[!isIconButton]]" icon="[[icon]]" on-tap="_run" disabled$="[[_computeDisabled(isActionInProgress, disabled)]]" tooltip-text$="[[longDesc]]"></paper-icon-button>
     <paper-button id="bActionButton" hidden$="[[isIconButton]]" raised roll="button" on-tap="_run" style="width:100%" disabled$="[[_computeDisabled(isActionInProgress, disabled)]]" tooltip-text$="[[longDesc]]">
         <span>[[shortDesc]]</span>
@@ -268,6 +274,12 @@ Polymer({
             type: Function
         },
 
+        /**
+         * The object that has function to open toast.
+         */
+        toaster: {
+            type: Object
+        },
 
         /** Sequential action number as provided by Java API. */
         numberOfAction: {
@@ -310,6 +322,15 @@ Polymer({
             type: Function
         },
 
+        /**
+         * Property that indicates whether element-name and import uri are defined from current entity and, if exists, chosen property.
+         */
+        dynamicAction : {
+            type: Boolean,
+            reflectToAttribute: true,
+            value: false,
+        },
+
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
         //////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -318,6 +339,14 @@ Polymer({
         // Also, these properties are designed to be bound to children element properties -- it is necessary to//
         //   populate their default values in ready callback (to have these values populated in children)!     //
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        /**
+         * The type of entity for which dynamic action was invoked previous time.
+         */
+        _previousEntityType: {
+            type: String,
+            value: ""
+        },
         /**
          * Executes the action in context of 'currentEntity'. 
          *
@@ -372,6 +401,22 @@ Polymer({
             value: false
         },
 
+        _masterUri: {
+            type: String,
+            value: ""
+        },
+
+        /**
+         * Additional headers for every 'iron-ajax' client-side requests. These only contain 
+         * our custom 'Time-Zone' header that indicates real time-zone for the client application.
+         * The time-zone then is to be assigned to threadlocal 'IDates.timeZone' to be able
+         * to compute 'Now' moment properly.
+         */
+        _headers: {
+            type: String,
+            value: _timeZoneHeader
+        },
+
         /**
          * In case where this tg-ui-action represents continuation action, continuationProperty uniquely identifies continuation in saving session of parent initiating entity (will be set into companion object).
          */
@@ -400,24 +445,55 @@ Polymer({
     created: function () {
         const self = this;
         this._reflector = new TgReflector();
+        this._serialiser = new TgSerialiser();
+
+        this._processMasterError = this._processMasterError.bind(this);
+
         self._run = (function (event) {
             console.log(this.shortDesc + ": execute");
 
+            const postMasterInfoRetrieve = function () {
+                if (this.preAction) {
+                    const result = this.preAction(this)
+                    const promise = result instanceof Promise ? result : Promise.resolve(result);
+    
+                    promise.then(function (value) {
+                        self.showDialog(self);
+                    }, function (error) {
+                        self.restoreActionState();
+                        console.log("The action was rejected with error: " + error);
+                    });
+                } else {
+                    this.showDialog(this);
+                }
+            }.bind(this);
+
             self.persistActiveElement();
 
-            if (this.preAction) {
-                const result = this.preAction(this)
-                const promise = result instanceof Promise ? result : Promise.resolve(result);
-
-                promise.then(function (value) {
-                    self.showDialog(self);
-                }, function (error) {
-                    self.restoreActionState();
-                    console.log("The action was rejected with error: " + error);
-                });
+            const currentEntityType = this._calculateCurrentEntityType();
+            if (this.dynamicAction && this.currentEntity && this._previousEntityType !== currentEntityType) {
+                this._masterUri = '/master/' + currentEntityType + '/' + this.currentEntity.get("id");
+                this.isActionInProgress = true;
+                this.$.masterRetriever.generateRequest().completes
+                    .then(res => {
+                        try {
+                            this._processMasterRetriever(res);
+                            this._previousEntityType = currentEntityType;
+                            postMasterInfoRetrieve();
+                        }catch (e) {
+                            this.isActionInProgress = false;
+                            this.restoreActionState();
+                            console.log("The action was rejected with error: " + error);
+                        }
+                    }).catch(error => {
+                        this.isActionInProgress = false;
+                        this.restoreActionState();
+                        console.log("The action was rejected with error: " + error);
+                    });
             } else {
-                this.showDialog(this);
+                postMasterInfoRetrieve();
             }
+
             tearDownEvent(event);
         }).bind(self);
 
@@ -625,5 +701,85 @@ Polymer({
 
     _computeDisabled: function (isActionInProgress, disabled) {
         return isActionInProgress || disabled;
-    }
+    },
+
+    _calculateCurrentEntityType: function () {
+        if (this.currentEntity && this.chosenProperty) {
+            let currentProperty = this.chosenProperty;
+            let currentValue = this.currentEntity.get(currentProperty);
+            while (!this._reflector.isEntity(currentValue)) {
+                const lastDotIndex = currentProperty.lastIndexOf(".");
+                currentProperty = lastDotIndex >=0 ? currentProperty.substring(0, lastDotIndex) : "";
+                currentValue = currentProperty ? this.currentEntity.get(currentProperty) : this.currentEntity;
+            }
+            return currentValue.type().notEnhancedFullClassName(); 
+        } else if (this.currentEntity) {
+            return this.currentEntity.type().notEnhancedFullClassName();
+        }
+    },
+
+    _processMasterRetriever: function(e) {
+        console.log("PROCESS MASTER INFO RETRIEVE:");
+        console.log("Master info retrieve: iron-response: status = ", e.xhr.status, ", e.response = ", e.response);
+        if (e.xhr.status === 200) { // successful execution of the request
+            const deserialisedResult = this._serialiser.deserialise(e.response);
+            
+            if (this._reflector.isError(deserialisedResult)) {
+                console.log('deserialisedResult: ', deserialisedResult);
+                this.toaster && this.toaster.openToastForError(deserialisedResult.message, this._toastMsgForError(deserialisedResult), true);
+                throw {msg: deserialisedResult};
+            }
+            const masterInfo = deserialisedResult.instance;
+            this.elementName = masterInfo.key;
+            this.componentUri = masterInfo.desc;
+            this.shortDesc = this.shortDesc || masterInfo.shortDesc;
+            this.longDesc = this.longDesc || masterInfo.longDesc;
+            this.attrs = Object.assign({}, this.attrs, {
+                entityType: masterInfo.entityType,
+                entityId: masterInfo.entityId, 
+                currentState:'EDIT',
+                prefDim: masterInfo.width && masterInfo.height && masterInfo.widthUnit && masterInfo.heightUnit && {
+                    width: () => masterInfo.width,
+                    height: () => masterInfo.height,
+                    widthUnit: masterInfo.widthUnit,
+                    heightUnit: masterInfo.heightUnit
+                }
+            });
+            this.requireSelectionCriteria = masterInfo.requireSelectionCriteria;
+            this.requireSelectedEntities = masterInfo.requireSelectedEntities;
+            this.requireMasterEntity = masterInfo.requireMasterEntity;
+            this.shouldRefreshParentCentreAfterSave = masterInfo.shouldRefreshParentCentreAfterSave;
+        } else { // other codes
+            this.toaster && this.toaster.openToastForError('Master load error: ', 'Request could not be dispatched.', true);
+            throw {msg: 'Request could not be dispatched.'};
+        }
+    }, 
+    
+    _processMasterError: function (e) {
+        console.log('PROCESS ERROR', e.error);
+        const xhr = e.detail.request.xhr;
+        if (xhr.status === 500) { // internal server error, which could either be due to business rules or have some other cause due to a bug or db connectivity issue
+            const deserialisedResult = this._serialiser.deserialise(xhr.response);
+
+            if (this._reflector.isError(deserialisedResult)) {
+                // throw the toast message about the server-side error
+                this.toaster && this.toaster.openToastForError(this._reflector.exceptionMessage(deserialisedResult.ex), this._toastMsgForError(deserialisedResult), true);
+            } else {
+                //throw new Error('Responses with status code 500 suppose to carry an error cause!');
+                this.toaster && this.toaster.openToastForError('Master load error: ', 'Responses with status code 500 suppose to carry an error cause!', true);
+            }
+        } else if (xhr.status === 403) { // forbidden!
+            this.toaster && this.toaster.openToastForError('Access denied.', 'The current session has expired. Please login and try again.', true);
+        } else if (xhr.status === 503) { // service unavailable
+            this.toaster && this.toaster.openToastForError('Service Unavailable.', 'Server responded with error 503 (Service Unavailable).', true);
+        } else if (xhr.status >= 400) { // other client or server error codes
+            this.toaster && this.toaster.openToastForError('Service Error (' + xhr.status + ').', 'Server responded with error code ' + xhr.status, true);
+        } else { // for other codes just log the code
+            console.warn('Server responded with error code ', xhr.status);
+        }
+    },
+
+    _toastMsgForError: function (errorResult) {
+        return this._reflector.stackTrace(errorResult.ex);
+    },
 });

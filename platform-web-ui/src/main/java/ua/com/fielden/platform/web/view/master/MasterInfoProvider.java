@@ -2,12 +2,9 @@ package ua.com.fielden.platform.web.view.master;
 
 import static java.lang.String.format;
 
-import com.google.inject.Inject;
-
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.EntityEditAction;
-import ua.com.fielden.platform.master.IMasterInfoProvider;
 import ua.com.fielden.platform.master.MasterInfo;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
@@ -15,32 +12,29 @@ import ua.com.fielden.platform.web.app.exceptions.WebUiBuilderException;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 
-public class MasterInfoProvider implements IMasterInfoProvider {
+public class MasterInfoProvider {
 
     private final IWebUiConfig webUiConfig;
 
-    @Inject
     public MasterInfoProvider(final IWebUiConfig webUiConfig) {
         this.webUiConfig = webUiConfig;
     }
 
-    @Override
-    public MasterInfo getMasterInfo(final Class<? extends AbstractEntity<?>> type) {
+    public MasterInfo getMasterInfo(final Class<? extends AbstractEntity<?>> type, final Long entityId) {
         try {
             return webUiConfig.configApp().getOpenMasterAction(type).get().map(entityActionConfig -> {
                 final FunctionalActionElement funcElem = new FunctionalActionElement(entityActionConfig, 0, FunctionalActionKind.PRIMARY_RESULT_SET);
                 final DomElement actionElement = funcElem.render();
                 final MasterInfo  info = new MasterInfo();
+                info.setEntityId(entityId);
                 info.setKey(actionElement.getAttr("element-name").value.toString());
                 info.setDesc(actionElement.getAttr("component-uri").value.toString());
-                info.setShouldRefreshParentCentreAfterSave(actionElement.getAttr("should-refresh-parent-centre-after-save") != null);
                 info.setShortDesc(actionElement.getAttr("short-desc").value.toString());
                 info.setLongDesc(actionElement.getAttr("long-desc").value.toString());
+                info.setShouldRefreshParentCentreAfterSave(actionElement.getAttr("should-refresh-parent-centre-after-save") != null);
                 info.setRequireSelectionCriteria(actionElement.getAttr("require-selection-criteria").value.toString());
                 info.setRequireSelectedEntities(actionElement.getAttr("require-selected-entities").value.toString());
                 info.setRequireMasterEntity(actionElement.getAttr("require-master-entity").value.toString());
-                info.setIcon(actionElement.getAttr("icon").value.toString());
-                info.setIconStyle(actionElement.getAttr("icon-style").value.toString());
                 info.setEntityType(entityActionConfig.functionalEntity.get().getName());
                 entityActionConfig.prefDimForView.ifPresent(prefDim -> {
                     info.setWidth(prefDim.width);
@@ -49,16 +43,17 @@ public class MasterInfoProvider implements IMasterInfoProvider {
                     info.setHeightUnit(prefDim.heightUnit.value);
                 });
                 return info;
-            }).orElse(buildDefaultMasterConfiguration(type));
+            }).orElse(buildDefaultMasterConfiguration(type, entityId));
         } catch (final WebUiBuilderException e) {
-            return buildDefaultMasterConfiguration(type);
+            return buildDefaultMasterConfiguration(type, entityId);
         }
     }
 
-    private MasterInfo buildDefaultMasterConfiguration(final Class<? extends AbstractEntity<?>> type) {
+    private MasterInfo buildDefaultMasterConfiguration(final Class<? extends AbstractEntity<?>> type, final Long entityId) {
         return webUiConfig.configApp().getMaster(type).map(master -> {
             final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(type).getKey();
             final MasterInfo  info = new MasterInfo();
+            info.setEntityId(entityId);
             info.setKey("tg-EntityEditAction-master");
             info.setDesc("/master_ui/ua.com.fielden.platform.entity.EntityEditAction");
             info.setShortDesc(format("Edit %s", entityTitle));
@@ -66,8 +61,6 @@ public class MasterInfoProvider implements IMasterInfoProvider {
             info.setRequireSelectionCriteria("false");
             info.setRequireSelectedEntities("ONE");
             info.setRequireMasterEntity("false");
-            info.setIcon("editor:mode-edit");
-            info.setIconStyle("");
             info.setEntityType(EntityEditAction.class.getName());
             return info;
         }).orElse(null);

@@ -732,6 +732,13 @@ export const TgEntityBinderBehavior = {
             // 'tg-action' will augment this function with its own '_afterExecution' logic (spinner stopping etc.).
             console.warn("SERVER ERROR: ", errorResult);
         }).bind(this);
+
+        //Toaster object Can be used in other components on binder to show toasts.
+        self.toaster = {
+            openToastForError : self._openToastForError.bind(self),
+            openToast: self._openToast.bind(self),
+            openToastWithoutEntity: self._openToastWithoutEntity.bind(self)
+        };
     },
 
     ///////////// toast related //////////////////

@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.master;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
@@ -11,6 +12,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @KeyType(String.class)
 @KeyTitle("Element Name")
 @DescTitle("Element URI")
+@CompanionObject(IMasterInfo.class)
 public class MasterInfo extends AbstractEntity<String> {
 
     @IsProperty
@@ -30,16 +32,8 @@ public class MasterInfo extends AbstractEntity<String> {
     private String heightUnit;
 
     @IsProperty
-    @Title(value = "Short Description", desc = "Action's short description")
-    private String shortDesc;
-
-    @IsProperty
-    @Title(value = "Long Description", desc = "Action's long description")
-    private String longDesc;
-
-    @IsProperty
     @Title("Refresh parent centre after save?")
-    private boolean shouldRefreshParentCentreAfterSave;
+    private boolean shouldRefreshParentCentreAfterSave = false;
 
     @IsProperty
     @Title("Require Selection Criteria")
@@ -54,16 +48,30 @@ public class MasterInfo extends AbstractEntity<String> {
     private String requireMasterEntity;
 
     @IsProperty
-    @Title("Icon")
-    private String icon;
-
-    @IsProperty
-    @Title("Icon Style")
-    private String iconStyle;
-
-    @IsProperty
     @Title(value = "Entity Type", desc = "Desc")
     private String entityType;
+
+    @IsProperty
+    @Title(value = "Entity Id", desc = "Desc")
+    private Long entityId;
+
+    @IsProperty
+    @Title(value = "Short Description", desc = "Action's short description")
+    private String shortDesc;
+
+    @IsProperty
+    @Title(value = "Long Description", desc = "Action's long description")
+    private String longDesc;
+
+    @Observable
+    public MasterInfo setEntityId(final Long entityId) {
+        this.entityId = entityId;
+        return this;
+    }
+
+    public Long getEntityId() {
+        return entityId;
+    }
 
     @Observable
     public MasterInfo setEntityType(final String entityType) {
@@ -73,26 +81,6 @@ public class MasterInfo extends AbstractEntity<String> {
 
     public String getEntityType() {
         return entityType;
-    }
-
-    @Observable
-    public MasterInfo setIconStyle(final String iconStyle) {
-        this.iconStyle = iconStyle;
-        return this;
-    }
-
-    public String getIconStyle() {
-        return iconStyle;
-    }
-
-    @Observable
-    public MasterInfo setIcon(final String icon) {
-        this.icon = icon;
-        return this;
-    }
-
-    public String getIcon() {
-        return icon;
     }
 
     @Observable
@@ -136,26 +124,6 @@ public class MasterInfo extends AbstractEntity<String> {
     }
 
     @Observable
-    public MasterInfo setLongDesc(final String longDesc) {
-        this.longDesc = longDesc;
-        return this;
-    }
-
-    public String getLongDesc() {
-        return longDesc;
-    }
-
-    @Observable
-    public MasterInfo setShortDesc(final String shortDesc) {
-        this.shortDesc = shortDesc;
-        return this;
-    }
-
-    public String getShortDesc() {
-        return shortDesc;
-    }
-
-    @Observable
     public MasterInfo setHeightUnit(final String heightUnit) {
         this.heightUnit = heightUnit;
         return this;
@@ -193,5 +161,25 @@ public class MasterInfo extends AbstractEntity<String> {
 
     public String getWidth() {
         return width;
+    }
+
+    @Observable
+    public MasterInfo setLongDesc(final String longDesc) {
+        this.longDesc = longDesc;
+        return this;
+    }
+
+    public String getLongDesc() {
+        return longDesc;
+    }
+
+    @Observable
+    public MasterInfo setShortDesc(final String shortDesc) {
+        this.shortDesc = shortDesc;
+        return this;
+    }
+
+    public String getShortDesc() {
+        return shortDesc;
     }
 }

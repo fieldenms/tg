@@ -49,6 +49,8 @@ import ua.com.fielden.platform.entity.matcher.ValueMatcherFactory;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.keygen.IKeyNumber;
 import ua.com.fielden.platform.keygen.KeyNumberDao;
+import ua.com.fielden.platform.master.IMasterInfo;
+import ua.com.fielden.platform.master.MasterInfoDao;
 import ua.com.fielden.platform.menu.CustomViewDao;
 import ua.com.fielden.platform.menu.EntityCentreViewDao;
 import ua.com.fielden.platform.menu.EntityMasterViewDao;
@@ -232,6 +234,8 @@ public class BasicWebServerModule extends CommonFactoryModule {
 
         //Reference Hierarchy
         bind(IReferenceHierarchy.class).to(ReferenceHierarchyDao.class);
+        //Bind master info companion
+        bind(IMasterInfo.class).to(MasterInfoDao.class);
 
         // user security related bindings
         bind(IUser.class).to(UserDao.class);

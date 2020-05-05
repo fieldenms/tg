@@ -4,6 +4,8 @@ import static ua.com.fielden.platform.companion.PersistentEntitySaver.ERR_COULD_
 import static ua.com.fielden.platform.utils.EntityUtils.isConflicting;
 
 import java.util.Map;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import javax.persistence.OptimisticLockException;
 
@@ -14,6 +16,7 @@ import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
@@ -86,6 +89,10 @@ public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> i
         }
     }
     
+    @Override
+    public <T> T withDbVersion(final Function<DbVersion, T> fun) {
+        return fun.apply(getDbVersion());
+    }
     /**
      * Regular entity saving process with transaction scope but not allowing to nest that scope inside another scope.
      * 
