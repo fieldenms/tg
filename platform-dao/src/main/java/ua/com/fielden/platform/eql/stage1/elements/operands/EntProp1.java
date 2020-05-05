@@ -40,7 +40,7 @@ public class EntProp1 implements ISingleOperand1<EntProp2> {
             if (resolution != null) {
                 final EntProp2 transformedProp = new EntProp2(resolution.getSource(), resolution.getPath());
                 
-                return new TransformationResult<EntProp2>(transformedProp, context.cloneNew());
+                return new TransformationResult<EntProp2>(transformedProp, context);
             }
         }
 

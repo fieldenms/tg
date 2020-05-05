@@ -28,7 +28,7 @@ public class PropsResolutionContext {
     public PropsResolutionContext(final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo, final List<List<IQrySource2<? extends IQrySource3>>> sources, final String sourceId) {
         this.domainInfo = new HashMap<>(domainInfo);
         this.sources = sources;
-        this.sourceId = sourceId; 
+        this.sourceId = sourceId;
     }
 
     private static List<List<IQrySource2<? extends IQrySource3>>> buildSourcesStackForNewQuery(final List<List<IQrySource2<? extends IQrySource3>>> existingSources) {
@@ -50,12 +50,6 @@ public class PropsResolutionContext {
         final List<List<IQrySource2<? extends IQrySource3>>> srcs = new ArrayList<>();
         srcs.addAll(sources);
         srcs.get(0).add(transformedSource); // adding source to current query list of sources
-        return new PropsResolutionContext(domainInfo, srcs, sourceId);
-    }
-
-    public PropsResolutionContext cloneNew() {
-        final List<List<IQrySource2<? extends IQrySource3>>> srcs = new ArrayList<>();
-        srcs.addAll(sources);
         return new PropsResolutionContext(domainInfo, srcs, sourceId);
     }
 

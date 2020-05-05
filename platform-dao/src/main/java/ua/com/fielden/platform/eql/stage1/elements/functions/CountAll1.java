@@ -8,7 +8,7 @@ public class CountAll1 extends AbstractFunction1<CountAll2> {
 
     @Override
     public TransformationResult<CountAll2> transform(final PropsResolutionContext context) {
-        return new TransformationResult<CountAll2>(new CountAll2(), context.cloneNew());
+        return new TransformationResult<CountAll2>(new CountAll2(), context);
     }
     
     @Override
