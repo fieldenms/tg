@@ -33,13 +33,21 @@ import ua.com.fielden.platform.entity.IEntityEditAction;
 import ua.com.fielden.platform.entity.IEntityNavigationAction;
 import ua.com.fielden.platform.entity.IEntityNewAction;
 import ua.com.fielden.platform.entity.IReferenceHierarchy;
+import ua.com.fielden.platform.entity.IReferenceHierarchyEntry;
+import ua.com.fielden.platform.entity.IReferenceLevelHierarchyEntry;
+import ua.com.fielden.platform.entity.IReferencedByLevelHierarchyEntry;
 import ua.com.fielden.platform.entity.ISecurityMatrixInsertionPoint;
 import ua.com.fielden.platform.entity.ISecurityMatrixSaveAction;
 import ua.com.fielden.platform.entity.ISecurityTokenTreeNodeEntity;
+import ua.com.fielden.platform.entity.ITypeLevelHierarchyEntry;
 import ua.com.fielden.platform.entity.ReferenceHierarchyDao;
+import ua.com.fielden.platform.entity.ReferenceHierarchyEntryDao;
+import ua.com.fielden.platform.entity.ReferenceLevelHierarchyEntryDao;
+import ua.com.fielden.platform.entity.ReferencedByLevelHierarchyEntryDao;
 import ua.com.fielden.platform.entity.SecurityMatrixInsertionPointDao;
 import ua.com.fielden.platform.entity.SecurityMatrixSaveActionDao;
 import ua.com.fielden.platform.entity.SecurityTokenTreeNodeEntityDao;
+import ua.com.fielden.platform.entity.TypeLevelHierarchyEntryDao;
 import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarningsDao;
 import ua.com.fielden.platform.entity.functional.master.IAcknowledgeWarnings;
 import ua.com.fielden.platform.entity.functional.master.IPropertyWarning;
@@ -234,6 +242,10 @@ public class BasicWebServerModule extends CommonFactoryModule {
 
         //Reference Hierarchy
         bind(IReferenceHierarchy.class).to(ReferenceHierarchyDao.class);
+        bind(IReferenceHierarchyEntry.class).to(ReferenceHierarchyEntryDao.class);
+        bind(ITypeLevelHierarchyEntry.class).to(TypeLevelHierarchyEntryDao.class);
+        bind(IReferenceLevelHierarchyEntry.class).to(ReferenceLevelHierarchyEntryDao.class);
+        bind(IReferencedByLevelHierarchyEntry.class).to(ReferencedByLevelHierarchyEntryDao.class);
         //Bind master info companion
         bind(IMasterInfo.class).to(MasterInfoDao.class);
 

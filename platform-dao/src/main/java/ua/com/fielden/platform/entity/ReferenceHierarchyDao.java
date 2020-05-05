@@ -120,11 +120,11 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
         return referenceEntry;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private List<ReferenceLevelHierarchyEntry> generateReferences(final ReferenceHierarchy entity) {
         final Class<? extends AbstractEntity<?>> entityType = entity.getRefEntityClass().orElseThrow(() -> failuref(ERR_ENTITY_TYPE_NOT_FOUND, entity.getRefEntityType()));
         final List<Field> entityFields = getReferenceProperties(entityType);
-        final fetch<AbstractEntity<?>> fetchModel = (fetch<AbstractEntity<?>>)generateReferenceFetchModel(entityType, entityFields);
+        final fetch fetchModel = generateReferenceFetchModel(entityType, entityFields);
         final Optional<? extends AbstractEntity<?>> optionalEntity = co(entityType).findByIdOptional(entity.getRefEntityId(), fetchModel);
         return optionalEntity.map(refEntity -> generateReferencesFor(refEntity, getExistentReferenceProperties(refEntity, entityFields))).orElse(new ArrayList<>());
     }

@@ -3,6 +3,7 @@ package ua.com.fielden.platform.entity;
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.ReferenceHierarchyLevel.REFERENCE_INSTANCE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
+import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
 
@@ -14,7 +15,6 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
-import ua.com.fielden.platform.utils.EntityUtils;
 
 public class ReferenceHierarchyProducer extends DefaultEntityProducerWithContext<ReferenceHierarchy> {
 
@@ -23,7 +23,7 @@ public class ReferenceHierarchyProducer extends DefaultEntityProducerWithContext
         super(factory, ReferenceHierarchy.class, companionFinder);
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     protected ReferenceHierarchy provideDefaultValues(final ReferenceHierarchy entity) {
         if (selectedEntitiesNotEmpty() || currentEntityNotEmpty()) {
@@ -38,8 +38,8 @@ public class ReferenceHierarchyProducer extends DefaultEntityProducerWithContext
             } else {
                 throw new ReflectionException(format("Unsupported entity type [%s] for Reference Hiearchy.", entityType.getSimpleName()));
             }
-            final fetch<AbstractEntity<?>> fetchModel = (fetch<AbstractEntity<?>>)fetchKeyAndDescOnly(selectedEntity.getType());
-            final AbstractEntity<?> refetchedEntity = co(selectedEntity.getType()).findById(selectedEntity.getId(), EntityUtils.hasDescProperty(selectedEntity.getType()) ? fetchModel.with("desc") : fetchModel);
+            final fetch fetchModel = fetchKeyAndDescOnly(selectedEntity.getType());
+            final AbstractEntity<?> refetchedEntity = co(selectedEntity.getType()).findById(selectedEntity.getId(), hasDescProperty(selectedEntity.getType()) ? fetchModel.with("desc") : fetchModel);
             entity.setRefEntityId(refetchedEntity.getId());
             entity.setLoadedHierarchyLevel(REFERENCE_INSTANCE);
             entity.setTitle(selectedEntity.getKey() + (StringUtils.isEmpty(refetchedEntity.getDesc()) ? "" : ": " + refetchedEntity.getDesc()));

@@ -1,9 +1,11 @@
 package ua.com.fielden.platform.entity;
 
+import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
+@CompanionObject(IReferenceLevelHierarchyEntry.class)
 public class ReferenceLevelHierarchyEntry extends ReferencedByLevelHierarchyEntry {
 
     @IsProperty

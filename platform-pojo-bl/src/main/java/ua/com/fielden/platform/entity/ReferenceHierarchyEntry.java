@@ -6,12 +6,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
 @KeyType(String.class)
+@CompanionObject(IReferenceHierarchyEntry.class)
 public class ReferenceHierarchyEntry extends AbstractTreeEntry<String> {
 
     @IsProperty
