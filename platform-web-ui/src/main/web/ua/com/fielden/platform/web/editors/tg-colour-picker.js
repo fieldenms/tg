@@ -313,7 +313,7 @@ export class TgColourPicker extends TgEditor {
 
     _formatText (_editingValue) {
         if (this.reflector().isEntity(this.entity)) {
-            return this.reflector().tg_toStringForDisplay(this.convertFromString(_editingValue), this.entity.type(), this.propertyName);
+            return this.reflector().tg_toString(this.convertFromString(_editingValue), this.entity.type(), this.propertyName, { bindingValue: true, display: true });
         }
         return '';
     }

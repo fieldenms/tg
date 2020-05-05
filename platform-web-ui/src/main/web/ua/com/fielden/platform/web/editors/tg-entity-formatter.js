@@ -22,7 +22,7 @@ const states = {
             return 's3'
         } else if (template[idx] === 'v') {
             const name = titles[titles.length - 1].keyName;
-            titles[titles.length - 1].value = reflector.tg_toStringFull(entity.get(name), entity.type(), name);
+            titles[titles.length - 1].value = reflector.tg_toString(entity.get(name), entity.type(), name);
             if (template.length - 1 === idx) {
                 return;
             }
@@ -72,7 +72,7 @@ const states = {
 function parseValueAndReturnState(entity, template, idx, reflector, titles, state) {
     if (template[idx] === 'v') {
         const name = titles[titles.length - 1].keyName;
-        titles[titles.length - 1].value = reflector.tg_toStringFull(entity.get(name), entity.type(), name);
+        titles[titles.length - 1].value = reflector.tg_toString(entity.get(name), entity.type(), name);
         if (template.length - 1 === idx) {
             return;
         }
@@ -139,7 +139,7 @@ function composeDefaultValueObject(entity, reflector, titles) {
     entityType.compositeKeyNames().forEach(keyName => {
         if (entity.get(keyName)) {
             titles.push({
-                value: reflector.tg_toStringFull(entity.get(keyName), entity.type(), keyName),
+                value: reflector.tg_toString(entity.get(keyName), entity.type(), keyName),
                 separator: compositeKeySeparator
             });
         }
@@ -155,7 +155,7 @@ function createCompositeTitleWithoutTemplate (entity, reflector, titles) {
         if (entity.get(keyName)) {
             titles.push({
                 title: entityType.prop(keyName).title(),
-                value: reflector.tg_toStringFull(entity.get(keyName), entity.type(), keyName)
+                value: reflector.tg_toString(entity.get(keyName), entity.type(), keyName)
             });
         }
     });

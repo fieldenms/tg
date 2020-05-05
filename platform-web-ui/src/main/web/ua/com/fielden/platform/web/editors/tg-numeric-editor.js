@@ -10,7 +10,7 @@ export class TgNumericEditor extends TgEditor {
     
     _formatText (_editingValue) {
         if (this.reflector().isEntity(this.entity)) {
-            return this.reflector().tg_toStringForDisplay(this.convertFromString(_editingValue), this.entity.type(), this.propertyName, this.$.appConfig.locale);
+            return this.reflector().tg_toString(this.convertFromString(_editingValue), this.entity.type(), this.propertyName, { bindingValue: true, display: true, locale: this.$.appConfig.locale });
         }
         return '';
     }

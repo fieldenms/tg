@@ -26,6 +26,8 @@ const _UNDEFINED_CONFIG_TITLE = '_______________________undefined';
 const _LINK_CONFIG_TITLE = '_______________________link';
 const KEY_NOT_ASSIGNED = "[key is not assigned]"; // closely resembles AbstractEntity.KEY_NOT_ASSIGNED
 
+const STANDARD_COLLECTION_SEPARATOR = ', ';
+
 /**
  * Determines whether the result represents the error.
  */
@@ -1206,7 +1208,7 @@ const _toString = function (bindingValue, rootEntityType, property) {
     } else if (Array.isArray(bindingValue)) {
         // Here we have standard logic of converting collections using the most common ', ' separator.
         // To apply custom separator please use _toStringForCollection method (see tg-entity-editor.convertToString).
-        return _toStringForCollection(bindingValue, rootEntityType, property, ', ');
+        return _toStringForCollection(bindingValue, rootEntityType, property, STANDARD_COLLECTION_SEPARATOR);
     } else if (typeof bindingValue === 'object' && bindingValue.hasOwnProperty('hashlessUppercasedColourValue')) { // Colour
         return bindingValue.hashlessUppercasedColourValue;
     } else if (typeof bindingValue === 'object' && bindingValue.hasOwnProperty('value')) { // Hyperlink
@@ -1217,17 +1219,6 @@ const _toString = function (bindingValue, rootEntityType, property) {
     } else {
         throw new _UCEPrototype(bindingValue);
     }
-};
-
-/**
- * Converts property value to string.
- * 
- * @param fullyFledgedValue -- fully-fledged property value (not binding representation)
- * @param rootEntityType -- the type of entity holding this property
- * @param property -- property name of the property; can be dot-notated
- */
-const _toStringFull = function (fullyFledgedValue, rootEntityType, property) {
-    return _toString(_convert(fullyFledgedValue), rootEntityType, property);
 };
 
 /**
@@ -1282,19 +1273,18 @@ const _toStringForCollection = function (bindingValue, rootEntityType, property,
 };
 
 /**
- * Converts collectional property value to tooltip's string representation.
+ * Converts collectional property value, converted to editor binding representation ('bindingValue'), to tooltip's string representation.
  * 
- * @param fullyFledgedValue -- fully-fledged property value (not binding representation); array of entities
+ * @param bindingValue -- binding representation of property value that is the same as fully-fledged value; this can be null or array of entities or numbers or strings etc.
  * @param rootEntityType -- the type of entity holding this property
  * @param property -- property name of the property; can be dot-notated
  */
-const _toStringForCollectionAsTooltip = function (fullyFledgedValue, rootEntityType, property) {
-    const bindingValue = _convert(fullyFledgedValue);
+const _toStringForCollectionAsTooltip = function (bindingValue, rootEntityType, property) {
     const convertedCollection = _toString(bindingValue, rootEntityType, property);
     if (convertedCollection === '') {
         return '';
     }
-    const desc = _toStringForCollection(bindingValue, rootEntityType, property, ', ', entity => entity.get('desc')); // maps entity descriptions; this includes descs from short collection sub-keys
+    const desc = _toStringForCollection(bindingValue, rootEntityType, property, STANDARD_COLLECTION_SEPARATOR, entity => entity.get('desc')); // maps entity descriptions; this includes descs from short collection sub-keys
     return '<b>' + convertedCollection + '</b>' + (desc !== '' ? '<br>' + desc : '');
 };
 
@@ -1577,61 +1567,44 @@ export const TgReflector = Polymer({
     },
     
     /**
-     * Converts property value, converted to editor binding representation ('bindingValue'), to string.
-     * 
-     * @param bindingValue -- binding representation of property value; for entity-typed property it is string; for array it is shallow array copy; for all other values -- it is the same value
-     * @param rootEntityType -- the type of entity holding this property
-     * @param property -- property name of the property; can be dot-notated
-     */
-    tg_toString: function (bindingValue, rootEntityType, property) {
-        return _toString(bindingValue, rootEntityType, property);
-    },
-    
-    /**
      * Converts property value to string.
      * 
-     * @param fullyFledgedValue -- fully-fledged property value (not binding representation)
+     * Terms:
+     * binding value -- binding representation of fully-fledged property value; for entity-typed property it is string; for array it is shallow array copy; for all other values -- it is the same value.
+     * 
+     * @param value -- the value of property; can be fully-fledged (by default) or binding value (if opts.bindingValue === true)
      * @param rootEntityType -- the type of entity holding this property
      * @param property -- property name of the property; can be dot-notated
-     */
-    tg_toStringFull: function (fullyFledgedValue, rootEntityType, property) {
-        return _toStringFull(fullyFledgedValue, rootEntityType, property);
-    },
-    
-    /**
-     * Converts property value, converted to editor binding representation ('bindingValue'), to string for display purposes.
+     * @param opts.bindingValue -- if true then 'value' represents binding value representation, otherwise -- fully-fledged value
      * 
-     * @param bindingValue -- binding representation of property value; for entity-typed property it is string; for array it is shallow array copy; for all other values -- it is the same value
-     * @param rootEntityType -- the type of entity holding this property
-     * @param property -- property name of the property; can be dot-notated or '' meaning "entity itself"
-     * @param locale -- optional; application-wide server-driven locale; this is to be used for number properties conversion (BigDecimal, Integer / Long, Money) and can be omitted for other types
+     * @param opts.display -- if true then 'value' will be converted to "display" string representation, aka #F1F1F1 for colour or 10,000.50 and $37.7878 for numeric props, otherwise -- to editing value representation (F1F1F1 or 10000.5 and 37.7878)
+     * @param   opts.locale -- optional; works only for opts.display === true; application-wide server-driven locale; this is to be used for number properties conversion (BigDecimal, Integer / Long, Money) and can be omitted for other types
+     *    otherwise
+     * @param opts.collection -- true if 'value' represents collection, false otherwise; this is to be used with custom parameters for collection conversion:
+     * @param   opts.asTooltip -- if true then collection of entities will be converted to standard tooltip representation
+     *          or
+     * @param   opts.separator -- string value to glue string representations of collectional values with; ', ' by default
+     * @param   opts.mappingFunction -- maps resulting collectional elements before actual element-by-element toString conversion and glueing them all together; optional
+     *    otherwise
+     *        standard toString convertion
      */
-    tg_toStringForDisplay: function (bindingValue, rootEntityType, property, locale) {
-        return _toStringForDisplay(bindingValue, rootEntityType, property, locale);
-    },
-    
-    /**
-     * Converts collectional property value, converted to editor binding representation ('bindingValue'), to string.
-     * 
-     * @param bindingValue -- binding representation of property value that is the same as fully-fledged value; this can be array of entities or numbers or strings etc.
-     * @param rootEntityType -- the type of entity holding this property
-     * @param property -- property name of the property; can be dot-notated
-     * @param separator -- string value to glue string representations of values with
-     * @param mappingFunction -- maps resulting elements before actual element-by-element toString conversion and glueing them all together; this is optional
-     */
-    tg_toStringForCollection: function (bindingValue, rootEntityType, property, separator, mappingFunction) {
-        return _toStringForCollection(bindingValue, rootEntityType, property, separator, mappingFunction);
-    },
-    
-    /**
-     * Converts collectional property value to tooltip's string representation.
-     * 
-     * @param fullyFledgedValue -- fully-fledged property value (not binding representation); array of entities
-     * @param rootEntityType -- the type of entity holding this property
-     * @param property -- property name of the property; can be dot-notated
-     */
-    tg_toStringForCollectionAsTooltip: function (fullyFledgedValue, rootEntityType, property) {
-        return _toStringForCollectionAsTooltip(fullyFledgedValue, rootEntityType, property);
+    tg_toString: function (value, rootEntityType, property, opts) {
+        const isBindingValue = opts && opts.bindingValue;
+        if (!isBindingValue) {
+            return this.tg_toString(_convert(value), rootEntityType, property, Object.assign({}, opts, { bindingValue: true })); // copy opts with bindingValue assigned as true
+        } else {
+            if (opts && opts.display) {
+                return _toStringForDisplay(value, rootEntityType, property, opts.locale);
+            } else if (opts && opts.collection) {
+                if (opts.asTooltip) {
+                    return _toStringForCollectionAsTooltip(value, rootEntityType, property);
+                } else {
+                    return _toStringForCollection(value, rootEntityType, property, opts.separator || STANDARD_COLLECTION_SEPARATOR, opts.mappingFunction);
+                }
+            } else {
+                return _toString(value, rootEntityType, property);
+            }
+        }
     },
     
     /**

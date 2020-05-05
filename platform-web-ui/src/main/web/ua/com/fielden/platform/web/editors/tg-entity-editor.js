@@ -806,7 +806,7 @@ export class TgEntityEditor extends TgEditor {
         // joining on an empty array evaluates to an empty string
         // null converts to '' in majority of cases in reflector.tg_toString... family of methods and this is the case for this editor (String or Arrays of String types)
         return this.multi === true
-            ? this.reflector().tg_toStringForCollection(value, this.entity.type(), this.propertyName, this.separator)
+            ? this.reflector().tg_toString(value, this.entity.type(), this.propertyName, { bindingValue: true, collection: true, separator: this.separator })
             : super.convertToString(value);
     }
 
@@ -950,7 +950,7 @@ export class TgEntityEditor extends TgEditor {
             if (entityValue.get(keyName)) {
                 titles.push({
                     title: entityType.prop(keyName).title(),
-                    value: this.reflector().tg_toStringFull(entityValue.get(keyName), entityType, keyName)
+                    value: this.reflector().tg_toString(entityValue.get(keyName), entityType, keyName)
                 });
             }
         });

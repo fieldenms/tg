@@ -69,7 +69,7 @@ export const TgEgiDataRetrievalBehavior = {
         if (entity === null || property === null || type === null) {
             return '';
         } else {
-            return this._reflector.tg_toStringForDisplay(this._reflector.tg_convert(entity.get(property)), entity.type(), property, this._appConfig.locale);
+            return this._reflector.tg_toString(entity.get(property), entity.type(), property, { display: true, locale: this._appConfig.locale });
         }
     }
 

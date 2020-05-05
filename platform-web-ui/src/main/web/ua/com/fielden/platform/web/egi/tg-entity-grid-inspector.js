@@ -2052,7 +2052,7 @@ Polymer({
     _generateEntityTooltip: function (entity, column) {
         const valueToFormat = this.getValueFromEntity(entity, column);
         if (Array.isArray(valueToFormat)) {
-            return this._reflector.tg_toStringForCollectionAsTooltip(valueToFormat, this.getRealEntity(entity, column).type(), this.getRealProperty(column));
+            return this._reflector.tg_toString(valueToFormat, this.getRealEntity(entity, column).type(), this.getRealProperty(column), { collection: true, asTooltip: true });
         } else {
             let desc;
             try {
