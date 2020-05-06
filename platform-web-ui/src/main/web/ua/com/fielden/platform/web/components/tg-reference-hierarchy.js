@@ -112,7 +112,9 @@ const getKeys = function (entity, entityWithKey) {
     let titleObject = filterKeys(entity, composeDefaultUnconvertedEntityValue(entityWithKey)).map(keyValue => {
         return {
             title: keyValue.title,
-            value: typeof keyValue.value.type === 'function' ? getKeys(entity, keyValue.value) : keyValue.value
+            value: typeof keyValue.value.type === 'function' ? getKeys(entity, keyValue.value) : keyValue.value,
+            propertyName: keyValue.propertyName,
+            type: keyValue.type
         };
     });
     if (titleObject.length === 1) {
@@ -133,7 +135,7 @@ const buildTitles = function (titleObject, reflector) {
         const valueStyle = "font-size:16px;display:flex;flex-direction:row;align-items:center;" + (idx < titleObject.length - 1 ? "padding-right: 5px;" : "");
         accum += curr.title ? "<span style='font-size:0.8em;color:#737373;font-weight:bold;padding-right:2px;'>" + curr.title + ":&nbsp;</span>": "";
         accum += "<span class='part-to-highlight' style='" + valueStyle + "'>" + (curr.title && Array.isArray(curr.value) && curr.value.length > 1 ? "<span style='padding-right:2px;color:#737373;'>{</span>" : "")
-            + (Array.isArray(curr.value) ? buildTitles(curr.value, reflector) : reflector.convert(curr.value)) + (curr.title && Array.isArray(curr.value) && curr.value.length > 1 ? "<span style='padding-left:2px;color:#737373;'>}</span>" : "") + "</span>";
+            + (Array.isArray(curr.value) ? buildTitles(curr.value, reflector) : reflector.tg_toString(curr.value, curr.type, curr.propertyName)) + (curr.title && Array.isArray(curr.value) && curr.value.length > 1 ? "<span style='padding-left:2px;color:#737373;'>}</span>" : "") + "</span>";
         return accum;
     }, "");
 };

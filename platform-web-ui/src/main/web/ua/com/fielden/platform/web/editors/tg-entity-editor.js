@@ -514,9 +514,9 @@ export class TgEntityEditor extends TgEditor {
         let wasNewValueObserved = false;
         let indexOfFirstNewValue = -1;
         for (let index = 0; index < entities.length; index++) {
-            // Entity is converted to a string representation of its key.
-            // This includes correct conversion of simple, composite and union entities
-            const key = this.reflector().convert(entities[index]);
+            // Entity is converted to a string representation of itself that is the same as string representation of its key or [key is not assigned] string if there is no key.
+            // This includes correct conversion of simple and composite entities. Top-level union entities are not supported -- only as part of other entities as a property values.
+            const key = entities[index].toString();
             entities[index].key = key;
             const isNew = this.result.pushValue(entities[index]);
             // if a new value was observed for the first time then capture its index
@@ -804,7 +804,10 @@ export class TgEntityEditor extends TgEditor {
         // there are cases where value might be null even for MULTI selection criteria
         // this happens when a crit-only property changes from type SINGLE to MULTI
         // joining on an empty array evaluates to an empty string
-        return value === null ? "" : (this.multi === true ? value.join(this.separator) : "" + value);
+        // null converts to '' in majority of cases in reflector.tg_toString... family of methods and this is the case for this editor (String or Arrays of String types)
+        return this.multi === true
+            ? this.reflector().tg_toString(value, this.entity.type(), this.propertyName, { bindingValue: true, collection: true, separator: this.separator })
+            : super.convertToString(value);
     }
 
     /**
@@ -867,11 +870,11 @@ export class TgEntityEditor extends TgEditor {
         }
         var valueToFormat, fullEntity;
         if (!focused && entity !== null) {
-            fullEntity = this.reflector()._getValueFor(entity, "");
+            fullEntity = this.reflector().tg_getFullEntity(entity);
             if (this.reflector().isError(fullEntity.prop(this.propertyName).validationResult())) {
                 valueToFormat = _editingValue; // Here we can take fullEntity.prop(this.propertyName).lastInvalidValue(); to show also description of invalid values. However, 'not found mocks' need to be properly supported. Also description layer for unfocused editor can be enhanced in a similar way too.
             } else {
-                valueToFormat = this.reflector()._getValueFor(entity, this.propertyName);
+                valueToFormat = fullEntity.get(this.propertyName);
             }
             return super._getTooltip(valueToFormat);
         }
@@ -896,11 +899,11 @@ export class TgEntityEditor extends TgEditor {
     _createEntityTooltip (entity) {
         const titles = this._createEntityTitleObject(entity);
         if (titles.length === 1) {
-            return "<b>" + this.reflector().convert(entity) + "</b>" + (entity.get('desc') ? "<br>" + entity.get('desc') : "");
+            return "<b>" + titles[0].value + "</b>" + (entity.get('desc') ? "<br>" + entity.get('desc') : "");
         } else {
             return "<table style='border-collapse: collapse;'>" +
                 titles.map(entry => "<tr><td valign='top' style='padding-left:0'>" + entry.title + ": </td><td valign='top' style='padding-right:0'><b>" + entry.value + "</b></td></tr>").join("") +
-            "</table>"  + (entity.get('desc') ? "<br>" + entity.get('desc') : "");
+            "</table>"  + (entity.get('desc') ? entity.get('desc') : "");
         }
     }
 
@@ -919,8 +922,8 @@ export class TgEntityEditor extends TgEditor {
 
     _createTitleObject (entity) {
         if (entity !== null) {
-            const entityValue = this.reflector()._getValueFor(entity, this.propertyName);
-            const metaProp = this.reflector().getEntityTypeProp(entity["@@origin"], this.propertyName);
+            const entityValue = this.reflector().tg_getFullValue(entity, this.propertyName);
+            const metaProp = this.reflector().getEntityTypeProp(this.reflector().tg_getFullEntity(entity), this.propertyName);
             if (entityValue !== null && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription()) {
                 try {
                     return composeEntityValue(entityValue, metaProp.displayAs());
@@ -947,7 +950,7 @@ export class TgEntityEditor extends TgEditor {
             if (entityValue.get(keyName)) {
                 titles.push({
                     title: entityType.prop(keyName).title(),
-                    value: this.reflector().convert(entityValue.get(keyName))
+                    value: this.reflector().tg_toString(entityValue.get(keyName), entityType, keyName)
                 });
             }
         });
@@ -958,12 +961,12 @@ export class TgEntityEditor extends TgEditor {
     }
 
     _createSimpleTitle (entityValue) {
-        return [{value: this.reflector().convert(entityValue)}];
+        return [{value: entityValue.toString()}]; // entityValue never empty
     }
 
     _hasDesc (entity) {
         if (entity !== null) {
-            var entityValue = this.reflector()._getValueFor(entity, this.propertyName);
+            var entityValue = this.reflector().tg_getFullValue(entity, this.propertyName);
             if (entityValue !== null && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription()) {
                 return !!entityValue.get('desc');
             }
@@ -973,7 +976,7 @@ export class TgEntityEditor extends TgEditor {
 
     _formatDesc (entity) {
         if (entity !== null) {
-            var entityValue = this.reflector()._getValueFor(entity, this.propertyName);
+            var entityValue = this.reflector().tg_getFullValue(entity, this.propertyName);
             if (entityValue !== null && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription() && entityValue.get('desc')) {
                 return entityValue.get('desc');
             }
@@ -986,8 +989,8 @@ export class TgEntityEditor extends TgEditor {
             return;
         }
         if (entity !== null) {
-            var entityValue = this.reflector()._getValueFor(entity, this.propertyName);
-            this._hasLayer = entityValue !== null && this.convertToString(this.reflector().convert(entityValue)) === _editingValue && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription();
+            var entityValue = this.reflector().tg_getFullValue(entity, this.propertyName);
+            this._hasLayer = entityValue !== null && this.convertToString(this.reflector().tg_convert(entityValue)) === _editingValue && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription();
         } else {
             this._hasLayer = false;
         }

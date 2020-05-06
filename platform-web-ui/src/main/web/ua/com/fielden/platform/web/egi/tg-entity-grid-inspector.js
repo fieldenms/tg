@@ -2050,21 +2050,19 @@ Polymer({
     },
     
     _generateEntityTooltip: function (entity, column) {
-        const key = this.getBindedValue(entity, column);
-        let desc;
-        try {
-            if (Array.isArray(this.getValueFromEntity(entity, column))) {
-                desc = generateShortCollection(this.getRealEntity(entity, column), this.getRealProperty(column), this._reflector.findTypeByName(column.type))
-                    .map(function (subEntity) {
-                        return subEntity.get("desc");
-                    }).join(", ");
-            } else {
+        const valueToFormat = this.getValueFromEntity(entity, column);
+        if (Array.isArray(valueToFormat)) {
+            return this._reflector.tg_toString(valueToFormat, this.getRealEntity(entity, column).type(), this.getRealProperty(column), { collection: true, asTooltip: true });
+        } else {
+            let desc;
+            try {
                 desc = entity.get(column.property === '' ? "desc" : (column.property + ".desc"));
+            } catch (e) {
+                desc = ""; // TODO consider leaving the exception (especially strict proxies) to be able to see the problems of 'badly fetched columns'
             }
-        } catch (e) {
-            desc = ""; // TODO consider leaving the exception (especially strict proxies) to be able to see the problems of 'badly fetched columns'
+            const key = this.getBindedValue(entity, column);
+            return (key && ("<b>" + key + "</b>")) + (desc ? "<br>" + desc : "");
         }
-        return (key && ("<b>" + key + "</b>")) + (desc ? "<br>" + desc : "");
     },
 
     _generateActionTooltip: function (action) {

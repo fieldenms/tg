@@ -79,6 +79,34 @@ public class EntityTypeProp extends AbstractEntity<String> {
     @Title(value = "Display  pattern", desc = "Pattern that is used to display value for entity type property")
     private String _displayAs;
 
+    @IsProperty
+    @Title(value = "Type Name", desc = "Name of property type")
+    private String _typeName;
+
+    @IsProperty
+    @Title(value = "Short Collection Key", desc = "Non-parent composite key member of this short collectional property's element type (only if it is short collection).")
+    private String _shortCollectionKey;
+
+    @Observable
+    public EntityTypeProp set_shortCollectionKey(final String _shortCollectionKey) {
+        this._shortCollectionKey = _shortCollectionKey;
+        return this;
+    }
+
+    public String get_shortCollectionKey() {
+        return _shortCollectionKey;
+    }
+
+    @Observable
+    public EntityTypeProp set_typeName(final String _typeName) {
+        this._typeName = _typeName;
+        return this;
+    }
+
+    public String get_typeName() {
+        return _typeName;
+    }
+
     @Observable
     public EntityTypeProp set_displayAs(final String _displayAs) {
         this._displayAs = _displayAs;

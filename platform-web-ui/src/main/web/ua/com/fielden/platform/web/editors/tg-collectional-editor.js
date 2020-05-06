@@ -414,7 +414,7 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
             // This session includes initial refresh, multiple validation cycles and finishing save / cancel.
             // It is believed that resetting of _originalChosenIds can be safely done in attached callback of tg-collectional-editor.
             if (this._originalChosenIds === null) {
-                const arrivedEntities = this.reflector()._getValueFor(this.entity, this.propertyName);
+                const arrivedEntities = this.reflector().tg_getFullValue(this.entity, this.propertyName);
                 
                 const chosenIds = typeof this.entity.chosenIds === 'undefined' ? [] : this.entity.get('chosenIds');
                 if (typeof this.entity.chosenIds === 'undefined') {

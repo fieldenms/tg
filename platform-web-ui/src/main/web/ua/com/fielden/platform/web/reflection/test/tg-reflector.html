@@ -18,6 +18,8 @@
     <script type="module">
 
         import '/app/tg-reflector.js';
+        import '/app/tg-app-config.js'; // this is to trigger setting of LTS, LT and L formats in moment library instance to convert dates properly
+        import { _millisDateRepresentation } from '/resources/reflection/tg-date-utils.js';
 
         suite('reflector\'s', function() {
             let reflector;
@@ -32,6 +34,152 @@
                 reflector = document.querySelector('#reflector');
             });
             
+            test('Entity.toString: key converts (empty)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
+                entity.key = null;
+                assert.strictEqual(entity.toString(), '[key is not assigned]');
+                done();
+            });
+            
+            test('Entity.toString: String key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
+                entity.key = 'KEY1';
+                assert.strictEqual(entity.toString(), 'KEY1');
+                done();
+            });
+            
+            test('Entity.toString: String key converts (empty string)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
+                entity.key = '';
+                assert.strictEqual(entity.toString(), '[key is not assigned]');
+                done();
+            });
+            
+            test('Entity.toString: boolean key converts (true)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityBooleanKey');
+                entity.key = true;
+                assert.strictEqual(entity.toString(), 'true');
+                done();
+            });
+            
+            test('Entity.toString: boolean key converts (empty)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityBooleanKey');
+                entity.key = null;
+                assert.strictEqual(entity.toString(), 'false');
+                done();
+            });
+            
+            test('Entity.toString: boolean key converts (false)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityBooleanKey');
+                entity.key = false;
+                assert.strictEqual(entity.toString(), 'false');
+                done();
+            });
+            
+            test('Entity.toString: Date key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityDateKey');
+                entity.key = 0;
+                assert.strictEqual(entity.toString(), _millisDateRepresentation(entity.key, null, null));
+                done();
+            });
+            
+            test('Entity.toString: Integer key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityIntegerKey');
+                entity.key = 1700;
+                assert.strictEqual(entity.toString(), '1700');
+                done();
+            });
+            
+            test('Entity.toString: Long key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityLongKey');
+                entity.key = 17000000000;
+                assert.strictEqual(entity.toString(), '17000000000');
+                done();
+            });
+            
+            // Money keys are not supported as part of Hibernate configuration; Colour and Hyperlink are not Comparable and thus not suitable for key definition too.
+            
+            test('Entity.toString: Entity key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityEntityKey');
+                entity.key = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
+                entity.key.key = 'KEY1';
+                assert.equal(entity.toString(), 'KEY1');
+                done();
+            });
+            
+            test('tg_convert: key converts (empty)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
+                entity.key = null;
+                assert.strictEqual(reflector.tg_convert(entity), '[key is not assigned]');
+                done();
+            });
+            
+            test('tg_convert: String key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
+                entity.key = 'KEY1';
+                assert.strictEqual(reflector.tg_convert(entity), 'KEY1');
+                done();
+            });
+            
+            test('tg_convert: String key converts (empty string)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
+                entity.key = '';
+                assert.strictEqual(reflector.tg_convert(entity), '[key is not assigned]');
+                done();
+            });
+            
+            test('tg_convert: boolean key converts (true)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityBooleanKey');
+                entity.key = true;
+                assert.strictEqual(reflector.tg_convert(entity), 'true');
+                done();
+            });
+            
+            test('tg_convert: boolean key converts (empty)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityBooleanKey');
+                entity.key = null;
+                assert.strictEqual(reflector.tg_convert(entity), 'false');
+                done();
+            });
+            
+            test('tg_convert: boolean key converts (false)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityBooleanKey');
+                entity.key = false;
+                assert.strictEqual(reflector.tg_convert(entity), 'false');
+                done();
+            });
+            
+            test('tg_convert: Date key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityDateKey');
+                entity.key = 0;
+                assert.strictEqual(reflector.tg_convert(entity), _millisDateRepresentation(entity.key, null, null));
+                done();
+            });
+            
+            test('tg_convert: Integer key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityIntegerKey');
+                entity.key = 1700;
+                assert.strictEqual(reflector.tg_convert(entity), '1700');
+                done();
+            });
+            
+            test('tg_convert: Long key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityLongKey');
+                entity.key = 17000000000;
+                assert.strictEqual(reflector.tg_convert(entity), '17000000000');
+                done();
+            });
+            
+            // Money keys are not supported as part of Hibernate configuration; Colour and Hyperlink are not Comparable and thus not suitable for key definition too.
+            
+            test('tg_convert: Entity key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityEntityKey');
+                entity.key = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
+                entity.key.key = 'KEY1';
+                assert.strictEqual(reflector.tg_convert(entity), 'KEY1');
+                done();
+            });
+            
             // Testing the access to 'key' property of different kinds of entities.
             // This property is of high importance and should be much in sync with server-side implementation.
             // At this stage only equality and toString implementation is used when accessing properties.
@@ -39,13 +187,13 @@
             
             /////////////////////// entity.get('key') tests ///////////////////////
             test('test empty object convertion should be fine', function (done) {
-                assert.deepEqual(reflector.convert({}), {});
+                assert.deepEqual(reflector.tg_convert({}), {});
                 done();
             });
             
             test('test object with arbitrary properties convertion should not be acceptable', function (done) {
                 try {
-                    reflector.convert({testProp: "testProp"});
+                    reflector.tg_convert({testProp: "testProp"});
                 } catch (ex) {
                     done();
                 }
@@ -93,7 +241,7 @@
             test('simple entity: conversion is forbidden if key is not fetched', function (done) {
                 const entity1 = reflector.newEntity(typeName1);
                 try {
-                    reflector.convert(entity1);
+                    reflector.tg_convert(entity1);
                     assert.fail('Strict proxy exception is required.');
                 } catch (ex) {
                     done();
@@ -104,7 +252,7 @@
                 const entity1 = reflector.newEntity(typeName1);
                 entity1.key = 'DEMO01';
                 
-                assert.strictEqual(reflector.convert(entity1), 'DEMO01');
+                assert.strictEqual(reflector.tg_convert(entity1), 'DEMO01');
                 done();
             });
             
@@ -162,7 +310,7 @@
                 const entity1 = reflector.newEntity(typeName2);
                 entity1.key2 = 7; // key1 is not fetched
                 try {
-                    reflector.convert(entity1);
+                    reflector.tg_convert(entity1);
                     assert.fail('Strict proxy exception is required.');
                 } catch (ex) {
                     done();
@@ -176,7 +324,7 @@
                 entity1.key1 = e1;
                 entity1.key2 = 7;
                 
-                assert.strictEqual(reflector.convert(entity1), 'DEMO01 7');
+                assert.strictEqual(reflector.tg_convert(entity1), 'DEMO01 7');
                 done();
             });
             
@@ -196,7 +344,7 @@
             
             test('union entity: conversion succeeds for empty union entity', function (done) {
                 const uEntity1 = reflector.newEntity(typeName3); // TgBogieLocation union entity (no active entity)
-                assert.strictEqual(reflector.convert(uEntity1), null);
+                assert.strictEqual(reflector.tg_convert(uEntity1), '');
                 done();
             });
             
@@ -230,7 +378,7 @@
                 workshop1.key = 'W1';
                 uEntity1.workshop = workshop1;
                 
-                assert.strictEqual(reflector.convert(uEntity1), 'W1');
+                assert.strictEqual(reflector.tg_convert(uEntity1), 'W1');
                 done();
             });
             
@@ -276,7 +424,7 @@
                 wagonSlot1.position = 7;
                 uEntity1.wagonSlot = wagonSlot1;
                 
-                assert.strictEqual(reflector.convert(uEntity1), 'WAG1 7');
+                assert.strictEqual(reflector.tg_convert(uEntity1), 'WAG1 7');
                 done();
             });
             
@@ -316,7 +464,7 @@
                 uEntity1.workshop = workshop1;
                 
                 try {
-                    reflector.convert(uEntity1);
+                    reflector.tg_convert(uEntity1);
                     assert.fail('Strict proxy exception is required.');
                 } catch (ex) {
                     done();
@@ -361,7 +509,7 @@
                 uEntity1.wagonSlot = wagonSlot1;
                 
                 try {
-                    reflector.convert(uEntity1);
+                    reflector.tg_convert(uEntity1);
                     assert.fail('Strict proxy exception is required.');
                 } catch (ex) {
                     done();
@@ -651,82 +799,82 @@
             });
             
             test('foramtting: formatting 123.3 decimal with scale and trailing zeros should return 123.3000', function (done) {
-                assert.equal(reflector.formatDecimal(123.3, 'en-AU', 4, true), "123.3000");
+                assert.equal(reflector.tg_formatDecimal(123.3, 'en-AU', 4, true), "123.3000");
                 done();
             });
             
             test('foramtting: formatting 123.3121 decimal with scale and trailing zeros should return 123.3121', function (done) {
-                assert.equal(reflector.formatDecimal(123.3121, 'en-AU', 4, true), "123.3121");
+                assert.equal(reflector.tg_formatDecimal(123.3121, 'en-AU', 4, true), "123.3121");
                 done();
             });
             
             test('foramtting: formatting 123.3 decimal with scale and without trailing zeros should return 123.3', function (done) {
-                assert.equal(reflector.formatDecimal(123.3, 'en-AU', 4, false), "123.3");
+                assert.equal(reflector.tg_formatDecimal(123.3, 'en-AU', 4, false), "123.3");
                 done();
             });
             
             test('foramtting: formatting 123.3121 decimal with scale and without trailing zeros should return 123.3121', function (done) {
-                assert.equal(reflector.formatDecimal(123.3121, 'en-AU', 4, false), "123.3121");
+                assert.equal(reflector.tg_formatDecimal(123.3121, 'en-AU', 4, false), "123.3121");
                 done();
             });
             
             test('foramtting: formatting 123.3 money with scale and trailing zeros should return $123.3000', function (done) {
-                assert.equal(reflector.formatMoney({amount: 123.3}, 'en-AU', 4, true), "$123.3000");
+                assert.equal(reflector.tg_formatMoney({amount: 123.3}, 'en-AU', 4, true), "$123.3000");
                 done();
             });
             
             test('foramtting: formatting 123.3121 money with scale and trailing zeros should return $123.3121', function (done) {
-                assert.equal(reflector.formatMoney({amount: 123.3121}, 'en-AU', 4, true), "$123.3121");
+                assert.equal(reflector.tg_formatMoney({amount: 123.3121}, 'en-AU', 4, true), "$123.3121");
                 done();
             });
             
             test('foramtting: formatting 123.3 money with scale and without trailing zeros should return $123.3', function (done) {
-                assert.equal(reflector.formatMoney({amount: 123.3}, 'en-AU', 4, false), "$123.3");
+                assert.equal(reflector.tg_formatMoney({amount: 123.3}, 'en-AU', 4, false), "$123.3");
                 done();
             });
             
              test('foramtting: formatting 123.3121 decimal with scale and without trailing zeros should return $123.3121', function (done) {
-                assert.equal(reflector.formatMoney({amount: 123.3121}, 'en-AU', 4, false), "$123.3121");
+                assert.equal(reflector.tg_formatMoney({amount: 123.3121}, 'en-AU', 4, false), "$123.3121");
                 done();
             });
             
             test('foramtting: formatting 123.3 decimal with default scale and trailing zeros should return 123.30', function (done) {
-                assert.equal(reflector.formatDecimal(123.3, 'en-AU', undefined, true), "123.30");
+                assert.equal(reflector.tg_formatDecimal(123.3, 'en-AU', undefined, true), "123.30");
                 done();
             });
             
             test('foramtting: formatting 123.3121 decimal with default scale and trailing zeros should return 123.31', function (done) {
-                assert.equal(reflector.formatDecimal(123.3121, 'en-AU', undefined, true), "123.31");
+                assert.equal(reflector.tg_formatDecimal(123.3121, 'en-AU', undefined, true), "123.31");
                 done();
             });
             
             test('foramtting: formatting 123.3 decimal with default scale and without trailing zeros should return 123.30', function (done) {
-                assert.equal(reflector.formatDecimal(123.3, 'en-AU'), "123.30");
+                assert.equal(reflector.tg_formatDecimal(123.3, 'en-AU'), "123.30");
                 done();
             });
             
             test('foramtting: formatting 123.3121 decimal with default scale and without trailing zeros should return 123.31', function (done) {
-                assert.equal(reflector.formatDecimal(123.3121, 'en-AU'), "123.31");
+                assert.equal(reflector.tg_formatDecimal(123.3121, 'en-AU'), "123.31");
                 done();
             });
             
             test('foramtting: formatting 123.3 money with default scale and trailing zeros should return $123.30', function (done) {
-                assert.equal(reflector.formatMoney({amount: 123.3}, 'en-AU', undefined, true), "$123.30");
+                assert.equal(reflector.tg_formatMoney({amount: 123.3}, 'en-AU', undefined, true), "$123.30");
                 done();
             });
             
             test('foramtting: formatting 123.3121 money with default scale and trailing zeros should return $123.31', function (done) {
-                assert.equal(reflector.formatMoney({amount: 123.3121}, 'en-AU', undefined, true), "$123.31");
+                assert.equal(reflector.tg_formatMoney({amount: 123.3121}, 'en-AU', undefined, true), "$123.31");
                 done();
             });
             
             test('foramtting: formatting 123.3 money with default scale and without trailing zeros should return $123.30', function (done) {
-                assert.equal(reflector.formatMoney({amount: 123.3}, 'en-AU'), "$123.30");
+                assert.equal(reflector.tg_formatMoney({amount: 123.3}, 'en-AU'), "$123.30");
                 done();
             });
             
             test('foramtting: formatting 123.3121 money with default scale and without trailing zeros should return $123.31', function (done) {
-                assert.equal(reflector.formatMoney({amount: 123.3121}, 'en-AU'), "$123.31");
+                assert.equal(reflector.tg_formatMoney({amount: 123.3121}, 'en-AU'), "$123.31");
                 done();
             });
             

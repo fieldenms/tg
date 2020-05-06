@@ -14,7 +14,7 @@ import '/resources/components/tg-calendar.js';
 import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
 import { TgEditor, createEditorTemplate} from '/resources/editors/tg-editor.js'
-import { _momentTz, _millisDateRepresentation, timeZoneFormats } from '/resources/reflection/tg-date-utils.js';
+import { _momentTz, timeZoneFormats } from '/resources/reflection/tg-date-utils.js';
 import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js'
 
 const pickerStyle = html`
@@ -230,17 +230,6 @@ export class TgDatetimePicker extends TgEditor {
         }
     }
 
-    /**
-     * Converts the value into string representation (which is used in editing / comm values).
-     */
-    convertToString (value) {
-        if (value === null) {
-            return "";
-        } else {
-            return _millisDateRepresentation(value, this.timeZone, this.datePortion);
-        }
-    }
-
     _showCalendar (e) {
         if (!this._isCalendarOpen) {
             this._isCalendarOpen = true;
@@ -282,7 +271,7 @@ export class TgDatetimePicker extends TgEditor {
                 .minute(this.$.datePicker.selectedMinute)
                 .seconds(this.$.datePicker.seconds)
                 .milliseconds(this.$.datePicker.milis);
-            self._editingValue = _millisDateRepresentation(acceptedMoment.valueOf(), self.timeZone, self.datePortion);
+            self._editingValue = self.convertToString(acceptedMoment.valueOf());
             //self.decoratedInput().focus();
         }.bind(domBind);
 
@@ -400,19 +389,19 @@ export class TgDatetimePicker extends TgEditor {
             } else if (this._isLiteral(dateEditingValue)) {
                 this._validMoment = this._tryLiterals(dateEditingValue);
                 if (this._validMoment !== null) {
-                    return _millisDateRepresentation(this._validMoment.valueOf(), this.timeZone, this.datePortion);
+                    return this.convertToString(this._validMoment.valueOf());
                 }
             } else if (this.timeZone === 'UTC' && dateEditingValue.indexOf('-') >= 0) { //As the last resort try utc formatting
                 this._validMoment = this._tryUTCFormats(dateEditingValue);
                 if (this._validMoment !== null) {
-                    return _millisDateRepresentation(this._validMoment.valueOf(), this.timeZone, this.datePortion);
+                    return this.convertToString(this._validMoment.valueOf());
                 }
             } else {
                 const value = dateEditingValue.replace(new RegExp(' ', 'g'), '').trim();
                 if (value) {
                     this._validMoment = this._tryTimePortionFormats(value, this._timePortionFormats.slice() /* the copy is made  */);
                     if (this._validMoment !== null) {
-                        return _millisDateRepresentation(this._validMoment.valueOf(), this.timeZone, this.datePortion);
+                        return this.convertToString(this._validMoment.valueOf());
                     }
                 }
             }
@@ -450,7 +439,7 @@ export class TgDatetimePicker extends TgEditor {
         if (value) {
             this._validMoment = this._tryFormats(value, this._formats.slice() /* the copy is made  */);
             if (this._validMoment !== null) {
-                return _millisDateRepresentation(this._validMoment.valueOf(), this.timeZone, this.datePortion);
+                return this.convertToString(this._validMoment.valueOf());
             }
         }
         return undefined;
