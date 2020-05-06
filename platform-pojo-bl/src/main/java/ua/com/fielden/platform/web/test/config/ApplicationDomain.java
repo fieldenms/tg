@@ -28,7 +28,13 @@ import ua.com.fielden.platform.sample.domain.TgCoordinate;
 import ua.com.fielden.platform.sample.domain.TgCreatePersistentStatusAction;
 import ua.com.fielden.platform.sample.domain.TgDeletionTestEntity;
 import ua.com.fielden.platform.sample.domain.TgDummyAction;
+import ua.com.fielden.platform.sample.domain.TgEntityBooleanKey;
+import ua.com.fielden.platform.sample.domain.TgEntityDateKey;
+import ua.com.fielden.platform.sample.domain.TgEntityEntityKey;
 import ua.com.fielden.platform.sample.domain.TgEntityForColourMaster;
+import ua.com.fielden.platform.sample.domain.TgEntityIntegerKey;
+import ua.com.fielden.platform.sample.domain.TgEntityLongKey;
+import ua.com.fielden.platform.sample.domain.TgEntityStringKey;
 import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependency;
 import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDescriptor;
 import ua.com.fielden.platform.sample.domain.TgEntityWithTimeZoneDates;
@@ -167,6 +173,13 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem.class);
         add(TgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem.class);
         add(TgFuelType.class);
+        
+        add(TgEntityStringKey.class);
+        add(TgEntityBooleanKey.class);
+        add(TgEntityDateKey.class);
+        add(TgEntityIntegerKey.class);
+        add(TgEntityLongKey.class);
+        add(TgEntityEntityKey.class);
     }
 
     @Override

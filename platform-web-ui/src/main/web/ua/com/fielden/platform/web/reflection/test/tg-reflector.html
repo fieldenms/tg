@@ -18,6 +18,8 @@
     <script type="module">
 
         import '/app/tg-reflector.js';
+        import '/app/tg-app-config.js'; // this is to trigger setting of LTS, LT and L formats in moment library instance to convert dates properly
+        import { _millisDateRepresentation } from '/resources/reflection/tg-date-utils.js';
 
         suite('reflector\'s', function() {
             let reflector;
@@ -30,6 +32,79 @@
             
             setup(function() {
                 reflector = document.querySelector('#reflector');
+            });
+            
+            test('Entity.toString: key converts (empty)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
+                entity.key = null;
+                assert.equal(entity.toString(), '[key is not assigned]');
+                done();
+            });
+            
+            test('Entity.toString: String key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
+                entity.key = 'KEY1';
+                assert.equal(entity.toString(), 'KEY1');
+                done();
+            });
+            
+            test('Entity.toString: String key converts (empty string)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
+                entity.key = '';
+                assert.equal(entity.toString(), '[key is not assigned]');
+                done();
+            });
+            
+            test('Entity.toString: boolean key converts (true)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityBooleanKey');
+                entity.key = true;
+                assert.equal(entity.toString(), 'true');
+                done();
+            });
+            
+            test('Entity.toString: boolean key converts (empty)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityBooleanKey');
+                entity.key = null;
+                assert.equal(entity.toString(), 'false');
+                done();
+            });
+            
+            test('Entity.toString: boolean key converts (false)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityBooleanKey');
+                entity.key = false;
+                assert.equal(entity.toString(), 'false');
+                done();
+            });
+            
+            test('Entity.toString: Date key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityDateKey');
+                entity.key = 0;
+                assert.equal(entity.toString(), _millisDateRepresentation(entity.key, null, null));
+                done();
+            });
+            
+            test('Entity.toString: Integer key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityIntegerKey');
+                entity.key = 1700;
+                assert.equal(entity.toString(), '1700');
+                done();
+            });
+            
+            test('Entity.toString: Long key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityLongKey');
+                entity.key = 17000000000;
+                assert.equal(entity.toString(), '17000000000');
+                done();
+            });
+            
+            // Money keys are not supported as part of Hibernate configuration; Colour and Hyperlink are not Comparable and thus not suitable for key definition too.
+            
+            test('Entity.toString: Entity key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityEntityKey');
+                entity.key = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
+                entity.key.key = 'KEY1';
+                assert.equal(entity.toString(), 'KEY1');
+                done();
             });
             
             // Testing the access to 'key' property of different kinds of entities.

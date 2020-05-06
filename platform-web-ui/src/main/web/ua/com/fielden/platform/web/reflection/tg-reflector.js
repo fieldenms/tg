@@ -632,11 +632,8 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
      * Note: this method closely resembles AbstractEntity.toString method.
      */
     Entity.prototype.toString = function () {
-        if (this.get('key') === null) {
-            return KEY_NOT_ASSIGNED;
-        }
-        const convertedKey = _convert(this.get('key'));
-        return convertedKey === null || convertedKey === '' ? KEY_NOT_ASSIGNED : ('' + convertedKey);
+        const convertedKey = _toString(_convert(this.get('key')), this.type(), 'key');
+        return convertedKey === '' ? KEY_NOT_ASSIGNED : convertedKey;
     }
     
     return Entity;
@@ -1178,7 +1175,8 @@ const _findProperty = function (entityType, property) {
  * @param property -- property name; can be dot-notated or '' meaning "entity itself"
  */
 const _determinePropertyType = function (entityType, property) {
-    return '' === property ? entityType : _findProperty(entityType, property).type();
+    return '' === property ? entityType : 
+        (entityType.isCompositeEntity() && 'key' === property ? null : _findProperty(entityType, property).type());
 };
 
 /**
