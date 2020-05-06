@@ -633,7 +633,7 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
      */
     Entity.prototype.toString = function () {
         const convertedKey = _toString(_convert(this.get('key')), this.type(), 'key');
-        return convertedKey === '' ? KEY_NOT_ASSIGNED : convertedKey;
+        return convertedKey === '' && !this.type().isUnionEntity() ? KEY_NOT_ASSIGNED : convertedKey;
     }
     
     return Entity;
@@ -1113,7 +1113,7 @@ const _convert = function (value) {
     } else if (value instanceof _DEKPrototype) {
         return value._convertDynamicEntityKey();
     } else if (value instanceof _EPrototype) {
-        return _convert(value.get('key'));
+        return value.toString();
     } else if (typeof value === 'number') { // for number value -- return the same value for editors (includes date, integer, decimal number editors)
         return value;
     } else if (typeof value === 'boolean') { // for boolean value -- return the same value for editors

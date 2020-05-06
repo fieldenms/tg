@@ -37,63 +37,63 @@
             test('Entity.toString: key converts (empty)', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
                 entity.key = null;
-                assert.equal(entity.toString(), '[key is not assigned]');
+                assert.strictEqual(entity.toString(), '[key is not assigned]');
                 done();
             });
             
             test('Entity.toString: String key converts', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
                 entity.key = 'KEY1';
-                assert.equal(entity.toString(), 'KEY1');
+                assert.strictEqual(entity.toString(), 'KEY1');
                 done();
             });
             
             test('Entity.toString: String key converts (empty string)', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
                 entity.key = '';
-                assert.equal(entity.toString(), '[key is not assigned]');
+                assert.strictEqual(entity.toString(), '[key is not assigned]');
                 done();
             });
             
             test('Entity.toString: boolean key converts (true)', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityBooleanKey');
                 entity.key = true;
-                assert.equal(entity.toString(), 'true');
+                assert.strictEqual(entity.toString(), 'true');
                 done();
             });
             
             test('Entity.toString: boolean key converts (empty)', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityBooleanKey');
                 entity.key = null;
-                assert.equal(entity.toString(), 'false');
+                assert.strictEqual(entity.toString(), 'false');
                 done();
             });
             
             test('Entity.toString: boolean key converts (false)', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityBooleanKey');
                 entity.key = false;
-                assert.equal(entity.toString(), 'false');
+                assert.strictEqual(entity.toString(), 'false');
                 done();
             });
             
             test('Entity.toString: Date key converts', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityDateKey');
                 entity.key = 0;
-                assert.equal(entity.toString(), _millisDateRepresentation(entity.key, null, null));
+                assert.strictEqual(entity.toString(), _millisDateRepresentation(entity.key, null, null));
                 done();
             });
             
             test('Entity.toString: Integer key converts', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityIntegerKey');
                 entity.key = 1700;
-                assert.equal(entity.toString(), '1700');
+                assert.strictEqual(entity.toString(), '1700');
                 done();
             });
             
             test('Entity.toString: Long key converts', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityLongKey');
                 entity.key = 17000000000;
-                assert.equal(entity.toString(), '17000000000');
+                assert.strictEqual(entity.toString(), '17000000000');
                 done();
             });
             
@@ -104,6 +104,79 @@
                 entity.key = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
                 entity.key.key = 'KEY1';
                 assert.equal(entity.toString(), 'KEY1');
+                done();
+            });
+            
+            test('tg_convert: key converts (empty)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
+                entity.key = null;
+                assert.strictEqual(reflector.tg_convert(entity), '[key is not assigned]');
+                done();
+            });
+            
+            test('tg_convert: String key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
+                entity.key = 'KEY1';
+                assert.strictEqual(reflector.tg_convert(entity), 'KEY1');
+                done();
+            });
+            
+            test('tg_convert: String key converts (empty string)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
+                entity.key = '';
+                assert.strictEqual(reflector.tg_convert(entity), '[key is not assigned]');
+                done();
+            });
+            
+            test('tg_convert: boolean key converts (true)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityBooleanKey');
+                entity.key = true;
+                assert.strictEqual(reflector.tg_convert(entity), 'true');
+                done();
+            });
+            
+            test('tg_convert: boolean key converts (empty)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityBooleanKey');
+                entity.key = null;
+                assert.strictEqual(reflector.tg_convert(entity), 'false');
+                done();
+            });
+            
+            test('tg_convert: boolean key converts (false)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityBooleanKey');
+                entity.key = false;
+                assert.strictEqual(reflector.tg_convert(entity), 'false');
+                done();
+            });
+            
+            test('tg_convert: Date key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityDateKey');
+                entity.key = 0;
+                assert.strictEqual(reflector.tg_convert(entity), _millisDateRepresentation(entity.key, null, null));
+                done();
+            });
+            
+            test('tg_convert: Integer key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityIntegerKey');
+                entity.key = 1700;
+                assert.strictEqual(reflector.tg_convert(entity), '1700');
+                done();
+            });
+            
+            test('tg_convert: Long key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityLongKey');
+                entity.key = 17000000000;
+                assert.strictEqual(reflector.tg_convert(entity), '17000000000');
+                done();
+            });
+            
+            // Money keys are not supported as part of Hibernate configuration; Colour and Hyperlink are not Comparable and thus not suitable for key definition too.
+            
+            test('tg_convert: Entity key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityEntityKey');
+                entity.key = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
+                entity.key.key = 'KEY1';
+                assert.strictEqual(reflector.tg_convert(entity), 'KEY1');
                 done();
             });
             
@@ -271,7 +344,7 @@
             
             test('union entity: conversion succeeds for empty union entity', function (done) {
                 const uEntity1 = reflector.newEntity(typeName3); // TgBogieLocation union entity (no active entity)
-                assert.strictEqual(reflector.tg_convert(uEntity1), null);
+                assert.strictEqual(reflector.tg_convert(uEntity1), '');
                 done();
             });
             
