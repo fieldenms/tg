@@ -85,6 +85,7 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -478,7 +479,7 @@ public class CentreUpdater {
         final ILoadableCentreConfig lccCompanion = companionFinder.find(LoadableCentreConfig.class);
         
         final String surrogateNamePrefix = deviceSpecific(FRESH_CENTRE_NAME, device);
-        final EntityResultQueryModel<EntityCentreConfig> queryForCurrentUser = centreConfigQueryFor(user, miType, device).model();
+        final EntityResultQueryModel<EntityCentreConfig> queryForCurrentUser = eccCompanion.withDbVersion(centreConfigQueryFor(user, miType, device)).model();
         final fetch<EntityCentreConfig> fetch = EntityUtils.fetchWithKeyAndDesc(EntityCentreConfig.class).fetchModel();
         if (user.isBase()) {
             try (final Stream<EntityCentreConfig> stream = eccCompanion.stream(from(queryForCurrentUser).with(fetch).model()) ) {
@@ -487,7 +488,7 @@ public class CentreUpdater {
                 });
             }
         } else {
-            final EntityResultQueryModel<EntityCentreConfig> queryForBaseUser = centreConfigQueryFor(user.getBasedOnUser(), miType, device).model();
+            final EntityResultQueryModel<EntityCentreConfig> queryForBaseUser = eccCompanion.withDbVersion(centreConfigQueryFor(user.getBasedOnUser(), miType, device)).model();
             try (final Stream<EntityCentreConfig> streamForCurrentUser = eccCompanion.stream(from(queryForCurrentUser).with(fetch).model());
                  final Stream<EntityCentreConfig> streamForBaseUser = eccCompanion.stream(from(queryForBaseUser).with(fetch).model())) {
                 streamForCurrentUser.forEach(ecc -> {
@@ -522,7 +523,7 @@ public class CentreUpdater {
      */
     private static Stream<EntityCentreConfig> streamPreferredConfigs(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final ICompanionObjectFinder companionFinder) {
         final IEntityCentreConfig eccCompanion = companionFinder.find(EntityCentreConfig.class);
-        final EntityResultQueryModel<EntityCentreConfig> queryForCurrentUser = centreConfigQueryFor(user, miType, device)
+        final EntityResultQueryModel<EntityCentreConfig> queryForCurrentUser = eccCompanion.withDbVersion(centreConfigQueryFor(user, miType, device))
             .and().prop("preferred").eq().val(true).model();
         final fetch<EntityCentreConfig> fetch = fetchWithKeyAndDesc(EntityCentreConfig.class).with("preferred").fetchModel();
         return eccCompanion.stream(from(queryForCurrentUser).with(fetch).model());
@@ -605,7 +606,7 @@ public class CentreUpdater {
     }
     
     /**
-     * Creates a query to find centre configurations persisted for <code>user</code>.
+     * Creates a function that returns a query to find centre configurations persisted for <code>user</code>.
      * <p>
      * Looks only for named / link configurations, default configurations are avoided.
      * 
@@ -614,13 +615,15 @@ public class CentreUpdater {
      * @param device -- the device for which centre configurations are looked for
      * @return
      */
-    private static ICompoundCondition0<EntityCentreConfig> centreConfigQueryFor(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device) {
-        final String escapedOpeningBracket = "[[]"; // need to provide escaping for opening bracket to find records with [, see https://stackoverflow.com/questions/439495/how-can-i-escape-square-brackets-in-a-like-clause
-        return select(EntityCentreConfig.class).where().
-            begin().prop("owner").eq().val(user).end().and().
-            prop("title").like().val(deviceSpecific(FRESH_CENTRE_NAME, device) + escapedOpeningBracket + "%").and().
-            prop("title").notLike().val(deviceSpecific(FRESH_CENTRE_NAME, opposite(device)) + escapedOpeningBracket + "%").and().
-            prop("menuItem.key").eq().val(miType.getName());
+    private static Function<DbVersion, ICompoundCondition0<EntityCentreConfig>> centreConfigQueryFor(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device) {
+        return (dbVersion) -> {
+            final String escapedOpeningBracket = DbVersion.MSSQL == dbVersion ? "[[]" : "["; // need to provide escaping for opening bracket to find records with [, see https://stackoverflow.com/questions/439495/how-can-i-escape-square-brackets-in-a-like-clause
+            return select(EntityCentreConfig.class).where().
+                begin().prop("owner").eq().val(user).end().and().
+                prop("title").like().val(deviceSpecific(FRESH_CENTRE_NAME, device) + escapedOpeningBracket + "%").and().
+                prop("title").notLike().val(deviceSpecific(FRESH_CENTRE_NAME, opposite(device)) + escapedOpeningBracket + "%").and().
+                prop("menuItem.key").eq().val(miType.getName());
+        };
     }
     
     /**
