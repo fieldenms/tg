@@ -26,7 +26,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.google.inject.Inject;
-import com.sun.javafx.property.adapter.PropertyDescriptor;
 
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.dao.CommonEntityDao;
@@ -35,6 +34,7 @@ import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.annotation.MapTo;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fluent.fetch;

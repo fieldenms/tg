@@ -65,7 +65,7 @@ public class ReferenceHierarchyWebUiConfig {
         @Override
         public JsCode build() {
             return new JsCode(
-                    "const reflector = typeof self._reflector === 'function' ? self._reflector() : self._reflector;\n"
+                    "const reflector = new TgReflector();\n"
                     + "if (action.requireSelectedEntities === 'ONE') {\n"
                     + "    action.shortDesc = reflector.getType(action.currentEntity.type().notEnhancedFullClassName()).entityTitle();\n"
                     + "} else if (action.requireSelectedEntities === 'ALL' && self.$.egi.getSelectedEntities().length > 0) {\n"
