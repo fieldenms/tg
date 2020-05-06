@@ -5,7 +5,6 @@ import java.util.Objects;
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.eql.stage1.elements.ITransformableToS2;
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
-import ua.com.fielden.platform.eql.stage1.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage1.elements.conditions.Conditions1;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.CompoundSource2;
@@ -23,10 +22,10 @@ public class CompoundSource1 implements ITransformableToS2<CompoundSource2>{
     }
 
     @Override
-    public TransformationResult<CompoundSource2> transform(final PropsResolutionContext context) {
-        final TransformationResult<? extends IQrySource2<?>> sourceTransformationResult = source.transform(context);
-        final TransformationResult<Conditions2> joinConditionsTransformationResult = joinConditions.transform(sourceTransformationResult.updatedContext);
-        return new TransformationResult<CompoundSource2>(new CompoundSource2(sourceTransformationResult.item, joinType, joinConditionsTransformationResult.item), joinConditionsTransformationResult.updatedContext);
+    public CompoundSource2 transform(final PropsResolutionContext context) {
+        final IQrySource2<?> source2 = source.transform(context);
+        final Conditions2 joinConditions2 = joinConditions.transform(context.cloneWithAdded(source2));
+        return new CompoundSource2(source2, joinType, joinConditions2);
     }
 
     @Override

@@ -1,14 +1,16 @@
 package ua.com.fielden.platform.eql.stage1.elements.sources;
 
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
-import ua.com.fielden.platform.eql.stage1.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.sources.CompoundSource2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.Sources2;
+import ua.com.fielden.platform.types.tuples.T2;
 
 public class Sources1  {
     public final IQrySource1<? extends IQrySource2<?>> main;
@@ -19,18 +21,17 @@ public class Sources1  {
         this.compounds = compounds;
     }
 
-    public TransformationResult<Sources2> transform(final PropsResolutionContext context) {
-        final TransformationResult<? extends IQrySource2<?>> mainTransformationResult = main.transform(context);    
-                
+    public T2<Sources2, PropsResolutionContext> transform(final PropsResolutionContext context) {
+        final IQrySource2<?> mainTransformationResult = main.transform(context);    
+        PropsResolutionContext currentContext = context.cloneWithAdded(mainTransformationResult);
+
         final List<CompoundSource2> transformed = new ArrayList<>();
-        PropsResolutionContext currentResolutionContext = mainTransformationResult.updatedContext;
-        
         for (final CompoundSource1 compoundSource : compounds) {
-            final TransformationResult<CompoundSource2> compoundSourceTransformationResult = compoundSource.transform(currentResolutionContext);
-            transformed.add(compoundSourceTransformationResult.item);
-            currentResolutionContext = compoundSourceTransformationResult.updatedContext;
+            final CompoundSource2 compoundSourceTransformationResult = compoundSource.transform(currentContext);
+            transformed.add(compoundSourceTransformationResult);
+            currentContext = currentContext.cloneWithAdded(compoundSourceTransformationResult.source);
         }
-        return new TransformationResult<Sources2>(new Sources2(mainTransformationResult.item, transformed), currentResolutionContext);
+        return t2(new Sources2(mainTransformationResult, transformed), currentContext);
     }
 
     @Override

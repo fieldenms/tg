@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.elements.functions;
 
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
-import ua.com.fielden.platform.eql.stage1.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.elements.functions.DayOfWeekOf2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
@@ -13,9 +12,8 @@ public class DayOfWeekOf1 extends SingleOperandFunction1<DayOfWeekOf2> {
     }
 
     @Override
-    public TransformationResult<DayOfWeekOf2> transform(final PropsResolutionContext context) {
-        final TransformationResult<? extends ISingleOperand2<?>> operandTransformationResult = operand.transform(context);
-        return new TransformationResult<DayOfWeekOf2>(new DayOfWeekOf2(operandTransformationResult.item), operandTransformationResult.updatedContext);
+    public DayOfWeekOf2 transform(final PropsResolutionContext context) {
+        return new DayOfWeekOf2(operand.transform(context));
     }
     
     @Override

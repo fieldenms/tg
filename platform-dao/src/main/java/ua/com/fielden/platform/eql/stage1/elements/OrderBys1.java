@@ -1,10 +1,10 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
-import java.util.ArrayList;
+import static java.util.stream.Collectors.toList;
+
 import java.util.List;
 import java.util.Objects;
 
-import ua.com.fielden.platform.eql.stage2.elements.OrderBy2;
 import ua.com.fielden.platform.eql.stage2.elements.OrderBys2;
 
 public class OrderBys1 {
@@ -14,15 +14,8 @@ public class OrderBys1 {
         this.models = models;
     }
 
-    public TransformationResult<OrderBys2> transform(final PropsResolutionContext context) {
-        final List<OrderBy2> transformed = new ArrayList<>();
-        PropsResolutionContext currentResolutionContext = context;
-        for (final OrderBy1 orderBy : models) {
-            final TransformationResult<OrderBy2> orderByTr = orderBy.transform(currentResolutionContext);
-            transformed.add(orderByTr.item);
-            currentResolutionContext = orderByTr.updatedContext;
-        }
-        return new TransformationResult<OrderBys2>(new OrderBys2(transformed), currentResolutionContext);
+    public OrderBys2 transform(final PropsResolutionContext context) {
+        return new OrderBys2(models.stream().map(el -> el.transform(context)).collect(toList()));
     }
 
     @Override

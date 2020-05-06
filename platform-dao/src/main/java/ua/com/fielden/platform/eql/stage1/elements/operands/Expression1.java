@@ -1,12 +1,11 @@
 package ua.com.fielden.platform.eql.stage1.elements.operands;
 
-import java.util.ArrayList;
+import static java.util.stream.Collectors.toList;
+
 import java.util.List;
 import java.util.Objects;
 
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
-import ua.com.fielden.platform.eql.stage1.elements.TransformationResult;
-import ua.com.fielden.platform.eql.stage2.elements.operands.CompoundSingleOperand2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.Expression2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 
@@ -21,16 +20,8 @@ public class Expression1 implements ISingleOperand1<Expression2> {
     }
 
     @Override
-    public TransformationResult<Expression2> transform(final PropsResolutionContext context) {
-        final List<CompoundSingleOperand2> transformed = new ArrayList<>();
-        final TransformationResult<? extends ISingleOperand2<?>> firstTr = first.transform(context);
-        PropsResolutionContext currentResolutionContext = firstTr.updatedContext;
-        for (final CompoundSingleOperand1 item : items) {
-            final TransformationResult<? extends ISingleOperand2<?>> itemTr = item.operand.transform(currentResolutionContext);
-            transformed.add(new CompoundSingleOperand2(itemTr.item, item.operator));
-            currentResolutionContext = itemTr.updatedContext;
-        }
-        return new TransformationResult<Expression2>(new Expression2(firstTr.item, transformed), currentResolutionContext);
+    public Expression2 transform(final PropsResolutionContext context) {
+        return new Expression2(first.transform(context), items.stream().map(el -> el.transform(context)).collect(toList()));
     }
 
     @Override

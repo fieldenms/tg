@@ -1,15 +1,14 @@
 package ua.com.fielden.platform.eql.stage1.elements.functions;
 
-import java.util.ArrayList;
+import static java.util.stream.Collectors.toList;
+
 import java.util.List;
 import java.util.Objects;
 
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
-import ua.com.fielden.platform.eql.stage1.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.elements.functions.Concat2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
-import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 
 public class Concat1 extends AbstractFunction1<Concat2> {
 
@@ -20,15 +19,8 @@ public class Concat1 extends AbstractFunction1<Concat2> {
     }
 
     @Override
-    public TransformationResult<Concat2> transform(final PropsResolutionContext context) {
-        final List<ISingleOperand2<? extends ISingleOperand3>> transformed = new ArrayList<>();
-        PropsResolutionContext currentResolutionContext = context;
-        for (final ISingleOperand1<? extends ISingleOperand2<? extends ISingleOperand3>> operand : operands) {
-            final TransformationResult<? extends ISingleOperand2<? extends ISingleOperand3>> operandTr = operand.transform(currentResolutionContext);
-            transformed.add(operandTr.item);
-            currentResolutionContext = operandTr.updatedContext;
-        }
-        return new TransformationResult<Concat2>(new Concat2(transformed), currentResolutionContext);
+    public Concat2 transform(final PropsResolutionContext context) {
+        return new Concat2(operands.stream().map(el -> el.transform(context)).collect(toList()));
     }
 
     @Override

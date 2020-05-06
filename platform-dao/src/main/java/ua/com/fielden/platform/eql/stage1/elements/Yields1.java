@@ -2,15 +2,14 @@ package ua.com.fielden.platform.eql.stage1.elements;
 
 import static java.lang.String.format;
 import static java.util.Collections.unmodifiableCollection;
+import static java.util.stream.Collectors.toList;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
-import ua.com.fielden.platform.eql.stage2.elements.Yield2;
 import ua.com.fielden.platform.eql.stage2.elements.Yields2;
 
 public class Yields1 {
@@ -22,15 +21,8 @@ public class Yields1 {
         }
     }
     
-    public TransformationResult<Yields2> transform(final PropsResolutionContext context) {
-        final List<Yield2> yieldsList = new ArrayList<>(); 
-        PropsResolutionContext currentResolutionContext = context;
-        for (final Yield1 yield : yieldsMap.values()) {
-            final TransformationResult<Yield2> yieldTr = yield.transform(currentResolutionContext);
-            currentResolutionContext = yieldTr.updatedContext;
-            yieldsList.add(yieldTr.item);
-        }
-        return new TransformationResult<Yields2>(new Yields2(yieldsList), currentResolutionContext);
+    public Yields2 transform(final PropsResolutionContext context) {
+        return new Yields2(yieldsMap.values().stream().map(el -> el.transform(context)).collect(toList()));
     }
 
     public void addYield(final Yield1 yield) {

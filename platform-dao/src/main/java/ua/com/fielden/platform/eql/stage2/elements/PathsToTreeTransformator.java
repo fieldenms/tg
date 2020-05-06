@@ -23,7 +23,6 @@ import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.meta.EntityInfo;
 import ua.com.fielden.platform.eql.meta.EntityTypePropInfo;
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
-import ua.com.fielden.platform.eql.stage1.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.Expression2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.Child;
@@ -116,8 +115,7 @@ public class PathsToTreeTransformator {
         final Set<Child> dependencies = new HashSet<>();
         if (propInfo.hasExpression()) {
             
-            final TransformationResult<Expression2> tr = expressionToS2(contextSource, propInfo, domainInfo);
-            expr2 = tr.item;
+            expr2 = expressionToS2(contextSource, propInfo, domainInfo);
             final Map<IQrySource2<?>, SortedSet<Child>> dependenciesResult = transform(expr2.collectProps(), domainInfo);
 
             for (final Entry<IQrySource2<?>, SortedSet<Child>> drEntry : dependenciesResult.entrySet()) {
@@ -160,7 +158,7 @@ public class PathsToTreeTransformator {
         return t2(path, nextProps);
     }
     
-    private static TransformationResult<Expression2> expressionToS2(final IQrySource2<?> contextSource, final AbstractPropInfo<?> propInfo, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
+    private static Expression2 expressionToS2(final IQrySource2<?> contextSource, final AbstractPropInfo<?> propInfo, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
         final PropsResolutionContext prc = new PropsResolutionContext(domainInfo, asList(asList(contextSource)), contextSource.contextId() + "_" + propInfo.name); 
         return propInfo.expression.transform(prc);
     }

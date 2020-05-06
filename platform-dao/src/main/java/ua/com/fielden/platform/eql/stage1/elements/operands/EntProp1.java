@@ -12,7 +12,6 @@ import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingExcept
 import ua.com.fielden.platform.eql.meta.ResolutionContext;
 import ua.com.fielden.platform.eql.stage1.elements.PropResolution;
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
-import ua.com.fielden.platform.eql.stage1.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
 import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySource3;
@@ -27,7 +26,7 @@ public class EntProp1 implements ISingleOperand1<EntProp2> {
     }
 
     @Override
-    public TransformationResult<EntProp2> transform(final PropsResolutionContext context) {
+    public EntProp2 transform(final PropsResolutionContext context) {
         
         final Iterator<List<IQrySource2<? extends IQrySource3>>> it = context.getSources().iterator();
         if (external) {
@@ -38,9 +37,7 @@ public class EntProp1 implements ISingleOperand1<EntProp2> {
             final List<IQrySource2<? extends IQrySource3>> item = it.next();
             final PropResolution resolution = resolveProp(item, this);
             if (resolution != null) {
-                final EntProp2 transformedProp = new EntProp2(resolution.getSource(), resolution.getPath());
-                
-                return new TransformationResult<EntProp2>(transformedProp, context);
+                return new EntProp2(resolution.getSource(), resolution.getPath());
             }
         }
 

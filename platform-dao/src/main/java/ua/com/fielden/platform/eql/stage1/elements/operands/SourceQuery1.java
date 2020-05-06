@@ -11,7 +11,6 @@ import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.stage1.elements.EntQueryBlocks1;
 import ua.com.fielden.platform.eql.stage1.elements.ITransformableToS2;
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
-import ua.com.fielden.platform.eql.stage1.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.EntQueryBlocks2;
 import ua.com.fielden.platform.eql.stage2.elements.GroupBys2;
 import ua.com.fielden.platform.eql.stage2.elements.OrderBys2;
@@ -21,6 +20,7 @@ import ua.com.fielden.platform.eql.stage2.elements.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.SourceQuery2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.Sources2;
+import ua.com.fielden.platform.types.tuples.T2;
 
 public class SourceQuery1 extends AbstractQuery1 implements ITransformableToS2<SourceQuery2> {
 
@@ -30,18 +30,20 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableToS2<S
     }
 
     @Override
-    public TransformationResult<SourceQuery2> transform(final PropsResolutionContext context) {
+    public SourceQuery2 transform(final PropsResolutionContext context) {
         final PropsResolutionContext localResolutionContext = context.produceForCorrelatedSubquery();//isSubQuery() ? context.produceForCorrelatedSubquery() : context.produceForUncorrelatedSubquery();
         // .produceForUncorrelatedSubquery() should be used only for cases of synthetic entities (where source query can only be uncorrelated) -- simple queries as source queries are accessible for correlation
-        final TransformationResult<Sources2> sourcesTr = sources.transform(localResolutionContext);
-        final TransformationResult<Conditions2> conditionsTr = conditions.transform(sourcesTr.updatedContext);
-        final TransformationResult<Yields2> yieldsTr = yields.transform(conditionsTr.updatedContext);
-        final TransformationResult<GroupBys2> groupsTr = groups.transform(yieldsTr.updatedContext);
-        final TransformationResult<OrderBys2> orderingsTr = orderings.transform(groupsTr.updatedContext);
-        final Yields2 enhancedYields = enhanceYields(yieldsTr.item, sourcesTr.item);
-        final EntQueryBlocks2 entQueryBlocks = new EntQueryBlocks2(sourcesTr.item, conditionsTr.item, enhancedYields, groupsTr.item, orderingsTr.item);
+        final T2<Sources2,PropsResolutionContext> sourcesTr = sources.transform(localResolutionContext);
+        final PropsResolutionContext enhancedContext = sourcesTr._2; 
+        final Sources2 sources2 = sourcesTr._1;
+        final Conditions2 conditions2 = conditions.transform(enhancedContext);
+        final Yields2 yields2 = yields.transform(enhancedContext);
+        final GroupBys2 groups2 = groups.transform(enhancedContext);
+        final OrderBys2 orderings2 = orderings.transform(enhancedContext);
+        final Yields2 enhancedYields2 = enhanceYields(yields2, sources2);
+        final EntQueryBlocks2 entQueryBlocks = new EntQueryBlocks2(sources2, conditions2, enhancedYields2, groups2, orderings2);
 
-        return new TransformationResult<SourceQuery2>(new SourceQuery2(entQueryBlocks, resultType), context);//orderingsTr.updatedContext.leaveCorrelatedSubquery());
+        return new SourceQuery2(entQueryBlocks, resultType);
     }
 
     private Yields2 enhanceYields(final Yields2 yields, final Sources2 sources2) {

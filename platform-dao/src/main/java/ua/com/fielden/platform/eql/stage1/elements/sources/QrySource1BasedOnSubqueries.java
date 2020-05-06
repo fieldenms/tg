@@ -9,7 +9,6 @@ import java.util.Objects;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
-import ua.com.fielden.platform.eql.stage1.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage1.elements.Yield1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.SourceQuery1;
 import ua.com.fielden.platform.eql.stage2.elements.operands.SourceQuery2;
@@ -56,19 +55,16 @@ public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2Ba
     }
    
     @Override
-    public TransformationResult<QrySource2BasedOnSubqueries> transform(final PropsResolutionContext resolutionContext) {
+    public QrySource2BasedOnSubqueries transform(final PropsResolutionContext context) {
         
         final List<SourceQuery2> transformedQueries = new ArrayList<>();
-        PropsResolutionContext currentResolutionContext = resolutionContext;
 
         for (final SourceQuery1 model : models) {
-            final TransformationResult<SourceQuery2> modelTr = model.transform(currentResolutionContext/*.produceNewOne() // as already invoked as part of EntQuery1.transform(..)*/);
-            transformedQueries.add(modelTr.item);
-            currentResolutionContext = modelTr.updatedContext; // TODO should be just resolutionContext with propsResolutions added from this model transformation   
+            final SourceQuery2 modelTr = model.transform(context/*.produceNewOne() // as already invoked as part of EntQuery1.transform(..)*/);
+            transformedQueries.add(modelTr);
         }
            
-        final QrySource2BasedOnSubqueries transformedSource = new QrySource2BasedOnSubqueries(transformedQueries, alias, resolutionContext.getDomainInfo(), (resolutionContext.sourceId == null ? Integer.toString(contextId) : resolutionContext.sourceId + "_" + Integer.toString(contextId)));
-        return new TransformationResult<QrySource2BasedOnSubqueries>(transformedSource, /*currentResolutionContext*/resolutionContext.cloneWithAdded(transformedSource));
+        return new QrySource2BasedOnSubqueries(transformedQueries, alias, context.getDomainInfo(), (context.sourceId == null ? Integer.toString(contextId) : context.sourceId + "_" + Integer.toString(contextId)));
     }
     
     private SourceQuery1 firstModel() {

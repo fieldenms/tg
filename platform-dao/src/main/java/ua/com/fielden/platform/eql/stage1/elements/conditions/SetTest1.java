@@ -3,7 +3,6 @@ package ua.com.fielden.platform.eql.stage1.elements.conditions;
 import java.util.Objects;
 
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
-import ua.com.fielden.platform.eql.stage1.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage1.elements.operands.ISetOperand1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.SetTest2;
@@ -22,10 +21,8 @@ public class SetTest1 implements ICondition1<SetTest2> {
     }
 
     @Override
-    public TransformationResult<SetTest2> transform(final PropsResolutionContext context) {
-        final TransformationResult<? extends ISingleOperand2<?>> leftOperandTr = leftOperand.transform(context);
-        final TransformationResult<? extends ISetOperand2<?>> rightOperandTr = rightOperand.transform(leftOperandTr.updatedContext);
-        return new TransformationResult<SetTest2>(new SetTest2(leftOperandTr.item, negated, rightOperandTr.item), rightOperandTr.updatedContext);
+    public SetTest2 transform(final PropsResolutionContext context) {
+        return new SetTest2(leftOperand.transform(context), negated, rightOperand.transform(context));
     }
 
     @Override

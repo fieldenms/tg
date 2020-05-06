@@ -5,7 +5,6 @@ import java.util.Objects;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
-import ua.com.fielden.platform.eql.stage1.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.sources.QrySource2BasedOnPersistentType;
 
 public class QrySource1BasedOnPersistentType extends AbstractQrySource1<QrySource2BasedOnPersistentType> {
@@ -30,9 +29,8 @@ public class QrySource1BasedOnPersistentType extends AbstractQrySource1<QrySourc
     }
 
     @Override
-    public TransformationResult<QrySource2BasedOnPersistentType> transform(final PropsResolutionContext context) {
-        final QrySource2BasedOnPersistentType transformedSource = new QrySource2BasedOnPersistentType(sourceType(), context.getDomainInfo().get(sourceType()), alias, (context.sourceId == null ? Integer.toString(contextId) : context.sourceId + "_" + Integer.toString(contextId)));
-        return new TransformationResult<QrySource2BasedOnPersistentType>(transformedSource, context.cloneWithAdded(transformedSource));
+    public QrySource2BasedOnPersistentType transform(final PropsResolutionContext context) {
+        return new QrySource2BasedOnPersistentType(sourceType(), context.getDomainInfo().get(sourceType()), alias, (context.sourceId == null ? Integer.toString(contextId) : context.sourceId + "_" + Integer.toString(contextId)));
     }
 
     @Override

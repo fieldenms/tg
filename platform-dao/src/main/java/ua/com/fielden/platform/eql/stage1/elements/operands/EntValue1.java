@@ -3,7 +3,6 @@ package ua.com.fielden.platform.eql.stage1.elements.operands;
 import java.util.Objects;
 
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
-import ua.com.fielden.platform.eql.stage1.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntValue2;
 
 public class EntValue1 implements ISingleOperand1<EntValue2> {
@@ -24,9 +23,8 @@ public class EntValue1 implements ISingleOperand1<EntValue2> {
     }
 
     @Override
-    public TransformationResult<EntValue2> transform(final PropsResolutionContext context) {
-        final EntValue2 transformed = new EntValue2(value, ignoreNull);
-        return new TransformationResult<EntValue2>(transformed, context);
+    public EntValue2 transform(final PropsResolutionContext context) {
+        return new EntValue2(value, ignoreNull);
     }
 
     @Override

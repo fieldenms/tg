@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Objects;
 
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
-import ua.com.fielden.platform.eql.stage1.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.ICondition2;
 
@@ -60,17 +59,15 @@ public class Conditions1 implements ICondition1<Conditions2> {
     }
 
     @Override
-    public TransformationResult<Conditions2> transform(final PropsResolutionContext context) {
+    public Conditions2 transform(final PropsResolutionContext context) {
         final List<List<ICondition1<? extends ICondition2<?>>>> dnfs = formDnf();
         final List<List<? extends ICondition2<?>>> transformed = new ArrayList<>();
-        PropsResolutionContext currentResolutionContext = context;
         for (final List<ICondition1<? extends ICondition2<?>>> andGroup : dnfs) {
             final List<ICondition2<?>> transformedAndGroup = new ArrayList<>(); 
             for (final ICondition1<? extends ICondition2<?>> andGroupCondition : andGroup) {
-                final TransformationResult<? extends ICondition2<?>> andGroupConditionTransformationResult = andGroupCondition.transform(currentResolutionContext);
-                if (!andGroupConditionTransformationResult.item.ignore()) {
-                    transformedAndGroup.add(andGroupConditionTransformationResult.item);
-                    currentResolutionContext = andGroupConditionTransformationResult.updatedContext;
+                final ICondition2<?> andGroupConditionTransformed = andGroupCondition.transform(context);
+                if (!andGroupConditionTransformed.ignore()) {
+                    transformedAndGroup.add(andGroupConditionTransformed);
                 }
             }
             if (!transformedAndGroup.isEmpty()) {
@@ -87,7 +84,7 @@ public class Conditions1 implements ICondition1<Conditions2> {
 //                .filter(andGroup -> !andGroup.isEmpty())
 //                .collect(toList());
         
-        return new TransformationResult<Conditions2>(new Conditions2(negated, transformed), currentResolutionContext);
+        return new Conditions2(negated, transformed);
     }
 
     @Override

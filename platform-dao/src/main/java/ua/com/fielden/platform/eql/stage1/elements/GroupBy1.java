@@ -13,9 +13,8 @@ public class GroupBy1 {
         this.operand = operand;
     }
 
-    public TransformationResult<GroupBy2> transform(final PropsResolutionContext context) {
-        final TransformationResult<? extends ISingleOperand2<?>> operandTr = operand.transform(context);
-        return new TransformationResult<GroupBy2>(new GroupBy2(operandTr.item), operandTr.updatedContext);
+    public GroupBy2 transform(final PropsResolutionContext context) {
+        return new GroupBy2(operand.transform(context));
     }
 
     @Override

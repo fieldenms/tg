@@ -4,7 +4,6 @@ import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
-import ua.com.fielden.platform.eql.stage1.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.ComparisonTest2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
@@ -21,10 +20,8 @@ public class ComparisonTest1 implements ICondition1<ComparisonTest2> {
     }
 
     @Override
-    public TransformationResult<ComparisonTest2> transform(final PropsResolutionContext context) {
-        final TransformationResult<? extends ISingleOperand2<?>> leftOperandTr = leftOperand.transform(context);
-        final TransformationResult<? extends ISingleOperand2<?>> rightOperandTr = rightOperand.transform(leftOperandTr.updatedContext);
-        return new TransformationResult<ComparisonTest2>(new ComparisonTest2(leftOperandTr.item, operator, rightOperandTr.item), rightOperandTr.updatedContext);
+    public ComparisonTest2 transform(final PropsResolutionContext context) {
+        return new ComparisonTest2(leftOperand.transform(context), operator, rightOperand.transform(context));
     }
 
     @Override

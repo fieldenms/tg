@@ -5,12 +5,10 @@ import java.util.Objects;
 import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
 import ua.com.fielden.platform.eql.meta.Quantifier;
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
-import ua.com.fielden.platform.eql.stage1.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.SubQuery1;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.QuantifiedTest2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
-import ua.com.fielden.platform.eql.stage2.elements.operands.SubQuery2;
 
 public class QuantifiedTest1 implements ICondition1<QuantifiedTest2> {
     private final ISingleOperand1<? extends ISingleOperand2<?>> leftOperand;
@@ -26,11 +24,8 @@ public class QuantifiedTest1 implements ICondition1<QuantifiedTest2> {
     }
 
     @Override
-    public TransformationResult<QuantifiedTest2> transform(final PropsResolutionContext context) {
-        final TransformationResult<? extends ISingleOperand2<?>> leftOperandTr = leftOperand.transform(context);
-        final TransformationResult<SubQuery2> rightOperandTr = rightOperand.transform(leftOperandTr.updatedContext);
-        
-        return new TransformationResult<QuantifiedTest2>(new QuantifiedTest2(leftOperandTr.item, operator, quantifier, rightOperandTr.item), rightOperandTr.updatedContext);
+    public QuantifiedTest2 transform(final PropsResolutionContext context) {
+        return new QuantifiedTest2(leftOperand.transform(context), operator, quantifier, rightOperand.transform(context));
     }
 
     @Override

@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.elements.functions;
 
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
-import ua.com.fielden.platform.eql.stage1.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.elements.functions.AverageOf2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
@@ -15,9 +14,8 @@ public class AverageOf1 extends SingleOperandFunction1<AverageOf2> {
     }
 
     @Override
-    public TransformationResult<AverageOf2> transform(final PropsResolutionContext context) {
-        final TransformationResult<? extends ISingleOperand2<?>> operandTr = operand.transform(context);
-        return new TransformationResult<AverageOf2>(new AverageOf2(operandTr.item, distinct), operandTr.updatedContext);
+    public AverageOf2 transform(final PropsResolutionContext context) {
+        return new AverageOf2(operand.transform(context), distinct);
     }
     
     @Override

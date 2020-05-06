@@ -3,7 +3,6 @@ package ua.com.fielden.platform.eql.stage1.elements.sources;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
-import ua.com.fielden.platform.eql.stage1.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.sources.QrySource2BasedOnVoid;
 
 public class QrySource1BasedOnVoid  implements IQrySource1<QrySource2BasedOnVoid> {
@@ -19,8 +18,8 @@ public class QrySource1BasedOnVoid  implements IQrySource1<QrySource2BasedOnVoid
     } 
 
     @Override
-    public TransformationResult<QrySource2BasedOnVoid> transform(final PropsResolutionContext context) {
-        return new TransformationResult<QrySource2BasedOnVoid>(new QrySource2BasedOnVoid(), context);
+    public QrySource2BasedOnVoid transform(final PropsResolutionContext context) {
+        return new QrySource2BasedOnVoid();
     }
 
     @Override

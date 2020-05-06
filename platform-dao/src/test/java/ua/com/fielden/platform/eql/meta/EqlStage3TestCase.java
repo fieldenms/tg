@@ -57,15 +57,15 @@ public class EqlStage3TestCase extends EqlTestCase {
         final AggregatedResultQueryModel countQry = unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate();
 
         final PropsResolutionContext resolutionContext = new PropsResolutionContext(metadata());
-        final ua.com.fielden.platform.eql.stage1.elements.TransformationResult<ResultQuery2> s1tr = qb().generateEntQueryAsResultQuery(countQry, null).transform(resolutionContext);
-        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<ResultQuery3> s2tr = s1tr.item.transform(new TransformationContext(tables, groupChildren(s1tr.item.collectProps(), metadata())));
+        final ResultQuery2 rq2 = qb().generateEntQueryAsResultQuery(countQry, null).transform(resolutionContext);
+        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<ResultQuery3> s2tr = rq2.transform(new TransformationContext(tables, groupChildren(rq2.collectProps(), metadata())));
         return s2tr.item;
     }
     
     protected static ResultQuery3 qry(final AggregatedResultQueryModel qry) {
         final PropsResolutionContext resolutionContext = new PropsResolutionContext(metadata());
-        final ua.com.fielden.platform.eql.stage1.elements.TransformationResult<ResultQuery2> s1tr = qb().generateEntQueryAsResultQuery(qry, null).transform(resolutionContext);
-        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<ResultQuery3> s2tr = s1tr.item.transform(new TransformationContext(tables, groupChildren(s1tr.item.collectProps(), metadata())));
+        final ResultQuery2 rq2 = qb().generateEntQueryAsResultQuery(qry, null).transform(resolutionContext);
+        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<ResultQuery3> s2tr = rq2.transform(new TransformationContext(tables, groupChildren(rq2.collectProps(), metadata())));
         return s2tr.item;
     }
     
@@ -73,8 +73,8 @@ public class EqlStage3TestCase extends EqlTestCase {
         final AggregatedResultQueryModel countQry = unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate();
 
         final PropsResolutionContext resolutionContext = new PropsResolutionContext(metadata(paramValues));
-        final ua.com.fielden.platform.eql.stage1.elements.TransformationResult<ResultQuery2> s1tr = qb(paramValues).generateEntQueryAsResultQuery(countQry, null).transform(resolutionContext);
-        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<ResultQuery3> s2tr = s1tr.item.transform(new TransformationContext(tables, groupChildren(s1tr.item.collectProps(), metadata(paramValues))));
+        final ResultQuery2 rq2 = qb(paramValues).generateEntQueryAsResultQuery(countQry, null).transform(resolutionContext);
+        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<ResultQuery3> s2tr = rq2.transform(new TransformationContext(tables, groupChildren(rq2.collectProps(), metadata(paramValues))));
         return s2tr.item;
     }
 

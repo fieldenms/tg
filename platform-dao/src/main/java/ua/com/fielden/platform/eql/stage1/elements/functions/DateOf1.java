@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.elements.functions;
 
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
-import ua.com.fielden.platform.eql.stage1.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.elements.functions.DateOf2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
@@ -13,9 +12,8 @@ public class DateOf1 extends SingleOperandFunction1<DateOf2> {
     }
 
     @Override
-    public TransformationResult<DateOf2> transform(final PropsResolutionContext context) {
-        final TransformationResult<? extends ISingleOperand2<?>> operandTransformationResult = operand.transform(context);
-        return new TransformationResult<DateOf2>(new DateOf2(operandTransformationResult.item), operandTransformationResult.updatedContext);
+    public DateOf2 transform(final PropsResolutionContext context) {
+        return new DateOf2(operand.transform(context));
     }
     
     @Override

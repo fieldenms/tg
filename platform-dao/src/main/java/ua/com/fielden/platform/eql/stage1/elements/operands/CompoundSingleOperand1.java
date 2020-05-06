@@ -3,6 +3,8 @@ package ua.com.fielden.platform.eql.stage1.elements.operands;
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.ArithmeticalOperator;
+import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
+import ua.com.fielden.platform.eql.stage2.elements.operands.CompoundSingleOperand2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 
 public class CompoundSingleOperand1 {
@@ -12,6 +14,10 @@ public class CompoundSingleOperand1 {
     public CompoundSingleOperand1(final ISingleOperand1<? extends ISingleOperand2<?>> operand, final ArithmeticalOperator operator) {
         this.operand = operand;
         this.operator = operator;
+    }
+    
+    public CompoundSingleOperand2 transform(final PropsResolutionContext context) {
+        return new CompoundSingleOperand2(operand.transform(context), operator);
     }
 
     @Override

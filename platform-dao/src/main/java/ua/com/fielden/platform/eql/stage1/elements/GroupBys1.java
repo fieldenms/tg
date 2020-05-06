@@ -1,10 +1,10 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
-import java.util.ArrayList;
+import static java.util.stream.Collectors.toList;
+
 import java.util.List;
 import java.util.Objects;
 
-import ua.com.fielden.platform.eql.stage2.elements.GroupBy2;
 import ua.com.fielden.platform.eql.stage2.elements.GroupBys2;
 
 public class GroupBys1 {
@@ -14,15 +14,8 @@ public class GroupBys1 {
         this.groups = groups;
     }
 
-    public TransformationResult<GroupBys2> transform(final PropsResolutionContext context) {
-        final List<GroupBy2> transformed = new ArrayList<>();
-        PropsResolutionContext currentResolutionContext = context;
-        for (final GroupBy1 groupBy : groups) {
-            final TransformationResult<GroupBy2> groupByTr = groupBy.transform(currentResolutionContext);
-            transformed.add(groupByTr.item);
-            currentResolutionContext = groupByTr.updatedContext;
-        }
-        return new TransformationResult<GroupBys2>(new GroupBys2(transformed), currentResolutionContext);
+    public GroupBys2 transform(final PropsResolutionContext context) {
+        return new GroupBys2(groups.stream().map(el -> el.transform(context)).collect(toList()));
     }
 
     @Override

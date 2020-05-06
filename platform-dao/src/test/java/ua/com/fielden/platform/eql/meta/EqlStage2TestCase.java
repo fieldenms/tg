@@ -57,17 +57,17 @@ public class EqlStage2TestCase extends EqlTestCase {
     protected static <T extends AbstractEntity<?>> ResultQuery2 qryCountAll(final ICompoundCondition0<T> unfinishedQry) {
         final AggregatedResultQueryModel countQry = unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate();
         final PropsResolutionContext resolutionContext = new PropsResolutionContext(metadata);
-        return qb().generateEntQueryAsResultQuery(countQry, null).transform(resolutionContext).item;
+        return qb().generateEntQueryAsResultQuery(countQry, null).transform(resolutionContext);
     }
     
     protected static <T extends AbstractEntity<?>> ResultQuery2 qry(final EntityResultQueryModel<T> qry) {
         final PropsResolutionContext resolutionContext = new PropsResolutionContext(metadata);
-        return qb().generateEntQueryAsResultQuery(qry, null).transform(resolutionContext).item;
+        return qb().generateEntQueryAsResultQuery(qry, null).transform(resolutionContext);
     }
 
     protected static ResultQuery2 qry(final AggregatedResultQueryModel qry) {
         final PropsResolutionContext resolutionContext = new PropsResolutionContext(metadata);
-        return qb().generateEntQueryAsResultQuery(qry, null).transform(resolutionContext).item;
+        return qb().generateEntQueryAsResultQuery(qry, null).transform(resolutionContext);
     }
     
     protected static EntQueryBlocks2 qb2(final Sources2 sources, final Conditions2 conditions) {

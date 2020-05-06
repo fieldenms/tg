@@ -149,8 +149,8 @@ public class EntityContainerFetcher {
             }
             
             final PropsResolutionContext resolutionContext = new PropsResolutionContext(domainInfo);
-            final ua.com.fielden.platform.eql.stage1.elements.TransformationResult<ResultQuery2> s1tr = gen1.generateEntQueryAsResultQuery(qem.queryModel, qem.orderModel).transform(resolutionContext);
-            final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<ResultQuery3> s2tr = s1tr.item.transform(new TransformationContext(tables, groupChildren(s1tr.item.collectProps(), domainInfo)));
+            final ResultQuery2 s1tr = gen1.generateEntQueryAsResultQuery(qem.queryModel, qem.orderModel).transform(resolutionContext);
+            final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<ResultQuery3> s2tr = s1tr.transform(new TransformationContext(tables, groupChildren(s1tr.collectProps(), domainInfo)));
             final ResultQuery3 entQuery3 = s2tr.item;
             final String sql3 = entQuery3.sql(domainMetadataAnalyser.getDbVersion());
             return new QueryModelResult<>((Class<E>)entQuery3.resultType, sql3, getResultPropsInfos(entQuery3.yields), s2tr.updatedContext.getParamValues(), qem.fetchModel);
