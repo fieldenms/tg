@@ -52,6 +52,10 @@ public class PropsResolutionContext {
         srcs.get(0).add(transformedSource); // adding source to current query list of sources
         return new PropsResolutionContext(domainInfo, srcs, sourceId);
     }
+    
+//    public PropsResolutionContext leaveCorrelatedSubquery() {
+//        return new PropsResolutionContext(domainInfo, sources.subList(1, sources.size()), sourceId);
+//    }
 
     public List<List<IQrySource2<? extends IQrySource3>>> getSources() {
         return unmodifiableList(sources);

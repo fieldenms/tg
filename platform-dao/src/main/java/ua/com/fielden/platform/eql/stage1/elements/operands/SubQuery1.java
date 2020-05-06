@@ -36,9 +36,7 @@ public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuer
         final Yields2 enhancedYields = enhanceYields(yieldsTr.item, sourcesTr.item);
         final EntQueryBlocks2 entQueryBlocks = new EntQueryBlocks2(sourcesTr.item, conditionsTr.item, enhancedYields, groupsTr.item, orderingsTr.item);
 
-        final PropsResolutionContext resultResolutionContext = new PropsResolutionContext(orderingsTr.updatedContext.getDomainInfo(), orderingsTr.updatedContext.getSources().subList(1, orderingsTr.updatedContext.getSources().size()), orderingsTr.updatedContext.sourceId);
-
-        return new TransformationResult<SubQuery2>(new SubQuery2(entQueryBlocks, resultType), resultResolutionContext);
+        return new TransformationResult<SubQuery2>(new SubQuery2(entQueryBlocks, resultType), context);//orderingsTr.updatedContext.leaveCorrelatedSubquery());
     }
 
     private Yields2 enhanceYields(final Yields2 yields, final Sources2 sources2) {
