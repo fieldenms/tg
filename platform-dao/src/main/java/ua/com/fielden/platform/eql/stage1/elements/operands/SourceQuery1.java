@@ -24,14 +24,17 @@ import ua.com.fielden.platform.types.tuples.T2;
 
 public class SourceQuery1 extends AbstractQuery1 implements ITransformableToS2<SourceQuery2> {
 
-    public SourceQuery1(final EntQueryBlocks1 queryBlocks, final Class<? extends AbstractEntity<?>> resultType) {
+    public final boolean isCorrelated;
+    
+    public SourceQuery1(final EntQueryBlocks1 queryBlocks, final Class<? extends AbstractEntity<?>> resultType, final boolean isCorrelated) {
         super(queryBlocks, resultType);
+        this.isCorrelated = isCorrelated;
         assert (resultType != null);
     }
 
     @Override
     public SourceQuery2 transform(final PropsResolutionContext context) {
-        final PropsResolutionContext localResolutionContext = context.produceForCorrelatedSubquery();//isSubQuery() ? context.produceForCorrelatedSubquery() : context.produceForUncorrelatedSubquery();
+        final PropsResolutionContext localResolutionContext = isCorrelated ? context.produceForCorrelatedSubquery() : context.produceForUncorrelatedSubquery();
         // .produceForUncorrelatedSubquery() should be used only for cases of synthetic entities (where source query can only be uncorrelated) -- simple queries as source queries are accessible for correlation
         final T2<Sources2,PropsResolutionContext> sourcesTr = sources.transform(localResolutionContext);
         final PropsResolutionContext enhancedContext = sourcesTr._2; 
@@ -62,12 +65,13 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableToS2<S
     @Override
     public int hashCode() {
         final int prime = 31;
-        final int result = super.hashCode();
+        int result = super.hashCode();
+        result = prime * result + (isCorrelated ? 1231 : 1237);
         return prime * result + SourceQuery1.class.getName().hashCode();
     }
 
     @Override
     public boolean equals(final Object obj) {
-        return this == obj || super.equals(obj) && obj instanceof SourceQuery1;
+        return this == obj || super.equals(obj) && obj instanceof SourceQuery1 && ((SourceQuery1) obj).isCorrelated == isCorrelated;
     }
 }

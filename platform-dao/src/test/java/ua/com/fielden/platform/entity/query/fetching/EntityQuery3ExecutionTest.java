@@ -21,6 +21,7 @@ import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.sample.domain.ITeVehicleModel;
+import ua.com.fielden.platform.sample.domain.TeAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TeVehicle;
 import ua.com.fielden.platform.sample.domain.TeVehicleFuelUsage;
 import ua.com.fielden.platform.sample.domain.TeVehicleMake;
@@ -563,6 +564,12 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
 
         run(qry);
     }
+    
+    @Test
+    public void eql3_query_executes_correctly57() {
+        run(select(TeAverageFuelUsage.class).where().prop("key.modelMakeKey6").isNotNull());
+    }
+
     
     @Override
     protected void populateDomain() {

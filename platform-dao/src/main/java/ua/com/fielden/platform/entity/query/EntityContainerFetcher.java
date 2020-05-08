@@ -4,9 +4,11 @@ import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.eql.stage2.elements.PathsToTreeTransformator.groupChildren;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.Stream;
@@ -142,7 +144,10 @@ public class EntityContainerFetcher {
             
             try {
                 final MetadataGenerator mtg = new MetadataGenerator(executionContext.getDomainMetadata(), filter, username, executionContext.dates(), qem.getParamValues());
-                domainInfo = mtg.generate(executionContext.getDomainMetadata().getPersistedEntityMetadataMap().keySet());
+                final Set<Class<? extends AbstractEntity<?>>> emd = new HashSet<>();
+                emd.addAll(executionContext.getDomainMetadata().getPersistedEntityMetadataMap().keySet());
+                emd.addAll(executionContext.getDomainMetadata().getModelledEntityMetadataMap().keySet());
+                domainInfo = mtg.generate(emd);
                 tables = mtg.generateTables(executionContext.getDomainMetadata().getPersistedEntityMetadataMap().keySet());
             } catch (final Exception e) {
                 e.printStackTrace();

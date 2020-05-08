@@ -16,6 +16,7 @@ import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.persistence.types.EntityWithSimpleMoney;
 import ua.com.fielden.platform.persistence.types.EntityWithSimpleTaxMoney;
 import ua.com.fielden.platform.persistence.types.EntityWithTaxMoney;
+import ua.com.fielden.platform.sample.domain.TeAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TeVehicle;
 import ua.com.fielden.platform.sample.domain.TeVehicleFuelUsage;
 import ua.com.fielden.platform.sample.domain.TeVehicleMake;
@@ -144,6 +145,7 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(EntityBasedOnAbstractPersistentEntity.class);
         add(EntityBasedOnAbstractPersistentEntity2.class);
         add(TgAverageFuelUsage.class);
+        add(TeAverageFuelUsage.class);
         add(TgSystem.class);
         add(TgSubSystem.class);
         add(TgCategory.class);

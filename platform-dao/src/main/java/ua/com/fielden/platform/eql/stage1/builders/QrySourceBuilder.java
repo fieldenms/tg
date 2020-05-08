@@ -16,6 +16,8 @@ import java.util.List;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
+import ua.com.fielden.platform.entity.query.metadata.AbstractEntityMetadata;
+import ua.com.fielden.platform.entity.query.metadata.ModelledEntityMetadata;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.eql.stage1.elements.operands.SourceQuery1;
 import ua.com.fielden.platform.eql.stage1.elements.sources.QrySource1BasedOnPersistentType;
@@ -71,12 +73,24 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
         if (isPersistedEntityType(resultType)) {
             return pair(QRY_SOURCE, new QrySource1BasedOnPersistentType(resultType, (String) secondValue(), getQueryBuilder().nextCondtextId()));    
         } else if (isSyntheticEntityType(resultType) || isSyntheticBasedOnPersistentEntityType(resultType)) {
-            throw new EqlStage1ProcessingException("Not yet.");
+            return pair(QRY_SOURCE, buildQrySourceBasedOnSyntheticEntityType(resultType, (String) secondValue()));
         } else {
             throw new EqlStage1ProcessingException("Not yet.");
         }
     }
+    
+    private <T extends AbstractEntity<?>> QrySource1BasedOnSubqueries buildQrySourceBasedOnSyntheticEntityType(final Class<T> resultType, final String alias) {
+        final AbstractEntityMetadata<T> entityMetadata = getQueryBuilder().domainMetadataAnalyser.getEntityMetadata(resultType);
+        final List<QueryModel<T>> models = new ArrayList<>();
+        models.addAll(((ModelledEntityMetadata<T>) entityMetadata).getModels());
+        final List<SourceQuery1> queries = new ArrayList<>();
+        for (final QueryModel<T> qryModel : models) {
+            queries.add(getQueryBuilder().generateEntQueryAsSyntheticEntityQuery(qryModel, resultType));
+        }
 
+        return new QrySource1BasedOnSubqueries(alias, queries, getQueryBuilder().nextCondtextId());
+    }
+    
     private Pair<TokenCategory, Object> buildResultForQrySourceBasedOnSubqueries() {
         final List<SourceQuery1> queries = new ArrayList<>();
         final String alias = secondValue();
