@@ -1247,7 +1247,7 @@ const _toStringForCollection = function (bindingValue, rootEntityType, property,
             resultingCollection = bindingValue.map(entity => entity.get(shortCollectionKey));
         }
         return resultingCollection
-            .map(element => _toString(_convert(mappingFunction ? mappingFunction(element) : element), rootEntityType, property))
+            .map(element => _toString(_convert(mappingFunction ? mappingFunction(element) : element), rootEntityType, property)) // note that collection of 'boolean'/'Date' values are not [yet] supported due to non-existence of collection element type on the client EntityTypeProp for collectional property (see _toString method); this looks like artificial collections to be supported; however they can be, if needed 
             .filter(str => str !== '') // filter out empty strings not to include them into resulting string (especially important for functions that use 'mappingFunction')
             .join(separator);
     }
