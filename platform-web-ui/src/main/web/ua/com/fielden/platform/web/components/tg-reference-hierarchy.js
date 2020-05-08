@@ -223,9 +223,9 @@ Polymer({
     },
 
     _buildEditAction: function(action) {
+        action.shortDesc = "";
         this._actions[referenceHierarchyActions.EDIT] = (e) => {
             action.currentEntity = e.model.entity.entity.entity;
-            action.shortDesc = "";
             action._run();
         };
         return (entity) => {
