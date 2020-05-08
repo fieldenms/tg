@@ -26,7 +26,7 @@ public class CustomisableColumn extends AbstractEntity<String> {
     
     @IsProperty
     @Title("Sorting")
-    private Boolean sorting = null;
+    private Boolean sorting = null; // three values possible: true for ASCENDING, false for DESCENDING, null for non-sorted
     
     @IsProperty
     @Title("Sorting Number")

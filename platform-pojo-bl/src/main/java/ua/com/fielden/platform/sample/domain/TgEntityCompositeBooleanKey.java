@@ -10,7 +10,6 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Optional;
-import ua.com.fielden.platform.entity.annotation.Title;
 
 /**
  * Master entity object.
@@ -25,7 +24,6 @@ public class TgEntityCompositeBooleanKey extends AbstractPersistentEntity<Dynami
     
     @IsProperty
     @MapTo
-    @Title("Boolean Key")
     @CompositeKeyMember(1)
     @Optional
     private boolean booleanKey;

@@ -370,6 +370,61 @@
                 done();
             });
             
+            const typeName7 = 'ua.com.fielden.platform.sample.domain.TgEntityCompositeKey';
+            const typeName8 = 'ua.com.fielden.platform.sample.domain.TgEntityCompositeBooleanKey';
+            const typeName9 = 'ua.com.fielden.platform.sample.domain.TgEntityStringKey';
+            
+            test('EntityTypeProp.type: boolean prop type is defined', function (done) {
+                assert.strictEqual(reflector.getType(typeName8).prop('booleanKey').type(), 'boolean');
+                done();
+            });
+            
+            test('EntityTypeProp.type: String prop type is defined', function (done) {
+                assert.strictEqual(reflector.getType(typeName7).prop('stringKey').type(), 'String');
+                done();
+            });
+            
+            test('EntityTypeProp.type: Date prop type is defined', function (done) {
+                assert.strictEqual(reflector.getType(typeName7).prop('dateKey').type(), 'Date');
+                done();
+            });
+            
+            test('EntityTypeProp.type: Integer prop type is defined', function (done) {
+                assert.strictEqual(reflector.getType(typeName7).prop('integerKey').type(), 'Integer');
+                done();
+            });
+            
+            test('EntityTypeProp.type: Long prop type is defined', function (done) {
+                assert.strictEqual(reflector.getType(typeName7).prop('longKey').type(), 'Long');
+                done();
+            });
+            
+            test('EntityTypeProp.type: Money prop type is defined', function (done) {
+                assert.strictEqual(reflector.getType(typeName7).prop('moneyKey').type(), 'Money');
+                done();
+            });
+            
+            test('EntityTypeProp.type: collection prop type is not defined', function (done) {
+                assert.strictEqual(reflector.getType(typeName7).prop('listOfStringsProp').type(), null);
+                assert.strictEqual(reflector.getType(typeName7).prop('setOfEntitiesProp').type(), null);
+                done();
+            });
+            
+            test('EntityTypeProp.type: Colour prop type is defined', function (done) {
+                assert.strictEqual(reflector.getType(typeName7).prop('colourKey').type(), 'Colour');
+                done();
+            });
+            
+            test('EntityTypeProp.type: Hyperlink prop type is defined', function (done) {
+                assert.strictEqual(reflector.getType(typeName7).prop('hyperlinkKey').type(), 'Hyperlink');
+                done();
+            });
+            
+            test('EntityTypeProp.type: entity prop type is defined', function (done) {
+                assert.strictEqual(reflector.getType(typeName7).prop('entityKey').type(), reflector.getType(typeName9));
+                done();
+            });
+            
             // Testing the access to 'key' property of different kinds of entities.
             // This property is of high importance and should be much in sync with server-side implementation.
             // At this stage only equality and toString implementation is used when accessing properties.
