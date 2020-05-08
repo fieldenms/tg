@@ -348,6 +348,15 @@ Polymer({
             value: ""
         },
         /**
+         * The saved short desc in case the action is dynamic 
+         * If short desc wasn't specified then short desc should be specified every time new master is retrieved
+         * And this property becomes an indicator of that fact. 
+         */
+        _originalShortDesc: {
+            type: String,
+            value:""
+        },
+        /**
          * Executes the action in context of 'currentEntity'. 
          *
          * Please override this method in descendands to implement specific execution logic.
@@ -472,6 +481,9 @@ Polymer({
 
             const currentEntityType = this._calculateCurrentEntityType();
             if (this.dynamicAction && this.currentEntity && this._previousEntityType !== currentEntityType) {
+                if (!this.elementName) {//Element name for dynamic action is not specified at first run
+                    this._originalShortDesc = this.shortDesc;//It means that sjortDesc wasn't changed yet.
+                }
                 this._masterUri = '/master/' + currentEntityType + '/' + this.currentEntity.get("id");
                 this.isActionInProgress = true;
                 this.$.masterRetriever.generateRequest().completes
@@ -732,7 +744,7 @@ Polymer({
             const masterInfo = deserialisedResult.instance;
             this.elementName = masterInfo.key;
             this.componentUri = masterInfo.desc;
-            this.shortDesc = this.shortDesc || masterInfo.shortDesc;
+            this.shortDesc = this._originalShortDesc || masterInfo.shortDesc;
             this.longDesc = this.longDesc || masterInfo.longDesc;
             this.attrs = Object.assign({}, this.attrs, {
                 entityType: masterInfo.entityType,
