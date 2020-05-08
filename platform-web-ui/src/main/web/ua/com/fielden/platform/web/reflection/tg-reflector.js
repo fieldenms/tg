@@ -1155,12 +1155,14 @@ const _convertFullPropertyValue = function (bindingView, propertyName, fullValue
 /**
  * Determines the type of property from 'entityType' and 'property'.
  * 
+ * Returns 'DynamicEntityKey' for 'key' property of composite 'entityType'.
+ * 
  * @param entityType -- entity type
  * @param property -- property name; can be dot-notated or '' meaning "entity itself"
  */
 const _determinePropertyType = function (entityType, property) {
     return '' === property ? entityType : 
-        (entityType.isCompositeEntity() && 'key' === property ? null : entityType.prop(property).type());
+        (entityType.isCompositeEntity() && 'key' === property ? 'DynamicEntityKey' : entityType.prop(property).type());
 };
 
 /**
@@ -1561,6 +1563,18 @@ export const TgReflector = Polymer({
      */
     tg_convert: function (value) {
         return _convert(value);
+    },
+    
+    /**
+     * Determines the type of property from 'entityType' and 'property'.
+     * 
+     * Returns 'DynamicEntityKey' for 'key' property of composite 'entityType'.
+     * 
+     * @param entityType -- entity type
+     * @param property -- property name; can be dot-notated or '' meaning "entity itself"
+     */
+    tg_determinePropertyType: function (entityType, property) {
+        return _determinePropertyType(entityType, property);
     },
     
     /**
