@@ -668,11 +668,12 @@ const _createDynamicEntityKeyPrototype = function () {
             const compositePartName = compositeKeyNames[i];
             const compositePart = compositeEntity.get(compositePartName);
             if (compositePart !== null) {
+                const strPart = _toString(_convert(compositePart), type, compositePartName);
                 if (first) {
-                    str = str + _convert(compositePart);
+                    str = str + strPart;
                     first = false;
                 } else {
-                    str = str + compositeKeySeparator + _convert(compositePart);
+                    str = str + compositeKeySeparator + strPart;
                 }
             }
         }
