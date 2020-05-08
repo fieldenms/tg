@@ -973,21 +973,30 @@ const _isDynamicEntityKey = function (obj) {
 };
 
 const _isPropertyValueObject = function (value, subValueName) {
-    return value !== null && typeof value === 'object' && typeof value[subValueName] !== 'undefined';
+    return typeof value === 'object' && typeof value[subValueName] !== 'undefined';
 };
 
+/**
+ * Checks whether non-null 'value' represents money value.
+ */
 const _isMoney = function (value) {
     return _isPropertyValueObject(value, 'amount');
 };
 const _moneyVal = function (value) {
     return value['amount'];
 };
+/**
+ * Checks whether non-null 'value' represents colour value.
+ */
 const _isColour = function (value) {
     return _isPropertyValueObject(value, 'hashlessUppercasedColourValue');
 };
 const _colourVal = function (value) {
     return value['hashlessUppercasedColourValue'];
 };
+/**
+ * Checks whether non-null 'value' represents hyperlink value.
+ */
 const _isHyperlink = function (value) {
     return _isPropertyValueObject(value, 'value');
 };
@@ -1015,12 +1024,12 @@ const _equalsEx = function (value1, value2) {
         return _entitiesEqualsEx(value1, value2);
     } else if (Array.isArray(value1)) {
         return _arraysEqualsEx(value1, value2);
-    } else if (_isMoney(value1)) {
-        return _isMoney(value2) && _equalsEx(_moneyVal(value1), _moneyVal(value2));
-    } else if (_isColour(value1)) {
-        return _isColour(value2) && _equalsEx(_colourVal(value1), _colourVal(value2));
-    } else if (_isHyperlink(value1)) {
-        return _isHyperlink(value2) && _equalsEx(_hyperlinkVal(value1), _hyperlinkVal(value2));
+    } else if (value1 !== null && _isMoney(value1)) {
+        return value2 !== null && _isMoney(value2) && _equalsEx(_moneyVal(value1), _moneyVal(value2));
+    } else if (value1 !== null && _isColour(value1)) {
+        return value2 !== null && _isColour(value2) && _equalsEx(_colourVal(value1), _colourVal(value2));
+    } else if (value1 !== null && _isHyperlink(value1)) {
+        return value2 !== null && _isHyperlink(value2) && _equalsEx(_hyperlinkVal(value1), _hyperlinkVal(value2));
     }
     return value1 === value2;
 };
@@ -1184,16 +1193,16 @@ const _toString = function (bindingValue, rootEntityType, property) {
         } else {
             return '' + bindingValue; // Integer value (or Long, but very rare)
         }
-    } else if (typeof bindingValue === 'object' && bindingValue.hasOwnProperty('amount') && bindingValue.hasOwnProperty('currency') && bindingValue.hasOwnProperty('taxPercent')) {
-        return '' + bindingValue.amount;
+    } else if (_isMoney(bindingValue)) {
+        return '' + _moneyVal(bindingValue); // represents number, so needs "'' +" conversion prefix
     } else if (Array.isArray(bindingValue)) {
         // Here we have standard logic of converting collections using the most common ', ' separator.
         // To apply custom separator please use _toStringForCollection method (see tg-entity-editor.convertToString).
         return _toStringForCollection(bindingValue, rootEntityType, property, STANDARD_COLLECTION_SEPARATOR);
-    } else if (typeof bindingValue === 'object' && bindingValue.hasOwnProperty('hashlessUppercasedColourValue')) { // Colour
-        return bindingValue.hashlessUppercasedColourValue;
-    } else if (typeof bindingValue === 'object' && bindingValue.hasOwnProperty('value')) { // Hyperlink
-        return bindingValue.value;
+    } else if (_isColour(bindingValue)) {
+        return _colourVal(bindingValue); // represents string -- no conversion required
+    } else if (_isHyperlink(bindingValue)) {
+        return _hyperlinkVal(bindingValue); // represents string -- no conversion required
     } else if (typeof bindingValue === 'object' && Object.getOwnPropertyNames(bindingValue).length === 0) {
         // TODO investigate where empty object is actually used to ensure proper conversion here
         return '';
