@@ -164,7 +164,7 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
             entry.setDesc(value.getDesc());
         }
         entry.setPropertyTitle(propTitle);
-        entry.setEntity(value);
+        entry.setEntity(AbstractUnionEntity.class.isAssignableFrom(value.getType()) ? ((AbstractUnionEntity)value).activeEntity() : value);
         entry.setHierarchyLevel(ReferenceHierarchyLevel.REFERENCE_INSTANCE);
         entry.setHasChildren(false);
         final List<ReferenceHierarchyActions> actions = new ArrayList<>();
@@ -200,7 +200,8 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
         instanceEntry.setId(((AbstractEntity<?>)instanceAggregate.get("entity")).getId());
         instanceEntry.setKey(instanceAggregate.get("entity").toString());
         instanceEntry.setDesc(instanceAggregate.get("entity.desc"));
-        instanceEntry.setEntity(instanceAggregate.get("entity"));
+        final AbstractEntity<?> entity = instanceAggregate.get("entity");
+        instanceEntry.setEntity(AbstractUnionEntity.class.isAssignableFrom(entity.getType()) ? ((AbstractUnionEntity)entity).activeEntity() : entity);
         instanceEntry.setHierarchyLevel(REFERENCE_BY_INSTANCE);
         instanceEntry.setHasChildren("Y".equals(instanceAggregate.get("hasDependencies")) || !getExistentReferenceProperties(instanceEntry.getEntity(), propFields).isEmpty());
         final List<ReferenceHierarchyActions> actions = new ArrayList<>();
