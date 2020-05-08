@@ -425,6 +425,21 @@
                 done();
             });
             
+            test('EntityTypeProp.shortCollectionKey: collection of raw values is not short-collectional and does not have shortCollectionKey', function (done) {
+                assert.strictEqual(reflector.getType(typeName7).prop('listOfStringsProp').shortCollectionKey(), null);
+                done();
+            });
+            
+            test('EntityTypeProp.shortCollectionKey: collection of entities is not is not always short-collectional and in that case does not have shortCollectionKey', function (done) {
+                assert.strictEqual(reflector.getType(typeName7).prop('setOfEntitiesProp').shortCollectionKey(), null);
+                done();
+            });
+            
+            test('EntityTypeProp.shortCollectionKey: short-collection does have shortCollectionKey', function (done) {
+                assert.strictEqual(reflector.getType(typeName7).prop('shortCollectionalProp').shortCollectionKey(), 'entityKey');
+                done();
+            });
+            
             // Testing the access to 'key' property of different kinds of entities.
             // This property is of high importance and should be much in sync with server-side implementation.
             // At this stage only equality and toString implementation is used when accessing properties.

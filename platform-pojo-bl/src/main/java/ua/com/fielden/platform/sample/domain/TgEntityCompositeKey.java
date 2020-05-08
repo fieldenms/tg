@@ -88,6 +88,20 @@ public class TgEntityCompositeKey extends AbstractPersistentEntity<DynamicEntity
     @IsProperty(String.class)
     private final List<String> listOfStringsProp = new ArrayList<>();
     
+    @IsProperty(TgEntityTwoEntityKeys.class)
+    private final Set<TgEntityTwoEntityKeys> shortCollectionalProp = new HashSet<>();
+    
+    @Observable
+    protected TgEntityCompositeKey setShortCollectionalProp(final Set<TgEntityTwoEntityKeys> shortCollectionalProp) {
+        this.shortCollectionalProp.clear();
+        this.shortCollectionalProp.addAll(shortCollectionalProp);
+        return this;
+    }
+    
+    public Set<TgEntityTwoEntityKeys> getShortCollectionalProp() {
+        return unmodifiableSet(shortCollectionalProp);
+    }
+    
     @Observable
     protected TgEntityCompositeKey setListOfStringsProp(final List<String> listProp) {
         this.listOfStringsProp.clear();
