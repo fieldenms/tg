@@ -373,6 +373,7 @@
             const typeName7 = 'ua.com.fielden.platform.sample.domain.TgEntityCompositeKey';
             const typeName8 = 'ua.com.fielden.platform.sample.domain.TgEntityCompositeBooleanKey';
             const typeName9 = 'ua.com.fielden.platform.sample.domain.TgEntityStringKey';
+            const typeName10 = 'ua.com.fielden.platform.sample.domain.TgEntityTwoEntityKeys';
             
             test('EntityTypeProp.type: boolean prop type is defined', function (done) {
                 assert.strictEqual(reflector.getType(typeName8).prop('booleanKey').type(), 'boolean');
@@ -437,6 +438,21 @@
             
             test('EntityTypeProp.shortCollectionKey: short-collection does have shortCollectionKey', function (done) {
                 assert.strictEqual(reflector.getType(typeName7).prop('shortCollectionalProp').shortCollectionKey(), 'entityKey');
+                done();
+            });
+            
+            test('EntityType.prop: one-level dot-notated property is defined', function (done) {
+                assert.strictEqual(reflector.getType(typeName10).prop('entityKey.key'), reflector.getType(typeName9).prop('key'));
+                done();
+            });
+            
+            test('EntityType.prop: two-level dot-notated property is defined', function (done) {
+                assert.strictEqual(reflector.getType(typeName10).prop('parentKey.dateKey'), reflector.getType(typeName7).prop('dateKey'));
+                done();
+            });
+            
+            test('EntityType.prop: three-level dot-notated property is defined', function (done) {
+                assert.strictEqual(reflector.getType(typeName10).prop('parentKey.entityKey.key'), reflector.getType(typeName9).prop('key'));
                 done();
             });
             

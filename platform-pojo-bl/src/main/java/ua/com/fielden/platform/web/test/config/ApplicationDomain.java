@@ -37,6 +37,7 @@ import ua.com.fielden.platform.sample.domain.TgEntityForColourMaster;
 import ua.com.fielden.platform.sample.domain.TgEntityIntegerKey;
 import ua.com.fielden.platform.sample.domain.TgEntityLongKey;
 import ua.com.fielden.platform.sample.domain.TgEntityStringKey;
+import ua.com.fielden.platform.sample.domain.TgEntityTwoEntityKeys;
 import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependency;
 import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDescriptor;
 import ua.com.fielden.platform.sample.domain.TgEntityWithTimeZoneDates;
@@ -184,6 +185,7 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgEntityEntityKey.class);
         add(TgEntityCompositeKey.class);
         add(TgEntityCompositeBooleanKey.class);
+        add(TgEntityTwoEntityKeys.class);
     }
 
     @Override
