@@ -97,86 +97,265 @@
                 done();
             });
             
-            // Money keys are not supported as part of Hibernate configuration; Colour and Hyperlink are not Comparable and thus not suitable for key definition too.
-            
             test('Entity.toString: Entity key converts', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityEntityKey');
                 entity.key = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
                 entity.key.key = 'KEY1';
-                assert.equal(entity.toString(), 'KEY1');
+                assert.strictEqual(entity.toString(), 'KEY1');
                 done();
             });
+            // (Money keys are not supported as part of Hibernate configuration; Colour and Hyperlink are not Comparable and thus not suitable for key definition too.)
             
-            test('tg_convert: key converts (empty)', function (done) {
+            test('tg_convert simple entity: key converts (empty)', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
                 entity.key = null;
                 assert.strictEqual(reflector.tg_convert(entity), '[key is not assigned]');
                 done();
             });
             
-            test('tg_convert: String key converts', function (done) {
+            test('tg_convert simple entity: String key converts', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
                 entity.key = 'KEY1';
                 assert.strictEqual(reflector.tg_convert(entity), 'KEY1');
                 done();
             });
             
-            test('tg_convert: String key converts (empty string)', function (done) {
+            test('tg_convert simple entity: String key converts (empty string)', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
                 entity.key = '';
                 assert.strictEqual(reflector.tg_convert(entity), '[key is not assigned]');
                 done();
             });
             
-            test('tg_convert: boolean key converts (true)', function (done) {
+            test('tg_convert simple entity: boolean key converts (true)', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityBooleanKey');
                 entity.key = true;
                 assert.strictEqual(reflector.tg_convert(entity), 'true');
                 done();
             });
             
-            test('tg_convert: boolean key converts (empty)', function (done) {
+            test('tg_convert simple entity: boolean key converts (empty)', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityBooleanKey');
                 entity.key = null;
                 assert.strictEqual(reflector.tg_convert(entity), 'false');
                 done();
             });
             
-            test('tg_convert: boolean key converts (false)', function (done) {
+            test('tg_convert simple entity: boolean key converts (false)', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityBooleanKey');
                 entity.key = false;
                 assert.strictEqual(reflector.tg_convert(entity), 'false');
                 done();
             });
             
-            test('tg_convert: Date key converts', function (done) {
+            test('tg_convert simple entity: Date key converts', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityDateKey');
                 entity.key = 0;
                 assert.strictEqual(reflector.tg_convert(entity), _millisDateRepresentation(entity.key, null, null));
                 done();
             });
             
-            test('tg_convert: Integer key converts', function (done) {
+            test('tg_convert simple entity: Integer key converts', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityIntegerKey');
                 entity.key = 1700;
                 assert.strictEqual(reflector.tg_convert(entity), '1700');
                 done();
             });
             
-            test('tg_convert: Long key converts', function (done) {
+            test('tg_convert simple entity: Long key converts', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityLongKey');
                 entity.key = 17000000000;
                 assert.strictEqual(reflector.tg_convert(entity), '17000000000');
                 done();
             });
             
-            // Money keys are not supported as part of Hibernate configuration; Colour and Hyperlink are not Comparable and thus not suitable for key definition too.
-            
-            test('tg_convert: Entity key converts', function (done) {
+            test('tg_convert simple entity: Entity key converts', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityEntityKey');
                 entity.key = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
                 entity.key.key = 'KEY1';
                 assert.strictEqual(reflector.tg_convert(entity), 'KEY1');
+                done();
+            });
+            // (Money keys are not supported as part of Hibernate configuration; Colour and Hyperlink are not Comparable and thus not suitable for key definition too.)
+            
+            test('tg_convert composite entity: key converts (empty)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.stringKey = null;
+                entity.booleanKey = null;
+                entity.dateKey = null;
+                entity.integerKey = null;
+                entity.longKey = null;
+                entity.moneyKey = null;
+                entity.colourKey = null;
+                entity.hyperlinkKey = null;
+                entity.entityKey = null;
+                assert.strictEqual(reflector.tg_convert(entity), '[key is not assigned]');
+                done();
+            });
+            
+            test('tg_convert composite entity: String key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.stringKey = 'KEY1';
+                entity.booleanKey = null;
+                entity.dateKey = null;
+                entity.integerKey = null;
+                entity.longKey = null;
+                entity.moneyKey = null;
+                entity.colourKey = null;
+                entity.hyperlinkKey = null;
+                entity.entityKey = null;
+                assert.strictEqual(reflector.tg_convert(entity), 'KEY1');
+                done();
+            });
+            
+            test('tg_convert composite entity: String key converts (empty string)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.stringKey = '';
+                entity.booleanKey = null;
+                entity.dateKey = null;
+                entity.integerKey = null;
+                entity.longKey = null;
+                entity.moneyKey = null;
+                entity.colourKey = null;
+                entity.hyperlinkKey = null;
+                entity.entityKey = null;
+                assert.strictEqual(reflector.tg_convert(entity), '[key is not assigned]');
+                done();
+            });
+            
+            test('tg_convert composite entity: boolean key converts (true)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.stringKey = null;
+                entity.booleanKey = true;
+                entity.dateKey = null;
+                entity.integerKey = null;
+                entity.longKey = null;
+                entity.moneyKey = null;
+                entity.colourKey = null;
+                entity.hyperlinkKey = null;
+                entity.entityKey = null;
+                assert.strictEqual(reflector.tg_convert(entity), 'true');
+                done();
+            });
+            
+            test('tg_convert composite entity: boolean key converts (false)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.stringKey = null;
+                entity.booleanKey = false;
+                entity.dateKey = null;
+                entity.integerKey = null;
+                entity.longKey = null;
+                entity.moneyKey = null;
+                entity.colourKey = null;
+                entity.hyperlinkKey = null;
+                entity.entityKey = null;
+                assert.strictEqual(reflector.tg_convert(entity), 'false');
+                done();
+            });
+            
+            test('tg_convert composite entity: Date key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.stringKey = null;
+                entity.booleanKey = null;
+                entity.dateKey = 0;
+                entity.integerKey = null;
+                entity.longKey = null;
+                entity.moneyKey = null;
+                entity.colourKey = null;
+                entity.hyperlinkKey = null;
+                entity.entityKey = null;
+                assert.strictEqual(reflector.tg_convert(entity), _millisDateRepresentation(entity.dateKey, null, null));
+                done();
+            });
+            
+            test('tg_convert composite entity: Integer key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.stringKey = null;
+                entity.booleanKey = null;
+                entity.dateKey = null;
+                entity.integerKey = 1700;
+                entity.longKey = null;
+                entity.moneyKey = null;
+                entity.colourKey = null;
+                entity.hyperlinkKey = null;
+                entity.entityKey = null;
+                assert.strictEqual(reflector.tg_convert(entity), '1700');
+                done();
+            });
+            
+            test('tg_convert composite entity: Long key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.stringKey = null;
+                entity.booleanKey = null;
+                entity.dateKey = null;
+                entity.integerKey = null;
+                entity.longKey = 17000000000;
+                entity.moneyKey = null;
+                entity.colourKey = null;
+                entity.hyperlinkKey = null;
+                entity.entityKey = null;
+                assert.strictEqual(reflector.tg_convert(entity), '17000000000');
+                done();
+            });
+            
+            test('tg_convert composite entity: Entity key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.stringKey = null;
+                entity.booleanKey = null;
+                entity.dateKey = null;
+                entity.integerKey = null;
+                entity.longKey = null;
+                entity.moneyKey = null;
+                entity.colourKey = null;
+                entity.hyperlinkKey = null;
+                entity.entityKey = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
+                entity.entityKey.key = 'KEY1';
+                assert.strictEqual(reflector.tg_convert(entity), 'KEY1');
+                done();
+            });
+            
+            test('tg_convert composite entity: Money key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.stringKey = null;
+                entity.booleanKey = null;
+                entity.dateKey = null;
+                entity.integerKey = null;
+                entity.longKey = null;
+                entity.moneyKey = { amount: 1700, currency: 'AUD', taxPercent: null };
+                entity.colourKey = null;
+                entity.hyperlinkKey = null;
+                entity.entityKey = null;
+                assert.strictEqual(reflector.tg_convert(entity), '1700');
+                done();
+            });
+            
+            test('tg_convert composite entity: Colour key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.stringKey = null;
+                entity.booleanKey = null;
+                entity.dateKey = null;
+                entity.integerKey = null;
+                entity.longKey = null;
+                entity.moneyKey = null;
+                entity.colourKey = { hashlessUppercasedColourValue: 'FFCC80' };
+                entity.hyperlinkKey = null;
+                entity.entityKey = null;
+                assert.strictEqual(reflector.tg_convert(entity), 'FFCC80');
+                done();
+            });
+            
+            test('tg_convert composite entity: Hyperlink key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.stringKey = null;
+                entity.booleanKey = null;
+                entity.dateKey = null;
+                entity.integerKey = null;
+                entity.longKey = null;
+                entity.moneyKey = null;
+                entity.colourKey = null;
+                entity.hyperlinkKey = { value: 'https://www.example.com' };
+                entity.entityKey = null;
+                assert.strictEqual(reflector.tg_convert(entity), 'https://www.example.com');
                 done();
             });
             
