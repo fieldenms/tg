@@ -37,13 +37,6 @@ public class TgEntityCompositeKey extends AbstractPersistentEntity<DynamicEntity
     
     @IsProperty
     @MapTo
-    @Title("Boolean Key")
-    @CompositeKeyMember(2)
-    @Optional
-    private boolean booleanKey;
-    
-    @IsProperty
-    @MapTo
     @Title("Date Key")
     @CompositeKeyMember(3)
     @Optional
@@ -159,16 +152,6 @@ public class TgEntityCompositeKey extends AbstractPersistentEntity<DynamicEntity
     
     public Date getDateKey() {
         return dateKey;
-    }
-    
-    @Observable
-    public TgEntityCompositeKey setBooleanKey(final boolean booleanKey) {
-        this.booleanKey = booleanKey;
-        return this;
-    }
-    
-    public boolean getBooleanKey() {
-        return booleanKey;
     }
     
     @Observable

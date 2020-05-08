@@ -181,7 +181,6 @@
             test('tg_convert composite entity: key converts (empty)', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
                 entity.stringKey = null;
-                entity.booleanKey = null;
                 entity.dateKey = null;
                 entity.integerKey = null;
                 entity.longKey = null;
@@ -196,7 +195,6 @@
             test('tg_convert composite entity: String key converts', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
                 entity.stringKey = 'KEY1';
-                entity.booleanKey = null;
                 entity.dateKey = null;
                 entity.integerKey = null;
                 entity.longKey = null;
@@ -211,7 +209,6 @@
             test('tg_convert composite entity: String key converts (empty string)', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
                 entity.stringKey = '';
-                entity.booleanKey = null;
                 entity.dateKey = null;
                 entity.integerKey = null;
                 entity.longKey = null;
@@ -224,31 +221,22 @@
             });
             
             test('tg_convert composite entity: boolean key converts (true)', function (done) {
-                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
-                entity.stringKey = null;
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeBooleanKey');
                 entity.booleanKey = true;
-                entity.dateKey = null;
-                entity.integerKey = null;
-                entity.longKey = null;
-                entity.moneyKey = null;
-                entity.colourKey = null;
-                entity.hyperlinkKey = null;
-                entity.entityKey = null;
                 assert.strictEqual(reflector.tg_convert(entity), 'true');
                 done();
             });
             
+            test('tg_convert composite entity: boolean key converts (empty)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeBooleanKey');
+                entity.booleanKey = null;
+                assert.strictEqual(reflector.tg_convert(entity), 'false');
+                done();
+            });
+            
             test('tg_convert composite entity: boolean key converts (false)', function (done) {
-                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
-                entity.stringKey = null;
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeBooleanKey');
                 entity.booleanKey = false;
-                entity.dateKey = null;
-                entity.integerKey = null;
-                entity.longKey = null;
-                entity.moneyKey = null;
-                entity.colourKey = null;
-                entity.hyperlinkKey = null;
-                entity.entityKey = null;
                 assert.strictEqual(reflector.tg_convert(entity), 'false');
                 done();
             });
@@ -256,7 +244,6 @@
             test('tg_convert composite entity: Date key converts', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
                 entity.stringKey = null;
-                entity.booleanKey = null;
                 entity.dateKey = 0;
                 entity.integerKey = null;
                 entity.longKey = null;
@@ -271,7 +258,6 @@
             test('tg_convert composite entity: Integer key converts', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
                 entity.stringKey = null;
-                entity.booleanKey = null;
                 entity.dateKey = null;
                 entity.integerKey = 1700;
                 entity.longKey = null;
@@ -286,7 +272,6 @@
             test('tg_convert composite entity: Long key converts', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
                 entity.stringKey = null;
-                entity.booleanKey = null;
                 entity.dateKey = null;
                 entity.integerKey = null;
                 entity.longKey = 17000000000;
@@ -301,7 +286,6 @@
             test('tg_convert composite entity: Entity key converts', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
                 entity.stringKey = null;
-                entity.booleanKey = null;
                 entity.dateKey = null;
                 entity.integerKey = null;
                 entity.longKey = null;
@@ -317,7 +301,6 @@
             test('tg_convert composite entity: Money key converts', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
                 entity.stringKey = null;
-                entity.booleanKey = null;
                 entity.dateKey = null;
                 entity.integerKey = null;
                 entity.longKey = null;
@@ -332,7 +315,6 @@
             test('tg_convert composite entity: Colour key converts', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
                 entity.stringKey = null;
-                entity.booleanKey = null;
                 entity.dateKey = null;
                 entity.integerKey = null;
                 entity.longKey = null;
@@ -347,7 +329,6 @@
             test('tg_convert composite entity: Hyperlink key converts', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
                 entity.stringKey = null;
-                entity.booleanKey = null;
                 entity.dateKey = null;
                 entity.integerKey = null;
                 entity.longKey = null;
@@ -362,7 +343,6 @@
             test('tg_convert composite entity: custom separator is used and order of keys is correct', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
                 entity.stringKey = 'KEY1';
-                entity.booleanKey = true;
                 entity.dateKey = 0;
                 entity.integerKey = 1500;
                 entity.longKey = 16000000000;
@@ -371,14 +351,13 @@
                 entity.hyperlinkKey = { value: 'https://www.example.com' };
                 entity.entityKey = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
                 entity.entityKey.key = 'KEY2';
-                assert.strictEqual(reflector.tg_convert(entity), 'KEY1:true:' + _millisDateRepresentation(entity.dateKey, null, null) + ':1500:16000000000:1700:FFCC80:https://www.example.com:KEY2');
+                assert.strictEqual(reflector.tg_convert(entity), 'KEY1:' + _millisDateRepresentation(entity.dateKey, null, null) + ':1500:16000000000:1700:FFCC80:https://www.example.com:KEY2');
                 done();
             });
             
-            test('tg_convert composite entity: null values are skipped regardless of their types', function (done) {
+            test('tg_convert composite entity: empty values are skipped regardless of their types', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
                 entity.stringKey = 'KEY1';
-                entity.booleanKey = null;
                 entity.dateKey = 0;
                 entity.integerKey = null;
                 entity.longKey = 16000000000;

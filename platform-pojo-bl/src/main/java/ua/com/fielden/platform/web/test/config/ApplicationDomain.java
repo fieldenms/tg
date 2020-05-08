@@ -29,8 +29,9 @@ import ua.com.fielden.platform.sample.domain.TgCreatePersistentStatusAction;
 import ua.com.fielden.platform.sample.domain.TgDeletionTestEntity;
 import ua.com.fielden.platform.sample.domain.TgDummyAction;
 import ua.com.fielden.platform.sample.domain.TgEntityBooleanKey;
-import ua.com.fielden.platform.sample.domain.TgEntityDateKey;
+import ua.com.fielden.platform.sample.domain.TgEntityCompositeBooleanKey;
 import ua.com.fielden.platform.sample.domain.TgEntityCompositeKey;
+import ua.com.fielden.platform.sample.domain.TgEntityDateKey;
 import ua.com.fielden.platform.sample.domain.TgEntityEntityKey;
 import ua.com.fielden.platform.sample.domain.TgEntityForColourMaster;
 import ua.com.fielden.platform.sample.domain.TgEntityIntegerKey;
@@ -182,6 +183,7 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgEntityLongKey.class);
         add(TgEntityEntityKey.class);
         add(TgEntityCompositeKey.class);
+        add(TgEntityCompositeBooleanKey.class);
     }
 
     @Override

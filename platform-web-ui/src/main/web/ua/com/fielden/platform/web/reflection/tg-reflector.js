@@ -659,25 +659,7 @@ const _createDynamicEntityKeyPrototype = function () {
     DynamicEntityKey.prototype._convertDynamicEntityKey = function () {
         const compositeEntity = this._entity;
         const type = compositeEntity.constructor.prototype.type.call(compositeEntity);
-        const compositeKeyNames = type.compositeKeyNames();
-        const compositeKeySeparator = type.compositeKeySeparator();
-
-        let str = "";
-        let first = true;
-        for (let i = 0; i < compositeKeyNames.length; i++) {
-            const compositePartName = compositeKeyNames[i];
-            const compositePart = compositeEntity.get(compositePartName);
-            if (compositePart !== null) {
-                const strPart = _toString(_convert(compositePart), type, compositePartName);
-                if (first) {
-                    str = str + strPart;
-                    first = false;
-                } else {
-                    str = str + compositeKeySeparator + strPart;
-                }
-            }
-        }
-        return str;
+        return _toStringForKeys(type.compositeKeyNames().map(name => [name, compositeEntity.get(name)]), type, type.compositeKeySeparator());
     };
 
     /**
@@ -1269,6 +1251,21 @@ const _toStringForCollection = function (bindingValue, rootEntityType, property,
             .filter(str => str !== '') // filter out empty strings not to include them into resulting string (especially important for functions that use 'mappingFunction')
             .join(separator);
     }
+};
+
+/**
+ * Converts composite entity's keyNamesAndValues to string.
+ * 
+ * @param keyNamesAndValues -- non-empty array of elements (also arrays) consisting on [0] index of composite key property name and on [1] index of actual value of that composite key
+ * @param entityType -- the type of composite entity
+ * @param separator -- string value to glue string representations of values with
+ * @param mappingFunction -- maps resulting elements before actual element-by-element toString conversion and glueing them all together; this is optional
+ */
+const _toStringForKeys = function (keyNamesAndValues, entityType, separator, mappingFunction) {
+    return keyNamesAndValues
+        .map(keyNameAndValue => _toString(_convert(mappingFunction ? mappingFunction(keyNameAndValue[1]) : keyNameAndValue[1]), entityType, keyNameAndValue[0]))
+        .filter(str => str !== '') // filter out empty strings not to include them into resulting string (especially important for functions that use 'mappingFunction')
+        .join(separator);
 };
 
 /**
