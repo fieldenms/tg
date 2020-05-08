@@ -843,10 +843,19 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
     }
 
     /** 
-     * Returns entity type property with the specified name.
+     * Finds EntityTypeProp meta-info instance from specified 'name'. Returns 'null' for property '' meaning there is no EntityTypeProp for "entity itself".
+     * 
+     * @param name -- property name; can be dot-notated
      */
     EntityType.prototype.prop = function (name) {
-        return typeof this._props !== 'undefined' && this._props && this._props[name] ? this._props[name] : null;
+        const dotIndex = name.indexOf('.');
+        if (dotIndex > -1) {
+            const first = name.slice(0, dotIndex);
+            const rest = name.slice(dotIndex + 1);
+            return this.prop(first).type().prop(rest);
+        } else {
+            return typeof this._props !== 'undefined' && this._props && this._props[name] ? this._props[name] : null;
+        }
     }
 
     /** 
@@ -1144,23 +1153,6 @@ const _convertFullPropertyValue = function (bindingView, propertyName, fullValue
 };
 
 /**
- * Finds EntityTypeProp meta-info instance from 'entityType' and 'property'. Returns 'null' for property '' meaning there is no EntityTypeProp for "entity itself".
- * 
- * @param entityType -- entity type
- * @param property -- property name; can be dot-notated
- */
-const _findProperty = function (entityType, property) {
-    const dotIndex = property.indexOf('.');
-    if (dotIndex > -1) {
-        const first = property.slice(0, dotIndex);
-        const rest = property.slice(dotIndex + 1);
-        return _findProperty(entityType.prop(first).type(), rest);
-    } else {
-        return entityType.prop(property);
-    }
-};
-
-/**
  * Determines the type of property from 'entityType' and 'property'.
  * 
  * @param entityType -- entity type
@@ -1168,7 +1160,7 @@ const _findProperty = function (entityType, property) {
  */
 const _determinePropertyType = function (entityType, property) {
     return '' === property ? entityType : 
-        (entityType.isCompositeEntity() && 'key' === property ? null : _findProperty(entityType, property).type());
+        (entityType.isCompositeEntity() && 'key' === property ? null : entityType.prop(property).type());
 };
 
 /**
@@ -1188,7 +1180,7 @@ const _toString = function (bindingValue, rootEntityType, property) {
         return bindingValue; // this covers converted entity-typed properties and string properties -- no further conversion required
     } else if (typeof bindingValue === 'number') {
         if (propertyType === 'Date') {
-            const prop = _findProperty(rootEntityType, property);
+            const prop = rootEntityType.prop(property);
             return _millisDateRepresentation(bindingValue, prop.timeZone(), prop.datePortion());
         } else {
             return '' + bindingValue; // Integer value (or Long, but very rare)
@@ -1221,7 +1213,7 @@ const _toString = function (bindingValue, rootEntityType, property) {
  */
 const _toStringForDisplay = function (bindingValue, rootEntityType, property, locale) {
     const propertyType = _determinePropertyType(rootEntityType, property);
-    const prop = _findProperty(rootEntityType, property);
+    const prop = rootEntityType.prop(property);
     // for all numeric types and Colour we have non-standard display formatting; all other types will be displayed the same fashion as it is in standard conversion
     if (propertyType === 'Colour') {
         return bindingValue === null ? '' : '#' + _toString(bindingValue, rootEntityType, property);
@@ -1250,7 +1242,7 @@ const _toStringForCollection = function (bindingValue, rootEntityType, property,
         return '';
     } else {
         let resultingCollection = bindingValue;
-        const entityTypeProp = _findProperty(rootEntityType, property);
+        const entityTypeProp = rootEntityType.prop(property);
         const shortCollectionKey = entityTypeProp.shortCollectionKey();
         if (shortCollectionKey) { // existence of shortCollectionKey indicates that the property is indeed "short collection"
             resultingCollection = bindingValue.map(entity => entity.get(shortCollectionKey));
