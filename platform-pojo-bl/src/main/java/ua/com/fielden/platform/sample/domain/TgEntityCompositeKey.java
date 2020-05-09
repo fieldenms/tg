@@ -82,8 +82,14 @@ public class TgEntityCompositeKey extends AbstractPersistentEntity<DynamicEntity
     @Optional
     private TgEntityStringKey entityKey;
     
+    @IsProperty
+    @MapTo
+    @CompositeKeyMember(10)
+    @Optional
+    private TgEntityCompositeKey selfKey;
+    
     @IsProperty(TgEntityStringKey.class)
-    private final Set<TgEntityStringKey> setOfEntitiesProp = new HashSet<>();
+    private final Set<TgEntityCompositeKey> setOfEntitiesProp = new HashSet<>();
     
     @IsProperty(String.class)
     private final List<String> listOfStringsProp = new ArrayList<>();
@@ -114,14 +120,24 @@ public class TgEntityCompositeKey extends AbstractPersistentEntity<DynamicEntity
     }
     
     @Observable
-    protected TgEntityCompositeKey setSetOfEntitiesProp(final Set<TgEntityStringKey> setOfEntitiesProp) {
+    protected TgEntityCompositeKey setSetOfEntitiesProp(final Set<TgEntityCompositeKey> setOfEntitiesProp) {
         this.setOfEntitiesProp.clear();
         this.setOfEntitiesProp.addAll(setOfEntitiesProp);
         return this;
     }
     
-    public Set<TgEntityStringKey> getSetOfEntitiesProp() {
+    public Set<TgEntityCompositeKey> getSetOfEntitiesProp() {
         return unmodifiableSet(setOfEntitiesProp);
+    }
+    
+    @Observable
+    public TgEntityCompositeKey setSelfKey(final TgEntityCompositeKey selfKey) {
+        this.selfKey = selfKey;
+        return this;
+    }
+    
+    public TgEntityCompositeKey getSelfKey() {
+        return selfKey;
     }
     
     @Observable

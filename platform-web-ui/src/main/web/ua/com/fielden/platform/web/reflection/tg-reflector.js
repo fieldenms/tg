@@ -1250,7 +1250,7 @@ const _toStringForCollection = function (bindingValue, rootEntityType, property,
         const entityTypeProp = rootEntityType.prop(property);
         const shortCollectionKey = entityTypeProp.shortCollectionKey();
         if (shortCollectionKey) { // existence of shortCollectionKey indicates that the property is indeed "short collection"
-            resultingCollection = bindingValue.map(entity => entity.get(shortCollectionKey));
+            resultingCollection = bindingValue.map(entity => entity ? entity.get(shortCollectionKey) : entity);
         }
         return resultingCollection
             .map(element => _toString(_convert(mappingFunction ? mappingFunction(element) : element), rootEntityType, property)) // note that collection of 'boolean'/'Date' values are not [yet] supported due to non-existence of collection element type on the client EntityTypeProp for collectional property (see _toString method); this looks like artificial collections to be supported; however they can be, if needed 
@@ -1600,7 +1600,7 @@ export const TgReflector = Polymer({
      * @param   opts.separator -- string value to glue string representations of collectional values with; ', ' by default
      * @param   opts.mappingFunction -- maps resulting collectional elements before actual element-by-element toString conversion and glueing them all together; optional
      *    otherwise
-     *        standard toString convertion
+     *        standard toString conversion
      */
     tg_toString: function (value, rootEntityType, property, opts) {
         const isBindingValue = opts && opts.bindingValue;
