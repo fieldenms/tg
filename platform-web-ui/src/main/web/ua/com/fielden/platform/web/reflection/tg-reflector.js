@@ -1188,7 +1188,7 @@ const _toString = function (bindingValue, rootEntityType, property) {
             const prop = rootEntityType.prop(property);
             return _millisDateRepresentation(bindingValue, prop.timeZone(), prop.datePortion());
         } else {
-            return '' + bindingValue; // Integer value (or Long, but very rare)
+            return '' + bindingValue; // Integer value (or Long, but very rare) and BigDecimal value
         }
     } else if (_isMoney(bindingValue)) {
         return '' + _moneyVal(bindingValue); // represents number, so needs "'' +" conversion prefix

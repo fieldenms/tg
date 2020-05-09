@@ -3,6 +3,7 @@ package ua.com.fielden.platform.sample.domain;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableSet;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -58,33 +59,39 @@ public class TgEntityCompositeKey extends AbstractPersistentEntity<DynamicEntity
     @Optional
     private Long longKey;
     
-    @IsProperty
+    @IsProperty(precision = 18, scale = 4)
     @MapTo
     @CompositeKeyMember(6)
     @Optional
-    private Money moneyKey;
+    private BigDecimal bigDecimalKey;
     
     @IsProperty
     @MapTo
     @CompositeKeyMember(7)
     @Optional
-    private Colour colourKey;
+    private Money moneyKey;
     
     @IsProperty
     @MapTo
     @CompositeKeyMember(8)
     @Optional
-    private Hyperlink hyperlinkKey;
+    private Colour colourKey;
     
     @IsProperty
     @MapTo
     @CompositeKeyMember(9)
     @Optional
-    private TgEntityStringKey entityKey;
+    private Hyperlink hyperlinkKey;
     
     @IsProperty
     @MapTo
     @CompositeKeyMember(10)
+    @Optional
+    private TgEntityStringKey entityKey;
+    
+    @IsProperty
+    @MapTo
+    @CompositeKeyMember(11)
     @Optional
     private TgEntityCompositeKey selfKey;
     
@@ -178,6 +185,16 @@ public class TgEntityCompositeKey extends AbstractPersistentEntity<DynamicEntity
     
     public Money getMoneyKey() {
         return moneyKey;
+    }
+    
+    @Observable
+    public TgEntityCompositeKey setBigDecimalKey(final BigDecimal bigDecimalKey) {
+        this.bigDecimalKey = bigDecimalKey;
+        return this;
+    }
+    
+    public BigDecimal getBigDecimalKey() {
+        return bigDecimalKey;
     }
     
     @Observable

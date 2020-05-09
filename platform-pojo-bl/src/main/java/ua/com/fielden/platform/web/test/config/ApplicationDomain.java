@@ -28,6 +28,7 @@ import ua.com.fielden.platform.sample.domain.TgCoordinate;
 import ua.com.fielden.platform.sample.domain.TgCreatePersistentStatusAction;
 import ua.com.fielden.platform.sample.domain.TgDeletionTestEntity;
 import ua.com.fielden.platform.sample.domain.TgDummyAction;
+import ua.com.fielden.platform.sample.domain.TgEntityBigDecimalKey;
 import ua.com.fielden.platform.sample.domain.TgEntityBooleanKey;
 import ua.com.fielden.platform.sample.domain.TgEntityCompositeBooleanKey;
 import ua.com.fielden.platform.sample.domain.TgEntityCompositeKey;
@@ -186,6 +187,7 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgEntityCompositeKey.class);
         add(TgEntityCompositeBooleanKey.class);
         add(TgEntityTwoEntityKeys.class);
+        add(TgEntityBigDecimalKey.class);
     }
 
     @Override

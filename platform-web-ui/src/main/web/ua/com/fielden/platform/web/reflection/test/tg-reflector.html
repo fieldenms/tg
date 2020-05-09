@@ -97,6 +97,13 @@
                 done();
             });
             
+            test('Entity.toString: BigDecimal key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityBigDecimalKey');
+                entity.key = 1700.1234;
+                assert.strictEqual(entity.toString(), '1700.1234');
+                done();
+            });
+            
             test('Entity.toString: Entity key converts', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityEntityKey');
                 entity.key = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
@@ -169,6 +176,13 @@
                 done();
             });
             
+            test('tg_convert simple entity: BigDecimal key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityBigDecimalKey');
+                entity.key = 1700.1234;
+                assert.strictEqual(reflector.tg_convert(entity), '1700.1234');
+                done();
+            });
+            
             test('tg_convert simple entity: Entity key converts', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityEntityKey');
                 entity.key = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
@@ -184,6 +198,7 @@
                 entity.dateKey = null;
                 entity.integerKey = null;
                 entity.longKey = null;
+                entity.bigDecimalKey = null;
                 entity.moneyKey = null;
                 entity.colourKey = null;
                 entity.hyperlinkKey = null;
@@ -199,6 +214,7 @@
                 entity.dateKey = null;
                 entity.integerKey = null;
                 entity.longKey = null;
+                entity.bigDecimalKey = null;
                 entity.moneyKey = null;
                 entity.colourKey = null;
                 entity.hyperlinkKey = null;
@@ -214,6 +230,7 @@
                 entity.dateKey = null;
                 entity.integerKey = null;
                 entity.longKey = null;
+                entity.bigDecimalKey = null;
                 entity.moneyKey = null;
                 entity.colourKey = null;
                 entity.hyperlinkKey = null;
@@ -250,6 +267,7 @@
                 entity.dateKey = 0;
                 entity.integerKey = null;
                 entity.longKey = null;
+                entity.bigDecimalKey = null;
                 entity.moneyKey = null;
                 entity.colourKey = null;
                 entity.hyperlinkKey = null;
@@ -265,6 +283,7 @@
                 entity.dateKey = null;
                 entity.integerKey = 1700;
                 entity.longKey = null;
+                entity.bigDecimalKey = null;
                 entity.moneyKey = null;
                 entity.colourKey = null;
                 entity.hyperlinkKey = null;
@@ -280,6 +299,7 @@
                 entity.dateKey = null;
                 entity.integerKey = null;
                 entity.longKey = 17000000000;
+                entity.bigDecimalKey = null;
                 entity.moneyKey = null;
                 entity.colourKey = null;
                 entity.hyperlinkKey = null;
@@ -289,12 +309,29 @@
                 done();
             });
             
+            test('tg_convert composite entity: BigDecimal key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.stringKey = null;
+                entity.dateKey = null;
+                entity.integerKey = null;
+                entity.longKey = null;
+                entity.bigDecimalKey = 1700.1234;
+                entity.moneyKey = null;
+                entity.colourKey = null;
+                entity.hyperlinkKey = null;
+                entity.entityKey = null;
+                entity.selfKey = null;
+                assert.strictEqual(reflector.tg_convert(entity), '1700.1234');
+                done();
+            });
+            
             test('tg_convert composite entity: Entity key converts', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
                 entity.stringKey = null;
                 entity.dateKey = null;
                 entity.integerKey = null;
                 entity.longKey = null;
+                entity.bigDecimalKey = null;
                 entity.moneyKey = null;
                 entity.colourKey = null;
                 entity.hyperlinkKey = null;
@@ -311,6 +348,7 @@
                 entity.dateKey = null;
                 entity.integerKey = null;
                 entity.longKey = null;
+                entity.bigDecimalKey = null;
                 entity.moneyKey = { amount: 1700, currency: 'AUD', taxPercent: null };
                 entity.colourKey = null;
                 entity.hyperlinkKey = null;
@@ -326,6 +364,7 @@
                 entity.dateKey = null;
                 entity.integerKey = null;
                 entity.longKey = null;
+                entity.bigDecimalKey = null;
                 entity.moneyKey = null;
                 entity.colourKey = { hashlessUppercasedColourValue: 'FFCC80' };
                 entity.hyperlinkKey = null;
@@ -341,6 +380,7 @@
                 entity.dateKey = null;
                 entity.integerKey = null;
                 entity.longKey = null;
+                entity.bigDecimalKey = null;
                 entity.moneyKey = null;
                 entity.colourKey = null;
                 entity.hyperlinkKey = { value: 'https://www.example.com' };
@@ -356,13 +396,14 @@
                 entity.dateKey = 0;
                 entity.integerKey = 1500;
                 entity.longKey = 16000000000;
+                entity.bigDecimalKey = 1700.1234;
                 entity.moneyKey = { amount: 1700, currency: 'AUD', taxPercent: null };
                 entity.colourKey = { hashlessUppercasedColourValue: 'FFCC80' };
                 entity.hyperlinkKey = { value: 'https://www.example.com' };
                 entity.entityKey = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
                 entity.entityKey.key = 'KEY2';
                 entity.selfKey = null;
-                assert.strictEqual(reflector.tg_convert(entity), 'KEY1:' + _millisDateRepresentation(entity.dateKey, null, null) + ':1500:16000000000:1700:FFCC80:https://www.example.com:KEY2');
+                assert.strictEqual(reflector.tg_convert(entity), 'KEY1:' + _millisDateRepresentation(entity.dateKey, null, null) + ':1500:16000000000:1700.1234:1700:FFCC80:https://www.example.com:KEY2');
                 done();
             });
             
@@ -372,6 +413,7 @@
                 entity.dateKey = 0;
                 entity.integerKey = null;
                 entity.longKey = 16000000000;
+                entity.bigDecimalKey = null;
                 entity.moneyKey = null;
                 entity.colourKey = { hashlessUppercasedColourValue: 'FFCC80' };
                 entity.hyperlinkKey = null;
@@ -409,6 +451,11 @@
             
             test('EntityTypeProp.type: Long prop type is defined', function (done) {
                 assert.strictEqual(reflector.getType(typeName7).prop('longKey').type(), 'Long');
+                done();
+            });
+            
+            test('EntityTypeProp.type: BigDecimal prop type is defined', function (done) {
+                assert.strictEqual(reflector.getType(typeName7).prop('bigDecimalKey').type(), 'BigDecimal');
                 done();
             });
             
@@ -493,6 +540,11 @@
                 done();
             });
             
+            test('tg_determinePropertyType: BigDecimal prop type is defined', function (done) {
+                assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType(typeName7), 'bigDecimalKey'), 'BigDecimal');
+                done();
+            });
+            
             test('tg_determinePropertyType: Money prop type is defined', function (done) {
                 assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType(typeName7), 'moneyKey'), 'Money');
                 done();
@@ -557,6 +609,7 @@
                 parentEntity.compositeProp.parentKey.dateKey = null;
                 parentEntity.compositeProp.parentKey.integerKey = null;
                 parentEntity.compositeProp.parentKey.longKey = null;
+                parentEntity.compositeProp.parentKey.bigDecimalKey = null;
                 parentEntity.compositeProp.parentKey.moneyKey = null;
                 parentEntity.compositeProp.parentKey.colourKey = null;
                 parentEntity.compositeProp.parentKey.hyperlinkKey = null;
@@ -574,6 +627,7 @@
                 parentEntity.compositeProp.parentKey.dateKey = null;
                 parentEntity.compositeProp.parentKey.integerKey = null;
                 parentEntity.compositeProp.parentKey.longKey = null;
+                parentEntity.compositeProp.parentKey.bigDecimalKey = null;
                 parentEntity.compositeProp.parentKey.moneyKey = null;
                 parentEntity.compositeProp.parentKey.colourKey = null;
                 parentEntity.compositeProp.parentKey.hyperlinkKey = null;
@@ -593,6 +647,8 @@
                 assert.strictEqual(reflector.tg_toString(entity.get('integerKey'), entity.type(), 'integerKey'), '');
                 entity.longKey = null;
                 assert.strictEqual(reflector.tg_toString(entity.get('longKey'), entity.type(), 'longKey'), '');
+                entity.bigDecimalKey = null;
+                assert.strictEqual(reflector.tg_toString(entity.get('bigDecimalKey'), entity.type(), 'bigDecimalKey'), '');
                 entity.moneyKey = null;
                 assert.strictEqual(reflector.tg_toString(entity.get('moneyKey'), entity.type(), 'moneyKey'), '');
                 entity.colourKey = null;
@@ -666,6 +722,13 @@
                 done();
             });
             
+            test('tg_toString standard: BigDecimal converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.bigDecimalKey = 1700.1234;
+                assert.strictEqual(reflector.tg_toString(entity.get('bigDecimalKey'), entity.type(), 'bigDecimalKey'), '1700.1234');
+                done();
+            });
+            
             test('tg_toString standard: Entity converts', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
                 entity.entityKey = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
@@ -705,6 +768,7 @@
                 master.dateKey = null;
                 master.integerKey = null;
                 master.longKey = null;
+                master.bigDecimalKey = null;
                 master.moneyKey = null;
                 master.colourKey = null;
                 master.hyperlinkKey = null;
@@ -715,6 +779,7 @@
                 entity.dateKey = null;
                 entity.integerKey = null;
                 entity.longKey = null;
+                entity.bigDecimalKey = null;
                 entity.moneyKey = null;
                 entity.colourKey = null;
                 entity.hyperlinkKey = null;
@@ -731,6 +796,7 @@
                 master.dateKey = null;
                 master.integerKey = null;
                 master.longKey = null;
+                master.bigDecimalKey = null;
                 master.moneyKey = null;
                 master.colourKey = null;
                 master.hyperlinkKey = null;
@@ -776,6 +842,8 @@
                 assert.strictEqual(reflector.tg_toString(entity.get('integerKey'), entity.type(), 'integerKey', { display: true }), '');
                 entity.longKey = null;
                 assert.strictEqual(reflector.tg_toString(entity.get('longKey'), entity.type(), 'longKey', { display: true }), '');
+                entity.bigDecimalKey = null;
+                assert.strictEqual(reflector.tg_toString(entity.get('bigDecimalKey'), entity.type(), 'bigDecimalKey', { display: true }), '');
                 entity.moneyKey = null;
                 assert.strictEqual(reflector.tg_toString(entity.get('moneyKey'), entity.type(), 'moneyKey', { display: true }), '');
                 entity.colourKey = null;
@@ -851,6 +919,13 @@
                 done();
             });
             
+            test('tg_toString for display: BigDecimal converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.bigDecimalKey = 1700.1234;
+                assert.strictEqual(reflector.tg_toString(entity.get('bigDecimalKey'), entity.type(), 'bigDecimalKey', { display: true, locale: locale }), reflector.tg_formatDecimal(entity.get('bigDecimalKey'), locale, entity.type().prop('bigDecimalKey').scale(), entity.type().prop('bigDecimalKey').trailingZeros()));
+                done();
+            });
+            
             test('tg_toString for display: Entity converts', function (done) {
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
                 entity.entityKey = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
@@ -890,6 +965,7 @@
                 master.dateKey = null;
                 master.integerKey = null;
                 master.longKey = null;
+                master.bigDecimalKey = null;
                 master.moneyKey = null;
                 master.colourKey = null;
                 master.hyperlinkKey = null;
@@ -900,6 +976,7 @@
                 entity.dateKey = null;
                 entity.integerKey = null;
                 entity.longKey = null;
+                entity.bigDecimalKey = null;
                 entity.moneyKey = null;
                 entity.colourKey = null;
                 entity.hyperlinkKey = null;
@@ -916,6 +993,7 @@
                 master.dateKey = null;
                 master.integerKey = null;
                 master.longKey = null;
+                master.bigDecimalKey = null;
                 master.moneyKey = null;
                 master.colourKey = null;
                 master.hyperlinkKey = null;
