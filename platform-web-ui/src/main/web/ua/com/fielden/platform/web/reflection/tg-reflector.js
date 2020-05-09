@@ -1286,7 +1286,7 @@ const _toStringForCollectionAsTooltip = function (bindingValue, rootEntityType, 
     if (convertedCollection === '') {
         return '';
     }
-    const desc = _toStringForCollection(bindingValue, rootEntityType, property, STANDARD_COLLECTION_SEPARATOR, entity => entity.get('desc')); // maps entity descriptions; this includes descs from short collection sub-keys
+    const desc = _toStringForCollection(bindingValue, rootEntityType, property, STANDARD_COLLECTION_SEPARATOR, entity => entity ? entity.get('desc') : entity); // maps entity descriptions; this includes descs from short collection sub-keys
     return '<b>' + convertedCollection + '</b>' + (desc !== '' ? '<br>' + desc : '');
 };
 
