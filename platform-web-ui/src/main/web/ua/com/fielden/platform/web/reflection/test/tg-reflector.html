@@ -1137,6 +1137,27 @@
                 done();
             });
             
+            test('tg_toString for collection: list of strings converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.listOfStringsProp = ['1', '', '2', null, '3', null];
+                assert.strictEqual(reflector.tg_toString(entity.get('listOfStringsProp'), entity.type(), 'listOfStringsProp', { collection: true }), '1, 2, 3');
+                done();
+            });
+            
+            test('tg_toString for collection: list of strings converts with custom separator', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.listOfStringsProp = ['1', '', '2', null, '3', null];
+                assert.strictEqual(reflector.tg_toString(entity.get('listOfStringsProp'), entity.type(), 'listOfStringsProp', { collection: true, separator: ':' }), '1:2:3');
+                done();
+            });
+            
+            test('tg_toString for collection: list of strings converts with mapping function', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.listOfStringsProp = ['1', '', '2', null, '3', null];
+                assert.strictEqual(reflector.tg_toString(entity.get('listOfStringsProp'), entity.type(), 'listOfStringsProp', { collection: true, mappingFunction: str => str ? '' + (+str * 2) : '' }), '2, 4, 6');
+                done();
+            });
+            
             // Testing the access to 'key' property of different kinds of entities.
             // This property is of high importance and should be much in sync with server-side implementation.
             // At this stage only equality and toString implementation is used when accessing properties.
