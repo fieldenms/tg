@@ -441,18 +441,131 @@
                 done();
             });
             
-            test('EntityType.prop: one-level dot-notated property is defined', function (done) {
+            test('EntityType.prop: two-level dot-notated property is defined (String)', function (done) {
                 assert.strictEqual(reflector.getType(typeName10).prop('entityKey.key'), reflector.getType(typeName9).prop('key'));
                 done();
             });
             
-            test('EntityType.prop: two-level dot-notated property is defined', function (done) {
+            test('EntityType.prop: two-level dot-notated property is defined (Date)', function (done) {
                 assert.strictEqual(reflector.getType(typeName10).prop('parentKey.dateKey'), reflector.getType(typeName7).prop('dateKey'));
                 done();
             });
             
             test('EntityType.prop: three-level dot-notated property is defined', function (done) {
                 assert.strictEqual(reflector.getType(typeName10).prop('parentKey.entityKey.key'), reflector.getType(typeName9).prop('key'));
+                done();
+            });
+            
+            test('tg_determinePropertyType: boolean prop type is defined', function (done) {
+                assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType(typeName8), 'booleanKey'), 'boolean');
+                done();
+            });
+            
+            test('tg_determinePropertyType: String prop type is defined', function (done) {
+                assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType(typeName7), 'stringKey'), 'String');
+                done();
+            });
+            
+            test('tg_determinePropertyType: Date prop type is defined', function (done) {
+                assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType(typeName7), 'dateKey'), 'Date');
+                done();
+            });
+            
+            test('tg_determinePropertyType: Integer prop type is defined', function (done) {
+                assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType(typeName7), 'integerKey'), 'Integer');
+                done();
+            });
+            
+            test('tg_determinePropertyType: Long prop type is defined', function (done) {
+                assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType(typeName7), 'longKey'), 'Long');
+                done();
+            });
+            
+            test('tg_determinePropertyType: Money prop type is defined', function (done) {
+                assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType(typeName7), 'moneyKey'), 'Money');
+                done();
+            });
+            
+            test('tg_determinePropertyType: collection prop type is not defined', function (done) {
+                assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType(typeName7), 'listOfStringsProp'), null);
+                assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType(typeName7), 'setOfEntitiesProp'), null);
+                done();
+            });
+            
+            test('tg_determinePropertyType: Colour prop type is defined', function (done) {
+                assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType(typeName7), 'colourKey'), 'Colour');
+                done();
+            });
+            
+            test('tg_determinePropertyType: Hyperlink prop type is defined', function (done) {
+                assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType(typeName7), 'hyperlinkKey'), 'Hyperlink');
+                done();
+            });
+            
+            test('tg_determinePropertyType: entity prop type is defined', function (done) {
+                assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType(typeName7), 'entityKey'), reflector.getType(typeName9));
+                done();
+            });
+            
+            test('tg_determinePropertyType: entity-itself prop type is defined', function (done) {
+                assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType(typeName7), ''), reflector.getType(typeName7));
+                done();
+            });
+            
+            test('tg_determinePropertyType: key prop type of composite entity type is defined', function (done) {
+                assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType(typeName7), 'key'), 'DynamicEntityKey');
+                done();
+            });
+            
+            test('tg_determinePropertyType: two-level dot-notated prop type is defined (String)', function (done) {
+                assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType(typeName10), 'entityKey.key'), 'String');
+                done();
+            });
+            
+            test('tg_determinePropertyType: two-level dot-notated prop type is defined (Date)', function (done) {
+                assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType(typeName10), 'parentKey.dateKey'), 'Date');
+                done();
+            });
+            
+            test('tg_determinePropertyType: two-level dot-notated prop type is defined (DynamicEntityKey)', function (done) {
+                assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType(typeName10), 'parentKey.key'), 'DynamicEntityKey');
+                done();
+            });
+            
+            test('tg_determinePropertyType: three-level dot-notated prop type is defined', function (done) {
+                assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType(typeName10), 'parentKey.entityKey.key'), 'String');
+                done();
+            });
+            
+            test('tg_toString: dot-notated composite entity-typed prop', function (done) {
+                const parentEntity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityEntityKey');
+                parentEntity.compositeProp = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityTwoEntityKeys');
+                parentEntity.compositeProp.parentKey = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                parentEntity.compositeProp.parentKey.stringKey = 'KEY1';
+                parentEntity.compositeProp.parentKey.dateKey = null;
+                parentEntity.compositeProp.parentKey.integerKey = null;
+                parentEntity.compositeProp.parentKey.longKey = null;
+                parentEntity.compositeProp.parentKey.moneyKey = null;
+                parentEntity.compositeProp.parentKey.colourKey = null;
+                parentEntity.compositeProp.parentKey.hyperlinkKey = null;
+                parentEntity.compositeProp.parentKey.entityKey = null;
+                assert.strictEqual(reflector.tg_toString(parentEntity.get('compositeProp.parentKey'), parentEntity.type(), 'compositeProp.parentKey'), 'KEY1');
+                done();
+            });
+            
+            test('tg_toString: dot-notated composite entity-typed prop and accessing its key', function (done) {
+                const parentEntity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityEntityKey');
+                parentEntity.compositeProp = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityTwoEntityKeys');
+                parentEntity.compositeProp.parentKey = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                parentEntity.compositeProp.parentKey.stringKey = 'KEY1';
+                parentEntity.compositeProp.parentKey.dateKey = null;
+                parentEntity.compositeProp.parentKey.integerKey = null;
+                parentEntity.compositeProp.parentKey.longKey = null;
+                parentEntity.compositeProp.parentKey.moneyKey = null;
+                parentEntity.compositeProp.parentKey.colourKey = null;
+                parentEntity.compositeProp.parentKey.hyperlinkKey = null;
+                parentEntity.compositeProp.parentKey.entityKey = null;
+                assert.strictEqual(reflector.tg_toString(parentEntity.get('compositeProp.parentKey.key'), parentEntity.type(), 'compositeProp.parentKey.key'), 'KEY1');
                 done();
             });
             

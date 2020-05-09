@@ -854,7 +854,11 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
             const rest = name.slice(dotIndex + 1);
             return this.prop(first).type().prop(rest);
         } else {
-            return typeof this._props !== 'undefined' && this._props && this._props[name] ? this._props[name] : null;
+            const prop = typeof this._props !== 'undefined' && this._props && this._props[name];
+            if (!prop && this.isCompositeEntity() && name === 'key') {
+                return { type: function () { return 'DynamicEntityKey'; } };
+            }
+            return prop ? prop : null;
         }
     }
 
@@ -1161,8 +1165,7 @@ const _convertFullPropertyValue = function (bindingView, propertyName, fullValue
  * @param property -- property name; can be dot-notated or '' meaning "entity itself"
  */
 const _determinePropertyType = function (entityType, property) {
-    return '' === property ? entityType : 
-        (entityType.isCompositeEntity() && 'key' === property ? 'DynamicEntityKey' : entityType.prop(property).type());
+    return '' === property ? entityType : entityType.prop(property).type();
 };
 
 /**
@@ -1179,7 +1182,7 @@ const _toString = function (bindingValue, rootEntityType, property) {
     } else if (bindingValue === null) {
         return '';
     } else if (typeof bindingValue === 'string') {
-        return bindingValue; // this covers converted entity-typed properties and string properties -- no further conversion required
+        return bindingValue; // this covers converted entity-typed properties, DynamicEntityKey instances and string properties -- no further conversion required
     } else if (typeof bindingValue === 'number') {
         if (propertyType === 'Date') {
             const prop = rootEntityType.prop(property);
