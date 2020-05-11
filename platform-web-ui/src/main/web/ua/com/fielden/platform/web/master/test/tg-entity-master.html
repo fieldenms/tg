@@ -182,7 +182,7 @@
 
 	                // value validationresult?
 	                assert.ok(validatedEntity.prop('integerProp').validationResult(), 'Instance meta-prop should have non-empty (unsuccessful) validation result.');
-	                assert.strictEqual(validatedEntity.prop('integerProp').validationResult().message, 'Value \'10000\' is greater than the maximum limit of 9999.', 'Property has incorrect validation result message.');
+	                assert.strictEqual(validatedEntity.prop('integerProp').validationResult().message, 'Value should be less or equal to 9999.', 'Property has incorrect validation result message.');
 
 	                // binding value ok?
 	                assert.ok(bindingEntity.get('integerProp'), 'Binding property should be initialised.');
