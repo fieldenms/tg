@@ -264,13 +264,15 @@ Polymer({
     },
 
     _getAdditionalInfo: function (entity) {
-        let additionalInfo = "<span style='color:#737373'>";
         if (entity.entity.level === referenceHierarchyLevel.TYPE) {
-            additionalInfo += "&nbsp;(" + entity.entity.numberOfEntities + ")";
-        } else if (entity.entity.level === referenceHierarchyLevel.REFERENCED_BY) {
-            additionalInfo += "&nbsp;(" + entity.entity.desc + ")";
+            return "<span style='color:#737373'>&nbsp;(" + entity.entity.numberOfEntities + ")"
+                    + (entity.entity.desc ? "&nbsp;&ndash;&nbsp;<i>" + entity.entity.desc + "</i>" : "") + "</span>";
+        } else if (entity.entity.level === referenceHierarchyLevel.REFERENCED_BY ||
+            entity.entity.level === referenceHierarchyLevel.REFERENCES) {
+            return "<span style='color:#737373'>&nbsp;(" + entity.entity.desc + ")</span>";
+        }else {
+            return "<span style='color:#737373'>" + (entity.entity.desc ? "&nbsp;&ndash;&nbsp;<i>" + entity.entity.desc + "</i>" : "") + "</span>"; 
         }
-        return  additionalInfo + (entity.entity.level !== referenceHierarchyLevel.REFERENCED_BY && entity.entity.desc ? "&nbsp;&ndash;&nbsp;<i>" + entity.entity.desc + "</i>" : "") + "</span>";       
     },
 
     _entityChanged: function(newBindingEntity) {

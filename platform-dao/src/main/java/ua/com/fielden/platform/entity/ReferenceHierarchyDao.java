@@ -115,6 +115,7 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
     private ReferenceHierarchyEntry createReferenceGroup(final List<ReferenceLevelHierarchyEntry> references) {
         final ReferenceHierarchyEntry referenceEntry = new ReferenceHierarchyEntry();
         referenceEntry.setKey("References");
+        referenceEntry.setDesc(String.valueOf(references.size()));
         referenceEntry.setChildren(references);
         referenceEntry.setHierarchyLevel(REFERENCES);
         return referenceEntry;
