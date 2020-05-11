@@ -1,6 +1,14 @@
 package ua.com.fielden.platform.sample.domain;
 
+import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.unmodifiableSet;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
@@ -12,7 +20,6 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Optional;
-import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
@@ -30,66 +37,115 @@ public class TgEntityCompositeKey extends AbstractPersistentEntity<DynamicEntity
     
     @IsProperty
     @MapTo
-    @Title("String Key")
     @CompositeKeyMember(1)
     @Optional
     private String stringKey;
     
     @IsProperty
     @MapTo
-    @Title("Boolean Key")
-    @CompositeKeyMember(2)
-    @Optional
-    private boolean booleanKey;
-    
-    @IsProperty
-    @MapTo
-    @Title("Date Key")
     @CompositeKeyMember(3)
     @Optional
     private Date dateKey;
     
     @IsProperty
     @MapTo
-    @Title("Integer Key")
     @CompositeKeyMember(4)
     @Optional
     private Integer integerKey;
     
     @IsProperty
     @MapTo
-    @Title("Long Key")
     @CompositeKeyMember(5)
     @Optional
     private Long longKey;
     
+    @IsProperty(precision = 18, scale = 4)
+    @MapTo
+    @CompositeKeyMember(6)
+    @Optional
+    private BigDecimal bigDecimalKey;
+    
     @IsProperty
     @MapTo
-    @Title("Money Key")
-    @CompositeKeyMember(6)
+    @CompositeKeyMember(7)
     @Optional
     private Money moneyKey;
     
     @IsProperty
     @MapTo
-    @Title("Colour Key")
-    @CompositeKeyMember(7)
+    @CompositeKeyMember(8)
     @Optional
     private Colour colourKey;
     
     @IsProperty
     @MapTo
-    @Title("Hyperlink Key")
-    @CompositeKeyMember(8)
+    @CompositeKeyMember(9)
     @Optional
     private Hyperlink hyperlinkKey;
     
     @IsProperty
     @MapTo
-    @Title("Entity Key")
-    @CompositeKeyMember(9)
+    @CompositeKeyMember(10)
     @Optional
     private TgEntityStringKey entityKey;
+    
+    @IsProperty
+    @MapTo
+    @CompositeKeyMember(11)
+    @Optional
+    private TgEntityCompositeKey selfKey;
+    
+    @IsProperty(TgEntityStringKey.class)
+    private final Set<TgEntityCompositeKey> setOfEntitiesProp = new HashSet<>();
+    
+    @IsProperty(String.class)
+    private final List<String> listOfStringsProp = new ArrayList<>();
+    
+    @IsProperty(TgEntityTwoEntityKeys.class)
+    private final Set<TgEntityTwoEntityKeys> shortCollectionalProp = new HashSet<>();
+    
+    @Observable
+    protected TgEntityCompositeKey setShortCollectionalProp(final Set<TgEntityTwoEntityKeys> shortCollectionalProp) {
+        this.shortCollectionalProp.clear();
+        this.shortCollectionalProp.addAll(shortCollectionalProp);
+        return this;
+    }
+    
+    public Set<TgEntityTwoEntityKeys> getShortCollectionalProp() {
+        return unmodifiableSet(shortCollectionalProp);
+    }
+    
+    @Observable
+    protected TgEntityCompositeKey setListOfStringsProp(final List<String> listProp) {
+        this.listOfStringsProp.clear();
+        this.listOfStringsProp.addAll(listProp);
+        return this;
+    }
+    
+    public List<String> getListOfStringsProp() {
+        return unmodifiableList(listOfStringsProp);
+    }
+    
+    @Observable
+    protected TgEntityCompositeKey setSetOfEntitiesProp(final Set<TgEntityCompositeKey> setOfEntitiesProp) {
+        this.setOfEntitiesProp.clear();
+        this.setOfEntitiesProp.addAll(setOfEntitiesProp);
+        return this;
+    }
+    
+    public Set<TgEntityCompositeKey> getSetOfEntitiesProp() {
+        return unmodifiableSet(setOfEntitiesProp);
+    }
+    
+    @Observable
+    public TgEntityCompositeKey setSelfKey(final TgEntityCompositeKey selfKey) {
+        this.selfKey = selfKey;
+        return this;
+    }
+    
+    public TgEntityCompositeKey getSelfKey() {
+        return selfKey;
+    }
     
     @Observable
     public TgEntityCompositeKey setEntityKey(final TgEntityStringKey entityKey) {
@@ -132,6 +188,16 @@ public class TgEntityCompositeKey extends AbstractPersistentEntity<DynamicEntity
     }
     
     @Observable
+    public TgEntityCompositeKey setBigDecimalKey(final BigDecimal bigDecimalKey) {
+        this.bigDecimalKey = bigDecimalKey;
+        return this;
+    }
+    
+    public BigDecimal getBigDecimalKey() {
+        return bigDecimalKey;
+    }
+    
+    @Observable
     public TgEntityCompositeKey setLongKey(final Long longKey) {
         this.longKey = longKey;
         return this;
@@ -159,16 +225,6 @@ public class TgEntityCompositeKey extends AbstractPersistentEntity<DynamicEntity
     
     public Date getDateKey() {
         return dateKey;
-    }
-    
-    @Observable
-    public TgEntityCompositeKey setBooleanKey(final boolean booleanKey) {
-        this.booleanKey = booleanKey;
-        return this;
-    }
-    
-    public boolean getBooleanKey() {
-        return booleanKey;
     }
     
     @Observable

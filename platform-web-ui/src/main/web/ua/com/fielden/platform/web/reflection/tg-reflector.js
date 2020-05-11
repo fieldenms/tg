@@ -659,25 +659,7 @@ const _createDynamicEntityKeyPrototype = function () {
     DynamicEntityKey.prototype._convertDynamicEntityKey = function () {
         const compositeEntity = this._entity;
         const type = compositeEntity.constructor.prototype.type.call(compositeEntity);
-        const compositeKeyNames = type.compositeKeyNames();
-        const compositeKeySeparator = type.compositeKeySeparator();
-
-        let str = "";
-        let first = true;
-        for (let i = 0; i < compositeKeyNames.length; i++) {
-            const compositePartName = compositeKeyNames[i];
-            const compositePart = compositeEntity.get(compositePartName);
-            if (compositePart !== null) {
-                const strPart = _toString(_convert(compositePart), type, compositePartName);
-                if (first) {
-                    str = str + strPart;
-                    first = false;
-                } else {
-                    str = str + compositeKeySeparator + strPart;
-                }
-            }
-        }
-        return str;
+        return _toStringForKeys(type.compositeKeyNames().map(name => [name, compositeEntity.get(name)]), type, type.compositeKeySeparator());
     };
 
     /**
@@ -861,10 +843,23 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
     }
 
     /** 
-     * Returns entity type property with the specified name.
+     * Finds EntityTypeProp meta-info instance from specified 'name'. Returns 'null' for property '' meaning there is no EntityTypeProp for "entity itself".
+     * 
+     * @param name -- property name; can be dot-notated
      */
     EntityType.prototype.prop = function (name) {
-        return typeof this._props !== 'undefined' && this._props && this._props[name] ? this._props[name] : null;
+        const dotIndex = name.indexOf('.');
+        if (dotIndex > -1) {
+            const first = name.slice(0, dotIndex);
+            const rest = name.slice(dotIndex + 1);
+            return this.prop(first).type().prop(rest);
+        } else {
+            const prop = typeof this._props !== 'undefined' && this._props && this._props[name];
+            if (!prop && this.isCompositeEntity() && name === 'key') {
+                return { type: function () { return 'DynamicEntityKey'; } };
+            }
+            return prop ? prop : null;
+        }
     }
 
     /** 
@@ -991,21 +986,30 @@ const _isDynamicEntityKey = function (obj) {
 };
 
 const _isPropertyValueObject = function (value, subValueName) {
-    return value !== null && typeof value === 'object' && typeof value[subValueName] !== 'undefined';
+    return typeof value === 'object' && typeof value[subValueName] !== 'undefined';
 };
 
+/**
+ * Checks whether non-null 'value' represents money value.
+ */
 const _isMoney = function (value) {
     return _isPropertyValueObject(value, 'amount');
 };
 const _moneyVal = function (value) {
     return value['amount'];
 };
+/**
+ * Checks whether non-null 'value' represents colour value.
+ */
 const _isColour = function (value) {
     return _isPropertyValueObject(value, 'hashlessUppercasedColourValue');
 };
 const _colourVal = function (value) {
     return value['hashlessUppercasedColourValue'];
 };
+/**
+ * Checks whether non-null 'value' represents hyperlink value.
+ */
 const _isHyperlink = function (value) {
     return _isPropertyValueObject(value, 'value');
 };
@@ -1033,12 +1037,12 @@ const _equalsEx = function (value1, value2) {
         return _entitiesEqualsEx(value1, value2);
     } else if (Array.isArray(value1)) {
         return _arraysEqualsEx(value1, value2);
-    } else if (_isMoney(value1)) {
-        return _isMoney(value2) && _equalsEx(_moneyVal(value1), _moneyVal(value2));
-    } else if (_isColour(value1)) {
-        return _isColour(value2) && _equalsEx(_colourVal(value1), _colourVal(value2));
-    } else if (_isHyperlink(value1)) {
-        return _isHyperlink(value2) && _equalsEx(_hyperlinkVal(value1), _hyperlinkVal(value2));
+    } else if (value1 !== null && _isMoney(value1)) {
+        return value2 !== null && _isMoney(value2) && _equalsEx(_moneyVal(value1), _moneyVal(value2));
+    } else if (value1 !== null && _isColour(value1)) {
+        return value2 !== null && _isColour(value2) && _equalsEx(_colourVal(value1), _colourVal(value2));
+    } else if (value1 !== null && _isHyperlink(value1)) {
+        return value2 !== null && _isHyperlink(value2) && _equalsEx(_hyperlinkVal(value1), _hyperlinkVal(value2));
     }
     return value1 === value2;
 };
@@ -1153,31 +1157,15 @@ const _convertFullPropertyValue = function (bindingView, propertyName, fullValue
 };
 
 /**
- * Finds EntityTypeProp meta-info instance from 'entityType' and 'property'. Returns 'null' for property '' meaning there is no EntityTypeProp for "entity itself".
- * 
- * @param entityType -- entity type
- * @param property -- property name; can be dot-notated
- */
-const _findProperty = function (entityType, property) {
-    const dotIndex = property.indexOf('.');
-    if (dotIndex > -1) {
-        const first = property.slice(0, dotIndex);
-        const rest = property.slice(dotIndex + 1);
-        return _findProperty(entityType.prop(first).type(), rest);
-    } else {
-        return entityType.prop(property);
-    }
-};
-
-/**
  * Determines the type of property from 'entityType' and 'property'.
+ * 
+ * Returns 'DynamicEntityKey' for 'key' property of composite 'entityType'.
  * 
  * @param entityType -- entity type
  * @param property -- property name; can be dot-notated or '' meaning "entity itself"
  */
 const _determinePropertyType = function (entityType, property) {
-    return '' === property ? entityType : 
-        (entityType.isCompositeEntity() && 'key' === property ? null : _findProperty(entityType, property).type());
+    return '' === property ? entityType : entityType.prop(property).type();
 };
 
 /**
@@ -1194,24 +1182,24 @@ const _toString = function (bindingValue, rootEntityType, property) {
     } else if (bindingValue === null) {
         return '';
     } else if (typeof bindingValue === 'string') {
-        return bindingValue; // this covers converted entity-typed properties and string properties -- no further conversion required
+        return bindingValue; // this covers converted entity-typed properties, DynamicEntityKey instances and string properties -- no further conversion required
     } else if (typeof bindingValue === 'number') {
         if (propertyType === 'Date') {
-            const prop = _findProperty(rootEntityType, property);
+            const prop = rootEntityType.prop(property);
             return _millisDateRepresentation(bindingValue, prop.timeZone(), prop.datePortion());
         } else {
-            return '' + bindingValue; // Integer value (or Long, but very rare)
+            return '' + bindingValue; // Integer value (or Long, but very rare) and BigDecimal value
         }
-    } else if (typeof bindingValue === 'object' && bindingValue.hasOwnProperty('amount') && bindingValue.hasOwnProperty('currency') && bindingValue.hasOwnProperty('taxPercent')) {
-        return '' + bindingValue.amount;
+    } else if (_isMoney(bindingValue)) {
+        return '' + _moneyVal(bindingValue); // represents number, so needs "'' +" conversion prefix
     } else if (Array.isArray(bindingValue)) {
         // Here we have standard logic of converting collections using the most common ', ' separator.
         // To apply custom separator please use _toStringForCollection method (see tg-entity-editor.convertToString).
         return _toStringForCollection(bindingValue, rootEntityType, property, STANDARD_COLLECTION_SEPARATOR);
-    } else if (typeof bindingValue === 'object' && bindingValue.hasOwnProperty('hashlessUppercasedColourValue')) { // Colour
-        return bindingValue.hashlessUppercasedColourValue;
-    } else if (typeof bindingValue === 'object' && bindingValue.hasOwnProperty('value')) { // Hyperlink
-        return bindingValue.value;
+    } else if (_isColour(bindingValue)) {
+        return _colourVal(bindingValue); // represents string -- no conversion required
+    } else if (_isHyperlink(bindingValue)) {
+        return _hyperlinkVal(bindingValue); // represents string -- no conversion required
     } else if (typeof bindingValue === 'object' && Object.getOwnPropertyNames(bindingValue).length === 0) {
         // TODO investigate where empty object is actually used to ensure proper conversion here
         return '';
@@ -1230,7 +1218,7 @@ const _toString = function (bindingValue, rootEntityType, property) {
  */
 const _toStringForDisplay = function (bindingValue, rootEntityType, property, locale) {
     const propertyType = _determinePropertyType(rootEntityType, property);
-    const prop = _findProperty(rootEntityType, property);
+    const prop = rootEntityType.prop(property);
     // for all numeric types and Colour we have non-standard display formatting; all other types will be displayed the same fashion as it is in standard conversion
     if (propertyType === 'Colour') {
         return bindingValue === null ? '' : '#' + _toString(bindingValue, rootEntityType, property);
@@ -1259,16 +1247,31 @@ const _toStringForCollection = function (bindingValue, rootEntityType, property,
         return '';
     } else {
         let resultingCollection = bindingValue;
-        const entityTypeProp = _findProperty(rootEntityType, property);
+        const entityTypeProp = rootEntityType.prop(property);
         const shortCollectionKey = entityTypeProp.shortCollectionKey();
         if (shortCollectionKey) { // existence of shortCollectionKey indicates that the property is indeed "short collection"
-            resultingCollection = bindingValue.map(entity => entity.get(shortCollectionKey));
+            resultingCollection = bindingValue.map(entity => entity ? entity.get(shortCollectionKey) : entity);
         }
         return resultingCollection
-            .map(element => _toString(_convert(mappingFunction ? mappingFunction(element) : element), rootEntityType, property))
+            .map(element => _toString(_convert(mappingFunction ? mappingFunction(element) : element), rootEntityType, property)) // note that collection of 'boolean'/'Date' values are not [yet] supported due to non-existence of collection element type on the client EntityTypeProp for collectional property (see _toString method); this looks like artificial collections to be supported; however they can be, if needed 
             .filter(str => str !== '') // filter out empty strings not to include them into resulting string (especially important for functions that use 'mappingFunction')
             .join(separator);
     }
+};
+
+/**
+ * Converts composite entity's keyNamesAndValues to string.
+ * 
+ * @param keyNamesAndValues -- non-empty array of elements (also arrays) consisting on [0] index of composite key property name and on [1] index of actual value of that composite key
+ * @param entityType -- the type of composite entity
+ * @param separator -- string value to glue string representations of values with
+ * @param mappingFunction -- maps resulting elements before actual element-by-element toString conversion and glueing them all together; this is optional
+ */
+const _toStringForKeys = function (keyNamesAndValues, entityType, separator, mappingFunction) {
+    return keyNamesAndValues
+        .map(keyNameAndValue => _toString(_convert(mappingFunction ? mappingFunction(keyNameAndValue[1]) : keyNameAndValue[1]), entityType, keyNameAndValue[0]))
+        .filter(str => str !== '') // filter out empty strings not to include them into resulting string (especially important for functions that use 'mappingFunction')
+        .join(separator);
 };
 
 /**
@@ -1283,7 +1286,7 @@ const _toStringForCollectionAsTooltip = function (bindingValue, rootEntityType, 
     if (convertedCollection === '') {
         return '';
     }
-    const desc = _toStringForCollection(bindingValue, rootEntityType, property, STANDARD_COLLECTION_SEPARATOR, entity => entity.get('desc')); // maps entity descriptions; this includes descs from short collection sub-keys
+    const desc = _toStringForCollection(bindingValue, rootEntityType, property, STANDARD_COLLECTION_SEPARATOR, entity => entity ? entity.get('desc') : entity); // maps entity descriptions; this includes descs from short collection sub-keys
     return '<b>' + convertedCollection + '</b>' + (desc !== '' ? '<br>' + desc : '');
 };
 
@@ -1566,6 +1569,18 @@ export const TgReflector = Polymer({
     },
     
     /**
+     * Determines the type of property from 'entityType' and 'property'.
+     * 
+     * Returns 'DynamicEntityKey' for 'key' property of composite 'entityType'.
+     * 
+     * @param entityType -- entity type
+     * @param property -- property name; can be dot-notated or '' meaning "entity itself"
+     */
+    tg_determinePropertyType: function (entityType, property) {
+        return _determinePropertyType(entityType, property);
+    },
+    
+    /**
      * Converts property value to string.
      * 
      * Terms:
@@ -1585,7 +1600,7 @@ export const TgReflector = Polymer({
      * @param   opts.separator -- string value to glue string representations of collectional values with; ', ' by default
      * @param   opts.mappingFunction -- maps resulting collectional elements before actual element-by-element toString conversion and glueing them all together; optional
      *    otherwise
-     *        standard toString convertion
+     *        standard toString conversion
      */
     tg_toString: function (value, rootEntityType, property, opts) {
         const isBindingValue = opts && opts.bindingValue;
