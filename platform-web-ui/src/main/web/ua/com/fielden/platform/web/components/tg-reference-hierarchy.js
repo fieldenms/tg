@@ -124,7 +124,7 @@ const getKeys = function (entity, entityWithKey) {
 }
 
 const filterKeys = function (entity, keyValues) {
-    return keyValues.filter(key => 
+    return keyValues.length <= 1 ? keyValues : keyValues.filter(key => 
         typeof key.value.type === 'undefined' ||
         (typeof key.value.type === 'function' && 
         (key.value.type().fullClassName() !== entity.entity.parent.refEntityType || key.value.get("id") !== entity.entity.parent.refEntityId)));
@@ -143,6 +143,16 @@ const buildTitles = function (titleObject, reflector) {
 const buildFilteringKey = function(titleObject) {
     return titleObject.map(curr => (Array.isArray(curr.value) ? buildFilteringKey(curr.value) : curr.value)).join(" ");
 };
+
+const escapeHtmlText = function(text) {
+    const searchFor = [/</g, />/g];
+    const replaceWith = ['&lt;', '&gt;'];
+    let escapedStr = text;
+    searchFor.forEach((search, i) => {
+        escapedStr = escapedStr.replace(search, replaceWith[i]);
+    });
+    return escapedStr;
+}
 
 Polymer({
     _template: template,
@@ -266,12 +276,12 @@ Polymer({
     _getAdditionalInfo: function (entity) {
         if (entity.entity.level === referenceHierarchyLevel.TYPE) {
             return "<span style='color:#737373'>&nbsp;(" + entity.entity.numberOfEntities + ")"
-                    + (entity.entity.desc ? "&nbsp;&ndash;&nbsp;<i>" + entity.entity.desc + "</i>" : "") + "</span>";
+                    + (entity.entity.desc ? "&nbsp;&ndash;&nbsp;<i>" + escapeHtmlText(entity.entity.desc) + "</i>" : "") + "</span>";
         } else if (entity.entity.level === referenceHierarchyLevel.REFERENCED_BY ||
             entity.entity.level === referenceHierarchyLevel.REFERENCES) {
             return "<span style='color:#737373'>&nbsp;(" + entity.entity.desc + ")</span>";
         }else {
-            return "<span style='color:#737373'>" + (entity.entity.desc ? "&nbsp;&ndash;&nbsp;<i>" + entity.entity.desc + "</i>" : "") + "</span>"; 
+            return "<span style='color:#737373'>" + (entity.entity.desc ? "&nbsp;&ndash;&nbsp;<i>" + escapeHtmlText(entity.entity.desc) + "</i>" : "") + "</span>"; 
         }
     },
 
