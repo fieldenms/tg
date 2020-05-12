@@ -5,7 +5,7 @@ import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -60,7 +60,7 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     private List<EntityAggregates> run(final AggregatedResultQueryModel qry) {
         return aggregateDao.getAllEntities(from(qry).with("EQL3", null).model());
     }
-
+    
     private void run(final ICompoundCondition0<? extends AbstractEntity<?>> qryStart) {
         run(qryStart.yield().countAll().as("KOUNT").modelAsAggregate());
     }
@@ -570,7 +570,14 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
         run(select(TeAverageFuelUsage.class).where().prop("key.modelMakeKey6").isNotNull());
     }
 
-    
+    @Test
+    public void eql3_query_executes_correctly58() {
+        ITeVehicleModel co = getInstance(ITeVehicleModel.class);
+        EntityResultQueryModel<TeVehicleModel> qry = select(TeVehicleModel.class).model();
+        co.getAllEntities(from(qry).with("EQL3", null).with(fetch(TeVehicleModel.class).with("makeKey2")).model());
+    }
+
+       
     @Override
     protected void populateDomain() {
         super.populateDomain();

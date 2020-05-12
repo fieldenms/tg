@@ -56,7 +56,7 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToS2<R
         if (yields.getYields().isEmpty()) {
             final List<Yield2> enhancedYields = new ArrayList<>();
             for (final Entry<String, AbstractPropInfo<?>> el : sources2.main.entityInfo().getProps().entrySet()) {
-                if (!el.getValue().hasExpression()) {
+                if (fetchModel.containsProp(el.getValue().name)) {
                     enhancedYields.add(new Yield2(new EntProp2(sources2.main, listOf(el.getValue())), el.getKey(), false));
                 }
             }
