@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity;
 
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
+import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
 import static ua.com.fielden.platform.entity.ReferenceHierarchyActions.EDIT;
 import static ua.com.fielden.platform.entity.ReferenceHierarchyActions.REFERENCE_HIERARCHY;
 import static ua.com.fielden.platform.entity.ReferenceHierarchyLevel.REFERENCES;
@@ -137,10 +138,15 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
     @SuppressWarnings("unchecked")
     private fetch<? extends AbstractEntity<?>> generateReferenceFetchModel(final Class<? extends AbstractEntity<?>> entityType, final List<Field> entityFields) {
         fetch<? extends AbstractEntity<?>> fetch = fetchKeyAndDescOnly(entityType);
+        fetch = hasDescProperty(entityType) ? fetch.with("desc") : fetch;
         for (final Field propField: entityFields) {
             final Class<? extends AbstractEntity<?>> propertyType = (Class<? extends AbstractEntity<?>>)propField.getType();
-            final fetch<? extends AbstractEntity<?>> innerFetchModel = fetchKeyAndDescOnly(propertyType);
-            fetch = fetch.with(propField.getName(), hasDescProperty(propertyType) ? innerFetchModel.with("desc") : innerFetchModel);
+            final List<Field> innerProps = new ArrayList<>();
+            if (AbstractUnionEntity.class.isAssignableFrom(propertyType)) {
+                innerProps.addAll(unionProperties((Class<? extends AbstractUnionEntity>) propertyType));
+            }
+            final fetch<? extends AbstractEntity<?>> innerFetchModel = generateReferenceFetchModel(propertyType, innerProps);
+            fetch = fetch.with(propField.getName(), innerFetchModel);
         }
         return fetch;
     }
