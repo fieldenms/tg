@@ -58,6 +58,7 @@ public class DataDependencyQueriesGenerator {
                 yield().model(select(detailsType).where().prop(ID).eq().extProp(ID).model()).as("entity").
                 yield().expr(hasDependencies).as("hasDependencies").
                 modelAsAggregate();
+        qry.setFilterable(true);
         return from(qry).with(fetchAggregates().with("hasDependencies").with("entity", fetchModel)).with(orderBy().prop("key").asc().model()).model();
     }
 
