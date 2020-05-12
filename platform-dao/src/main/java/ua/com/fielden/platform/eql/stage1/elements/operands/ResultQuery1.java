@@ -6,7 +6,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 
+import com.google.common.base.Objects;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.IRetrievalModel;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.stage1.elements.EntQueryBlocks1;
 import ua.com.fielden.platform.eql.stage1.elements.ITransformableToS2;
@@ -23,9 +26,12 @@ import ua.com.fielden.platform.eql.stage2.elements.sources.Sources2;
 import ua.com.fielden.platform.types.tuples.T2;
 
 public class ResultQuery1 extends AbstractQuery1 implements ITransformableToS2<ResultQuery2> {
+    
+    public final IRetrievalModel<?> fetchModel;
 
-    public ResultQuery1(final EntQueryBlocks1 queryBlocks, final Class<? extends AbstractEntity<?>> resultType) {
+    public ResultQuery1(final EntQueryBlocks1 queryBlocks, final Class<? extends AbstractEntity<?>> resultType, final IRetrievalModel<?> fetchModel) {
         super(queryBlocks, resultType);
+        this.fetchModel = fetchModel;
         assert (resultType != null);
     }
 
@@ -62,12 +68,13 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToS2<R
     @Override
     public int hashCode() {
         final int prime = 31;
-        final int result = super.hashCode();
+        int result = super.hashCode();
+        result = prime * result + ((fetchModel == null) ? 0 : fetchModel.hashCode());
         return prime * result + ResultQuery1.class.getName().hashCode();
     }
-
+    
     @Override
     public boolean equals(final Object obj) {
-        return this == obj || super.equals(obj) && obj instanceof ResultQuery1;
+        return this == obj || super.equals(obj) && obj instanceof ResultQuery1 && Objects.equal(fetchModel, ((ResultQuery1) obj).fetchModel);
     }
 }

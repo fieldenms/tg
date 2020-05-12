@@ -47,11 +47,11 @@ public class EqlStage1TestCase extends EqlTestCase {
     }
     
     protected static <T extends AbstractEntity<?>> ResultQuery1 resultQry(final EntityResultQueryModel<T> qry) {
-        return qb().generateEntQueryAsResultQuery(qry, null);
+        return qb().generateEntQueryAsResultQuery(qry, null, null);
     }
 
     protected static ResultQuery1 resultQry(final AggregatedResultQueryModel qry) {
-        return qb().generateEntQueryAsResultQuery(qry, null);
+        return qb().generateEntQueryAsResultQuery(qry, null, null);
     }
     
     protected static EntQueryBlocks1 qb1(final Sources1 sources, final Conditions1 conditions) {

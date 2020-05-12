@@ -14,6 +14,7 @@ import java.util.Map;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.query.IRetrievalModel;
 import ua.com.fielden.platform.entity.query.fluent.enums.QueryTokens;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
@@ -58,8 +59,8 @@ public class EntQueryGenerator {
         return contextId;
     }
     
-    public <T extends AbstractEntity<?>, Q extends QueryModel<T>> ResultQuery1 generateEntQueryAsResultQuery(final QueryModel<T> qm, final OrderingModel orderModel) {
-        return new ResultQuery1(parseTokensIntoComponents(qm, orderModel), qm.getResultType());
+    public <T extends AbstractEntity<?>, Q extends QueryModel<T>> ResultQuery1 generateEntQueryAsResultQuery(final QueryModel<T> qm, final OrderingModel orderModel, final IRetrievalModel<T> fetchModel) {
+        return new ResultQuery1(parseTokensIntoComponents(qm, orderModel), qm.getResultType(), fetchModel);
     }
 
     public <T extends AbstractEntity<?>> SourceQuery1 generateEntQueryAsSourceQuery(final QueryModel<T> qryModel) {
