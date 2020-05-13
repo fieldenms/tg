@@ -9,6 +9,12 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
+/**
+ * Entity that provides information about master to open.
+ *
+ * @author TG Team
+ *
+ */
 @KeyType(String.class)
 @KeyTitle("Element Name")
 @DescTitle("Element URI")
@@ -28,7 +34,7 @@ public class MasterInfo extends AbstractEntity<String> {
     private String widthUnit;
 
     @IsProperty
-    @Title(value = "Height Unit", desc = "Desc")
+    @Title(value = "Height Unit")
     private String heightUnit;
 
     @IsProperty
@@ -48,11 +54,11 @@ public class MasterInfo extends AbstractEntity<String> {
     private String requireMasterEntity;
 
     @IsProperty
-    @Title(value = "Entity Type", desc = "Desc")
+    @Title(value = "Entity Type")
     private String entityType;
 
     @IsProperty
-    @Title(value = "Entity Id", desc = "Desc")
+    @Title(value = "Entity Id")
     private Long entityId;
 
     @IsProperty
