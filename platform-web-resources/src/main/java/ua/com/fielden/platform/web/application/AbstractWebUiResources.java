@@ -135,7 +135,7 @@ public abstract class AbstractWebUiResources extends Application {
         router.attach("/test/egi", new EgiExampleResourceFactory(injector));
 
         //Attache master retrieve resources
-        router.attach("/master/{entityType}/{entityId}", new MasterInfoProviderResourceFactory(webApp, deviceProvider, dates, restUtil));
+        router.attach("/master/{entityType}", new MasterInfoProviderResourceFactory(webApp, deviceProvider, dates, restUtil));
 
         // Registering entity centres:
         attachCentreResources(router, webApp, restUtil);

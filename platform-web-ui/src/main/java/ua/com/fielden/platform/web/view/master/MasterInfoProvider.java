@@ -20,13 +20,12 @@ public class MasterInfoProvider {
         this.webUiConfig = webUiConfig;
     }
 
-    public MasterInfo getMasterInfo(final Class<? extends AbstractEntity<?>> type, final Long entityId) {
+    public MasterInfo getMasterInfo(final Class<? extends AbstractEntity<?>> type) {
         try {
             return webUiConfig.configApp().getOpenMasterAction(type).get().map(entityActionConfig -> {
                 final FunctionalActionElement funcElem = new FunctionalActionElement(entityActionConfig, 0, FunctionalActionKind.PRIMARY_RESULT_SET);
                 final DomElement actionElement = funcElem.render();
                 final MasterInfo  info = new MasterInfo();
-                info.setEntityId(entityId);
                 info.setKey(actionElement.getAttr("element-name").value.toString());
                 info.setDesc(actionElement.getAttr("component-uri").value.toString());
                 info.setShortDesc(actionElement.getAttr("short-desc").value.toString());
@@ -43,17 +42,16 @@ public class MasterInfoProvider {
                     info.setHeightUnit(prefDim.heightUnit.value);
                 });
                 return info;
-            }).orElse(buildDefaultMasterConfiguration(type, entityId));
+            }).orElse(buildDefaultMasterConfiguration(type));
         } catch (final WebUiBuilderException e) {
-            return buildDefaultMasterConfiguration(type, entityId);
+            return buildDefaultMasterConfiguration(type);
         }
     }
 
-    private MasterInfo buildDefaultMasterConfiguration(final Class<? extends AbstractEntity<?>> type, final Long entityId) {
+    private MasterInfo buildDefaultMasterConfiguration(final Class<? extends AbstractEntity<?>> type) {
         return webUiConfig.configApp().getMaster(type).map(master -> {
             final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(type).getKey();
             final MasterInfo  info = new MasterInfo();
-            info.setEntityId(entityId);
             info.setKey("tg-EntityEditAction-master");
             info.setDesc("/master_ui/ua.com.fielden.platform.entity.EntityEditAction");
             info.setShortDesc(format("Edit %s", entityTitle));

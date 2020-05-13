@@ -58,26 +58,12 @@ public class MasterInfo extends AbstractEntity<String> {
     private String entityType;
 
     @IsProperty
-    @Title(value = "Entity Id")
-    private Long entityId;
-
-    @IsProperty
     @Title(value = "Short Description", desc = "Action's short description")
     private String shortDesc;
 
     @IsProperty
     @Title(value = "Long Description", desc = "Action's long description")
     private String longDesc;
-
-    @Observable
-    public MasterInfo setEntityId(final Long entityId) {
-        this.entityId = entityId;
-        return this;
-    }
-
-    public Long getEntityId() {
-        return entityId;
-    }
 
     @Observable
     public MasterInfo setEntityType(final String entityType) {

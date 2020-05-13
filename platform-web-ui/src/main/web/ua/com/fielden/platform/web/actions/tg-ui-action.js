@@ -485,7 +485,7 @@ Polymer({
                 if (!this.elementName) {//Element name for dynamic action is not specified at first run
                     this._originalShortDesc = this.shortDesc;//It means that shortDesc wasn't changed yet.
                 }
-                this._masterUri = '/master/' + currentEntityType + '/' + this.currentEntity.get("id");
+                this._masterUri = '/master/' + currentEntityType;
                 this.isActionInProgress = true;
                 this.$.masterRetriever.generateRequest().completes
                     .then(res => {
@@ -749,7 +749,6 @@ Polymer({
             this.longDesc = this.longDesc || masterInfo.longDesc;
             this.attrs = Object.assign({}, this.attrs, {
                 entityType: masterInfo.entityType,
-                entityId: masterInfo.entityId, 
                 currentState:'EDIT',
                 prefDim: masterInfo.width && masterInfo.height && masterInfo.widthUnit && masterInfo.heightUnit && {
                     width: () => masterInfo.width,
