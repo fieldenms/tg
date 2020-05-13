@@ -480,29 +480,34 @@ Polymer({
 
             self.persistActiveElement();
 
-            const currentEntityType = this._calculateCurrentEntityType();
-            if (this.dynamicAction && this.currentEntity && this._previousEntityType !== currentEntityType) {
-                if (!this.elementName) {//Element name for dynamic action is not specified at first run
-                    this._originalShortDesc = this.shortDesc;//It means that shortDesc wasn't changed yet.
-                }
-                this._masterUri = '/master/' + currentEntityType;
-                this.isActionInProgress = true;
-                this.$.masterRetriever.generateRequest().completes
-                    .then(res => {
-                        try {
-                            this._processMasterRetriever(res);
-                            this._previousEntityType = currentEntityType;
-                            postMasterInfoRetrieve();
-                        }catch (e) {
+            
+            if (this.dynamicAction && this.currentEntity) {
+                const currentEntityType = this._calculateCurrentEntityType();
+                if (this._previousEntityType !== currentEntityType) {
+                    if (!this.elementName) {//Element name for dynamic action is not specified at first run
+                        this._originalShortDesc = this.shortDesc;//It means that shortDesc wasn't changed yet.
+                    }
+                    this._masterUri = '/master/' + currentEntityType;
+                    this.isActionInProgress = true;
+                    this.$.masterRetriever.generateRequest().completes
+                        .then(res => {
+                            try {
+                                this._processMasterRetriever(res);
+                                this._previousEntityType = currentEntityType;
+                                postMasterInfoRetrieve();
+                            }catch (e) {
+                                this.isActionInProgress = false;
+                                this.restoreActionState();
+                                console.log("The action was rejected with error: " + e);
+                            }
+                        }).catch(error => {
                             this.isActionInProgress = false;
                             this.restoreActionState();
-                            console.log("The action was rejected with error: " + e);
-                        }
-                    }).catch(error => {
-                        this.isActionInProgress = false;
-                        this.restoreActionState();
-                        console.log("The action was rejected with error: " + error);
-                    });
+                            console.log("The action was rejected with error: " + error);
+                        });
+                } else {
+                    postMasterInfoRetrieve();    
+                }
             } else {
                 postMasterInfoRetrieve();
             }
