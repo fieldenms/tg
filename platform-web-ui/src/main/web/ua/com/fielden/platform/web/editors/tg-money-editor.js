@@ -69,7 +69,7 @@ export class TgMoneyEditor extends TgNumericEditor {
         
         // TODO currency and tax are ignored at this stage, but their support should most likely be implemented at some
         //      there is a need to have a better more general understanding of the role for currency and tax at the platfrom level
-        var amount = (+strValue) 
+        const amount = (+strValue) 
         return {'amount': amount};
     }
 

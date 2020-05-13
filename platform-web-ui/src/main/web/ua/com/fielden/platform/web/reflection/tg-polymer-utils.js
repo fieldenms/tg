@@ -169,10 +169,16 @@ export class EntityStub {
         this[property] = value;
     }
 
+    propType (name) {
+        return null;
+    }
+
     type() {
+        const self = this;
         return {
-            prop: (prop) => {
+            prop: (name) => {
                 return {
+                    type: () => self.propType(name),
                     scale: () => 0,
                     trailingZeros: () => true,
                     displayAs: () => ""

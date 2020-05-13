@@ -1132,6 +1132,10 @@ const _convert = function (value) {
     } else if (typeof value === 'object' && (value.hasOwnProperty('hashlessUppercasedColourValue') || value.hasOwnProperty('value'))) {
         return value;
     } else if (typeof value === 'object' && Object.getOwnPropertyNames(value).length === 0) {
+        // Some functional actions have properties with type Map<String, ...>.
+        // Initial value of such properties, retrieved from server, is always {}.
+        // That's because they are processed manually on client and only gets back to server with some data.
+        // Here we allows such processing instead of throwing 'unsupported type' exception.
         return value;
     } else {
         throw new _UCEPrototype(value);
@@ -1201,7 +1205,10 @@ const _toString = function (bindingValue, rootEntityType, property) {
     } else if (_isHyperlink(bindingValue)) {
         return _hyperlinkVal(bindingValue); // represents string -- no conversion required
     } else if (typeof bindingValue === 'object' && Object.getOwnPropertyNames(bindingValue).length === 0) {
-        // TODO investigate where empty object is actually used to ensure proper conversion here
+        // See method _convert that explains the use case of the properties with {} value.
+        // We provide ability to even convert binding representation of these properties to string, which is, naturally, ''.
+        // This is done to provide consistency between supported types of properties in both _convert and _toString functions.
+        // The main case, however, does not require _toString support -- this is because such properties do not bind to any existing editor.
         return '';
     } else {
         throw new _UCEPrototype(bindingValue);

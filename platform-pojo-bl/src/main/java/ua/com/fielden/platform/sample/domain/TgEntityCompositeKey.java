@@ -43,55 +43,55 @@ public class TgEntityCompositeKey extends AbstractPersistentEntity<DynamicEntity
     
     @IsProperty
     @MapTo
-    @CompositeKeyMember(3)
+    @CompositeKeyMember(2)
     @Optional
     private Date dateKey;
     
     @IsProperty
     @MapTo
-    @CompositeKeyMember(4)
+    @CompositeKeyMember(3)
     @Optional
     private Integer integerKey;
     
     @IsProperty
     @MapTo
-    @CompositeKeyMember(5)
+    @CompositeKeyMember(4)
     @Optional
     private Long longKey;
     
     @IsProperty(precision = 18, scale = 4)
     @MapTo
-    @CompositeKeyMember(6)
+    @CompositeKeyMember(5)
     @Optional
     private BigDecimal bigDecimalKey;
     
     @IsProperty
     @MapTo
-    @CompositeKeyMember(7)
+    @CompositeKeyMember(6)
     @Optional
     private Money moneyKey;
     
     @IsProperty
     @MapTo
-    @CompositeKeyMember(8)
+    @CompositeKeyMember(7)
     @Optional
     private Colour colourKey;
     
     @IsProperty
     @MapTo
-    @CompositeKeyMember(9)
+    @CompositeKeyMember(8)
     @Optional
     private Hyperlink hyperlinkKey;
     
     @IsProperty
     @MapTo
-    @CompositeKeyMember(10)
+    @CompositeKeyMember(9)
     @Optional
     private TgEntityStringKey entityKey;
     
     @IsProperty
     @MapTo
-    @CompositeKeyMember(11)
+    @CompositeKeyMember(10)
     @Optional
     private TgEntityCompositeKey selfKey;
     

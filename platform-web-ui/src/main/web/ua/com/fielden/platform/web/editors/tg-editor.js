@@ -677,13 +677,13 @@ export class TgEditor extends PolymerElement {
                 this.reflector().tg_convertPropertyValue(newValue, this.propertyName, this.reflector().tg_getFullEntity(newValue), this.previousModifiedPropertiesHolder);
             }
             
-            var convertedValue = this.reflector().tg_getBindingValue.bind(this.reflector())(newValue, this.propertyName);
-            var newEditingValue = this.convertToString(convertedValue);
+            const convertedValue = this.reflector().tg_getBindingValue.bind(this.reflector())(newValue, this.propertyName);
+            const newEditingValue = this.convertToString(convertedValue);
             if (newEditingValue === this._editingValue) {
                 this._refreshCycleStarted = false;
                 this._updateMessagesForEntity(newValue);
             } else {
-                var editingValueAfterPreviousRefreshCycleChanged = oldValue 
+                const editingValueAfterPreviousRefreshCycleChanged = oldValue 
                     ? this.convertToString(this.reflector().tg_getBindingValue.bind(this.reflector())(oldValue, this.propertyName)) !== newEditingValue 
                     : true;
                 
@@ -715,7 +715,7 @@ export class TgEditor extends PolymerElement {
     }
     
     _assignConvertedValue (propValue) {
-        var newEditingValue = this.convertToString(propValue);
+        const newEditingValue = this.convertToString(propValue);
         if (newEditingValue === this._editingValue && (this._refreshCycleStarted === true) ) {
             this._refreshCycleStarted = false;
         }
@@ -723,12 +723,12 @@ export class TgEditor extends PolymerElement {
     }
     
     assignValue (entity, propertyName, tg_getBindingValueFromFullEntity) {
-        var convertedValue = tg_getBindingValueFromFullEntity(entity, propertyName);
+        const convertedValue = tg_getBindingValueFromFullEntity(entity, propertyName);
         this._assignConvertedValue(convertedValue);
     }
     
     assignConcreteValue (value, converter) {
-        var convertedValue = converter(value);
+        const convertedValue = converter(value);
         this._assignConvertedValue(convertedValue);
     }
 

@@ -801,12 +801,12 @@ export class TgEntityEditor extends TgEditor {
      * However, there are exceptional situations where null values might be passed even in case of MULTI.
      */
     convertToString (value) {
-        // there are cases where value might be null even for MULTI selection criteria
-        // this happens when a crit-only property changes from type SINGLE to MULTI
-        // joining on an empty array evaluates to an empty string
-        // null converts to '' in majority of cases in reflector.tg_toString... family of methods and this is the case for this editor (String or Arrays of String types)
+        // there are cases where value might be null even for MULTI selection criteria;
+        // this happens when a crit-only property changes from type SINGLE to MULTI;
+        // joining on an empty array evaluates to an empty string;
+        // null converts to '' in majority of cases (except boolean) in reflector.tg_toString... family of methods and this is the case for this editor (String or Array of Strings types)
         return this.multi === true
-            ? this.reflector().tg_toString(value, this.entity.type(), this.propertyName, { bindingValue: true, collection: true, separator: this.separator })
+            ? this.reflector().tg_toString(value, this.entity.type(), this.propertyName, { bindingValue: true, collection: true, separator: this.separator }) // custom ',' separator is needed here, otherwise tg-editor.convertToString would be sufficient
             : super.convertToString(value);
     }
 
@@ -868,9 +868,9 @@ export class TgEntityEditor extends TgEditor {
         if (!allDefined(arguments)) {
             return;
         }
-        var valueToFormat, fullEntity;
         if (!focused && entity !== null) {
-            fullEntity = this.reflector().tg_getFullEntity(entity);
+            const fullEntity = this.reflector().tg_getFullEntity(entity);
+            let valueToFormat;
             if (this.reflector().isError(fullEntity.prop(this.propertyName).validationResult())) {
                 valueToFormat = _editingValue; // Here we can take fullEntity.prop(this.propertyName).lastInvalidValue(); to show also description of invalid values. However, 'not found mocks' need to be properly supported. Also description layer for unfocused editor can be enhanced in a similar way too.
             } else {
@@ -966,7 +966,7 @@ export class TgEntityEditor extends TgEditor {
 
     _hasDesc (entity) {
         if (entity !== null) {
-            var entityValue = this.reflector().tg_getFullValue(entity, this.propertyName);
+            const entityValue = this.reflector().tg_getFullValue(entity, this.propertyName);
             if (entityValue !== null && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription()) {
                 return !!entityValue.get('desc');
             }
@@ -976,7 +976,7 @@ export class TgEntityEditor extends TgEditor {
 
     _formatDesc (entity) {
         if (entity !== null) {
-            var entityValue = this.reflector().tg_getFullValue(entity, this.propertyName);
+            const entityValue = this.reflector().tg_getFullValue(entity, this.propertyName);
             if (entityValue !== null && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription() && entityValue.get('desc')) {
                 return entityValue.get('desc');
             }
@@ -989,7 +989,7 @@ export class TgEntityEditor extends TgEditor {
             return;
         }
         if (entity !== null) {
-            var entityValue = this.reflector().tg_getFullValue(entity, this.propertyName);
+            const entityValue = this.reflector().tg_getFullValue(entity, this.propertyName);
             this._hasLayer = entityValue !== null && this.convertToString(this.reflector().tg_convert(entityValue)) === _editingValue && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription();
         } else {
             this._hasLayer = false;
