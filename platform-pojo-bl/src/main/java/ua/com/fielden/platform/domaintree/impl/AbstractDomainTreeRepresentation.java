@@ -304,7 +304,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
         final Class<?> elementType = determineClass(penultAndLast.getKey(), penultAndLast.getValue(), true, true);
         return getKeyMembers(elementType).stream()
             .filter(field -> !isShortCollectionKeyCompatible(field.getType(), penultAndLast.getKey()))
-            .findAny()
+            .findAny() // stream should return exactly one key field out of two entity-typed key fields after above filtering
             .map(field -> field.getName())
             .orElseThrow(() -> new IllegalStateException(format("Short collection (%s; %s) does not have significant key that is not compatible with parent type.", root.getSimpleName(), property)));
     }

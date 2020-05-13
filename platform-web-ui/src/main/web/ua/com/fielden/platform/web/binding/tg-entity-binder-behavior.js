@@ -1134,7 +1134,7 @@ export const TgEntityBinderBehavior = {
      * Sets the value of entity property ('propNameFromFuncEntityToAssign') to the property editor with propertyName 'propNameToBeAssigned'.
      */
     setEditorValue4Property: function (propNameToBeAssigned, entity, propNameFromFuncEntityToAssign) {
-        var editor = this.$.masterDom.querySelector('[id=editor_4_' + propNameToBeAssigned + ']');
+        const editor = this.$.masterDom.querySelector('[id=editor_4_' + propNameToBeAssigned + ']');
         editor.assignValue(entity, propNameFromFuncEntityToAssign, editor.reflector().tg_getBindingValueFromFullEntity.bind(editor.reflector()));
         editor.commit();
     },
