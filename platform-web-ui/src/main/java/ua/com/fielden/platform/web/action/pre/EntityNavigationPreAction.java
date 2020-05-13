@@ -14,6 +14,11 @@ public class EntityNavigationPreAction implements IPreAction {
 
     private final String navigationType;
 
+    /**
+     * Creates pre-action for action that allows to navigate to another entity without closing dialog, such action can work only on EGI.
+     *
+     * @param navigationType - type description that is used to inform user what type of entity is currently opened and is navigating.
+     */
     public EntityNavigationPreAction(final String navigationType) {
         this.navigationType = navigationType;
     }

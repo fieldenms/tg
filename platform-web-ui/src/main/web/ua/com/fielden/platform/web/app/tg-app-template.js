@@ -370,11 +370,17 @@ Polymer({
         }
     },
 
+    /**
+     * Selectes the specified view. If the view is opened in different module then play transition animation between modules.
+     * 
+     * @param {String} selected 
+     */
     _setSelected: function (selected) {
         if (this.menuConfig) {
             const moduleToSelect = findModule(selected, this.menuConfig);
             const currentlySelected = this.$.pages.selected;
             const currentlySelectedElement = currentlySelected && this.shadowRoot.querySelector("[name='" + currentlySelected + "']");
+            //If module to select is the same as currently selected then just open selected menu item (e.i open entity centre or master)
             if (currentlySelected === moduleToSelect) {
                 if (selected === 'master') {
                     this._selectedSubmodule = this._subroute.path;
@@ -388,6 +394,7 @@ Polymer({
                 }
                 return;
             }
+            //Otherwise configure exit animation on currently selected module and entry animation on module to select
             const elementToSelect = moduleToSelect && this.shadowRoot.querySelector("[name='" + moduleToSelect + "']");
             if (currentlySelectedElement) {
                 currentlySelectedElement.configureExitAnimation(moduleToSelect);
@@ -401,6 +408,7 @@ Polymer({
                 return;
             }
         }
+        //Play the transition animation. The view will be selected on animation finish event handler
         this.selectAfterRender = selected;
     },
     
@@ -409,7 +417,13 @@ Polymer({
         return e.returnValue;
     },
     
-    /*FIXME target is always the neon animated pages here should some specific target*/
+    /**
+     * Animation finish event handler. This handler opens master or centre if module transition occured because of user action.
+     * 
+     * @param {Event} e 
+     * @param {Object} detail 
+     * @param {Object} source 
+     */
     _animationFinished: function (e, detail, source) {
         var target = e.target || e.srcElement;
         if (target === this.$.pages){

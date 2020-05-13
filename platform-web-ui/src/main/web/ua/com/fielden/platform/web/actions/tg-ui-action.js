@@ -16,6 +16,7 @@ import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
+import {processResponseError, toastMsgForError} from '/resources/reflection/tg-ajax-utils.js';
 
 const template = html`
     <style>
@@ -479,29 +480,34 @@ Polymer({
 
             self.persistActiveElement();
 
-            const currentEntityType = this._calculateCurrentEntityType();
-            if (this.dynamicAction && this.currentEntity && this._previousEntityType !== currentEntityType) {
-                if (!this.elementName) {//Element name for dynamic action is not specified at first run
-                    this._originalShortDesc = this.shortDesc;//It means that sjortDesc wasn't changed yet.
-                }
-                this._masterUri = '/master/' + currentEntityType + '/' + this.currentEntity.get("id");
-                this.isActionInProgress = true;
-                this.$.masterRetriever.generateRequest().completes
-                    .then(res => {
-                        try {
-                            this._processMasterRetriever(res);
-                            this._previousEntityType = currentEntityType;
-                            postMasterInfoRetrieve();
-                        }catch (e) {
+            
+            if (this.dynamicAction && this.currentEntity) {
+                const currentEntityType = this._calculateCurrentEntityType();
+                if (this._previousEntityType !== currentEntityType) {
+                    if (!this.elementName) {//Element name for dynamic action is not specified at first run
+                        this._originalShortDesc = this.shortDesc;//It means that shortDesc wasn't changed yet.
+                    }
+                    this._masterUri = '/master/' + currentEntityType;
+                    this.isActionInProgress = true;
+                    this.$.masterRetriever.generateRequest().completes
+                        .then(res => {
+                            try {
+                                this._processMasterRetriever(res);
+                                this._previousEntityType = currentEntityType;
+                                postMasterInfoRetrieve();
+                            }catch (e) {
+                                this.isActionInProgress = false;
+                                this.restoreActionState();
+                                console.log("The action was rejected with error: " + e);
+                            }
+                        }).catch(error => {
                             this.isActionInProgress = false;
                             this.restoreActionState();
                             console.log("The action was rejected with error: " + error);
-                        }
-                    }).catch(error => {
-                        this.isActionInProgress = false;
-                        this.restoreActionState();
-                        console.log("The action was rejected with error: " + error);
-                    });
+                        });
+                } else {
+                    postMasterInfoRetrieve();    
+                }
             } else {
                 postMasterInfoRetrieve();
             }
@@ -738,7 +744,7 @@ Polymer({
             
             if (this._reflector.isError(deserialisedResult)) {
                 console.log('deserialisedResult: ', deserialisedResult);
-                this.toaster && this.toaster.openToastForError(deserialisedResult.message, this._toastMsgForError(deserialisedResult), true);
+                this.toaster && this.toaster.openToastForError(deserialisedResult.message, toastMsgForError(this._reflector, deserialisedResult), true);
                 throw {msg: deserialisedResult};
             }
             const masterInfo = deserialisedResult.instance;
@@ -748,7 +754,6 @@ Polymer({
             this.longDesc = this.longDesc || masterInfo.longDesc;
             this.attrs = Object.assign({}, this.attrs, {
                 entityType: masterInfo.entityType,
-                entityId: masterInfo.entityId, 
                 currentState:'EDIT',
                 prefDim: masterInfo.width && masterInfo.height && masterInfo.widthUnit && masterInfo.heightUnit && {
                     width: () => masterInfo.width,
@@ -768,30 +773,7 @@ Polymer({
     }, 
     
     _processMasterError: function (e) {
-        console.log('PROCESS ERROR', e.error);
-        const xhr = e.detail.request.xhr;
-        if (xhr.status === 500) { // internal server error, which could either be due to business rules or have some other cause due to a bug or db connectivity issue
-            const deserialisedResult = this._serialiser.deserialise(xhr.response);
-
-            if (this._reflector.isError(deserialisedResult)) {
-                // throw the toast message about the server-side error
-                this.toaster && this.toaster.openToastForError(this._reflector.exceptionMessage(deserialisedResult.ex), this._toastMsgForError(deserialisedResult), true);
-            } else {
-                //throw new Error('Responses with status code 500 suppose to carry an error cause!');
-                this.toaster && this.toaster.openToastForError('Master load error: ', 'Responses with status code 500 suppose to carry an error cause!', true);
-            }
-        } else if (xhr.status === 403) { // forbidden!
-            this.toaster && this.toaster.openToastForError('Access denied.', 'The current session has expired. Please login and try again.', true);
-        } else if (xhr.status === 503) { // service unavailable
-            this.toaster && this.toaster.openToastForError('Service Unavailable.', 'Server responded with error 503 (Service Unavailable).', true);
-        } else if (xhr.status >= 400) { // other client or server error codes
-            this.toaster && this.toaster.openToastForError('Service Error (' + xhr.status + ').', 'Server responded with error code ' + xhr.status, true);
-        } else { // for other codes just log the code
-            console.warn('Server responded with error code ', xhr.status);
-        }
+        processResponseError(e, this._reflector, this._serialiser, null, this.toaster);
     },
 
-    _toastMsgForError: function (errorResult) {
-        return this._reflector.stackTrace(errorResult.ex);
-    },
 });

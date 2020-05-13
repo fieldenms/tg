@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.resources;
 import static java.lang.String.format;
 import static org.restlet.data.MediaType.APPLICATION_JSON;
 import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.serialisation.api.SerialiserEngines.JACKSON;
 
@@ -374,9 +375,9 @@ public class RestServerUtil {
         if (entity != null) {
             // valid and invalid entities: both kinds are represented using successful result. Use client-side isValid() method
             //   in 'tg-reflector' to differentiate them
-            result = new Result(entity, "OK");
+            result = successful(entity);
         } else {
-            result = new Result(null, new Exception(format("Could not find master for entity type: %s.", entityType)));
+            result = failuref("Could not find master for entity type: %s.", entityType);
         }
         final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
         return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON);
