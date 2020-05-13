@@ -1,4 +1,5 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
+import {processResponseError, toastMsgForError} from '/resources/reflection/tg-ajax-utils.js';
 
 export const TgEntityBinderBehavior = {
 
@@ -449,7 +450,7 @@ export const TgEntityBinderBehavior = {
                         reader.onload = function () {
                             const resultAsObj = JSON.parse(reader.result);
                             const result = self._serialiser().deserialise(resultAsObj);
-                            self._openToastForError(result.message, self._toastMsgForError(result), true);
+                            self._openToastForError(result.message, toastMsgForError(self._reflector(), result), true);
                         }
                         reader.readAsText(xhr.response);
                     }
@@ -509,8 +510,8 @@ export const TgEntityBinderBehavior = {
                 var deserialisedResult = this._serialiser().deserialise(e.detail.response);
 
                 if (this._reflector().isWarning(deserialisedResult)) {
-                    console.warn(this._toastMsgForError(deserialisedResult));
-                    //this._openToastForError('Warning.', this._toastMsgForError(deserialisedResult), false);
+                    console.warn(toastMsgForError(this._reflector(), deserialisedResult));
+                    //this._openToastForError('Warning.', toastMsgForError(this._reflector(), deserialisedResult), false);
                 } else {
                     // continue with normal handling of the result's instance
                     var deserialisedInstance = deserialisedResult.instance;
@@ -520,7 +521,7 @@ export const TgEntityBinderBehavior = {
                     // Current logic of tg-toast will discard all other messages after this message, until this message dissapear.
                     if (this._reflector().isError(deserialisedResult)) {
                         console.log('deserialisedResult: ', deserialisedResult);
-                        this._openToastForError(deserialisedResult.message, this._toastMsgForError(deserialisedResult), !this._reflector().isContinuationError(deserialisedResult) || this.showContinuationsAsErrors);
+                        this._openToastForError(deserialisedResult.message, toastMsgForError(this._reflector(), deserialisedResult), !this._reflector().isContinuationError(deserialisedResult) || this.showContinuationsAsErrors);
                     }
                     e.detail.successful = customHandlerFor(deserialisedInstance, this._reflector().isError(deserialisedResult) ? deserialisedResult : null);
                     if (this._reflector().isError(deserialisedResult)) {
@@ -550,33 +551,7 @@ export const TgEntityBinderBehavior = {
         }).bind(self);
 
         self._processError = (function (e, name, customErrorHandlerFor) {
-            console.log('PROCESS ERROR', e.error);
-            const xhr = e.detail.request.xhr;
-            if (xhr.status === 500) { // internal server error, which could either be due to business rules or have some other cause due to a bug or db connectivity issue
-                const deserialisedResult = this._serialiser().deserialise(xhr.response);
-
-                if (this._reflector().isError(deserialisedResult)) {
-                    // throw the toast message about the server-side error
-                    this._openToastForError(this._reflector().exceptionMessage(deserialisedResult.ex), this._toastMsgForError(deserialisedResult), true);
-                    // continue with custom error handling of the error result
-                    customErrorHandlerFor(deserialisedResult);
-                } else {
-                    //throw new Error('Responses with status code 500 suppose to carry an error cause!');
-                    customErrorHandlerFor('Responses with status code 500 suppose to carry an error cause!');
-                }
-            } else if (xhr.status === 403) { // forbidden!
-                // TODO should prompt for login in place...
-                this._openToastForError('Access denied.', 'The current session has expired. Please login and try again.', true);
-                customErrorHandlerFor('Access denied');
-            } else if (xhr.status === 503) { // service unavailable
-                this._openToastForError('Service Unavailable.', 'Server responded with error 503 (Service Unavailable).', true);
-                customErrorHandlerFor('Service Unavailable');
-            } else if (xhr.status >= 400) { // other client or server error codes
-                this._openToastForError('Service Error (' + xhr.status + ').', 'Server responded with error code ' + xhr.status, true);
-                customErrorHandlerFor('Service Error (' + xhr.status + ').');
-            } else { // for other codes just log the code
-                console.warn('Server responded with error code ', xhr.status);
-            }
+            processResponseError(e, this._reflector(), this._serialiser(), customErrorHandlerFor, this.toaster);
         }).bind(self);
 
         // calbacks, that will be bound by editor child elements:
@@ -808,11 +783,6 @@ export const TgEntityBinderBehavior = {
         this._toastGreeting().msgHeading = "Error";
         console.log('about to show ... this._toastGreeting().isCritical = ', isCritical);
         this._toastGreeting().show();
-    },
-
-    _toastMsgForError: function (errorResult) {
-        var ex = errorResult.ex;
-        return this._reflector().stackTrace(ex);
     },
 
     _toastMsgForErrorObject: function (errorObject) {
