@@ -155,7 +155,7 @@ public class GraphQLService implements IWebApi {
      * @return
      */
     private static Optional<Pair<Class<? extends AbstractEntity<?>>, GraphQLObjectType>> createGraphQLTypeFor(final Class<? extends AbstractEntity<?>> entityType) {
-        final List<GraphQLFieldDefinition> graphQLFieldDefinitions = constructKeysAndProperties(entityType).stream()
+        final List<GraphQLFieldDefinition> graphQLFieldDefinitions = constructKeysAndProperties(entityType, true).stream()
             .filter(field -> !isExcluded(entityType, reflectionProperty(field.getName())))
             .map(field -> createGraphQLFieldDefinition(entityType, field.getName()))
             .flatMap(optField -> optField.map(Stream::of).orElseGet(Stream::empty))

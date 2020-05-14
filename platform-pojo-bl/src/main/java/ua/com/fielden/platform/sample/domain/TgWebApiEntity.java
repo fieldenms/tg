@@ -166,4 +166,11 @@ public class TgWebApiEntity extends ActivatableAbstractEntity<String> {
         return this;
     }
     
+    @Observable
+    @Override
+    public TgWebApiEntity setKey(final String key) {
+        super.setKey(key);
+        return this;
+    }
+    
 }
