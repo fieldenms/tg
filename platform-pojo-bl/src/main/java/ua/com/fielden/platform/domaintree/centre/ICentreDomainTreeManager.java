@@ -775,5 +775,50 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * @param widthsAndGrowFactors
          */
         void setWidthsAndGrowFactors(final T2<EnhancementPropertiesMap<Integer>, EnhancementPropertiesMap<Integer>> widthsAndGrowFactors);
+        
+        /**
+         * Gets result-set page capacity.
+         * 
+         * @return
+         */
+        int getPageCapacity();
+        
+        /**
+         * Sets result-set page capacity.
+         * 
+         * @param pageCapacity
+         * @return
+         */
+        IAddToResultTickManager setPageCapacity(final int pageCapacity);
+        
+        /**
+         * Gets result-set visible rows count.
+         * 
+         * @return
+         */
+        int getVisibleRowsCount();
+        
+        /**
+         * Sets result-set visible rows count.
+         * 
+         * @param visibleRowsCount
+         * @return
+         */
+        IAddToResultTickManager setVisibleRowsCount(final int visibleRowsCount);
+        
+        /**
+         * Gets result-set number of header lines.
+         * 
+         * @return
+         */
+        int getNumberOfHeaderLines();
+        
+        /**
+         * Sets result-set number of header lines.
+         * 
+         * @param numberOfHeaderLines
+         * @return
+         */
+        IAddToResultTickManager setNumberOfHeaderLines(final int numberOfHeaderLines);
     }
 }

@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 import static ua.com.fielden.platform.web.resources.webui.EntityResource.restoreEntityFrom;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreSavingInfoHolder;
@@ -24,6 +26,7 @@ import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -37,6 +40,7 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  *
  */
 public class EntityValidationResource<T extends AbstractEntity<?>> extends AbstractWebResource {
+    static final String VALIDATION_COUNTER = "@validationCounter";
     private final Class<T> entityType;
     private final EntityFactory entityFactory;
     private final RestServerUtil restUtil;
@@ -57,10 +61,11 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Abstr
             final IWebUiConfig webUiConfig,
             final IUserProvider userProvider,
             final IDeviceProvider deviceProvider,
+            final IDates dates,
             final Context context,
             final Request request,
             final Response response) {
-        super(context, request, response, deviceProvider);
+        super(context, request, response, deviceProvider, dates);
         
         this.entityType = entityType;
         this.entityFactory = entityFactory;
@@ -73,7 +78,7 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Abstr
     }
 
     /**
-     * Handles POST request resulting from RAO call to method save.
+     * Handles POST request resulting from tg-entity-master <code>validate()</code> method.
      */
     @Post
     public Representation validate(final Representation envelope) {
@@ -91,7 +96,7 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Abstr
             final T applied = restoreEntityFrom(false, savingInfoHolder, entityType, entityFactory, webUiConfig, companionFinder, user, userProvider, critGenerator, 0, device(), domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion);
             
             logger.debug("ENTITY_VALIDATION_RESOURCE: validate finished.");
-            return restUtil.rawListJsonRepresentation(applied);
+            return restUtil.rawListJsonRepresentation(applied, linkedMapOf(t2(VALIDATION_COUNTER, savingInfoHolder.getModifHolder().get(VALIDATION_COUNTER)))); // savingInfoHolder and its modifHolder are never empty
         }, restUtil);
     }
 }

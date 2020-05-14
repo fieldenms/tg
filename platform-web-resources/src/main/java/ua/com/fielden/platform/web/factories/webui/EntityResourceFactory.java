@@ -14,6 +14,7 @@ import ua.com.fielden.platform.entity.IEntityProducer;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -37,6 +38,7 @@ public class EntityResourceFactory extends Restlet {
     private final ICompanionObjectFinder coFinder;
     private final IUserProvider userProvider;
     private final IDeviceProvider deviceProvider;
+    private final IDates dates;
     
     /**
      * Instantiates a factory for entity resources.
@@ -54,6 +56,7 @@ public class EntityResourceFactory extends Restlet {
         this.coFinder = injector.getInstance(ICompanionObjectFinder.class);
         this.userProvider = injector.getInstance(IUserProvider.class);
         this.deviceProvider = injector.getInstance(IDeviceProvider.class);
+        this.dates = injector.getInstance(IDates.class);
     }
 
     @Override
@@ -63,7 +66,7 @@ public class EntityResourceFactory extends Restlet {
         if (Method.POST == request.getMethod() || Method.PUT == request.getMethod() || Method.DELETE == request.getMethod()) {
             final EntityMaster<? extends AbstractEntity<?>> master = ResourceFactoryUtils.getEntityMaster(request, webUiConfig);
             
-            new EntityResource<AbstractEntity<?>>(
+            new EntityResource<>(
                     (Class<AbstractEntity<?>>) master.getEntityType(),
                     (IEntityProducer<AbstractEntity<?>>) master.createEntityProducer(),
                     factory,
@@ -74,6 +77,7 @@ public class EntityResourceFactory extends Restlet {
                     webUiConfig,
                     userProvider,
                     deviceProvider,
+                    dates,
                     getContext(),
                     request,
                     response //

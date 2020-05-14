@@ -27,8 +27,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -305,7 +305,7 @@ public class EntQuery implements ISingleOperand {
         final List<OrderBy> toBeAdded = new ArrayList<>();
         
         if (orderBy.getYieldName().equals(KEY) && isCompositeEntity(resultType)) {
-            final List<String> keyOrderProps = keyPaths((Class<? extends AbstractEntity<DynamicEntityKey>>) resultType);
+            final List<String> keyOrderProps = keyPaths(resultType);
             for (final String keyMemberProp : keyOrderProps) {
                 toBeAdded.add(new OrderBy(new EntProp(keyMemberProp), orderBy.isDesc()));
             }
@@ -329,7 +329,7 @@ public class EntQuery implements ISingleOperand {
         final List<OrderBy> toBeAdded = new ArrayList<>();
         
         if (orderBy.getOperand() instanceof EntProp && ((EntProp) orderBy.getOperand()).getName().equals(KEY) && isCompositeEntity(resultType)) {
-            final List<String> keyOrderProps = keyPaths((Class<? extends AbstractEntity<DynamicEntityKey>>) resultType);
+            final List<String> keyOrderProps = keyPaths(resultType);
             for (final String keyMemberProp : keyOrderProps) {
                 toBeAdded.add(new OrderBy(new EntProp(keyMemberProp), orderBy.isDesc()));
             }

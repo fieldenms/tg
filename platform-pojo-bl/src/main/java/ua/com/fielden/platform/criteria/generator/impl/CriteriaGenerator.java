@@ -143,6 +143,16 @@ public class CriteriaGenerator implements ICriteriaGenerator {
     }
 
     /**
+     * {@inheritDoc}
+     * <p>
+     * This implementation clears generated selection criteria classes that become out-dated when adding / removing selection criteria properties to Web UI centre configurations.
+     */
+    @Override
+    public void clear() {
+        generatedClasses.clear();
+    }
+
+    /**
      * Generates criteria properties for specified list of properties and their root type.
      *
      * @param root

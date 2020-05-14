@@ -41,8 +41,8 @@ public class CentreConfigUpdater extends AbstractFunctionalEntityForCollectionMo
     private List<String> sortingVals = new ArrayList<>(); // this list should not contain duplicates, please ensure that when setSortingVals invocation is performing
 
     @IsProperty
-    @Title(value = "Sorting Changed", desc = "Indicates whether successful saving of this entity actually changed centre sorting")
-    private boolean sortingChanged;
+    @Title(value = "Trigger Re-run", desc = "Indicates whether successful saving of this entity should trigger re-run.")
+    private boolean triggerRerun;
 
     @IsProperty
     @Title(value = "Master Entity Holder", desc = "Master entity's holder that is set during producing of this functional action and is used to restore master entity in companion object.")
@@ -63,16 +63,32 @@ public class CentreConfigUpdater extends AbstractFunctionalEntityForCollectionMo
     @Title(value = "Visible Rows", desc = "The number of visible rows. Value 0 (zero) stands for \"display all data retrieved\".")
     @Required
     @BeforeChange({@Handler(value = GreaterOrEqualValidator.class, str = {@StrParam(name = "limit", value = "0")})})
-    private Integer visibleRows;
+    private Integer visibleRowsCount;
+
+    @IsProperty
+    @Title(value = "Number of Header Lines", desc = "The maximum number of wrapped lines in table header. Minumum is 1 and maximum is 3.")
+    @BeforeChange({@Handler(value = GreaterValidator.class, str = {@StrParam(name = "limit", value = "0")}),
+                   @Handler(value = MaxValueValidator.class, str = {@StrParam(name = "limit", value = "3")})})
+    private Integer numberOfHeaderLines;
 
     @Observable
-    public CentreConfigUpdater setVisibleRows(final Integer visibleRows) {
-        this.visibleRows = visibleRows;
+    public CentreConfigUpdater setNumberOfHeaderLines(final Integer numberOfHeaderLines) {
+        this.numberOfHeaderLines = numberOfHeaderLines;
         return this;
     }
 
-    public Integer getVisibleRows() {
-        return visibleRows;
+    public Integer getNumberOfHeaderLines() {
+        return numberOfHeaderLines;
+    }
+
+    @Observable
+    public CentreConfigUpdater setVisibleRowsCount(final Integer visibleRowsCount) {
+        this.visibleRowsCount = visibleRowsCount;
+        return this;
+    }
+
+    public Integer getVisibleRowsCount() {
+        return visibleRowsCount;
     }
 
     @Observable
@@ -106,13 +122,13 @@ public class CentreConfigUpdater extends AbstractFunctionalEntityForCollectionMo
     }
 
     @Observable
-    public CentreConfigUpdater setSortingChanged(final boolean sortingChanged) {
-        this.sortingChanged = sortingChanged;
+    public CentreConfigUpdater setTriggerRerun(final boolean triggerRerun) {
+        this.triggerRerun = triggerRerun;
         return this;
     }
 
-    public boolean isSortingChanged() {
-        return sortingChanged;
+    public boolean isTriggerRerun() {
+        return triggerRerun;
     }
 
     @Observable

@@ -137,6 +137,7 @@ const template = html`
              cursor: col-resize;
         }
         .table-header-row {
+            line-height: 1rem;
             font-size: 0.9rem;
             font-weight: 400;
             color: #757575;
@@ -322,6 +323,14 @@ const template = html`
             overflow: hidden;
             text-overflow: ellipsis;
         }
+        .truncate[multiple-line] {
+            overflow: hidden;
+            white-space: normal;
+            word-break: break-word;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: var(--egi-number-of-header-lines, 1);
+        }
         tg-egi-cell.with-action {
             cursor: pointer;
         }
@@ -454,7 +463,7 @@ const template = html`
                         <template is="dom-repeat" items="[[fixedColumns]]">
                             <div class="table-cell cell" fixed style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, item.shouldAddDynamicWidth, 'true')]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                                 <div class="table-header-column-content">
-                                    <div class="truncate table-header-column-title" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
+                                    <div class="truncate table-header-column-title" multiple-line$="[[_multipleHeaderLines]]" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
                                     <iron-icon class="header-icon indicator-icon" hidden$="[[!item.editable]]" tooltip-text="This column is editable" icon="icons:create"></iron-icon>
                                     <div class="header-icon sorting-group" hidden$="[[!_isSortingVisible(item.sortable, item.sorting)]]">
                                         <iron-icon class="indicator-icon" icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_computeSortingIconStyle(item.sorting)]]"></iron-icon>
@@ -477,7 +486,7 @@ const template = html`
                         <template is="dom-repeat" items="[[columns]]">
                             <div class="table-cell cell" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, item.shouldAddDynamicWidth, 'false')]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                                 <div class="table-header-column-content">
-                                    <div class="truncate table-header-column-title" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
+                                    <div class="truncate table-header-column-title" multiple-line$="[[_multipleHeaderLines]]" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
                                     <iron-icon class="header-icon indicator-icon" hidden="[[!item.editable]]" tooltip-text="This column is editable" icon="icons:create"></iron-icon>
                                     <div class="header-icon sorting-group" hidden$="[[!_isSortingVisible(item.sortable, item.sorting)]]">
                                         <iron-icon class="indicator-icon" icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_computeSortingIconStyle(item.sorting)]]"></iron-icon>
@@ -760,9 +769,24 @@ Polymer({
             value: true
         },
         /**
+         * Defines the number of wrapped lines in EGI.
+         */
+        numberOfHeaderLines: {
+            type: Number,
+            value: 1,
+            observer: "_numberOfHeaderLinesChanged"
+        },
+        /**
+         * Property needed for differentiating styles between multiple row header or single line header 
+         */
+        _multipleHeaderLines: {
+            type: Boolean,
+            value: false
+        },
+        /**
          * Defines the number of visible rows.
          */
-        visibleRowCount: {
+        visibleRowsCount: {
             type: Number,
             value: 0
         },
@@ -882,7 +906,7 @@ Polymer({
 
     observers: [
         "_columnsChanged(columns, fixedColumns)",
-        "_heightRelatedPropertiesChanged(visibleRowCount, rowHeight, constantHeight, fitToHeight, summaryFixed, _totalsRowCount)"
+        "_heightRelatedPropertiesChanged(visibleRowsCount, rowHeight, constantHeight, fitToHeight, summaryFixed, _totalsRowCount)"
     ],
 
     created: function () {
@@ -1233,14 +1257,14 @@ Polymer({
         if (this.offsetParent !== null) {
             const fixedHeaders = this.$.top_left_egi.querySelectorAll(".table-header-column-title");
             const scrollingHeaders = this.$.top_egi.querySelectorAll(".table-header-column-title");
-            this._setSortingFor(sortingConfig, this.fixedColumns, fixedHeaders,"fixedColumns");
-            this._setSortingFor(sortingConfig, this.columns, scrollingHeaders, "columns");
+            this._setSortingFor(sortingConfig, this.fixedColumns, fixedHeaders,"fixedColumns", "0"/*The index of fixed columns in summary row*/);
+            this._setSortingFor(sortingConfig, this.columns, scrollingHeaders, "columns", "1"/*The index of scrollable columns in summary row*/);
         } else {
             this._postponedSortingConfig = sortingConfig;
         }
     },
 
-    _setSortingFor(sortingConfig, columns, headerTitles, modelName) {
+    _setSortingFor(sortingConfig, columns, headerTitles, modelName, totalsModelName) {
         columns.forEach((col, idx) => {
             const configIdx = sortingConfig.findIndex(config => config.property === col.property);
             if (configIdx >= 0) {
@@ -1248,12 +1272,14 @@ Polymer({
                 this.set(modelName + "." + idx + ".sortingNumber", configIdx);
                 if (headerTitles[idx].scrollWidth > headerTitles[idx].offsetWidth) {
                     this.set(modelName + "." + idx + ".shouldAddDynamicWidth", true);
+                    this._updateTotalDynamicWidth(idx, totalsModelName, true);
                 }
             } else {
                 this.set(modelName + "." + idx + ".sorting", null);
                 this.set(modelName + "." + idx + ".sortingNumber", -1);
                 if (this.get(modelName + "." + idx + ".shouldAddDynamicWidth")) {
                     this.set(modelName + "." + idx + ".shouldAddDynamicWidth", false);
+                    this._updateTotalDynamicWidth(idx, totalsModelName, false);
                 }
             }
         });
@@ -1627,6 +1653,14 @@ Polymer({
         }
     },
 
+    _updateTotalDynamicWidth: function (colIndex, modelIndex, value) {
+        if (this._totalsRows) {
+            this._totalsRows.forEach((totalRow, totalIndex) => {
+                this.set("_totalsRows." + totalIndex + "." + modelIndex + "." + colIndex + ".shouldAddDynamicWidth", value);
+            });
+        }
+    },
+
     _endColumnResizing: function (e) {
         //this.style.cursor = "default";
         e.currentTarget.classList.toggle("resizing-action", false);
@@ -1830,6 +1864,13 @@ Polymer({
         this.updateStyles({"--egi-row-height": newValue});
     },
 
+    _numberOfHeaderLinesChanged: function (newValue) {
+        if (newValue > 0 && newValue < 4) {
+            this.updateStyles({"--egi-number-of-header-lines": newValue});
+            this._multipleHeaderLines = newValue > 1;
+        }
+    },
+
     _sortIndicatorWidthChanged: function (newValue) {
         this.updateStyles({"--egi-sorting-width": newValue + "px"});
     },
@@ -1860,12 +1901,14 @@ Polymer({
                         const totalColumn = item.summary[summaryRowCounter]
                         totalColumn.width = item.width;
                         totalColumn.growFactor = item.growFactor;
+                        totalColumn.shouldAddDynamicWidth = item.shouldAddDynamicWidth;
                         totalsRow.push(item.summary[summaryRowCounter]);
                     } else {
                         const totalColumn = {};
                         totalColumn.width = item.width;
                         totalColumn.growFactor = item.growFactor;
                         totalColumn.type = item.type
+                        totalColumn.shouldAddDynamicWidth = item.shouldAddDynamicWidth;
                         totalsRow.push(totalColumn);
                     }
                 });
@@ -1877,7 +1920,7 @@ Polymer({
         this._totalsRows = gridSummary;
     },
 
-    _heightRelatedPropertiesChanged: function (visibleRowCount, rowHeight, constantHeight, fitToHeight, summaryFixed, _totalsRowCount) {
+    _heightRelatedPropertiesChanged: function (visibleRowsCount, rowHeight, constantHeight, fitToHeight, summaryFixed, _totalsRowCount) {
         //Constant height take precedence over visible row count which takes precedence over default behaviour that extends the EGI's height to it's content height
         this.$.paperMaterial.style.removeProperty("height");
         this.$.paperMaterial.style.removeProperty("min-height");
@@ -1885,9 +1928,9 @@ Polymer({
         this.$.scrollableContainer.style.removeProperty("max-height");
         if (constantHeight) { //Set the height for the egi
             this.$.paperMaterial.style["height"] = "calc(" + constantHeight + " - 20px)";
-        } else if (visibleRowCount > 0) { //Set the height or max height for the scroll container so that only specified number of rows become visible.
+        } else if (visibleRowsCount > 0) { //Set the height or max height for the scroll container so that only specified number of rows become visible.
             this.$.paperMaterial.style["min-height"] = "fit-content";
-            const rowCount = visibleRowCount + (summaryFixed ? _totalsRowCount : 0);
+            const rowCount = visibleRowsCount + (summaryFixed ? _totalsRowCount : 0);
             const bottomMargin = this.getComputedStyleValue('--egi-bottom-margin').trim() || "15px";
             const height = "calc(3rem + " + rowCount + " * " + rowHeight + " + " + rowCount + "px" + (summaryFixed && _totalsRowCount > 0 ? (" + " + bottomMargin) : "") + ")";
             if (fitToHeight) {

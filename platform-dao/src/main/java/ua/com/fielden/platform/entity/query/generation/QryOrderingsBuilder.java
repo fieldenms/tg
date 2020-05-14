@@ -41,7 +41,7 @@ public class QryOrderingsBuilder extends AbstractTokensBuilder {
             finaliseChild();
             //throw new RuntimeException("Unable to produce result - unfinished model state!");
         }
-        final List<OrderBy> models = new ArrayList<OrderBy>();
+        final List<OrderBy> models = new ArrayList<>();
         for (final Pair<TokenCategory, Object> pair : getTokens()) {
             models.add((OrderBy) pair.getValue());
         }

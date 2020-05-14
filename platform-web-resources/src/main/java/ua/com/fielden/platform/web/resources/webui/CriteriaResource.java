@@ -29,6 +29,7 @@ import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.cr
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.isAutoRunning;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.isRunning;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.isSorting;
+import static ua.com.fielden.platform.web.resources.webui.EntityValidationResource.VALIDATION_COUNTER;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentreContextHolder;
@@ -77,6 +78,7 @@ import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.CentreContext;
@@ -128,12 +130,13 @@ public class CriteriaResource extends AbstractWebResource {
             final ICompanionObjectFinder companionFinder,
             final IUserProvider userProvider,
             final IDeviceProvider deviceProvider,
+            final IDates dates,
             final ICriteriaGenerator critGenerator,
             final EntityFactory entityFactory,
             final Context context,
             final Request request,
             final Response response) {
-        super(context, request, response, deviceProvider);
+        super(context, request, response, deviceProvider, dates);
 
         this.restUtil = restUtil;
         this.companionFinder = companionFinder;
@@ -196,14 +199,13 @@ public class CriteriaResource extends AbstractWebResource {
             final DeviceProfile device = device();
             final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = createCriteriaEntityWithoutConflicts(modifiedPropertiesHolder, companionFinder, critGenerator, miType, saveAsName, user, userProvider, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
             final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre = appliedCriteriaEntity.getCentreDomainTreeMangerAndEnhancer();
-            return restUtil.rawListJsonRepresentation(
-                    appliedCriteriaEntity,
-                    createCriteriaMetaValuesCustomObject(
-                            createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)),
-                            isFreshCentreChanged(updatedFreshCentre, updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder)),
-                            createStaleCriteriaMessage((String) modifiedPropertiesHolder.get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, userProvider, companionFinder, critGenerator, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion)
-                    )//
+            final Map<String, Object> customObject = createCriteriaMetaValuesCustomObject(
+                createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)),
+                isFreshCentreChanged(updatedFreshCentre, updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder)),
+                createStaleCriteriaMessage((String) modifiedPropertiesHolder.get("@@wasRun"), updatedFreshCentre, miType, saveAsName, user, userProvider, companionFinder, critGenerator, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion)
             );
+            customObject.put(VALIDATION_COUNTER, modifiedPropertiesHolder.get(VALIDATION_COUNTER));
+            return restUtil.rawListJsonRepresentation(appliedCriteriaEntity, customObject);
         }, restUtil);
     }
 
@@ -327,6 +329,9 @@ public class CriteriaResource extends AbstractWebResource {
                     final List<Pair<String, Ordering>> previousSortingProps = previousFreshCentre.getSecondTick().orderedProperties(root);
                     final List<String> previousUsedProps = previousFreshCentre.getSecondTick().usedProperties(root);
                     final T2<EnhancementPropertiesMap<Integer>, EnhancementPropertiesMap<Integer>> previousWidthsAndGrowFactors = previousFreshCentre.getSecondTick().getWidthsAndGrowFactors();
+                    final int previousPageCapacity = previousFreshCentre.getSecondTick().getPageCapacity();
+                    final int previousVisibleRowsCount = previousFreshCentre.getSecondTick().getVisibleRowsCount();
+                    final int previousNumberOfHeaderLines = previousFreshCentre.getSecondTick().getNumberOfHeaderLines();
 
                     // clear all surrogate centres
                     removeCentres(user, miType, device(), saveAsName, eccCompanion, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME);
@@ -336,6 +341,10 @@ public class CriteriaResource extends AbstractWebResource {
                     emptyFreshCentre.getSecondTick().setWidthsAndGrowFactors(previousWidthsAndGrowFactors);
                     // then apply order, visibility and sorting
                     applyNewOrderVisibilityAndSorting(emptyFreshCentre.getSecondTick(), root, previousUsedProps, previousSortingProps);
+                    // also pageCapacity, visibleRowsCount and numberOfHeaderLines
+                    emptyFreshCentre.getSecondTick().setPageCapacity(previousPageCapacity);
+                    emptyFreshCentre.getSecondTick().setVisibleRowsCount(previousVisibleRowsCount);
+                    emptyFreshCentre.getSecondTick().setNumberOfHeaderLines(previousNumberOfHeaderLines);
                     // save the centre into the database
                     updatedFreshCentre = commitCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device(), emptyFreshCentre, null /* newDesc */, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
 
@@ -534,10 +543,10 @@ public class CriteriaResource extends AbstractWebResource {
         return resList;
     }
 
-    private Map<String, List<Map<String, String>>> createDynamicProperties(final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext) {
-        final Map<String, List<Map<String, String>>> dynamicColumns = new LinkedHashMap<>();
+    private Map<String, List<Map<String, Object>>> createDynamicProperties(final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext) {
+        final Map<String, List<Map<String, Object>>> dynamicColumns = new LinkedHashMap<>();
         resPropsWithContext.forEach(resPropWithContext -> {
-            centre.getDynamicColumnBuilderFor(resPropWithContext.getKey()).ifPresent(dynColumnBuilder -> 
+            centre.getDynamicColumnBuilderFor(resPropWithContext.getKey()).ifPresent(dynColumnBuilder ->
                 dynColumnBuilder.getColumnsConfig(resPropWithContext.getValue()).ifPresent(config -> dynamicColumns.put(resPropWithContext.getKey().propName.get() + "Columns", config.build()))
             );
         });

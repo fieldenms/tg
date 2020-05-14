@@ -7,7 +7,6 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.uncapitalize;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY_NOT_ASSIGNED;
 import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -630,6 +629,9 @@ public class EntityResourceUtils {
         } else if (EntityUtils.isString(propertyType)) {
             return reflectedValue;
         } else if (Integer.class.isAssignableFrom(propertyType)) {
+            if (reflectedValue instanceof Long || reflectedValue instanceof BigInteger) {
+                throw new IllegalStateException("Too big.");
+            }
             return reflectedValue;
         } else if (EntityUtils.isBoolean(propertyType)) {
             return reflectedValue;

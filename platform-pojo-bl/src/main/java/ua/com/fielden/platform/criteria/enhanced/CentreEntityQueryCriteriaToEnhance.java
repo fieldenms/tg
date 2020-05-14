@@ -10,6 +10,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.utils.IDates;
 
 //TODO must finish implementation in order to provide correct ordering, fetch model etc. Consider to provide reference on to the ICriteriaDomainTreeManager.
 /**
@@ -31,7 +32,7 @@ public class CentreEntityQueryCriteriaToEnhance<T extends AbstractEntity<?>, DAO
      */
     @SuppressWarnings("rawtypes")
     @Inject
-    protected CentreEntityQueryCriteriaToEnhance(final IValueMatcherFactory valueMatcherFactory, final IGeneratedEntityController generatedEntityController, final ISerialiser serialiser, final ICompanionObjectFinder controllerProvider) {
-        super(valueMatcherFactory, generatedEntityController, serialiser, controllerProvider);
+    protected CentreEntityQueryCriteriaToEnhance(final IValueMatcherFactory valueMatcherFactory, final IGeneratedEntityController generatedEntityController, final ISerialiser serialiser, final ICompanionObjectFinder controllerProvider, final IDates dates) {
+        super(valueMatcherFactory, generatedEntityController, serialiser, controllerProvider, dates);
     }
 }

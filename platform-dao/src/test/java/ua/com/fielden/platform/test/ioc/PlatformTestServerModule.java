@@ -37,6 +37,7 @@ import ua.com.fielden.platform.sample.domain.ITgBogie;
 import ua.com.fielden.platform.sample.domain.ITgBogieClass;
 import ua.com.fielden.platform.sample.domain.ITgBogieLocation;
 import ua.com.fielden.platform.sample.domain.ITgCategory;
+import ua.com.fielden.platform.sample.domain.ITgCategoryAttachment;
 import ua.com.fielden.platform.sample.domain.ITgCentreDiffSerialisation;
 import ua.com.fielden.platform.sample.domain.ITgCentreDiffSerialisationNonPersistentChild;
 import ua.com.fielden.platform.sample.domain.ITgCentreDiffSerialisationNonPersistentCompositeChild;
@@ -83,6 +84,7 @@ import ua.com.fielden.platform.sample.domain.TgAverageFuelUsageDao;
 import ua.com.fielden.platform.sample.domain.TgBogieClassDao;
 import ua.com.fielden.platform.sample.domain.TgBogieDao;
 import ua.com.fielden.platform.sample.domain.TgBogieLocationDao;
+import ua.com.fielden.platform.sample.domain.TgCategoryAttachmentDao;
 import ua.com.fielden.platform.sample.domain.TgCategoryDao;
 import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationDao;
 import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationNonPersistentChildDao;
@@ -137,6 +139,7 @@ import ua.com.fielden.platform.test.entities.CompositeEntityKeyDao;
 import ua.com.fielden.platform.test.entities.IComplexKeyEntity;
 import ua.com.fielden.platform.test.entities.ICompositeEntity;
 import ua.com.fielden.platform.test.entities.ICompositeEntityKey;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
 /**
@@ -173,6 +176,7 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bindConstant().annotatedWith(UntrustedDeviceSessionDuration.class).to(5); // 5 minutes
 
         bind(Ticker.class).to(TickerForSessionCache.class).in(Scopes.SINGLETON);
+        bind(IDates.class).to(DatesForTesting.class).in(Scopes.SINGLETON);
         bind(IUniversalConstants.class).to(UniversalConstantsForTesting.class).in(Scopes.SINGLETON);
         bind(new TypeLiteral<Cache<String, UserSession>>(){}).annotatedWith(SessionCache.class).toProvider(TestSessionCacheBuilder.class).in(Scopes.SINGLETON);
 
@@ -203,6 +207,7 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bind(ITgSystem.class).to(TgSystemDao.class);
         bind(ITgSubSystem.class).to(TgSubSystemDao.class);
         bind(ITgCategory.class).to(TgCategoryDao.class);
+        bind(ITgCategoryAttachment.class).to(TgCategoryAttachmentDao.class);
         bind(ITgVehicle.class).to(TgVehicleDao.class);
         bind(ITgWebApiEntity.class).to(TgWebApiEntityDao.class);
         bind(ITgVehicleFinDetails.class).to(TgVehicleFinDetailsDao.class);

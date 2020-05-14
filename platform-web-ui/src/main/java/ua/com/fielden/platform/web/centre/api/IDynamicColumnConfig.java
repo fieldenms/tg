@@ -13,7 +13,7 @@ import ua.com.fielden.platform.entity_centre.review.criteria.DynamicColumnForExp
  */
 public interface IDynamicColumnConfig {
 
-    List<Map<String, String>> build();
+    List<Map<String, Object>> build();
 
     List<DynamicColumnForExport> buildToExport();
 }

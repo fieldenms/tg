@@ -257,8 +257,8 @@ public class WebResourceGuardTestCase extends AbstractDaoTestCase {
         final User currUser = getInstance(IUserProvider.class).getUser();
 
         // establish generate two authenticators with the second authenticator having a greater expiration time
-        final Authenticator auth1 = coSession.mkAuthenticator(currUser, coSession.genSeriesId(), dateTime("2015-04-23 18:00:00").toDate());
-        final Authenticator auth2 = coSession.mkAuthenticator(currUser, coSession.genSeriesId(), dateTime("2015-04-23 19:00:00").toDate());
+        final Authenticator auth1 = coSession.mkAuthenticator(currUser, coSession.genSeriesId(), 1L, dateTime("2015-04-23 19:00:01").toDate());
+        final Authenticator auth2 = coSession.mkAuthenticator(currUser, coSession.genSeriesId(), 2L, dateTime("2015-04-23 19:00:00").toDate());
         final String strAuth1 = auth1.toString();
         final String strAuth2 = auth2.toString();
 

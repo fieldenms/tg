@@ -42,7 +42,7 @@ public class StandAloneConditionBuilder extends AbstractTokensBuilder {
 
         final Iterator<Pair<TokenCategory, Object>> iterator = getTokens().iterator();
         final ICondition firstCondition = (ICondition) iterator.next().getValue();
-        final List<CompoundCondition> otherConditions = new ArrayList<CompoundCondition>();
+        final List<CompoundCondition> otherConditions = new ArrayList<>();
         for (; iterator.hasNext();) {
             final CompoundCondition subsequentCompoundCondition = (CompoundCondition) iterator.next().getValue();
             otherConditions.add(subsequentCompoundCondition);

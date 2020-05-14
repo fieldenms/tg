@@ -55,11 +55,11 @@ const entityCentreTemplate = html`
         /*toolbarStyles*/
     </style>
     <tg-entity-centre id="dom" _selected-view="{{_selectedView}}" _url="[[_url]]" _bind-centre-info="[[_bindCentreInfo]]" _process-discarder-response="[[_processDiscarderResponse]]" _process-discarder-error="[[_processDiscarderError]]" _saver-disabled="[[_saverDisabled]]" _discarder-disabled="[[_discarderDisabled]]" _runner-disabled="[[_runnerDisabled]]" _viewer-disabled="[[_viewerDisabled]]" save="[[save]]" discard="[[discard]]" run="[[run]]" _activate-result-set-view="[[_activateResultSetView]]" stale-criteria-message="[[staleCriteriaMessage]]" _show-dialog="[[_showDialog]]" save-as-name="{{saveAsName}}" _create-context-holder="[[_createContextHolder]]" uuid="[[uuid]]">
-        <tg-@mi_type-selection-criteria id="selection_criteria" slot="custom-selection-criteria" _was-run="{{_wasRun}}" _centre-changed="{{_centreChanged}}" _edited-props-exist="{{_editedPropsExist}}" _criteria-loaded="{{_criteriaLoaded}}" uuid="[[uuid]]" mi-type="[[miType]]" save-as-name="{{saveAsName}}" query-part="[[queryPart]]" page-capacity="@pageCapacity" post-run="[[_postRun]]" get-selected-entities="[[_getSelectedEntities]]" get-master-entity="[[getMasterEntity]]" post-retrieved="[[postRetrieved]]" page-number="{{pageNumber}}" page-count="{{pageCount}}" page-number-updated="{{pageNumberUpdated}}" page-count-updated="{{pageCountUpdated}}" is-running="{{isRunning}}" stale-criteria-message="{{staleCriteriaMessage}}" @queryEnhancerContextConfig></tg-@mi_type-selection-criteria>
+        <tg-@mi_type-selection-criteria id="selection_criteria" slot="custom-selection-criteria" _was-run="{{_wasRun}}" _centre-changed="{{_centreChanged}}" _edited-props-exist="{{_editedPropsExist}}" _criteria-loaded="{{_criteriaLoaded}}" uuid="[[uuid]]" mi-type="[[miType]]" save-as-name="{{saveAsName}}" query-part="[[queryPart]]" post-run="[[_postRun]]" get-selected-entities="[[_getSelectedEntities]]" get-master-entity="[[getMasterEntity]]" post-retrieved="[[postRetrieved]]" page-number="{{pageNumber}}" page-count="{{pageCount}}" page-number-updated="{{pageNumberUpdated}}" page-count-updated="{{pageCountUpdated}}" is-running="{{isRunning}}" stale-criteria-message="{{staleCriteriaMessage}}" @queryEnhancerContextConfig></tg-@mi_type-selection-criteria>
 
         <!--@custom-front-actions-->
         
-        <tg-entity-grid-inspector id="egi" slot="custom-egi" class="entity-grid-inspector" centre-selection="[[centreSelection]]" column-properties-mapper="{{columnPropertiesMapper}}" custom-shortcuts="@customShortcuts" visible-row-count="@visibleRowCount" constant-height="@egiHeight" row-height="@egiRowHeight" @fitToHeight @canDragFrom @toolbarVisible @checkboxVisible @dragAnchorFixed @checkboxesFixed @checkboxesWithPrimaryActionsFixed num-of-fixed-cols="@numOfFixedCols" @secondaryActionsFixed @headerFixed @summaryFixed @gridLayout>
+        <tg-entity-grid-inspector id="egi" slot="custom-egi" class="entity-grid-inspector" centre-selection="[[centreSelection]]" column-properties-mapper="{{columnPropertiesMapper}}" custom-shortcuts="@customShortcuts" constant-height="@egiHeight" row-height="@egiRowHeight" @hidden @fitToHeight @canDragFrom @toolbarVisible @checkboxVisible @dragAnchorFixed @checkboxesFixed @checkboxesWithPrimaryActionsFixed num-of-fixed-cols="@numOfFixedCols" @secondaryActionsFixed @headerFixed @summaryFixed @gridLayout>
             <!-- EGI COLUMNS DOM (GENERATED) -->
             
             <!--@egi_columns-->
@@ -79,10 +79,10 @@ const entityCentreTemplate = html`
         <div slot="right-insertion-point" class="right-insertion-point">
             <!--@right_insertion_points-->
         </div>
-        <div slot="bottom-insertion-point">
+        <div slot="bottom-insertion-point" class="bottom-insertion-point">
             <!--@bottom_insertion_points-->
         </div>
-        <div slot="top-insertion-point">
+        <div slot="top-insertion-point" class="top-insertion-point">
             <!--@top_insertion_points-->
         </div>
     </tg-entity-centre>
