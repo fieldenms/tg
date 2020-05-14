@@ -407,11 +407,32 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void test_entity_exists_using_entity() {
-        final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
+    public void entityExists_is_true_for_persisted_entities() {
+        final EntityWithMoneyDao co = co$(EntityWithMoney.class);
 
-        final EntityWithMoney entity = dao.findByKey("key1");
-        assertTrue(dao.entityExists(entity));
+        final EntityWithMoney entity = co.findByKey("key1");
+        assertTrue(co.entityExists(entity));
+    }
+
+    @Test
+    public void entityExists_is_true_IDs_matching_persisted_entities() {
+        final EntityWithMoneyDao co = co$(EntityWithMoney.class);
+
+        final EntityWithMoney entity = co.findByKey("key1");
+        assertTrue(co.entityExists(entity.getId()));
+    }
+
+    @Test
+    public void entityExists_is_false_for_not_persisted_entities() {
+        final EntityWithMoneyDao co = co$(EntityWithMoney.class);
+        final EntityWithMoney entity = co.new_();
+        assertFalse(co.entityExists(entity));
+    }
+
+    @Test
+    public void entityExists_is_false_for_IDs_not_matching_any_persisted_entities() {
+        final EntityWithMoneyDao co = co$(EntityWithMoney.class);
+        assertFalse(co.entityExists(-1L));
     }
 
     @Test
@@ -656,18 +677,15 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void test_entity_staleness_check() {
+    public void isStale_holds_ondly_for_stale_entities() {
         final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
 
         final EntityWithMoney entity = dao.findByKey("key1");
+        assertTrue(0L == dao.save(entity).getVersion());
         // update entity to simulate staleness
-        entity.setDesc("new desc");
-        dao.save(entity);
+        assertTrue(1L == dao.save(entity.setDesc("new desc")).getVersion());
 
-        dao.findByKey("key1");
         assertTrue("This version should have been recognised as stale.", dao.isStale(entity.getId(), 0L));
-        //assertTrue("This version should have been recognised as stale.", dao.isStale(entity.getId(), 1L));
-        //assertFalse("This version should have been recognised as current.", dao.isStale(entity.getId(), 2L));
         assertFalse("This version should have been recognised as current.", dao.isStale(entity.getId(), 1L));
     }
 
