@@ -677,7 +677,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void isStale_holds_ondly_for_stale_entities() {
+    public void isStale_holds_only_for_stale_entities() {
         final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
 
         final EntityWithMoney entity = dao.findByKey("key1");
