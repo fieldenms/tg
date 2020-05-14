@@ -196,6 +196,20 @@ Polymer({
         }
     },
 
+    offloadDom: function () {
+        const elementToLoad = this.shadowRoot.querySelector("#elementToLoad");
+        if (elementToLoad) {
+            elementToLoad.offloadDom();
+        }
+    },
+
+    loadDom: function () {
+        const elementToLoad = this.shadowRoot.querySelector("#elementToLoad");
+        if (elementToLoad) {
+            elementToLoad.loadDom();
+        }
+    },
+
     wasLoaded: function () {
         const elementToLoad = this.shadowRoot.querySelector("#elementToLoad");
         if (elementToLoad) {

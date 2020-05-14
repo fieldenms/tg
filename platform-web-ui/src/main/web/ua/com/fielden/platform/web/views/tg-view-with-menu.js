@@ -213,11 +213,11 @@ const template = html`
                 <div class="menu-item-view" page-name="_"></div>
                 <template is="dom-repeat" items="[[menuItem.menu]]" as="firstLevelItem">
                     <template is="dom-if" if="[[!_isMenuPresent(firstLevelItem.menu)]]">
-                        <tg-menu-item-view class="menu-item-view" page-name$="[[_calcItemPath(firstLevelItem)]]" menu-item="[[firstLevelItem]]" submodule-id="[[_calcSubmoduleId(firstLevelItem)]]" module-id="[[menuItem.key]]" selected-module="[[selectedModule]]" submodule="[[submodule]]"></tg-menu-item-view>
+                        <tg-menu-item-view auto-load class="menu-item-view" page-name$="[[_calcItemPath(firstLevelItem)]]" menu-item="[[firstLevelItem]]" submodule-id="[[_calcSubmoduleId(firstLevelItem)]]" module-id="[[menuItem.key]]" selected-module="[[selectedModule]]" submodule="[[submodule]]"></tg-menu-item-view>
                     </template>
                     <template is="dom-if" if="[[_isMenuPresent(firstLevelItem.menu)]]">
                         <template is="dom-repeat" items="[[firstLevelItem.menu]]">
-                            <tg-menu-item-view class="menu-item-view" page-name$="[[_calcItemPath(firstLevelItem, item)]]" tooltip-text$="[[item.desc]]" menu-item="[[item]]" submodule-id="[[_calcSubmoduleId(firstLevelItem, item)]]" module-id="[[menuItem.key]]" selected-module="[[selectedModule]]" submodule="[[submodule]]"></tg-menu-item-view>
+                            <tg-menu-item-view auto-load class="menu-item-view" page-name$="[[_calcItemPath(firstLevelItem, item)]]" tooltip-text$="[[item.desc]]" menu-item="[[item]]" submodule-id="[[_calcSubmoduleId(firstLevelItem, item)]]" module-id="[[menuItem.key]]" selected-module="[[selectedModule]]" submodule="[[submodule]]"></tg-menu-item-view>
                         </template>
                     </template>
                 </template>
@@ -645,6 +645,7 @@ Polymer({
                     const currentState = window.history.state;
                     window.history.replaceState(currentState, "", window.location.href.split("?")[0]);
                 } else {
+                    viewToLoad.loadDom();
                     viewToLoad.focusLoadedView();
                 }
             }

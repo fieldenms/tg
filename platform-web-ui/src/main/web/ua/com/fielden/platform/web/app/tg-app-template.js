@@ -503,6 +503,38 @@ Polymer({
             this._toastGreeting().msgHeading = "Info";
             this._toastGreeting().isCritical = false;
             this._toastGreeting().show();
+
+            //SPIKE
+            const menuItemViews = [];
+            this.shadowRoot.querySelectorAll('tg-app-view').forEach(appView => {
+                appView.shadowRoot.querySelectorAll('tg-view-with-menu').forEach(viewWithMenu => {
+                    viewWithMenu.shadowRoot.querySelectorAll('tg-menu-item-view').forEach(menuItemView => {
+                        menuItemViews.push(menuItemView);
+                    });
+                });
+            });
+            const loadNext = function (idx) {
+                if (menuItemViews[idx]) {
+                    if (idx < 170) {
+                        const nextViewToLoad = menuItemViews[idx];
+                        const loadNextHandler = function (e) {
+                            console.log("#############################Loaded " + (idx + 1) + " view: " + nextViewToLoad.menuItem.key +", left: " + (menuItemViews.length - idx - 1) + " items.###########################");
+                            loadNext(idx + 1);
+                            nextViewToLoad.removeEventListener("menu-item-view-loaded", loadNextHandler);    
+                        }
+                        nextViewToLoad.addEventListener("menu-item-view-loaded", loadNextHandler);
+                        nextViewToLoad.load();
+                    } else {
+                        // console.log("#########################Waiting one minute##################");
+                        // setTimeout(()=>{
+                        //     console.log("###################Starting offloading nodes####################");
+                        //     menuItemViews.forEach(menuItemView => menuItemView.offloadDom());
+                        // }, 60000);
+                    }
+                }
+            } 
+            loadNext(0);
+            //END OF SPIKE
         });
         
         window.addEventListener("beforeunload", this._checkWhetherCanLeave);
