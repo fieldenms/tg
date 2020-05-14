@@ -46,6 +46,7 @@ import graphql.schema.GraphQLTypeReference;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -68,15 +69,16 @@ public class GraphQLService implements IWebApi {
      * 
      * @param applicationDomainProvider
      * @param coFinder
+     * @param dates
      */
     @Inject
-    public GraphQLService(final IApplicationDomainProvider applicationDomainProvider, final ICompanionObjectFinder coFinder) {
+    public GraphQLService(final IApplicationDomainProvider applicationDomainProvider, final ICompanionObjectFinder coFinder, final IDates dates) {
         logger.info("GraphQL Web API...");
         final GraphQLCodeRegistry.Builder codeRegistryBuilder = newCodeRegistry();
         logger.info("\tBuilding dictionary...");
         final Map<Class<? extends AbstractEntity<?>>, GraphQLType> dictionary = createDictionary(applicationDomainProvider.entityTypes());
         logger.info("\tBuilding query type...");
-        final GraphQLObjectType queryType = createQueryType(dictionary.keySet(), coFinder, codeRegistryBuilder);
+        final GraphQLObjectType queryType = createQueryType(dictionary.keySet(), coFinder, dates, codeRegistryBuilder);
         logger.info("\tBuilding schema...");
         final GraphQLSchema schema = newSchema()
             .codeRegistry(codeRegistryBuilder.build())
@@ -124,10 +126,11 @@ public class GraphQLService implements IWebApi {
      * 
      * @param dictionary -- list of supported GraphQL entity types
      * @param coFinder
+     * @param dates
      * @param codeRegistryBuilder -- a place to register root data fetchers
      * @return
      */
-    private static GraphQLObjectType createQueryType(final Set<Class<? extends AbstractEntity<?>>> dictionary, final ICompanionObjectFinder coFinder, final GraphQLCodeRegistry.Builder codeRegistryBuilder) {
+    private static GraphQLObjectType createQueryType(final Set<Class<? extends AbstractEntity<?>>> dictionary, final ICompanionObjectFinder coFinder, final IDates dates, final GraphQLCodeRegistry.Builder codeRegistryBuilder) {
         final String queryTypeName = "Query";
         final Builder queryTypeBuilder = newObject().name(queryTypeName);
         dictionary.stream().forEach(entityType -> {
@@ -138,7 +141,7 @@ public class GraphQLService implements IWebApi {
                 .description(format("Query [%s] entity.", getEntityTitleAndDesc(entityType).getValue()))
                 .type(new GraphQLList(new GraphQLTypeReference(simpleTypeName)))
             );
-            codeRegistryBuilder.dataFetcher(coordinates(queryTypeName, fieldName), new RootEntityFetcher<>((Class<AbstractEntity<?>>) entityType, coFinder));
+            codeRegistryBuilder.dataFetcher(coordinates(queryTypeName, fieldName), new RootEntityFetcher<>((Class<AbstractEntity<?>>) entityType, coFinder, dates));
         });
         return queryTypeBuilder.build();
     }

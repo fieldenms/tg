@@ -9,6 +9,7 @@ import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.PropertyDataFetcher;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.utils.IDates;
 
 /**
  * {@link DataFetcher} implementation responsible for resolving root <code>Query</code> fields that correspond to main entity trees.
@@ -21,6 +22,8 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetcher<List<T>> {
     private final Class<T> entityType;
     private final ICompanionObjectFinder coFinder;
+    private final IDates dates;
+    
     /**
      * Default maximum number of entities returned in a single root field of a <code>Query</code>.
      */
@@ -31,10 +34,12 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
      * 
      * @param entityType
      * @param coFinder
+     * @param dates
      */
-    public RootEntityFetcher(final Class<T> entityType, final ICompanionObjectFinder coFinder) {
+    public RootEntityFetcher(final Class<T> entityType, final ICompanionObjectFinder coFinder, final IDates dates) {
         this.entityType = entityType;
         this.coFinder = coFinder;
+        this.dates = dates;
     }
     
     /**
@@ -50,7 +55,7 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
                 environment.getFragmentsByName(),
                 entityType,
                 environment.getGraphQLSchema()
-            ),
+            ).apply(dates),
             MAX_NUMBER_OF_ENTITIES
         );
     }

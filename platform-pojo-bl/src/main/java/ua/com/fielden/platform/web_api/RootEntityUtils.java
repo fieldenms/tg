@@ -26,6 +26,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.apache.log4j.Logger;
@@ -49,6 +50,7 @@ import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryPro
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.types.tuples.T3;
+import ua.com.fielden.platform.utils.IDates;
 
 /**
  * Contains querying utility methods for root fields in GraphQL query / mutation schemas.
@@ -60,7 +62,8 @@ public class RootEntityUtils {
     private static final Logger LOGGER = Logger.getLogger(RootEntityUtils.class);
     
     /**
-     * Generates EQL query execution model for retrieving <code>selectionSet</code> of fields inside root selection of GraphQL query or mutation.
+     * Returns function for generation of EQL query execution model for retrieving <code>selectionSet</code> of fields inside root selection of GraphQL query or mutation.
+     * The argument of function is {@link IDates} instance from which 'now' moment can properly be retrieved and used for date property filtering.
      * 
      * @param selectionSet
      * @param variables -- existing variable values by names in the query; they can be used in <code>selectionSet</code>
@@ -69,7 +72,7 @@ public class RootEntityUtils {
      * @param schema -- GraphQL schema to assist with resolving of argument values
      * @return
      */
-    public static <T extends AbstractEntity<?>> QueryExecutionModel<T, EntityResultQueryModel<T>> generateQueryModelFrom(
+    public static <T extends AbstractEntity<?>> Function<IDates, QueryExecutionModel<T, EntityResultQueryModel<T>>> generateQueryModelFrom(
         final SelectionSet selectionSet,
         final Map<String, Object> variables,
         final Map<String, FragmentDefinition> fragmentDefinitions,
@@ -88,7 +91,7 @@ public class RootEntityUtils {
                 schema.getCodeRegistry()
             ))
             .collect(toList());
-        return from(createQuery(entityType, queryProperties).model())
+        return dates -> from(createQuery(entityType, queryProperties, dates).model())
             .with(fetchNotInstrumented(entityType).with(propertiesAndArguments.keySet()).fetchModel())
             .model(); // TODO fetch order etc.
     }
