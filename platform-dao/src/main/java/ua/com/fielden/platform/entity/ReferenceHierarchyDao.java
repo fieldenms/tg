@@ -19,6 +19,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -44,6 +45,7 @@ import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 /**
@@ -59,12 +61,15 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
     private final IEntityAggregatesOperations coAggregates;
     private final Map<Class<? extends AbstractEntity<?>>, Map<Class<? extends AbstractEntity<?>>, Set<String>>> dependenciesMetadata;
     private final Map<ReferenceHierarchyLevel, Function<ReferenceHierarchy, List<? extends AbstractEntity<?>>>> generateFunctions;
+    private final Set<Class<? extends AbstractEntity<?>>> systemTypesToExclude;
 
     @Inject
     public ReferenceHierarchyDao(final IFilter filter, final IEntityAggregatesOperations coAggregates, final IApplicationDomainProvider applicationDomainProvider) {
         super(filter);
         this.coAggregates = coAggregates;
         this.dependenciesMetadata = DataDependencyQueriesGenerator.produceDependenciesMetadata(applicationDomainProvider.entityTypes());
+        this.systemTypesToExclude = new HashSet<>();
+        this.systemTypesToExclude.add(User.class);
         this.generateFunctions = new HashMap<>();
         this.generateFunctions.put(REFERENCE_GROUP, this::generateReferenceGroup);
         this.generateFunctions.put(REFERENCE_BY_INSTANCE, this::generateReferenceByInstanceLevelHierarchy);
@@ -153,7 +158,7 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
 
     private List<Field> getReferenceProperties(final Class<? extends AbstractEntity<?>> entityType) {
         return Finder.findPropertiesThatAreEntities(entityType).stream()
-                .filter(propField -> propField.isAnnotationPresent(MapTo.class) && !PropertyDescriptor.class.isAssignableFrom(propField.getType()))
+                .filter(propField -> propField.isAnnotationPresent(MapTo.class) && !PropertyDescriptor.class.isAssignableFrom(propField.getType()) && !systemTypesToExclude.contains(propField.getType()))
                 .collect(Collectors.toList());
     }
 
