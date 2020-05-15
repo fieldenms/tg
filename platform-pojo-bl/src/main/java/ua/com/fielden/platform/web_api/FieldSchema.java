@@ -15,6 +15,7 @@ import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotationOptionally;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determineClass;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
@@ -94,6 +95,11 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class FieldSchema {
+    private static final String SPACE = " ";
+    private static final String NEWLINE = "  \n"; // GraphiQL uses Markdown -- way to achieve new lines
+    private static final String SPACE_SEPARATOR = "," + SPACE;
+    private static final String NEWLINE_SEPARATOR = "," + NEWLINE;
+    private static final String INDENT_STEP = "&nbsp;&nbsp;&nbsp;&nbsp;";
     static final String LIKE = "like";
     static final String VALUE = "value";
     static final String FROM = "from";
@@ -124,16 +130,25 @@ public class FieldSchema {
         return determineFieldType(entityType, property).map(typeAndArguments -> {
             return newFieldDefinition()
                 .name(property)
-                .description(titleAndDescRepresentation(entityType, property) + metaInformationFor(entityType, property))
+                .description(
+                    asList(
+                        titleAndDescRepresentation(getTitleAndDesc(property, entityType)),
+                        metaInformationFor(entityType, property)
+                    ).stream()
+                    .filter(s -> !isEmpty(s))
+                    .collect(joining(NEWLINE + NEWLINE)))
                 .type(typeAndArguments._1)
                 .arguments(typeAndArguments._2)
                 .build();
         });
     }
     
-    private static String titleAndDescRepresentation(final Class<? extends AbstractEntity<?>> entityType, final String property) {
-        final Pair<String, String> titleAndDesc = getTitleAndDesc(property, entityType);
-        return equalsEx(titleAndDesc.getKey(), titleAndDesc.getValue()) ? titleAndDesc.getKey() : titleAndDesc.getKey() + " &ndash; " + titleAndDesc.getValue();
+    public static String titleAndDescRepresentation(final Pair<String, String> titleAndDesc) {
+        final String title = isEmpty(titleAndDesc.getKey()) ? titleAndDesc.getKey() : bold(titleAndDesc.getKey());
+        return isEmpty(titleAndDesc.getValue())
+            || equalsEx(titleAndDesc.getKey(),             titleAndDesc.getValue())
+            || equalsEx(titleAndDesc.getKey() + " entity", titleAndDesc.getValue())
+            ? title : title + " &ndash; " + titleAndDesc.getValue();
     }
     
     private static String metaInformationFor(final Class<? extends AbstractEntity<?>> entityType, final String property) {
@@ -170,12 +185,15 @@ public class FieldSchema {
             .flatMap(annotation -> annotation.isPresent() ? Stream.of(annotation.get()) : Stream.empty())
             .map(FieldSchema::toString)
             .flatMap(str -> str.isPresent() ? Stream.of(str.get()) : Stream.empty())
-            .collect(joining("  \n", "  \n  \n", "")); // GraphiQL uses Markdown -- way to achieve new lines
+            .collect(joining(NEWLINE));
+    }
+    
+    private static String typeName(final Annotation annotation) {
+        return bold("@" + annotation.annotationType().getSimpleName());
     }
     
     private static Optional<String> toString(final Annotation annotation) {
-        final Class<? extends Annotation> type = annotation.annotationType();
-        final String typeName = type.getSimpleName();
+        final String typeName = typeName(annotation);
         final String str;
         if (annotation instanceof Calculated) {
             str = isValueDefault(annotation, "value") ? typeName : format("%s(%s)", typeName, ((Calculated) annotation).value());
@@ -184,9 +202,9 @@ public class FieldSchema {
         } else if (annotation instanceof CritOnly) {
             str = format("%s(%s)", typeName, ((CritOnly) annotation).value()); // TODO mnemonics + excludeMissing? TODO precision + scale?
         } else if (annotation instanceof Dependent) {
-            str = format("%s(%s)", typeName, stream(((Dependent) annotation).value()).collect(joining(", ")));
+            str = format("%s(%s)", typeName, stream(((Dependent) annotation).value()).collect(joining(SPACE_SEPARATOR)));
         } else if (annotation instanceof PersistentType) {
-            str = IUtcDateTimeType.class.equals(((PersistentType) annotation).userType()) ? "UTC" : null;
+            str = IUtcDateTimeType.class.equals(((PersistentType) annotation).userType()) ? bold("@UTC") : null;
         } else if (annotation instanceof Required) {
             str = isValueDefault(annotation, "value") ? typeName : format("%s(%s)", typeName, ((Required) annotation).value());
         } else if (annotation instanceof SkipEntityExistsValidation) {
@@ -198,9 +216,7 @@ public class FieldSchema {
             final AfterChange afterChange = (AfterChange) annotation;
             params.add(afterChange.value().getSimpleName());
             addIfNonDefault(params, annotation);
-            final String newLineLeft = params.size() > 1 ? "  \n&nbsp;&nbsp;" : "";
-            final String newLineRight = params.size() > 1 ? "  \n" : "";
-            str = format("%s(%s%s%s)", typeName, newLineLeft, params.stream().collect(joining(",  \n&nbsp;&nbsp;")), newLineRight);
+            str = annotationWithParams(typeName, params);
         } else if (annotation instanceof BeforeChange) {
             final List<String> handlerStrs = new ArrayList<>();
             final BeforeChange beforeChange = (BeforeChange) annotation;
@@ -209,13 +225,9 @@ public class FieldSchema {
                 final List<String> params = new ArrayList<>();
                 params.add(handler.value().getSimpleName());
                 addIfNonDefault(params, handler);
-                final String newLineLeft = params.size() > 1 ? "  \n&nbsp;&nbsp;&nbsp;&nbsp;" : "";
-                final String newLineRight = params.size() > 1 ? "  \n&nbsp;&nbsp;" : "";
-                handlerStrs.add("@Handler(" + newLineLeft + params.stream().collect(joining(",  \n&nbsp;&nbsp;&nbsp;&nbsp;")) + newLineRight +")");
+                handlerStrs.add(annotationWithParams(typeName(handler), params, INDENT_STEP));
             });
-            final String newLineLeft = handlerStrs.size() > 1 ? "  \n&nbsp;&nbsp;" : "";
-            final String newLineRight = handlerStrs.size() > 1 ? "  \n" : "";
-            str = format("%s(%s%s%s)", typeName, newLineLeft, handlerStrs.stream().collect(joining(",  \n&nbsp;&nbsp;")), newLineRight);
+            str = annotationWithParams(typeName, handlerStrs);
         } else if (annotation instanceof Subtitles) {
             final List<String> subtitleStrs = new ArrayList<>();
             final Subtitles subtitles = (Subtitles) annotation;
@@ -227,11 +239,9 @@ public class FieldSchema {
                 if (!isValueDefault(pathTitle, "desc")) {
                     params.add("desc=" + pathTitle.desc());
                 }
-                subtitleStrs.add("@PathTitle(" + params.stream().collect(joining(", ")) + ")");
+                subtitleStrs.add(typeName(pathTitle) + "(" + params.stream().collect(joining(SPACE_SEPARATOR)) + ")");
             });
-            final String newLineLeft = subtitleStrs.size() > 1 ? "  \n&nbsp;&nbsp;" : "";
-            final String newLineRight = subtitleStrs.size() > 1 ? "  \n" : "";
-            str = format("%s(%s%s%s)", typeName, newLineLeft, subtitleStrs.stream().collect(joining(",  \n&nbsp;&nbsp;")), newLineRight);
+            str = annotationWithParams(typeName, subtitleStrs);
         } else if (annotation instanceof StrParam) {
             str = format("%s(%s)", typeName, "name=" + ((StrParam) annotation).name() + ", value=" + ((StrParam) annotation).value());
         } else if (annotation instanceof ClassParam) {
@@ -251,7 +261,21 @@ public class FieldSchema {
         } else {
             str = typeName;
         }
-        return str == null ? empty() : of("@" + str);
+        return str == null ? empty() : of(str);
+    }
+    
+    private static String annotationWithParams(final String typeName, final List<String> params) {
+        return annotationWithParams(typeName, params, "");
+    }
+    
+    private static String annotationWithParams(final String typeName, final List<String> params, final String base) {
+        final String newLineLeft = params.size() > 1 ? NEWLINE + base + INDENT_STEP : "";
+        final String newLineRight = params.size() > 1 ? NEWLINE + base : "";
+        return typeName + "(" + newLineLeft + params.stream().collect(joining(NEWLINE_SEPARATOR + base + INDENT_STEP)) + newLineRight +")";
+    }
+    
+    public static String bold(final String str) {
+        return "**" + str + "**";
     }
     
     private static void addIfNonDefault(final List<String> params, final Annotation annotation) {

@@ -18,7 +18,9 @@ import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresen
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
 import static ua.com.fielden.platform.utils.Pair.pair;
+import static ua.com.fielden.platform.web_api.FieldSchema.bold;
 import static ua.com.fielden.platform.web_api.FieldSchema.createGraphQLFieldDefinition;
+import static ua.com.fielden.platform.web_api.FieldSchema.titleAndDescRepresentation;
 import static ua.com.fielden.platform.web_api.WebApiUtils.operationName;
 import static ua.com.fielden.platform.web_api.WebApiUtils.query;
 import static ua.com.fielden.platform.web_api.WebApiUtils.variables;
@@ -132,13 +134,13 @@ public class GraphQLService implements IWebApi {
      */
     private static GraphQLObjectType createQueryType(final Set<Class<? extends AbstractEntity<?>>> dictionary, final ICompanionObjectFinder coFinder, final IDates dates, final GraphQLCodeRegistry.Builder codeRegistryBuilder) {
         final String queryTypeName = "Query";
-        final Builder queryTypeBuilder = newObject().name(queryTypeName);
+        final Builder queryTypeBuilder = newObject().name(queryTypeName).description("Query following **entities** represented as GraphQL root fields:");
         dictionary.stream().forEach(entityType -> {
             final String simpleTypeName = entityType.getSimpleName();
             final String fieldName = uncapitalize(simpleTypeName);
             queryTypeBuilder.field(newFieldDefinition()
                 .name(fieldName)
-                .description(format("Query [%s] entity.", getEntityTitleAndDesc(entityType).getValue()))
+                .description(format("Query %s.", bold(getEntityTitleAndDesc(entityType).getKey())))
                 .type(new GraphQLList(new GraphQLTypeReference(simpleTypeName)))
             );
             codeRegistryBuilder.dataFetcher(coordinates(queryTypeName, fieldName), new RootEntityFetcher<>((Class<AbstractEntity<?>>) entityType, coFinder, dates));
@@ -166,7 +168,7 @@ public class GraphQLService implements IWebApi {
             // So these will be used for GraphQL type naming.
             return of(pair(entityType, newObject()
                 .name(entityType.getSimpleName())
-                .description(getEntityTitleAndDesc(entityType).getValue())
+                .description(titleAndDescRepresentation(getEntityTitleAndDesc(entityType)))
                 .fields(graphQLFieldDefinitions).build()
             ));
         }
