@@ -15,8 +15,13 @@ import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Stream.concat;
 import static org.apache.commons.lang.StringUtils.isEmpty;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotationOptionally;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotationPresentForClass;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.isPropertyAnnotationPresent;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determineClass;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
@@ -56,6 +61,9 @@ import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.DateOnly;
 import ua.com.fielden.platform.entity.annotation.Dependent;
+import ua.com.fielden.platform.entity.annotation.DescReadonly;
+import ua.com.fielden.platform.entity.annotation.DescRequired;
+import ua.com.fielden.platform.entity.annotation.KeyReadonly;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.Readonly;
 import ua.com.fielden.platform.entity.annotation.Required;
@@ -154,7 +162,8 @@ public class FieldSchema {
     private static String metaInformationFor(final Class<? extends AbstractEntity<?>> entityType, final String property) {
         // TODO support @DescReadonly / @DescRequired as annotations added to entity type, not property
         // TODO support @KeyReadonly                  as annotations added to entity type, not property
-        return Arrays.asList(
+        return concat(
+            asList(
                 Calculated.class,
                 CompositeKeyMember.class,
                 CritOnly.class,
@@ -184,12 +193,31 @@ public class FieldSchema {
             .map(annotationType -> getPropertyAnnotationOptionally(annotationType, entityType, property))
             .flatMap(annotation -> annotation.isPresent() ? Stream.of(annotation.get()) : Stream.empty())
             .map(FieldSchema::toString)
-            .flatMap(str -> str.isPresent() ? Stream.of(str.get()) : Stream.empty())
-            .collect(joining(NEWLINE));
+            .flatMap(str -> str.isPresent() ? Stream.of(str.get()) : Stream.empty()),
+            
+            Stream.of(Required.class, Readonly.class).filter(type -> {
+                if (KEY.equals(property)) {
+                    return Required.class.equals(type)
+                        || Readonly.class.equals(type) && isAnnotationPresentForClass(KeyReadonly.class, entityType);
+                } else if (DESC.equals(property)) {
+                    return Required.class.equals(type) && isAnnotationPresentForClass(DescRequired.class, entityType)
+                        || Readonly.class.equals(type) && isAnnotationPresentForClass(DescReadonly.class, entityType);
+                } else if (isPropertyAnnotationPresent(CompositeKeyMember.class, entityType, property)) {
+                    return Required.class.equals(type) && !isPropertyAnnotationPresent(ua.com.fielden.platform.entity.annotation.Optional.class, entityType, property);
+                } else {
+                    return false;
+                }
+            }).map(type -> typeName(type))
+            
+            ).collect(joining(NEWLINE));
+    }
+    
+    private static String typeName(final Class<? extends Annotation> annotationType) {
+        return bold("@" + annotationType.getSimpleName());
     }
     
     private static String typeName(final Annotation annotation) {
-        return bold("@" + annotation.annotationType().getSimpleName());
+        return typeName(annotation.annotationType());
     }
     
     private static Optional<String> toString(final Annotation annotation) {
