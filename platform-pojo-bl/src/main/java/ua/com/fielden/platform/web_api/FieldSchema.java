@@ -85,6 +85,7 @@ import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
 import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.utils.Pair;
 
 /**
  * Contains utilities to convert TG entity properties to GraphQL query fields that reside under <code>Query.exampleEntityType</code> fields.
@@ -123,11 +124,16 @@ public class FieldSchema {
         return determineFieldType(entityType, property).map(typeAndArguments -> {
             return newFieldDefinition()
                 .name(property)
-                .description(getTitleAndDesc(property, entityType).getValue() + metaInformationFor(entityType, property))
+                .description(titleAndDescRepresentation(entityType, property) + metaInformationFor(entityType, property))
                 .type(typeAndArguments._1)
                 .arguments(typeAndArguments._2)
                 .build();
         });
+    }
+    
+    private static String titleAndDescRepresentation(final Class<? extends AbstractEntity<?>> entityType, final String property) {
+        final Pair<String, String> titleAndDesc = getTitleAndDesc(property, entityType);
+        return equalsEx(titleAndDesc.getKey(), titleAndDesc.getValue()) ? titleAndDesc.getKey() : titleAndDesc.getKey() + " &ndash; " + titleAndDesc.getValue();
     }
     
     private static String metaInformationFor(final Class<? extends AbstractEntity<?>> entityType, final String property) {
@@ -141,7 +147,8 @@ public class FieldSchema {
                 Dependent.class,
                 // @Ignore and @Invisible properties are excluded; no need to check these annotations
                 // @IsProperty is not really interesting for integrator; all of properties have this annotation except both 'id' and 'version'
-                // TODO expose its linkProperty, assignBeforeSave, length, precision, scale, trailingZeros and displayAs if not empty
+                //   expose its TODO @AssignBeforeSave, TODO @Length, TODO @PrecisionAndScale
+                //   value(type)+linkProperty are internal implementation detail for collections; trailingZeros+displayAs are related to UI display representation
                 // @MapTo is believed to be internal and should not be exposed
                 ua.com.fielden.platform.entity.annotation.Optional.class,
                 PersistentType.class, // this is only relevant for UTC dates that are represented as @PersistentType(userType = IUtcDateTimeType.class)
