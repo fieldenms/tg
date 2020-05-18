@@ -6,6 +6,7 @@ import static graphql.Scalars.GraphQLInt;
 import static graphql.Scalars.GraphQLLong;
 import static graphql.Scalars.GraphQLString;
 import static graphql.schema.GraphQLArgument.newArgument;
+import static graphql.schema.GraphQLEnumType.newEnum;
 import static graphql.schema.GraphQLFieldDefinition.newFieldDefinition;
 import static java.lang.String.format;
 import static java.lang.reflect.Modifier.isAbstract;
@@ -112,6 +113,34 @@ public class FieldSchema {
     static final String VALUE = "value";
     static final String FROM = "from";
     static final String TO = "to";
+    static final String ORDER = "order";
+    static final GraphQLArgument ORDER_ARGUMENT = newArgument()
+        .name(ORDER)
+        .description("Order entities by this property with specified **ASC_n** / **DESC_m** value. Use **n** / **m** numbers (0..9) to define priority among other properties.")
+        .type(newEnum()
+            .name("Order")
+            .description("Type for property order with priority.")
+            .value("ASC_1", "ASC_1", "Ascending order, priority 1.")
+            .value("DESC_1", "DESC_1", "Descending order, priority 1.")
+            .value("ASC_2", "ASC_2", "Ascending order, priority 2.")
+            .value("DESC_2", "DESC_2", "Descending order, priority 2.")
+            .value("ASC_3", "ASC_3", "Ascending order, priority 3.")
+            .value("DESC_3", "DESC_3", "Descending order, priority 3.")
+            .value("ASC_4", "ASC_4", "Ascending order, priority 4.")
+            .value("DESC_4", "DESC_4", "Descending order, priority 4.")
+            .value("ASC_5", "ASC_5", "Ascending order, priority 5.")
+            .value("DESC_5", "DESC_5", "Descending order, priority 5.")
+            .value("ASC_6", "ASC_6", "Ascending order, priority 6.")
+            .value("DESC_6", "DESC_6", "Descending order, priority 6.")
+            .value("ASC_7", "ASC_7", "Ascending order, priority 7.")
+            .value("DESC_7", "DESC_7", "Descending order, priority 7.")
+            .value("ASC_8", "ASC_8", "Ascending order, priority 8.")
+            .value("DESC_8", "DESC_8", "Descending order, priority 8.")
+            .value("ASC_9", "ASC_9", "Ascending order, priority 9.")
+            .value("DESC_9", "DESC_9", "Descending order, priority 9.")
+            .build()
+        )
+        .build();
 
     /**
      * Creates GraphQL field definition for <code>entityType</code> and <code>property</code>.
@@ -373,14 +402,16 @@ public class FieldSchema {
                 .name(LIKE)
                 .description("Include entities with specified string value pattern with % as a wildcard.")
                 .type(GraphQLString)
-                .build()
+                .build(),
+                ORDER_ARGUMENT
             )));
         } else if (isBoolean(propertyType)) {
             return of(t2(GraphQLBoolean, asList(newArgument() // null-valued or non-existing argument in GraphQL query means entities with both true and false values in the property
                 .name(VALUE)
                 .description("Include entities with specified boolean value.")
                 .type(GraphQLBoolean)
-                .build()
+                .build(),
+                ORDER_ARGUMENT
             )));
         } else if (Integer.class.isAssignableFrom(propertyType)) {
             return of(t2(GraphQLInt, createRangeArgumentsFor(GraphQLInt)));
@@ -396,16 +427,16 @@ public class FieldSchema {
         } else if (isDate(propertyType)) {
             return of(t2(GraphQLDate, createRangeArgumentsFor(GraphQLDate)));
         } else if (Hyperlink.class.isAssignableFrom(propertyType)) {
-            return of(t2(GraphQLHyperlink, asList()));
+            return of(t2(GraphQLHyperlink, asList(ORDER_ARGUMENT)));
         } else if (Colour.class.isAssignableFrom(propertyType)) {
-            return of(t2(GraphQLColour, asList()));
+            return of(t2(GraphQLColour, asList(ORDER_ARGUMENT)));
         } else if (AbstractView.class == propertyType
             || PropertyDescriptor.class == propertyType
             || AbstractUnionEntity.class.isAssignableFrom(propertyType) // not supported yet
             || isAbstract(propertyType.getModifiers())) { // be careful with boolean.class because it has abstract modifier
             return empty();
         } else if (isEntityType(propertyType)) {
-            return of(t2(new GraphQLTypeReference(propertyType.getSimpleName()), asList()));
+            return of(t2(new GraphQLTypeReference(propertyType.getSimpleName()), asList(ORDER_ARGUMENT)));
         } else {
             return empty();
         }
@@ -429,7 +460,9 @@ public class FieldSchema {
             .name(TO)
             .description("Include entities with property less than (or equal to) specified value.")
             .type(inputType)
-            .build()
+            .build(),
+            
+            ORDER_ARGUMENT
         );
     }
     

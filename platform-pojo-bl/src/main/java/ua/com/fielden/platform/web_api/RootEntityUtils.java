@@ -1,11 +1,15 @@
 package ua.com.fielden.platform.web_api;
 
+import static java.lang.Byte.valueOf;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.concat;
 import static java.util.stream.Stream.of;
+import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.ASCENDING;
+import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.DESCENDING;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity_centre.review.DynamicOrderingBuilder.createOrderingModel;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.createQuery;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty.createEmptyQueryProperty;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
@@ -15,8 +19,10 @@ import static ua.com.fielden.platform.types.tuples.T3.t3;
 import static ua.com.fielden.platform.utils.EntityUtils.fetchNotInstrumented;
 import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
+import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web_api.FieldSchema.FROM;
 import static ua.com.fielden.platform.web_api.FieldSchema.LIKE;
+import static ua.com.fielden.platform.web_api.FieldSchema.ORDER;
 import static ua.com.fielden.platform.web_api.FieldSchema.TO;
 import static ua.com.fielden.platform.web_api.FieldSchema.VALUE;
 
@@ -26,6 +32,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -43,6 +50,7 @@ import graphql.schema.GraphQLArgument;
 import graphql.schema.GraphQLCodeRegistry;
 import graphql.schema.GraphQLSchema;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
+import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
@@ -51,6 +59,7 @@ import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.utils.IDates;
+import ua.com.fielden.platform.utils.Pair;
 
 /**
  * Contains querying utility methods for root fields in GraphQL query / mutation schemas.
@@ -91,9 +100,23 @@ public class RootEntityUtils {
                 schema.getCodeRegistry()
             ))
             .collect(toList());
+        final List<Pair<String, Ordering>> orderingProperties = propertiesAndArguments.entrySet().stream()
+            .filter(propertyAndArguments -> !propertyAndArguments.getValue()._1.isEmpty()) // if GraphQL argument definitions are not empty ...
+            .map(propertyAndArguments -> createOrderingProperty( // ... create ordering properties based on them
+                entityType,
+                propertyAndArguments.getKey(),
+                propertyAndArguments.getValue(),
+                variables,
+                schema.getCodeRegistry()
+            ))
+            .flatMap(orderingProperty -> orderingProperty.isPresent() ? Stream.of(orderingProperty.get()) : Stream.empty()) // exclude empty values
+            .sorted((p1, p2) -> p1._3.compareTo(p2._3)) // sort by ordering priority
+            .map(prop -> pair(prop._1, prop._2)) // get (name; Ordering) only -- without priority 
+            .collect(toList()); // make list -- order is important
         return dates -> from(createQuery(entityType, queryProperties, dates).model())
             .with(fetchNotInstrumented(entityType).with(propertiesAndArguments.keySet()).fetchModel())
-            .model(); // TODO fetch order etc.
+            .with(createOrderingModel(entityType, orderingProperties))
+            .model();
     }
     
     /**
@@ -153,6 +176,42 @@ public class RootEntityUtils {
             });
         }
         return queryProperty;
+    }
+    
+    /**
+     * Returns {@link Optional} tuple representing ordering <code>property</code> in <code>entityType</code>: dot-notation name, {@link Ordering} and number (priority).
+     * Returns {@link Optional#empty()} if there is no ordering.
+     * 
+     * @param entityType
+     * @param property
+     * @param arguments -- pair of {@link GraphQLArgument} definitions and corresponding resolved {@link Argument} instances (which contain actual values)
+     * @param variables -- existing variable values by names in the query
+     * @param codeRegistry -- code registry that is used only to take care of field visibility during {@link ValuesResolver#getArgumentValues(List, List, Map)} conversion
+     * 
+     * @return
+     */
+    private static <T extends AbstractEntity<?>> Optional<T3<String, Ordering, Byte>> createOrderingProperty(
+        final Class<T> entityType,
+        final String property,
+        final T2<List<GraphQLArgument>, List<Argument>> arguments,
+        final Map<String, Object> variables,
+        final GraphQLCodeRegistry codeRegistry
+    ) {
+        // The following @Internal API (ValuesResolver) is used for argument value resolving.
+        // It is not really clear why this API is @Internal though.
+        // Surely ValuesResolver is used when validating argument values and returning the result of validation to the user.
+        // But graphql-java has not exposed this as a public API for client implementations.
+        // We argue that values resolving logic is error-prone and must follow standard guidelines from ValuesResolver.
+        // These guidelines include a) resolving from argument literals b) resolving from raw variable values c) scalar values coercion etc.
+        // Please follow these guidelines even if ValuesResolver will be made even more private, however this is unlikely scenario.
+        final Map<String, Object> argumentValues = new ValuesResolver().getArgumentValues(codeRegistry, arguments._1, arguments._2, variables);
+        
+        return ofNullable(argumentValues.get(ORDER))
+            .map(val -> {
+                final String str = (String) val; // "ASC_1", "DESC_1", "ASC_2", "DESC_2" and so on
+                final byte priority = valueOf(str.substring(str.length() - 1));
+                return t3(property, "ASC".equals(str.substring(0, str.length() - 2)) ? ASCENDING : DESCENDING, priority);
+            });
     }
     
     /**
