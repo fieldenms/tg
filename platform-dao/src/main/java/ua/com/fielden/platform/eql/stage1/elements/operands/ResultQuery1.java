@@ -53,8 +53,8 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToS2<R
     private Yields2 enhanceYields(final Yields2 yields, final Sources2 sources2) {
         // TODO include all props that are available (including calc-props) and also present in fetch model.
 
-        if (yields.getYields().isEmpty()) {
-            final List<Yield2> enhancedYields = new ArrayList<>();
+        if (yields.getYields().isEmpty() || yieldAll) {
+            final List<Yield2> enhancedYields = new ArrayList<>(yields.getYields());
             for (final Entry<String, AbstractPropInfo<?>> el : sources2.main.entityInfo().getProps().entrySet()) {
                 if (fetchModel.containsProp(el.getValue().name)) {
                     enhancedYields.add(new Yield2(new EntProp2(sources2.main, listOf(el.getValue())), el.getKey(), false));

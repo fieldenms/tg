@@ -50,8 +50,8 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableToS2<S
     }
 
     private Yields2 enhanceYields(final Yields2 yields, final Sources2 sources2) {
-        if (yields.getYields().isEmpty()) {
-            final List<Yield2> enhancedYields = new ArrayList<>();
+        if (yields.getYields().isEmpty() || yieldAll) {
+            final List<Yield2> enhancedYields = new ArrayList<>(yields.getYields());
             for (final Entry<String, AbstractPropInfo<?>> el : sources2.main.entityInfo().getProps().entrySet()) {
                 if (!el.getValue().hasExpression()) {
                     enhancedYields.add(new Yield2(new EntProp2(sources2.main, listOf(el.getValue())), el.getKey(), false));

@@ -3,9 +3,11 @@ package ua.com.fielden.platform.entity.query.fetching;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -20,7 +22,9 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
+import ua.com.fielden.platform.sample.domain.ITeAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.ITeVehicleModel;
+import ua.com.fielden.platform.sample.domain.ITgEntityWithComplexSummaries;
 import ua.com.fielden.platform.sample.domain.TeAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TeVehicle;
 import ua.com.fielden.platform.sample.domain.TeVehicleFuelUsage;
@@ -572,11 +576,34 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
 
     @Test
     public void eql3_query_executes_correctly58() {
-        ITeVehicleModel co = getInstance(ITeVehicleModel.class);
-        EntityResultQueryModel<TeVehicleModel> qry = select(TeVehicleModel.class).model();
+        final EntityResultQueryModel<TeAverageFuelUsage> qry = select(TeAverageFuelUsage.class).model();
+        final List<TeAverageFuelUsage> models = getInstance(ITeAverageFuelUsage.class).getAllEntities(from(qry).with(fetchAll(TeAverageFuelUsage.class)).with("EQL3", null).model());
+        for (final TeAverageFuelUsage item : models) {
+            System.out.println(item.getId() + " : " + item.getKey() + " : " + item.getQty());
+        }
+    }
+    
+    @Test
+    public void eql3_query_executes_correctly59() {
+        final ITeVehicleModel co = getInstance(ITeVehicleModel.class);
+        final EntityResultQueryModel<TeVehicleModel> qry = select(TeVehicleModel.class).model();
         co.getAllEntities(from(qry).with("EQL3", null).with(fetch(TeVehicleModel.class).with("makeKey2")).model());
     }
 
+    @Test
+    public void eql3_query_executes_correctly60() {
+        final ITgEntityWithComplexSummaries co = getInstance(ITgEntityWithComplexSummaries.class);
+        final EntityResultQueryModel<TgEntityWithComplexSummaries> qry = select(TgEntityWithComplexSummaries.class).model();
+        co.getAllEntities(from(qry).with("EQL3", null).model());
+    }
+    
+    @Test
+    public void eql3_query_executes_correctly61() {
+        final ITgEntityWithComplexSummaries co = getInstance(ITgEntityWithComplexSummaries.class);
+        final EntityResultQueryModel<TgEntityWithComplexSummaries> qry = select(TgEntityWithComplexSummaries.class).model();
+        co.getAllEntities(from(qry).with("EQL3", null).with(fetchIdOnly(TgEntityWithComplexSummaries.class).without("id").with("costPerKm")).model());
+    }
+    
        
     @Override
     protected void populateDomain() {

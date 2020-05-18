@@ -84,6 +84,7 @@ public class EqlTestCase {
     public static final Map<String, Table> tables = new HashMap<>();
     public static final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> metadata = new HashMap<>();
 
+    
     static {
         hibTypeDefaults.put(Date.class, DateTimeType.class);
         hibTypeDefaults.put(Money.class, SimpleMoneyType.class);

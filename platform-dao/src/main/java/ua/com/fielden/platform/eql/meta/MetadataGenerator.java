@@ -30,8 +30,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import org.hibernate.type.BigDecimalType;
+import org.hibernate.type.IntegerType;
 import org.hibernate.type.LongType;
 import org.hibernate.type.StringType;
+import org.hibernate.type.Type;
 import org.hibernate.type.YesNoType;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -53,6 +56,7 @@ import ua.com.fielden.platform.eql.stage1.builders.StandAloneExpressionBuilder;
 import ua.com.fielden.platform.eql.stage1.elements.operands.Expression1;
 import ua.com.fielden.platform.eql.stage3.elements.Column;
 import ua.com.fielden.platform.eql.stage3.elements.Table;
+import ua.com.fielden.platform.persistence.types.DateTimeType;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -64,6 +68,7 @@ public class MetadataGenerator {
     private final IFilter filter;
     private final String username;
     private final Map<String, Object> paramValues = new HashMap<>();
+    public static Type dateTimeHibType = new DateTimeType();
 
     public MetadataGenerator(final DomainMetadata dm, final IFilter filter, final String username, final IDates dates, final Map<String, Object> paramValues) {
         this.dm = dm;
@@ -179,7 +184,23 @@ public class MetadataGenerator {
                 final boolean required = PropertyTypeDeterminator.isRequiredByDefinition(field, javaType);
                 entityInfo.addProp(new EntityTypePropInfo(field.getName(), allEntitiesInfo.get(javaType), LongType.INSTANCE, required, expr));
             } else {
-                entityInfo.addProp(new PrimTypePropInfo(field.getName(),EntityUtils.isBoolean(javaType) ? YesNoType.INSTANCE : StringType.INSTANCE, javaType, expr));
+                Type hibType = null;
+                
+                if (EntityUtils.isInteger(javaType)) {
+                    hibType = IntegerType.INSTANCE;
+                } else if (EntityUtils.isBoolean(javaType)) {
+                    hibType = YesNoType.INSTANCE;
+                } else if (EntityUtils.isString(javaType)) {
+                    hibType = StringType.INSTANCE;
+                } else if (EntityUtils.isDecimal(javaType)) {
+                    hibType = BigDecimalType.INSTANCE;
+                } else if (EntityUtils.isDate(javaType) || EntityUtils.isDateTime(javaType)) {
+                    hibType = dateTimeHibType;
+                } else {
+                    //System.out.println(field.getName() + " : " + javaType);
+                }
+                    
+                entityInfo.addProp(new PrimTypePropInfo(field.getName(), hibType, javaType, expr));
             }
 
         });

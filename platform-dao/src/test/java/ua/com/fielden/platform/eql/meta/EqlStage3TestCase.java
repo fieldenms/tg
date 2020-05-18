@@ -116,7 +116,7 @@ public class EqlStage3TestCase extends EqlTestCase {
 
     
     protected static ISingleOperand3 dateProp(final String name, final IQrySource3 source) {
-        return new EntProp3(name, source, Date.class, StringType.INSTANCE);
+        return new EntProp3(name, source, Date.class, MetadataGenerator.dateTimeHibType);
     }
     
     protected static ComparisonTest3 eq(final ISingleOperand3 op1, final ISingleOperand3 op2) {

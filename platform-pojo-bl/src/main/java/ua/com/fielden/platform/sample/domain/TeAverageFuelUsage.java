@@ -24,6 +24,7 @@ public class TeAverageFuelUsage extends AbstractEntity<TeVehicle> {
                     prop("date").gt().iParam("datePeriod.from").and(). //
                     prop("date").lt().iParam("datePeriod.to"). //
                     groupBy().prop("vehicle"). //
+                    yield().prop("vehicle").as("id"). //
                     yield().prop("vehicle").as("key"). //
                     yield().sumOf().prop("qty").as("qty"). //
                     modelAsEntity(TeAverageFuelUsage.class);

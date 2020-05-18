@@ -18,6 +18,7 @@ public abstract class AbstractQuery1 {
     public final GroupBys1 groups;
     public final OrderBys1 orderings;
     public final Class<? extends AbstractEntity<?>> resultType;
+    public final boolean yieldAll;
 
     public AbstractQuery1(final EntQueryBlocks1 queryBlocks, final Class<? extends AbstractEntity<?>> resultType) {
         this.sources = queryBlocks.sources;
@@ -26,6 +27,7 @@ public abstract class AbstractQuery1 {
         this.groups = queryBlocks.groups;
         this.orderings = queryBlocks.orderings;
         this.resultType = resultType;
+        this.yieldAll = queryBlocks.yieldAll;
     }
 
     @Override
@@ -38,6 +40,7 @@ public abstract class AbstractQuery1 {
         result = prime * result + ((resultType == null) ? 0 : resultType.hashCode());
         result = prime * result + sources.hashCode();
         result = prime * result + yields.hashCode();
+        result = prime * result + (yieldAll ? 1231 : 1237);
         return result;
     }
 
@@ -58,6 +61,7 @@ public abstract class AbstractQuery1 {
                 Objects.equals(yields, other.yields) &&
                 Objects.equals(conditions, other.conditions) &&
                 Objects.equals(groups, other.groups) &&
-                Objects.equals(orderings, other.orderings);
+                Objects.equals(orderings, other.orderings) &&
+                Objects.equals(yieldAll, other.yieldAll);
     }
 }
