@@ -149,6 +149,7 @@ public class GraphQLService implements IWebApi {
         return entityTypes.stream()
             .map(GraphQLService::createGraphQLTypeFor)
             .flatMap(optType -> optType.map(Stream::of).orElseGet(Stream::empty))
+            .sorted((pair1, pair2) -> pair1.getKey().getSimpleName().compareTo(pair2.getKey().getSimpleName()))
             .collect(toLinkedHashMap(Pair::getKey, Pair::getValue));
     }
     
