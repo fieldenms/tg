@@ -160,8 +160,6 @@ public class FieldSchema {
     }
     
     private static String metaInformationFor(final Class<? extends AbstractEntity<?>> entityType, final String property) {
-        // TODO support @DescReadonly / @DescRequired as annotations added to entity type, not property
-        // TODO support @KeyReadonly                  as annotations added to entity type, not property
         return concat(
             asList(
                 Calculated.class,
@@ -209,7 +207,7 @@ public class FieldSchema {
                 }
             }).map(type -> typeName(type))
             
-            ).collect(joining(NEWLINE));
+            ).distinct().collect(joining(NEWLINE));
     }
     
     private static String typeName(final Class<? extends Annotation> annotationType) {
