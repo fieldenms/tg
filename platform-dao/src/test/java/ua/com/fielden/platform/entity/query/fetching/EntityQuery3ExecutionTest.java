@@ -604,7 +604,14 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
         co.getAllEntities(from(qry).with("EQL3", null).with(fetchIdOnly(TgEntityWithComplexSummaries.class).without("id").with("costPerKm")).model());
     }
     
-       
+    @Test
+    public void eql3_query_executes_correctly62() {
+        final ITeVehicleModel co = getInstance(ITeVehicleModel.class);
+        final EntityResultQueryModel<TeVehicleModel> qry = select(TeVehicleModel.class).model();
+        qry.setFilterable(true);
+        co.getAllEntities(from(qry).with("EQL3", null).with(fetch(TeVehicleModel.class).with("makeKey2")).model());
+    }
+    
     @Override
     protected void populateDomain() {
         super.populateDomain();

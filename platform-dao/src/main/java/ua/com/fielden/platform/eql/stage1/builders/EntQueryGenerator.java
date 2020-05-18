@@ -1,9 +1,11 @@
 package ua.com.fielden.platform.eql.stage1.builders;
 
 import static java.util.Collections.unmodifiableMap;
+import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.AND;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ORDER_TOKENS;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.QUERY_TOKEN;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.SORT_ORDER;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,14 +19,20 @@ import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.IRetrievalModel;
 import ua.com.fielden.platform.entity.query.fluent.enums.QueryTokens;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
+import ua.com.fielden.platform.entity.query.generation.elements.GroupedConditions;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
+import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.eql.stage1.elements.EntQueryBlocks1;
 import ua.com.fielden.platform.eql.stage1.elements.OrderBys1;
+import ua.com.fielden.platform.eql.stage1.elements.conditions.CompoundCondition1;
+import ua.com.fielden.platform.eql.stage1.elements.conditions.Conditions1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.ResultQuery1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.SourceQuery1;
 import ua.com.fielden.platform.eql.stage1.elements.operands.SubQuery1;
+import ua.com.fielden.platform.eql.stage1.elements.sources.IQrySource1;
+import ua.com.fielden.platform.eql.stage1.elements.sources.Sources1;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -115,7 +123,23 @@ public class EntQueryGenerator {
             }
         }
 
-        return new EntQueryBlocks1(from.getModel(), where.getModel(), select.getModel(), groupBy.getModel(), produceOrderBys(orderModel), qryModel.isYieldAll());
+        final Sources1 fromModel = from.getModel();
+        final Conditions1 whereModel = addFilteringCondition(where.getModel(), qryModel.isFilterable(), filter, username, fromModel.main);
+
+        return new EntQueryBlocks1(fromModel, whereModel, select.getModel(), groupBy.getModel(), produceOrderBys(orderModel), qryModel.isYieldAll());
+    }
+    
+    private Conditions1 addFilteringCondition(final Conditions1 originalConditions, final boolean filterable, final IFilter filter, final String username, final IQrySource1 mainSource) {
+        if (filterable && filter != null) {
+            final ConditionModel filteringCondition = filter.enhance(mainSource.sourceType(), mainSource.getAlias(), username);
+            if (filteringCondition != null) {
+                // LOGGER.debug("\nApplied user-driven-filter to query main source type [" + mainSource.sourceType().getSimpleName() + "]");
+                final Conditions1 userDateFilteringCondition = new StandAloneConditionBuilder(this, filteringCondition, false).getModel();
+                return new Conditions1(false, userDateFilteringCondition, listOf(new CompoundCondition1(AND, originalConditions)));
+            }
+        }
+
+        return originalConditions;
     }
 
     private List<Pair<TokenCategory, Object>> linearizeTokens(final List<Pair<TokenCategory, Object>> tokens) {
