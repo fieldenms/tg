@@ -27,6 +27,7 @@ import ua.com.fielden.platform.web.factories.webui.EntityAutocompletionResourceF
 import ua.com.fielden.platform.web.factories.webui.EntityResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EntityValidationResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.FileResourceFactory;
+import ua.com.fielden.platform.web.factories.webui.GraphiQLResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.MainWebUiComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.MasterComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.MasterTestsComponentResourceFactory;
@@ -134,7 +135,8 @@ public abstract class AbstractWebUiResources extends Application {
         // For egi example TODO remove later.
         router.attach("/test/egi", new EgiExampleResourceFactory(injector));
         // Web API resource
-        router.attach("/webapi", new WebApiResourceFactory(injector));
+        router.attach("/api", new WebApiResourceFactory(injector));
+        router.attach("/api/graphiql", new GraphiQLResourceFactory(injector));
 
         // Registering entity centres:
         attachCentreResources(router, webApp, restUtil);

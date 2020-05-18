@@ -1,4 +1,4 @@
-# Welcome to GraphiQL
+# Welcome to GraphiQL (https://tgdev.com/api/graphiql)
 #
 # GraphiQL is an in-browser tool for writing, validating, and
 # testing GraphQL queries.
