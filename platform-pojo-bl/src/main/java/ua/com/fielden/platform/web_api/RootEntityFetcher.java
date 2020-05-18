@@ -1,14 +1,21 @@
 package ua.com.fielden.platform.web_api;
 
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.web_api.FieldSchema.MAX_NUMBER_OF_ENTITIES;
+import static ua.com.fielden.platform.web_api.RootEntityUtils.extractPageCapacity;
 import static ua.com.fielden.platform.web_api.RootEntityUtils.generateQueryModelFrom;
+import static ua.com.fielden.platform.web_api.RootEntityUtils.rootPropAndArguments;
 
 import java.util.List;
 
+import graphql.language.Argument;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
+import graphql.schema.GraphQLArgument;
 import graphql.schema.PropertyDataFetcher;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.utils.IDates;
 
 /**
@@ -23,11 +30,6 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
     private final Class<T> entityType;
     private final ICompanionObjectFinder coFinder;
     private final IDates dates;
-    
-    /**
-     * Default maximum number of entities returned in a single root field of a <code>Query</code>.
-     */
-    private final int MAX_NUMBER_OF_ENTITIES = 1000;
     
     /**
      * Creates {@link RootEntityFetcher} for concrete <code>entityType</code>.
@@ -48,6 +50,7 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
      */
     @Override
     public List<T> get(final DataFetchingEnvironment environment) {
+        final T3<String, List<GraphQLArgument>, List<Argument>> rootArguments = rootPropAndArguments(environment.getGraphQLSchema(), environment.getField());
         return coFinder.findAsReader(entityType, true).getFirstEntities( // reader must be uninstrumented
             generateQueryModelFrom(
                 environment.getField(),
@@ -56,7 +59,11 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
                 entityType,
                 environment.getGraphQLSchema()
             ).apply(dates),
-            MAX_NUMBER_OF_ENTITIES
+            extractPageCapacity(
+                t2(rootArguments._2, rootArguments._3),
+                environment.getVariables(),
+                environment.getGraphQLSchema().getCodeRegistry()
+            ).orElse(MAX_NUMBER_OF_ENTITIES)
         );
     }
     

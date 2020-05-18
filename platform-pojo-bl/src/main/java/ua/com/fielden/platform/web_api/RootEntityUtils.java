@@ -23,6 +23,7 @@ import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web_api.FieldSchema.FROM;
 import static ua.com.fielden.platform.web_api.FieldSchema.LIKE;
 import static ua.com.fielden.platform.web_api.FieldSchema.ORDER;
+import static ua.com.fielden.platform.web_api.FieldSchema.PAGE_CAPACITY;
 import static ua.com.fielden.platform.web_api.FieldSchema.TO;
 import static ua.com.fielden.platform.web_api.FieldSchema.VALUE;
 
@@ -92,7 +93,7 @@ public class RootEntityUtils {
         final SelectionSet selectionSet = rootField.getSelectionSet();
         // convert selectionSet to concrete properties (their dot-notated names) with their arguments
         final Map<String, T2<List<GraphQLArgument>, List<Argument>>> propertiesAndArguments = concat(
-            Stream.of(propAndArgumentsFrom(schema, rootField, "", QUERY_TYPE_NAME)), // "entity-itself" property (this can have some arguments, e.g. 'order')
+            Stream.of(rootPropAndArguments(schema, rootField)), // "entity-itself" property (this can have some arguments, e.g. 'order')
             properties(entityType, null, toFields(selectionSet, fragmentDefinitions), fragmentDefinitions, schema)
         ).collect(toLinkedHashMap(t3 -> t3._1, t3 -> t2(t3._2, t3._3)));
         final List<QueryProperty> queryProperties = propertiesAndArguments.entrySet().stream()
@@ -108,7 +109,6 @@ public class RootEntityUtils {
         final List<Pair<String, Ordering>> orderingProperties = propertiesAndArguments.entrySet().stream()
             .filter(propertyAndArguments -> !propertyAndArguments.getValue()._1.isEmpty()) // if GraphQL argument definitions are not empty ...
             .map(propertyAndArguments -> createOrderingProperty( // ... create ordering properties based on them
-                entityType,
                 propertyAndArguments.getKey(),
                 propertyAndArguments.getValue(),
                 variables,
@@ -187,7 +187,6 @@ public class RootEntityUtils {
      * Returns {@link Optional} tuple representing ordering <code>property</code> in <code>entityType</code>: dot-notation name, {@link Ordering} and number (priority).
      * Returns {@link Optional#empty()} if there is no ordering.
      * 
-     * @param entityType
      * @param property
      * @param arguments -- pair of {@link GraphQLArgument} definitions and corresponding resolved {@link Argument} instances (which contain actual values)
      * @param variables -- existing variable values by names in the query
@@ -196,7 +195,6 @@ public class RootEntityUtils {
      * @return
      */
     private static <T extends AbstractEntity<?>> Optional<T3<String, Ordering, Byte>> createOrderingProperty(
-        final Class<T> entityType,
         final String property,
         final T2<List<GraphQLArgument>, List<Argument>> arguments,
         final Map<String, Object> variables,
@@ -217,6 +215,34 @@ public class RootEntityUtils {
                 final byte priority = valueOf(str.substring(str.length() - 1));
                 return t3(property, "ASC".equals(str.substring(0, str.length() - 2)) ? ASCENDING : DESCENDING, priority);
             });
+    }
+    
+    /**
+     * Returns {@link Optional} integer representing custom page capacity.
+     * Returns {@link Optional#empty()} if there is no custom page capacity.
+     * 
+     * @param property
+     * @param arguments -- pair of {@link GraphQLArgument} definitions and corresponding resolved {@link Argument} instances (which contain actual values)
+     * @param variables -- existing variable values by names in the query
+     * @param codeRegistry -- code registry that is used only to take care of field visibility during {@link ValuesResolver#getArgumentValues(List, List, Map)} conversion
+     * 
+     * @return
+     */
+    static <T extends AbstractEntity<?>> Optional<Integer> extractPageCapacity(
+        final T2<List<GraphQLArgument>, List<Argument>> arguments,
+        final Map<String, Object> variables,
+        final GraphQLCodeRegistry codeRegistry
+    ) {
+        // The following @Internal API (ValuesResolver) is used for argument value resolving.
+        // It is not really clear why this API is @Internal though.
+        // Surely ValuesResolver is used when validating argument values and returning the result of validation to the user.
+        // But graphql-java has not exposed this as a public API for client implementations.
+        // We argue that values resolving logic is error-prone and must follow standard guidelines from ValuesResolver.
+        // These guidelines include a) resolving from argument literals b) resolving from raw variable values c) scalar values coercion etc.
+        // Please follow these guidelines even if ValuesResolver will be made even more private, however this is unlikely scenario.
+        final Map<String, Object> argumentValues = new ValuesResolver().getArgumentValues(codeRegistry, arguments._1, arguments._2, variables);
+        
+        return ofNullable(argumentValues.get(PAGE_CAPACITY)).map(val -> (int) val).filter(val -> val >= 1); // zero or less will be ignored
     }
     
     /**
@@ -250,6 +276,17 @@ public class RootEntityUtils {
                 )
             );
         });
+    }
+    
+    /**
+     * Creates tuple of Query root property with its argument definitions and actual arguments.
+     * 
+     * @param schema -- GraphQL schema needed to extract argument definitions
+     * @param graphQLField -- field instance with actual arguments
+     * @return
+     */
+    static T3<String, List<GraphQLArgument>, List<Argument>> rootPropAndArguments(final GraphQLSchema schema, final Field graphQLField) {
+        return propAndArgumentsFrom(schema, graphQLField, "", QUERY_TYPE_NAME);
     }
     
     /**

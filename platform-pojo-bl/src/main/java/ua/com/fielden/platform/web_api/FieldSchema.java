@@ -114,6 +114,7 @@ public class FieldSchema {
     static final String FROM = "from";
     static final String TO = "to";
     static final String ORDER = "order";
+    static final String PAGE_CAPACITY = "pageCapacity";
     static final GraphQLArgument ORDER_ARGUMENT = newArgument()
         .name(ORDER)
         .description("Order entities by this property with specified **ASC_n** / **DESC_m** value. Use **n** / **m** numbers (0..9) to define priority among other properties.")
@@ -141,7 +142,16 @@ public class FieldSchema {
             .build()
         )
         .build();
-
+    /**
+     * Default maximum number of entities returned in a single root field of a <code>Query</code>.
+     */
+    static final int MAX_NUMBER_OF_ENTITIES = 1000;
+    static final GraphQLArgument PAGE_CAPACITY_ARGUMENT = newArgument()
+        .name(PAGE_CAPACITY)
+        .description(format("Positive number to limit maximum number of entities returned. Numbers <= 0 will be ignored. %s by default.", MAX_NUMBER_OF_ENTITIES))
+        .type(GraphQLInt)
+        .build();
+    
     /**
      * Creates GraphQL field definition for <code>entityType</code> and <code>property</code>.
      * Set of supported property types:

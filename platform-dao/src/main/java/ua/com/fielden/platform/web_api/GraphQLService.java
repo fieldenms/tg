@@ -22,6 +22,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web_api.FieldSchema.ORDER_ARGUMENT;
+import static ua.com.fielden.platform.web_api.FieldSchema.PAGE_CAPACITY_ARGUMENT;
 import static ua.com.fielden.platform.web_api.FieldSchema.bold;
 import static ua.com.fielden.platform.web_api.FieldSchema.createGraphQLFieldDefinition;
 import static ua.com.fielden.platform.web_api.FieldSchema.titleAndDescRepresentation;
@@ -175,6 +176,7 @@ public class GraphQLService implements IWebApi {
                 .name(fieldName)
                 .description(format("Query %s.", bold(getEntityTitleAndDesc(entityType).getKey())))
                 .argument(ORDER_ARGUMENT)
+                .argument(PAGE_CAPACITY_ARGUMENT)
                 .type(new GraphQLList(new GraphQLTypeReference(simpleTypeName)))
             );
             codeRegistryBuilder.dataFetcher(coordinates(QUERY_TYPE_NAME, fieldName), new RootEntityFetcher<>((Class<AbstractEntity<?>>) entityType, coFinder, dates));
