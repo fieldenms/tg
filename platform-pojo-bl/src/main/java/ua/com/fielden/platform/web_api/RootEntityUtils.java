@@ -68,28 +68,33 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class RootEntityUtils {
+    static final String QUERY_TYPE_NAME = "Query";
     private static final Logger LOGGER = Logger.getLogger(RootEntityUtils.class);
     
     /**
-     * Returns function for generation of EQL query execution model for retrieving <code>selectionSet</code> of fields inside root selection of GraphQL query or mutation.
+     * Returns function for generation of EQL query execution model for retrieving <code>rootField</code> and its selection set in GraphQL query or mutation.
      * The argument of function is {@link IDates} instance from which 'now' moment can properly be retrieved and used for date property filtering.
      * 
-     * @param selectionSet
-     * @param variables -- existing variable values by names in the query; they can be used in <code>selectionSet</code>
-     * @param fragmentDefinitions -- fragment definitions by names in the query; <code>selectionSet</code> can contain fragment spreads based on that definitions
+     * @param rootField -- root field for GraphQL query or mutation
+     * @param variables -- existing variable values by names in the query; they can be used in <code>rootField.selectionSet</code>
+     * @param fragmentDefinitions -- fragment definitions by names in the query; <code>rootField.selectionSet</code> can contain fragment spreads based on that definitions
      * @param entityType
      * @param schema -- GraphQL schema to assist with resolving of argument values
      * @return
      */
     public static <T extends AbstractEntity<?>> Function<IDates, QueryExecutionModel<T, EntityResultQueryModel<T>>> generateQueryModelFrom(
-        final SelectionSet selectionSet,
+        final Field rootField,
         final Map<String, Object> variables,
         final Map<String, FragmentDefinition> fragmentDefinitions,
         final Class<T> entityType,
         final GraphQLSchema schema
     ) {
+        final SelectionSet selectionSet = rootField.getSelectionSet();
         // convert selectionSet to concrete properties (their dot-notated names) with their arguments
-        final Map<String, T2<List<GraphQLArgument>, List<Argument>>> propertiesAndArguments = properties(selectionSet, fragmentDefinitions, entityType, schema).collect(toLinkedHashMap(t3 -> t3._1, t3 -> t2(t3._2, t3._3)));
+        final Map<String, T2<List<GraphQLArgument>, List<Argument>>> propertiesAndArguments = concat(
+            Stream.of(propAndArgumentsFrom(schema, rootField, "", QUERY_TYPE_NAME)), // "entity-itself" property (this can have some arguments, e.g. 'order')
+            properties(entityType, null, toFields(selectionSet, fragmentDefinitions), fragmentDefinitions, schema)
+        ).collect(toLinkedHashMap(t3 -> t3._1, t3 -> t2(t3._2, t3._3)));
         final List<QueryProperty> queryProperties = propertiesAndArguments.entrySet().stream()
             .filter(propertyAndArguments -> !propertyAndArguments.getValue()._1.isEmpty()) // if GraphQL argument definitions are not empty ...
             .map(propertyAndArguments -> createQueryProperty( // ... create query properties based on them
@@ -217,24 +222,6 @@ public class RootEntityUtils {
     /**
      * Creates stream of dot-notated property names with their lists of argumentDefinitions / arguments.
      * 
-     * @param selectionSet -- selection set of fields in root field
-     * @param fragmentDefinitions -- definitions of named fragments to extract concrete field selections from fragment spreads
-     * @param entityType -- root entity type
-     * @param schema -- GraphQL schema needed to extract argument definitions
-     * @return
-     */
-    private static <T extends AbstractEntity<?>> Stream<T3<String, List<GraphQLArgument>, List<Argument>>> properties(
-        final SelectionSet selectionSet,
-        final Map<String, FragmentDefinition> fragmentDefinitions,
-        final Class<T> entityType,
-        final GraphQLSchema schema
-    ) {
-        return properties(entityType, null, toFields(selectionSet, fragmentDefinitions), fragmentDefinitions, schema);
-    }
-    
-    /**
-     * Creates stream of dot-notated property names with their lists of argumentDefinitions / arguments.
-     * 
      * @param entityType -- type in which we process its selected <code>graphQLFields</code>
      * @param prefix -- path to the <code>entityType</code> from its root
      * @param graphQLFields
@@ -251,12 +238,9 @@ public class RootEntityUtils {
     ) {
         return graphQLFields.stream().flatMap(graphQLField -> { // flatten resultant stream of prop+arguments derived from 'graphQLField'
             final String property = prefix == null ? graphQLField.getName() : prefix + "." + graphQLField.getName(); // 'property' has dot-notated property name from root entity type to currently selected 'graphQLField'
+            final String entityTypeName = entityType.getSimpleName();
             return concat( // concatenate two streams: ...
-                of(t3( // ... first is single-element stream containing 'graphQLField' property itself and ...
-                    property,
-                    schema.getObjectType(entityType.getSimpleName()).getFieldDefinition(graphQLField.getName()).getArguments(), // argument definitions
-                    graphQLField.getArguments() // arguments with actual values
-                )),
+                of(propAndArgumentsFrom(schema, graphQLField, property, entityTypeName)), // ... first is single-element stream containing 'graphQLField' property itself and ...
                 properties( // ... second contains all selected sub-fields of 'graphQLField'
                     determinePropertyType(entityType, graphQLField.getName()),
                     property,
@@ -266,6 +250,23 @@ public class RootEntityUtils {
                 )
             );
         });
+    }
+    
+    /**
+     * Creates tuple of: <code>property</code>, its argument definitions and actual arguments.
+     * 
+     * @param schema -- GraphQL schema needed to extract argument definitions
+     * @param graphQLField -- field instance with actual arguments
+     * @param property
+     * @param parentTypeName -- name of parent GraphQL type that contains <code>graphQLField</code>
+     * @return
+     */
+    private static T3<String, List<GraphQLArgument>, List<Argument>> propAndArgumentsFrom(final GraphQLSchema schema, final Field graphQLField, final String property, final String parentTypeName) {
+        return t3(
+            property,
+            schema.getObjectType(parentTypeName).getFieldDefinition(graphQLField.getName()).getArguments(), // argument definitions
+            graphQLField.getArguments() // arguments with actual values
+        );
     }
     
     /**

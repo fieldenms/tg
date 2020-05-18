@@ -21,9 +21,11 @@ import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
 import static ua.com.fielden.platform.utils.Pair.pair;
+import static ua.com.fielden.platform.web_api.FieldSchema.ORDER_ARGUMENT;
 import static ua.com.fielden.platform.web_api.FieldSchema.bold;
 import static ua.com.fielden.platform.web_api.FieldSchema.createGraphQLFieldDefinition;
 import static ua.com.fielden.platform.web_api.FieldSchema.titleAndDescRepresentation;
+import static ua.com.fielden.platform.web_api.RootEntityUtils.QUERY_TYPE_NAME;
 import static ua.com.fielden.platform.web_api.WebApiUtils.operationName;
 import static ua.com.fielden.platform.web_api.WebApiUtils.query;
 import static ua.com.fielden.platform.web_api.WebApiUtils.variables;
@@ -165,17 +167,17 @@ public class GraphQLService implements IWebApi {
      * @return
      */
     private static GraphQLObjectType createQueryType(final Set<Class<? extends AbstractEntity<?>>> dictionary, final ICompanionObjectFinder coFinder, final IDates dates, final GraphQLCodeRegistry.Builder codeRegistryBuilder) {
-        final String queryTypeName = "Query";
-        final Builder queryTypeBuilder = newObject().name(queryTypeName).description("Query following **entities** represented as GraphQL root fields:");
+        final Builder queryTypeBuilder = newObject().name(QUERY_TYPE_NAME).description("Query following **entities** represented as GraphQL root fields:");
         dictionary.stream().forEach(entityType -> {
             final String simpleTypeName = entityType.getSimpleName();
             final String fieldName = uncapitalize(simpleTypeName);
             queryTypeBuilder.field(newFieldDefinition()
                 .name(fieldName)
                 .description(format("Query %s.", bold(getEntityTitleAndDesc(entityType).getKey())))
+                .argument(ORDER_ARGUMENT)
                 .type(new GraphQLList(new GraphQLTypeReference(simpleTypeName)))
             );
-            codeRegistryBuilder.dataFetcher(coordinates(queryTypeName, fieldName), new RootEntityFetcher<>((Class<AbstractEntity<?>>) entityType, coFinder, dates));
+            codeRegistryBuilder.dataFetcher(coordinates(QUERY_TYPE_NAME, fieldName), new RootEntityFetcher<>((Class<AbstractEntity<?>>) entityType, coFinder, dates));
         });
         return queryTypeBuilder.build();
     }

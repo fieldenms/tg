@@ -50,7 +50,7 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
     public List<T> get(final DataFetchingEnvironment environment) {
         return coFinder.findAsReader(entityType, true).getFirstEntities( // reader must be uninstrumented
             generateQueryModelFrom(
-                environment.getField().getSelectionSet(),
+                environment.getField(),
                 environment.getVariables(),
                 environment.getFragmentsByName(),
                 entityType,
