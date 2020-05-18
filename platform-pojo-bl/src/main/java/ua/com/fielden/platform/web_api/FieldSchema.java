@@ -114,6 +114,7 @@ public class FieldSchema {
     static final String FROM = "from";
     static final String TO = "to";
     static final String ORDER = "order";
+    static final String PAGE_NUMBER = "pageNumber";
     static final String PAGE_CAPACITY = "pageCapacity";
     static final GraphQLArgument ORDER_ARGUMENT = newArgument()
         .name(ORDER)
@@ -143,12 +144,21 @@ public class FieldSchema {
         )
         .build();
     /**
+     * Default page number of entities returned in a single root field of a <code>Query</code>.
+     */
+    static final int DEFAULT_PAGE_NUMBER = 0;
+    static final GraphQLArgument PAGE_NUMBER_ARGUMENT = newArgument()
+            .name(PAGE_NUMBER)
+            .description(format("Non-negative number indicating the 'page' of entities returned. Numbers < 0 will be ignored. %s by default.", DEFAULT_PAGE_NUMBER))
+            .type(GraphQLInt)
+            .build();
+    /**
      * Default maximum number of entities returned in a single root field of a <code>Query</code>.
      */
-    static final int MAX_NUMBER_OF_ENTITIES = 1000;
+    static final int DEFAULT_PAGE_CAPACITY = 1000;
     static final GraphQLArgument PAGE_CAPACITY_ARGUMENT = newArgument()
         .name(PAGE_CAPACITY)
-        .description(format("Positive number to limit maximum number of entities returned. Numbers <= 0 will be ignored. %s by default.", MAX_NUMBER_OF_ENTITIES))
+        .description(format("Positive number to limit maximum number of entities returned. Numbers <= 0 will be ignored. %s by default.", DEFAULT_PAGE_CAPACITY))
         .type(GraphQLInt)
         .build();
     

@@ -1,8 +1,11 @@
 package ua.com.fielden.platform.web_api;
 
 import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.web_api.FieldSchema.MAX_NUMBER_OF_ENTITIES;
-import static ua.com.fielden.platform.web_api.RootEntityUtils.extractPageCapacity;
+import static ua.com.fielden.platform.web_api.FieldSchema.DEFAULT_PAGE_CAPACITY;
+import static ua.com.fielden.platform.web_api.FieldSchema.DEFAULT_PAGE_NUMBER;
+import static ua.com.fielden.platform.web_api.FieldSchema.PAGE_CAPACITY;
+import static ua.com.fielden.platform.web_api.FieldSchema.PAGE_NUMBER;
+import static ua.com.fielden.platform.web_api.RootEntityUtils.extractValue;
 import static ua.com.fielden.platform.web_api.RootEntityUtils.generateQueryModelFrom;
 import static ua.com.fielden.platform.web_api.RootEntityUtils.rootPropAndArguments;
 
@@ -45,13 +48,13 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
     }
     
     /**
-     * Finds an uninstrumented reader for the {@link #entityType} and retrieves first {@link #MAX_NUMBER_OF_ENTITIES} entities.<p>
+     * Finds an uninstrumented reader for the {@link #entityType} and retrieves first {@link #DEFAULT_PAGE_CAPACITY} entities.<p>
      * {@inheritDoc}
      */
     @Override
     public List<T> get(final DataFetchingEnvironment environment) {
         final T3<String, List<GraphQLArgument>, List<Argument>> rootArguments = rootPropAndArguments(environment.getGraphQLSchema(), environment.getField());
-        return coFinder.findAsReader(entityType, true).getFirstEntities( // reader must be uninstrumented
+        return coFinder.findAsReader(entityType, true).getPage( // reader must be uninstrumented
             generateQueryModelFrom(
                 environment.getField(),
                 environment.getVariables(),
@@ -59,12 +62,21 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
                 entityType,
                 environment.getGraphQLSchema()
             ).apply(dates),
-            extractPageCapacity(
+            extractValue(
+                PAGE_NUMBER,
                 t2(rootArguments._2, rootArguments._3),
                 environment.getVariables(),
-                environment.getGraphQLSchema().getCodeRegistry()
-            ).orElse(MAX_NUMBER_OF_ENTITIES)
-        );
+                environment.getGraphQLSchema().getCodeRegistry(),
+                0
+            ).orElse(DEFAULT_PAGE_NUMBER),
+            extractValue(
+                PAGE_CAPACITY,
+                t2(rootArguments._2, rootArguments._3),
+                environment.getVariables(),
+                environment.getGraphQLSchema().getCodeRegistry(),
+                1
+            ).orElse(DEFAULT_PAGE_CAPACITY)
+        ).data();
     }
     
 }

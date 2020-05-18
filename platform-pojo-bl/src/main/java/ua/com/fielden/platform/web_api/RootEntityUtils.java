@@ -23,7 +23,6 @@ import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web_api.FieldSchema.FROM;
 import static ua.com.fielden.platform.web_api.FieldSchema.LIKE;
 import static ua.com.fielden.platform.web_api.FieldSchema.ORDER;
-import static ua.com.fielden.platform.web_api.FieldSchema.PAGE_CAPACITY;
 import static ua.com.fielden.platform.web_api.FieldSchema.TO;
 import static ua.com.fielden.platform.web_api.FieldSchema.VALUE;
 
@@ -218,20 +217,23 @@ public class RootEntityUtils {
     }
     
     /**
-     * Returns {@link Optional} integer representing custom page capacity.
-     * Returns {@link Optional#empty()} if there is no custom page capacity.
+     * Returns {@link Optional} integer representing custom value for <code>what</code>.
+     * Returns {@link Optional#empty()} if there is no custom value.
      * 
-     * @param property
+     * @param what
      * @param arguments -- pair of {@link GraphQLArgument} definitions and corresponding resolved {@link Argument} instances (which contain actual values)
      * @param variables -- existing variable values by names in the query
      * @param codeRegistry -- code registry that is used only to take care of field visibility during {@link ValuesResolver#getArgumentValues(List, List, Map)} conversion
+     * @param significantLimit
      * 
      * @return
      */
-    static <T extends AbstractEntity<?>> Optional<Integer> extractPageCapacity(
+    static <T extends AbstractEntity<?>> Optional<Integer> extractValue(
+        final String what,
         final T2<List<GraphQLArgument>, List<Argument>> arguments,
         final Map<String, Object> variables,
-        final GraphQLCodeRegistry codeRegistry
+        final GraphQLCodeRegistry codeRegistry,
+        final int significantLimit
     ) {
         // The following @Internal API (ValuesResolver) is used for argument value resolving.
         // It is not really clear why this API is @Internal though.
@@ -242,7 +244,7 @@ public class RootEntityUtils {
         // Please follow these guidelines even if ValuesResolver will be made even more private, however this is unlikely scenario.
         final Map<String, Object> argumentValues = new ValuesResolver().getArgumentValues(codeRegistry, arguments._1, arguments._2, variables);
         
-        return ofNullable(argumentValues.get(PAGE_CAPACITY)).map(val -> (int) val).filter(val -> val >= 1); // zero or less will be ignored
+        return ofNullable(argumentValues.get(what)).map(val -> (int) val).filter(val -> val >= significantLimit); // value less than significantLimit will be ignored
     }
     
     /**
