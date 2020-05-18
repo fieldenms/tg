@@ -8,6 +8,7 @@ import static graphql.schema.GraphQLFieldDefinition.newFieldDefinition;
 import static graphql.schema.GraphQLObjectType.newObject;
 import static graphql.schema.GraphQLSchema.newSchema;
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toList;
@@ -17,6 +18,8 @@ import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresen
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isExcluded;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web_api.FieldSchema.bold;
 import static ua.com.fielden.platform.web_api.FieldSchema.createGraphQLFieldDefinition;
@@ -45,9 +48,16 @@ import graphql.schema.GraphQLObjectType.Builder;
 import graphql.schema.GraphQLSchema;
 import graphql.schema.GraphQLType;
 import graphql.schema.GraphQLTypeReference;
+import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
+import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
+import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
+import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -75,21 +85,42 @@ public class GraphQLService implements IWebApi {
      */
     @Inject
     public GraphQLService(final IApplicationDomainProvider applicationDomainProvider, final ICompanionObjectFinder coFinder, final IDates dates) {
-        logger.info("GraphQL Web API...");
-        final GraphQLCodeRegistry.Builder codeRegistryBuilder = newCodeRegistry();
-        logger.info("\tBuilding dictionary...");
-        final Map<Class<? extends AbstractEntity<?>>, GraphQLType> dictionary = createDictionary(applicationDomainProvider.entityTypes());
-        logger.info("\tBuilding query type...");
-        final GraphQLObjectType queryType = createQueryType(dictionary.keySet(), coFinder, dates, codeRegistryBuilder);
-        logger.info("\tBuilding schema...");
-        final GraphQLSchema schema = newSchema()
-            .codeRegistry(codeRegistryBuilder.build())
-            .query(queryType)
-            .additionalTypes(new LinkedHashSet<>(dictionary.values()))
-            .build();
-        logger.info("\tBuilding service...");
-        graphQL = newGraphQL(schema).build();
-        logger.info("GraphQL Web API...done");
+        try {
+            logger.info("GraphQL Web API...");
+            final GraphQLCodeRegistry.Builder codeRegistryBuilder = newCodeRegistry();
+            logger.info("\tBuilding dictionary...");
+            final Map<Class<? extends AbstractEntity<?>>, GraphQLType> dictionary = createDictionary(persistentAndSyntheticDomainTypes(applicationDomainProvider));
+            logger.info("\tBuilding query type...");
+            final GraphQLObjectType queryType = createQueryType(dictionary.keySet(), coFinder, dates, codeRegistryBuilder);
+            logger.info("\tBuilding schema...");
+            final GraphQLSchema schema = newSchema()
+                    .codeRegistry(codeRegistryBuilder.build())
+                    .query(queryType)
+                    .additionalTypes(new LinkedHashSet<>(dictionary.values()))
+                    .build();
+            logger.info("\tBuilding service...");
+            graphQL = newGraphQL(schema).build();
+            logger.info("GraphQL Web API...done");
+        } catch (final Throwable t) {
+            logger.error("GraphQL Web API error.", t);
+            throw t;
+        }
+    }
+    
+    /**
+     * Returns all domain [non-platform] types of persistent / synthetic nature. This includes persistent with activatable nature,
+     * synthetic based on persistent. This does not include union and functional entities. This does not include all entities that
+     * do not fall into any of the above categories.
+     * 
+     * @return
+     */
+    private List<Class<? extends AbstractEntity<?>>> persistentAndSyntheticDomainTypes(final IApplicationDomainProvider applicationDomainProvider) {
+        final List<Class<? extends AbstractPersistentEntity<? extends Comparable<?>>>> supportedPlatformTypes = asList(User.class, UserRole.class, UserAndRoleAssociation.class, SecurityRoleAssociation.class, Attachment.class);
+        return applicationDomainProvider.entityTypes().stream()
+            .filter(type -> 
+                    (supportedPlatformTypes.stream().anyMatch(pType -> pType.isAssignableFrom(type)) || !PlatformDomainTypes.types.contains(type))
+                &&  (isSyntheticEntityType(type) || isPersistedEntityType(type) || type.getSimpleName().endsWith("GroupingProperty")) )
+            .collect(toList());
     }
     
     /**
