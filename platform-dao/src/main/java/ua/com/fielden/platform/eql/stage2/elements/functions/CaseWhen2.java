@@ -54,9 +54,9 @@ public class CaseWhen2 extends AbstractFunction2<CaseWhen3> {
             currentContext = operandTr.updatedContext;
             transformedWhenThenPairs.add(t2(conditionTr.item, operandTr.item));
         }
-        final TransformationResult<? extends ISingleOperand3> elseOperandTr = elseOperand.transform(currentContext);
+        final TransformationResult<? extends ISingleOperand3> elseOperandTr = elseOperand == null ? null : elseOperand.transform(currentContext);
         
-        return new TransformationResult<CaseWhen3>(new CaseWhen3(transformedWhenThenPairs, elseOperandTr.item, typeCast), elseOperandTr.updatedContext);
+        return new TransformationResult<CaseWhen3>(new CaseWhen3(transformedWhenThenPairs, elseOperandTr == null ? null : elseOperandTr.item, typeCast), elseOperandTr == null ? currentContext : elseOperandTr.updatedContext);
     }
 
     @Override
@@ -66,7 +66,10 @@ public class CaseWhen2 extends AbstractFunction2<CaseWhen3> {
             result.addAll(pair._1.collectProps());
             result.addAll(pair._2.collectProps());
         }
-        result.addAll(elseOperand.collectProps());
+        if (elseOperand != null) {
+            result.addAll(elseOperand.collectProps());    
+        }
+        
         return result;
     }
     

@@ -37,7 +37,7 @@ public class CaseWhen1 extends AbstractFunction1<CaseWhen2> {
             final ISingleOperand2<?> operandTransformed = pair._2.transform(context);
             transformedWhenThenPairs.add(t2(conditionTransformed, operandTransformed));
         }
-        final ISingleOperand2<?> elseOperandTransformed = elseOperand.transform(context);
+        final ISingleOperand2<?> elseOperandTransformed = elseOperand == null ? null : elseOperand.transform(context);
         
         return new CaseWhen2(transformedWhenThenPairs, elseOperandTransformed, typeCast);
     }
