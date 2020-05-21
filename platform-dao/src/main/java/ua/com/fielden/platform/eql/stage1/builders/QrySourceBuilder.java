@@ -16,8 +16,8 @@ import java.util.List;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
-import ua.com.fielden.platform.entity.query.metadata.AbstractEntityMetadata;
-import ua.com.fielden.platform.entity.query.metadata.ModelledEntityMetadata;
+import ua.com.fielden.platform.entity.query.metadata.EntityTypeInfo;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.eql.stage1.elements.operands.SourceQuery1;
 import ua.com.fielden.platform.eql.stage1.elements.sources.QrySource1BasedOnPersistentType;
@@ -80,9 +80,9 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
     }
     
     private <T extends AbstractEntity<?>> QrySource1BasedOnSubqueries buildQrySourceBasedOnSyntheticEntityType(final Class<T> resultType, final String alias) {
-        final AbstractEntityMetadata<T> entityMetadata = getQueryBuilder().domainMetadataAnalyser.getEntityMetadata(resultType);
-        final List<QueryModel<T>> models = new ArrayList<>();
-        models.addAll(((ModelledEntityMetadata<T>) entityMetadata).getModels());
+        final EntityTypeInfo<T> parentInfo = new EntityTypeInfo<>(resultType);
+        final List<EntityResultQueryModel<T>> models = new ArrayList<>();
+        models.addAll(parentInfo.entityModels);
         final List<SourceQuery1> queries = new ArrayList<>();
         for (final QueryModel<T> qryModel : models) {
             queries.add(getQueryBuilder().generateEntQueryAsSyntheticEntityQuery(qryModel, resultType));

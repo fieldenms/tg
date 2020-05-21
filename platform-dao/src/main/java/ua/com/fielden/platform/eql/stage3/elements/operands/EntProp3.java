@@ -39,7 +39,7 @@ public class EntProp3 implements ISingleOperand3 {
         int result = 1;
         result = prime * result + name.hashCode();
         result = prime * result + source.hashCode();
-        result = prime * result + hibType.hashCode();
+        result = prime * result + hibType.getClass().getName().hashCode();
         result = prime * result + (type == null ? 0 : source.hashCode());
         return result;
     }
@@ -56,6 +56,6 @@ public class EntProp3 implements ISingleOperand3 {
         
         final EntProp3 other = (EntProp3) obj;
         
-        return Objects.equals(name, other.name) && Objects.equals(source, other.source) && Objects.equals(type, other.type) && Objects.equals(hibType, other.hibType);
+        return Objects.equals(name, other.name) && Objects.equals(source, other.source) && Objects.equals(type, other.type) && Objects.equals(hibType.getClass().getName(), other.hibType.getClass().getName());
     }
 }

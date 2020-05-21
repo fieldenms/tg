@@ -31,7 +31,8 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 import ua.com.fielden.platform.entity.query.stream.ScrollableResultStream;
 import ua.com.fielden.platform.eql.meta.EntityInfo;
-import ua.com.fielden.platform.eql.meta.MetadataGenerator;
+import ua.com.fielden.platform.eql.meta.LongMetadata;
+import ua.com.fielden.platform.eql.meta.ShortMetadata;
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ResultQuery2;
@@ -138,12 +139,13 @@ public class EntityContainerFetcher {
             final String sql = entQuery.sql();
             return new QueryModelResult<>((Class<E>)entQuery.type(), sql, getResultPropsInfos(entQuery.getYields()), entQuery.getValuesForSqlParams(), qem.fetchModel);
         } else {
-            final ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator gen1 = new ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator(domainMetadataAnalyser, filter, username, executionContext.dates(), qem.getParamValues());
+            final ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator gen1 = new ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator(domainMetadataAnalyser.getDbVersion(), filter, username, executionContext.dates(), qem.getParamValues());
             Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo = null;
             Map<String, Table> tables = null;
             
             try {
-                final MetadataGenerator mtg = new MetadataGenerator(executionContext.getDomainMetadata(), filter, username, executionContext.dates(), qem.getParamValues());
+                final LongMetadata lmg = new LongMetadata(executionContext.getDomainMetadata().htd, executionContext.getDomainMetadata().hibTypesInjector, executionContext.getDomainMetadata().entityTypes, domainMetadataAnalyser.getDbVersion());
+                final ShortMetadata mtg = new ShortMetadata(lmg, filter, username, executionContext.dates(), qem.getParamValues());
                 final Set<Class<? extends AbstractEntity<?>>> emd = new HashSet<>();
                 emd.addAll(executionContext.getDomainMetadata().getPersistedEntityMetadataMap().keySet());
                 emd.addAll(executionContext.getDomainMetadata().getModelledEntityMetadataMap().keySet());

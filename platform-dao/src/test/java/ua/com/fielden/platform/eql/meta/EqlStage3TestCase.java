@@ -50,9 +50,12 @@ import ua.com.fielden.platform.eql.stage3.elements.sources.JoinedQrySource3;
 import ua.com.fielden.platform.eql.stage3.elements.sources.QrySource3BasedOnSubqueries;
 import ua.com.fielden.platform.eql.stage3.elements.sources.QrySource3BasedOnTable;
 import ua.com.fielden.platform.eql.stage3.elements.sources.SingleQrySource3;
+import ua.com.fielden.platform.persistence.types.DateTimeType;
 
 public class EqlStage3TestCase extends EqlTestCase {
+    public static Type dateTimeHibType = new DateTimeType();
 
+    
     protected static <T extends AbstractEntity<?>> ResultQuery3 qryCountAll(final ICompoundCondition0<T> unfinishedQry) {
         final AggregatedResultQueryModel countQry = unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate();
 
@@ -116,7 +119,7 @@ public class EqlStage3TestCase extends EqlTestCase {
 
     
     protected static ISingleOperand3 dateProp(final String name, final IQrySource3 source) {
-        return new EntProp3(name, source, Date.class, MetadataGenerator.dateTimeHibType);
+        return new EntProp3(name, source, Date.class, dateTimeHibType);
     }
     
     protected static ComparisonTest3 eq(final ISingleOperand3 op1, final ISingleOperand3 op2) {

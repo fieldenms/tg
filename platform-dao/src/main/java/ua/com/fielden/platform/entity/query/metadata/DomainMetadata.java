@@ -47,6 +47,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -114,9 +115,10 @@ public class DomainMetadata {
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, ModelledEntityMetadata> modelledEntityMetadataMap;
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, PureEntityMetadata> pureEntityMetadataMap;
 
-    private final List<Class<? extends AbstractEntity<?>>> entityTypes;
+    public final List<Class<? extends AbstractEntity<?>>> entityTypes;
+    public final Map<Class<?>, Class<?>> htd = new HashMap<>(); 
     
-    private Injector hibTypesInjector;
+    public Injector hibTypesInjector;
 
     public DomainMetadata(//
             final Map<Class, Class> hibTypesDefaults, //
@@ -124,7 +126,7 @@ public class DomainMetadata {
             final List<Class<? extends AbstractEntity<?>>> entityTypes, //
             final DbVersion dbVersion) {
         this.dbVersion = dbVersion;
-
+        
         this.hibTypesDefaults = new ConcurrentHashMap<>(entityTypes.size());
         this.persistedEntityMetadataMap = new ConcurrentHashMap<>(entityTypes.size());
         this.modelledEntityMetadataMap = new ConcurrentHashMap<>(entityTypes.size());
@@ -143,6 +145,10 @@ public class DomainMetadata {
 
         // carry on with other stuff
         if (hibTypesDefaults != null) {
+            for (final Entry<Class, Class> el : hibTypesDefaults.entrySet()) {
+                htd.put(el.getKey(), el.getValue());
+            }
+
             for (final Entry<Class, Class> entry : hibTypesDefaults.entrySet()) {
                 try {
                     this.hibTypesDefaults.put(entry.getKey(), entry.getValue().newInstance());
@@ -159,7 +165,7 @@ public class DomainMetadata {
         // the following operations are a bit heave and benefit from parallel processing
         entityTypes.parallelStream().forEach(entityType -> {
             try {
-                EntityTypeInfo<? extends AbstractEntity<?>> parentInfo = new EntityTypeInfo<>(entityType);
+                final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo = new EntityTypeInfo<>(entityType);
                 switch (parentInfo.category) {
                 case PERSISTED:
                     persistedEntityMetadataMap.put(entityType, generatePersistedEntityMetadata(parentInfo));

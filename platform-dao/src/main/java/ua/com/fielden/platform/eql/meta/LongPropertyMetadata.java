@@ -25,16 +25,15 @@ import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.meta.model.PropColumn;
 
 public class LongPropertyMetadata implements Comparable<LongPropertyMetadata> {
-    private final String name;
-    private final Class<?> javaType;
-    private final Object hibType;
-    private final boolean nullable;
+    public final String name;
+    public final Class<?> javaType;
+    public final Object hibType;
+    public final boolean nullable;
 
-    private final PropColumn column;
+    public final PropColumn column;
     private final List<LongPropertyMetadata> subitems;
-    private final ExpressionModel expressionModel;
-    private final boolean aggregatedExpression; // contains aggregation function on the root level (i.e. Totals in entity centre tree)
-
+    public final ExpressionModel expressionModel;
+    
     private LongPropertyMetadata(final Builder builder) {
         name = builder.name;
         javaType = builder.javaType;
@@ -43,7 +42,6 @@ public class LongPropertyMetadata implements Comparable<LongPropertyMetadata> {
         subitems = builder.subitems;
         nullable = builder.nullable;
         expressionModel = builder.expressionModel;
-        aggregatedExpression = builder.aggregatedExpression;
     }
 
     public Set<LongPropertyMetadata> getCompositeTypeSubprops(final ICompositeUserTypeInstantiate hibTypeP) {
@@ -54,9 +52,9 @@ public class LongPropertyMetadata implements Comparable<LongPropertyMetadata> {
         if (subprops.size() == 1) {
             final Object hibType = subpropsTypes.get(0);
             if (expressionModel != null) {
-                result.add(new LongPropertyMetadata.Builder(name + "." + subprops.get(0), ((Type) hibType).getReturnedClass(), nullable).expression(expressionModel).aggregatedExpression(aggregatedExpression).hibType(hibType).build());
+                result.add(new LongPropertyMetadata.Builder(name + "." + subprops.get(0), ((Type) hibType).getReturnedClass(), nullable).expression(expressionModel).hibType(hibType).build());
             } else if (columns.size() == 0) { // synthetic entity context
-                result.add(new LongPropertyMetadata.Builder(name + "." + subprops.get(0), ((Type) hibType).getReturnedClass(), nullable).aggregatedExpression(aggregatedExpression).hibType(hibType).build());
+                result.add(new LongPropertyMetadata.Builder(name + "." + subprops.get(0), ((Type) hibType).getReturnedClass(), nullable).hibType(hibType).build());
             } else {
                 result.add(new LongPropertyMetadata.Builder(name + "." + subprops.get(0), ((Type) subpropsTypes.get(0)).getReturnedClass(), nullable).column(columns.get(0)).hibType(subpropsTypes.get(0)).build());
             }
@@ -101,7 +99,6 @@ public class LongPropertyMetadata implements Comparable<LongPropertyMetadata> {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + (aggregatedExpression ? 1231 : 1237);
         result = prime * result + ((column == null) ? 0 : column.hashCode());
         result = prime * result + ((expressionModel == null) ? 0 : expressionModel.hashCode());
         result = prime * result + ((hibType == null) ? 0 : hibType.hashCode());
@@ -123,9 +120,6 @@ public class LongPropertyMetadata implements Comparable<LongPropertyMetadata> {
             return false;
         }
         final LongPropertyMetadata other = (LongPropertyMetadata) obj;
-        if (aggregatedExpression != other.aggregatedExpression) {
-            return false;
-        }
 
         if (expressionModel == null) {
             if (other.expressionModel != null) {
@@ -170,7 +164,6 @@ public class LongPropertyMetadata implements Comparable<LongPropertyMetadata> {
         private PropColumn column;
         private final List<LongPropertyMetadata> subitems = new ArrayList<>();
         private ExpressionModel expressionModel;
-        private boolean aggregatedExpression = false;
 
         public LongPropertyMetadata build() {
             return new LongPropertyMetadata(this);
@@ -201,11 +194,5 @@ public class LongPropertyMetadata implements Comparable<LongPropertyMetadata> {
             this.subitems.addAll(subitems);
             return this;
         }
-
-        public Builder aggregatedExpression(final boolean val) {
-            aggregatedExpression = val;
-            return this;
-        }
-
     }
 }

@@ -19,8 +19,6 @@ import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.IRetrievalModel;
 import ua.com.fielden.platform.entity.query.fluent.enums.QueryTokens;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
-import ua.com.fielden.platform.entity.query.generation.elements.GroupedConditions;
-import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
@@ -40,17 +38,15 @@ public class EntQueryGenerator {
     public static final String NOW = "UC#NOW";
 
     public final DbVersion dbVersion;
-    public final DomainMetadataAnalyser domainMetadataAnalyser;
-    private final IDates dates;
+    public final IDates dates;
     public final IFilter filter;
     public final String username;
     private final Map<String, Object> paramValues = new HashMap<>();
 
     private final int increment = 1;
     
-    public EntQueryGenerator(final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username, final IDates dates, final Map<String, Object> paramValues) {
-        dbVersion = domainMetadataAnalyser.getDbVersion();
-        this.domainMetadataAnalyser = domainMetadataAnalyser;
+    public EntQueryGenerator(final DbVersion dbVersion, final IFilter filter, final String username, final IDates dates, final Map<String, Object> paramValues) {
+        this.dbVersion = dbVersion;
         this.filter = filter;
         this.username = username;
         this.dates = dates;
@@ -180,9 +176,5 @@ public class EntQueryGenerator {
     
     public Map<String, Object> getParamValues() {
         return unmodifiableMap(paramValues);
-    }
-
-    public IDates dates() {
-        return dates;
     }
 }

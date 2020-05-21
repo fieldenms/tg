@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.meta;
 
 import static java.util.Collections.emptyMap;
+import static ua.com.fielden.platform.entity.query.DbVersion.H2;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -12,20 +13,23 @@ import java.util.Map;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
+import org.hibernate.type.YesNoType;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.generation.ioc.HelperIocModule;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
-import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator;
 import ua.com.fielden.platform.eql.stage3.elements.Table;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
+import ua.com.fielden.platform.persistence.types.ColourType;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
+import ua.com.fielden.platform.persistence.types.HyperlinkType;
+import ua.com.fielden.platform.persistence.types.PropertyDescriptorType;
 import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
 import ua.com.fielden.platform.sample.domain.TeVehicle;
 import ua.com.fielden.platform.sample.domain.TeVehicleMake;
@@ -43,6 +47,8 @@ import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
 import ua.com.fielden.platform.sample.domain.TgWagonSlot;
 import ua.com.fielden.platform.sample.domain.TgWorkshop;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
+import ua.com.fielden.platform.types.Colour;
+import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.IDates;
 
@@ -86,15 +92,20 @@ public class EqlTestCase {
 
     
     static {
+        hibTypeDefaults.put(boolean.class, YesNoType.class);
+        hibTypeDefaults.put(Boolean.class, YesNoType.class);
         hibTypeDefaults.put(Date.class, DateTimeType.class);
         hibTypeDefaults.put(Money.class, SimpleMoneyType.class);
+        hibTypeDefaults.put(PropertyDescriptor.class, PropertyDescriptorType.class);
+        hibTypeDefaults.put(Colour.class, ColourType.class);
+        hibTypeDefaults.put(Hyperlink.class, HyperlinkType.class);
         
         DOMAIN_METADATA = new DomainMetadata(hibTypeDefaults, 
                 injector, 
                 PlatformTestDomainTypes.entityTypes, 
-                DbVersion.H2);
-
-        final MetadataGenerator mdg = new MetadataGenerator(DOMAIN_METADATA, null, null, injector.getInstance(IDates.class), emptyMap());
+                H2);
+        final LongMetadata lmg = new LongMetadata(DOMAIN_METADATA.htd, DOMAIN_METADATA.hibTypesInjector, DOMAIN_METADATA.entityTypes, H2);
+        final ShortMetadata mdg = new ShortMetadata(lmg, null, null, injector.getInstance(IDates.class), emptyMap());
         
         try {
             metadata.putAll(mdg.generate(new HashSet<>(PlatformTestDomainTypes.entityTypes)));
@@ -113,7 +124,7 @@ public class EqlTestCase {
     }
     
     protected static final EntQueryGenerator qb(final IFilter filter, final String username, final IDates dates, final Map<String, Object> paramValues) {
-        return new EntQueryGenerator(new DomainMetadataAnalyser(DOMAIN_METADATA), filter, username, dates, paramValues);
+        return new EntQueryGenerator(H2, filter, username, dates, paramValues);
     }
     
     protected static final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> metadata() {
@@ -126,7 +137,8 @@ public class EqlTestCase {
 
     protected static final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> metadata(final IFilter filter, final String username, final IDates dates, final Map<String, Object> paramValues) {
         final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> result = new HashMap<>();
-        final MetadataGenerator mdg = new MetadataGenerator(DOMAIN_METADATA, filter, username, dates, paramValues);
+        final LongMetadata lmg = new LongMetadata(DOMAIN_METADATA.htd, DOMAIN_METADATA.hibTypesInjector, DOMAIN_METADATA.entityTypes, H2);
+        final ShortMetadata mdg = new ShortMetadata(lmg, filter, username, dates, paramValues);
         try {
             result.putAll(mdg.generate(new HashSet<>(PlatformTestDomainTypes.entityTypes)));    
         } catch (final Exception e) {

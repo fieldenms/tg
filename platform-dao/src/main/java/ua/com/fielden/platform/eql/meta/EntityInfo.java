@@ -5,6 +5,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.metadata.EntityCategory;
 
 public class EntityInfo<T extends AbstractEntity<?>> implements IResolvable<T> {
     private final Class<T> javaType;
