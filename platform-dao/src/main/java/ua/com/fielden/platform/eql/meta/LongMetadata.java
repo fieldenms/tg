@@ -13,6 +13,7 @@ import static ua.com.fielden.platform.entity.query.metadata.CompositeKeyEqlExpre
 import static ua.com.fielden.platform.entity.query.metadata.DomainMetadataUtils.extractExpressionModelFromCalculatedProperty;
 import static ua.com.fielden.platform.entity.query.metadata.DomainMetadataUtils.generateUnionEntityPropertyExpression;
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.PERSISTED;
+import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.QUERY_BASED;
 import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.COLLECTIONAL;
 import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.COMPONENT_HEADER;
 import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.EXPRESSION;
@@ -286,12 +287,10 @@ public class LongMetadata {
             if (!result.containsKey(field.getName())) {
                 if (Collection.class.isAssignableFrom(field.getType()) && hasLinkProperty(parentInfo.entityType, field.getName())) {
                     //safeMapAdd(result, getCollectionalPropInfo(field, parentInfo));
-                } else if ((isAnnotationPresent(field, Calculated.class) || isAnnotationPresent(field, MapTo.class) || (parentInfo.category == EntityCategory.QUERY_BASED && !isAnnotationPresent(field, CritOnly.class)))) {
+                } else if ((isAnnotationPresent(field, Calculated.class) || isAnnotationPresent(field, MapTo.class) || (parentInfo.category == QUERY_BASED && !isAnnotationPresent(field, CritOnly.class)))) {
                     safeMapAdd(result, getCommonPropInfo(field, parentInfo.entityType));
                 } else if (isOne2One_association(parentInfo.entityType, field.getName())) {
-                    //safeMapAdd(result, getOneToOnePropInfo(field, parentInfo));
-                } else if (!isAnnotationPresent(field, CritOnly.class)) {
-                    //safeMapAdd(result, getSyntheticPropInfo(field, parentInfo));
+                    safeMapAdd(result, getOneToOnePropInfo(field, parentInfo));
                 } else {
                     //System.out.println(" --------------------------------------------------------- " + entityType.getSimpleName() + ": " + field.getName());
                 }
@@ -358,6 +357,7 @@ public class LongMetadata {
         final Object ht = getHibernateType(propField);
 
         final T3<Type, IUserTypeInstantiate, ICompositeUserTypeInstantiate> hibernateType = ht == null ? null : getHibernateConverter(ht);
+        final Object hibType = hibernateType == null ? null : (hibernateType._1 != null ? hibernateType._1 : (hibernateType._2 != null ? hibernateType._2 : (hibernateType._3 != null ? hibernateType._3 : null)));
 
         final MapTo mapTo = getAnnotation(propField, MapTo.class);
         final IsProperty isProperty = getAnnotation(propField, IsProperty.class);
@@ -365,7 +365,7 @@ public class LongMetadata {
         
         final Builder resultInProgress = new LongPropertyMetadata.
                 Builder(propName, propType, nullable).
-                hibType(hibernateType == null ? null : (hibernateType._1 != null ? hibernateType._1 : (hibernateType._2 != null ? hibernateType._2 : (hibernateType._3 != null ? hibernateType._3 : null))));
+                hibType(hibType);
         
 
         
@@ -387,54 +387,24 @@ public class LongMetadata {
         return new PropertyMetadata.Builder(KEY, String.class, true, parentInfo).expression(generateCompositeKeyEqlExpression(parentInfo.entityType)).hibType(H_STRING).category(VIRTUAL_OVERRIDE).build();
     }
 
-    private PropertyMetadata getCalculatedPropInfo(final Field propField, final EntityTypeInfo <? extends AbstractEntity<?>> parentInfo) throws Exception {
+    private LongPropertyMetadata getOneToOnePropInfo(final Field propField, final EntityTypeInfo <? extends AbstractEntity<?>> parentInfo) throws Exception {
         final String propName = propField.getName();
-        final boolean aggregatedExpression = (AGGREGATED_EXPRESSION == getAnnotation(propField, Calculated.class).category());
+        final Class<?> javaType = propField.getType();
+        final Object ht = getHibernateType(propField);
+        final T3<Type, IUserTypeInstantiate, ICompositeUserTypeInstantiate> hibernateType = ht == null ? null : getHibernateConverter(ht);
+        final Object hibType = hibernateType == null ? null : (hibernateType._1 != null ? hibernateType._1 : (hibernateType._2 != null ? hibernateType._2 : (hibernateType._3 != null ? hibernateType._3 : null)));
+
         
-        final Class<?> javaType = propField.getType();
-        final Object hibernateType = getHibernateType(propField);
-
-        final ExpressionModel expressionModel = extractExpressionModelFromCalculatedProperty(parentInfo.entityType, propField);
-        final PropertyCategory propCat = hibernateType instanceof ICompositeUserTypeInstantiate ? COMPONENT_HEADER : EXPRESSION;
-        return new PropertyMetadata.
-                Builder(propName, propField.getType(), true, parentInfo).
-                expression(expressionModel).
-                hibType(hibernateType).
-                category(propCat).
-                aggregatedExpression(aggregatedExpression).
-                build();
-    }
-
-    private PropertyMetadata getOneToOnePropInfo(final Field propField, final EntityTypeInfo <? extends AbstractEntity<?>> parentInfo) throws Exception {
-        final String propName = propField.getName();
-        final Class<?> javaType = propField.getType();
-        final Object hibernateType = getHibernateType(propField);
-
         // 1-2-1 is not required to exist -- that's why need longer formula -- that's why 1-2-1 is in fact implicitly calculated nullable prop
         final ExpressionModel expressionModel = expr().model(select((Class<? extends AbstractEntity<?>>) propField.getType()).where().prop(KEY).eq().extProp(ID).model()).model();
-        return new PropertyMetadata.
-                Builder(propName, javaType, true, parentInfo).
+        return new LongPropertyMetadata.
+                Builder(propName, javaType, true).
                 expression(expressionModel).
-                hibType(hibernateType).
-                category(EXPRESSION).
+                hibType(hibType).
                 build();
     }
-
-    private PropertyMetadata getSyntheticPropInfo(final Field propField, final EntityTypeInfo <? extends AbstractEntity<?>> parentInfo) throws Exception {
-        final String propName = propField.getName();
-        final Class<?> javaType = propField.getType();
-        final Object hibernateType = getHibernateType(propField);
-        final PropertyCategory propCat = hibernateType instanceof ICompositeUserTypeInstantiate ? SYNTHETIC_COMPONENT_HEADER : SYNTHETIC;
-        return new PropertyMetadata.
-                Builder(propField.getName(), propField.getType(), true, parentInfo).
-                hibType(hibernateType).
-                category(propCat).
-                build();
-    }
-    
 
     private PropertyMetadata getCollectionalPropInfo(final Field propField, final EntityTypeInfo <? extends AbstractEntity<?>> parentInfo) throws Exception {
         return new PropertyMetadata.Builder(propField.getName(), determinePropertyType(parentInfo.entityType, propField.getName()), true, parentInfo).category(COLLECTIONAL).build();
     }
-
 }
