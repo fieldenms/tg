@@ -76,6 +76,7 @@ const createColumnAction = function (entityCentre) {
     actionModel.componentUri = '/master_ui/ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater';
     actionModel.elementName = 'tg-CentreColumnWidthConfigUpdater-master';
     actionModel.showDialog = entityCentre._showCentreConfigDialog;
+    actionModel.toaster = entityCentre.toaster;
     actionModel.createContextHolder = entityCentre._createContextHolder;
     actionModel.preAction = function (action) {
         action.modifyFunctionalEntity = (function (bindingEntity, master) {
@@ -808,6 +809,9 @@ const TgEntityCentreBehaviorImpl = {
         });
 
         self._columnAction = createColumnAction(self);
+
+        //Toaster object Can be used in other components on binder to show toasts.
+        self.toaster = self.$.selection_criteria.toaster;
 
     }, // end of ready callback
 

@@ -682,6 +682,13 @@ const TgEntityMasterBehaviorImpl = {
         
     },
 
+    detached: function () {
+        if (this._centreRefreshRedirector !== null) {
+            this._centreRefreshRedirector.unsubscribe();
+            this._centreRefreshRedirector = null;
+        }
+    },
+
     /**
      * Publishes a closure to be executed by an Entity Centre identified by centreUuid (opening centre).
      */

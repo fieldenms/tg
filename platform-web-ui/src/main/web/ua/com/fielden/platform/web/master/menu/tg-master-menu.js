@@ -418,6 +418,20 @@ Polymer({
         });
     },
 
+    detached: function () {
+        if (this._centreRefreshRedirector !== null) {
+            this._centreRefreshRedirector.unsubscribe();
+            this._centreRefreshRedirector = null;
+        }
+        if (this._dialogClosingRedirector !== null) {
+            this._dialogClosingRedirector.unsubscribe();
+            this._dialogClosingRedirector = null;
+        }
+        while (this._subscriptions.length !== 0) {
+            this._subscriptions.pop().unsubscribe();
+        }
+    },
+
     _entityChanged: function (newBindingEntity, oldOne) {
         const newEntity = newBindingEntity ? newBindingEntity['@@origin'] : null;
         if (newEntity) {

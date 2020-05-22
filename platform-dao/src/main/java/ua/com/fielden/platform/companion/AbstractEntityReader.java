@@ -3,6 +3,8 @@ package ua.com.fielden.platform.companion;
 import static java.lang.String.format;
 import static java.util.Collections.emptyMap;
 import static ua.com.fielden.platform.companion.helper.KeyConditionBuilder.createQueryByKey;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
@@ -16,7 +18,6 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.hibernate.Session;
-import org.hibernate.type.LongType;
 
 import ua.com.fielden.platform.dao.ISessionEnabled;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
@@ -84,10 +85,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
             return false;
         }
 
-        final Integer count = ((Number) getSession().createQuery("select count(*) from " + getEntityType().getName() + " where id = :id and version = :version")//
-        .setParameter("id", entityId).setParameter("version", version).uniqueResult()).intValue();
-
-        return count != 1;
+        return !exists(select(getEntityType()).where().prop(ID).eq().val(entityId).and().prop(VERSION).eq().val(version).model());
     }
 
     @Override
@@ -147,9 +145,8 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
         if (id == null) {
             return false;
         }
-        return getSession().createQuery("select id from " + getEntityType().getName() + " where id = :id")
-               .setParameter("id", id, LongType.INSTANCE)
-               .uniqueResult() != null;
+
+        return exists(select(getEntityType()).where().prop(ID).eq().val(id).model());
     }
 
     @Override
