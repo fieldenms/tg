@@ -206,6 +206,7 @@ const template = html`
                     <div class="flex truncate" tooltip-text$="[[_calcSelectedPageDesc(_selectedPage, saveAsName, saveAsDesc)]]">[[selectedPageTitle]]</div>
                     <div class="flex truncate watermark" hidden$="[[!_watermark]]">[[_watermark]]</div>
                     <paper-icon-button id="mainMenu" icon="apps" tooltip-text="Main menu (tap or hit F10 to invoke)." on-tap="_showMenu"></paper-icon-button>
+                    <paper-icon-button id="offload" icon="apps" tooltip-text="Offloads node" on-tap="_offloadCurrentView"></paper-icon-button>
                 </div>
             </div>
 
@@ -573,6 +574,11 @@ Polymer({
 
     _showMenu: function (e, detail, source) {
         this.fire("main-menu");
+    },
+
+    _offloadCurrentView: function (e) {
+        const pageToOffload = this.shadowRoot.querySelector("tg-menu-item-view[page-name='" + this.$.pages.selected + "']");
+        pageToOffload.offloadDom();
     },
 
     _togglePanel: function (e, detail, source) {

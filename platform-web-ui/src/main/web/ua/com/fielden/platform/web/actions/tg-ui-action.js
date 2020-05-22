@@ -536,6 +536,7 @@ Polymer({
      * Override this to restre action's state that might have been stored by preAcion or any other routine.
      */
     restoreActionState: function () {
+        this._masterReferenceForTesting = null;
         this.restoreActiveElement();
     },
 

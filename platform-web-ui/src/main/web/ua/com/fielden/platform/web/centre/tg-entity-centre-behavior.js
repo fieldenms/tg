@@ -99,10 +99,15 @@ const createColumnAction = function (entityCentre) {
     return actionModel;
 };
 
+const removeDialogFromDom = function (e) {
+    const dialog = e.target;
+    document.body.removeChild(dialog);
+}
+
 const createDialog = function (id) {
     const dialog = document.createElement('tg-custom-action-dialog');
     dialog.setAttribute("id", id);
-    document.body.appendChild(dialog);
+    dialog.addEventListener("iron-overlay-closed", removeDialogFromDom);
     return dialog;
 };
 
@@ -708,6 +713,12 @@ const TgEntityCentreBehaviorImpl = {
             const closeEventTopics = ['save.post.success', 'refresh.post.success'];
             if (!self.$.egi.isEditing()) {
                 this.async(function () {
+                    if (this.actionDialog === null) {
+                        this.actionDialog = createDialog(self.uuid + '');
+                    }
+                    if (this.actionDialog.parentNode === null) {
+                        document.body.appendChild(this.actionDialog);
+                    }
                     this.actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
                 }.bind(self), 1);
             } else {
@@ -722,6 +733,12 @@ const TgEntityCentreBehaviorImpl = {
             const closeEventChannel = self.uuid;
             const closeEventTopics = ['save.post.success', 'refresh.post.success'];
             this.async(function () {
+                if (this.centreConfigDialog === null) {
+                    this.centreConfigDialog = createDialog(self.uuid + '_centreConfig');
+                }
+                if (this.centreConfigDialog.parentNode === null) {
+                    document.body.appendChild(this.centreConfigDialog);
+                }
                 this.centreConfigDialog.showDialog(action, closeEventChannel, closeEventTopics);
             }.bind(self), 1);
         }).bind(self);
@@ -800,14 +817,6 @@ const TgEntityCentreBehaviorImpl = {
 
     attached: function () {
         const self = this;
-
-        if (this.actionDialog === null) {
-            this.actionDialog = createDialog(self.uuid + '');
-        }
-
-        if (this.centreConfigDialog === null) {
-            this.centreConfigDialog = createDialog(self.uuid + '_centreConfig');
-        }
 
         /* Provide predicate for egi that determines whether inline master can be opened or not.
          * It can not be opened if another master in dialog is opened. */

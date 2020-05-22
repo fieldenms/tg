@@ -915,19 +915,19 @@ Polymer({
     /** A convenient method that return a Promise that resolves to an element instaces from cache or from the element loader. */
     _getElement: function(customAction) {
         var self = this;
-        var key = customAction.elementAlias ? customAction.elementAlias : customAction.elementName;
+        //var key = customAction.elementAlias ? customAction.elementAlias : customAction.elementName;
         // disabled chache (temprarily?) to support polymorphic masters
-         if (self._cachedElements.hasOwnProperty(key)) {
-            console.log("Reusing cached element:", key);
-            var element = self._cachedElements[key];
-            self.$.elementLoader.insert(element);
-            return Promise.resolve(element);
-        } else { 
+        //  if (self._cachedElements.hasOwnProperty(key)) {
+        //     console.log("Reusing cached element:", key);
+        //     var element = self._cachedElements[key];
+        //     self.$.elementLoader.insert(element);
+        //     return Promise.resolve(element);
+        // } else { 
             self.$.elementLoader.import = customAction.componentUri;
             self.$.elementLoader.elementName = customAction.elementName;
             self.$.elementLoader.attrs = customAction.attrs;
             return self.$.elementLoader.reload();
-        }
+        //}
     },
 
     /*
@@ -961,13 +961,13 @@ Polymer({
                         if (promise) {
                             return promise
                                 .then(function(ironRequest) {
-                                    var key = customAction.elementAlias ? customAction.elementAlias : customAction.elementName;
-                                    if (!self._cachedElements.hasOwnProperty(key)) {
-                                        if (typeof element['canBeCached'] === 'undefined' || element.canBeCached() === true) {
-                                            console.log("caching:", key);
-                                            self._cachedElements[key] = element;
-                                        }
-                                    }
+                                    // var key = customAction.elementAlias ? customAction.elementAlias : customAction.elementName;
+                                    // if (!self._cachedElements.hasOwnProperty(key)) {
+                                    //     if (typeof element['canBeCached'] === 'undefined' || element.canBeCached() === true) {
+                                    //         console.log("caching:", key);
+                                    //         self._cachedElements[key] = element;
+                                    //     }
+                                    // }
                                     if (ironRequest && typeof ironRequest.successful !== 'undefined' && ironRequest.successful === true) {
                                         return Promise.resolve(self._showMaster(customAction, element, closeEventChannel, closeEventTopics));
                                     } else {
@@ -1357,6 +1357,9 @@ Polymer({
     
     //Resets the dialogs state when it gets closed.
     _resetState: function () {
+        //FIXME DOM offloading should also be called when master is nonUi. 
+        this.$.elementLoader.offloadDom();
+        this._lastElement = null;
         this._dataLoaded = false;
         this._hasNext = false;
         this._hasPrev = false;
