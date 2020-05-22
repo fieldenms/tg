@@ -212,7 +212,8 @@ public class PopulateDb extends DomainDrivenDataPopulation {
 
         save(new_(TgGeneratedEntity.class).setEntityKey("KEY1").setCreatedBy(su));
 
-        save(new_(TgPersistentEntityWithProperties.class, "FILTERED").setIntegerProp(43).setRequiredValidatedProp(30).setDesc("Description for filtered entity.").setStatus(co$(TgPersistentStatus.class).findByKey("DR")));
+        final TgPersistentEntityWithProperties filteredEntity = save(new_(TgPersistentEntityWithProperties.class, "FILTERED").setIntegerProp(43).setRequiredValidatedProp(30).setDesc("Description for filtered entity.").setStatus(co$(TgPersistentStatus.class).findByKey("DR")));
+        save(defaultEnt.setEntityProp(filteredEntity));
         
         save(new_(TgCloseLeaveExample.class, "KEY1").setDesc("desc 1"));
         save(new_(TgCloseLeaveExample.class, "KEY2").setDesc("desc 2"));

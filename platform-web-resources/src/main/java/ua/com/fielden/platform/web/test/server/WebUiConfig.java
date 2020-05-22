@@ -25,7 +25,6 @@ import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layo
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.CELL_LAYOUT;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.MARGIN;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.MARGIN_PIX;
-import static ua.com.fielden.platform.web.test.server.config.LocatorFactory.mkLocator;
 import static ua.com.fielden.platform.web.test.server.config.StandardActions.EDIT_ACTION;
 import static ua.com.fielden.platform.web.test.server.config.StandardActions.SEQUENTIAL_EDIT_ACTION;
 import static ua.com.fielden.platform.web.test.server.config.StandardMessages.DELETE_CONFIRMATION;
@@ -102,7 +101,6 @@ import ua.com.fielden.platform.sample.domain.TgSelectedEntitiesExampleAction;
 import ua.com.fielden.platform.sample.domain.TgSelectedEntitiesExampleActionProducer;
 import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntityProducer;
-import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityLocator;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
@@ -261,7 +259,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         TgMachineRealtimeMonitorWebUiConfig.register(injector(), configApp());
         TgPolygonWebUiConfig.register(injector(), configApp());
         final TgCompoundEntityWebUiConfig tgCompoundEntityWebUiConfig = TgCompoundEntityWebUiConfig.register(injector(), configApp());
-        final EntityActionConfig mkTgCompoundEntityLocator = mkLocator(configApp(), injector(), TgCompoundEntityLocator.class, "tgCompoundEntity", "color: #0d4b8a");
+        //final EntityActionConfig mkTgCompoundEntityLocator = mkLocator(configApp(), injector(), TgCompoundEntityLocator.class, "tgCompoundEntity", "color: #0d4b8a");
 
         //Centre configuration for deletion test case entity.
         final EntityCentre<TgDeletionTestEntity> deletionTestCentre = new EntityCentre<>(MiDeletionTestEntity.class, "TgDeletionTestEntity",
@@ -971,7 +969,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addModule("Import utilities")
                 .description("Import utilities")
                 .withAction(actionForMainMenu(TgGeneratedEntity.class, "copyright", "color: yellow", null))
-                .withAction(mkTgCompoundEntityLocator)
+                //.withAction(mkTgCompoundEntityLocator)
                 .withAction(tgCompoundEntityWebUiConfig.newTgCompoundEntityAction)
                 .icon("menu:import-utilities")
                 .detailIcon("menu-detailed:import-utilities")
@@ -983,6 +981,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 /*  */.addMenuItem("Entity Centre 2").description("Entity centre description").centre(entityCentre2).done()
                 /*  */.addMenuItem("Entity Centre 3").description("Entity centre description").centre(entityCentre3).done()
                 /*  */.addMenuItem("Entity Centre 4").description("Entity centre description").centre(entityCentre4).done()
+                /*  */.addMenuItem("Compound Entity Centre").description("Centre for compound entity.").centre(tgCompoundEntityWebUiConfig.centre).done()
                 /*  */.addMenuItem("Criteria Validation / Defining").description("Criteria Validation / Defining").centre(entityCentre5).done()
                 /*  */.addMenuItem("Collectional Serialisation Test").description("Collectional Serialisation Test description").centre(collectionalSerialisationTestCentre).done()
                 /*  */.addMenuItem("Third view").description("Third view description").view(null).done().done()
@@ -1736,6 +1735,14 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         .build())
                 .also()
                 .addEditableProp("desc")
+                    .withAction(
+                        action(TgPersistentEntityWithProperties.class)
+                        .withContext(context().withCurrentEntity().build())
+                        .shortDesc("Edit (simple master)")
+                        .longDesc("Opens TgPersistentEntityWithProperties master for editing. No wrapping master (e.g. EntityEditAction / EntityNavigationMaster) is used around it.")
+                        .withNoParentCentreRefresh()
+                        .build()
+                    )
                 .also();
                 if (withCalculatedAndCustomProperties) {
                 beforeAddProp = beforeAddProp.addProp(mkProp("DR", "Defect Radio", String.class)).width(26).

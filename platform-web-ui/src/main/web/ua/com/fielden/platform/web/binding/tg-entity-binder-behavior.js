@@ -633,7 +633,7 @@ export const TgEntityBinderBehavior = {
             var customObject = this._reflector().customObject(entityAndCustomObject);
 
             var msg = this._toastMsg("Refreshing", entity);
-            this._openToast(entity, msg, !entity.isValid() || entity.isValidWithWarning(), msg, false);
+            this._openToast(entity, msg, entity !== null && (!entity.isValid() || entity.isValidWithWarning()), msg, false);
 
             var newBindingEntity = this._postEntityReceived(entity, true);
 
@@ -642,8 +642,10 @@ export const TgEntityBinderBehavior = {
             if (this.postRetrieved) {
                 this.postRetrieved(entity, newBindingEntity, customObject);
             }
-
-            this.enableView();
+            
+            if (entity !== null) {
+                this.enableView();
+            }
             this._retrievalInitiated = false;
             return true;
         }).bind(self);
@@ -727,13 +729,13 @@ export const TgEntityBinderBehavior = {
         this._toastGreeting().showProgress = showProgress;
         this._toastGreeting().isCritical = false;
         if (hasMoreInfo) {
-            if (!entity.isValid()) {
+            if (entity !== null && !entity.isValid()) {
                 // TODO is it still relevant? msgHeading
                 // TODO is it still relevant? msgHeading
                 // TODO is it still relevant? msgHeading
                 this._toastGreeting().msgHeading = "Error";
                 this._toastGreeting().isCritical = true;
-            } else if (entity.isValidWithWarning()) {
+            } else if (entity !== null && entity.isValidWithWarning()) {
                 this._toastGreeting().msgHeading = "Warning";
             } else {
                 this._toastGreeting().msgHeading = "Info";
@@ -791,9 +793,9 @@ export const TgEntityBinderBehavior = {
     },
 
     _toastMsg: function (actionName, entity) {
-        if (!entity.isValid()) {
+        if (entity !== null && !entity.isValid()) {
             return entity.firstFailure().message;
-        } else if (entity.isValidWithWarning()) {
+        } else if (entity !== null && entity.isValidWithWarning()) {
             return entity.firstWarning().message;
         } else {
             return actionName + " completed successfully.";
@@ -923,9 +925,16 @@ export const TgEntityBinderBehavior = {
             self._resetState();
         }
         // After the entity has received, potentially its id has been updated:
-        if (self._idConvert(entity.get('id')) !== self.entityId) {
-            self.entityId = self._idConvert(entity.get('id'));
+        const retrievedId = entity !== null ? entity.get('id') : null;
+        if (self._idConvert(retrievedId) !== self.entityId) {
+            self.entityId = self._idConvert(retrievedId);
         }
+        
+        if (entity == null) { // data filtering may filter out entity; this will be represented as 'null' entity
+            console.log("       _postEntityReceived: _currBindingEntity + _originalBindingEntity", self._currBindingEntity, self._originalBindingEntity);
+            return self._currBindingEntity;
+        }
+        
         // extract previous version of modified properties holder, to merge it with new version of validated entity for invalida properties!
         var previousModifiedPropertiesHolder = null;
         if (self._currBindingEntity !== null) {

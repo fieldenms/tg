@@ -926,7 +926,7 @@ const TgEntityMasterBehaviorImpl = {
     _postRetrievedDefaultForDescendants: function (entity, bindingEntity, customObject) {
         TgEntityBinderBehavior._postRetrievedDefaultForDescendants.call(this, entity, bindingEntity, customObject);
 
-        if (entity.id === null) {
+        if (entity !== null && entity.id === null) {
             this._originallyProducedEntity = entity;
         } else {
             this._originallyProducedEntity = null;
