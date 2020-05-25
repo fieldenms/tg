@@ -633,7 +633,7 @@ export const TgEntityBinderBehavior = {
             var customObject = this._reflector().customObject(entityAndCustomObject);
 
             var msg = this._toastMsg("Refreshing", entity);
-            this._openToast(entity, msg, entity !== null && (!entity.isValid() || entity.isValidWithWarning()), msg, false);
+            this._openToast(entity, msg, entity == null || !entity.isValid() || entity.isValidWithWarning(), msg, false);
 
             var newBindingEntity = this._postEntityReceived(entity, true);
 
@@ -729,13 +729,13 @@ export const TgEntityBinderBehavior = {
         this._toastGreeting().showProgress = showProgress;
         this._toastGreeting().isCritical = false;
         if (hasMoreInfo) {
-            if (entity !== null && !entity.isValid()) {
+            if (entity == null || !entity.isValid()) {
                 // TODO is it still relevant? msgHeading
                 // TODO is it still relevant? msgHeading
                 // TODO is it still relevant? msgHeading
                 this._toastGreeting().msgHeading = "Error";
                 this._toastGreeting().isCritical = true;
-            } else if (entity !== null && entity.isValidWithWarning()) {
+            } else if (entity.isValidWithWarning()) {
                 this._toastGreeting().msgHeading = "Warning";
             } else {
                 this._toastGreeting().msgHeading = "Info";
@@ -793,9 +793,11 @@ export const TgEntityBinderBehavior = {
     },
 
     _toastMsg: function (actionName, entity) {
-        if (entity !== null && !entity.isValid()) {
+        if (entity == null) {
+            return 'Not found.';
+        } else if (!entity.isValid()) {
             return entity.firstFailure().message;
-        } else if (entity !== null && entity.isValidWithWarning()) {
+        } else if (entity.isValidWithWarning()) {
             return entity.firstWarning().message;
         } else {
             return actionName + " completed successfully.";
