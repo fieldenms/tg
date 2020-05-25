@@ -81,10 +81,6 @@ public class ShortMetadata {
         return parentInfo.category;
     }
 
-    private boolean isOneToOne(final Class<? extends AbstractEntity<?>> entityType) {
-        return isPersistedEntityType(getKeyType(entityType));
-    }
-
     private <T extends AbstractEntity<?>> void addProps(final EntityInfo<T> entityInfo, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> allEntitiesInfo) {
         final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo = new EntityTypeInfo<>(entityInfo.javaType());
         try {

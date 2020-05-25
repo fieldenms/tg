@@ -18,9 +18,6 @@ public class Child implements Comparable<Child> {
     public final String fullPath; //not null if given child represents explicit prop that needs resolution 
     public final IQrySource2<?> parentSource;
 
-    //final String context; //indicates context for table being joined within main (explicit) table (aka dot.notation being resolved by joining this table)
-    
-
     public final Expression2 expr;
     public final Set<Child> dependencies;
 
@@ -36,6 +33,8 @@ public class Child implements Comparable<Child> {
         this.expr = expr;
         this.dependencies = dependencies;
         this.id = id;
+        assert(items.isEmpty() || !items.isEmpty() && source !=null );
+        assert(dependencies.isEmpty() || !dependencies.isEmpty() && expr != null);
     }
     
     @Override

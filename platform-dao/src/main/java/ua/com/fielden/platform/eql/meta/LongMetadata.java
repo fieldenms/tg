@@ -383,10 +383,6 @@ public class LongMetadata {
         }
     }
     
-    private PropertyMetadata getVirtualPropInfoForDynamicEntityKey(final EntityTypeInfo <? extends AbstractEntity<DynamicEntityKey>> parentInfo) throws Exception {
-        return new PropertyMetadata.Builder(KEY, String.class, true, parentInfo).expression(generateCompositeKeyEqlExpression(parentInfo.entityType)).hibType(H_STRING).category(VIRTUAL_OVERRIDE).build();
-    }
-
     private LongPropertyMetadata getOneToOnePropInfo(final Field propField, final EntityTypeInfo <? extends AbstractEntity<?>> parentInfo) throws Exception {
         final String propName = propField.getName();
         final Class<?> javaType = propField.getType();

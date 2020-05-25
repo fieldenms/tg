@@ -24,6 +24,8 @@ public class ChildGroup {
         this.source = source;
         this.paths = paths;
         this.expr = expr;
+        assert(items.isEmpty() || !items.isEmpty() && source !=null );
+        assert(!items.isEmpty() || items.isEmpty() && !paths.isEmpty());
     }
     
     @Override
@@ -32,7 +34,7 @@ public class ChildGroup {
         int result = 1;
         result = prime * result + items.hashCode();
         result = prime * result + mainName.hashCode();
-        result = prime * result + ((paths == null) ? 0 : paths.hashCode());
+        result = prime * result + paths.hashCode();
         result = prime * result + ((source == null) ? 0 : source.hashCode());
         return result;
     }
