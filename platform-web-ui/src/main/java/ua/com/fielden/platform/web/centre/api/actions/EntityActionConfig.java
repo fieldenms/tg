@@ -54,12 +54,12 @@ public final class EntityActionConfig {
             final InsertionPoints whereToInsertView,
             final UI_ROLE role) {
 
-        if (!noAction && functionalEntity == null) {
-            throw new IllegalArgumentException("A functional entity type should be provided.");
+        if (!noAction && context == null) {
+            throw new IllegalArgumentException("Any functional entity requires some execution context to be specified.");
         }
 
-        if (functionalEntity != null && context == null) {
-            throw new IllegalArgumentException("Any functional entity requires some execution context to be specified.");
+        if (functionalEntity == null && !context.withCurrentEtity) {
+            throw new IllegalArgumentException("Dynamic action can be created only with current entity in context.");
         }
 
         this.shouldRefreshParentCentreAfterSave = shouldRefreshParentCentreAfterSave;
