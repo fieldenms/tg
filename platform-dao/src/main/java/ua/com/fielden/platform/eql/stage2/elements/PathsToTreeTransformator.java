@@ -7,11 +7,16 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
+
+import javax.swing.text.html.HTMLDocument.HTMLReader.PreAction;
+
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
@@ -22,6 +27,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.meta.EntityInfo;
 import ua.com.fielden.platform.eql.meta.EntityTypePropInfo;
+import ua.com.fielden.platform.eql.meta.UnionTypePropInfo;
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.Expression2;
@@ -43,7 +49,7 @@ public class PathsToTreeTransformator {
     public static Map<IQrySource2<?>, List<ChildGroup>> groupChildren(final Set<EntProp2> props, final  Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
         final Map<IQrySource2<?>, List<ChildGroup>> result = new HashMap<>();
         for (final Entry<IQrySource2<?>, SortedSet<Child>> el : transform(props, domainInfo).entrySet()) {
-            result.put(el.getKey(), convertToGroup(el.getValue()));
+            result.put(el.getKey(), convertToGroup(el.getValue(), emptyList()));
         }
         return result;
     }
@@ -163,11 +169,12 @@ public class PathsToTreeTransformator {
         return propInfo.expression.transform(prc);
     }
     
-    private static List<ChildGroup> convertToGroup(final SortedSet<Child> children) {
+    private static List<ChildGroup> convertToGroup(final SortedSet<Child> children, final List<String> parentPrefix) {
         final List<ChildGroup> result = new ArrayList<>();
         final List<String> items = new ArrayList<>();
         final Map<String, Set<Child>> map = new HashMap<>();
         final Map<String, SortedMap<String, QrySource2BasedOnPersistentType>> mapSources = new HashMap<>();
+        final Set<String> unions = new HashSet<>();
         
         for (final Child child : children) {
             if (items.contains(child.main.name)) {
@@ -188,6 +195,10 @@ public class PathsToTreeTransformator {
                 map.put(child.main.name, itemChildren);
                 mapSources.put(child.main.name, itemSources);
             }
+            
+            if (child.main instanceof UnionTypePropInfo) {
+                unions.add(child.main.name);
+            }
         }
         
         for (final String item : items) {
@@ -202,9 +213,17 @@ public class PathsToTreeTransformator {
                     groupPaths.add(t2(c.fullPath, c.parentSource));    
                 }
             }
+            
+            final List<String> newParentPrefix = new ArrayList<>(parentPrefix);
+            newParentPrefix.add(item);
 
-            final List<ChildGroup> groupItems = convertToGroup(mergedItems);
-            result.add(new ChildGroup(item, groupItems, groupPaths, first.required, mapSources.get(item).isEmpty() ? first.source : mapSources.get(item).entrySet().iterator().next().getValue(), first.expr));
+            if (unions.contains(item)) {
+                result.addAll(convertToGroup(mergedItems, newParentPrefix));
+            } else {
+                final List<ChildGroup> groupItems = convertToGroup(mergedItems, emptyList());
+                final String itemName = parentPrefix.isEmpty() ? item : newParentPrefix.stream().collect(Collectors.joining("."));
+                result.add(new ChildGroup(itemName, groupItems, groupPaths, first.required, mapSources.get(item).isEmpty() ? first.source : mapSources.get(item).entrySet().iterator().next().getValue(), first.expr));
+            }
         }   
         
         return result;

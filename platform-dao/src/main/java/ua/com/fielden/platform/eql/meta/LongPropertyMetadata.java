@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.meta;
 
 import static java.lang.String.format;
+import static java.util.Collections.unmodifiableList;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
 import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.UNION_ENTITY_HEADER;
@@ -9,6 +10,7 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotati
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -44,6 +46,10 @@ public class LongPropertyMetadata implements Comparable<LongPropertyMetadata> {
         expressionModel = builder.expressionModel;
     }
 
+    public List<LongPropertyMetadata> subitems() {
+        return unmodifiableList(subitems);
+    }
+    
     public Set<LongPropertyMetadata> getCompositeTypeSubprops(final ICompositeUserTypeInstantiate hibTypeP) {
         final Set<LongPropertyMetadata> result = new HashSet<LongPropertyMetadata>();
         final List<PropColumn> columns = new ArrayList<>();

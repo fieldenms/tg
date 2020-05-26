@@ -7,6 +7,7 @@ import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedP
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
+import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.entity.query.metadata.CompositeKeyEqlExpressionGenerator.generateCompositeKeyEqlExpression;
@@ -34,6 +35,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isOneToOne;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -47,6 +49,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import org.hibernate.type.BasicType;
+import org.hibernate.type.LongType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
 
@@ -150,6 +153,10 @@ public class LongMetadata {
     private Object getHibernateType(final Field propField) {
         final String propName = propField.getName();
         final Class<?> propType = propField.getType();
+        
+        if (isUnionEntityType(propType)) {
+            return H_LONG;
+        }
         
         if (isPersistedEntityType(propType)) {
             return H_LONG;
@@ -288,7 +295,7 @@ public class LongMetadata {
                 if (Collection.class.isAssignableFrom(field.getType()) && hasLinkProperty(parentInfo.entityType, field.getName())) {
                     //safeMapAdd(result, getCollectionalPropInfo(field, parentInfo));
                 } else if ((isAnnotationPresent(field, Calculated.class) || isAnnotationPresent(field, MapTo.class) || (parentInfo.category == QUERY_BASED && !isAnnotationPresent(field, CritOnly.class)))) {
-                    safeMapAdd(result, getCommonPropInfo(field, parentInfo.entityType));
+                    safeMapAdd(result, getCommonPropInfo(field, parentInfo.entityType, null));
                 } else if (isOne2One_association(parentInfo.entityType, field.getName())) {
                     safeMapAdd(result, getOneToOnePropInfo(field, parentInfo));
                 } else {
@@ -300,8 +307,12 @@ public class LongMetadata {
         return result;
     }
     
-    private List<PropColumn> getPropColumns(final Field field, final IsProperty isProperty, final MapTo mapTo, final Object hibernateType) throws Exception {
-        final String columnName = isNotEmpty(mapTo.value()) ? mapTo.value() : field.getName().toUpperCase() + "_";
+    private String getColumnName(final String propName, final MapTo mapTo, final String parentPrefix) {
+        return (parentPrefix != null ? parentPrefix + "_" : "") + (isNotEmpty(mapTo.value()) ? mapTo.value() : propName.toUpperCase() + "_");
+    }
+    
+    private List<PropColumn> getPropColumns(final Field field, final IsProperty isProperty, final MapTo mapTo, final Object hibernateType, final String parentPrefix) throws Exception {
+        final String columnName = getColumnName(field.getName(), mapTo, parentPrefix); 
 
         final List<PropColumn> result = new ArrayList<>();
         if (hibernateType instanceof ICompositeUserTypeInstantiate) {
@@ -344,13 +355,11 @@ public class LongMetadata {
         return result;
     }
     
-    private LongPropertyMetadata getCommonPropInfo(final Field propField, final Class<? extends AbstractEntity<?>> entityType) throws Exception {
+    private LongPropertyMetadata getCommonPropInfo(final Field propField, final Class<? extends AbstractEntity<?>> entityType, String parentPrefix) throws Exception {
         final String propName = propField.getName();
         final Class<?> propType = propField.getType();
 
-        if (EntityUtils.isUnionEntityType(propType)) {
-            return null;
-        }
+
             
         final boolean nullable = !PropertyTypeDeterminator.isRequiredByDefinition(propField, entityType);
 
@@ -367,10 +376,22 @@ public class LongMetadata {
                 Builder(propName, propType, nullable).
                 hibType(hibType);
         
+        if (EntityUtils.isUnionEntityType(propType)) {
+            String subitemParentPrefix = getColumnName(propName, mapTo, parentPrefix);
+            
+            final List<Field> propsFields = unionProperties((Class<? extends AbstractUnionEntity>) propType);
+            final List<LongPropertyMetadata> subitems = new ArrayList<>();
+            for (final Field subpropField : propsFields) {
+                subitems.add(getCommonPropInfo(subpropField, (Class<? extends AbstractEntity<?>>) propType, subitemParentPrefix));
+            }
+
+ //           System.out.println("!!!!\nA\n!!!!" + propName + " " + propType);
+            return resultInProgress.subitems(subitems).build();
+        }    
 
         
         if (mapTo != null) {
-            final List<PropColumn> columns = getPropColumns(propField, isProperty, mapTo, hibernateType);
+            final List<PropColumn> columns = getPropColumns(propField, isProperty, mapTo, hibernateType, parentPrefix);
             if (columns.size() == 1) {
                 return resultInProgress.column(columns.get(0)).build(); 
             } else {

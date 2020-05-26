@@ -623,6 +623,11 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
         run(select(TgVehicle.class).where().prop("finDetails.capitalWorksNo").isNotNull());
     }
     
+    @Test
+    public void eql3_query_executes_correctly65() {
+        run(select(TgBogie.class).where().anyOfProps("location.workshop.key", "location.wagonSlot.wagon", "location.wagonSlot.key").isNotNull());
+    }
+
     @Override
     protected void populateDomain() {
         super.populateDomain();

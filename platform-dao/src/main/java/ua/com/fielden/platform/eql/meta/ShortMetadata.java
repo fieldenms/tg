@@ -2,10 +2,11 @@ package ua.com.fielden.platform.eql.meta;
 
 import static java.util.stream.Collectors.toMap;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
+import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.UNION;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -14,6 +15,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.metadata.EntityCategory;
 import ua.com.fielden.platform.entity.query.metadata.EntityTypeInfo;
@@ -66,6 +68,10 @@ public class ShortMetadata {
             for (final LongPropertyMetadata el : lmg.generatePropertyMetadatasForEntity(parentInfo).values()) {
                 if (el.column != null) {
                     columns.put(el.name, new Column(el.column.name));
+                } else if (!el.subitems().isEmpty()) {
+                    for (LongPropertyMetadata subitem : el.subitems()) {
+                        columns.put(el.name + "." + subitem.name, new Column(subitem.column.name.substring(0, subitem.column.name.length() - 1)));
+                    }
                 }
             }
         } catch (final Exception e1) {
@@ -92,7 +98,14 @@ public class ShortMetadata {
                 final ExpressionModel expressionModel = el.getValue().expressionModel;
                 final Expression1 expr = expressionModel == null ? null : (Expression1) (new StandAloneExpressionBuilder(qb(), expressionModel)).getResult().getValue();
                 
-                if (AbstractEntity.class.isAssignableFrom(javaType)) {
+                
+                if (isUnionEntityType(javaType)) {
+                    EntityInfo<? extends AbstractUnionEntity> ef = new EntityInfo<>((Class<? extends AbstractUnionEntity>)javaType, UNION);
+                    for (LongPropertyMetadata sub : el.getValue().subitems()) {
+                        ef.addProp(new EntityTypePropInfo(sub.name, allEntitiesInfo.get(sub.javaType), sub.hibType, false, null));
+                    }
+                    entityInfo.addProp(new UnionTypePropInfo(name, ef, hibType, required));
+                } else if (AbstractEntity.class.isAssignableFrom(javaType)) {
                     entityInfo.addProp(new EntityTypePropInfo(name, allEntitiesInfo.get(javaType), hibType, required, expr));
                 } else if (ID.equals(name)){
                     entityInfo.addProp(new EntityTypePropInfo(name, allEntitiesInfo.get(entityInfo.javaType()), hibType, required, expr));

@@ -33,7 +33,7 @@ public class Child implements Comparable<Child> {
         this.expr = expr;
         this.dependencies = dependencies;
         this.id = id;
-        assert(items.isEmpty() || !items.isEmpty() && source !=null );
+ //       assert(items.isEmpty() || !items.isEmpty() && source !=null );
         assert(dependencies.isEmpty() || !dependencies.isEmpty() && expr != null);
     }
     

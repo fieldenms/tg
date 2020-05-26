@@ -24,7 +24,7 @@ public class ChildGroup {
         this.source = source;
         this.paths = paths;
         this.expr = expr;
-        assert(items.isEmpty() || !items.isEmpty() && source !=null );
+//        assert(items.isEmpty() || !items.isEmpty() && source !=null );
         assert(!items.isEmpty() || items.isEmpty() && !paths.isEmpty());
     }
     
