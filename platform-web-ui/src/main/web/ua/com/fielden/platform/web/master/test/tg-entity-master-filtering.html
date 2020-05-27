@@ -140,7 +140,7 @@
             
             test('works for master going through its producer and compound-main-menu-item master entity', function (done) {
                 compoundMasterMain.postRetrievedError = function (errorResult) {
-                    assert.strictEqual(errorResult.message, exMessage(compoundEntityTitle), 'Result of master retrieval should contain [Not found] error -- FILTERED instance should be filtered out.');
+                    assert.strictEqual(errorResult.message, exMessage(compoundEntityTitle), 'Result of master retrieval should contain [Not found] error -- FILTERED1 instance should be filtered out.');
                     done();
                 };
                 
@@ -165,7 +165,7 @@
             
             test('works for master going through its producer and compound-detail-menu-item master entity', function (done) {
                 compoundMasterDetail.postRetrievedError = function (errorResult) {
-                    assert.strictEqual(errorResult.message, exMessage(compoundDetailEntityTitle), 'Result of master retrieval should contain [Not found] error -- FILTERED instance should be filtered out.');
+                    assert.strictEqual(errorResult.message, exMessage(compoundDetailEntityTitle), 'Result of master retrieval should contain [Not found] error -- FILTERED2 instance should be filtered out.');
                     done();
                 };
                 
@@ -190,7 +190,7 @@
             
             test('works for compound-master-opener going through its producer', function (done) {
                 compoundMaster.postRetrievedError = function (errorResult) {
-                    assert.strictEqual(errorResult.message, exMessage(compoundEntityTitle), 'Result of master retrieval should contain [Not found] error -- FILTERED instance should be filtered out.');
+                    assert.strictEqual(errorResult.message, exMessage(compoundEntityTitle), 'Result of master retrieval should contain [Not found] error -- FILTERED1 instance should be filtered out.');
                     done();
                 };
                 compoundMaster.entityId = 'new';

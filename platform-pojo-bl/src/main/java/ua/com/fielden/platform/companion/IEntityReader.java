@@ -86,9 +86,7 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      * @param fetchModel -- fetching model specifying the initialisation strategy (i.e. what properties should be retrieved).
      * @return
      */
-    default T findById(final Long id, final fetch<T> fetchModel) {
-        return findById(false, id, fetchModel);
-    }
+    T findById(final Long id, final fetch<T> fetchModel);
 
     default Optional<T> findByIdOptional(final Long id, final fetch<T> fetchModel) {
         return Optional.ofNullable(findById(id, fetchModel));
@@ -141,9 +139,7 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      * @param keyValues
      * @return
      */
-    default T findByKeyAndFetch(final fetch<T> fetchModel, final Object... keyValues) {
-        return findByKeyAndFetch(false, fetchModel, keyValues);
-    }
+    T findByKeyAndFetch(final fetch<T> fetchModel, final Object... keyValues);
 
     default Optional<T> findByKeyAndFetchOptional(final fetch<T> fetchModel, final Object... keyValues) {
         return Optional.ofNullable(findByKeyAndFetch(fetchModel, keyValues));

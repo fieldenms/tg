@@ -99,6 +99,12 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
     public T findById(final boolean filtered, final Long id, final fetch<T> fetchModel) {
         return fetchOneEntityInstance(filtered, id, fetchModel);
     }
+    
+    @Override
+    @SessionRequired
+    public final T findById(final Long id, final fetch<T> fetchModel) {
+        return findById(false, id, fetchModel);
+    }
 
     @Override
     @SessionRequired
@@ -112,6 +118,12 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
         } catch (final Exception e) {
             throw new EntityCompanionException(format("Could not find and fetch by key an entity of type [%s].", getEntityType().getName()), e);
         }
+    }
+
+    @Override
+    @SessionRequired
+    public final T findByKeyAndFetch(final fetch<T> fetchModel, final Object... keyValues) {
+        return findByKeyAndFetch(false, fetchModel, keyValues);
     }
 
     @Override

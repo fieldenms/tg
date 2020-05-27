@@ -50,6 +50,11 @@ public class TgSystemDaoStub implements ITgSystem {
     }
 
     @Override
+    public TgSystem findById(final Long id, final fetch<TgSystem> fetchModel) {
+        return null;
+    }
+
+    @Override
     public TgSystem findById(final Long id) {
         return null;
     }
@@ -61,6 +66,11 @@ public class TgSystemDaoStub implements ITgSystem {
 
     @Override
     public TgSystem findByKeyAndFetch(final boolean filtered, final fetch<TgSystem> fetchModel, final Object... keyValues) {
+        return null;
+    }
+
+    @Override
+    public TgSystem findByKeyAndFetch(final fetch<TgSystem> fetchModel, final Object... keyValues) {
         return null;
     }
 
@@ -180,7 +190,7 @@ public class TgSystemDaoStub implements ITgSystem {
     }
 
 	@Override
-	public boolean exists(EntityResultQueryModel<TgSystem> model, Map<String, Object> paramValues) {
+	public boolean exists(final EntityResultQueryModel<TgSystem> model, final Map<String, Object> paramValues) {
 		// TODO Auto-generated method stub
 		return false;
 	}
