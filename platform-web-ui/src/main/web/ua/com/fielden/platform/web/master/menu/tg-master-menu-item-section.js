@@ -198,6 +198,12 @@ Polymer({
         if (this._blockingPaneCounter > 0) {
             this._errorMsg = e.detail;
             tearDownEvent(e);
+            this.fire('data-loaded-and-focused', null, { node: this.parentNode });
+        } else if (this._blockingPaneCounter === 0) {
+            this._showBlockingPane()
+            this._errorMsg = e.detail;
+            tearDownEvent(e);
+            this.fire('data-loaded-and-focused', null, { node: this.parentNode });
         }
     },
 

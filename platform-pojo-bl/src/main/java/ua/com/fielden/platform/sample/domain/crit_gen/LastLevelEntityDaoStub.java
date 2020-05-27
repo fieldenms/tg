@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
@@ -191,21 +192,33 @@ public class LastLevelEntityDaoStub implements ILastLevelEntity {
     }
 
     @Override
-    public Stream<LastLevelEntity> stream(QueryExecutionModel<LastLevelEntity, ?> qem, int fetchSize) {
+    public Stream<LastLevelEntity> stream(final QueryExecutionModel<LastLevelEntity, ?> qem, final int fetchSize) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public Stream<LastLevelEntity> stream(QueryExecutionModel<LastLevelEntity, ?> qem) {
+    public Stream<LastLevelEntity> stream(final QueryExecutionModel<LastLevelEntity, ?> qem) {
         // TODO Auto-generated method stub
         return null;
     }
 
 	@Override
-	public boolean exists(EntityResultQueryModel<LastLevelEntity> model, Map<String, Object> paramValues) {
+	public boolean exists(final EntityResultQueryModel<LastLevelEntity> model, final Map<String, Object> paramValues) {
 		// TODO Auto-generated method stub
 		return false;
 	}
-
+    
+    @Override
+    public boolean isFilterable() {
+        // TODO Auto-generated method stub
+        return false;
+    }
+    
+    @Override
+    public IEntityReader<LastLevelEntity> setFilterable(final boolean filterable) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+    
 }

@@ -227,6 +227,8 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         save(new_(TgCompoundEntity.class, "KEY4").setActive(true).setDesc("desc 4"));
         save(new_(TgCompoundEntity.class, "KEY5").setActive(true).setDesc("desc 5"));
         
+        save(new_(TgCompoundEntity.class, "FILTERED").setActive(true).setDesc("Description for filtered entity."));
+        
         LOGGER.info("\tPopulating messages...");
         final Map<String, TgMachine> machines = new HashMap<>();
         try {

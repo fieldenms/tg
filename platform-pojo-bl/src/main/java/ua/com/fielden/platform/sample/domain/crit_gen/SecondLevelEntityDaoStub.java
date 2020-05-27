@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
@@ -188,21 +189,33 @@ public class SecondLevelEntityDaoStub implements ISecondLevelEntity {
     }
 
     @Override
-    public Stream<SecondLevelEntity> stream(QueryExecutionModel<SecondLevelEntity, ?> qem, int fetchSize) {
+    public Stream<SecondLevelEntity> stream(final QueryExecutionModel<SecondLevelEntity, ?> qem, final int fetchSize) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public Stream<SecondLevelEntity> stream(QueryExecutionModel<SecondLevelEntity, ?> qem) {
+    public Stream<SecondLevelEntity> stream(final QueryExecutionModel<SecondLevelEntity, ?> qem) {
         // TODO Auto-generated method stub
         return null;
     }
 
 	@Override
-	public boolean exists(EntityResultQueryModel<SecondLevelEntity> model, Map<String, Object> paramValues) {
+	public boolean exists(final EntityResultQueryModel<SecondLevelEntity> model, final Map<String, Object> paramValues) {
 		// TODO Auto-generated method stub
 		return false;
 	}
-
+    
+    @Override
+    public boolean isFilterable() {
+        // TODO Auto-generated method stub
+        return false;
+    }
+    
+    @Override
+    public IEntityReader<SecondLevelEntity> setFilterable(final boolean filterable) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+    
 }

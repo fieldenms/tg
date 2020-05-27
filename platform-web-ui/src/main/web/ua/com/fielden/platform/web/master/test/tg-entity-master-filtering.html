@@ -24,26 +24,152 @@
             ></tg-tgPersistentEntityWithProperties-master>
         </template>
     </test-fixture>
+    <test-fixture id="CompoundMasterFixture">
+        <template>
+            <tg-tgCompoundEntity-master
+                id="compoundMaster"
+                entity-type="ua.com.fielden.platform.sample.domain.compound.TgCompoundEntity"
+                entity-id="new"
+                current-state="EDIT"
+            ></tg-tgCompoundEntity-master>
+        </template>
+    </test-fixture>
+    <test-fixture id="CompoundMasterDetailFixture">
+        <template>
+            <tg-tgCompoundEntityDetail-master
+                id="compoundDetailMaster"
+                entity-type="ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityDetail"
+                entity-id="new"
+                current-state="EDIT"
+            ></tg-tgCompoundEntityDetail-master>
+        </template>
+    </test-fixture>
     
     <script type="module">
         import '/app/tg-reflector.js';
         import '/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties';
+        import '/master_ui/ua.com.fielden.platform.sample.domain.compound.TgCompoundEntity';
+        import '/master_ui/ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityDetail';
         
         suite('entity master filtering', function () {
-            let master, reflector;
+            let master, compoundMaster, compoundDetailMaster, reflector;
             
             setup(function () {
                 master = fixture('MasterFixture');
+                compoundMaster = fixture('CompoundMasterFixture');
+                compoundDetailMaster = fixture('CompoundMasterDetailFixture');
                 reflector = document.querySelector('#reflector');
             });
             
             test('works for master knowing its entityId explicitly', function (done) {
-                master.postRetrieved = function (entity, bindingEntity, customObject) {
-                    assert.strictEqual(entity, null, 'The entity returned in master after retrieval should be empty -- FILTERED instance should be filtered out.');
+                master.postRetrievedError = function (errorResult) {
+                    assert.strictEqual(errorResult.message, 'Not found.', 'Result of master retrieval should contain [Not found] error -- FILTERED instance should be filtered out.');
                     done();
                 };
                 master.entityId = '83';
                 master.retrieve();
+            });
+            
+            test('works for master going through its producer', function (done) {
+                master.postRetrievedError = function (errorResult) {
+                    assert.strictEqual(errorResult.message, 'Not found.', 'Result of master retrieval should contain [Not found] error -- FILTERED instance should be filtered out.');
+                    done();
+                };
+                master.entityId = 'new';
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties');
+                entity.id = 83;
+                const context = reflector.createContextHolder(null, 'ONE', null, null, () => [entity], null, null);
+                context['chosenProperty'] = 'desc';
+                master.retrieve(context);
+            });
+            
+            test('works for master going through its producer and EntityEditAction master entity', function (done) {
+                master.postRetrievedError = function (errorResult) {
+                    assert.strictEqual(errorResult.message, 'Not found.', 'Result of master retrieval should contain [Not found] error -- FILTERED instance should be filtered out.');
+                    done();
+                };
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties');
+                entity.id = 83;
+                const context = reflector.createContextHolder(null, 'ONE', null, null, () => [entity], null, null);
+                context['chosenProperty'] = '';
+                
+                const _originallyProducedEntity = reflector.newEntity('ua.com.fielden.platform.entity.EntityEditAction');
+                _originallyProducedEntity.entityId = '83';
+                _originallyProducedEntity.key = 'NO_KEY';
+                
+                master.getMasterEntity = (function () {
+                    reflector.setCustomProperty(context, '@@funcEntityType', 'ua.com.fielden.platform.entity.EntityEditAction');
+                    return reflector.createSavingInfoHolder(_originallyProducedEntity, master._extractModifiedPropertiesHolder(master._extractBindingView(_originallyProducedEntity, null, null), master._extractOriginalBindingView(_originallyProducedEntity, null)), context, {});
+                }).bind(this); // this triggers retrieval with getMasterEntity() context and entityId = 'find_or_new' -- see _getMasterEntityAssigned method in master behavior
+            });
+            
+            test('works for master going through its producer and EntityNavigationAction master entity', function (done) {
+                master.postRetrievedError = function (errorResult) {
+                    assert.strictEqual(errorResult.message, 'Not found.', 'Result of master retrieval should contain [Not found] error -- FILTERED instance should be filtered out.');
+                    done();
+                };
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties');
+                entity.id = 83;
+                const context = reflector.createContextHolder(null, 'ALL', null, null, () => [entity], null, null);
+                
+                const _originallyProducedEntity = reflector.newEntity('ua.com.fielden.platform.entity.EntityNavigationAction');
+                _originallyProducedEntity.entityId = '83';
+                _originallyProducedEntity.key = 'NO_KEY';
+                
+                master.getMasterEntity = (function () {
+                    reflector.setCustomProperty(context, '@@funcEntityType', 'ua.com.fielden.platform.entity.EntityNavigationAction');
+                    return reflector.createSavingInfoHolder(_originallyProducedEntity, master._extractModifiedPropertiesHolder(master._extractBindingView(_originallyProducedEntity, null, null), master._extractOriginalBindingView(_originallyProducedEntity, null)), context, {});
+                }).bind(this); // this triggers retrieval with getMasterEntity() context and entityId = 'find_or_new' -- see _getMasterEntityAssigned method in master behavior
+            });
+            
+            test('works for master going through its producer and compound-main-menu-item master entity', function (done) {
+                compoundMaster.postRetrievedError = function (errorResult) {
+                    assert.strictEqual(errorResult.message, 'Not found.', 'Result of master retrieval should contain [Not found] error -- FILTERED instance should be filtered out.');
+                    done();
+                };
+                
+                compoundMaster.getMasterEntity = (function () {
+                    const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.compound.TgCompoundEntity');
+                    entity.id = 94;
+                    const _originallyProducedEntity = reflector.newEntity('ua.com.fielden.platform.sample.domain.compound.master.menu.actions.TgCompoundEntityMaster_OpenMain_MenuItem');
+                    _originallyProducedEntity.id = null;
+                    _originallyProducedEntity.key = entity;
+                    const context = reflector.createContextHolder(null, null, 'true', null, null, () => {
+                        const _originallyProducedEntity = reflector.newEntity('ua.com.fielden.platform.sample.domain.compound.ui_actions.OpenTgCompoundEntityMasterAction');
+                        _originallyProducedEntity.id = null;
+                        _originallyProducedEntity.key = entity;
+                        const context = reflector.createContextHolder(null, 'ONE', null, null, () => [entity], null, null);
+                        reflector.setCustomProperty(context, '@@funcEntityType', 'ua.com.fielden.platform.sample.domain.compound.ui_actions.OpenTgCompoundEntityMasterAction');
+                        return reflector.createSavingInfoHolder(_originallyProducedEntity, compoundMaster._extractModifiedPropertiesHolder(compoundMaster._extractBindingView(_originallyProducedEntity, null, null), compoundMaster._extractOriginalBindingView(_originallyProducedEntity, null)), context, {});
+                    }, null);
+                    reflector.setCustomProperty(context, '@@funcEntityType', 'ua.com.fielden.platform.sample.domain.compound.master.menu.actions.TgCompoundEntityMaster_OpenMain_MenuItem');
+                    return reflector.createSavingInfoHolder(_originallyProducedEntity, compoundMaster._extractModifiedPropertiesHolder(compoundMaster._extractBindingView(_originallyProducedEntity, null, null), compoundMaster._extractOriginalBindingView(_originallyProducedEntity, null)), context, {});
+                }).bind(this); // this triggers retrieval with getMasterEntity() context and entityId = 'find_or_new' -- see _getMasterEntityAssigned method in master behavior
+            });
+            
+            test('works for master going through its producer and compound-detail-menu-item master entity', function (done) {
+                compoundDetailMaster.postRetrievedError = function (errorResult) {
+                    assert.strictEqual(errorResult.message, 'Not found.', 'Result of master retrieval should contain [Not found] error -- FILTERED instance should be filtered out.');
+                    done();
+                };
+                
+                compoundDetailMaster.getMasterEntity = (function () {
+                    const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.compound.TgCompoundEntity');
+                    entity.id = 94;
+                    const _originallyProducedEntity = reflector.newEntity('ua.com.fielden.platform.sample.domain.compound.master.menu.actions.TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem');
+                    _originallyProducedEntity.id = null;
+                    _originallyProducedEntity.key = entity;
+                    const context = reflector.createContextHolder(null, null, 'true', null, null, () => {
+                        const _originallyProducedEntity = reflector.newEntity('ua.com.fielden.platform.sample.domain.compound.ui_actions.OpenTgCompoundEntityMasterAction');
+                        _originallyProducedEntity.id = null;
+                        _originallyProducedEntity.key = entity;
+                        const context = reflector.createContextHolder(null, 'ONE', null, null, () => [entity], null, null);
+                        reflector.setCustomProperty(context, '@@funcEntityType', 'ua.com.fielden.platform.sample.domain.compound.ui_actions.OpenTgCompoundEntityMasterAction');
+                        return reflector.createSavingInfoHolder(_originallyProducedEntity, compoundDetailMaster._extractModifiedPropertiesHolder(compoundDetailMaster._extractBindingView(_originallyProducedEntity, null, null), compoundDetailMaster._extractOriginalBindingView(_originallyProducedEntity, null)), context, {});
+                    }, null);
+                    reflector.setCustomProperty(context, '@@funcEntityType', 'ua.com.fielden.platform.sample.domain.compound.master.menu.actions.TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem');
+                    return reflector.createSavingInfoHolder(_originallyProducedEntity, compoundDetailMaster._extractModifiedPropertiesHolder(compoundDetailMaster._extractBindingView(_originallyProducedEntity, null, null), compoundDetailMaster._extractOriginalBindingView(_originallyProducedEntity, null)), context, {});
+                }).bind(this); // this triggers retrieval with getMasterEntity() context and entityId = 'find_or_new' -- see _getMasterEntityAssigned method in master behavior
             });
             
         });

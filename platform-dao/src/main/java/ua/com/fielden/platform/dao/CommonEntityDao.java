@@ -99,6 +99,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     private Boolean hasSaveOverridden;
 
     private boolean $instrumented$ = true;
+    private boolean $filterable$ = false;
 
     private final Class<? extends Comparable<?>> keyType;
     private final Class<T> entityType;
@@ -164,10 +165,16 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 dates, 
                 getIdOnlyProxiedEntityTypeCache());
     }
-
+    
     @Override
-    protected boolean isFilterable() {
-        return false;
+    public CommonEntityDao<T> setFilterable(final boolean filterable) {
+        this.$filterable$ = filterable;
+        return this;
+    }
+    
+    @Override
+    public boolean isFilterable() {
+        return $filterable$;
     }
     
     /**

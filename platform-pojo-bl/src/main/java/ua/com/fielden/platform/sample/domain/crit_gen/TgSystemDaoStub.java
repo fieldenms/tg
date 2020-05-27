@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
@@ -180,9 +181,21 @@ public class TgSystemDaoStub implements ITgSystem {
     }
 
 	@Override
-	public boolean exists(EntityResultQueryModel<TgSystem> model, Map<String, Object> paramValues) {
+	public boolean exists(final EntityResultQueryModel<TgSystem> model, final Map<String, Object> paramValues) {
 		// TODO Auto-generated method stub
 		return false;
 	}
-
+    
+    @Override
+    public boolean isFilterable() {
+        // TODO Auto-generated method stub
+        return false;
+    }
+    
+    @Override
+    public IEntityReader<TgSystem> setFilterable(final boolean filterable) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+    
 }

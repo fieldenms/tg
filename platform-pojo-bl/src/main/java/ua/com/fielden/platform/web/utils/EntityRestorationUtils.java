@@ -1,24 +1,24 @@
 package ua.com.fielden.platform.web.utils;
 
-import static java.lang.String.format;
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static java.util.Optional.ofNullable;
+import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.tabs;
 
 import java.util.Map;
+import java.util.function.Supplier;
 
 import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.entity.EntityProducingException;
 import ua.com.fielden.platform.entity.IEntityProducer;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
@@ -36,35 +36,62 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  */
 public class EntityRestorationUtils {
     private static final Logger logger = Logger.getLogger(EntityRestorationUtils.class);
-    private static final String ERR_MISSING_ID_VALUE = "Argument [id] must have a value to find an instance of [%s]."; // TODO copied from AbstractEntityReader
     
     ////////////////////////////////////// VALIDATION PROTOTYPE CREATION //////////////////////////////////////
     /**
-     * Finds entity by <code>id</code> ensuring it will be filtered out by registered domain-driven application {@link IFilter} if its logic defines such filtering.
-     * Default {@link IEntityReader#getFetchProvider()} will be used for fetch model construction.
+     * Finds entity by <code>id</code> ensuring it will be filtered out by registered domain-driven application's {@link IFilter} if its logic defines such filtering.
+     * 'Not found' {@link Result} is thrown if no entity was found. Default {@link IEntityReader#getFetchProvider()} will be used for fetch model construction.
      * 
      * @param id
-     * @param reader
+     * @param reader -- {@link IEntityReader} for entity reading; not necessarily filterable; instrumented or not depending on actual needs
      * @return
      */
     public static <T extends AbstractEntity<?>> T findByIdWithFiltering(final Long id, final IEntityReader<T> reader) {
-        final Class<T> entityType = reader.getEntityType();
-        if (id == null) {
-            throw new EntityCompanionException(format(ERR_MISSING_ID_VALUE, entityType.getName()));
+        return findByIdWithFiltering(id, reader, reader.getFetchProvider().fetchModel());
+    }
+    
+    /**
+     * Finds entity by <code>id</code> ensuring it will be filtered out by registered domain-driven application's {@link IFilter} if its logic defines such filtering.
+     * 'Not found' {@link Result} is thrown if no entity was found.
+     * 
+     * @param id
+     * @param reader -- {@link IEntityReader} for entity reading; not necessarily filterable; instrumented or not depending on actual needs
+     * @param fetchModel -- custom fetch model
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> T findByIdWithFiltering(final Long id, final IEntityReader<T> reader, final fetch<T> fetchModel) {
+        return findWithFiltering(() -> reader.findById(id, fetchModel), reader);
+    }
+    
+    /**
+     * Finds entity by <code>keyValues</code> ensuring it will be filtered out by registered domain-driven application's {@link IFilter} if its logic defines such filtering.
+     * 'Not found' {@link Result} is thrown if no entity was found. Default {@link IEntityReader#getFetchProvider()} will be used for fetch model construction.
+     * 
+     * @param id
+     * @param reader -- {@link IEntityReader} for entity reading; not necessarily filterable; instrumented or not depending on actual needs
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> T findByKeyWithFiltering(final IEntityReader<T> reader, final Object... keyValues) {
+        return findWithFiltering(() -> reader.findByKeyAndFetch(reader.getFetchProvider().fetchModel(), keyValues), reader);
+    }
+    
+    /**
+     * Finds entity by <code>id</code> ensuring it will be filtered out by registered domain-driven application's {@link IFilter} if its logic defines such filtering.
+     * 'Not found' {@link Result} is thrown if no entity was found. Default {@link IEntityReader#getFetchProvider()} will be used for fetch model construction.
+     * 
+     * @param supplier -- function to find entity
+     * @param reader -- {@link IEntityReader} for entity reading; not necessarily filterable; instrumented or not depending on actual needs
+     * @return
+     */
+    private static <T extends AbstractEntity<?>> T findWithFiltering(final Supplier<T> supplier, final IEntityReader<T> reader) {
+        final boolean filterable = reader.isFilterable();
+        if (!filterable) {
+            reader.setFilterable(true);
         }
         try {
-            return reader.getEntity(
-                from(
-                    select(entityType)
-                    .where().prop(ID).eq().val(id)
-                    .model()
-                    .setFilterable(true) // the query must be filterable
-                ).with(
-                    reader.getFetchProvider().fetchModel()
-                ).model()
-            );
-        } catch (final Exception e) {
-            throw new EntityCompanionException(format("Could not fetch one entity of type [%s].", entityType.getName()), e);
+            return ofNullable(supplier.get()).orElseThrow(() -> failure("Not found."));
+        } finally {
+            reader.setFilterable(filterable);
         }
     }
     
