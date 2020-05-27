@@ -5,7 +5,7 @@ import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.tabs;
 
 import java.util.Map;
-import java.util.function.Supplier;
+import java.util.function.Function;
 
 import org.apache.log4j.Logger;
 
@@ -60,7 +60,7 @@ public class EntityRestorationUtils {
      * @return
      */
     public static <T extends AbstractEntity<?>> T findByIdWithFiltering(final Long id, final IEntityReader<T> reader, final fetch<T> fetchModel) {
-        return findWithFiltering(() -> reader.findById(id, fetchModel), reader);
+        return findWithFiltering((filtered) -> reader.findById(filtered, id, fetchModel), reader);
     }
     
     /**
@@ -72,27 +72,19 @@ public class EntityRestorationUtils {
      * @return
      */
     public static <T extends AbstractEntity<?>> T findByKeyWithFiltering(final IEntityReader<T> reader, final Object... keyValues) {
-        return findWithFiltering(() -> reader.findByKeyAndFetch(reader.getFetchProvider().fetchModel(), keyValues), reader);
+        return findWithFiltering((filtered) -> reader.findByKeyAndFetch(filtered, reader.getFetchProvider().fetchModel(), keyValues), reader);
     }
     
     /**
      * Finds entity by <code>id</code> ensuring it will be filtered out by registered domain-driven application's {@link IFilter} if its logic defines such filtering.
      * 'Not found' {@link Result} is thrown if no entity was found. Default {@link IEntityReader#getFetchProvider()} will be used for fetch model construction.
      * 
-     * @param supplier -- function to find entity
-     * @param reader -- {@link IEntityReader} for entity reading; not necessarily filterable; instrumented or not depending on actual needs
+     * @param finder -- function with 'filtered' argument to find entity
+     * @param reader -- {@link IEntityReader} for entity reading; instrumented or not depending on actual needs
      * @return
      */
-    private static <T extends AbstractEntity<?>> T findWithFiltering(final Supplier<T> supplier, final IEntityReader<T> reader) {
-        final boolean filterable = reader.isFilterable();
-        if (!filterable) {
-            reader.setFilterable(true);
-        }
-        try {
-            return ofNullable(supplier.get()).orElseThrow(() -> failure("Not found."));
-        } finally {
-            reader.setFilterable(filterable);
-        }
+    private static <T extends AbstractEntity<?>> T findWithFiltering(final Function<Boolean, T> finder, final IEntityReader<T> reader) {
+        return ofNullable(finder.apply(true)).orElseThrow(() -> failure("Not found."));
     }
     
     /**
