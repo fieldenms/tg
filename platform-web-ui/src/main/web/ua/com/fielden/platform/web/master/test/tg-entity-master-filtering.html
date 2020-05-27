@@ -53,6 +53,10 @@
         
         suite('entity master filtering', function () {
             let master, compoundMaster, compoundDetailMaster, reflector;
+            const mainEntityTitle = 'Tg Persistent Entity With Properties';
+            const compoundEntityTitle = 'Tg Compound Entity';
+            const compoundDetailEntityTitle = 'Tg Compound Entity Detail';
+            const exMessage = (title) => `Entity [${title}] could not be found.`;
             
             setup(function () {
                 master = fixture('MasterFixture');
@@ -63,7 +67,7 @@
             
             test('works for master knowing its entityId explicitly', function (done) {
                 master.postRetrievedError = function (errorResult) {
-                    assert.strictEqual(errorResult.message, 'Not found.', 'Result of master retrieval should contain [Not found] error -- FILTERED instance should be filtered out.');
+                    assert.strictEqual(errorResult.message, exMessage(mainEntityTitle), 'Result of master retrieval should contain [Not found] error -- FILTERED instance should be filtered out.');
                     done();
                 };
                 master.entityId = '83';
@@ -72,7 +76,7 @@
             
             test('works for master going through its producer', function (done) {
                 master.postRetrievedError = function (errorResult) {
-                    assert.strictEqual(errorResult.message, 'Not found.', 'Result of master retrieval should contain [Not found] error -- FILTERED instance should be filtered out.');
+                    assert.strictEqual(errorResult.message, exMessage(mainEntityTitle), 'Result of master retrieval should contain [Not found] error -- FILTERED instance should be filtered out.');
                     done();
                 };
                 master.entityId = 'new';
@@ -85,7 +89,7 @@
             
             test('works for master going through its producer and EntityEditAction master entity', function (done) {
                 master.postRetrievedError = function (errorResult) {
-                    assert.strictEqual(errorResult.message, 'Not found.', 'Result of master retrieval should contain [Not found] error -- FILTERED instance should be filtered out.');
+                    assert.strictEqual(errorResult.message, exMessage(mainEntityTitle), 'Result of master retrieval should contain [Not found] error -- FILTERED instance should be filtered out.');
                     done();
                 };
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties');
@@ -105,7 +109,7 @@
             
             test('works for master going through its producer and EntityNavigationAction master entity', function (done) {
                 master.postRetrievedError = function (errorResult) {
-                    assert.strictEqual(errorResult.message, 'Not found.', 'Result of master retrieval should contain [Not found] error -- FILTERED instance should be filtered out.');
+                    assert.strictEqual(errorResult.message, exMessage(mainEntityTitle), 'Result of master retrieval should contain [Not found] error -- FILTERED instance should be filtered out.');
                     done();
                 };
                 const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties');
@@ -124,7 +128,7 @@
             
             test('works for master going through its producer and compound-main-menu-item master entity', function (done) {
                 compoundMaster.postRetrievedError = function (errorResult) {
-                    assert.strictEqual(errorResult.message, 'Not found.', 'Result of master retrieval should contain [Not found] error -- FILTERED instance should be filtered out.');
+                    assert.strictEqual(errorResult.message, exMessage(compoundEntityTitle), 'Result of master retrieval should contain [Not found] error -- FILTERED instance should be filtered out.');
                     done();
                 };
                 
@@ -149,13 +153,13 @@
             
             test('works for master going through its producer and compound-detail-menu-item master entity', function (done) {
                 compoundDetailMaster.postRetrievedError = function (errorResult) {
-                    assert.strictEqual(errorResult.message, 'Not found.', 'Result of master retrieval should contain [Not found] error -- FILTERED instance should be filtered out.');
+                    assert.strictEqual(errorResult.message, exMessage(compoundDetailEntityTitle), 'Result of master retrieval should contain [Not found] error -- FILTERED instance should be filtered out.');
                     done();
                 };
                 
                 compoundDetailMaster.getMasterEntity = (function () {
                     const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.compound.TgCompoundEntity');
-                    entity.id = 94;
+                    entity.id = 95;
                     const _originallyProducedEntity = reflector.newEntity('ua.com.fielden.platform.sample.domain.compound.master.menu.actions.TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem');
                     _originallyProducedEntity.id = null;
                     _originallyProducedEntity.key = entity;

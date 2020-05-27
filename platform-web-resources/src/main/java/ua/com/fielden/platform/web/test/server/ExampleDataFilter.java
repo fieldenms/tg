@@ -18,10 +18,10 @@ public class ExampleDataFilter implements IFilter {
             return cond().prop("key").ne().val("FILTERED").model();
         }
         if (originalType == TgCompoundEntity.class) { // ... and TgCompoundEntity
-            return cond().prop("key").ne().val("FILTERED").model();
+            return cond().prop("key").ne().val("FILTERED1").model();
         }
         if (originalType == TgCompoundEntityDetail.class) { // ... and TgCompoundEntityDetail instances
-            return cond().prop("key.key").ne().val("FILTERED").model();
+            return cond().prop("key.key").ne().val("FILTERED2").model();
         }
         return null;
     }

@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.web.utils;
 
+import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.tabs;
 
 import java.util.Map;
@@ -35,6 +37,7 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  *
  */
 public class EntityRestorationUtils {
+    private static final String ENTITY_NOT_FOUND = "Entity [%s] could not be found.";
     private static final Logger logger = Logger.getLogger(EntityRestorationUtils.class);
     
     ////////////////////////////////////// VALIDATION PROTOTYPE CREATION //////////////////////////////////////
@@ -84,7 +87,7 @@ public class EntityRestorationUtils {
      * @return
      */
     private static <T extends AbstractEntity<?>> T findWithFiltering(final Function<Boolean, T> finder, final IEntityReader<T> reader) {
-        return ofNullable(finder.apply(true)).orElseThrow(() -> failure("Not found."));
+        return ofNullable(finder.apply(true)).orElseThrow(() -> failure(format(ENTITY_NOT_FOUND, getEntityTitleAndDesc(reader.getEntityType()).getKey())));
     }
     
     /**
