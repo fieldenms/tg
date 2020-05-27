@@ -96,15 +96,15 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
 
     @Override
     @SessionRequired
-    public T findById(final Long id, final fetch<T> fetchModel) {
-        return fetchOneEntityInstance(id, fetchModel);
+    public T findById(final boolean filtered, final Long id, final fetch<T> fetchModel) {
+        return fetchOneEntityInstance(filtered, id, fetchModel);
     }
 
     @Override
     @SessionRequired
-    public T findByKeyAndFetch(final fetch<T> fetchModel, final Object... keyValues) {
+    public T findByKeyAndFetch(final boolean filtered, final fetch<T> fetchModel, final Object... keyValues) {
         try {
-            final EntityResultQueryModel<T> queryModel = createQueryByKey(getDbVersion(), getEntityType(), getKeyType(), isFilterable(), keyValues);
+            final EntityResultQueryModel<T> queryModel = createQueryByKey(getDbVersion(), getEntityType(), getKeyType(), filtered, keyValues);
             final Builder<T, EntityResultQueryModel<T>> qemBuilder = from(queryModel).with(fetchModel);
             return getEntity(instrumented() ? qemBuilder.model() : qemBuilder.lightweight().model());
         } catch (final EntityCompanionException e) {
@@ -319,17 +319,18 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
     /**
      * A private helper method.
      * 
+     * @param filtered -- <code>true</code> to turn filtering on.
      * @param id
      * @param fetchModel
      * @return
      */
-    private T fetchOneEntityInstance(final Long id, final fetch<T> fetchModel) {
+    private T fetchOneEntityInstance(final boolean filtered, final Long id, final fetch<T> fetchModel) {
         if (id == null) {
             throw new EntityCompanionException(format(ERR_MISSING_ID_VALUE, getEntityType().getName()));
         }
         try {
-            final EntityResultQueryModel<T> query = select(getEntityType()).where().prop(AbstractEntity.ID).eq().val(id).model();
-            query.setFilterable(isFilterable());
+            final EntityResultQueryModel<T> query = select(getEntityType()).where().prop(ID).eq().val(id).model();
+            query.setFilterable(filtered);
             return getEntity(instrumented() ? from(query).with(fetchModel).model(): from(query).with(fetchModel).lightweight().model());
         } catch (final Exception e) {
             throw new EntityCompanionException(format("Could not fetch one entity of type [%s].", getEntityType().getName()), e);

@@ -72,13 +72,23 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
     /**
      * Finds entity by its surrogate id.
      *
-     * @param id
-     *            -- ID of the entity to be loaded.
-     * @param models
-     *            -- one or more fetching models specifying the initialisation strategy (i.e. what properties should be retrieved).
+     * @param filtered -- <code>true</code> to turn filtering on.
+     * @param id -- ID of the entity to be loaded.
+     * @param fetchModel -- fetching model specifying the initialisation strategy (i.e. what properties should be retrieved).
      * @return
      */
-    T findById(final Long id, final fetch<T> fetchModel);
+    T findById(final boolean filtered, final Long id, final fetch<T> fetchModel);
+
+    /**
+     * Finds entity by its surrogate id.
+     *
+     * @param id -- ID of the entity to be loaded.
+     * @param fetchModel -- fetching model specifying the initialisation strategy (i.e. what properties should be retrieved).
+     * @return
+     */
+    default T findById(final Long id, final fetch<T> fetchModel) {
+        return findById(false, id, fetchModel);
+    }
 
     default Optional<T> findByIdOptional(final Long id, final fetch<T> fetchModel) {
         return Optional.ofNullable(findById(id, fetchModel));
@@ -116,10 +126,24 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      * Finds entity by its business key and enhances it according to provided fetch model. If the key is composite then values of the key components should be passed in the same
      * order as defined in the entity class using annotation {@link CompositeKeyMember}.
      *
+     * @param filtered -- <code>true</code> to turn filtering on.
+     * @param fetchModel -- fetching model specifying the initialisation strategy (i.e. what properties should be retrieved).
      * @param keyValues
      * @return
      */
-    T findByKeyAndFetch(final fetch<T> fetchModel, final Object... keyValues);
+    T findByKeyAndFetch(final boolean filtered, final fetch<T> fetchModel, final Object... keyValues);
+
+    /**
+     * Finds entity by its business key and enhances it according to provided fetch model. If the key is composite then values of the key components should be passed in the same
+     * order as defined in the entity class using annotation {@link CompositeKeyMember}.
+     *
+     * @param fetchModel -- fetching model specifying the initialisation strategy (i.e. what properties should be retrieved).
+     * @param keyValues
+     * @return
+     */
+    default T findByKeyAndFetch(final fetch<T> fetchModel, final Object... keyValues) {
+        return findByKeyAndFetch(false, fetchModel, keyValues);
+    }
 
     default Optional<T> findByKeyAndFetchOptional(final fetch<T> fetchModel, final Object... keyValues) {
         return Optional.ofNullable(findByKeyAndFetch(fetchModel, keyValues));
