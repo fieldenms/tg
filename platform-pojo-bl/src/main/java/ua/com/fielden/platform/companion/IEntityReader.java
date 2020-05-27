@@ -23,7 +23,7 @@ import ua.com.fielden.platform.pagination.IPage;
  *
  * @param <T>
  */
-public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInstantiator<T>, IEntityStreamer<T>, IFilterable<T> {
+public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInstantiator<T>, IEntityStreamer<T> {
 
     /**
      * Should return an entity type the DAO is managing.

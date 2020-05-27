@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
@@ -167,34 +166,21 @@ public class TopLevelEntityDaoStub implements ITopLevelEntity {
     }
 
     @Override
-    public Stream<TopLevelEntity> stream(final QueryExecutionModel<TopLevelEntity, ?> qem, final int fetchSize) {
+    public Stream<TopLevelEntity> stream(QueryExecutionModel<TopLevelEntity, ?> qem, int fetchSize) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public Stream<TopLevelEntity> stream(final QueryExecutionModel<TopLevelEntity, ?> qem) {
+    public Stream<TopLevelEntity> stream(QueryExecutionModel<TopLevelEntity, ?> qem) {
         // TODO Auto-generated method stub
         return null;
     }
 
 	@Override
-	public boolean exists(final EntityResultQueryModel<TopLevelEntity> model, final Map<String, Object> paramValues) {
+	public boolean exists(EntityResultQueryModel<TopLevelEntity> model, Map<String, Object> paramValues) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
-    
-    @Override
-    public boolean isFilterable() {
-        // TODO Auto-generated method stub
-        return false;
-    }
-    
-    @Override
-    public IEntityReader<TopLevelEntity> setFilterable(final boolean filterable) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-    
 }

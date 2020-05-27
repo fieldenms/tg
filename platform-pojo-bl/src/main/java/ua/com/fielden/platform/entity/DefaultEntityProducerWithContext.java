@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity;
 
 import static java.lang.String.format;
+import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.web.utils.EntityRestorationUtils.findByIdWithFiltering;
 
@@ -27,8 +28,8 @@ import ua.com.fielden.platform.web.utils.EntityRestorationUtils;
 public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> implements IEntityProducer<T>, IContextDecomposer {
     private final EntityFactory factory;
     protected final Class<T> entityType;
-    /** Instrumented and filterable reader to be used for producing of {@link #new_()} editable entities and for re-fetching ({@link #refetchInstrumentedEntityById(Long)}) of persisted editable entities. */
-    private final Optional<IEntityReader<T>> filterableReader;
+    /** Instrumented reader to be used for producing of {@link #new_()} editable entities and for re-fetching ({@link #refetchInstrumentedEntityById(Long)}) of persisted editable entities. */
+    private final Optional<IEntityReader<T>> reader;
     /** Optional context for context-dependent entity producing logic. */
     private CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> context;
     private final ICompanionObjectFinder coFinder;
@@ -39,7 +40,7 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
         this.factory = factory;
         this.entityType = entityType;
         this.coFinder = companionFinder;
-        this.filterableReader = Optional.<IEntityReader<T>>ofNullable(coFinder.findAsReader(entityType, false)).map(reader -> reader.setFilterable(true));
+        this.reader = ofNullable(coFinder.findAsReader(entityType, false));
     }
 
     /**
@@ -136,7 +137,7 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
      * @return
      */
     private T new_() {
-        return filterableReader
+        return reader
                 .map(co -> co.new_())
                 .orElseGet(() -> factory.newEntity(this.entityType));
     }
@@ -179,7 +180,7 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
      * @return
      */
     protected final T refetchInstrumentedEntityById(final Long entityId) {
-        return findByIdWithFiltering(entityId, filterableReader.get());
+        return findByIdWithFiltering(entityId, reader.get());
     }
 
     /**
@@ -190,7 +191,7 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
      * @return
      */
     protected final <M extends AbstractEntity<?>> M refetch(final M entity, final String property) {
-        return findByIdWithFiltering(entity.getId(), co((Class<M>) entity.getType()), filterableReader.get().getFetchProvider().<M>fetchFor(property).fetchModel());
+        return findByIdWithFiltering(entity.getId(), co((Class<M>) entity.getType()), reader.get().getFetchProvider().<M>fetchFor(property).fetchModel());
     }
 
     /**
