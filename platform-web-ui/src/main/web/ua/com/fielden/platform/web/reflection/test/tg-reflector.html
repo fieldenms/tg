@@ -1800,7 +1800,12 @@
                 assert.equal(reflector.tg_formatMoney({amount: 123.3}, 'en-AU', 4, true), "$123.3000");
                 done();
             });
-            
+
+            test('foramtting: formatting -123.3 money with scale and trailing zeros should return -$123.3000', function (done) {
+                assert.equal(reflector.tg_formatMoney({amount: -123.3}, 'en-AU', 4, true), "-$123.3000");
+                done();
+            });
+
             test('foramtting: formatting 123.3121 money with scale and trailing zeros should return $123.3121', function (done) {
                 assert.equal(reflector.tg_formatMoney({amount: 123.3121}, 'en-AU', 4, true), "$123.3121");
                 done();
