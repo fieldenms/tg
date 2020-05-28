@@ -8,6 +8,7 @@ import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntity;
+import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityChild;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityDetail;
 
 public class ExampleDataFilter implements IFilter {
@@ -20,8 +21,11 @@ public class ExampleDataFilter implements IFilter {
         if (originalType == TgCompoundEntity.class) { // ... and TgCompoundEntity
             return cond().prop("key").ne().val("FILTERED1").model();
         }
-        if (originalType == TgCompoundEntityDetail.class) { // ... and TgCompoundEntityDetail instances
+        if (originalType == TgCompoundEntityDetail.class) { // ... and TgCompoundEntityDetail
             return cond().prop("key.key").ne().val("FILTERED2").model();
+        }
+        if (originalType == TgCompoundEntityChild.class) { // ... and TgCompoundEntityChild instances
+            return cond().prop("tgCompoundEntity.key").ne().val("FILTERED2").model();
         }
         return null;
     }

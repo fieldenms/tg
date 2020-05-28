@@ -52,6 +52,7 @@ import ua.com.fielden.platform.sample.domain.TgPersistentStatus;
 import ua.com.fielden.platform.sample.domain.TgPerson;
 import ua.com.fielden.platform.sample.domain.TgPolygon;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntity;
+import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityChild;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.provider.SecurityTokenNode;
 import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
@@ -228,7 +229,8 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         save(new_(TgCompoundEntity.class, "KEY5").setActive(true).setDesc("desc 5"));
         
         save(new_(TgCompoundEntity.class, "FILTERED1").setActive(true).setDesc("Description for filtered TgCompoundEntity entity."));
-        save(new_(TgCompoundEntity.class, "FILTERED2").setActive(true).setDesc("Description for TgCompoundEntity entity, for which TgCompoundEntityDetail is filtered."));
+        final TgCompoundEntity filteredEntity2 = save(new_(TgCompoundEntity.class, "FILTERED2").setActive(true).setDesc("Description for TgCompoundEntity entity, for which TgCompoundEntityDetail is filtered."));
+        save(new_composite(TgCompoundEntityChild.class, filteredEntity2, new Date()).setDesc("Description for filtered TgCompoundEntityChild entity."));
         
         LOGGER.info("\tPopulating messages...");
         final Map<String, TgMachine> machines = new HashMap<>();
