@@ -43,10 +43,10 @@ public class EntityRestorationUtils {
     ////////////////////////////////////// VALIDATION PROTOTYPE CREATION //////////////////////////////////////
     /**
      * Finds entity by <code>id</code> ensuring it will be filtered out by registered domain-driven application's {@link IFilter} if its logic defines such filtering.
-     * 'Not found' {@link Result} is thrown if no entity was found. Default {@link IEntityReader#getFetchProvider()} will be used for fetch model construction.
+     * {@value #ENTITY_NOT_FOUND} {@link Result} is thrown if no entity was found. Default {@link IEntityReader#getFetchProvider()} will be used for fetch model construction.
      * 
      * @param id
-     * @param reader -- {@link IEntityReader} for entity reading; not necessarily filterable; instrumented or not depending on actual needs
+     * @param reader -- {@link IEntityReader} for entity reading; instrumented or not depending on actual needs
      * @return
      */
     public static <T extends AbstractEntity<?>> T findByIdWithFiltering(final Long id, final IEntityReader<T> reader) {
@@ -55,10 +55,10 @@ public class EntityRestorationUtils {
     
     /**
      * Finds entity by <code>id</code> ensuring it will be filtered out by registered domain-driven application's {@link IFilter} if its logic defines such filtering.
-     * 'Not found' {@link Result} is thrown if no entity was found.
+     * {@value #ENTITY_NOT_FOUND} {@link Result} is thrown if no entity was found.
      * 
      * @param id
-     * @param reader -- {@link IEntityReader} for entity reading; not necessarily filterable; instrumented or not depending on actual needs
+     * @param reader -- {@link IEntityReader} for entity reading; instrumented or not depending on actual needs
      * @param fetchModel -- custom fetch model
      * @return
      */
@@ -68,10 +68,10 @@ public class EntityRestorationUtils {
     
     /**
      * Finds entity by <code>keyValues</code> ensuring it will be filtered out by registered domain-driven application's {@link IFilter} if its logic defines such filtering.
-     * 'Not found' {@link Result} is thrown if no entity was found. Default {@link IEntityReader#getFetchProvider()} will be used for fetch model construction.
+     * {@value #ENTITY_NOT_FOUND} {@link Result} is thrown if no entity was found. Default {@link IEntityReader#getFetchProvider()} will be used for fetch model construction.
      * 
-     * @param id
-     * @param reader -- {@link IEntityReader} for entity reading; not necessarily filterable; instrumented or not depending on actual needs
+     * @param reader -- {@link IEntityReader} for entity reading; instrumented or not depending on actual needs
+     * @param keyValues
      * @return
      */
     public static <T extends AbstractEntity<?>> T findByKeyWithFiltering(final IEntityReader<T> reader, final Object... keyValues) {
@@ -79,8 +79,8 @@ public class EntityRestorationUtils {
     }
     
     /**
-     * Finds entity by <code>id</code> ensuring it will be filtered out by registered domain-driven application's {@link IFilter} if its logic defines such filtering.
-     * 'Not found' {@link Result} is thrown if no entity was found. Default {@link IEntityReader#getFetchProvider()} will be used for fetch model construction.
+     * Finds entity using <code>finder</code> ensuring it will be filtered out by registered domain-driven application's {@link IFilter} if its logic defines such filtering.
+     * {@value #ENTITY_NOT_FOUND} {@link Result} is thrown if no entity was found.
      * 
      * @param finder -- function with 'filtered' argument to find entity
      * @param reader -- {@link IEntityReader} for entity reading; instrumented or not depending on actual needs

@@ -1071,7 +1071,7 @@ public class DynamicQueryBuilder {
     //TODO Later the genClass property must be removed. This is an interim solution that allows to add .amount prefix to the money properties.
     public static <E extends AbstractEntity<?>> ISubsequentCompletedAndYielded<E> createAggregationQuery(final EntityResultQueryModel<E> sourceQueryModel, final List<String> distributionProperties, final Class<E> genClass, final Map<String, String> yieldProperties) {
 
-        //sourceQueryModel.setFilterable(true);
+        sourceQueryModel.setFilterable(true);
         ICompleted<E> baseQuery = select(sourceQueryModel).as(ALIAS);
         for (final String groupProperty : distributionProperties) {
             baseQuery = groupBy(groupProperty, baseQuery);

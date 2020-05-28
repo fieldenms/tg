@@ -195,15 +195,13 @@ Polymer({
     },
 
     _handleError: function (e) {
-        if (this._blockingPaneCounter > 0) {
+        if (this._blockingPaneCounter >= 0) {
+            if (this._blockingPaneCounter === 0) { // open blocking pane if it was not opened previously; this is when EntityNavigationAction navigation is used and previous menu item was successful but became unsuccessful
+                this._showBlockingPane();
+            }
             this._errorMsg = e.detail;
             tearDownEvent(e);
-            this.fire('data-loaded-and-focused', null, { node: this.parentNode });
-        } else if (this._blockingPaneCounter === 0) {
-            this._showBlockingPane()
-            this._errorMsg = e.detail;
-            tearDownEvent(e);
-            this.fire('data-loaded-and-focused', null, { node: this.parentNode });
+            this.fire('data-loaded-and-focused', null, { node: this.parentNode }); // propagate event further above to indicate that loading ended (dialog should hide its blocking pane)
         }
     },
 

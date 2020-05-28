@@ -24,15 +24,15 @@ public class ValueMatcherUtils {
             final ConditionModel searchCriteria,
             final OrderingModel ordering,
             final Map<String, Object> queryParams) {
-        final EntityResultQueryModel<T> queryModel = (searchCriteria != null ? select(entityType).where().condition(searchCriteria).model() : select(entityType).model());//.setFilterable(true);
+        final EntityResultQueryModel<T> queryModel = (searchCriteria != null ? select(entityType).where().condition(searchCriteria).model() : select(entityType).model()).setFilterable(true);
         return from(queryModel).with(ordering).with(queryParams).lightweight();
     }
 
-    public static ConditionModel createStrictSearchByKeyCriteriaModel(final Class<? extends AbstractEntity<?>> entityType, final String searchString) {
+    public static ConditionModel createStrictSearchByKeyCriteriaModel(Class<? extends AbstractEntity<?>> entityType, final String searchString) {
         ConditionModel keyCriteria = cond().prop(KEY).iLikeWithCast().val(searchString).model();
 
         if (isCompositeEntity((Class<? extends AbstractEntity<?>>) entityType)) {
-            for (final String propName : keyPaths(entityType)) {
+            for (String propName : keyPaths(entityType)) {
                 keyCriteria = cond().condition(keyCriteria).or().prop(propName).iLikeWithCast().val(searchString).model();
             }
         }
