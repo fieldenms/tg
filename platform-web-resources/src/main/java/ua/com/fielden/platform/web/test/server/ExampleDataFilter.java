@@ -15,17 +15,18 @@ public class ExampleDataFilter implements IFilter {
     @Override
     public <T extends AbstractEntity<?>> ConditionModel enhance(final Class<T> entityType, final String typeAlias, final String username) {
         final Class<T> originalType = getOriginalType(entityType);
+        final String prefix = typeAlias != null ? typeAlias + "." : "";
         if (originalType == TgPersistentEntityWithProperties.class) { // filter TgPersistentEntityWithProperties ...
-            return cond().prop("key").ne().val("FILTERED").model();
+            return cond().prop(prefix + "key").ne().val("FILTERED").model();
         }
         if (originalType == TgCompoundEntity.class) { // ... and TgCompoundEntity
-            return cond().prop("key").ne().val("FILTERED1").model();
+            return cond().prop(prefix + "key").ne().val("FILTERED1").model();
         }
         if (originalType == TgCompoundEntityDetail.class) { // ... and TgCompoundEntityDetail
-            return cond().prop("key.key").ne().val("FILTERED2").model();
+            return cond().prop(prefix + "key.key").ne().val("FILTERED2").model();
         }
         if (originalType == TgCompoundEntityChild.class) { // ... and TgCompoundEntityChild instances
-            return cond().prop("tgCompoundEntity.key").ne().val("FILTERED2").model();
+            return cond().prop(prefix + "tgCompoundEntity.key").ne().val("FILTERED2").model();
         }
         return null;
     }
