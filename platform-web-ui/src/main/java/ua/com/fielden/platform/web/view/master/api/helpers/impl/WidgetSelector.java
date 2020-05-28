@@ -127,28 +127,29 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
     @Override
     public IDateTimePickerConfig<T> asDateTimePicker() {
         final String timePortion = getTimePortionToDisplay(smBuilder.getEntityType(), propertyName);
-        if (timePortion != null) {
-            throw new EntityMasterConfigurationException(format("The master configuration for [%s] is invalid. Cause: [%s] is annotated with @%sOnly", smBuilder.getEntityType(), propertyName, timePortion));
-        }
-        widget = new DateTimePickerWidget(
-                TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()),
-                propertyName,
-                false,
-                DefaultValueContract.getTimeZone(smBuilder.getEntityType(), propertyName),
-                null
-                );
-        return new DateTimePickerConfig<>((DateTimePickerWidget) widget, smBuilder);
-    }
-
-    @Override
-    public IDatePickerConfig<T> asDatePicker() {
-        if ("DATE".equals(getTimePortionToDisplay(smBuilder.getEntityType(), propertyName))) {
+        if (timePortion == null) {
             widget = new DateTimePickerWidget(
                     TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()),
                     propertyName,
                     false,
                     DefaultValueContract.getTimeZone(smBuilder.getEntityType(), propertyName),
-                    "DATE"
+                    null
+                    );
+            return new DateTimePickerConfig<>((DateTimePickerWidget) widget, smBuilder);
+        }
+        throw new EntityMasterConfigurationException(format("The master configuration for [%s] is invalid. Cause: [%s] is annotated with @%sOnly", smBuilder.getEntityType(), propertyName, timePortion));
+    }
+
+    @Override
+    public IDatePickerConfig<T> asDatePicker() {
+        final String DATE_ONLY = "DATE";
+        if (DATE_ONLY.equals(getTimePortionToDisplay(smBuilder.getEntityType(), propertyName))) {
+            widget = new DateTimePickerWidget(
+                    TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()),
+                    propertyName,
+                    false,
+                    DefaultValueContract.getTimeZone(smBuilder.getEntityType(), propertyName),
+                    DATE_ONLY
                     );
             return new DatePickerConfig<>((DateTimePickerWidget) widget, smBuilder);
         }
@@ -157,13 +158,14 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
 
     @Override
     public ITimePickerConfig<T> asTimePicker() {
-        if ("TIME".equals(getTimePortionToDisplay(smBuilder.getEntityType(), propertyName))) {
+        final String TIME_ONLY = "TIME";
+        if (TIME_ONLY.equals(getTimePortionToDisplay(smBuilder.getEntityType(), propertyName))) {
             widget = new DateTimePickerWidget(
                     TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()),
                     propertyName,
                     false,
                     DefaultValueContract.getTimeZone(smBuilder.getEntityType(), propertyName),
-                    "TIME"
+                    TIME_ONLY
                     );
             return new TimePickerConfig<>((DateTimePickerWidget) widget, smBuilder);
         }
