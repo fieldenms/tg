@@ -11,11 +11,17 @@ public class Yield3 {
     public final ISingleOperand3 operand;
     public final String alias;
     public final Column column;
+    public final boolean isHeader;
 
-    public Yield3(final ISingleOperand3 operand, final String alias) {
+    public Yield3(final ISingleOperand3 operand, final String alias, final boolean isHeader) {
         this.operand = operand;
         this.alias = alias;
-        this.column = StringUtils.isEmpty(alias) ? null : new Column(alias.toUpperCase() + "_");
+        this.column = StringUtils.isEmpty(alias) || isHeader ? null : new Column(alias.replace(".", "_").toUpperCase() + "_");
+        this.isHeader = isHeader;
+    }
+
+    public Yield3(final ISingleOperand3 operand, final String alias) {
+        this(operand, alias, false);
     }
 
     public String sql(final DbVersion dbVersion) {
@@ -28,6 +34,7 @@ public class Yield3 {
         int result = 1;
         result = prime * result + ((alias == null) ? 0 : alias.hashCode());
         result = prime * result + operand.hashCode();
+        result = prime * result + (isHeader ? 1231 : 1237);
         return result;
     }
 
@@ -43,6 +50,6 @@ public class Yield3 {
         
         final Yield3 other = (Yield3) obj;
         
-        return Objects.equals(operand, other.operand) && Objects.equals(alias, other.alias);
+        return Objects.equals(operand, other.operand) && Objects.equals(alias, other.alias) && Objects.equals(isHeader, other.isHeader);
     }
 }

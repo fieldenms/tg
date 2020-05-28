@@ -10,11 +10,17 @@ public class Yield2 {
     public final ISingleOperand2<? extends ISingleOperand3> operand;
     public final String alias;
     public final boolean hasRequiredHint;
+    public final boolean isHeader;
 
-    public Yield2(final ISingleOperand2<? extends ISingleOperand3> operand, final String alias, final boolean hasRequiredHint) {
+    public Yield2(final ISingleOperand2<? extends ISingleOperand3> operand, final String alias, final boolean hasRequiredHint, final boolean isHeader) {
         this.operand = operand;
         this.alias = alias;
         this.hasRequiredHint = hasRequiredHint;
+        this.isHeader = isHeader;
+    }
+
+    public Yield2(final ISingleOperand2<? extends ISingleOperand3> operand, final String alias, final boolean hasRequiredHint) {
+        this(operand, alias, hasRequiredHint, false);
     }
 
     public Class<?> javaType() {
@@ -23,7 +29,7 @@ public class Yield2 {
 
     public TransformationResult<Yield3> transform(final TransformationContext context) {
         final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);
-        return new TransformationResult<Yield3>(new Yield3(operandTransformationResult.item, alias), operandTransformationResult.updatedContext);
+        return new TransformationResult<Yield3>(new Yield3(operandTransformationResult.item, alias, isHeader), operandTransformationResult.updatedContext);
     }
 
     @Override
@@ -33,6 +39,7 @@ public class Yield2 {
         result = prime * result + ((alias == null) ? 0 : alias.hashCode());
         result = prime * result + operand.hashCode();
         result = prime * result + (hasRequiredHint ? 1231 : 1237);
+        result = prime * result + (isHeader ? 1231 : 1237);
         return result;
     }
 
@@ -48,6 +55,6 @@ public class Yield2 {
         
         final Yield2 other = (Yield2) obj;
         
-        return Objects.equals(operand, other.operand) && Objects.equals(alias, other.alias) && (hasRequiredHint == other.hasRequiredHint);
+        return Objects.equals(operand, other.operand) && Objects.equals(alias, other.alias) && (hasRequiredHint == other.hasRequiredHint) && (isHeader == other.isHeader);
     }
 }

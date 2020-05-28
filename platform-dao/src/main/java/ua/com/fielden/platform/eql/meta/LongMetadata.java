@@ -3,7 +3,6 @@ package ua.com.fielden.platform.eql.meta;
 import static java.lang.String.format;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
-import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory.AGGREGATED_EXPRESSION;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
@@ -16,11 +15,6 @@ import static ua.com.fielden.platform.entity.query.metadata.DomainMetadataUtils.
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.PERSISTED;
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.QUERY_BASED;
 import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.COLLECTIONAL;
-import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.COMPONENT_HEADER;
-import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.EXPRESSION;
-import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.SYNTHETIC;
-import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.SYNTHETIC_COMPONENT_HEADER;
-import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.VIRTUAL_OVERRIDE;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
@@ -40,6 +34,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -49,7 +44,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import org.hibernate.type.BasicType;
-import org.hibernate.type.LongType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
 
@@ -68,9 +62,9 @@ import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.IUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
-import ua.com.fielden.platform.entity.query.metadata.EntityCategory;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICaseWhenFunctionWhen;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneExprOperationAndClose;
 import ua.com.fielden.platform.entity.query.metadata.EntityTypeInfo;
-import ua.com.fielden.platform.entity.query.metadata.PropertyCategory;
 import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.meta.LongPropertyMetadata.Builder;
@@ -377,15 +371,17 @@ public class LongMetadata {
                 hibType(hibType);
         
         if (EntityUtils.isUnionEntityType(propType)) {
-            String subitemParentPrefix = getColumnName(propName, mapTo, parentPrefix);
+            final String subitemParentPrefix = getColumnName(propName, mapTo, parentPrefix);
+            final EntityTypeInfo<?> eti = new EntityTypeInfo(propType);
             
             final List<Field> propsFields = unionProperties((Class<? extends AbstractUnionEntity>) propType);
             final List<LongPropertyMetadata> subitems = new ArrayList<>();
+            subitems.add(new LongPropertyMetadata.Builder(KEY, String.class, false).hibType(H_STRING).expression(generateUnionEntityPropertyExpression2((Class<? extends AbstractUnionEntity>) propType, KEY, propName)).build());
+            subitems.add(new LongPropertyMetadata.Builder(ID, Long.class, false).hibType(H_LONG).expression(generateUnionEntityPropertyExpression2((Class<? extends AbstractUnionEntity>) propType, ID, propName)).build());
             for (final Field subpropField : propsFields) {
                 subitems.add(getCommonPropInfo(subpropField, (Class<? extends AbstractEntity<?>>) propType, subitemParentPrefix));
             }
 
- //           System.out.println("!!!!\nA\n!!!!" + propName + " " + propType);
             return resultInProgress.subitems(subitems).build();
         }    
 
@@ -423,5 +419,20 @@ public class LongMetadata {
 
     private PropertyMetadata getCollectionalPropInfo(final Field propField, final EntityTypeInfo <? extends AbstractEntity<?>> parentInfo) throws Exception {
         return new PropertyMetadata.Builder(propField.getName(), determinePropertyType(parentInfo.entityType, propField.getName()), true, parentInfo).category(COLLECTIONAL).build();
+    }
+    
+    public static ExpressionModel generateUnionEntityPropertyExpression2(final Class<? extends AbstractUnionEntity> entityType, final String commonPropName, final String contextPropName) {
+        final List<Field> props = unionProperties(entityType);
+        final Iterator<Field> iterator = props.iterator();
+        final String firstUnionPropName = contextPropName + "." + iterator.next().getName();
+        ICaseWhenFunctionWhen<IStandAloneExprOperationAndClose, AbstractEntity<?>> expressionModelInProgress = expr().caseWhen().prop(firstUnionPropName).isNotNull().then().prop(firstUnionPropName
+                + "." + commonPropName);
+
+        for (; iterator.hasNext();) {
+            final String unionPropName = contextPropName + "." + iterator.next().getName();
+            expressionModelInProgress = expressionModelInProgress.when().prop(unionPropName).isNotNull().then().prop(unionPropName + "." + commonPropName);
+        }
+
+        return expressionModelInProgress.end().model();
     }
 }

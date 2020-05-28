@@ -25,6 +25,7 @@ import ua.com.fielden.platform.eql.stage1.builders.StandAloneExpressionBuilder;
 import ua.com.fielden.platform.eql.stage1.elements.operands.Expression1;
 import ua.com.fielden.platform.eql.stage3.elements.Column;
 import ua.com.fielden.platform.eql.stage3.elements.Table;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.IDates;
 
 public class ShortMetadata {
@@ -70,7 +71,9 @@ public class ShortMetadata {
                     columns.put(el.name, new Column(el.column.name));
                 } else if (!el.subitems().isEmpty()) {
                     for (LongPropertyMetadata subitem : el.subitems()) {
-                        columns.put(el.name + "." + subitem.name, new Column(subitem.column.name.substring(0, subitem.column.name.length() - 1)));
+                        if (subitem.expressionModel == null) {
+                            columns.put(el.name + "." + subitem.name, new Column(subitem.column.name.substring(0, subitem.column.name.length() - 1)));    
+                        }
                     }
                 }
             }
@@ -100,12 +103,18 @@ public class ShortMetadata {
                 
                 
                 if (isUnionEntityType(javaType)) {
-                    EntityInfo<? extends AbstractUnionEntity> ef = new EntityInfo<>((Class<? extends AbstractUnionEntity>)javaType, UNION);
+                    final EntityInfo<? extends AbstractUnionEntity> ef = new EntityInfo<>((Class<? extends AbstractUnionEntity>)javaType, UNION);
                     for (LongPropertyMetadata sub : el.getValue().subitems()) {
-                        ef.addProp(new EntityTypePropInfo(sub.name, allEntitiesInfo.get(sub.javaType), sub.hibType, false, null));
+                        if (sub.expressionModel == null) {
+                            ef.addProp(new EntityTypePropInfo(sub.name, allEntitiesInfo.get(sub.javaType), sub.hibType, false, null));
+                        } else {
+                            final ExpressionModel subExpressionModel = sub.expressionModel;
+                            final Expression1 subExpr = subExpressionModel == null ? null : (Expression1) (new StandAloneExpressionBuilder(qb(), subExpressionModel)).getResult().getValue();
+                            ef.addProp(new PrimTypePropInfo(sub.name, sub.hibType, sub.javaType, subExpr));
+                        }
                     }
                     entityInfo.addProp(new UnionTypePropInfo(name, ef, hibType, required));
-                } else if (AbstractEntity.class.isAssignableFrom(javaType)) {
+                } else if (isPersistedEntityType(javaType)) {
                     entityInfo.addProp(new EntityTypePropInfo(name, allEntitiesInfo.get(javaType), hibType, required, expr));
                 } else if (ID.equals(name)){
                     entityInfo.addProp(new EntityTypePropInfo(name, allEntitiesInfo.get(entityInfo.javaType()), hibType, required, expr));

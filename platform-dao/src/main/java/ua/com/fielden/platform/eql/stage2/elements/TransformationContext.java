@@ -69,7 +69,13 @@ public class TransformationContext {
     }
     
     public T2<IQrySource3, Object> resolve(final IQrySource2<?> source, final String path) {
-        final T2<IQrySource3, Object> result = resolutions.get(source).get(path);
+        
+        final Map<String, T2<IQrySource3, Object>> sourceMap = resolutions.get(source);
+        if (sourceMap == null) {
+            System.out.println(format("CAN'T FIND sourceMap for path [%s] in source [%s].", path, source));
+        }
+
+        final T2<IQrySource3, Object> result = sourceMap.get(path);
 
         if (result == null) {
             System.out.println(format("CAN'T FIND path [%s] in source [%s].", path, source));

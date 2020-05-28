@@ -24,6 +24,7 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.sample.domain.ITeAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.ITeVehicleModel;
+import ua.com.fielden.platform.sample.domain.ITgBogie;
 import ua.com.fielden.platform.sample.domain.ITgEntityWithComplexSummaries;
 import ua.com.fielden.platform.sample.domain.TeAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TeVehicle;
@@ -628,6 +629,26 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
         run(select(TgBogie.class).where().anyOfProps("location.workshop.key", "location.wagonSlot.wagon", "location.wagonSlot.key").isNotNull());
     }
 
+    @Test
+    @Ignore
+    public void eql3_query_executes_correctly66() {
+        run(select(TgBogie.class).where().anyOfProps("location.key").isNotNull());
+    }
+
+    @Test
+    public void eql3_query_executes_correctly67() {
+        final ITgBogie co = getInstance(ITgBogie.class);
+        final EntityResultQueryModel<TgBogie> qry = select(TgBogie.class).model();
+        co.getAllEntities(from(qry).with("EQL3", null).with(fetch(TgBogie.class).with("location", fetch(TgBogieLocation.class).with("wagonSlot").with("workshop"))).model());
+    }
+    
+    @Test
+    public void eql3_query_executes_correctly68() {
+        final ITgBogie co = getInstance(ITgBogie.class);
+        final EntityResultQueryModel<TgBogie> qry = select(select(TgBogie.class).model()).model();
+        co.getAllEntities(from(qry).with("EQL3", null).with(fetch(TgBogie.class).with("location", fetch(TgBogieLocation.class).with("wagonSlot").with("workshop"))).model());
+    }
+    
     @Override
     protected void populateDomain() {
         super.populateDomain();
