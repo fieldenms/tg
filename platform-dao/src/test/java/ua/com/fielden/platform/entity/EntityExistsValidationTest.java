@@ -53,7 +53,7 @@ public class EntityExistsValidationTest extends AbstractDaoTestCase {
         assertFalse(result.isSuccessful());
         assertEquals("Tg Category [Cat2] exists, but is not active.", result.getMessage());
     }
-    
+
     @Test
     public void existing_but_inactive_entity_can_be_assigned_to_property_with_default_validation_on_criteria_entity() {
         cdtm.getFirstTick().check(TgSystem.class, "critOnlySingleCategory", true);
@@ -80,6 +80,17 @@ public class EntityExistsValidationTest extends AbstractDaoTestCase {
         assertFalse(result.isSuccessful());
         assertEquals("Tg Category [Cat2] was not found.", result.getMessage());
     }
+
+    @Test
+    public void new_entity_cannot_be_assigned_to_property_with_default_validation() {
+        final TgCategory newCat = co(TgCategory.class).new_().setKey("NEW CAT");
+        final TgSystem sys = new_(TgSystem.class, "Sys2").setActive(true).setFirstCategory(newCat);
+
+        final Result result = sys.isValid();
+        assertFalse(result.isSuccessful());
+        assertEquals(format(EntityExistsValidator.ERR_WAS_NOT_FOUND, TgCategory.ENTITY_TITLE), result.getMessage());
+    }
+
     
     @Test
     public void non_existing_entity_can_be_assigned_to_property_with_default_validation_on_criteria_entity() {
@@ -156,7 +167,7 @@ public class EntityExistsValidationTest extends AbstractDaoTestCase {
         final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(cat1.getType()).getKey(); 
         final Result result = sys.isValid();
         assertFalse(result.isSuccessful());
-        assertEquals(format(EntityExistsValidator.DIRTY_ERR, cat1, entityTitle), result.getMessage());
+        assertEquals(format(EntityExistsValidator.ERR_DIRTY, cat1, entityTitle), result.getMessage());
     }
 
     @Test
@@ -178,7 +189,7 @@ public class EntityExistsValidationTest extends AbstractDaoTestCase {
         final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(cat1.getType()).getKey(); 
         final Result result = sys.isValid();
         assertFalse(result.isSuccessful());
-        assertEquals(format(EntityExistsValidator.DIRTY_ERR, cat1, entityTitle), result.getMessage());
+        assertEquals(format(EntityExistsValidator.ERR_DIRTY, cat1, entityTitle), result.getMessage());
     }
     
     @Test
@@ -199,7 +210,7 @@ public class EntityExistsValidationTest extends AbstractDaoTestCase {
         final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(cat1.getType()).getKey(); 
         final Result result = sys.isValid();
         assertFalse(result.isSuccessful());
-        assertEquals(format(EntityExistsValidator.DIRTY_ERR, cat1, entityTitle), result.getMessage());
+        assertEquals(format(EntityExistsValidator.ERR_DIRTY, cat1, entityTitle), result.getMessage());
     }
 
     @Test

@@ -103,23 +103,6 @@ export function getActiveParentAnd(predicate) {
     return getParentAnd(deepestActiveElement(), predicate);
 }
 
-/**
- * Converts short collectional property with string value
- */
-export function generateShortCollection (entity, property, typeObject) {
-    const collectionValue = entity.get(property);
-    const containerPropertyValue = property.lastIndexOf('.') >= 0 ? entity.get(property.substr(0, property.lastIndexOf('.'))) : entity;
-    const keys = typeObject.compositeKeyNames();
-    return collectionValue.map(function (subEntity) {
-        const key = keys.find(function (key) {
-            if (subEntity.get(key) !== containerPropertyValue) {
-                return key;
-            }
-        });
-        return subEntity.get(key);
-    });
-};
-
 export function allDefined (args) {
     const convertedArgs = [...args];
     for (let i = 0; i < convertedArgs.length; i++) {
@@ -186,10 +169,16 @@ export class EntityStub {
         this[property] = value;
     }
 
+    propType (name) {
+        return null;
+    }
+
     type() {
+        const self = this;
         return {
-            prop: (prop) => {
+            prop: (name) => {
                 return {
+                    type: () => self.propType(name),
                     scale: () => 0,
                     trailingZeros: () => true,
                     displayAs: () => ""

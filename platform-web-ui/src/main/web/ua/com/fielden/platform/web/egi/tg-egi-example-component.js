@@ -15,8 +15,26 @@ const template = html`
         </template>
     </tg-entity-grid-inspector>`;
 
+class ExampleEntityStub extends EntityStub {
+    
+    type () {
+        return {
+            prop: function (name) {
+                return {
+                    type: function () {
+                        return name === 'intProp' ? 'Integer' : (name.startsWith('decProp') ? 'BigDecimal' : 'String');
+                    },
+                    scale: () => 2,
+                    trailingZeros: () => true
+                };
+            }
+        };
+    }
+    
+};
+
 function createEntity(id, params) {
-    const entity = new EntityStub(id);
+    const entity = new ExampleEntityStub(id);
     Object.keys(params).forEach(key => {
         entity.set(key, params[key]);
     });

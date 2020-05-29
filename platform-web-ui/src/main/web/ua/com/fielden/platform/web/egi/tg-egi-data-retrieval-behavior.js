@@ -1,4 +1,3 @@
-import { generateShortCollection } from '/resources/reflection/tg-polymer-utils.js';
 import { _millisDateRepresentation } from '/resources/reflection/tg-date-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import { TgAppConfig } from '/app/tg-app-config.js';
@@ -67,33 +66,11 @@ export const TgEgiDataRetrievalBehavior = {
     },
 
     getValue: function (entity, property, type) {
-        if (entity === null || property === null || type === null || this.getValueFromEntity(entity, {property: property}) === null) {
-            return "";
-        } else if (this._reflector.findTypeByName(type)) {
-            var propertyValue = this.getValueFromEntity(entity, {property: property});
-            if (Array.isArray(propertyValue)) {
-                propertyValue = generateShortCollection(entity, property, this._reflector.findTypeByName(type));
-            }
-            return Array.isArray(propertyValue) ? this._reflector.convert(propertyValue).join(", ") : this._reflector.convert(propertyValue);
-        } else if (type.lastIndexOf('Date', 0) === 0) { // check whether type startsWith 'Date'. Type can be like 'Date', 'Date:UTC:' or 'Date:Europe/London:'
-            var splitedType = type.split(':');
-            return _millisDateRepresentation(entity.get(property), splitedType[1] || null, splitedType[2] || null);
-        } else if (typeof entity.get(property) === 'number') {
-            if (type === 'BigDecimal') {
-                const metaProp = this._reflector.getEntityTypeProp(entity, property);
-                return this._reflector.formatDecimal(entity.get(property), this._appConfig.locale, metaProp && metaProp.scale(), metaProp && metaProp.trailingZeros());
-            } else {
-                return this._reflector.formatNumber(entity.get(property), this._appConfig.locale);
-            }
-        } else if (type === 'Money') {
-            const metaProp = this._reflector.getEntityTypeProp(entity, property);
-            return this._reflector.formatMoney(entity.get(property), this._appConfig.locale, metaProp && metaProp.scale(), metaProp && metaProp.trailingZeros());
-        } else if (type === 'Colour') {
-            return '#' + entity.get(property)['hashlessUppercasedColourValue'];
-        } else if (type === 'Hyperlink') {
-            return entity.get(property)['value'];
+        if (entity === null || property === null || type === null) {
+            return '';
         } else {
-            return entity.get(property);
+            return this._reflector.tg_toString(entity.get(property), entity.type(), property, { display: true, locale: this._appConfig.locale });
         }
-    },
-}
+    }
+
+};

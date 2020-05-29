@@ -18,6 +18,8 @@
     <script type="module">
 
         import '/app/tg-reflector.js';
+        import '/app/tg-app-config.js'; // this is to trigger setting of LTS, LT and L formats in moment library instance to convert dates properly
+        import { _millisDateRepresentation } from '/resources/reflection/tg-date-utils.js';
 
         suite('reflector\'s', function() {
             let reflector;
@@ -32,6 +34,1130 @@
                 reflector = document.querySelector('#reflector');
             });
             
+            test('Entity.toString: key converts (empty)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
+                entity.key = null;
+                assert.strictEqual(entity.toString(), '[key is not assigned]');
+                done();
+            });
+            
+            test('Entity.toString: String key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
+                entity.key = 'KEY1';
+                assert.strictEqual(entity.toString(), 'KEY1');
+                done();
+            });
+            
+            test('Entity.toString: String key converts (empty string)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
+                entity.key = '';
+                assert.strictEqual(entity.toString(), '[key is not assigned]');
+                done();
+            });
+            
+            test('Entity.toString: boolean key converts (true)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityBooleanKey');
+                entity.key = true;
+                assert.strictEqual(entity.toString(), 'true');
+                done();
+            });
+            
+            test('Entity.toString: boolean key converts (empty)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityBooleanKey');
+                entity.key = null;
+                assert.strictEqual(entity.toString(), 'false');
+                done();
+            });
+            
+            test('Entity.toString: boolean key converts (false)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityBooleanKey');
+                entity.key = false;
+                assert.strictEqual(entity.toString(), 'false');
+                done();
+            });
+            
+            test('Entity.toString: Date key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityDateKey');
+                entity.key = 0;
+                assert.strictEqual(entity.toString(), _millisDateRepresentation(entity.key, null, null));
+                done();
+            });
+            
+            test('Entity.toString: Integer key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityIntegerKey');
+                entity.key = 1700;
+                assert.strictEqual(entity.toString(), '1700');
+                done();
+            });
+            
+            test('Entity.toString: Long key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityLongKey');
+                entity.key = 17000000000;
+                assert.strictEqual(entity.toString(), '17000000000');
+                done();
+            });
+            
+            test('Entity.toString: BigDecimal key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityBigDecimalKey');
+                entity.key = 1700.1234;
+                assert.strictEqual(entity.toString(), '1700.1234');
+                done();
+            });
+            
+            test('Entity.toString: Entity key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityEntityKey');
+                entity.key = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
+                entity.key.key = 'KEY1';
+                assert.strictEqual(entity.toString(), 'KEY1');
+                done();
+            });
+            // (Money keys are not supported as part of Hibernate configuration; Colour and Hyperlink are not Comparable and thus not suitable for key definition too.)
+            
+            test('tg_convert simple entity: key converts (empty)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
+                entity.key = null;
+                assert.strictEqual(reflector.tg_convert(entity), '[key is not assigned]');
+                done();
+            });
+            
+            test('tg_convert simple entity: String key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
+                entity.key = 'KEY1';
+                assert.strictEqual(reflector.tg_convert(entity), 'KEY1');
+                done();
+            });
+            
+            test('tg_convert simple entity: String key converts (empty string)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
+                entity.key = '';
+                assert.strictEqual(reflector.tg_convert(entity), '[key is not assigned]');
+                done();
+            });
+            
+            test('tg_convert simple entity: boolean key converts (true)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityBooleanKey');
+                entity.key = true;
+                assert.strictEqual(reflector.tg_convert(entity), 'true');
+                done();
+            });
+            
+            test('tg_convert simple entity: boolean key converts (empty)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityBooleanKey');
+                entity.key = null;
+                assert.strictEqual(reflector.tg_convert(entity), 'false');
+                done();
+            });
+            
+            test('tg_convert simple entity: boolean key converts (false)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityBooleanKey');
+                entity.key = false;
+                assert.strictEqual(reflector.tg_convert(entity), 'false');
+                done();
+            });
+            
+            test('tg_convert simple entity: Date key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityDateKey');
+                entity.key = 0;
+                assert.strictEqual(reflector.tg_convert(entity), _millisDateRepresentation(entity.key, null, null));
+                done();
+            });
+            
+            test('tg_convert simple entity: Integer key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityIntegerKey');
+                entity.key = 1700;
+                assert.strictEqual(reflector.tg_convert(entity), '1700');
+                done();
+            });
+            
+            test('tg_convert simple entity: Long key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityLongKey');
+                entity.key = 17000000000;
+                assert.strictEqual(reflector.tg_convert(entity), '17000000000');
+                done();
+            });
+            
+            test('tg_convert simple entity: BigDecimal key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityBigDecimalKey');
+                entity.key = 1700.1234;
+                assert.strictEqual(reflector.tg_convert(entity), '1700.1234');
+                done();
+            });
+            
+            test('tg_convert simple entity: Entity key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityEntityKey');
+                entity.key = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
+                entity.key.key = 'KEY1';
+                assert.strictEqual(reflector.tg_convert(entity), 'KEY1');
+                done();
+            });
+            // (Money keys are not supported as part of Hibernate configuration; Colour and Hyperlink are not Comparable and thus not suitable for key definition too.)
+            
+            test('tg_convert composite entity: key converts (empty)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.stringKey = null;
+                entity.dateKey = null;
+                entity.integerKey = null;
+                entity.longKey = null;
+                entity.bigDecimalKey = null;
+                entity.moneyKey = null;
+                entity.colourKey = null;
+                entity.hyperlinkKey = null;
+                entity.entityKey = null;
+                entity.selfKey = null;
+                assert.strictEqual(reflector.tg_convert(entity), '[key is not assigned]');
+                done();
+            });
+            
+            test('tg_convert composite entity: String key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.stringKey = 'KEY1';
+                entity.dateKey = null;
+                entity.integerKey = null;
+                entity.longKey = null;
+                entity.bigDecimalKey = null;
+                entity.moneyKey = null;
+                entity.colourKey = null;
+                entity.hyperlinkKey = null;
+                entity.entityKey = null;
+                entity.selfKey = null;
+                assert.strictEqual(reflector.tg_convert(entity), 'KEY1');
+                done();
+            });
+            
+            test('tg_convert composite entity: String key converts (empty string)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.stringKey = '';
+                entity.dateKey = null;
+                entity.integerKey = null;
+                entity.longKey = null;
+                entity.bigDecimalKey = null;
+                entity.moneyKey = null;
+                entity.colourKey = null;
+                entity.hyperlinkKey = null;
+                entity.entityKey = null;
+                entity.selfKey = null;
+                assert.strictEqual(reflector.tg_convert(entity), '[key is not assigned]');
+                done();
+            });
+            
+            test('tg_convert composite entity: boolean key converts (true)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeBooleanKey');
+                entity.booleanKey = true;
+                assert.strictEqual(reflector.tg_convert(entity), 'true');
+                done();
+            });
+            
+            test('tg_convert composite entity: boolean key converts (empty)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeBooleanKey');
+                entity.booleanKey = null;
+                assert.strictEqual(reflector.tg_convert(entity), 'false');
+                done();
+            });
+            
+            test('tg_convert composite entity: boolean key converts (false)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeBooleanKey');
+                entity.booleanKey = false;
+                assert.strictEqual(reflector.tg_convert(entity), 'false');
+                done();
+            });
+            
+            test('tg_convert composite entity: Date key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.stringKey = null;
+                entity.dateKey = 0;
+                entity.integerKey = null;
+                entity.longKey = null;
+                entity.bigDecimalKey = null;
+                entity.moneyKey = null;
+                entity.colourKey = null;
+                entity.hyperlinkKey = null;
+                entity.entityKey = null;
+                entity.selfKey = null;
+                assert.strictEqual(reflector.tg_convert(entity), _millisDateRepresentation(entity.dateKey, null, null));
+                done();
+            });
+            
+            test('tg_convert composite entity: Integer key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.stringKey = null;
+                entity.dateKey = null;
+                entity.integerKey = 1700;
+                entity.longKey = null;
+                entity.bigDecimalKey = null;
+                entity.moneyKey = null;
+                entity.colourKey = null;
+                entity.hyperlinkKey = null;
+                entity.entityKey = null;
+                entity.selfKey = null;
+                assert.strictEqual(reflector.tg_convert(entity), '1700');
+                done();
+            });
+            
+            test('tg_convert composite entity: Long key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.stringKey = null;
+                entity.dateKey = null;
+                entity.integerKey = null;
+                entity.longKey = 17000000000;
+                entity.bigDecimalKey = null;
+                entity.moneyKey = null;
+                entity.colourKey = null;
+                entity.hyperlinkKey = null;
+                entity.entityKey = null;
+                entity.selfKey = null;
+                assert.strictEqual(reflector.tg_convert(entity), '17000000000');
+                done();
+            });
+            
+            test('tg_convert composite entity: BigDecimal key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.stringKey = null;
+                entity.dateKey = null;
+                entity.integerKey = null;
+                entity.longKey = null;
+                entity.bigDecimalKey = 1700.1234;
+                entity.moneyKey = null;
+                entity.colourKey = null;
+                entity.hyperlinkKey = null;
+                entity.entityKey = null;
+                entity.selfKey = null;
+                assert.strictEqual(reflector.tg_convert(entity), '1700.1234');
+                done();
+            });
+            
+            test('tg_convert composite entity: Entity key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.stringKey = null;
+                entity.dateKey = null;
+                entity.integerKey = null;
+                entity.longKey = null;
+                entity.bigDecimalKey = null;
+                entity.moneyKey = null;
+                entity.colourKey = null;
+                entity.hyperlinkKey = null;
+                entity.entityKey = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
+                entity.entityKey.key = 'KEY1';
+                entity.selfKey = null;
+                assert.strictEqual(reflector.tg_convert(entity), 'KEY1');
+                done();
+            });
+            
+            test('tg_convert composite entity: Money key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.stringKey = null;
+                entity.dateKey = null;
+                entity.integerKey = null;
+                entity.longKey = null;
+                entity.bigDecimalKey = null;
+                entity.moneyKey = { amount: 1700, currency: 'AUD', taxPercent: null };
+                entity.colourKey = null;
+                entity.hyperlinkKey = null;
+                entity.entityKey = null;
+                entity.selfKey = null;
+                assert.strictEqual(reflector.tg_convert(entity), '1700');
+                done();
+            });
+            
+            test('tg_convert composite entity: Colour key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.stringKey = null;
+                entity.dateKey = null;
+                entity.integerKey = null;
+                entity.longKey = null;
+                entity.bigDecimalKey = null;
+                entity.moneyKey = null;
+                entity.colourKey = { hashlessUppercasedColourValue: 'FFCC80' };
+                entity.hyperlinkKey = null;
+                entity.entityKey = null;
+                entity.selfKey = null;
+                assert.strictEqual(reflector.tg_convert(entity), 'FFCC80');
+                done();
+            });
+            
+            test('tg_convert composite entity: Hyperlink key converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.stringKey = null;
+                entity.dateKey = null;
+                entity.integerKey = null;
+                entity.longKey = null;
+                entity.bigDecimalKey = null;
+                entity.moneyKey = null;
+                entity.colourKey = null;
+                entity.hyperlinkKey = { value: 'https://www.example.com' };
+                entity.entityKey = null;
+                entity.selfKey = null;
+                assert.strictEqual(reflector.tg_convert(entity), 'https://www.example.com');
+                done();
+            });
+            
+            test('tg_convert composite entity: custom separator is used and order of keys is correct', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.stringKey = 'KEY1';
+                entity.dateKey = 0;
+                entity.integerKey = 1500;
+                entity.longKey = 16000000000;
+                entity.bigDecimalKey = 1700.1234;
+                entity.moneyKey = { amount: 1700, currency: 'AUD', taxPercent: null };
+                entity.colourKey = { hashlessUppercasedColourValue: 'FFCC80' };
+                entity.hyperlinkKey = { value: 'https://www.example.com' };
+                entity.entityKey = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
+                entity.entityKey.key = 'KEY2';
+                entity.selfKey = null;
+                assert.strictEqual(reflector.tg_convert(entity), 'KEY1:' + _millisDateRepresentation(entity.dateKey, null, null) + ':1500:16000000000:1700.1234:1700:FFCC80:https://www.example.com:KEY2');
+                done();
+            });
+            
+            test('tg_convert composite entity: empty values are skipped regardless of their types', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.stringKey = 'KEY1';
+                entity.dateKey = 0;
+                entity.integerKey = null;
+                entity.longKey = 16000000000;
+                entity.bigDecimalKey = null;
+                entity.moneyKey = null;
+                entity.colourKey = { hashlessUppercasedColourValue: 'FFCC80' };
+                entity.hyperlinkKey = null;
+                entity.entityKey = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
+                entity.entityKey.key = 'KEY2';
+                entity.selfKey = null;
+                assert.strictEqual(reflector.tg_convert(entity), 'KEY1:' + _millisDateRepresentation(entity.dateKey, null, null) + ':16000000000:FFCC80:KEY2');
+                done();
+            });
+            
+            const typeName7 = 'ua.com.fielden.platform.sample.domain.TgEntityCompositeKey';
+            const typeName8 = 'ua.com.fielden.platform.sample.domain.TgEntityCompositeBooleanKey';
+            const typeName9 = 'ua.com.fielden.platform.sample.domain.TgEntityStringKey';
+            const typeName10 = 'ua.com.fielden.platform.sample.domain.TgEntityTwoEntityKeys';
+            
+            test('EntityTypeProp.type: boolean prop type is defined', function (done) {
+                assert.strictEqual(reflector.getType(typeName8).prop('booleanKey').type(), 'boolean');
+                done();
+            });
+            
+            test('EntityTypeProp.type: String prop type is defined', function (done) {
+                assert.strictEqual(reflector.getType(typeName7).prop('stringKey').type(), 'String');
+                done();
+            });
+            
+            test('EntityTypeProp.type: Date prop type is defined', function (done) {
+                assert.strictEqual(reflector.getType(typeName7).prop('dateKey').type(), 'Date');
+                done();
+            });
+            
+            test('EntityTypeProp.type: Integer prop type is defined', function (done) {
+                assert.strictEqual(reflector.getType(typeName7).prop('integerKey').type(), 'Integer');
+                done();
+            });
+            
+            test('EntityTypeProp.type: Long prop type is defined', function (done) {
+                assert.strictEqual(reflector.getType(typeName7).prop('longKey').type(), 'Long');
+                done();
+            });
+            
+            test('EntityTypeProp.type: BigDecimal prop type is defined', function (done) {
+                assert.strictEqual(reflector.getType(typeName7).prop('bigDecimalKey').type(), 'BigDecimal');
+                done();
+            });
+            
+            test('EntityTypeProp.type: Money prop type is defined', function (done) {
+                assert.strictEqual(reflector.getType(typeName7).prop('moneyKey').type(), 'Money');
+                done();
+            });
+            
+            test('EntityTypeProp.type: collection prop type is not defined', function (done) {
+                assert.strictEqual(reflector.getType(typeName7).prop('listOfStringsProp').type(), null);
+                assert.strictEqual(reflector.getType(typeName7).prop('setOfEntitiesProp').type(), null);
+                done();
+            });
+            
+            test('EntityTypeProp.type: Colour prop type is defined', function (done) {
+                assert.strictEqual(reflector.getType(typeName7).prop('colourKey').type(), 'Colour');
+                done();
+            });
+            
+            test('EntityTypeProp.type: Hyperlink prop type is defined', function (done) {
+                assert.strictEqual(reflector.getType(typeName7).prop('hyperlinkKey').type(), 'Hyperlink');
+                done();
+            });
+            
+            test('EntityTypeProp.type: entity prop type is defined', function (done) {
+                assert.strictEqual(reflector.getType(typeName7).prop('entityKey').type(), reflector.getType(typeName9));
+                done();
+            });
+            
+            test('EntityTypeProp.shortCollectionKey: collection of raw values is not short-collectional and does not have shortCollectionKey', function (done) {
+                assert.strictEqual(reflector.getType(typeName7).prop('listOfStringsProp').shortCollectionKey(), null);
+                done();
+            });
+            
+            test('EntityTypeProp.shortCollectionKey: collection of entities is not is not always short-collectional and in that case does not have shortCollectionKey', function (done) {
+                assert.strictEqual(reflector.getType(typeName7).prop('setOfEntitiesProp').shortCollectionKey(), null);
+                done();
+            });
+            
+            test('EntityTypeProp.shortCollectionKey: short-collection does have shortCollectionKey', function (done) {
+                assert.strictEqual(reflector.getType(typeName7).prop('shortCollectionalProp').shortCollectionKey(), 'entityKey');
+                done();
+            });
+            
+            test('EntityType.prop: two-level dot-notated property is defined (String)', function (done) {
+                assert.strictEqual(reflector.getType(typeName10).prop('entityKey.key'), reflector.getType(typeName9).prop('key'));
+                done();
+            });
+            
+            test('EntityType.prop: two-level dot-notated property is defined (Date)', function (done) {
+                assert.strictEqual(reflector.getType(typeName10).prop('parentKey.dateKey'), reflector.getType(typeName7).prop('dateKey'));
+                done();
+            });
+            
+            test('EntityType.prop: three-level dot-notated property is defined', function (done) {
+                assert.strictEqual(reflector.getType(typeName10).prop('parentKey.entityKey.key'), reflector.getType(typeName9).prop('key'));
+                done();
+            });
+            
+            test('tg_determinePropertyType: boolean prop type is defined', function (done) {
+                assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType(typeName8), 'booleanKey'), 'boolean');
+                done();
+            });
+            
+            test('tg_determinePropertyType: String prop type is defined', function (done) {
+                assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType(typeName7), 'stringKey'), 'String');
+                done();
+            });
+            
+            test('tg_determinePropertyType: Date prop type is defined', function (done) {
+                assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType(typeName7), 'dateKey'), 'Date');
+                done();
+            });
+            
+            test('tg_determinePropertyType: Integer prop type is defined', function (done) {
+                assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType(typeName7), 'integerKey'), 'Integer');
+                done();
+            });
+            
+            test('tg_determinePropertyType: Long prop type is defined', function (done) {
+                assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType(typeName7), 'longKey'), 'Long');
+                done();
+            });
+            
+            test('tg_determinePropertyType: BigDecimal prop type is defined', function (done) {
+                assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType(typeName7), 'bigDecimalKey'), 'BigDecimal');
+                done();
+            });
+            
+            test('tg_determinePropertyType: Money prop type is defined', function (done) {
+                assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType(typeName7), 'moneyKey'), 'Money');
+                done();
+            });
+            
+            test('tg_determinePropertyType: collection prop type is not defined', function (done) {
+                assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType(typeName7), 'listOfStringsProp'), null);
+                assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType(typeName7), 'setOfEntitiesProp'), null);
+                done();
+            });
+            
+            test('tg_determinePropertyType: Colour prop type is defined', function (done) {
+                assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType(typeName7), 'colourKey'), 'Colour');
+                done();
+            });
+            
+            test('tg_determinePropertyType: Hyperlink prop type is defined', function (done) {
+                assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType(typeName7), 'hyperlinkKey'), 'Hyperlink');
+                done();
+            });
+            
+            test('tg_determinePropertyType: entity prop type is defined', function (done) {
+                assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType(typeName7), 'entityKey'), reflector.getType(typeName9));
+                done();
+            });
+            
+            test('tg_determinePropertyType: entity-itself prop type is defined', function (done) {
+                assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType(typeName7), ''), reflector.getType(typeName7));
+                done();
+            });
+            
+            test('tg_determinePropertyType: key prop type of composite entity type is defined', function (done) {
+                assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType(typeName7), 'key'), 'DynamicEntityKey');
+                done();
+            });
+            
+            test('tg_determinePropertyType: two-level dot-notated prop type is defined (String)', function (done) {
+                assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType(typeName10), 'entityKey.key'), 'String');
+                done();
+            });
+            
+            test('tg_determinePropertyType: two-level dot-notated prop type is defined (Date)', function (done) {
+                assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType(typeName10), 'parentKey.dateKey'), 'Date');
+                done();
+            });
+            
+            test('tg_determinePropertyType: two-level dot-notated prop type is defined (DynamicEntityKey)', function (done) {
+                assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType(typeName10), 'parentKey.key'), 'DynamicEntityKey');
+                done();
+            });
+            
+            test('tg_determinePropertyType: three-level dot-notated prop type is defined', function (done) {
+                assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType(typeName10), 'parentKey.entityKey.key'), 'String');
+                done();
+            });
+            
+            test('tg_toString: dot-notated composite entity-typed prop', function (done) {
+                const parentEntity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityEntityKey');
+                parentEntity.compositeProp = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityTwoEntityKeys');
+                parentEntity.compositeProp.parentKey = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                parentEntity.compositeProp.parentKey.stringKey = 'KEY1';
+                parentEntity.compositeProp.parentKey.dateKey = null;
+                parentEntity.compositeProp.parentKey.integerKey = null;
+                parentEntity.compositeProp.parentKey.longKey = null;
+                parentEntity.compositeProp.parentKey.bigDecimalKey = null;
+                parentEntity.compositeProp.parentKey.moneyKey = null;
+                parentEntity.compositeProp.parentKey.colourKey = null;
+                parentEntity.compositeProp.parentKey.hyperlinkKey = null;
+                parentEntity.compositeProp.parentKey.entityKey = null;
+                parentEntity.compositeProp.parentKey.selfKey = null;
+                assert.strictEqual(reflector.tg_toString(parentEntity.get('compositeProp.parentKey'), parentEntity.type(), 'compositeProp.parentKey'), 'KEY1');
+                done();
+            });
+            
+            test('tg_toString: dot-notated composite entity-typed prop and accessing its key', function (done) {
+                const parentEntity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityEntityKey');
+                parentEntity.compositeProp = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityTwoEntityKeys');
+                parentEntity.compositeProp.parentKey = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                parentEntity.compositeProp.parentKey.stringKey = 'KEY1';
+                parentEntity.compositeProp.parentKey.dateKey = null;
+                parentEntity.compositeProp.parentKey.integerKey = null;
+                parentEntity.compositeProp.parentKey.longKey = null;
+                parentEntity.compositeProp.parentKey.bigDecimalKey = null;
+                parentEntity.compositeProp.parentKey.moneyKey = null;
+                parentEntity.compositeProp.parentKey.colourKey = null;
+                parentEntity.compositeProp.parentKey.hyperlinkKey = null;
+                parentEntity.compositeProp.parentKey.entityKey = null;
+                parentEntity.compositeProp.parentKey.selfKey = null;
+                assert.strictEqual(reflector.tg_toString(parentEntity.get('compositeProp.parentKey.key'), parentEntity.type(), 'compositeProp.parentKey.key'), 'KEY1');
+                done();
+            });
+            
+            test('tg_toString standard: empty (null) converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.stringKey = null;
+                assert.strictEqual(reflector.tg_toString(entity.get('stringKey'), entity.type(), 'stringKey'), '');
+                entity.dateKey = null;
+                assert.strictEqual(reflector.tg_toString(entity.get('dateKey'), entity.type(), 'dateKey'), '');
+                entity.integerKey = null;
+                assert.strictEqual(reflector.tg_toString(entity.get('integerKey'), entity.type(), 'integerKey'), '');
+                entity.longKey = null;
+                assert.strictEqual(reflector.tg_toString(entity.get('longKey'), entity.type(), 'longKey'), '');
+                entity.bigDecimalKey = null;
+                assert.strictEqual(reflector.tg_toString(entity.get('bigDecimalKey'), entity.type(), 'bigDecimalKey'), '');
+                entity.moneyKey = null;
+                assert.strictEqual(reflector.tg_toString(entity.get('moneyKey'), entity.type(), 'moneyKey'), '');
+                entity.colourKey = null;
+                assert.strictEqual(reflector.tg_toString(entity.get('colourKey'), entity.type(), 'colourKey'), '');
+                entity.hyperlinkKey = null;
+                assert.strictEqual(reflector.tg_toString(entity.get('hyperlinkKey'), entity.type(), 'hyperlinkKey'), '');
+                entity.entityKey = null;
+                assert.strictEqual(reflector.tg_toString(entity.get('entityKey'), entity.type(), 'entityKey'), '');
+                entity.listOfStringsProp = null;
+                assert.strictEqual(reflector.tg_toString(entity.get('listOfStringsProp'), entity.type(), 'listOfStringsProp'), '');
+                entity.setOfEntitiesProp = null;
+                assert.strictEqual(reflector.tg_toString(entity.get('setOfEntitiesProp'), entity.type(), 'setOfEntitiesProp'), '');
+                entity.shortCollectionalProp = null;
+                assert.strictEqual(reflector.tg_toString(entity.get('shortCollectionalProp'), entity.type(), 'shortCollectionalProp'), '');
+                done();
+            });
+            
+            test('tg_toString standard: String converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.stringKey = 'KEY1';
+                assert.strictEqual(reflector.tg_toString(entity.get('stringKey'), entity.type(), 'stringKey'), 'KEY1');
+                done();
+            });
+            
+            test('tg_toString standard: String converts (empty string)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.stringKey = '';
+                assert.strictEqual(reflector.tg_toString(entity.get('stringKey'), entity.type(), 'stringKey'), '');
+                done();
+            });
+            
+            test('tg_toString standard: boolean converts (true)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeBooleanKey');
+                entity.booleanKey = true;
+                assert.strictEqual(reflector.tg_toString(entity.get('booleanKey'), entity.type(), 'booleanKey'), 'true');
+                done();
+            });
+            
+            test('tg_toString standard: boolean converts (empty)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeBooleanKey');
+                entity.booleanKey = null;
+                assert.strictEqual(reflector.tg_toString(entity.get('booleanKey'), entity.type(), 'booleanKey'), 'false');
+                done();
+            });
+            
+            test('tg_toString standard: boolean converts (false)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeBooleanKey');
+                entity.booleanKey = false;
+                assert.strictEqual(reflector.tg_toString(entity.get('booleanKey'), entity.type(), 'booleanKey'), 'false');
+                done();
+            });
+            
+            test('tg_toString standard: Date converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.dateKey = 0;
+                assert.strictEqual(reflector.tg_toString(entity.get('dateKey'), entity.type(), 'dateKey'), _millisDateRepresentation(entity.dateKey, null, null));
+                done();
+            });
+            
+            test('tg_toString standard: Integer converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.integerKey = 1700;
+                assert.strictEqual(reflector.tg_toString(entity.get('integerKey'), entity.type(), 'integerKey'), '1700');
+                done();
+            });
+            
+            test('tg_toString standard: Long converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.longKey = 17000000000;
+                assert.strictEqual(reflector.tg_toString(entity.get('longKey'), entity.type(), 'longKey'), '17000000000');
+                done();
+            });
+            
+            test('tg_toString standard: BigDecimal converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.bigDecimalKey = 1700.1234;
+                assert.strictEqual(reflector.tg_toString(entity.get('bigDecimalKey'), entity.type(), 'bigDecimalKey'), '1700.1234');
+                done();
+            });
+            
+            test('tg_toString standard: Entity converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.entityKey = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
+                entity.entityKey.key = 'KEY1';
+                assert.strictEqual(reflector.tg_toString(entity.get('entityKey'), entity.type(), 'entityKey'), 'KEY1');
+                done();
+            });
+            
+            test('tg_toString standard: Money converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.moneyKey = { amount: 1700, currency: 'AUD', taxPercent: null };
+                assert.strictEqual(reflector.tg_toString(entity.get('moneyKey'), entity.type(), 'moneyKey'), '1700');
+                done();
+            });
+            
+            test('tg_toString standard: empty collection converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.listOfStringsProp = [];
+                assert.strictEqual(reflector.tg_toString(entity.get('listOfStringsProp'), entity.type(), 'listOfStringsProp'), '');
+                entity.setOfEntitiesProp = [];
+                assert.strictEqual(reflector.tg_toString(entity.get('setOfEntitiesProp'), entity.type(), 'setOfEntitiesProp'), '');
+                entity.shortCollectionalProp = [];
+                assert.strictEqual(reflector.tg_toString(entity.get('shortCollectionalProp'), entity.type(), 'shortCollectionalProp'), '');
+                done();
+            });
+            
+            test('tg_toString standard: list of strings converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.listOfStringsProp = ['str1', '', 'str2', null, 'str3', null];
+                assert.strictEqual(reflector.tg_toString(entity.get('listOfStringsProp'), entity.type(), 'listOfStringsProp'), 'str1, str2, str3');
+                done();
+            });
+            
+            test('tg_toString standard: long collection converts', function (done) {
+                const master = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                master.stringKey = 'MASTER';
+                master.dateKey = null;
+                master.integerKey = null;
+                master.longKey = null;
+                master.bigDecimalKey = null;
+                master.moneyKey = null;
+                master.colourKey = null;
+                master.hyperlinkKey = null;
+                master.entityKey = null;
+                master.selfKey = null;
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.stringKey = 'STR1';
+                entity.dateKey = null;
+                entity.integerKey = null;
+                entity.longKey = null;
+                entity.bigDecimalKey = null;
+                entity.moneyKey = null;
+                entity.colourKey = null;
+                entity.hyperlinkKey = null;
+                entity.entityKey = null;
+                entity.selfKey = master;
+                master.setOfEntitiesProp = [entity, null, entity, null, entity, null];
+                assert.strictEqual(reflector.tg_toString(master.get('setOfEntitiesProp'), master.type(), 'setOfEntitiesProp'), 'STR1:MASTER, STR1:MASTER, STR1:MASTER');
+                done();
+            });
+            
+            test('tg_toString standard: short collection converts', function (done) {
+                const master = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                master.stringKey = 'MASTER';
+                master.dateKey = null;
+                master.integerKey = null;
+                master.longKey = null;
+                master.bigDecimalKey = null;
+                master.moneyKey = null;
+                master.colourKey = null;
+                master.hyperlinkKey = null;
+                master.entityKey = null;
+                master.selfKey = null;
+                const entity1 = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityTwoEntityKeys');
+                entity1.parentKey = master;
+                entity1.entityKey = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
+                entity1.entityKey.key = 'STR1';
+                const entity2 = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityTwoEntityKeys');
+                entity2.parentKey = master;
+                entity2.entityKey = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
+                entity2.entityKey.key = 'STR2';
+                const entity3 = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityTwoEntityKeys');
+                entity3.parentKey = master;
+                entity3.entityKey = null;
+                master.shortCollectionalProp = [entity1, null, entity2, null, entity3, null];
+                assert.strictEqual(reflector.tg_toString(master.get('shortCollectionalProp'), master.type(), 'shortCollectionalProp'), 'STR1, STR2');
+                done();
+            });
+            
+            test('tg_toString standard: Colour converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.colourKey = { hashlessUppercasedColourValue: 'FFCC80' };
+                assert.strictEqual(reflector.tg_toString(entity.get('colourKey'), entity.type(), 'colourKey'), 'FFCC80');
+                done();
+            });
+            
+            test('tg_toString standard: Hyperlink converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.hyperlinkKey = { value: 'https://www.example.com' };
+                assert.strictEqual(reflector.tg_toString(entity.get('hyperlinkKey'), entity.type(), 'hyperlinkKey'), 'https://www.example.com');
+                done();
+            });
+            
+            test('tg_toString for display: empty (null) converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.stringKey = null;
+                assert.strictEqual(reflector.tg_toString(entity.get('stringKey'), entity.type(), 'stringKey', { display: true }), '');
+                entity.dateKey = null;
+                assert.strictEqual(reflector.tg_toString(entity.get('dateKey'), entity.type(), 'dateKey', { display: true }), '');
+                entity.integerKey = null;
+                assert.strictEqual(reflector.tg_toString(entity.get('integerKey'), entity.type(), 'integerKey', { display: true }), '');
+                entity.longKey = null;
+                assert.strictEqual(reflector.tg_toString(entity.get('longKey'), entity.type(), 'longKey', { display: true }), '');
+                entity.bigDecimalKey = null;
+                assert.strictEqual(reflector.tg_toString(entity.get('bigDecimalKey'), entity.type(), 'bigDecimalKey', { display: true }), '');
+                entity.moneyKey = null;
+                assert.strictEqual(reflector.tg_toString(entity.get('moneyKey'), entity.type(), 'moneyKey', { display: true }), '');
+                entity.colourKey = null;
+                assert.strictEqual(reflector.tg_toString(entity.get('colourKey'), entity.type(), 'colourKey', { display: true }), '');
+                entity.hyperlinkKey = null;
+                assert.strictEqual(reflector.tg_toString(entity.get('hyperlinkKey'), entity.type(), 'hyperlinkKey', { display: true }), '');
+                entity.entityKey = null;
+                assert.strictEqual(reflector.tg_toString(entity.get('entityKey'), entity.type(), 'entityKey', { display: true }), '');
+                entity.listOfStringsProp = null;
+                assert.strictEqual(reflector.tg_toString(entity.get('listOfStringsProp'), entity.type(), 'listOfStringsProp', { display: true }), '');
+                entity.setOfEntitiesProp = null;
+                assert.strictEqual(reflector.tg_toString(entity.get('setOfEntitiesProp'), entity.type(), 'setOfEntitiesProp', { display: true }), '');
+                entity.shortCollectionalProp = null;
+                assert.strictEqual(reflector.tg_toString(entity.get('shortCollectionalProp'), entity.type(), 'shortCollectionalProp', { display: true }), '');
+                done();
+            });
+            
+            test('tg_toString for display: String converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.stringKey = 'KEY1';
+                assert.strictEqual(reflector.tg_toString(entity.get('stringKey'), entity.type(), 'stringKey', { display: true }), 'KEY1');
+                done();
+            });
+            
+            test('tg_toString for display: String converts (empty string)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.stringKey = '';
+                assert.strictEqual(reflector.tg_toString(entity.get('stringKey'), entity.type(), 'stringKey', { display: true }), '');
+                done();
+            });
+            
+            test('tg_toString for display: boolean converts (true)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeBooleanKey');
+                entity.booleanKey = true;
+                assert.strictEqual(reflector.tg_toString(entity.get('booleanKey'), entity.type(), 'booleanKey', { display: true }), 'true');
+                done();
+            });
+            
+            test('tg_toString for display: boolean converts (empty)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeBooleanKey');
+                entity.booleanKey = null;
+                assert.strictEqual(reflector.tg_toString(entity.get('booleanKey'), entity.type(), 'booleanKey', { display: true }), 'false');
+                done();
+            });
+            
+            test('tg_toString for display: boolean converts (false)', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeBooleanKey');
+                entity.booleanKey = false;
+                assert.strictEqual(reflector.tg_toString(entity.get('booleanKey'), entity.type(), 'booleanKey', { display: true }), 'false');
+                done();
+            });
+            
+            test('tg_toString for display: Date converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.dateKey = 0;
+                assert.strictEqual(reflector.tg_toString(entity.get('dateKey'), entity.type(), 'dateKey', { display: true }), _millisDateRepresentation(entity.dateKey, null, null));
+                done();
+            });
+            
+            const locale = 'en-AU';
+            
+            test('tg_toString for display: Integer converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.integerKey = 1700;
+                assert.strictEqual(reflector.tg_toString(entity.get('integerKey'), entity.type(), 'integerKey', { display: true, locale: locale }), reflector.tg_formatInteger(entity.get('integerKey'), locale));
+                done();
+            });
+            
+            test('tg_toString for display: Long converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.longKey = 17000000000;
+                assert.strictEqual(reflector.tg_toString(entity.get('longKey'), entity.type(), 'longKey', { display: true, locale: locale }), reflector.tg_formatInteger(entity.get('longKey'), locale));
+                done();
+            });
+            
+            test('tg_toString for display: BigDecimal converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.bigDecimalKey = 1700.1234;
+                assert.strictEqual(reflector.tg_toString(entity.get('bigDecimalKey'), entity.type(), 'bigDecimalKey', { display: true, locale: locale }), reflector.tg_formatDecimal(entity.get('bigDecimalKey'), locale, entity.type().prop('bigDecimalKey').scale(), entity.type().prop('bigDecimalKey').trailingZeros()));
+                done();
+            });
+            
+            test('tg_toString for display: Entity converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.entityKey = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
+                entity.entityKey.key = 'KEY1';
+                assert.strictEqual(reflector.tg_toString(entity.get('entityKey'), entity.type(), 'entityKey', { display: true }), 'KEY1');
+                done();
+            });
+            
+            test('tg_toString for display: Money converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.moneyKey = { amount: 1700, currency: 'AUD', taxPercent: null };
+                assert.strictEqual(reflector.tg_toString(entity.get('moneyKey'), entity.type(), 'moneyKey', { display: true, locale: locale }), reflector.tg_formatMoney(entity.get('moneyKey'), locale, entity.type().prop('moneyKey').scale(), entity.type().prop('moneyKey').trailingZeros()));
+                done();
+            });
+            
+            test('tg_toString for display: empty collection converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.listOfStringsProp = [];
+                assert.strictEqual(reflector.tg_toString(entity.get('listOfStringsProp'), entity.type(), 'listOfStringsProp', { display: true }), '');
+                entity.setOfEntitiesProp = [];
+                assert.strictEqual(reflector.tg_toString(entity.get('setOfEntitiesProp'), entity.type(), 'setOfEntitiesProp', { display: true }), '');
+                entity.shortCollectionalProp = [];
+                assert.strictEqual(reflector.tg_toString(entity.get('shortCollectionalProp'), entity.type(), 'shortCollectionalProp', { display: true }), '');
+                done();
+            });
+            
+            test('tg_toString for display: list of strings converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.listOfStringsProp = ['str1', '', 'str2', null, 'str3', null];
+                assert.strictEqual(reflector.tg_toString(entity.get('listOfStringsProp'), entity.type(), 'listOfStringsProp', { display: true }), 'str1, str2, str3');
+                done();
+            });
+            
+            test('tg_toString for display: long collection converts', function (done) {
+                const master = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                master.stringKey = 'MASTER';
+                master.dateKey = null;
+                master.integerKey = null;
+                master.longKey = null;
+                master.bigDecimalKey = null;
+                master.moneyKey = null;
+                master.colourKey = null;
+                master.hyperlinkKey = null;
+                master.entityKey = null;
+                master.selfKey = null;
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.stringKey = 'STR1';
+                entity.dateKey = null;
+                entity.integerKey = null;
+                entity.longKey = null;
+                entity.bigDecimalKey = null;
+                entity.moneyKey = null;
+                entity.colourKey = null;
+                entity.hyperlinkKey = null;
+                entity.entityKey = null;
+                entity.selfKey = master;
+                master.setOfEntitiesProp = [entity, null, entity, null, entity, null];
+                assert.strictEqual(reflector.tg_toString(master.get('setOfEntitiesProp'), master.type(), 'setOfEntitiesProp', { display: true }), 'STR1:MASTER, STR1:MASTER, STR1:MASTER');
+                done();
+            });
+            
+            test('tg_toString for display: short collection converts', function (done) {
+                const master = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                master.stringKey = 'MASTER';
+                master.dateKey = null;
+                master.integerKey = null;
+                master.longKey = null;
+                master.bigDecimalKey = null;
+                master.moneyKey = null;
+                master.colourKey = null;
+                master.hyperlinkKey = null;
+                master.entityKey = null;
+                master.selfKey = null;
+                const entity1 = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityTwoEntityKeys');
+                entity1.parentKey = master;
+                entity1.entityKey = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
+                entity1.entityKey.key = 'STR1';
+                const entity2 = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityTwoEntityKeys');
+                entity2.parentKey = master;
+                entity2.entityKey = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
+                entity2.entityKey.key = 'STR2';
+                const entity3 = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityTwoEntityKeys');
+                entity3.parentKey = master;
+                entity3.entityKey = null;
+                master.shortCollectionalProp = [entity1, null, entity2, null, entity3, null];
+                assert.strictEqual(reflector.tg_toString(master.get('shortCollectionalProp'), master.type(), 'shortCollectionalProp', { display: true }), 'STR1, STR2');
+                done();
+            });
+            
+            test('tg_toString for display: Colour converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.colourKey = { hashlessUppercasedColourValue: 'FFCC80' };
+                assert.strictEqual(reflector.tg_toString(entity.get('colourKey'), entity.type(), 'colourKey', { display: true }), '#FFCC80');
+                done();
+            });
+            
+            test('tg_toString for display: Hyperlink converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.hyperlinkKey = { value: 'https://www.example.com' };
+                assert.strictEqual(reflector.tg_toString(entity.get('hyperlinkKey'), entity.type(), 'hyperlinkKey', { display: true }), 'https://www.example.com');
+                done();
+            });
+            
+            test('tg_toString for collection as tooltip: long collection converts (empty)', function (done) {
+                const master = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                master.stringKey = 'MASTER';
+                master.dateKey = null;
+                master.integerKey = null;
+                master.longKey = null;
+                master.bigDecimalKey = null;
+                master.moneyKey = null;
+                master.colourKey = null;
+                master.hyperlinkKey = null;
+                master.entityKey = null;
+                master.selfKey = null;
+                master.setOfEntitiesProp = [null, null, null];
+                assert.strictEqual(reflector.tg_toString(master.get('setOfEntitiesProp'), master.type(), 'setOfEntitiesProp', { collection: true, asTooltip: true }), '');
+                done();
+            });
+            
+            test('tg_toString for collection as tooltip: long collection converts', function (done) {
+                const master = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                master.stringKey = 'MASTER';
+                master.dateKey = null;
+                master.integerKey = null;
+                master.longKey = null;
+                master.bigDecimalKey = null;
+                master.moneyKey = null;
+                master.colourKey = null;
+                master.hyperlinkKey = null;
+                master.entityKey = null;
+                master.selfKey = null;
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.stringKey = 'STR1';
+                entity.desc = 'desc1';
+                entity.dateKey = null;
+                entity.integerKey = null;
+                entity.longKey = null;
+                entity.bigDecimalKey = null;
+                entity.moneyKey = null;
+                entity.colourKey = null;
+                entity.hyperlinkKey = null;
+                entity.entityKey = null;
+                entity.selfKey = master;
+                const entity2 = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity2.stringKey = 'STR2';
+                entity2.desc = null;
+                entity2.dateKey = null;
+                entity2.integerKey = null;
+                entity2.longKey = null;
+                entity2.bigDecimalKey = null;
+                entity2.moneyKey = null;
+                entity2.colourKey = null;
+                entity2.hyperlinkKey = null;
+                entity2.entityKey = null;
+                entity2.selfKey = master;
+                master.setOfEntitiesProp = [entity, null, entity, null, entity2, null];
+                assert.strictEqual(reflector.tg_toString(master.get('setOfEntitiesProp'), master.type(), 'setOfEntitiesProp', { collection: true, asTooltip: true }), '<b>STR1:MASTER, STR1:MASTER, STR2:MASTER</b><br>desc1, desc1');
+                done();
+            });
+            
+            test('tg_toString for collection as tooltip: short collection converts', function (done) {
+                const master = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                master.stringKey = 'MASTER';
+                master.dateKey = null;
+                master.integerKey = null;
+                master.longKey = null;
+                master.bigDecimalKey = null;
+                master.moneyKey = null;
+                master.colourKey = null;
+                master.hyperlinkKey = null;
+                master.entityKey = null;
+                master.selfKey = null;
+                const entity1 = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityTwoEntityKeys');
+                entity1.parentKey = master;
+                entity1.entityKey = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
+                entity1.entityKey.key = 'STR1';
+                entity1.entityKey.desc = 'desc1';
+                const entity2 = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityTwoEntityKeys');
+                entity2.parentKey = master;
+                entity2.entityKey = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityStringKey');
+                entity2.entityKey.key = 'STR2';
+                entity2.entityKey.desc = null;
+                const entity3 = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityTwoEntityKeys');
+                entity3.parentKey = master;
+                entity3.entityKey = null;
+                master.shortCollectionalProp = [entity1, null, entity2, null, entity3, null];
+                assert.strictEqual(reflector.tg_toString(master.get('shortCollectionalProp'), master.type(), 'shortCollectionalProp', { collection: true, asTooltip: true }), '<b>STR1, STR2</b><br>desc1');
+                done();
+            });
+            
+            test('tg_toString for collection as tooltip: short collection converts (empty)', function (done) {
+                const master = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                master.stringKey = 'MASTER';
+                master.dateKey = null;
+                master.integerKey = null;
+                master.longKey = null;
+                master.bigDecimalKey = null;
+                master.moneyKey = null;
+                master.colourKey = null;
+                master.hyperlinkKey = null;
+                master.entityKey = null;
+                master.selfKey = null;
+                const entity3 = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityTwoEntityKeys');
+                entity3.parentKey = master;
+                entity3.entityKey = null;
+                master.shortCollectionalProp = [null, entity3, null];
+                assert.strictEqual(reflector.tg_toString(master.get('shortCollectionalProp'), master.type(), 'shortCollectionalProp', { collection: true, asTooltip: true }), '');
+                done();
+            });
+            
+            test('tg_toString for collection: list of strings converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.listOfStringsProp = ['1', '', '2', null, '3', null];
+                assert.strictEqual(reflector.tg_toString(entity.get('listOfStringsProp'), entity.type(), 'listOfStringsProp', { collection: true }), '1, 2, 3');
+                done();
+            });
+            
+            test('tg_toString for collection: list of strings converts with custom separator', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.listOfStringsProp = ['1', '', '2', null, '3', null];
+                assert.strictEqual(reflector.tg_toString(entity.get('listOfStringsProp'), entity.type(), 'listOfStringsProp', { collection: true, separator: ':' }), '1:2:3');
+                done();
+            });
+            
+            test('tg_toString for collection: list of strings converts with mapping function', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgEntityCompositeKey');
+                entity.listOfStringsProp = ['1', '', '2', null, '3', null];
+                assert.strictEqual(reflector.tg_toString(entity.get('listOfStringsProp'), entity.type(), 'listOfStringsProp', { collection: true, mappingFunction: str => str ? '' + (+str * 2) : '' }), '2, 4, 6');
+                done();
+            });
+            
             // Testing the access to 'key' property of different kinds of entities.
             // This property is of high importance and should be much in sync with server-side implementation.
             // At this stage only equality and toString implementation is used when accessing properties.
@@ -39,13 +1165,13 @@
             
             /////////////////////// entity.get('key') tests ///////////////////////
             test('test empty object convertion should be fine', function (done) {
-                assert.deepEqual(reflector.convert({}), {});
+                assert.deepEqual(reflector.tg_convert({}), {});
                 done();
             });
             
             test('test object with arbitrary properties convertion should not be acceptable', function (done) {
                 try {
-                    reflector.convert({testProp: "testProp"});
+                    reflector.tg_convert({testProp: "testProp"});
                 } catch (ex) {
                     done();
                 }
@@ -93,7 +1219,7 @@
             test('simple entity: conversion is forbidden if key is not fetched', function (done) {
                 const entity1 = reflector.newEntity(typeName1);
                 try {
-                    reflector.convert(entity1);
+                    reflector.tg_convert(entity1);
                     assert.fail('Strict proxy exception is required.');
                 } catch (ex) {
                     done();
@@ -104,7 +1230,7 @@
                 const entity1 = reflector.newEntity(typeName1);
                 entity1.key = 'DEMO01';
                 
-                assert.strictEqual(reflector.convert(entity1), 'DEMO01');
+                assert.strictEqual(reflector.tg_convert(entity1), 'DEMO01');
                 done();
             });
             
@@ -162,7 +1288,7 @@
                 const entity1 = reflector.newEntity(typeName2);
                 entity1.key2 = 7; // key1 is not fetched
                 try {
-                    reflector.convert(entity1);
+                    reflector.tg_convert(entity1);
                     assert.fail('Strict proxy exception is required.');
                 } catch (ex) {
                     done();
@@ -176,7 +1302,7 @@
                 entity1.key1 = e1;
                 entity1.key2 = 7;
                 
-                assert.strictEqual(reflector.convert(entity1), 'DEMO01 7');
+                assert.strictEqual(reflector.tg_convert(entity1), 'DEMO01 7');
                 done();
             });
             
@@ -196,7 +1322,7 @@
             
             test('union entity: conversion succeeds for empty union entity', function (done) {
                 const uEntity1 = reflector.newEntity(typeName3); // TgBogieLocation union entity (no active entity)
-                assert.strictEqual(reflector.convert(uEntity1), null);
+                assert.strictEqual(reflector.tg_convert(uEntity1), '');
                 done();
             });
             
@@ -230,7 +1356,7 @@
                 workshop1.key = 'W1';
                 uEntity1.workshop = workshop1;
                 
-                assert.strictEqual(reflector.convert(uEntity1), 'W1');
+                assert.strictEqual(reflector.tg_convert(uEntity1), 'W1');
                 done();
             });
             
@@ -276,7 +1402,7 @@
                 wagonSlot1.position = 7;
                 uEntity1.wagonSlot = wagonSlot1;
                 
-                assert.strictEqual(reflector.convert(uEntity1), 'WAG1 7');
+                assert.strictEqual(reflector.tg_convert(uEntity1), 'WAG1 7');
                 done();
             });
             
@@ -316,7 +1442,7 @@
                 uEntity1.workshop = workshop1;
                 
                 try {
-                    reflector.convert(uEntity1);
+                    reflector.tg_convert(uEntity1);
                     assert.fail('Strict proxy exception is required.');
                 } catch (ex) {
                     done();
@@ -361,7 +1487,7 @@
                 uEntity1.wagonSlot = wagonSlot1;
                 
                 try {
-                    reflector.convert(uEntity1);
+                    reflector.tg_convert(uEntity1);
                     assert.fail('Strict proxy exception is required.');
                 } catch (ex) {
                     done();
@@ -651,82 +1777,87 @@
             });
             
             test('foramtting: formatting 123.3 decimal with scale and trailing zeros should return 123.3000', function (done) {
-                assert.equal(reflector.formatDecimal(123.3, 'en-AU', 4, true), "123.3000");
+                assert.equal(reflector.tg_formatDecimal(123.3, 'en-AU', 4, true), "123.3000");
                 done();
             });
             
             test('foramtting: formatting 123.3121 decimal with scale and trailing zeros should return 123.3121', function (done) {
-                assert.equal(reflector.formatDecimal(123.3121, 'en-AU', 4, true), "123.3121");
+                assert.equal(reflector.tg_formatDecimal(123.3121, 'en-AU', 4, true), "123.3121");
                 done();
             });
             
             test('foramtting: formatting 123.3 decimal with scale and without trailing zeros should return 123.3', function (done) {
-                assert.equal(reflector.formatDecimal(123.3, 'en-AU', 4, false), "123.3");
+                assert.equal(reflector.tg_formatDecimal(123.3, 'en-AU', 4, false), "123.3");
                 done();
             });
             
             test('foramtting: formatting 123.3121 decimal with scale and without trailing zeros should return 123.3121', function (done) {
-                assert.equal(reflector.formatDecimal(123.3121, 'en-AU', 4, false), "123.3121");
+                assert.equal(reflector.tg_formatDecimal(123.3121, 'en-AU', 4, false), "123.3121");
                 done();
             });
             
             test('foramtting: formatting 123.3 money with scale and trailing zeros should return $123.3000', function (done) {
-                assert.equal(reflector.formatMoney({amount: 123.3}, 'en-AU', 4, true), "$123.3000");
+                assert.equal(reflector.tg_formatMoney({amount: 123.3}, 'en-AU', 4, true), "$123.3000");
                 done();
             });
-            
+
+            test('foramtting: formatting -123.3 money with scale and trailing zeros should return -$123.3000', function (done) {
+                assert.equal(reflector.tg_formatMoney({amount: -123.3}, 'en-AU', 4, true), "-$123.3000");
+                done();
+            });
+
             test('foramtting: formatting 123.3121 money with scale and trailing zeros should return $123.3121', function (done) {
-                assert.equal(reflector.formatMoney({amount: 123.3121}, 'en-AU', 4, true), "$123.3121");
+                assert.equal(reflector.tg_formatMoney({amount: 123.3121}, 'en-AU', 4, true), "$123.3121");
                 done();
             });
             
             test('foramtting: formatting 123.3 money with scale and without trailing zeros should return $123.3', function (done) {
-                assert.equal(reflector.formatMoney({amount: 123.3}, 'en-AU', 4, false), "$123.3");
+                assert.equal(reflector.tg_formatMoney({amount: 123.3}, 'en-AU', 4, false), "$123.3");
                 done();
             });
             
              test('foramtting: formatting 123.3121 decimal with scale and without trailing zeros should return $123.3121', function (done) {
-                assert.equal(reflector.formatMoney({amount: 123.3121}, 'en-AU', 4, false), "$123.3121");
+                assert.equal(reflector.tg_formatMoney({amount: 123.3121}, 'en-AU', 4, false), "$123.3121");
                 done();
             });
             
             test('foramtting: formatting 123.3 decimal with default scale and trailing zeros should return 123.30', function (done) {
-                assert.equal(reflector.formatDecimal(123.3, 'en-AU', undefined, true), "123.30");
+                assert.equal(reflector.tg_formatDecimal(123.3, 'en-AU', undefined, true), "123.30");
                 done();
             });
             
             test('foramtting: formatting 123.3121 decimal with default scale and trailing zeros should return 123.31', function (done) {
-                assert.equal(reflector.formatDecimal(123.3121, 'en-AU', undefined, true), "123.31");
+                assert.equal(reflector.tg_formatDecimal(123.3121, 'en-AU', undefined, true), "123.31");
                 done();
             });
             
             test('foramtting: formatting 123.3 decimal with default scale and without trailing zeros should return 123.30', function (done) {
-                assert.equal(reflector.formatDecimal(123.3, 'en-AU'), "123.30");
+                assert.equal(reflector.tg_formatDecimal(123.3, 'en-AU'), "123.30");
                 done();
             });
             
             test('foramtting: formatting 123.3121 decimal with default scale and without trailing zeros should return 123.31', function (done) {
-                assert.equal(reflector.formatDecimal(123.3121, 'en-AU'), "123.31");
+                assert.equal(reflector.tg_formatDecimal(123.3121, 'en-AU'), "123.31");
                 done();
             });
             
             test('foramtting: formatting 123.3 money with default scale and trailing zeros should return $123.30', function (done) {
-                assert.equal(reflector.formatMoney({amount: 123.3}, 'en-AU', undefined, true), "$123.30");
+                assert.equal(reflector.tg_formatMoney({amount: 123.3}, 'en-AU', undefined, true), "$123.30");
                 done();
             });
             
             test('foramtting: formatting 123.3121 money with default scale and trailing zeros should return $123.31', function (done) {
-                assert.equal(reflector.formatMoney({amount: 123.3121}, 'en-AU', undefined, true), "$123.31");
+                assert.equal(reflector.tg_formatMoney({amount: 123.3121}, 'en-AU', undefined, true), "$123.31");
                 done();
             });
             
             test('foramtting: formatting 123.3 money with default scale and without trailing zeros should return $123.30', function (done) {
-                assert.equal(reflector.formatMoney({amount: 123.3}, 'en-AU'), "$123.30");
+                assert.equal(reflector.tg_formatMoney({amount: 123.3}, 'en-AU'), "$123.30");
                 done();
             });
             
             test('foramtting: formatting 123.3121 money with default scale and without trailing zeros should return $123.31', function (done) {
-                assert.equal(reflector.formatMoney({amount: 123.3121}, 'en-AU'), "$123.31");
+                assert.equal(reflector.tg_formatMoney({amount: 123.3121}, 'en-AU'), "$123.31");
                 done();
             });
             

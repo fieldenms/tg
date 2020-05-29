@@ -583,7 +583,7 @@ export class TgEditor extends PolymerElement {
      * Erroneous values are considered here too. Binding entities creation contains such logic.
      */
     _extractOriginalEditingValue (bindingEntity, propertyName) {
-        return this.convertToString(this.reflector().getBindingValue.bind(this.reflector())(bindingEntity, propertyName));
+        return this.convertToString(this.reflector().tg_getBindingValue.bind(this.reflector())(bindingEntity, propertyName));
     }
     
     _editedPropsChanged (editedProps) {
@@ -655,7 +655,7 @@ export class TgEditor extends PolymerElement {
     _originalEntityChanged (newValue, oldValue) {
         if (this.reflector().isEntity(newValue)) {
             // lazy conversion of original property value performs here (previusly it was done for all properties inside tg-entity-binder-behavior)
-            this.reflector().convertOriginalPropertyValue(newValue, this.propertyName, newValue["@@origin"]);
+            this.reflector().tg_convertOriginalPropertyValue(newValue, this.propertyName, this.reflector().tg_getFullEntity(newValue));
         }
     }
 
@@ -674,17 +674,17 @@ export class TgEditor extends PolymerElement {
             
             // lazy conversion of property value performs here (previusly it was done for all properties inside tg-entity-binder-behavior)
             if (!this.reflector().isDotNotated(this.propertyName)) {
-                this.reflector().convertPropertyValue(newValue, this.propertyName, newValue["@@origin"], this.previousModifiedPropertiesHolder);
+                this.reflector().tg_convertPropertyValue(newValue, this.propertyName, this.reflector().tg_getFullEntity(newValue), this.previousModifiedPropertiesHolder);
             }
             
-            var convertedValue = this.reflector().getBindingValue.bind(this.reflector())(newValue, this.propertyName);
-            var newEditingValue = this.convertToString(convertedValue);
+            const convertedValue = this.reflector().tg_getBindingValue.bind(this.reflector())(newValue, this.propertyName);
+            const newEditingValue = this.convertToString(convertedValue);
             if (newEditingValue === this._editingValue) {
                 this._refreshCycleStarted = false;
                 this._updateMessagesForEntity(newValue);
             } else {
-                var editingValueAfterPreviousRefreshCycleChanged = oldValue 
-                    ? this.convertToString(this.reflector().getBindingValue.bind(this.reflector())(oldValue, this.propertyName)) !== newEditingValue 
+                const editingValueAfterPreviousRefreshCycleChanged = oldValue 
+                    ? this.convertToString(this.reflector().tg_getBindingValue.bind(this.reflector())(oldValue, this.propertyName)) !== newEditingValue 
                     : true;
                 
                 if (!editingValueAfterPreviousRefreshCycleChanged) {
@@ -715,20 +715,20 @@ export class TgEditor extends PolymerElement {
     }
     
     _assignConvertedValue (propValue) {
-        var newEditingValue = this.convertToString(propValue);
+        const newEditingValue = this.convertToString(propValue);
         if (newEditingValue === this._editingValue && (this._refreshCycleStarted === true) ) {
             this._refreshCycleStarted = false;
         }
         this._editingValue = newEditingValue;
     }
     
-    assignValue (entity, propertyName, getPropertyValue) {
-        var convertedValue = getPropertyValue(entity, propertyName);
+    assignValue (entity, propertyName, tg_getBindingValueFromFullEntity) {
+        const convertedValue = tg_getBindingValueFromFullEntity(entity, propertyName);
         this._assignConvertedValue(convertedValue);
     }
     
     assignConcreteValue (value, converter) {
-        var convertedValue = converter(value);
+        const convertedValue = converter(value);
         this._assignConvertedValue(convertedValue);
     }
 
@@ -805,11 +805,10 @@ export class TgEditor extends PolymerElement {
     _skipValidationAction () {}
 
     /**
-     * Converts the value into string representation (which is used in editing / comm values). Please implement this method in descendant editor.
+     * Converts the value into string representation (which is used in editing / comm values). Override this method in descendant editor to get some specific behavior.
      */
     convertToString (value) {
-        // return "" + value;
-        throw "Conversion to string is not specified for this editor.";
+        return this.reflector().tg_toString(value, this.entity.type(), this.propertyName, { bindingValue: true });
     }
 
     /**
