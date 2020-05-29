@@ -89,6 +89,7 @@ public class EntityNavigationPreAction implements IPreAction {
                 + "                        action.modifyFunctionalEntity(master._currBindingEntity, master, action);%n"
                 + "                    }%n"
                 + "                    if (master.$.menu) {%n"
+                + "                         master.$.menu.currentSection()._showBlockingPane();%n"
                 + "                         master.$.menu.maintainPreviouslyOpenedMenuItem = true;%n"
                 + "                    }%n"
                 + "                    master.addEventListener('data-loaded-and-focused', action._restoreNavigationButtonState);%n"
