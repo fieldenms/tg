@@ -33,9 +33,9 @@ class TgLitEditor extends LitElement {
 
     set entity (newEntity) {
         if (!this._reflector.isDotNotated(this.propertyName)) {
-            this._reflector.convertPropertyValue(newEntity, this.propertyName, newEntity["@@origin"], null);
+            this._reflector.tg_convertPropertyValue(newEntity, this.propertyName, this._reflector.tg_getFullEntity(newEntity), null);
         }
-        const convertedValue = this._reflector.getBindingValue.bind(this._reflector)(newEntity, this.propertyName);
+        const convertedValue = this._reflector.tg_getBindingValue.bind(this._reflector)(newEntity, this.propertyName);
         this._editingValue = this.convertToString(convertedValue);
     }
 
