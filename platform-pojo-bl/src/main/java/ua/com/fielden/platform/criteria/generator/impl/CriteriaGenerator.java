@@ -2,7 +2,10 @@ package ua.com.fielden.platform.criteria.generator.impl;
 
 import static java.lang.ClassLoader.getSystemClassLoader;
 import static java.lang.String.format;
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Stream.empty;
+import static java.util.stream.Stream.of;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.from;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.getCriteriaTitleAndDesc;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.is;
@@ -12,11 +15,16 @@ import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteri
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isCritOnlySingle;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isPlaceholder;
+import static ua.com.fielden.platform.entity.annotation.factory.DateAnnotations.newDateOnlyAnnotation;
+import static ua.com.fielden.platform.entity.annotation.factory.DateAnnotations.newTimeOnlyAnnotation;
+import static ua.com.fielden.platform.entity.annotation.factory.DateAnnotations.newUtcAnnotation;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotationOptionally;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getInstance;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.EntityUtils.isDate;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -41,7 +49,10 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
+import ua.com.fielden.platform.entity.annotation.DateOnly;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.annotation.PersistentType;
+import ua.com.fielden.platform.entity.annotation.TimeOnly;
 import ua.com.fielden.platform.entity.annotation.factory.AfterChangeAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.CriteriaPropertyAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.EntityTypeAnnotation;
@@ -192,12 +203,36 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         final List<NewProperty> generatedProperties = new ArrayList<>();
         
         final IsProperty isPropertyAnnotation = isEntityItself ? null : getPropertyAnnotation(IsProperty.class, managedType, propertyName);
+        final List<Annotation> additionalAnnotations = isDate(propertyType) ? copyDateAnnotations(managedType, propertyName) : emptyList();
         if (isDoubleCriterion(managedType, propertyName)) {
-            generatedProperties.addAll(generateRangeCriteriaProperties(root, managedType, propertyType, propertyName, titleAndDesc, critOnlyAnnotation, isPropertyAnnotation));
+            generatedProperties.addAll(generateRangeCriteriaProperties(root, managedType, propertyType, propertyName, titleAndDesc, critOnlyAnnotation, isPropertyAnnotation, additionalAnnotations));
         } else {
-            generatedProperties.add(generateSingleCriteriaProperty(root, managedType, propertyType, propertyName, titleAndDesc, critOnlyAnnotation, isPropertyAnnotation));
+            generatedProperties.add(generateSingleCriteriaProperty(root, managedType, propertyType, propertyName, titleAndDesc, critOnlyAnnotation, isPropertyAnnotation, additionalAnnotations));
         }
         return generatedProperties;
+    }
+
+    /**
+     * Copies date-related property annotations.
+     * 
+     * @param managedType
+     * @param propertyName
+     * @return
+     */
+    private static List<Annotation> copyDateAnnotations(final Class<?> managedType, final String propertyName) {
+        return of(DateOnly.class, TimeOnly.class, PersistentType.class)
+            .map(annotationType -> getPropertyAnnotationOptionally(annotationType, managedType, propertyName))
+            .flatMap(annotation -> annotation.isPresent() ? of(annotation.get()) : empty())
+            .map(annotation -> {
+                if (annotation instanceof DateOnly) {
+                    return newDateOnlyAnnotation();
+                } else if (annotation instanceof TimeOnly) {
+                    return newTimeOnlyAnnotation();
+                } else {
+                    return newUtcAnnotation();
+                }
+            })
+            .collect(toList());
     }
 
     /**
@@ -208,10 +243,11 @@ public class CriteriaGenerator implements ICriteriaGenerator {
      * @param propertyType
      * @param propertyName
      * @param critOnlyAnnotation
+     * @param additionalAnnotations -- additional annotations to be generated in criteria property
      * @return
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private static NewProperty generateSingleCriteriaProperty(final Class<?> root, final Class<?> managedType, final Class<?> propertyType, final String propertyName, final Pair<String, String> titleAndDesc, final CritOnly critOnlyAnnotation, final IsProperty isPropertyAnnotation) {
+    private static NewProperty generateSingleCriteriaProperty(final Class<?> root, final Class<?> managedType, final Class<?> propertyType, final String propertyName, final Pair<String, String> titleAndDesc, final CritOnly critOnlyAnnotation, final IsProperty isPropertyAnnotation, final List<Annotation> additionalAnnotations) {
         final boolean isEntity = EntityUtils.isEntityType(propertyType);
         final boolean isSingle = critOnlyAnnotation != null && Type.SINGLE.equals(critOnlyAnnotation.value());
         final Class<?> newPropertyType = isEntity ? (isSingle ? propertyType : List.class) : (EntityUtils.isBoolean(propertyType) ? boolean.class : propertyType);
@@ -230,6 +266,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         }
         annotations.add(new CriteriaPropertyAnnotation(managedType, propertyName).newInstance());
         annotations.add(new AfterChangeAnnotation(SynchroniseCriteriaWithModelHandler.class).newInstance());
+        annotations.addAll(additionalAnnotations);
         return new NewProperty(CriteriaReflector.critName(root, propertyName), newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(), annotations.toArray(new Annotation[0]));
     }
 
@@ -241,17 +278,17 @@ public class CriteriaGenerator implements ICriteriaGenerator {
      * @param propertyType
      * @param propertyName
      * @param critOnlyAnnotation
+     * @param additionalAnnotations -- additional annotations to be generated in criteria properties
      * @return
      */
     @SuppressWarnings("serial")
-    private static List<NewProperty> generateRangeCriteriaProperties(final Class<?> root, final Class<?> managedType, final Class<?> propertyType, final String propertyName, final Pair<String, String> titleAndDesc, final CritOnly critOnlyAnnotation, final IsProperty isPropertyAnnotation) {
-        //final boolean isEntityItself = "".equals(propertyName);
+    private static List<NewProperty> generateRangeCriteriaProperties(final Class<?> root, final Class<?> managedType, final Class<?> propertyType, final String propertyName, final Pair<String, String> titleAndDesc, final CritOnly critOnlyAnnotation, final IsProperty isPropertyAnnotation, final List<Annotation> additionalAnnotations) {
         final String firstPropertyName = CriteriaReflector.critName(root, EntityUtils.isBoolean(propertyType) ? is(propertyName) : from(propertyName));
         final String secondPropertyName = CriteriaReflector.critName(root, EntityUtils.isBoolean(propertyType) ? not(propertyName) : to(propertyName));
         final Class<?> newPropertyType = EntityUtils.isBoolean(propertyType) ? boolean.class : propertyType;
         
-        final NewProperty firstProperty = new NewProperty(firstPropertyName, newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(), createAnnotations(true, managedType, secondPropertyName, propertyName, isPropertyAnnotation));
-        final NewProperty secondProperty = new NewProperty(secondPropertyName, newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(), createAnnotations(false, managedType, firstPropertyName, propertyName, isPropertyAnnotation));
+        final NewProperty firstProperty = new NewProperty(firstPropertyName, newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(), createAnnotations(true, managedType, secondPropertyName, propertyName, isPropertyAnnotation, additionalAnnotations));
+        final NewProperty secondProperty = new NewProperty(secondPropertyName, newPropertyType, false, titleAndDesc.getKey(), titleAndDesc.getValue(), createAnnotations(false, managedType, firstPropertyName, propertyName, isPropertyAnnotation, additionalAnnotations));
         
         return new ArrayList<NewProperty>() {
             {
@@ -261,7 +298,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         };
     }
     
-    private static Annotation[] createAnnotations(final boolean first, final Class<?> managedType, final String otherPropertyName, final String originalPropertyName, final IsProperty isProperty) {
+    private static Annotation[] createAnnotations(final boolean first, final Class<?> managedType, final String otherPropertyName, final String originalPropertyName, final IsProperty isProperty, final List<Annotation> additionalAnnotations) {
         final List<Annotation> annotations = new ArrayList<>();
         if (isProperty != null) {
             annotations.add(new IsPropertyAnnotation().copyFrom(isProperty));
@@ -273,6 +310,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         }
         annotations.add(new CriteriaPropertyAnnotation(managedType, originalPropertyName).newInstance());
         annotations.add(new AfterChangeAnnotation(SynchroniseCriteriaWithModelHandler.class).newInstance());
+        annotations.addAll(additionalAnnotations);
         return annotations.toArray(new Annotation[0]);
     }
     
