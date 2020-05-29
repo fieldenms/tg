@@ -6,6 +6,8 @@ import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract
 import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.DateOnly;
+import ua.com.fielden.platform.entity.annotation.TimeOnly;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
@@ -59,7 +61,7 @@ import ua.com.fielden.platform.web.view.master.api.widgets.spinner.impl.SpinnerW
 import ua.com.fielden.platform.web.view.master.exceptions.EntityMasterConfigurationException;
 
 public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelector<T> {
-
+    private final String ERR_INVALID_DATEPICKER_CHOICE = "Invalid editor choice for [%s@%s] due to annotation @%s.";
     public final SimpleMasterBuilder<T> smBuilder;
     public final String propertyName;
 
@@ -137,7 +139,8 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
                     );
             return new DateTimePickerConfig<>((DateTimePickerWidget) widget, smBuilder);
         }
-        throw new EntityMasterConfigurationException(format("The master configuration for [%s] is invalid. Cause: [%s] is annotated with @%sOnly", smBuilder.getEntityType(), propertyName, timePortion));
+        throw new EntityMasterConfigurationException(format(ERR_INVALID_DATEPICKER_CHOICE,
+                propertyName, smBuilder.getEntityType().getSimpleName(), "DATE".equals(timePortion) ? DateOnly.class.getSimpleName() : TimeOnly.class.getSimpleName()));
     }
 
     @Override
@@ -153,7 +156,7 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
                     );
             return new DatePickerConfig<>((DateTimePickerWidget) widget, smBuilder);
         }
-        throw new EntityMasterConfigurationException(format("The master configuration for [%s] is invalid. Cause: [%s] is not annotated with @DateOnly", smBuilder.getEntityType(), propertyName));
+        throw new EntityMasterConfigurationException(format(ERR_INVALID_DATEPICKER_CHOICE, propertyName, smBuilder.getEntityType().getSimpleName(), DateOnly.class.getSimpleName()));
     }
 
     @Override
@@ -169,7 +172,7 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
                     );
             return new TimePickerConfig<>((DateTimePickerWidget) widget, smBuilder);
         }
-        throw new EntityMasterConfigurationException(format("The master configuration for [%s] is invalid. Cause: [%s] is not annotated with @TimeOnly", smBuilder.getEntityType(), propertyName));
+        throw new EntityMasterConfigurationException(format(ERR_INVALID_DATEPICKER_CHOICE, propertyName, smBuilder.getEntityType().getSimpleName(), TimeOnly.class.getSimpleName()));
     }
 
     @Override
