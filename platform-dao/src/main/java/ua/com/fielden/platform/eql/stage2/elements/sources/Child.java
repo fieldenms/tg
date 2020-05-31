@@ -1,11 +1,12 @@
 package ua.com.fielden.platform.eql.stage2.elements.sources;
 
-import static java.lang.String.format;
+import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.util.Objects;
 import java.util.Set;
 import java.util.SortedSet;
 
+import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.stage2.elements.operands.Expression2;
 
@@ -35,6 +36,10 @@ public class Child implements Comparable<Child> {
         this.id = id;
  //       assert(items.isEmpty() || !items.isEmpty() && source !=null );
         assert(dependencies.isEmpty() || !dependencies.isEmpty() && expr != null);
+        assert(parentSource != null);
+        if (source == null && fullPath == null && !isUnionEntityType(main.javaType())) {
+            throw new EqlException("Incorrect state.");
+        }
     }
     
     @Override
@@ -45,16 +50,39 @@ public class Child implements Comparable<Child> {
         result = prime * result + main.hashCode();
         result = prime * result + ((fullPath == null) ? 0 : fullPath.hashCode());
         result = prime * result + ((source == null) ? 0 : source.hashCode());
-        result = prime * result + ((parentSource == null) ? 0 : parentSource.hashCode());
+        result = prime * result + parentSource.hashCode();
         result = prime * result + dependencies.hashCode();
         return result;
     }
     
     @Override
     public String toString() {
-        return format("%3s| %30s | fp=%25s | %50s | %50s |", id, main, /*context, */fullPath, parentSource, (source != null ? source : "none"));
+        return toString("");
     }
 
+    private static String offset = "              ";
+    
+    private String toString(String currentOffset) {
+        final StringBuffer sb = new StringBuffer();
+        sb.append(currentOffset + "**** CHILD ****");//[" + hashCode() + "]");
+        sb.append("\n" + currentOffset + "-------------- main : " + main.name);
+        sb.append("\n" + currentOffset + "------------ source : " + (source != null ? source : ""));
+        sb.append("\n" + currentOffset + "------ parentSource : " + parentSource);
+        sb.append("\n" + currentOffset + "---------- fullPath : " + (fullPath != null ? fullPath : ""));
+        sb.append("\n" + currentOffset + "-------------- expr : " + (expr != null ? "Y" : ""));
+        if (!items.isEmpty()) {
+            sb.append("\n" + currentOffset + "------------- items :");
+            for (Child child : items) {
+                sb.append("\n");
+                sb.append(child.toString(currentOffset + offset));
+            }
+        }
+        
+        //sb.append("\n" + currentOffset + "***** END *****");//[" + hashCode() + "]");
+        
+        return sb.toString();
+    }
+    
     @Override
     public boolean equals(final Object obj) {
         if (this == obj) {
@@ -73,9 +101,18 @@ public class Child implements Comparable<Child> {
     private boolean dependsOn(final Child child) {
         return dependencies.contains(child) || dependencies.stream().anyMatch(c -> c.dependsOn(child));
     }
+
     
     @Override
     public int compareTo(final Child o) {
-        return dependsOn(o) ? 1 : (o.dependsOn(this) ? -1 : main.name.equals(o.main.name) ? (id > o.id ? 1 : -1) : (expr != null && o.expr != null || expr == null && o.expr == null ? main.name.compareTo(o.main.name) : (expr != null && o.expr == null ? 1 : -1)));
+        if (o.equals(this)) {
+            return 0;
+        }
+
+        return dependsOn(o) ? 1 : 
+            (o.dependsOn(this) ? -1 : 
+                main.name.equals(o.main.name) ? (id > o.id ? 1 : -1) :
+                    (expr != null && o.expr != null || expr == null && o.expr == null ? main.name.compareTo(o.main.name) :
+                        (expr != null ? 1 : -1)));
     }
 }

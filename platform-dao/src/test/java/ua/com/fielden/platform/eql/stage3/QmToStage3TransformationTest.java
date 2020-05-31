@@ -12,7 +12,6 @@ import java.util.HashMap;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.eql.meta.EqlStage3TestCase;
@@ -283,7 +282,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final ResultQuery3 expQry = qryCountAll(sources, conditions);
         
         assertEquals(expQry, actQry);
-        System.out.println(actQry.sql(DbVersion.H2));
+//        System.out.println(actQry.sql(DbVersion.H2));
     }
     
     @Test
@@ -309,7 +308,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final ResultQuery3 expQry = qryCountAll(sources, conditions);
 
         assertEquals(expQry, actQry);
-        System.out.println(actQry.sql(DbVersion.H2));
+//        System.out.println(actQry.sql(DbVersion.H2));
     }
 
     @Test
@@ -340,7 +339,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final ResultQuery3 expQry = qryCountAll(sources, conditions);
         
         assertEquals(expQry, actQry);
-        System.out.println(actQry.sql(DbVersion.H2));
+//        System.out.println(actQry.sql(DbVersion.H2));
         
     }
 

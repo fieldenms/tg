@@ -30,10 +30,6 @@ public class QrySource2BasedOnPersistentType extends AbstractElement2 implements
         this(sourceType, entityInfo, null, contextId);               
     }
 
-//    public QrySource2BasedOnPersistentType(final Class<? extends AbstractEntity<?>> sourceType, final EntityInfo entityInfo, final String contextId, final String subcontextId) {
-//        this(sourceType, entityInfo, null, contextId, subcontextId);               
-//    }
-
     @Override
     public TransformationResult<QrySource3BasedOnTable> transform(final TransformationContext context) {
         final QrySource3BasedOnTable transformedSource = new QrySource3BasedOnTable(context.getTable(sourceType().getName()), contextId);
@@ -67,7 +63,7 @@ public class QrySource2BasedOnPersistentType extends AbstractElement2 implements
     
     @Override
     public String toString() {
-        return format("%20s %30s", sourceType.getSimpleName(), contextId);
+        return format("type = [%s], ID = [%s], alias = [%s]", sourceType.getSimpleName(), contextId, (alias != null ? alias : ""));
     }
 
     @Override
