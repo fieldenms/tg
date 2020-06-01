@@ -103,12 +103,18 @@ public class EntityQueryCriteriaUtils {
         for (final String propertyName : tickManager.checkedProperties(root)) {
             if (!isPlaceholder(propertyName)) {
                 if (isDoubleCriterion(managedType, propertyName)) {
-                    if (isDate(determinePropertyType(managedType, propertyName)) && tickManager.getDatePrefix(root, propertyName) != null
-                            && tickManager.getDateMnemonic(root, propertyName) != null) {
+                    final boolean isDate = isDate(determinePropertyType(managedType, propertyName));
+                    if (isDate && tickManager.getDatePrefix(root, propertyName) != null && tickManager.getDateMnemonic(root, propertyName) != null) {
                         final Pair<Date, Date> fromAndTo = getDateValuesFrom(tickManager.getDatePrefix(root, propertyName), tickManager.getDateMnemonic(root, propertyName), tickManager.getAndBefore(root, propertyName), dates);
-                        paramValues.put(propertyName, pair(fromAndTo.getKey(), fromAndTo.getValue()));
+                        paramValues.put(propertyName, pair(
+                            fromAndTo.getKey(),
+                            fromAndTo.getValue()
+                        ));
                     } else {
-                        paramValues.put(propertyName, pair(tickManager.getValue(root, propertyName), tickManager.getValue2(root, propertyName)));
+                        paramValues.put(propertyName, pair(
+                            tickManager.getValue(root, propertyName),
+                            tickManager.getValue2(root, propertyName)
+                        ));
                     }
                 } else {
                     paramValues.put(propertyName, pair(tickManager.getValue(root, propertyName), null));
