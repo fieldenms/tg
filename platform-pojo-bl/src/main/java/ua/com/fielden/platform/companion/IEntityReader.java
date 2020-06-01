@@ -86,10 +86,16 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
      * @param fetchModel -- fetching model specifying the initialisation strategy (i.e. what properties should be retrieved).
      * @return
      */
-    T findById(final Long id, final fetch<T> fetchModel);
+    default T findById(final Long id, final fetch<T> fetchModel) {
+        return findById(false, id, fetchModel);
+    }
 
     default Optional<T> findByIdOptional(final Long id, final fetch<T> fetchModel) {
-        return Optional.ofNullable(findById(id, fetchModel));
+        return findByIdOptional(false, id, fetchModel);
+    }
+
+    default Optional<T> findByIdOptional(final boolean filtered, final Long id, final fetch<T> fetchModel) {
+        return Optional.ofNullable(findById(filtered, id, fetchModel));
     }
 
     /**
@@ -108,8 +114,8 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
     }
 
     /**
-     * Finds entity by its business key. If the key is composite then values of the key components should be passed in the same order as defined in the entity class using
-     * annotation {@link CompositeKeyMember}.
+     * Finds entity by its business key .
+     * If the key is composite then values of the key components should be passed in the same order as defined in the entity class using annotation {@link CompositeKeyMember}.
      *
      * @param keyValues
      * @return
@@ -121,10 +127,11 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
     }
 
     /**
-     * Finds entity by its business key and enhances it according to provided fetch model. If the key is composite then values of the key components should be passed in the same
-     * order as defined in the entity class using annotation {@link CompositeKeyMember}.
+     * Finds entity by its business key and fetches it with specified fetch model.
+     * If the key is composite then values of the key components should be passed in the same order as defined in the entity class using annotation {@link CompositeKeyMember}.
+     * Supports user filtering option as argument {@code filtered}.
      *
-     * @param filtered -- <code>true</code> to turn filtering on.
+     * @param filtered -- specify {@code true} to turn filtering on.
      * @param fetchModel -- fetching model specifying the initialisation strategy (i.e. what properties should be retrieved).
      * @param keyValues
      * @return
@@ -132,17 +139,23 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
     T findByKeyAndFetch(final boolean filtered, final fetch<T> fetchModel, final Object... keyValues);
 
     /**
-     * Finds entity by its business key and enhances it according to provided fetch model. If the key is composite then values of the key components should be passed in the same
-     * order as defined in the entity class using annotation {@link CompositeKeyMember}.
+     * Finds entity by its business key without applying user-driven filtering, and fetches it with the specified fetch model.
+     * If the key is composite then values of the key components should be passed in the same order as defined in the entity class using annotation {@link CompositeKeyMember}.
      *
      * @param fetchModel -- fetching model specifying the initialisation strategy (i.e. what properties should be retrieved).
      * @param keyValues
      * @return
      */
-    T findByKeyAndFetch(final fetch<T> fetchModel, final Object... keyValues);
+    default T findByKeyAndFetch(final fetch<T> fetchModel, final Object... keyValues) {
+        return findByKeyAndFetch(false, fetchModel, keyValues);
+    }
+
+    default Optional<T> findByKeyAndFetchOptional(final boolean filtered, final fetch<T> fetchModel, final Object... keyValues) {
+        return Optional.ofNullable(findByKeyAndFetch(filtered, fetchModel, keyValues));
+    }
 
     default Optional<T> findByKeyAndFetchOptional(final fetch<T> fetchModel, final Object... keyValues) {
-        return Optional.ofNullable(findByKeyAndFetch(fetchModel, keyValues));
+        return findByKeyAndFetchOptional(false, fetchModel, keyValues);
     }
 
     /**
