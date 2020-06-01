@@ -48,11 +48,6 @@ public class TopLevelEntityDaoStub implements ITopLevelEntity {
     }
 
     @Override
-    public TopLevelEntity findById(final Long id, final fetch<TopLevelEntity> fetchModel) {
-        return null;
-    }
-
-    @Override
     public TopLevelEntity findById(final Long id) {
         return null;
     }
@@ -64,11 +59,6 @@ public class TopLevelEntityDaoStub implements ITopLevelEntity {
 
     @Override
     public TopLevelEntity findByKeyAndFetch(final boolean filtered, final fetch<TopLevelEntity> fetchModel, final Object... keyValues) {
-        return null;
-    }
-
-    @Override
-    public TopLevelEntity findByKeyAndFetch(final fetch<TopLevelEntity> fetchModel, final Object... keyValues) {
         return null;
     }
 

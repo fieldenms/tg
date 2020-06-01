@@ -50,11 +50,6 @@ public class TgSystemDaoStub implements ITgSystem {
     }
 
     @Override
-    public TgSystem findById(final Long id, final fetch<TgSystem> fetchModel) {
-        return null;
-    }
-
-    @Override
     public TgSystem findById(final Long id) {
         return null;
     }
@@ -66,11 +61,6 @@ public class TgSystemDaoStub implements ITgSystem {
 
     @Override
     public TgSystem findByKeyAndFetch(final boolean filtered, final fetch<TgSystem> fetchModel, final Object... keyValues) {
-        return null;
-    }
-
-    @Override
-    public TgSystem findByKeyAndFetch(final fetch<TgSystem> fetchModel, final Object... keyValues) {
         return null;
     }
 

@@ -52,12 +52,6 @@ public class LastLevelEntityDaoStub implements ILastLevelEntity {
     }
 
     @Override
-    public LastLevelEntity findById(final Long id, final fetch<LastLevelEntity> fetchModel) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
     public LastLevelEntity findById(final Long id) {
         // TODO Auto-generated method stub
         return null;
@@ -71,12 +65,6 @@ public class LastLevelEntityDaoStub implements ILastLevelEntity {
 
     @Override
     public LastLevelEntity findByKeyAndFetch(final boolean filtered, final fetch<LastLevelEntity> fetchModel, final Object... keyValues) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public LastLevelEntity findByKeyAndFetch(final fetch<LastLevelEntity> fetchModel, final Object... keyValues) {
         // TODO Auto-generated method stub
         return null;
     }

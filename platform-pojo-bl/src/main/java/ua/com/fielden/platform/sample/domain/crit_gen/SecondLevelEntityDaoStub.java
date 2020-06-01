@@ -52,12 +52,6 @@ public class SecondLevelEntityDaoStub implements ISecondLevelEntity {
     }
 
     @Override
-    public SecondLevelEntity findById(final Long id, final fetch<SecondLevelEntity> fetchModel) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
     public SecondLevelEntity findById(final Long id) {
         // TODO Auto-generated method stub
         return null;
@@ -71,12 +65,6 @@ public class SecondLevelEntityDaoStub implements ISecondLevelEntity {
 
     @Override
     public SecondLevelEntity findByKeyAndFetch(final boolean filtered, final fetch<SecondLevelEntity> fetchModel, final Object... keyValues) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public SecondLevelEntity findByKeyAndFetch(final fetch<SecondLevelEntity> fetchModel, final Object... keyValues) {
         // TODO Auto-generated method stub
         return null;
     }
