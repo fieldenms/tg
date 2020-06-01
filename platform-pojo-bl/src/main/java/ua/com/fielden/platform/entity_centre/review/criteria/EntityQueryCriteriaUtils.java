@@ -102,8 +102,8 @@ public class EntityQueryCriteriaUtils {
         final Map<String, Pair<Object, Object>> paramValues = new HashMap<>();
         for (final String propertyName : tickManager.checkedProperties(root)) {
             if (!isPlaceholder(propertyName)) {
+                final boolean isDate = isDate(determinePropertyType(managedType, propertyName));
                 if (isDoubleCriterion(managedType, propertyName)) {
-                    final boolean isDate = isDate(determinePropertyType(managedType, propertyName));
                     if (isDate && tickManager.getDatePrefix(root, propertyName) != null && tickManager.getDateMnemonic(root, propertyName) != null) {
                         final Pair<Date, Date> fromAndTo = getDateValuesFrom(tickManager.getDatePrefix(root, propertyName), tickManager.getDateMnemonic(root, propertyName), tickManager.getAndBefore(root, propertyName), dates);
                         paramValues.put(propertyName, pair(
@@ -117,7 +117,10 @@ public class EntityQueryCriteriaUtils {
                         ));
                     }
                 } else {
-                    paramValues.put(propertyName, pair(tickManager.getValue(root, propertyName), null));
+                    paramValues.put(propertyName, pair(
+                        tickManager.getValue(root, propertyName),
+                        null
+                    ));
                 }
             }
         }
