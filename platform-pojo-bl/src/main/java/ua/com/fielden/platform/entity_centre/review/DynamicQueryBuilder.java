@@ -6,6 +6,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils.paramValue;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.baseEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
 import static ua.com.fielden.platform.utils.EntityUtils.isDate;
@@ -942,14 +943,14 @@ public class DynamicQueryBuilder {
                 // left boundary should be inclusive and right -- exclusive!
                 final Pair<Date, Date> fromAndTo = getDateValuesFrom(property.getDatePrefix(), property.getDateMnemonic(), property.getAndBefore(), dates);
                 return scag1.ge()
-                        .iVal(fromAndTo.getKey  ()).and().prop(propertyName)
+                        .iVal(paramValue(fromAndTo.getKey  (), isDate, property)).and().prop(propertyName)
                         .lt()
-                        .iVal(fromAndTo.getValue()).model();
+                        .iVal(paramValue(fromAndTo.getValue(), isDate, property)).model();
             } else {
                 final IStandAloneConditionComparisonOperator<ET> scag2 = (TRUE.equals(property.getExclusive ()) ? scag1.gt() : scag1.ge())
-                        .iVal(property.getValue ()).and().prop(propertyName);
+                        .iVal(paramValue(property.getValue (), isDate, property)).and().prop(propertyName);
                 return (TRUE.equals(property.getExclusive2()) ? scag2.lt() : scag2.le())
-                        .iVal(property.getValue2()).model();
+                        .iVal(paramValue(property.getValue2(), isDate, property)).model();
             }
         } else if (isBoolean(property.getType())) {
             final boolean is = (Boolean) property.getValue();

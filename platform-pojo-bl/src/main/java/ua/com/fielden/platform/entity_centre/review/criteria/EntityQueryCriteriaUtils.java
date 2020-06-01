@@ -1,9 +1,12 @@
 package ua.com.fielden.platform.entity_centre.review.criteria;
 
+import static org.joda.time.DateTimeZone.UTC;
+import static org.joda.time.DateTimeZone.getDefault;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isPlaceholder;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.getDateValuesFrom;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isUtc;
 import static ua.com.fielden.platform.utils.EntityUtils.isDate;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
@@ -14,6 +17,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.joda.time.DateTime;
 
 import ua.com.fielden.platform.domaintree.ICalculatedProperty;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
@@ -107,24 +112,63 @@ public class EntityQueryCriteriaUtils {
                     if (isDate && tickManager.getDatePrefix(root, propertyName) != null && tickManager.getDateMnemonic(root, propertyName) != null) {
                         final Pair<Date, Date> fromAndTo = getDateValuesFrom(tickManager.getDatePrefix(root, propertyName), tickManager.getDateMnemonic(root, propertyName), tickManager.getAndBefore(root, propertyName), dates);
                         paramValues.put(propertyName, pair(
-                            fromAndTo.getKey(),
-                            fromAndTo.getValue()
+                            paramValue(fromAndTo.getKey(), isDate, managedType, propertyName),
+                            paramValue(fromAndTo.getValue(), isDate, managedType, propertyName)
                         ));
                     } else {
                         paramValues.put(propertyName, pair(
-                            tickManager.getValue(root, propertyName),
-                            tickManager.getValue2(root, propertyName)
+                            paramValue(tickManager.getValue(root, propertyName), isDate, managedType, propertyName),
+                            paramValue(tickManager.getValue2(root, propertyName), isDate, managedType, propertyName)
                         ));
                     }
                 } else {
                     paramValues.put(propertyName, pair(
-                        tickManager.getValue(root, propertyName),
+                        paramValue(tickManager.getValue(root, propertyName), isDate, managedType, propertyName),
                         null
                     ));
                 }
             }
         }
         return paramValues;
+    }
+
+    /**
+     * Converts {@code value} to a form suitable for EQL parameters.
+     * <p>
+     * The only specifics here is UTC date handling. Date value is converted to the form in which UTC dates are persisted in database.
+     * 
+     * @param value
+     * @param isDate -- {@code true} if property is of {@link Date} type
+     * @param queryProperty
+     * @return
+     */
+    public static Object paramValue(final Object value, final boolean isDate, final QueryProperty queryProperty) {
+        return paramValue(value, isDate, queryProperty.getEntityClass(), queryProperty.getPropertyName());
+    }
+
+    /**
+     * Converts {@code value} to a form suitable for EQL parameters.
+     * <p>
+     * The only specifics here is UTC date handling. Date value is converted to the form in which UTC dates are persisted in database.
+     * 
+     * @param value
+     * @param isDate -- {@code true} if property is of {@link Date} type
+     * @param managedType
+     * @param propertyName
+     * @return
+     */
+    public static Object paramValue(final Object value, final boolean isDate, final Class<?> managedType, final String propertyName) {
+        return value != null && isDate && isUtc(managedType, propertyName) ? utcDateParamValue((Date) value) : value; 
+    }
+
+    /**
+     * Converts {@code value} for UTC property to the form in which UTC dates are persisted in database.
+     * 
+     * @param date
+     * @return
+     */
+    private static Date utcDateParamValue(final Date date) {
+        return new DateTime(date, UTC).withZoneRetainFields(getDefault()).toDate();
     }
 
     /**
