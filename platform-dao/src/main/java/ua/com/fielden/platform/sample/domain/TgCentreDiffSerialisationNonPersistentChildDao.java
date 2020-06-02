@@ -22,7 +22,7 @@ public class TgCentreDiffSerialisationNonPersistentChildDao extends CommonEntity
     }
     
     @Override
-    public TgCentreDiffSerialisationNonPersistentChild findByKeyAndFetch(final fetch<TgCentreDiffSerialisationNonPersistentChild> fetchModel, final Object... keyValues) {
+    public TgCentreDiffSerialisationNonPersistentChild findByKeyAndFetch(final boolean filtered, final fetch<TgCentreDiffSerialisationNonPersistentChild> fetchModel, final Object... keyValues) {
         return TgCentreDiffSerialisationNonPersistentChild.GroupingProperty.findByKey((String) keyValues[0]).map(v -> v.value).orElse(null);
     }
     

@@ -137,7 +137,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 keyType,
                 this::getUser,
                 () -> getUniversalConstants().now(),
-                this::isFilterable,
                 this::getCoFinder,
                 this::newQueryExecutionContext,
                 this::processAfterSaveEvent,
@@ -165,11 +164,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 getIdOnlyProxiedEntityTypeCache());
     }
 
-    @Override
-    protected boolean isFilterable() {
-        return false;
-    }
-    
     /**
      * A separate setter is used in order to avoid enforcement of providing mapping generator as one of constructor parameter in descendant classes.
      *
