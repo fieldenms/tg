@@ -65,16 +65,6 @@ public class TgSystemDaoStub implements ITgSystem {
     }
 
     @Override
-    public IPage<TgSystem> firstPage(final int pageCapacity) {
-        return null;
-    }
-
-    @Override
-    public IPage<TgSystem> getPage(final int pageNo, final int pageCapacity) {
-        return null;
-    }
-
-    @Override
     public IPage<TgSystem> firstPage(final QueryExecutionModel<TgSystem, ?> query, final int pageCapacity) {
         return null;
     }

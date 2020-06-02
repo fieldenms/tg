@@ -70,18 +70,6 @@ public class SecondLevelEntityDaoStub implements ISecondLevelEntity {
     }
 
     @Override
-    public IPage<SecondLevelEntity> firstPage(final int pageCapacity) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public IPage<SecondLevelEntity> getPage(final int pageNo, final int pageCapacity) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
     public IPage<SecondLevelEntity> firstPage(final QueryExecutionModel<SecondLevelEntity, ?> query, final int pageCapacity) {
         // TODO Auto-generated method stub
         return null;

@@ -70,18 +70,6 @@ public class LastLevelEntityDaoStub implements ILastLevelEntity {
     }
 
     @Override
-    public IPage<LastLevelEntity> firstPage(final int pageCapacity) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public IPage<LastLevelEntity> getPage(final int pageNo, final int pageCapacity) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
     public IPage<LastLevelEntity> firstPage(final QueryExecutionModel<LastLevelEntity, ?> query, final int pageCapacity) {
         // TODO Auto-generated method stub
         return null;

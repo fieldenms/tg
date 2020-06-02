@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.persistence.types;
 
 import static org.junit.Assert.assertEquals;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.math.BigDecimal;
 import java.util.Currency;
@@ -11,6 +14,9 @@ import org.junit.Test;
 import ua.com.fielden.platform.dao.EntityWithSimpleMoneyDao;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityWithMoney;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
@@ -53,7 +59,9 @@ public class MoneyAndSimpleMoneyTestCase extends AbstractDaoTestCase {
         final EntityWithSimpleMoney instance2 = dao.findByKey("name");
 
         assertEquals(instance, instance2);
-        assertEquals("Incorrect number of entities with simple money.", 2, dao.getPage(0, 25).data().size());
+        final EntityResultQueryModel<EntityWithSimpleMoney> query = select(EntityWithSimpleMoney.class).model();
+        final OrderingModel orderBy = orderBy().prop(AbstractEntity.ID).asc().model();
+        assertEquals("Incorrect number of entities with simple money.", 2, dao.getPage(from(query).with(orderBy).model(), 0, 25).data().size());
     }
 
     @Override

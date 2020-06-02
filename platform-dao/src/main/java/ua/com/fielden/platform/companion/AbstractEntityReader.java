@@ -209,15 +209,6 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
     }
 
     /**
-     * Returns a first page holding up to <code>pageCapacity</code> instance of entities retrieved by query with no filtering conditions. Useful for things like autocompleters.
-     */
-    @Override
-    @SessionRequired
-    public IPage<T> firstPage(final int pageCapacity) {
-        return new EntityQueryPage(getDefaultQueryExecutionModel(), 0, pageCapacity, evalNumOfPages(getDefaultQueryExecutionModel().getQueryModel(), Collections.<String, Object> emptyMap(), pageCapacity));
-    }
-    
-    /**
      * Returns a first page holding up to <code>size</code> instance of entities retrieved by the provided query model. This allows a query based pagination.
      */
     @Override
@@ -254,14 +245,6 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
 
         final int pageNumber = pageNo < 0 ? numberOfPagesAndCount.getKey() - 1 : pageNo;
         return new EntityQueryPage(qem, pageNumber, pageCapacity, numberOfPagesAndCount);
-    }
-
-    @Override
-    @SessionRequired
-    public IPage<T> getPage(final int pageNo, final int pageCapacity) {
-        final Pair<Integer, Integer> numberOfPagesAndCount = evalNumOfPages(getDefaultQueryExecutionModel().getQueryModel(), Collections.<String, Object> emptyMap(), pageCapacity);
-        final int pageNumber = pageNo < 0 ? numberOfPagesAndCount.getKey() - 1 : pageNo;
-        return new EntityQueryPage(getDefaultQueryExecutionModel(), pageNumber, pageCapacity, numberOfPagesAndCount);
     }
 
     /**
@@ -465,16 +448,6 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
         public int no() {
             return pageNumber;
         }
-    }
-    
-    protected QueryExecutionModel<T, EntityResultQueryModel<T>> produceDefaultQueryExecutionModel(final Class<T> entityType) {
-        final EntityResultQueryModel<T> query = select(entityType).model();
-        final OrderingModel orderBy = orderBy().prop(AbstractEntity.ID).asc().model();
-        return instrumented() ? from(query).with(orderBy).model() : from(query).with(orderBy).lightweight().model();
-    }
-
-    protected QueryExecutionModel<T, EntityResultQueryModel<T>> getDefaultQueryExecutionModel() {
-        return produceDefaultQueryExecutionModel(getEntityType());
     }
 
 }

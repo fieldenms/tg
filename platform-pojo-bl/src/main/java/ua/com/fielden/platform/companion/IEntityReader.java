@@ -181,14 +181,6 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
     List<T> getFirstEntities(final QueryExecutionModel<T, ?> query, final int numberOfEntities);
     
     /**
-     * Should return a reference to the first page of the specified size containing entity instances.
-     *
-     * @param pageCapacity
-     * @return
-     */
-    IPage<T> firstPage(final int pageCapacity);
-
-    /**
      * Should return a reference to the first page of the specified size containing entity instances retrieved using the provided query model (new EntityQuery).
      *
      * @param pageCapacity
@@ -209,16 +201,6 @@ public interface IEntityReader<T extends AbstractEntity<?>> extends IEntityInsta
     default IPage<T> firstPage(final QueryExecutionModel<T, ?> model, final QueryExecutionModel<T, ?> summaryModel, final int pageCapacity) {
         throw new UnsupportedOperationException("Not supported.");
     }
-
-    /**
-     * Returns a reference to a page with requested number and capacity holding entity instances retrieved sequentially ordered by ID.
-     *
-     * @param Equery
-     * @param pageCapacity
-     * @param pageNo
-     * @return
-     */
-    IPage<T> getPage(final int pageNo, final int pageCapacity);
 
     /**
      * Returns a reference to a page with requested number and capacity holding entity instances matching the provided query model (new EntityQuery).
