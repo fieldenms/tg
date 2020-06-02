@@ -593,8 +593,7 @@ Polymer({
      * A function for show-dialog attribute of tg-ui-action, which is used in case of master with menu to load and display a corresponding menu item view.
      */
     _showMenuItemView: function (action) {
-        const section = this.querySelector('tg-master-menu-item-section[data-route=' + action.getAttribute('data-route') + ']');
-        section.activate(action);
+        this._section(action.getAttribute('data-route')).activate(action);
     },
 
     /**
@@ -602,8 +601,7 @@ Polymer({
      */
     focusView: function () {
         if (this.sectionRoute !== undefined) {
-            const section = this.querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
-            section.focusView();
+            this.currentSection().focusView();
         }
     },
 
@@ -631,8 +629,7 @@ Polymer({
 
     _focusNextSectionView: function (e) {
         if (this.sectionRoute !== undefined && (!this.$.drawerPanel.narrow || !this.$.drawer.opened)) {
-            const section = this.querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
-            section.focusNextView(e);
+            this.currentSection().focusNextView(e);
         } else {
             this.fire("tg-last-item-focused", {
                 forward: true,
@@ -643,8 +640,7 @@ Polymer({
 
     _focusPreviousSectionView: function (e) {
         if (this.sectionRoute !== undefined && (!this.$.drawerPanel.narrow || !this.$.drawer.opened)) {
-            const section = this.querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
-            section.focusPreviousView(e);
+            this.currentSection().focusPreviousView(e);
         } else if (this.isMenuVisible()) {
             this._focusMenu();
             tearDownEvent(e);
@@ -667,7 +663,7 @@ Polymer({
     _routeChanged: function (newRoute, oldRoute) {
         if (this.route !== this.sectionRoute) {
             if (this.sectionRoute !== undefined) {
-                const currentSection = this.querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
+                const currentSection = this.currentSection();
                 if (!currentSection) {
                     throw 'Compound master\'s menu item section [' + this.sectionRoute + '] does not exist.';
                 }
@@ -687,7 +683,21 @@ Polymer({
             }
         }
     },
-
+    
+    /**
+     * Returns menu item section for the specified 'sectionRoute'.
+     */
+    _section: function (sectionRoute) {
+        return this.querySelector('tg-master-menu-item-section[data-route=' + sectionRoute + ']');
+    },
+    
+    /**
+     * Returns currently activated menu item section.
+     */
+    currentSection: function () {
+        return this._section(this.sectionRoute);
+    },
+    
     /**
      * Returns 'true' if the specified 'section' represents a master with master, that contains non-persisted entity instance; 'false' otherwise.
      * In case of 'true' the user will be warned to save or cancel and will be prevented from moving to another menu item on compound master.
@@ -720,8 +730,7 @@ Polymer({
 
     /** Used by the master, which incorporates this menu to check if it can be closed. */
     canLeave: function () {
-        const section = this.querySelector('tg-master-menu-item-section[data-route=' + this.route + ']');
-        return section.canLeave();
+        return this._section(this.route).canLeave();
     },
 
     _sectionRouteChanged: function (newRoute, oldRoute) {
@@ -729,7 +738,7 @@ Polymer({
             this.$.drawer.close(); // close drawer in tablet|mobile mode when section route changes (menu item has been actioned by user)
         }
 
-        const oldSection = this.querySelector('tg-master-menu-item-section[data-route=' + oldRoute + ']');
+        const oldSection = this._section(oldRoute);
         const action = this.querySelector('tg-ui-action[data-route=' + newRoute + ']');
 
         if (oldSection && oldSection._element && typeof oldSection._element.removeOwnKeyBindings === 'function') {

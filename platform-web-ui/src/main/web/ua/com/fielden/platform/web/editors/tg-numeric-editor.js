@@ -16,12 +16,12 @@ export class TgNumericEditor extends TgEditor {
     }
     
     /**
-     * Overridden to provide value corrections.
+     * Overridden to provide value adjustment for zeroes.
      */
     _commitForDescendants () {
-        const correctedValue = truncateInsignificantZeros(this._editingValue);
-        if (!this.reflector().equalsEx(correctedValue, this._editingValue)) {
-            this._editingValue = correctedValue;
+        const adjustedValue = truncateInsignificantZeros(this._editingValue);
+        if (!this.reflector().equalsEx(adjustedValue, this._editingValue)) {
+            this._editingValue = adjustedValue;
         }
     }
     

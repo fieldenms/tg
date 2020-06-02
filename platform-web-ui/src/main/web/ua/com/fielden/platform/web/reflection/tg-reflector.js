@@ -1327,7 +1327,8 @@ const _formatDecimal = function (value, locale, scale, trailingZeros) {
  */
 const _formatMoney = function (value, locale, scale, trailingZeros) {
     if (value !== null) {
-        return '$' + _formatDecimal(value.amount, locale, scale, trailingZeros);
+        const strValue = _formatDecimal(Math.abs(value.amount), locale, scale, trailingZeros);
+        return (value.amount < 0 ? '-$' : '$') + strValue;
     }
     return '';
 };

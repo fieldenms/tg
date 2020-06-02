@@ -39,9 +39,9 @@ import ua.com.fielden.platform.error.Result;
 public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBeforeChangeEventHandler<T> {
 
     public static final String WAS_NOT_FOUND_CONCRETE_ERR = "%s [%s] was not found.";
-    private static final String WAS_NOT_FOUND_ERR = "%s was not found.";
+    public static final String ERR_WAS_NOT_FOUND = "%s was not found.";
     public static final String EXISTS_BUT_NOT_ACTIVE_ERR = "%s [%s] exists, but is not active.";
-    public static final String DIRTY_ERR = "EntityExists validator: dirty entity %s (%s) is not acceptable.";
+    public static final String ERR_DIRTY = "Dirty entity %s (%s) is not acceptable.";
 
     private final Class<T> type;
     private final ICompanionObjectFinder coFinder;
@@ -79,7 +79,8 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
                     return successful(entity);
                 }
                 final String entityTitle = getEntityTitleAndDesc(newValue.getType()).getKey();
-                return failure(entity, format(DIRTY_ERR, newValue, entityTitle));
+                // let's differentiate between dirty and new instances
+                return failure(entity, !newValue.isPersisted() ? format(ERR_WAS_NOT_FOUND, entityTitle) : format(ERR_DIRTY, newValue, entityTitle));
             }
             
             // the notion of existence is different for activatable and non-activatable entities,
@@ -117,7 +118,7 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
                         // using newValue.getDesc() depends on the fact the it contains the value typed by the user
                         return failure(entity, format(WAS_NOT_FOUND_CONCRETE_ERR, entityTitle, newValue.getDesc()));
                     }
-                    return failure(entity, isPropertyDescriptor || isMockNotFoundValue || KEY_NOT_ASSIGNED.equals(newValue.toString()) ? format(WAS_NOT_FOUND_ERR, entityTitle) : format(WAS_NOT_FOUND_CONCRETE_ERR, entityTitle, newValue.toString()));
+                    return failure(entity, isPropertyDescriptor || isMockNotFoundValue || KEY_NOT_ASSIGNED.equals(newValue.toString()) ? format(ERR_WAS_NOT_FOUND, entityTitle) : format(WAS_NOT_FOUND_CONCRETE_ERR, entityTitle, newValue.toString()));
                 } else {
                     return failure(entity, format(EXISTS_BUT_NOT_ACTIVE_ERR, entityTitle, newValue.toString()));
                 }

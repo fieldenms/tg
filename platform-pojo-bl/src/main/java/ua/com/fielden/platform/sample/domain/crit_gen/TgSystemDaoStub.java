@@ -45,7 +45,7 @@ public class TgSystemDaoStub implements ITgSystem {
     }
 
     @Override
-    public TgSystem findById(final Long id, final fetch<TgSystem> fetchModel) {
+    public TgSystem findById(final boolean filtered, final Long id, final fetch<TgSystem> fetchModel) {
         return null;
     }
 
@@ -60,17 +60,7 @@ public class TgSystemDaoStub implements ITgSystem {
     }
 
     @Override
-    public TgSystem findByKeyAndFetch(final fetch<TgSystem> fetchModel, final Object... keyValues) {
-        return null;
-    }
-
-    @Override
-    public IPage<TgSystem> firstPage(final int pageCapacity) {
-        return null;
-    }
-
-    @Override
-    public IPage<TgSystem> getPage(final int pageNo, final int pageCapacity) {
+    public TgSystem findByKeyAndFetch(final boolean filtered, final fetch<TgSystem> fetchModel, final Object... keyValues) {
         return null;
     }
 
@@ -180,7 +170,7 @@ public class TgSystemDaoStub implements ITgSystem {
     }
 
 	@Override
-	public boolean exists(EntityResultQueryModel<TgSystem> model, Map<String, Object> paramValues) {
+	public boolean exists(final EntityResultQueryModel<TgSystem> model, final Map<String, Object> paramValues) {
 		// TODO Auto-generated method stub
 		return false;
 	}
