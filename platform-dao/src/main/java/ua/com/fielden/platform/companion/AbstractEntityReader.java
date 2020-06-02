@@ -53,19 +53,17 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implements IEntityReader<T> {
     public static final String ERR_MISSING_ID_VALUE = "Argument [id] must have a value to find an instance of [%s].";
-    
+
     ///////////////////////////////////////////////////////////
     ////////////// infrastructural methods ////////////////////
     ///////////////////////////////////////////////////////////
-    
+
     protected abstract Session getSession();
-    
+
     protected abstract DbVersion getDbVersion();
-    
+
     protected abstract boolean instrumented();
-    
-    protected abstract boolean isFilterable();
-    
+
     /**
      * A factory method to create new instances of {@link QueryExecutionContext}, which is required for implementing various reader methods.
      * This method is abstract in order to reduce dependencies of this reader implementation on types that are required for instantiating {@link QueryExecutionContext}.
@@ -96,15 +94,15 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
 
     @Override
     @SessionRequired
-    public T findById(final Long id, final fetch<T> fetchModel) {
-        return fetchOneEntityInstance(id, fetchModel);
+    public T findById(final boolean filtered, final Long id, final fetch<T> fetchModel) {
+        return fetchOneEntityInstance(filtered, id, fetchModel);
     }
-
+    
     @Override
     @SessionRequired
-    public T findByKeyAndFetch(final fetch<T> fetchModel, final Object... keyValues) {
+    public T findByKeyAndFetch(final boolean filtered, final fetch<T> fetchModel, final Object... keyValues) {
         try {
-            final EntityResultQueryModel<T> queryModel = createQueryByKey(getDbVersion(), getEntityType(), getKeyType(), isFilterable(), keyValues);
+            final EntityResultQueryModel<T> queryModel = createQueryByKey(getDbVersion(), getEntityType(), getKeyType(), filtered, keyValues);
             final Builder<T, EntityResultQueryModel<T>> qemBuilder = from(queryModel).with(fetchModel);
             return getEntity(instrumented() ? qemBuilder.model() : qemBuilder.lightweight().model());
         } catch (final EntityCompanionException e) {
@@ -211,15 +209,6 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
     }
 
     /**
-     * Returns a first page holding up to <code>pageCapacity</code> instance of entities retrieved by query with no filtering conditions. Useful for things like autocompleters.
-     */
-    @Override
-    @SessionRequired
-    public IPage<T> firstPage(final int pageCapacity) {
-        return new EntityQueryPage(getDefaultQueryExecutionModel(), 0, pageCapacity, evalNumOfPages(getDefaultQueryExecutionModel().getQueryModel(), Collections.<String, Object> emptyMap(), pageCapacity));
-    }
-    
-    /**
      * Returns a first page holding up to <code>size</code> instance of entities retrieved by the provided query model. This allows a query based pagination.
      */
     @Override
@@ -256,14 +245,6 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
 
         final int pageNumber = pageNo < 0 ? numberOfPagesAndCount.getKey() - 1 : pageNo;
         return new EntityQueryPage(qem, pageNumber, pageCapacity, numberOfPagesAndCount);
-    }
-
-    @Override
-    @SessionRequired
-    public IPage<T> getPage(final int pageNo, final int pageCapacity) {
-        final Pair<Integer, Integer> numberOfPagesAndCount = evalNumOfPages(getDefaultQueryExecutionModel().getQueryModel(), Collections.<String, Object> emptyMap(), pageCapacity);
-        final int pageNumber = pageNo < 0 ? numberOfPagesAndCount.getKey() - 1 : pageNo;
-        return new EntityQueryPage(getDefaultQueryExecutionModel(), pageNumber, pageCapacity, numberOfPagesAndCount);
     }
 
     /**
@@ -319,17 +300,18 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
     /**
      * A private helper method.
      * 
+     * @param filtered -- <code>true</code> to turn filtering on.
      * @param id
      * @param fetchModel
      * @return
      */
-    private T fetchOneEntityInstance(final Long id, final fetch<T> fetchModel) {
+    private T fetchOneEntityInstance(final boolean filtered, final Long id, final fetch<T> fetchModel) {
         if (id == null) {
             throw new EntityCompanionException(format(ERR_MISSING_ID_VALUE, getEntityType().getName()));
         }
         try {
-            final EntityResultQueryModel<T> query = select(getEntityType()).where().prop(AbstractEntity.ID).eq().val(id).model();
-            query.setFilterable(isFilterable());
+            final EntityResultQueryModel<T> query = select(getEntityType()).where().prop(ID).eq().val(id).model();
+            query.setFilterable(filtered);
             return getEntity(instrumented() ? from(query).with(fetchModel).model(): from(query).with(fetchModel).lightweight().model());
         } catch (final Exception e) {
             throw new EntityCompanionException(format("Could not fetch one entity of type [%s].", getEntityType().getName()), e);
@@ -466,17 +448,6 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
         public int no() {
             return pageNumber;
         }
-    }
-    
-    protected QueryExecutionModel<T, EntityResultQueryModel<T>> produceDefaultQueryExecutionModel(final Class<T> entityType) {
-        final EntityResultQueryModel<T> query = select(entityType).model();
-        query.setFilterable(isFilterable());
-        final OrderingModel orderBy = orderBy().prop(AbstractEntity.ID).asc().model();
-        return instrumented() ? from(query).with(orderBy).model() : from(query).with(orderBy).lightweight().model();
-    }
-
-    protected QueryExecutionModel<T, EntityResultQueryModel<T>> getDefaultQueryExecutionModel() {
-        return produceDefaultQueryExecutionModel(getEntityType());
     }
 
 }

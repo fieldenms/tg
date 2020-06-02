@@ -11,6 +11,7 @@ import static ua.com.fielden.platform.companion.AbstractEntityReader.ERR_MISSING
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllInclCalc;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithoutCritOnly;
 import static ua.com.fielden.platform.utils.EntityUtils.fetch;
@@ -26,8 +27,10 @@ import org.joda.time.DateTime;
 import org.junit.Test;
 
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
@@ -52,8 +55,10 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
     public void test_that_entity_with_simple_key_is_handled_correctly() {
         final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
 
+        final EntityResultQueryModel<EntityWithMoney> query = select(EntityWithMoney.class).model();
+        final OrderingModel orderBy = orderBy().prop(AbstractEntity.ID).asc().model();
         // find all
-        final List<EntityWithMoney> result = dao.getPage(0, 25).data();
+        final List<EntityWithMoney> result = dao.getPage(from(query).with(orderBy).model(), 0, 25).data();
         assertEquals("Incorrect number of retrieved entities.", 4, result.size());
         assertEquals("Incorrect key value.", "KEY1", result.get(0).getKey());
         // find by id
@@ -344,8 +349,10 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
         final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
         final EntityWithDynamicCompositeKeyDao daoComposite = co$(EntityWithDynamicCompositeKey.class);
 
+        final EntityResultQueryModel<EntityWithDynamicCompositeKey> query = select(EntityWithDynamicCompositeKey.class).model();
+        final OrderingModel orderBy = orderBy().prop(AbstractEntity.ID).asc().model();
         // find all
-        final List<EntityWithDynamicCompositeKey> result = daoComposite.getPage(0, 25).data();
+        final List<EntityWithDynamicCompositeKey> result = daoComposite.getPage(from(query).with(orderBy).model(), 0, 25).data();
         assertEquals("Incorrect number of retrieved entities.", 2, result.size());
         assertEquals("Incorrect key value.", new DynamicEntityKey(result.get(0)), result.get(0).getKey());
         // find by key
@@ -361,7 +368,10 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
     public void test_that_unfiltered_pagination_works() {
         final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
 
-        final IPage<EntityWithMoney> page = dao.firstPage(2);
+        final EntityResultQueryModel<EntityWithMoney> query = select(EntityWithMoney.class).model();
+        final OrderingModel orderBy = orderBy().prop(AbstractEntity.ID).asc().model();
+
+        final IPage<EntityWithMoney> page = dao.firstPage(from(query).with(orderBy).model(), 2);
         assertEquals("Incorrect number of instances on the page.", 2, page.data().size());
         assertTrue("Page should have the next one.", page.hasNext());
 
