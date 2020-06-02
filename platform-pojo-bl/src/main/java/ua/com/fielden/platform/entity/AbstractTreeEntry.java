@@ -8,6 +8,13 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
+/**
+ * The entity that should be used as a base entity for entities displayed in tree component.
+ *
+ * @author TG Team
+ *
+ * @param <K>
+ */
 public abstract class AbstractTreeEntry<K extends Comparable<?>> extends AbstractEntity<K> {
 
     @IsProperty

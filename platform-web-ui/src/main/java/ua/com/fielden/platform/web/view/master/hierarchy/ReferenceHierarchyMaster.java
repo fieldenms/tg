@@ -25,6 +25,12 @@ import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKin
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 
+/**
+ * Master implementation for reference hierarchy.
+ *
+ * @author TG Team
+ *
+ */
 public class ReferenceHierarchyMaster implements IMaster<ReferenceHierarchy> {
 
     private final List<EntityActionConfig> actions = new ArrayList<>();

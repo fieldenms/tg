@@ -16,6 +16,12 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
+/**
+ * Functional entity for reference hierarchy master component, used as a transport between reference hierarchy master and server. Server receives data that is used to determine next sub hierarchy to load and returns it to the client.
+ *
+ * @author oleh
+ *
+ */
 @EntityTitle("Reference Hierarchy")
 @KeyType(NoKey.class)
 @CompanionObject(IReferenceHierarchy.class)

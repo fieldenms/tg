@@ -5,7 +5,7 @@ import ua.com.fielden.platform.dao.IEntityDao;
 /**
 * Companion object for entity {@link ReferenceLevelHierarchyEntry}.
 *
-* @author Developers
+* @author TG Team
 *
 */
 public interface IReferenceLevelHierarchyEntry extends IEntityDao<ReferenceLevelHierarchyEntry> {

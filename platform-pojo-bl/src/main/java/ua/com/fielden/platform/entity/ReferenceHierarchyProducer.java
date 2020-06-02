@@ -16,6 +16,12 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 
+/**
+ * The producer for {@link ReferenceHierarchy} entity used to initialize {@link ReferenceHierarchy} instance with data that was calculated based on data received from client.
+ *
+ * @author TG Team
+ *
+ */
 public class ReferenceHierarchyProducer extends DefaultEntityProducerWithContext<ReferenceHierarchy> {
 
     @Inject

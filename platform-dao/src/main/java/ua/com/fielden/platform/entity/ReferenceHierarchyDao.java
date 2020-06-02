@@ -51,7 +51,7 @@ import ua.com.fielden.platform.utils.Pair;
 /**
  * DAO implementation for companion object {@link IReferenceHierarchy}.
  *
- * @author Developers
+ * @author TG Team
  *
  */
 @EntityType(ReferenceHierarchy.class)

@@ -4,6 +4,12 @@ import java.io.IOException;
 
 import ua.com.fielden.platform.svg.combining.IronIconsetUtility;
 
+/**
+ * The icon-set creator for reference hierarchy
+ *
+ * @author TG Team
+ *
+ */
 public class ReferenceHierarchyIconsetCreator {
 
     public static void main(final String[] args) throws IOException {

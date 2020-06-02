@@ -7,6 +7,12 @@ import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
+/**
+ * Represents the type entry in reference hierarchy.
+ *
+ * @author TG Team
+ *
+ */
 @KeyTitle("Entity Type Title")
 @DescTitle("Entity Type Description")
 @CompanionObject(ITypeLevelHierarchyEntry.class)

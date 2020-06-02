@@ -7,6 +7,12 @@ import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
+/**
+ * Represents the entity that was referenced by another examining entity in reference hierarchy.
+ *
+ * @author TG Team
+ *
+ */
 @KeyTitle("Entity key")
 @DescTitle("Entity Description")
 @CompanionObject(IReferencedByLevelHierarchyEntry.class)

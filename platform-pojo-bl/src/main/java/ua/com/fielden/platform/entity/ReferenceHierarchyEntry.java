@@ -12,6 +12,12 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
+/**
+ * The base entity for all reference hierarchy tree entries.
+ *
+ * @author TG Team
+ *
+ */
 @KeyType(String.class)
 @CompanionObject(IReferenceHierarchyEntry.class)
 public class ReferenceHierarchyEntry extends AbstractTreeEntry<String> {

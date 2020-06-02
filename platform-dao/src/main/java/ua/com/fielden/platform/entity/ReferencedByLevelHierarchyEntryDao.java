@@ -6,6 +6,12 @@ import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 
+/**
+ * The DAO implementation for  {@link IReferencedByLevelHierarchyEntry}
+ *
+ * @author TG Team
+ *
+ */
 @EntityType(ReferencedByLevelHierarchyEntry.class)
 public class ReferencedByLevelHierarchyEntryDao extends CommonEntityDao<ReferencedByLevelHierarchyEntry> implements IReferencedByLevelHierarchyEntry {
 

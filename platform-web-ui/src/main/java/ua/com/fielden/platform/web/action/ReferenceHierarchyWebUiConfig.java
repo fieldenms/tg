@@ -15,9 +15,20 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.hierarchy.ReferenceHierarchyMaster;
 
+/**
+ * Web UI configuration for reference hierarchy master and action needed to call reference hierarchy.
+ *
+ * @author TG Team
+ *
+ */
 public class ReferenceHierarchyWebUiConfig {
 
-
+    /**
+     * Creates the reference hierarchy master
+     *
+     * @param injector
+     * @return
+     */
     public static EntityMaster<ReferenceHierarchy> createReferenceHierarchyMaster(final Injector injector) {
         return new EntityMaster<>(ReferenceHierarchy.class,
                 ReferenceHierarchyProducer.class,
@@ -60,6 +71,12 @@ public class ReferenceHierarchyWebUiConfig {
             .build();
     }
 
+    /**
+     * Common {@link IPreAction} for reference hierarchy action.
+     *
+     * @author TG Team
+     *
+     */
     private static class ReferenceHierarchyPreAction implements IPreAction {
 
         @Override
