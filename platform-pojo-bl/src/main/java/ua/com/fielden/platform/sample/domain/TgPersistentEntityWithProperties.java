@@ -7,7 +7,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import java.math.BigDecimal;
 import java.util.Date;
 
-import ua.com.fielden.platform.entity.AbstractPersistentEntity;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
@@ -57,7 +57,7 @@ import ua.com.fielden.platform.types.Money;
 @MapEntityTo
 @DescTitle(value = "Desc", desc = "Some desc description")
 @DisplayDescription
-public class TgPersistentEntityWithProperties extends AbstractPersistentEntity<String> {
+public class TgPersistentEntityWithProperties extends AbstractFunctionalEntityWithCentreContext<String> { // yet persistent (@MapEntityTo); has been marked as functional to be able to add it as the action of editing itself
     @IsProperty
     @MapTo
     @Title(value = "Integer prop", desc = "Integer prop desc")

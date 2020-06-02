@@ -82,7 +82,6 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
     
     private final Class<T> entityType;
     private final Class<? extends Comparable<?>> keyType;
-    private final Supplier<Boolean> isFilterable;
     private final Supplier<ICompanionObjectFinder> coFinder;
     private final Supplier<QueryExecutionContext> newQueryExecutionContext;
     private final Supplier<User> user;
@@ -106,7 +105,6 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             final Class<? extends Comparable<?>> keyType,
             final Supplier<User> user,
             final Supplier<DateTime> now,
-            final Supplier<Boolean> isFilterable,
             final Supplier<ICompanionObjectFinder> coFinder,
             final Supplier<QueryExecutionContext> newQueryExecutionContext,
             final BiConsumer<T, List<String>> processAfterSaveEvent,
@@ -121,7 +119,6 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         this.keyType = keyType;
         this.user = user;
         this.now = now;
-        this.isFilterable = isFilterable;
         this.coFinder = coFinder;
         this.newQueryExecutionContext = newQueryExecutionContext;
         
@@ -240,7 +237,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         // which pertain to required and marked as assign before save properties that must have values
         checkDirtyMarkedForAssignmentBeforeSaveProperties(entity);
         // let's make sure that entity is not a duplicate
-        final AggregatedResultQueryModel model = select(createQueryByKey(dbVersion.get(), entityType, keyType, isFilterable.get(), entity.getKey())).yield().prop(AbstractEntity.ID).as(AbstractEntity.ID).modelAsAggregate();
+        final AggregatedResultQueryModel model = select(createQueryByKey(dbVersion.get(), entityType, keyType, false, entity.getKey())).yield().prop(AbstractEntity.ID).as(AbstractEntity.ID).modelAsAggregate();
         final QueryExecutionContext queryExecutionContext = newQueryExecutionContext.get();
         final List<EntityAggregates> ids = new EntityFetcher(queryExecutionContext).getEntities(from(model).lightweight().model());
         final int count = ids.size();
@@ -467,7 +464,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
      */
     private T2<Long, T> saveNewEntity(final T entity, final boolean skipRefetching) {
         // let's make sure that entity is not a duplicate
-        if (entityExists.apply(createQueryByKey(dbVersion.get(), entityType, keyType, isFilterable.get(), entity.getKey()))) {
+        if (entityExists.apply(createQueryByKey(dbVersion.get(), entityType, keyType, false, entity.getKey()))) {
             throw new EntityAlreadyExists(format("%s [%s] already exists.", TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey(), entity));
         }
 

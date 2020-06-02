@@ -198,6 +198,7 @@ Polymer({
         if (this._blockingPaneCounter > 0) {
             this._errorMsg = e.detail;
             tearDownEvent(e);
+            this.fire('data-loaded-and-focused', null, { node: this.parentNode }); // propagate event further above to indicate that loading ended (dialog should hide its blocking pane)
         }
     },
 

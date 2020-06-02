@@ -140,17 +140,11 @@ export class TgColourPicker extends TgEditor {
         }
     }
 
-    convertToString (value) {
-        if (value === null) {
-            return "";
-        } else {
-            return value.hashlessUppercasedColourValue;
-        }
-    }
-
     convertFromString (strValue) {
-        if (strValue.length !== 3 && strValue.length !== 6 && strValue !== "") {
-            throw "The entered value [ #" + strValue + "] is not a valid colour (use only [0-9; A-F], 3 or 6 characters).";
+        if (strValue === '') {
+            return null;
+        } else if (strValue.length !== 3 && strValue.length !== 6) {
+            throw 'The entered value [ #' + strValue + '] is not a valid colour (use only [0-9; A-F], 3 or 6 characters).';
         } else {
             return {
                 hashlessUppercasedColourValue: strValue
@@ -317,8 +311,11 @@ export class TgColourPicker extends TgEditor {
         return style;
     }
 
-    _formatText (value) {
-        return value && '#' + value;
+    _formatText (_editingValue) {
+        if (this.reflector().isEntity(this.entity)) {
+            return this.reflector().tg_toString(this.convertFromString(_editingValue), this.entity.type(), this.propertyName, { bindingValue: true, display: true });
+        }
+        return '';
     }
 }
 

@@ -43,6 +43,23 @@
                         validationResult: () => null
                     }
                 }
+
+                type () {
+                    return {
+                        prop: function (name) {
+                            return {
+                                type: function () { return null; } // string prop does not require type for its conversion
+                            };
+                        },
+                        notEnhancedFullClassName: function () {
+                            return 'ua.com.fielden.platform.stub_entities.StubEntity'; // aka not ua.com.fielden.platform.attachment.Attachment that requires special handling in EGI.getAttachmentIfPossible
+                        },
+                        isCompositeEntity: function () {
+                            return false;
+                        }
+                    };
+                }
+
             };
 
             let egi;
@@ -51,7 +68,7 @@
                 egi = fixture('EgiFixture');
             });
 
-            test('egi dynmaic rendering hints works', function (done) {
+            test('egi dynamic rendering hints works', function (done) {
                 //Create stub entity
                 const stubEntity = new StubEntity(1, "test value");
                 const columnRetriever = () => {
