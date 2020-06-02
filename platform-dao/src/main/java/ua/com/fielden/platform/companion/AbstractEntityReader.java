@@ -53,19 +53,17 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implements IEntityReader<T> {
     public static final String ERR_MISSING_ID_VALUE = "Argument [id] must have a value to find an instance of [%s].";
-    
+
     ///////////////////////////////////////////////////////////
     ////////////// infrastructural methods ////////////////////
     ///////////////////////////////////////////////////////////
-    
+
     protected abstract Session getSession();
-    
+
     protected abstract DbVersion getDbVersion();
-    
+
     protected abstract boolean instrumented();
-    
-    protected abstract boolean isFilterable();
-    
+
     /**
      * A factory method to create new instances of {@link QueryExecutionContext}, which is required for implementing various reader methods.
      * This method is abstract in order to reduce dependencies of this reader implementation on types that are required for instantiating {@link QueryExecutionContext}.
@@ -471,7 +469,6 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
     
     protected QueryExecutionModel<T, EntityResultQueryModel<T>> produceDefaultQueryExecutionModel(final Class<T> entityType) {
         final EntityResultQueryModel<T> query = select(entityType).model();
-        query.setFilterable(isFilterable());
         final OrderingModel orderBy = orderBy().prop(AbstractEntity.ID).asc().model();
         return instrumented() ? from(query).with(orderBy).model() : from(query).with(orderBy).lightweight().model();
     }
