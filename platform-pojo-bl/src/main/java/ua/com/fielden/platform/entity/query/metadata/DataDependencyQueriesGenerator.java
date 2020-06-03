@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity.query.metadata;
 
 import static java.util.Arrays.asList;
 import static java.util.Optional.empty;
+import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
@@ -13,12 +14,10 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import static ua.com.fielden.platform.utils.EntityUtils.getRealProperties;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 
@@ -100,24 +99,16 @@ public class DataDependencyQueriesGenerator {
     }
 
     private static List<AggregatedResultQueryModel> produceQueries(final Map<Class<? extends AbstractEntity<?>>, Map<Class<? extends AbstractEntity<?>>, Set<String>>> dependenciesMetadata, final Class<? extends AbstractEntity<?>> entityType, final Long entityId) {
-        final List<AggregatedResultQueryModel> queries = new ArrayList<>();
-        for (final Entry<Class<? extends AbstractEntity<?>>, Map<Class<? extends AbstractEntity<?>>, Set<String>>> el : dependenciesMetadata.entrySet()) {
-            if (el.getValue().containsKey(entityType)) {
-                final AggregatedResultQueryModel qry = select(el.getKey()).where().anyOfProps(el.getValue().get(entityType).toArray(new String[] {})).eq().val(entityId).yield().val(el.getKey().getName()).as("type").yield().prop(ID).as("entity").modelAsAggregate();
-                queries.add(qry);
-            }
-        }
-        return queries;
+        return dependenciesMetadata.entrySet().stream()
+        .filter(el -> el.getValue().containsKey(entityType))
+        .map(el -> select(el.getKey()).where().anyOfProps(el.getValue().get(entityType).toArray(new String[] {})).eq().val(entityId).yield().val(el.getKey().getName()).as("type").yield().prop(ID).as("entity").modelAsAggregate())
+        .collect(toList());
     }
 
     private static List<PrimitiveResultQueryModel> produceDetailsQueries(final Map<Class<? extends AbstractEntity<?>>, Map<Class<? extends AbstractEntity<?>>, Set<String>>> dependenciesMetadata, final Class<? extends AbstractEntity<?>> entityType) {
-        final List<PrimitiveResultQueryModel> queries = new ArrayList<>();
-        for (final Entry<Class<? extends AbstractEntity<?>>, Map<Class<? extends AbstractEntity<?>>, Set<String>>> el : dependenciesMetadata.entrySet()) {
-            if (el.getValue().containsKey(entityType)) {
-                final PrimitiveResultQueryModel qry = select(el.getKey()).where().anyOfProps(el.getValue().get(entityType).toArray(new String[] {})).eq().extProp(ID).yield().prop(ID).modelAsPrimitive();
-                queries.add(qry);
-            }
-        }
-        return queries;
+        return dependenciesMetadata.entrySet().stream()
+        .filter(el -> el.getValue().containsKey(entityType))
+        .map(el -> select(el.getKey()).where().anyOfProps(el.getValue().get(entityType).toArray(new String[] {})).eq().extProp(ID).yield().prop(ID).modelAsPrimitive())
+        .collect(toList());
     }
 }
