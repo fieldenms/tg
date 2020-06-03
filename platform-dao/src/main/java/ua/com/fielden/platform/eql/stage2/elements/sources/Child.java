@@ -1,10 +1,12 @@
 package ua.com.fielden.platform.eql.stage2.elements.sources;
 
+import static java.util.Collections.unmodifiableList;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.SortedSet;
 
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
@@ -14,7 +16,7 @@ public class Child implements Comparable<Child> {
     public final AbstractPropInfo<?> main;
     public final QrySource2BasedOnPersistentType source;
     public final boolean required;
-    public final SortedSet<Child> items;
+    private final List<Child> items;
     
     public final String fullPath; //not null if given child represents explicit prop that needs resolution 
     public final IQrySource2<?> parentSource;
@@ -24,7 +26,7 @@ public class Child implements Comparable<Child> {
 
     final int id;
     
-    public Child(final AbstractPropInfo<?> main, final SortedSet<Child> items, final String fullPath, final boolean required, final QrySource2BasedOnPersistentType source, final Expression2 expr, final IQrySource2<?> parentSource, final Set<Child> dependencies, final int id) {
+    public Child(final AbstractPropInfo<?> main, final List<Child> items, final String fullPath, final boolean required, final QrySource2BasedOnPersistentType source, final Expression2 expr, final IQrySource2<?> parentSource, final Set<Child> dependencies, final int id) {
         this.main = main;
         this.items = items;
         this.fullPath = fullPath;
@@ -35,11 +37,15 @@ public class Child implements Comparable<Child> {
         this.dependencies = dependencies;
         this.id = id;
  //       assert(items.isEmpty() || !items.isEmpty() && source !=null );
-        assert(dependencies.isEmpty() || !dependencies.isEmpty() && expr != null);
+ //       assert(dependencies.isEmpty() || !dependencies.isEmpty() && expr != null);
         assert(parentSource != null);
         if (source == null && fullPath == null && !isUnionEntityType(main.javaType())) {
             throw new EqlException("Incorrect state.");
         }
+    }
+    
+    public List<Child> getItems() {
+        return unmodifiableList(items);
     }
     
     @Override
