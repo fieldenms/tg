@@ -15,11 +15,14 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
+import ua.com.fielden.platform.entity.annotation.mutator.Handler;
+import ua.com.fielden.platform.entity.validation.ICanBuildReferenceHierarchyForEntityValidator;
 
 /**
  * Functional entity for reference hierarchy master component, used as a transport between reference hierarchy master and server. Server receives data that is used to determine next sub hierarchy to load and returns it to the client.
  *
- * @author oleh
+ * @author TG Team
  *
  */
 @EntityTitle("Reference Hierarchy")
@@ -33,10 +36,12 @@ public class ReferenceHierarchy extends AbstractFunctionalEntityWithCentreContex
 
     @IsProperty
     @Title(value = "Referenced Entity Type", desc = "The type of Referenced Entity ID")
+    @BeforeChange(@Handler(ICanBuildReferenceHierarchyForEntityValidator.class))
     private String refEntityType;
 
     @IsProperty
     @Title(value = "Entity Type", desc = "The type of entity that references the Referenced Entity ID'")
+    @BeforeChange(@Handler(ICanBuildReferenceHierarchyForEntityValidator.class))
     private String entityType;
 
     @IsProperty
@@ -210,7 +215,7 @@ public class ReferenceHierarchy extends AbstractFunctionalEntityWithCentreContex
     public Optional<Class<? extends AbstractEntity<?>>> getRefEntityClass() {
         try {
             return of((Class<? extends AbstractEntity<?>>) Class.forName(refEntityType));
-        } catch (final ClassNotFoundException e) {
+        } catch (final Exception e) {
             return empty();
         }
     }
@@ -225,7 +230,7 @@ public class ReferenceHierarchy extends AbstractFunctionalEntityWithCentreContex
     public Optional<Class<? extends AbstractEntity<?>>> getEntityClass() {
         try {
             return of((Class<? extends AbstractEntity<?>>) Class.forName(entityType));
-        } catch (final ClassNotFoundException e) {
+        } catch (final Exception e) {
             return empty();
         }
     }

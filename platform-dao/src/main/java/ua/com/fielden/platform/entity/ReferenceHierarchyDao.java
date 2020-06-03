@@ -42,6 +42,7 @@ import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.metadata.DataDependencyQueriesGenerator;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
@@ -78,6 +79,7 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
     @Override
     @SessionRequired
     public ReferenceHierarchy save(final ReferenceHierarchy entity) {
+        entity.isValid().ifFailure(Result::throwRuntime);
         if (entity.getRefEntityId() == null) {
             throw failuref("Please select at least one entity to open reference hierarchy.");
         } else {
@@ -129,6 +131,7 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private List<ReferenceLevelHierarchyEntry> generateReferences(final ReferenceHierarchy entity) {
+        entity.isValid().ifFailure(Result::throwRuntime);
         final Class<? extends AbstractEntity<?>> entityType = entity.getRefEntityClass().orElseThrow(() -> failuref(ERR_ENTITY_TYPE_NOT_FOUND, entity.getRefEntityType()));
         final List<Field> entityFields = getReferenceProperties(entityType);
         final fetch fetchModel = generateReferenceFetchModel(entityType, entityFields);
