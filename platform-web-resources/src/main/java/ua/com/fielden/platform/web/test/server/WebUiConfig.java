@@ -131,6 +131,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.PrefDim.Unit;
 import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig.CentreConfigActions;
+import ua.com.fielden.platform.web.action.ReferenceHierarchyWebUiConfig;
 import ua.com.fielden.platform.web.action.StandardMastersWebUiConfig;
 import ua.com.fielden.platform.web.action.post.FileSaverPostAction;
 import ua.com.fielden.platform.web.action.pre.EntityNavigationPreAction;
@@ -1397,6 +1398,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         longDesc("Start coninuous creatio of entities").
                         withNoParentCentreRefresh().
                         build())
+                .addGroupAction(ReferenceHierarchyWebUiConfig.mkAction())
                 .endTopActionsGroup().also().beginTopActionsGroup("group 2");
 
 
