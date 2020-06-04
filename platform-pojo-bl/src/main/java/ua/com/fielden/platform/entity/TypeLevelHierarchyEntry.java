@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.entity;
 
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
@@ -15,8 +14,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
  */
 @KeyTitle("Entity Type Title")
 @DescTitle("Entity Type Description")
-@CompanionObject(ITypeLevelHierarchyEntry.class)
-public class TypeLevelHierarchyEntry extends ReferenceHierarchyEntry{
+public class TypeLevelHierarchyEntry extends ReferenceHierarchyEntry {
 
     @IsProperty
     @Title(value = "Entity Type", desc = "The Referencing entity type")

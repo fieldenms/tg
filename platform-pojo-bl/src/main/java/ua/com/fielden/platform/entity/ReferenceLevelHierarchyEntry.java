@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.entity;
 
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
@@ -11,7 +10,6 @@ import ua.com.fielden.platform.entity.annotation.Title;
  * @author TG Team
  *
  */
-@CompanionObject(IReferenceLevelHierarchyEntry.class)
 public class ReferenceLevelHierarchyEntry extends ReferencedByLevelHierarchyEntry {
 
     @IsProperty
@@ -27,7 +25,5 @@ public class ReferenceLevelHierarchyEntry extends ReferencedByLevelHierarchyEntr
     public String getPropertyTitle() {
         return propertyTitle;
     }
-
-
 
 }

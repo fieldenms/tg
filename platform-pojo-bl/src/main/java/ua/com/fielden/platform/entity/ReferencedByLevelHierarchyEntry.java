@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.entity;
 
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
@@ -15,7 +14,6 @@ import ua.com.fielden.platform.entity.annotation.Title;
  */
 @KeyTitle("Entity key")
 @DescTitle("Entity Description")
-@CompanionObject(IReferencedByLevelHierarchyEntry.class)
 public class ReferencedByLevelHierarchyEntry extends ReferenceHierarchyEntry {
 
     @IsProperty
@@ -31,4 +29,5 @@ public class ReferencedByLevelHierarchyEntry extends ReferenceHierarchyEntry {
     public AbstractEntity<?> getEntity() {
         return entity;
     }
+
 }
