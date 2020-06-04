@@ -14,6 +14,8 @@ import static ua.com.fielden.platform.entity.query.metadata.DataDependencyQuerie
 import static ua.com.fielden.platform.entity.query.metadata.DataDependencyQueriesGenerator.queryForDependentTypesSummary;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.failuref;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
 
 import java.lang.reflect.Field;
@@ -25,7 +27,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import com.google.inject.Inject;
 
@@ -111,7 +112,7 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
     }
 
     private ReferenceHierarchyEntry createReferencedByGroup(final List<TypeLevelHierarchyEntry> types) {
-        final Integer totalCount = types.stream().reduce(Integer.valueOf(0), (prev, curr) -> Integer.valueOf(prev.intValue() + curr.getNumberOfEntities().intValue()), (prev, curr) -> Integer.valueOf(prev.intValue() + curr.intValue()));
+        final Integer totalCount = types.stream().reduce(0, (prev, curr) -> prev + curr.getNumberOfEntities(), (prev, curr) -> prev + curr);
         final ReferenceHierarchyEntry referencedByEntry = new ReferenceHierarchyEntry();
         referencedByEntry.setKey("Referenced By");
         referencedByEntry.setChildren(types);
@@ -131,16 +132,15 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private List<ReferenceLevelHierarchyEntry> generateReferences(final ReferenceHierarchy entity) {
-        entity.isValid().ifFailure(Result::throwRuntime);
         final Class<? extends AbstractEntity<?>> entityType = entity.getRefEntityClass().orElseThrow(() -> failuref(ERR_ENTITY_TYPE_NOT_FOUND, entity.getRefEntityType()));
         final List<Field> entityFields = getReferenceProperties(entityType);
         final fetch fetchModel = generateReferenceFetchModel(entityType, entityFields);
         final Optional<? extends AbstractEntity<?>> optionalEntity = co(entityType).findByIdOptional(entity.getRefEntityId(), fetchModel);
-        return optionalEntity.map(refEntity -> generateReferencesFor(refEntity, getExistentReferenceProperties(refEntity, entityFields))).orElse(new ArrayList<>());
+        return optionalEntity.map(refEntity -> generateReferencesFor(refEntity, getExistentReferenceProperties(refEntity, entityFields))).orElse(emptyList());
     }
 
     private List<Field> getExistentReferenceProperties(final AbstractEntity<?> refEntity, final List<Field> entityFields) {
-        return entityFields.stream().filter(entityField -> refEntity.get(entityField.getName()) != null).collect(Collectors.toList());
+        return entityFields.stream().filter(entityField -> refEntity.get(entityField.getName()) != null).collect(toList());
     }
 
     @SuppressWarnings("unchecked")
@@ -162,7 +162,7 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
     private List<Field> getReferenceProperties(final Class<? extends AbstractEntity<?>> entityType) {
         return Finder.findPropertiesThatAreEntities(entityType).stream()
                 .filter(propField -> propField.isAnnotationPresent(MapTo.class) && !PropertyDescriptor.class.isAssignableFrom(propField.getType()) && !systemTypesToExclude.contains(propField.getType()))
-                .collect(Collectors.toList());
+                .collect(toList());
     }
 
     private List<ReferenceLevelHierarchyEntry> generateReferencesFor(final AbstractEntity<?> entity, final List<Field> entityFields) {
@@ -170,7 +170,7 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
     }
 
     private ReferenceLevelHierarchyEntry generateReferenceFor(final AbstractEntity<?> entity, final Field propField) {
-        final String propTitle = TitlesDescsGetter.getTitleAndDesc(propField.getName(), entity.getType()).getKey();
+        final String propTitle = getTitleAndDesc(propField.getName(), entity.getType()).getKey();
         final AbstractEntity<?> value = entity.get(propField.getName());
         final ReferenceLevelHierarchyEntry entry = new ReferenceLevelHierarchyEntry();
         entry.setId(value.getId());
@@ -182,10 +182,7 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
         entry.setEntity(AbstractUnionEntity.class.isAssignableFrom(value.getType()) ? ((AbstractUnionEntity)value).activeEntity() : value);
         entry.setHierarchyLevel(ReferenceHierarchyLevel.REFERENCE_INSTANCE);
         entry.setHasChildren(false);
-        final List<ReferenceHierarchyActions> actions = new ArrayList<>();
-        actions.add(EDIT);
-        actions.add(REFERENCE_HIERARCHY);
-        entry.setHierarchyActions(actions.toArray(new ReferenceHierarchyActions[0]));
+        entry.setHierarchyActions(EDIT, REFERENCE_HIERARCHY);
         return entry;
     }
 
@@ -219,10 +216,7 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
         instanceEntry.setEntity(AbstractUnionEntity.class.isAssignableFrom(entity.getType()) ? ((AbstractUnionEntity)entity).activeEntity() : entity);
         instanceEntry.setHierarchyLevel(REFERENCE_BY_INSTANCE);
         instanceEntry.setHasChildren("Y".equals(instanceAggregate.get("hasDependencies")) || !getExistentReferenceProperties(instanceEntry.getEntity(), propFields).isEmpty());
-        final List<ReferenceHierarchyActions> actions = new ArrayList<>();
-        actions.add(EDIT);
-        actions.add(REFERENCE_HIERARCHY);
-        instanceEntry.setHierarchyActions(actions.toArray(new ReferenceHierarchyActions[0]));
+        instanceEntry.setHierarchyActions(EDIT, REFERENCE_HIERARCHY);
         return instanceEntry;
     }
 
@@ -244,7 +238,7 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
             final TypeLevelHierarchyEntry typeEntry = new TypeLevelHierarchyEntry();
             final String entityType = typeAggregate.get("type");
             final Class<? extends AbstractEntity<?>> entityTypeClass = (Class<? extends AbstractEntity<?>>) Class.forName(entityType);
-            final Pair<String, String> titleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(entityTypeClass);
+            final Pair<String, String> titleAndDesc = getEntityTitleAndDesc(entityTypeClass);
             typeEntry.setKey(titleAndDesc.getKey());
             typeEntry.setDesc(titleAndDesc.getValue());
             typeEntry.setEntityType(entityType);
