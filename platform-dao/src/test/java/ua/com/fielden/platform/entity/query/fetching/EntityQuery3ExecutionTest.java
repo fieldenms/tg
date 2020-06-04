@@ -641,13 +641,23 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
 
     @Test
     public void eql3_query_executes_correctly68() {
+        run(select(TgWagon.class).where().anyOfProps("firstSlot.bogie.location.key", "firstSlot.bogie.location.id").isNotNull());
+    }
+
+    @Test
+    public void eql3_query_executes_correctly69() {
+        run(select(TgWagon.class).where().anyOfProps("firstSlot.bogie.location.workshop.key", "firstSlot.bogie.location.wagonSlot.wagon", "firstSlot.bogie.location.wagonSlot.key").isNotNull());
+    }
+
+    @Test
+    public void eql3_query_executes_correctly70() {
         final ITgBogie co = getInstance(ITgBogie.class);
         final EntityResultQueryModel<TgBogie> qry = select(TgBogie.class).model();
         co.getAllEntities(from(qry).with("EQL3", null).with(fetch(TgBogie.class).with("location", fetch(TgBogieLocation.class).with("wagonSlot").with("workshop"))).model());
     }
     
     @Test
-    public void eql3_query_executes_correctly69() {
+    public void eql3_query_executes_correctly71() {
         final ITgBogie co = getInstance(ITgBogie.class);
         final EntityResultQueryModel<TgBogie> qry = select(select(TgBogie.class).model()).model();
         co.getAllEntities(from(qry).with("EQL3", null).with(fetch(TgBogie.class).with("location", fetch(TgBogieLocation.class).with("wagonSlot").with("workshop"))).model());
