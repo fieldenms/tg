@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.entity;
+package ua.com.fielden.platform.ref_hierarchy;
 
 /**
  * Available actions in reference hierarchy component.

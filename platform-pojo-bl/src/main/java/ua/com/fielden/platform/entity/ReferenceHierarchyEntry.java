@@ -1,16 +1,19 @@
 package ua.com.fielden.platform.entity;
 
+import static java.util.Collections.unmodifiableList;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Stream.of;
+
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchyActions;
+import ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchyLevel;
 
 /**
  * The base entity for all reference hierarchy tree entries.
@@ -38,12 +41,12 @@ public class ReferenceHierarchyEntry extends AbstractTreeEntry<String> {
     }
 
     public ReferenceHierarchyEntry setHierarchyActions(final ReferenceHierarchyActions... actions) {
-        setActions(Arrays.asList(actions).stream().map(action -> action.name()).collect(Collectors.toList()));
+        setActions(of(actions).map(action -> action.name()).collect(toList()));
         return this;
     }
 
     public List<String> getActions() {
-        return Collections.unmodifiableList(actions);
+        return unmodifiableList(actions);
     }
 
     @Observable

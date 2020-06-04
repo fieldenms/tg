@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.entity;
+package ua.com.fielden.platform.ref_hierarchy;
 
 /**
  * All available reference hierarchy levels that can be loaded and allows one to determine which level should be loaded next.

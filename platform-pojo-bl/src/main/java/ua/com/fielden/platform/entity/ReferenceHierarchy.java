@@ -18,6 +18,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.validation.ICanBuildReferenceHierarchyForEntityValidator;
+import ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchyLevel;
 
 /**
  * Functional entity for reference hierarchy master component, used as a transport between reference hierarchy master and server. Server receives data that is used to determine next sub hierarchy to load and returns it to the client.
