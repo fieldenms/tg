@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.entity;
+package ua.com.fielden.platform.ref_hierarchy;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 

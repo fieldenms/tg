@@ -6,7 +6,7 @@ import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreCo
 
 import com.google.inject.Injector;
 
-import ua.com.fielden.platform.entity.ReferenceHierarchy;
+import ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchy;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.minijs.JsCode;

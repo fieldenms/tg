@@ -1,7 +1,8 @@
-package ua.com.fielden.platform.entity;
+package ua.com.fielden.platform.ref_hierarchy;
 
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 import static ua.com.fielden.platform.entity.query.metadata.DataDependencyQueriesGenerator.queryForDependentTypeDetails;
@@ -35,6 +36,8 @@ import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.IEntityAggregatesOperations;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
@@ -45,7 +48,6 @@ import ua.com.fielden.platform.entity.query.metadata.DataDependencyQueriesGenera
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.pagination.IPage;
-import ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchyLevel;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -173,7 +175,7 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
         final String propTitle = getTitleAndDesc(propField.getName(), entity.getType()).getKey();
         final AbstractEntity<?> value = entity.get(propField.getName());
         final ReferenceLevelHierarchyEntry entry = new ReferenceLevelHierarchyEntry();
-        entry.setId(value.getId());
+        entry.set(ID, value.getId());
         entry.setKey(propTitle + ":" + value.toString());
         if (EntityUtils.hasDescProperty(value.getType())) {
             entry.setDesc(value.getDesc());
@@ -209,7 +211,7 @@ public class ReferenceHierarchyDao extends CommonEntityDao<ReferenceHierarchy> i
 
     private ReferencedByLevelHierarchyEntry createInstanceHierarchyEntry(final EntityAggregates instanceAggregate, final List<Field> propFields) {
         final ReferencedByLevelHierarchyEntry instanceEntry = new ReferencedByLevelHierarchyEntry();
-        instanceEntry.setId(((AbstractEntity<?>)instanceAggregate.get("entity")).getId());
+        instanceEntry.set(ID, ((AbstractEntity<?>)instanceAggregate.get("entity")).getId());
         instanceEntry.setKey(instanceAggregate.get("entity").toString());
         instanceEntry.setDesc(instanceAggregate.get("entity.desc"));
         final AbstractEntity<?> entity = instanceAggregate.get("entity");

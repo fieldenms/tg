@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.web.ref_hierarchy;
 
 import static java.lang.String.format;
-import static ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchyLevel.REFERENCE_INSTANCE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
+import static ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchyLevel.REFERENCE_INSTANCE;
 import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
@@ -13,10 +13,10 @@ import com.google.inject.Inject;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DefaultEntityProducerWithContext;
-import ua.com.fielden.platform.entity.ReferenceHierarchy;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchy;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 
 /**

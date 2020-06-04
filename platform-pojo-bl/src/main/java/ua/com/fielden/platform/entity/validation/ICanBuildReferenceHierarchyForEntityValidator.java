@@ -2,7 +2,7 @@ package ua.com.fielden.platform.entity.validation;
 
 import com.google.inject.ImplementedBy;
 
-import ua.com.fielden.platform.entity.ReferenceHierarchy;
+import ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchy;
 
 /**
  * A validator contract that is used for restricting building a reference hierarchy based.

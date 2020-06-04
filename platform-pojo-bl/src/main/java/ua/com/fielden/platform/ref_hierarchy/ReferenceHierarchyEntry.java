@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.entity;
+package ua.com.fielden.platform.ref_hierarchy;
 
 import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.toList;
