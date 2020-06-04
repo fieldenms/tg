@@ -160,6 +160,7 @@ import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.layout.api.impl.FlexLayoutConfig;
 import ua.com.fielden.platform.web.layout.api.impl.LayoutComposer;
 import ua.com.fielden.platform.web.minijs.JsCode;
+import ua.com.fielden.platform.web.ref_hierarchy.ReferenceHierarchyWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.AbstractWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.SecurityMatrixWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.UserRoleWebUiConfig;
@@ -1397,6 +1398,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         longDesc("Start coninuous creatio of entities").
                         withNoParentCentreRefresh().
                         build())
+                .addGroupAction(ReferenceHierarchyWebUiConfig.mkAction())
                 .endTopActionsGroup().also().beginTopActionsGroup("group 2");
 
 

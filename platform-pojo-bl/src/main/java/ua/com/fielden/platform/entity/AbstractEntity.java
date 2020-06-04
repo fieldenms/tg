@@ -77,7 +77,6 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.MetaPropertyFull;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.proxy.StrictProxyException;
-import ua.com.fielden.platform.entity.validation.EntityExistsValidator;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.ICustomValidator;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
@@ -1063,10 +1062,8 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     /**
      * {@link AbstractEntity} has a default way of validating, which has a support for descendants to override it. However, sometimes it is required to validate an entity ad-hoc
      * from some specific perspective.
-     *
      * <p>
-     * This method performs entity validation based on the provided custom validator. It is important to note that this validation process locks the entity being validated
-     * preventing concurrent modification while it is being processed. This is exactly the same invariant behaviour as per the default validation process.
+     * This method performs entity validation based on the provided custom validator.
      *
      * @param validator
      * @return

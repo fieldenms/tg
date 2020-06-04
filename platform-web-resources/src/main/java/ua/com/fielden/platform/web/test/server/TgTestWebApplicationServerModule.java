@@ -10,6 +10,8 @@ import com.google.inject.binder.AnnotatedBindingBuilder;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.validation.CanBuildReferenceHierarchyForEveryEntityValidator;
+import ua.com.fielden.platform.entity.validation.ICanBuildReferenceHierarchyForEntityValidator;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
@@ -41,6 +43,7 @@ public class TgTestWebApplicationServerModule extends TgTestApplicationServerMod
     @Override
     protected void configure() {
         super.configure();
+        bind(ICanBuildReferenceHierarchyForEntityValidator.class).to(CanBuildReferenceHierarchyForEveryEntityValidator.class);
         bindWebAppResources(new WebUiConfig(props));
     }
 
