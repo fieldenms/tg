@@ -5,8 +5,10 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.junit.Test;
 
@@ -22,15 +24,16 @@ import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.utils.CollectionUtil;
 
 public class CommonEntityDaoCompanionInstantiationTest extends AbstractDaoTestCase {
-    
-    private static final Set<Class<? extends AbstractEntity<?>>> types = CollectionUtil.setOf(ReferenceHierarchy.class, ReferenceHierarchyEntry.class, TypeLevelHierarchyEntry.class, ReferencedByLevelHierarchyEntry.class, ReferenceLevelHierarchyEntry.class);
 
+    private static final Set<Class<? extends AbstractEntity<?>>> types = CollectionUtil.setOf(ReferenceHierarchy.class, ReferenceHierarchyEntry.class, TypeLevelHierarchyEntry.class, ReferencedByLevelHierarchyEntry.class, ReferenceLevelHierarchyEntry.class);
+    private static final List<Class<? extends AbstractEntity<?>>> entityTypes = PlatformTestDomainTypes.entityTypes.stream().filter(type -> !types.contains(type)).collect(Collectors.toList());
     
     @Test
     public void companion_objects_for_any_registered_domain_entity_can_be_instantiated_through_co_API_of_random_companion() {
         final Random rnd = new Random();
-        final IEntityDao<?> randomCo = co$(PlatformTestDomainTypes.entityTypes.get(rnd.nextInt(PlatformTestDomainTypes.entityTypes.size())));
-        PlatformTestDomainTypes.entityTypes.stream().filter(type -> !types.contains(type)).forEach(type -> {
+        final IEntityDao<?> randomCo = co$(entityTypes.get(rnd.nextInt(entityTypes.size())));
+
+        entityTypes.stream().forEach(type -> {
             final IEntityDao<?> co = randomCo.co$(type);
             assertNotNull(format("Companion object for entity [%s] could not have been instantiated.", type.getName()), co);
         });
@@ -39,9 +42,9 @@ public class CommonEntityDaoCompanionInstantiationTest extends AbstractDaoTestCa
     @Test
     public void companion_objects_for_any_registered_domain_entity_are_cached_if_created_through_co_API_of_random_companion() {
         final Random rnd = new Random();
-        final IEntityDao<?> randomCo = co$(PlatformTestDomainTypes.entityTypes.get(rnd.nextInt(PlatformTestDomainTypes.entityTypes.size())));
+        final IEntityDao<?> randomCo = co$(entityTypes.get(rnd.nextInt(entityTypes.size())));
         
-        PlatformTestDomainTypes.entityTypes.stream().filter(type -> !types.contains(type)).forEach(type -> {
+        entityTypes.stream().forEach(type -> {
             final IEntityDao<?> co1 = randomCo.co$(type);
             final IEntityDao<?> co2 = randomCo.co$(type);
             assertTrue(format("Companion object for entity [%s] was not cached.", type.getName()), co1 == co2);
@@ -51,14 +54,14 @@ public class CommonEntityDaoCompanionInstantiationTest extends AbstractDaoTestCa
     @Test
     public void the_cache_of_companion_objects_is_not_shared_between_different_instances_of_the_same_producing_companion_object() {
         final Random rnd = new Random();
-        final Class<? extends AbstractEntity<?>> rndType = PlatformTestDomainTypes.entityTypes.get(rnd.nextInt(PlatformTestDomainTypes.entityTypes.size()));
+        final Class<? extends AbstractEntity<?>> rndType = entityTypes.get(rnd.nextInt(entityTypes.size()));
         final ICompanionObjectFinder coFinder = getInstance(ICompanionObjectFinder.class);
         final IEntityDao<?> randomCo1 = coFinder.find(rndType);
         final IEntityDao<?> randomCo2 = coFinder.find(rndType);
         
         assertFalse(randomCo1 == randomCo2);
         
-        PlatformTestDomainTypes.entityTypes.stream().filter(type -> !types.contains(type)).forEach(type -> {
+        entityTypes.stream().forEach(type -> {
             final IEntityDao<?> co1 = randomCo1.co$(type);
             final IEntityDao<?> co2 = randomCo2.co$(type);
             assertFalse(format("Companion objects for entity [%s] produced by different companions should not be the same.", type.getName()), co1 == co2);
