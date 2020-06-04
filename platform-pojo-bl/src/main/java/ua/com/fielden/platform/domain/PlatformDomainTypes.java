@@ -34,6 +34,11 @@ import ua.com.fielden.platform.menu.WebMenuItemInvisibility;
 import ua.com.fielden.platform.migration.MigrationError;
 import ua.com.fielden.platform.migration.MigrationHistory;
 import ua.com.fielden.platform.migration.MigrationRun;
+import ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchy;
+import ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchyEntry;
+import ua.com.fielden.platform.ref_hierarchy.ReferenceLevelHierarchyEntry;
+import ua.com.fielden.platform.ref_hierarchy.ReferencedByLevelHierarchyEntry;
+import ua.com.fielden.platform.ref_hierarchy.TypeLevelHierarchyEntry;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.SecurityTokenInfo;
@@ -121,6 +126,10 @@ public class PlatformDomainTypes {
         types.add(EntityNavigationAction.class);
         types.add(AttachmentPreviewEntityAction.class);
         types.add(MasterInfo.class);
-
+        types.add(ReferenceHierarchy.class);
+        types.add(ReferenceHierarchyEntry.class);
+        types.add(TypeLevelHierarchyEntry.class);
+        types.add(ReferencedByLevelHierarchyEntry.class);
+        types.add(ReferenceLevelHierarchyEntry.class);
     }
 }

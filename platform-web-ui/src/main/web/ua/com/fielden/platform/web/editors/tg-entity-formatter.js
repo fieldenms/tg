@@ -3,7 +3,7 @@ import {TgReflector} from '/app/tg-reflector.js';
 const states = {
     's0': (entity, template, idx, reflector, titles) => {
         if (!template) {
-            return createCompositeTitleWithoutTemplate(entity, reflector, titles);
+            return createCompositeTitleWithoutTemplate(entity, titles, reflector);
         } else if (template && template.length === 1 && template[0] === 'z') {
             return composeDefaultValueObject(entity, reflector, titles);
         } else if (template && template[idx] === '#') {
@@ -110,16 +110,25 @@ export function composeEntityValue (entity, template) {
     if (entity.type().isCompositeEntity()) {
         return createCompositeTitle(entity, template, new TgReflector());
     }
-    return createSimpleTitle(entity);
+    return createSimpleTitle(entity, true);
 }
 
 export function composeDefaultEntityValue(entity) {
     if (entity.type().isCompositeEntity()) {
         const titles = [];
-        createCompositeTitleWithoutTemplate(entity, new TgReflector(), titles);
+        createCompositeTitleWithoutTemplate(entity, titles, new TgReflector());
         return titles;
     }
-    return createSimpleTitle(entity);
+    return createSimpleTitle(entity, true);
+}
+
+export function composeDefaultUnconvertedEntityValue(entity) {
+    if (entity.type().isCompositeEntity()) {
+        const titles = [];
+        createCompositeTitleWithoutTemplate(entity, titles);
+        return titles;
+    }
+    return createSimpleTitle(entity, false);
 }
 
 function createCompositeTitle (entity, template, reflector) {
@@ -149,13 +158,15 @@ function composeDefaultValueObject(entity, reflector, titles) {
     }
 }
 
-function createCompositeTitleWithoutTemplate (entity, reflector, titles) {
+function createCompositeTitleWithoutTemplate (entity, titles, reflector) {
     const entityType = entity.type();
     entityType.compositeKeyNames().forEach(keyName => {
         if (entity.get(keyName)) {
             titles.push({
                 title: entityType.prop(keyName).title(),
-                value: reflector.tg_toString(entity.get(keyName), entity.type(), keyName)
+                value: reflector ? reflector.tg_toString(entity.get(keyName), entity.type(), keyName) : entity.get(keyName),
+                propertyName: keyName,
+                type: entity.type()
             });
         }
     });
@@ -164,6 +175,10 @@ function createCompositeTitleWithoutTemplate (entity, reflector, titles) {
     }
 }
 
-function createSimpleTitle (entity) {
-    return [{value: entity.toString()}]; // entity never empty
+function createSimpleTitle (entity, convert) {
+    return [{
+        value: convert ? entity.toString() : entity.get("key"),
+        propertyName: "key",
+        type: entity.type()
+    }]; // entity never empty
 }
