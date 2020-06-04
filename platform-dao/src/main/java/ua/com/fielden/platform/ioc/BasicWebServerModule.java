@@ -67,6 +67,8 @@ import ua.com.fielden.platform.menu.ModuleDao;
 import ua.com.fielden.platform.menu.ModuleMenuItemDao;
 import ua.com.fielden.platform.menu.ViewDao;
 import ua.com.fielden.platform.menu.WebMenuItemInvisibilityDao;
+import ua.com.fielden.platform.ref_hierarchy.IReferenceHierarchy;
+import ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchyDao;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.ISecurityRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.IUserAndRoleAssociationBatchAction;
@@ -230,6 +232,8 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(IEntityNavigationAction.class).to(EntityNavigationActionDao.class);
         bind(IEntityDeleteAction.class).to(EntityDeleteActionDao.class);
 
+        //Reference Hierarchy
+        bind(IReferenceHierarchy.class).to(ReferenceHierarchyDao.class);
         //Bind master info companion
         bind(IMasterInfo.class).to(MasterInfoDao.class);
 
