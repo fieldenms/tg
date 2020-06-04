@@ -34,6 +34,12 @@ import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 
+/**
+ * Provides static methods for generating EQL queries, which are used for inspecting references between entity instances.
+ *
+ * @author TG Team
+ *
+ */
 public class DataDependencyQueriesGenerator {
 
     public static Optional<QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel>> queryForDependentTypesSummary(final Map<Class<? extends AbstractEntity<?>>, Map<Class<? extends AbstractEntity<?>>, Set<String>>> dependenciesMetadata, final Long entityId, final Class<? extends AbstractEntity<?>> entityType) {
