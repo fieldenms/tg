@@ -370,28 +370,28 @@ public class LongMetadata {
                 Builder(propName, propType, nullable).
                 hibType(hibType);
         
-        if (EntityUtils.isUnionEntityType(propType)) {
-            final String subitemParentPrefix = getColumnName(propName, mapTo, parentPrefix);
-            final EntityTypeInfo<?> eti = new EntityTypeInfo(propType);
-            
-            final List<Field> propsFields = unionProperties((Class<? extends AbstractUnionEntity>) propType);
-            final List<LongPropertyMetadata> subitems = new ArrayList<>();
-            subitems.add(new LongPropertyMetadata.Builder(KEY, String.class, false).hibType(H_STRING).expression(generateUnionEntityPropertyExpression2((Class<? extends AbstractUnionEntity>) propType, KEY, propName)).build());
-            subitems.add(new LongPropertyMetadata.Builder(ID, Long.class, false).hibType(H_LONG).expression(generateUnionEntityPropertyExpression2((Class<? extends AbstractUnionEntity>) propType, ID, propName)).build());
-            for (final Field subpropField : propsFields) {
-                subitems.add(getCommonPropInfo(subpropField, (Class<? extends AbstractEntity<?>>) propType, subitemParentPrefix));
-            }
-
-            return resultInProgress.subitems(subitems).build();
-        }    
-
-        
         if (mapTo != null) {
-            final List<PropColumn> columns = getPropColumns(propField, isProperty, mapTo, hibernateType, parentPrefix);
-            if (columns.size() == 1) {
-                return resultInProgress.column(columns.get(0)).build(); 
+
+            if (EntityUtils.isUnionEntityType(propType)) {
+                final String subitemParentPrefix = getColumnName(propName, mapTo, parentPrefix);
+                final EntityTypeInfo<?> eti = new EntityTypeInfo(propType);
+                
+                final List<Field> propsFields = unionProperties((Class<? extends AbstractUnionEntity>) propType);
+                final List<LongPropertyMetadata> subitems = new ArrayList<>();
+                subitems.add(new LongPropertyMetadata.Builder(KEY, String.class, false).hibType(H_STRING).expression(generateUnionEntityPropertyExpression2((Class<? extends AbstractUnionEntity>) propType, KEY, propName)).build());
+                subitems.add(new LongPropertyMetadata.Builder(ID, Long.class, false).hibType(H_LONG).expression(generateUnionEntityPropertyExpression2((Class<? extends AbstractUnionEntity>) propType, ID, propName)).build());
+                for (final Field subpropField : propsFields) {
+                    subitems.add(getCommonPropInfo(subpropField, (Class<? extends AbstractEntity<?>>) propType, subitemParentPrefix));
+                }
+
+                return resultInProgress.subitems(subitems).build();
             } else {
-                return null;
+                final List<PropColumn> columns = getPropColumns(propField, isProperty, mapTo, hibernateType, parentPrefix);
+                if (columns.size() == 1) {
+                    return resultInProgress.column(columns.get(0)).build(); 
+                } else {
+                    return null;
+                }
             }
         } else if (calculated != null) {
             return resultInProgress.expression(extractExpressionModelFromCalculatedProperty(entityType, propField)).build();
