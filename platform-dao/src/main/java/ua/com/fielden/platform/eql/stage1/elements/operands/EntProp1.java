@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
+import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
+import ua.com.fielden.platform.eql.meta.ComponentTypePropInfo;
 import ua.com.fielden.platform.eql.meta.ResolutionContext;
 import ua.com.fielden.platform.eql.stage1.elements.PropResolution;
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
@@ -37,7 +39,15 @@ public class EntProp1 implements ISingleOperand1<EntProp2> {
             final List<IQrySource2<? extends IQrySource3>> item = it.next();
             final PropResolution resolution = resolveProp(item, this);
             if (resolution != null) {
-                return new EntProp2(resolution.getSource(), resolution.getPath());
+                final AbstractPropInfo<?> lastResolutionItem = resolution.getPath().get(resolution.getPath().size() - 1);
+                if (lastResolutionItem instanceof ComponentTypePropInfo && ((ComponentTypePropInfo) lastResolutionItem).getProps().size() == 1) {
+                    final List<AbstractPropInfo<?>> enhancedPath = new ArrayList<>(resolution.getPath());
+                    final AbstractPropInfo<?> autoResolvedItem = (AbstractPropInfo<?>) ((ComponentTypePropInfo) lastResolutionItem).getProps().values().iterator().next();
+                    enhancedPath.add(autoResolvedItem);
+                    return new EntProp2(resolution.getSource(), enhancedPath);
+                } else {
+                    return new EntProp2(resolution.getSource(), resolution.getPath());    
+                }
             }
         }
 

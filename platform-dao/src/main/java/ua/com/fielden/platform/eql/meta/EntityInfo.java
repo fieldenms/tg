@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.meta;
 
+import static java.util.Collections.unmodifiableSortedMap;
+
 import java.util.Objects;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -33,7 +35,7 @@ public class EntityInfo<T extends AbstractEntity<?>> implements IResolvable<T> {
     }
     
     public SortedMap<String, AbstractPropInfo<?>> getProps() {
-        return props;
+        return unmodifiableSortedMap(props);
     }
     
     @Override

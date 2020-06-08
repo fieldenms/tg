@@ -4,7 +4,9 @@ import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType.UNION_ENTITY_HEADER;
 import static ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType.USUAL_PROP;
+import static ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType.COMPOSITE_TYPE_HEADER;
 import static ua.com.fielden.platform.eql.stage2.elements.PathsToTreeTransformator.groupChildren;
+import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.util.HashSet;
 import java.util.List;
@@ -178,8 +180,8 @@ public class EntityContainerFetcher {
         final SortedSet<ResultQueryYieldDetails> result = new TreeSet<>();
         for (final Yield3 yield : model.getYields()) {
             final Class<?> yieldType = AbstractEntity.ID.equals(yield.alias) && (EntityUtils.isPersistedEntityType(yield.operand.type()) || EntityUtils.isSyntheticBasedOnPersistentEntityType((Class<? extends AbstractEntity<?>>) yield.operand.type()))  ? Long.class : yield.operand.type();
-            if (yield.isHeader && EntityUtils.isUnionEntityType(yieldType)) {
-                result.add(new ResultQueryYieldDetails(yield.alias, yieldType, yield.operand.hibType(), null, UNION_ENTITY_HEADER));
+            if (yield.isHeader) {
+                result.add(new ResultQueryYieldDetails(yield.alias, yieldType, yield.operand.hibType(), null, isUnionEntityType(yieldType) ? UNION_ENTITY_HEADER : COMPOSITE_TYPE_HEADER));
             } else {
                 result.add(new ResultQueryYieldDetails(yield.alias, yieldType, yield.operand.hibType(), yield.column.name, USUAL_PROP));    
             }

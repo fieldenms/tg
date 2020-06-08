@@ -304,25 +304,13 @@ public class LongMetadata {
     private String getColumnName(final String propName, final MapTo mapTo, final String parentPrefix) {
         return (parentPrefix != null ? parentPrefix + "_" : "") + (isNotEmpty(mapTo.value()) ? mapTo.value() : propName.toUpperCase() + "_");
     }
-    
-    private List<PropColumn> getPropColumns(final Field field, final IsProperty isProperty, final MapTo mapTo, final Object hibernateType, final String parentPrefix) throws Exception {
-        final String columnName = getColumnName(field.getName(), mapTo, parentPrefix); 
-
-        final List<PropColumn> result = new ArrayList<>();
-        if (hibernateType instanceof ICompositeUserTypeInstantiate) {
-            final ICompositeUserTypeInstantiate hibCompositeUSerType = (ICompositeUserTypeInstantiate) hibernateType;
-            for (final PropColumn column : getCompositeUserTypeColumns(hibCompositeUSerType, columnName)) {
-                result.add(column);
-            }
-        } else {
-            final Integer length = isProperty.length() > 0 ? isProperty.length() : null;
-            final Integer precision = isProperty.precision() >= 0 ? isProperty.precision() : null;
-            final Integer scale = isProperty.scale() >= 0 ? isProperty.scale() : null;
-            result.add(new PropColumn(columnName, length, precision, scale));
-        }
-        return result;
+   
+    private PropColumn generateColumn(final String columnName, final IsProperty isProperty) {
+        final Integer length = isProperty.length() > 0 ? isProperty.length() : null;
+        final Integer precision = isProperty.precision() >= 0 ? isProperty.precision() : null;
+        final Integer scale = isProperty.scale() >= 0 ? isProperty.scale() : null;
+        return new PropColumn(columnName, length, precision, scale);
     }
-    
     
     /**
      * Generates list of column names for mapping of CompositeUserType implementors.
@@ -332,24 +320,38 @@ public class LongMetadata {
      * @return
      * @throws Exception
      */
-    private List<PropColumn> getCompositeUserTypeColumns(final ICompositeUserTypeInstantiate hibType, final String parentColumnPrefix) throws Exception {
+    private List<LongPropertyMetadata> getCompositeUserTypeColumns(final ICompositeUserTypeInstantiate hibType, final String parentColumnPrefix, final ExpressionModel expr) throws Exception {
         final String[] propNames = hibType.getPropertyNames();
-        final List<PropColumn> result = new ArrayList<>();
-        for (final String propName : propNames) {
-            final MapTo mapTo = getPropertyAnnotation(MapTo.class, hibType.returnedClass(), propName);
-            final IsProperty isProperty = getPropertyAnnotation(IsProperty.class, hibType.returnedClass(), propName);
-            final String mapToColumn = mapTo.value();
-            final Integer length = isProperty.length() > 0 ? isProperty.length() : null;
-            final Integer precision = isProperty.precision() >= 0 ? isProperty.precision() : null;
-            final Integer scale = isProperty.scale() >= 0 ? isProperty.scale() : null;
-            final String columnName = propNames.length == 1 ? parentColumnPrefix
-                    : (parentColumnPrefix + (parentColumnPrefix.endsWith("_") ? "" : "_") + (isEmpty(mapToColumn) ? propName.toUpperCase() : mapToColumn));
-            result.add(new PropColumn(columnName, length, precision, scale));
+        final Object[] propHibTypes = hibType.getPropertyTypes();
+        final Class<?> headerPropType = hibType.returnedClass();
+        final List<LongPropertyMetadata> result = new ArrayList<>();
+        for (int i = 0 ; i != propNames.length ; i++) {
+            final String propName = propNames[i];
+            final MapTo mapTo = getPropertyAnnotation(MapTo.class, headerPropType, propName);
+            final IsProperty isProperty = getPropertyAnnotation(IsProperty.class, headerPropType, propName);
+            
+            final T3<Type, IUserTypeInstantiate, ICompositeUserTypeInstantiate> hibernateTypes3 = getHibernateConverter(propHibTypes[i]);
+            final Object subHibType = hibernateTypes3 == null ? null : (hibernateTypes3._1 != null ? hibernateTypes3._1 : (hibernateTypes3._2 != null ? hibernateTypes3._2 : (hibernateTypes3._3 != null ? hibernateTypes3._3 : null)));
+            final Class<?> subJavaType = PropertyTypeDeterminator.determinePropertyType(headerPropType, propName);
+            
+            final LongPropertyMetadata.Builder subLmdInProgress = new LongPropertyMetadata.
+            Builder(propName, subJavaType, false).
+            hibType(subHibType);
+            if (/*mapTo*/ parentColumnPrefix != null) {
+                final String mapToColumn = mapTo.value();
+                final String columnName = propNames.length == 1 ? parentColumnPrefix
+                        : (parentColumnPrefix + (parentColumnPrefix.endsWith("_") ? "" : "_") + (isEmpty(mapToColumn) ? propName.toUpperCase() : mapToColumn));
+                result.add(subLmdInProgress.column(generateColumn(columnName, isProperty)).build());
+            } else if (expr != null) {
+                result.add(subLmdInProgress.expression(expr).build());
+            } else {
+                result.add(subLmdInProgress.build());
+            }
         }
         return result;
     }
-    
-    private LongPropertyMetadata getCommonPropInfo(final Field propField, final Class<? extends AbstractEntity<?>> entityType, String parentPrefix) throws Exception {
+
+    private LongPropertyMetadata getCommonPropInfo(final Field propField, final Class<? extends AbstractEntity<?>> entityType, final String parentPrefix) throws Exception {
         final String propName = propField.getName();
         final Class<?> propType = propField.getType();
 
@@ -359,8 +361,8 @@ public class LongMetadata {
 
         final Object ht = getHibernateType(propField);
 
-        final T3<Type, IUserTypeInstantiate, ICompositeUserTypeInstantiate> hibernateType = ht == null ? null : getHibernateConverter(ht);
-        final Object hibType = hibernateType == null ? null : (hibernateType._1 != null ? hibernateType._1 : (hibernateType._2 != null ? hibernateType._2 : (hibernateType._3 != null ? hibernateType._3 : null)));
+        final T3<Type, IUserTypeInstantiate, ICompositeUserTypeInstantiate> hibernateTypes3 = ht == null ? null : getHibernateConverter(ht);
+        final Object hibType = hibernateTypes3 == null ? null : (hibernateTypes3._1 != null ? hibernateTypes3._1 : (hibernateTypes3._2 != null ? hibernateTypes3._2 : (hibernateTypes3._3 != null ? hibernateTypes3._3 : null)));
 
         final MapTo mapTo = getAnnotation(propField, MapTo.class);
         final IsProperty isProperty = getAnnotation(propField, IsProperty.class);
@@ -371,30 +373,29 @@ public class LongMetadata {
                 hibType(hibType);
         
         if (mapTo != null) {
-
+            final String columnName = getColumnName(propName, mapTo, parentPrefix);
             if (EntityUtils.isUnionEntityType(propType)) {
-                final String subitemParentPrefix = getColumnName(propName, mapTo, parentPrefix);
-                final EntityTypeInfo<?> eti = new EntityTypeInfo(propType);
-                
                 final List<Field> propsFields = unionProperties((Class<? extends AbstractUnionEntity>) propType);
                 final List<LongPropertyMetadata> subitems = new ArrayList<>();
                 subitems.add(new LongPropertyMetadata.Builder(KEY, String.class, false).hibType(H_STRING).expression(generateUnionEntityPropertyExpression2((Class<? extends AbstractUnionEntity>) propType, KEY, propName)).build());
                 subitems.add(new LongPropertyMetadata.Builder(ID, Long.class, false).hibType(H_LONG).expression(generateUnionEntityPropertyExpression2((Class<? extends AbstractUnionEntity>) propType, ID, propName)).build());
                 for (final Field subpropField : propsFields) {
-                    subitems.add(getCommonPropInfo(subpropField, (Class<? extends AbstractEntity<?>>) propType, subitemParentPrefix));
+                    subitems.add(getCommonPropInfo(subpropField, (Class<? extends AbstractEntity<?>>) propType, columnName));
                 }
 
                 return resultInProgress.subitems(subitems).build();
             } else {
-                final List<PropColumn> columns = getPropColumns(propField, isProperty, mapTo, hibernateType, parentPrefix);
-                if (columns.size() == 1) {
-                    return resultInProgress.column(columns.get(0)).build(); 
+                if (!(hibType instanceof ICompositeUserTypeInstantiate)) {
+                    return resultInProgress.column(generateColumn(columnName, isProperty)).build(); 
                 } else {
-                    return null;
-                }
-            }
+                    return resultInProgress.subitems(getCompositeUserTypeColumns((ICompositeUserTypeInstantiate) hibType, columnName, null)).build();
+                }            }
         } else if (calculated != null) {
-            return resultInProgress.expression(extractExpressionModelFromCalculatedProperty(entityType, propField)).build();
+            if (!(hibType instanceof ICompositeUserTypeInstantiate)) {
+                return resultInProgress.expression(extractExpressionModelFromCalculatedProperty(entityType, propField)).build();
+            } else {
+                return resultInProgress.subitems(getCompositeUserTypeColumns((ICompositeUserTypeInstantiate) hibType, null, extractExpressionModelFromCalculatedProperty(entityType, propField))).build();
+            }           
         } else {
             return resultInProgress.build();
         }

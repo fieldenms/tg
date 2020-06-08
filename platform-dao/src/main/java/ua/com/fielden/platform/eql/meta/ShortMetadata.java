@@ -25,7 +25,6 @@ import ua.com.fielden.platform.eql.stage1.builders.StandAloneExpressionBuilder;
 import ua.com.fielden.platform.eql.stage1.elements.operands.Expression1;
 import ua.com.fielden.platform.eql.stage3.elements.Column;
 import ua.com.fielden.platform.eql.stage3.elements.Table;
-import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.IDates;
 
 public class ShortMetadata {
@@ -67,15 +66,19 @@ public class ShortMetadata {
         final Map<String, Column> columns = new HashMap<>();
         try {
             for (final LongPropertyMetadata el : lmg.generatePropertyMetadatasForEntity(parentInfo).values()) {
+
                 if (el.column != null) {
                     columns.put(el.name, new Column(el.column.name));
                 } else if (!el.subitems().isEmpty()) {
-                    for (LongPropertyMetadata subitem : el.subitems()) {
+                    for (final LongPropertyMetadata subitem : el.subitems()) {
                         if (subitem.expressionModel == null) {
-                            columns.put(el.name + "." + subitem.name, new Column(subitem.column.name.substring(0, subitem.column.name.length() - 1)));    
+                            final String colName = subitem.column.name.endsWith("_") && subitem.column.name.substring(0, subitem.column.name.length() - 1).contains("_") ? subitem.column.name.substring(0, subitem.column.name.length() - 1) : subitem.column.name;
+                            columns.put(el.name + "." + subitem.name, new Column(colName));    
                         }
                     }
                 }
+                
+                
             }
         } catch (final Exception e1) {
             // TODO Auto-generated catch block
@@ -104,7 +107,7 @@ public class ShortMetadata {
                 
                 if (isUnionEntityType(javaType)) {
                     final EntityInfo<? extends AbstractUnionEntity> ef = new EntityInfo<>((Class<? extends AbstractUnionEntity>)javaType, UNION);
-                    for (LongPropertyMetadata sub : el.getValue().subitems()) {
+                    for (final LongPropertyMetadata sub : el.getValue().subitems()) {
                         if (sub.expressionModel == null) {
                             ef.addProp(new EntityTypePropInfo(sub.name, allEntitiesInfo.get(sub.javaType), sub.hibType, false, null));
                         } else {
@@ -119,7 +122,17 @@ public class ShortMetadata {
                 } else if (ID.equals(name)){
                     entityInfo.addProp(new EntityTypePropInfo(name, allEntitiesInfo.get(entityInfo.javaType()), hibType, required, expr));
                 } else {
-                    entityInfo.addProp(new PrimTypePropInfo(name, hibType, javaType, expr));
+                    if (el.getValue().subitems().isEmpty()) {
+                        entityInfo.addProp(new PrimTypePropInfo(name, hibType, javaType, expr));    
+                    } else {
+                        final ComponentTypePropInfo propTpi = new ComponentTypePropInfo(name, javaType, hibType);
+                        for (final LongPropertyMetadata sub : el.getValue().subitems()) {
+                            final ExpressionModel subExpressionModel = sub.expressionModel;
+                            final Expression1 subExpr = subExpressionModel == null ? null : (Expression1) (new StandAloneExpressionBuilder(qb(), subExpressionModel)).getResult().getValue();
+                            propTpi.addProp(new PrimTypePropInfo(sub.name, sub.hibType, sub.javaType, subExpr));
+                        }
+                        entityInfo.addProp(propTpi);
+                    }
                 }
             }
         } catch (final Exception e1) {

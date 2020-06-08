@@ -451,15 +451,15 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     
     @Test
     public void eql3_query_executes_correctly39() {
-        final AggregatedResultQueryModel qry = select(TeWorkOrder.class).yield().prop("vehicle").as("vh").modelAsAggregate();
+        final AggregatedResultQueryModel qry = select(TeWorkOrder.class).where().prop("actCost.amount").isNotNull().yield().prop("vehicle").as("vh").modelAsAggregate();
         
         run(select(qry).where().prop("vh.lastFuelUsageQty").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
     }
     
     @Test
     public void eql3_query_executes_correctly40() {
-        final AggregatedResultQueryModel qry1 = select(TeWorkOrder.class).where().prop("actCost").isNotNull().yield().prop("vehicle").as("vh").modelAsAggregate();
-        final AggregatedResultQueryModel qry2 = select(TeWorkOrder.class).where().prop("estCost").isNotNull().yield().prop("vehicle").as("vh").modelAsAggregate();
+        final AggregatedResultQueryModel qry1 = select(TeWorkOrder.class).where().prop("actCost.amount").isNotNull().yield().prop("vehicle").as("vh").modelAsAggregate();
+        final AggregatedResultQueryModel qry2 = select(TeWorkOrder.class).where().prop("estCost.amount").isNotNull().yield().prop("vehicle").as("vh").modelAsAggregate();
         
         run(select(qry1, qry2).where().prop("vh.lastFuelUsageQty").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
     }
@@ -662,6 +662,27 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
         final EntityResultQueryModel<TgBogie> qry = select(select(TgBogie.class).model()).model();
         co.getAllEntities(from(qry).with("EQL3", null).with(fetch(TgBogie.class).with("location", fetch(TgBogieLocation.class).with("wagonSlot").with("workshop"))).model());
     }
+
+    @Test
+    public void eql3_query_executes_correctly72() {
+        run(select(TeAverageFuelUsage.class).where().prop("cost.amount").gt().val(100));
+    }
+
+    @Test
+    public void eql3_query_executes_correctly73() {
+        run(select(TeAverageFuelUsage.class).where().prop("cost").lt().val(100));
+    }
+
+    @Test
+    public void eql3_query_executes_correctly74() {
+        run(select(TgVehicle.class).where().prop("sumOfPrices").lt().val(100));
+    }
+    
+    @Test
+    public void eql3_query_executes_correctly75() {
+        run(select(TgVehicle.class).where().prop("sumOfPrices.amount").lt().val(100));
+    }
+    
     
     @Override
     protected void populateDomain() {

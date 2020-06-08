@@ -11,6 +11,7 @@ import com.google.common.base.Objects;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.IRetrievalModel;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
+import ua.com.fielden.platform.eql.meta.ComponentTypePropInfo;
 import ua.com.fielden.platform.eql.meta.UnionTypePropInfo;
 import ua.com.fielden.platform.eql.stage1.elements.EntQueryBlocks1;
 import ua.com.fielden.platform.eql.stage1.elements.ITransformableToS2;
@@ -59,13 +60,17 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToS2<R
             final List<Yield2> enhancedYields = new ArrayList<>(yields.getYields());
             for (final Entry<String, AbstractPropInfo<?>> el : sources2.main.entityInfo().getProps().entrySet()) {
                 if (fetchModel.containsProp(el.getValue().name)) {
-                    enhancedYields.add(new Yield2(new EntProp2(sources2.main, listOf(el.getValue())), el.getKey(), false, el.getValue() instanceof UnionTypePropInfo)); 
+                    enhancedYields.add(new Yield2(new EntProp2(sources2.main, listOf(el.getValue())), el.getKey(), false, (el.getValue() instanceof UnionTypePropInfo || el.getValue() instanceof ComponentTypePropInfo))); 
                     
                     if (el.getValue() instanceof UnionTypePropInfo) {
                         for (Entry<String, AbstractPropInfo<?>> sub : ((UnionTypePropInfo<?>) el.getValue()).propEntityInfo.getProps().entrySet()) {
                             if (EntityUtils.isEntityType(sub.getValue().javaType())) {
                                 enhancedYields.add(new Yield2(new EntProp2(sources2.main, listOf(el.getValue(), sub.getValue())), el.getKey() + "." + sub.getKey(), false));             
                             }
+                        }
+                    } else if (el.getValue() instanceof ComponentTypePropInfo) {
+                        for (Entry<String, AbstractPropInfo<?>> sub : ((ComponentTypePropInfo<?>) el.getValue()).getProps().entrySet()) {
+                            enhancedYields.add(new Yield2(new EntProp2(sources2.main, listOf(el.getValue(), sub.getValue())), el.getKey() + "." + sub.getKey(), false));             
                         }
                     }
                 }

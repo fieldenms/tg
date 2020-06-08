@@ -15,6 +15,7 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.types.Money;
 
 @KeyTitle("Fuel Usages")
 @KeyType(DynamicEntityKey.class)
@@ -46,6 +47,24 @@ public class TeVehicleFuelUsage extends AbstractEntity<DynamicEntityKey> {
     @MapTo
     @Title(value = "Fuel type", desc = "Fuel type")
     private TgFuelType fuelType;
+    
+    @IsProperty
+    @MapTo
+    @Title(value = "Fuel cost")
+    private Money cost;
+
+    @Observable
+    public TeVehicleFuelUsage setCost(final Money cost) {
+        this.cost = cost;
+        return this;
+    }
+
+    public Money getCost() {
+        return cost;
+    }
+
+    
+
 
     @Observable
     public TeVehicleFuelUsage setFuelType(final TgFuelType fuelType) {

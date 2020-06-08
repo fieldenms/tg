@@ -3,7 +3,6 @@ package ua.com.fielden.platform.eql.stage2.elements.sources;
 import static java.util.Collections.unmodifiableList;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -40,7 +39,7 @@ public class Child implements Comparable<Child> {
  //       assert(dependencies.isEmpty() || !dependencies.isEmpty() && expr != null);
         assert(parentSource != null);
         if (source == null && fullPath == null && !isUnionEntityType(main.javaType())) {
-            throw new EqlException("Incorrect state.");
+          //  throw new EqlException("Incorrect state.");
         }
     }
     
@@ -68,7 +67,7 @@ public class Child implements Comparable<Child> {
 
     private static String offset = "              ";
     
-    private String toString(String currentOffset) {
+    private String toString(final String currentOffset) {
         final StringBuffer sb = new StringBuffer();
         sb.append(currentOffset + "**** CHILD ****");//[" + hashCode() + "]");
         sb.append("\n" + currentOffset + "-------------- main : " + main.name);
@@ -78,7 +77,7 @@ public class Child implements Comparable<Child> {
         sb.append("\n" + currentOffset + "-------------- expr : " + (expr != null ? "Y" : ""));
         if (!items.isEmpty()) {
             sb.append("\n" + currentOffset + "------------- items :");
-            for (Child child : items) {
+            for (final Child child : items) {
                 sb.append("\n");
                 sb.append(child.toString(currentOffset + offset));
             }

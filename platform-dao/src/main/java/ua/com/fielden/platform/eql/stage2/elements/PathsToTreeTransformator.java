@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
+import ua.com.fielden.platform.eql.meta.ComponentTypePropInfo;
 import ua.com.fielden.platform.eql.meta.EntityInfo;
 import ua.com.fielden.platform.eql.meta.EntityTypePropInfo;
 import ua.com.fielden.platform.eql.meta.UnionTypePropInfo;
@@ -219,7 +220,7 @@ public class PathsToTreeTransformator {
                 mapSources.put(child.main.name, itemSources);
             }
             
-            if (child.main instanceof UnionTypePropInfo) {
+            if (child.main instanceof UnionTypePropInfo || child.main instanceof ComponentTypePropInfo) {
                 unions.add(child.main.name);
             }
         }

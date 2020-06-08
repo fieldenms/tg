@@ -10,9 +10,11 @@ import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.types.Money;
 
 @KeyType(TeVehicle.class)
 @CompanionObject(ITeAverageFuelUsage.class)
@@ -27,11 +29,30 @@ public class TeAverageFuelUsage extends AbstractEntity<TeVehicle> {
                     yield().prop("vehicle").as("id"). //
                     yield().prop("vehicle").as("key"). //
                     yield().sumOf().prop("qty").as("qty"). //
+                    yield().sumOf().prop("cost.amount").as("cost.amount"). //
                     modelAsEntity(TeAverageFuelUsage.class);
 
     @IsProperty
     @Title("Total qty over the period")
     private BigDecimal qty;
+    
+    @IsProperty
+    @MapTo
+    @Title(value = "Title", desc = "Desc")
+    private Money cost;
+
+    @Observable
+    public TeAverageFuelUsage setCost(final Money cost) {
+        this.cost = cost;
+        return this;
+    }
+
+    public Money getCost() {
+        return cost;
+    }
+
+    
+
 
     @IsProperty
     @CritOnly
