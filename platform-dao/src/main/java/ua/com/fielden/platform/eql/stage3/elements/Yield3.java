@@ -12,16 +12,20 @@ public class Yield3 {
     public final String alias;
     public final Column column;
     public final boolean isHeader;
+    public final Class<?> type;
+    public final Object hibType;
 
-    public Yield3(final ISingleOperand3 operand, final String alias, final boolean isHeader) {
+    public Yield3(final ISingleOperand3 operand, final String alias, final boolean isHeader, final Class<?> type, final Object hibType) {
         this.operand = operand;
         this.alias = alias;
         this.column = StringUtils.isEmpty(alias) || isHeader ? null : new Column(alias.replace(".", "_").toUpperCase() + "_");
         this.isHeader = isHeader;
+        this.hibType = hibType;
+        this.type = type;
     }
 
     public Yield3(final ISingleOperand3 operand, final String alias) {
-        this(operand, alias, false);
+        this(operand, alias, false, null, null);
     }
 
     public String sql(final DbVersion dbVersion) {
@@ -34,6 +38,8 @@ public class Yield3 {
         int result = 1;
         result = prime * result + ((alias == null) ? 0 : alias.hashCode());
         result = prime * result + operand.hashCode();
+        result = prime * result + ((hibType == null) ? 0 : hibType.hashCode());
+        result = prime * result + ((type == null) ? 0 : type.hashCode());
         result = prime * result + (isHeader ? 1231 : 1237);
         return result;
     }
@@ -50,6 +56,6 @@ public class Yield3 {
         
         final Yield3 other = (Yield3) obj;
         
-        return Objects.equals(operand, other.operand) && Objects.equals(alias, other.alias) && Objects.equals(isHeader, other.isHeader);
+        return Objects.equals(operand, other.operand) && Objects.equals(alias, other.alias) && Objects.equals(isHeader, other.isHeader) && Objects.equals(hibType, other.hibType) && Objects.equals(type, other.type);
     }
 }

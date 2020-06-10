@@ -63,13 +63,13 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToS2<R
                     enhancedYields.add(new Yield2(new EntProp2(sources2.main, listOf(el.getValue())), el.getKey(), false, (el.getValue() instanceof UnionTypePropInfo || el.getValue() instanceof ComponentTypePropInfo))); 
                     
                     if (el.getValue() instanceof UnionTypePropInfo) {
-                        for (Entry<String, AbstractPropInfo<?>> sub : ((UnionTypePropInfo<?>) el.getValue()).propEntityInfo.getProps().entrySet()) {
+                        for (final Entry<String, AbstractPropInfo<?>> sub : ((UnionTypePropInfo<?>) el.getValue()).propEntityInfo.getProps().entrySet()) {
                             if (EntityUtils.isEntityType(sub.getValue().javaType())) {
                                 enhancedYields.add(new Yield2(new EntProp2(sources2.main, listOf(el.getValue(), sub.getValue())), el.getKey() + "." + sub.getKey(), false));             
                             }
                         }
                     } else if (el.getValue() instanceof ComponentTypePropInfo) {
-                        for (Entry<String, AbstractPropInfo<?>> sub : ((ComponentTypePropInfo<?>) el.getValue()).getProps().entrySet()) {
+                        for (final Entry<String, AbstractPropInfo<?>> sub : ((ComponentTypePropInfo<?>) el.getValue()).getProps().entrySet()) {
                             enhancedYields.add(new Yield2(new EntProp2(sources2.main, listOf(el.getValue(), sub.getValue())), el.getKey() + "." + sub.getKey(), false));             
                         }
                     }

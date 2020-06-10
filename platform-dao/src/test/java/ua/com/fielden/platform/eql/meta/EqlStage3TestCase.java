@@ -335,15 +335,15 @@ public class EqlStage3TestCase extends EqlTestCase {
     }
 
     protected static Yield3 yieldEntityExpr(final String propName, final IQrySource3 source, final String alias, final Class<? extends AbstractEntity<?>> propType) {
-        return new Yield3(expr(entityProp(propName, source, propType)), alias);
+        return new Yield3(expr(entityProp(propName, source, propType)), alias, false, propType, H_LONG);
     }
 
     protected static Yield3 yieldStringExpr(final String propName, final IQrySource3 source, final String alias) {
-        return new Yield3(expr(stringProp(propName, source)), alias);
+        return new Yield3(expr(stringProp(propName, source)), alias, false, String.class, H_STRING);
     }
 
     protected static Yield3 yieldPropExpr(final String propName, final IQrySource3 source, final String alias, final Class<?> type, final Type hibType) {
-        return new Yield3(expr(prop(propName, source, type, hibType)), alias);
+        return new Yield3(expr(prop(propName, source, type, hibType)), alias, false, type, hibType);
     }
 
     protected static Yield3 yieldProp(final String propName, final IQrySource3 source, final String alias) {

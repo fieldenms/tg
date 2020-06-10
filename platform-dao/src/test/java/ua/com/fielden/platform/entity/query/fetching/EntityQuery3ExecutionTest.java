@@ -26,6 +26,7 @@ import ua.com.fielden.platform.sample.domain.ITeAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.ITeVehicleModel;
 import ua.com.fielden.platform.sample.domain.ITgBogie;
 import ua.com.fielden.platform.sample.domain.ITgEntityWithComplexSummaries;
+import ua.com.fielden.platform.sample.domain.ITgVehicle;
 import ua.com.fielden.platform.sample.domain.TeAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TeVehicle;
 import ua.com.fielden.platform.sample.domain.TeVehicleFuelUsage;
@@ -683,6 +684,14 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
         run(select(TgVehicle.class).where().prop("sumOfPrices.amount").lt().val(100));
     }
     
+    @Test
+    public void eql3_query_executes_correctly76() {
+        final ITgVehicle co = getInstance(ITgVehicle.class);
+        final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).model();
+        final List<TgVehicle> items = co.getAllEntities(from(qry).with("EQL3", null).with(fetch(TgVehicle.class).with("constValueProp")).model());
+        System.out.println(items.size());
+        System.out.println(items.get(0).getConstValueProp());
+    }
     
     @Override
     protected void populateDomain() {
