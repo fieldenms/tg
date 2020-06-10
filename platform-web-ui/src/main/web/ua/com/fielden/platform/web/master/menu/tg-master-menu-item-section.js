@@ -110,6 +110,9 @@ Polymer({
     _getElement: function (customAction) {
         const self = this;
         if (self._element) {
+            if (!self._element.parentNode) {
+                this.$.elementLoader.loadDom();
+            }
             return Promise.resolve(self._element);
         } else {
             self.$.elementLoader.import = customAction.componentUri;
@@ -187,6 +190,20 @@ Polymer({
                        self.$.toaster.show();
                    });
 */
+        }
+    },
+
+    offloadDom: function () {
+        const elementToLoad = this.shadowRoot.querySelector("#elementLoader");
+        if (elementToLoad) {
+            elementToLoad.offloadDom();
+        }
+    },
+
+    loadDom: function () {
+        const elementToLoad = this.shadowRoot.querySelector("#elementLoader");
+        if (elementToLoad) {
+            elementToLoad.loadDom();
         }
     },
 

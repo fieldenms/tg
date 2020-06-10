@@ -395,6 +395,7 @@ Polymer({
     },
 
     detached: function () {
+        this.currentSection().offloadDom();
         while (this._subscriptions.length !== 0) {
             this._subscriptions.pop().unsubscribe();
         }
@@ -714,9 +715,16 @@ Polymer({
         const oldSection = this.querySelector('tg-master-menu-item-section[data-route=' + oldRoute + ']');
         const action = this.querySelector('tg-ui-action[data-route=' + newRoute + ']');
 
-        if (oldSection && oldSection._element && typeof oldSection._element.removeOwnKeyBindings === 'function') {
-            oldSection._element.removeOwnKeyBindings();
+        if (oldSection && oldSection._element) {
+            oldSection.offloadDom();
+            if (typeof oldSection._element.removeOwnKeyBindings === 'function') {
+                oldSection._element.removeOwnKeyBindings();
+            }
         }
+
+        // if (oldSection && oldSection._element && typeof oldSection._element.removeOwnKeyBindings === 'function') {
+        //     oldSection._element.removeOwnKeyBindings();
+        // }
         action._run();
     }
 });

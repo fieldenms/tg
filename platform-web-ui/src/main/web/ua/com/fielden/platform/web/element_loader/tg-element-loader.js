@@ -200,8 +200,8 @@ Polymer({
     offloadDom: function () {
         if (this.loadedElement && this.loadedElement.parentNode !== null) {
             this.removeChild(this.loadedElement);
-            this.loadedElement = null;
-            this.wasLoaded = false;
+            // this.loadedElement = null;
+            // this.wasLoaded = false;
         }
     },
 
