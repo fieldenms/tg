@@ -23,14 +23,18 @@ public class Conditions3 implements ICondition3 {
     }
     
     public String sql(final DbVersion dbVersion, final boolean atWhere) {
-        final StringBuffer sb = new StringBuffer();
         if (!allConditionsAsDnf.isEmpty()) {
+            final String sqlBody = allConditionsAsDnf.stream().map(dl -> dl.stream().map(cond -> cond.sql(dbVersion)).collect(joining(" AND "))).collect(joining(" OR "));
             if (atWhere) {
-                sb.append("\nWHERE ");    
+                return "\nWHERE " + sqlBody;    
+            } else if (allConditionsAsDnf.size() == 1) {
+                return sqlBody;
+            } else {
+                return "(" + sqlBody + ")";
             }
-            sb.append(allConditionsAsDnf.stream().map(dl -> dl.stream().map(cond -> cond.sql(dbVersion)).collect(joining(" AND "))).collect(joining(" OR ")));
+        } else {
+            return "";
         }
-        return sb.toString();    
     }
     
     @Override
