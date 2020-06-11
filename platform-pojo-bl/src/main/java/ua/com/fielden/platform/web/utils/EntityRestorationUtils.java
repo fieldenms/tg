@@ -37,7 +37,7 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  *
  */
 public class EntityRestorationUtils {
-    private static final String ENTITY_NOT_FOUND = "Entity [%s] could not be found.";
+    public static final String ENTITY_NOT_FOUND = "Entity [%s] could not be found.";
     private static final Logger logger = Logger.getLogger(EntityRestorationUtils.class);
     
     ////////////////////////////////////// VALIDATION PROTOTYPE CREATION //////////////////////////////////////
@@ -76,6 +76,18 @@ public class EntityRestorationUtils {
      */
     public static <T extends AbstractEntity<?>> T findByKeyWithFiltering(final IEntityReader<T> reader, final Object... keyValues) {
         return findWithFiltering((filtered) -> reader.findByKeyAndFetch(filtered, reader.getFetchProvider().fetchModel(), keyValues), reader);
+    }
+    
+    /**
+     * Finds entity by <code>keyValues</code> ensuring it will be filtered out by registered domain-driven application's {@link IFilter} if its logic defines such filtering.
+     * {@value #ENTITY_NOT_FOUND} {@link Result} is thrown if no entity was found. Default {@link IEntityReader#getFetchProvider()} will be used for fetch model construction.
+     * 
+     * @param reader -- {@link IEntityReader} for entity reading; instrumented or not depending on actual needs
+     * @param keyValues
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> T findByKeyWithFiltering(final IEntityReader<T> reader, final fetch<T> fetchModel, final Object... keyValues) {
+        return findWithFiltering((filtered) -> reader.findByKeyAndFetch(filtered, fetchModel, keyValues), reader);
     }
     
     /**

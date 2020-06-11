@@ -48,7 +48,7 @@ public class ReferenceHierarchyProducer extends DefaultEntityProducerWithContext
                 throw new ReflectionException(format("Unsupported entity type [%s] for Reference Hiearchy.", entityType.getSimpleName()));
             }
             final fetch fetchModel = fetchKeyAndDescOnly(selectedEntity.getType());
-            final AbstractEntity<?> refetchedEntity = co(selectedEntity.getType()).findById(selectedEntity.getId(), hasDescProperty(selectedEntity.getType()) ? fetchModel.with("desc") : fetchModel);
+            final AbstractEntity<?> refetchedEntity = fetchById(selectedEntity.getId(), hasDescProperty(selectedEntity.getType()) ? fetchModel.with("desc") : fetchModel);
             entity.setRefEntityId(refetchedEntity.getId());
             entity.setLoadedHierarchyLevel(REFERENCE_INSTANCE);
             entity.setTitle(selectedEntity.getKey() + (StringUtils.isEmpty(refetchedEntity.getDesc()) ? "" : ": " + refetchedEntity.getDesc()));

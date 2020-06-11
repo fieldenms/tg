@@ -2,8 +2,10 @@ package ua.com.fielden.platform.entity;
 
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.web.utils.EntityRestorationUtils.findByIdWithFiltering;
+import static ua.com.fielden.platform.web.utils.EntityRestorationUtils.findByKeyWithFiltering;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -11,10 +13,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.function.BiFunction;
 
 import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.utils.EntityRestorationUtils;
 
@@ -182,18 +188,114 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
     protected final T refetchInstrumentedEntityById(final Long entityId) {
         return findByIdWithFiltering(entityId, reader.get());
     }
-
+    
     /**
-     * Re-fetches entity using <code>property</code>'s fetch provider for the entity type behind this producer.
+     * Re-fetches {@code entity} using {@code property}'s fetch provider for the entity type behind this producer.
+     * Returns uninstrumented instance.
+     * <p>
+     * Instance will be filtered out by registered domain-driven application's {@link IFilter} if its logic defines such filtering.<br>
+     * {@link EntityRestorationUtils#ENTITY_NOT_FOUND} is thrown if no entity was found.
+     */
+    protected final <M extends AbstractEntity<?>> M refetch(final M entity, final String property) {
+        return findByIdWithFiltering(entity.getId(), co((Class<M>) entity.getType()), reader.get().getFetchProvider().<M>fetchFor(property).fetchModel());
+    }
+    
+    /**
+     * Re-fetches {@code entity} using {@code property}'s fetch provider for the specified {@code entityType}.
+     * Returns uninstrumented instance.
+     * <p>
+     * Instance will be filtered out by registered domain-driven application's {@link IFilter} if its logic defines such filtering.<br>
+     * {@link EntityRestorationUtils#ENTITY_NOT_FOUND} is thrown if no entity was found.
+     */
+    protected <M extends AbstractEntity<?>, N extends AbstractEntity<?>> M refetch(final M entity, final String property, final Class<N> entityType) {
+        return findByIdWithFiltering(entity.getId(), co((Class<M>) entity.getType()), co(entityType).getFetchProvider().<M>fetchFor(property).fetchModel());
+    }
+    
+    /**
+     * Shortcut for {@code co(entityType).new_()}.
+     */
+    protected <M extends AbstractEntity<?>> M new_(final Class<M> entityType) {
+        return co(entityType).new_();
+    }
+    
+    /**
+     * Returns a function for applying property value into {@code newEntity}. This provides some sort of "fluent" API for better readability, e.g.:
+     * <p>
+     * {@code final WorkActivity newWa = create(new_(WorkActivity.class)).apply("waType", keyOfMasterEntity(WorkActivityType.class));}
+     * <p>
+     * The value to be set will be re-fetched ({@link #refetch(AbstractEntity, String, Class)}) using {@code property}'s fetch provider for {@code newEntity.getType()}.
+     * Validation failure is to be thrown if any. Property will be made non-editable.
+     */
+    protected <M extends AbstractEntity<?>, N extends AbstractEntity<?>> BiFunction<String, N, M> create(final M newEntity) {
+        return (property, value) -> {
+            newEntity.set(property, refetch(value, property, newEntity.getType()));
+            newEntity.getProperty(property).validationResult().ifFailure(Result::throwRuntime);
+            newEntity.getProperty(property).setEditable(false);
+            return newEntity;
+        };
+    }
+    
+    /**
+     * Returns a function for applying two property values into {@code newEntity}. This provides some sort of "fluent" API for better readability, e.g.:
+     * <p>
+     * {@code final WorkActivity newWa = create(new_(WorkActivity.class)).apply("waType", keyOfMasterEntity(WorkActivityType.class)).apply("waStatus", keyOfMasterEntity(WorkActivityType.class).getWaStatus());}
+     * <p>
+     * The value to be set will be re-fetched ({@link #refetch(AbstractEntity, String, Class)}) using {@code property}'s fetch provider for {@code newEntity.getType()}.
+     * Validation failure is to be thrown if any. Property will be made non-editable.
+     */
+    protected <M extends AbstractEntity<?>, N extends AbstractEntity<?>> BiFunction<String, N, BiFunction<String, N, M>> create2(final M entity) {
+        return (property, value) -> {
+            return create(create(entity).apply(property, value));
+        };
+    }
+    
+    /**
+     * Fetches entity by {@code id} using {@code property}'s fetch provider for the entity type behind this producer.
+     * Returns uninstrumented instance.
+     * <p>
+     * Instance will be filtered out by registered domain-driven application's {@link IFilter} if its logic defines such filtering.<br>
+     * {@link EntityRestorationUtils#ENTITY_NOT_FOUND} is thrown if no entity was found.
+     */
+    protected final <M extends AbstractEntity<?>> M fetchById(final Long id, final String property) {
+        return findByIdWithFiltering(id, co((Class<M>) determinePropertyType(reader.get().getEntityType(), property)), reader.get().getFetchProvider().<M>fetchFor(property).fetchModel());
+    }
+    
+    /**
+     * Fetches entity by {@code id} using {@code fetchModel} for the entity type behind {@code fetchModel}.
+     * Returns uninstrumented instance.
+     * <p>
+     * Instance will be filtered out by registered domain-driven application's {@link IFilter} if its logic defines such filtering.<br>
+     * {@link EntityRestorationUtils#ENTITY_NOT_FOUND} is thrown if no entity was found.
+     */
+    protected final <M extends AbstractEntity<?>> M fetchById(final Long id, final fetch<M> fetchModel) {
+        return findByIdWithFiltering(id, co(fetchModel.getEntityType()), fetchModel);
+    }
+    
+    /**
+     * Fetches entity by {@code keyValues} using {@code property}'s fetch provider for the entity type behind this producer.
+     * Returns uninstrumented instance.
+     * <p>
+     * Instance will be filtered out by registered domain-driven application's {@link IFilter} if its logic defines such filtering.<br>
+     * {@link EntityRestorationUtils#ENTITY_NOT_FOUND} is thrown if no entity was found.
+     *
+     * @param entity
+     * @return
+     */
+    protected final <M extends AbstractEntity<?>> M fetchByKey(final String property, final Object... keyValues) {
+        return findByKeyWithFiltering(co((Class<M>) determinePropertyType(reader.get().getEntityType(), property)), reader.get().getFetchProvider().<M>fetchFor(property).fetchModel(), keyValues);
+    }
+    
+    /**
+     * Fetches entity by {@code keyValues} using {@code property}'s fetch provider for the specified {@code entityType}.
      * Returns uninstrumented instance.
      *
      * @param entity
      * @return
      */
-    protected final <M extends AbstractEntity<?>> M refetch(final M entity, final String property) {
-        return findByIdWithFiltering(entity.getId(), co((Class<M>) entity.getType()), reader.get().getFetchProvider().<M>fetchFor(property).fetchModel());
+    protected final <M extends AbstractEntity<?>, N extends AbstractEntity<?>> M fetchByKey(final String property, final Class<N> entityType, final Object... keyValues) {
+        return findByKeyWithFiltering(co((Class<M>) determinePropertyType(entityType, property)), co(entityType).getFetchProvider().<M>fetchFor(property).fetchModel(), keyValues);
     }
-
+    
     /**
      * Override this method in case where some additional initialisation is needed for the new entity, edited by standard {@link EntityNewAction}.
      *
