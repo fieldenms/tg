@@ -47,6 +47,8 @@ import ua.com.fielden.platform.entity.matcher.ValueMatcherFactory;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.keygen.IKeyNumber;
 import ua.com.fielden.platform.keygen.KeyNumberDao;
+import ua.com.fielden.platform.master.IMasterInfo;
+import ua.com.fielden.platform.master.MasterInfoDao;
 import ua.com.fielden.platform.menu.CustomViewDao;
 import ua.com.fielden.platform.menu.EntityCentreViewDao;
 import ua.com.fielden.platform.menu.EntityMasterViewDao;
@@ -65,6 +67,8 @@ import ua.com.fielden.platform.menu.ModuleDao;
 import ua.com.fielden.platform.menu.ModuleMenuItemDao;
 import ua.com.fielden.platform.menu.ViewDao;
 import ua.com.fielden.platform.menu.WebMenuItemInvisibilityDao;
+import ua.com.fielden.platform.ref_hierarchy.IReferenceHierarchy;
+import ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchyDao;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.ISecurityRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.IUserAndRoleAssociationBatchAction;
@@ -227,6 +231,11 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(IEntityEditAction.class).to(EntityEditActionDao.class);
         bind(IEntityNavigationAction.class).to(EntityNavigationActionDao.class);
         bind(IEntityDeleteAction.class).to(EntityDeleteActionDao.class);
+
+        //Reference Hierarchy
+        bind(IReferenceHierarchy.class).to(ReferenceHierarchyDao.class);
+        //Bind master info companion
+        bind(IMasterInfo.class).to(MasterInfoDao.class);
 
         // user security related bindings
         bind(IUser.class).to(UserDao.class);

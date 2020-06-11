@@ -1,4 +1,5 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
+import {processResponseError, toastMsgForError} from '/resources/reflection/tg-ajax-utils.js';
 
 export const TgEntityBinderBehavior = {
 
@@ -449,7 +450,7 @@ export const TgEntityBinderBehavior = {
                         reader.onload = function () {
                             const resultAsObj = JSON.parse(reader.result);
                             const result = self._serialiser().deserialise(resultAsObj);
-                            self._openToastForError(result.message, self._toastMsgForError(result), true);
+                            self._openToastForError(result.message, toastMsgForError(self._reflector(), result), true);
                         }
                         reader.readAsText(xhr.response);
                     }
@@ -509,8 +510,8 @@ export const TgEntityBinderBehavior = {
                 var deserialisedResult = this._serialiser().deserialise(e.detail.response);
 
                 if (this._reflector().isWarning(deserialisedResult)) {
-                    console.warn(this._toastMsgForError(deserialisedResult));
-                    //this._openToastForError('Warning.', this._toastMsgForError(deserialisedResult), false);
+                    console.warn(toastMsgForError(this._reflector(), deserialisedResult));
+                    //this._openToastForError('Warning.', toastMsgForError(this._reflector(), deserialisedResult), false);
                 } else {
                     // continue with normal handling of the result's instance
                     var deserialisedInstance = deserialisedResult.instance;
@@ -520,7 +521,7 @@ export const TgEntityBinderBehavior = {
                     // Current logic of tg-toast will discard all other messages after this message, until this message dissapear.
                     if (this._reflector().isError(deserialisedResult)) {
                         console.log('deserialisedResult: ', deserialisedResult);
-                        this._openToastForError(deserialisedResult.message, this._toastMsgForError(deserialisedResult), !this._reflector().isContinuationError(deserialisedResult) || this.showContinuationsAsErrors);
+                        this._openToastForError(deserialisedResult.message, toastMsgForError(this._reflector(), deserialisedResult), !this._reflector().isContinuationError(deserialisedResult) || this.showContinuationsAsErrors);
                     }
                     e.detail.successful = customHandlerFor(deserialisedInstance, this._reflector().isError(deserialisedResult) ? deserialisedResult : null);
                     if (this._reflector().isError(deserialisedResult)) {
@@ -550,33 +551,7 @@ export const TgEntityBinderBehavior = {
         }).bind(self);
 
         self._processError = (function (e, name, customErrorHandlerFor) {
-            console.log('PROCESS ERROR', e.error);
-            const xhr = e.detail.request.xhr;
-            if (xhr.status === 500) { // internal server error, which could either be due to business rules or have some other cause due to a bug or db connectivity issue
-                const deserialisedResult = this._serialiser().deserialise(xhr.response);
-
-                if (this._reflector().isError(deserialisedResult)) {
-                    // throw the toast message about the server-side error
-                    this._openToastForError(this._reflector().exceptionMessage(deserialisedResult.ex), this._toastMsgForError(deserialisedResult), true);
-                    // continue with custom error handling of the error result
-                    customErrorHandlerFor(deserialisedResult);
-                } else {
-                    //throw new Error('Responses with status code 500 suppose to carry an error cause!');
-                    customErrorHandlerFor('Responses with status code 500 suppose to carry an error cause!');
-                }
-            } else if (xhr.status === 403) { // forbidden!
-                // TODO should prompt for login in place...
-                this._openToastForError('Access denied.', 'The current session has expired. Please login and try again.', true);
-                customErrorHandlerFor('Access denied');
-            } else if (xhr.status === 503) { // service unavailable
-                this._openToastForError('Service Unavailable.', 'Server responded with error 503 (Service Unavailable).', true);
-                customErrorHandlerFor('Service Unavailable');
-            } else if (xhr.status >= 400) { // other client or server error codes
-                this._openToastForError('Service Error (' + xhr.status + ').', 'Server responded with error code ' + xhr.status, true);
-                customErrorHandlerFor('Service Error (' + xhr.status + ').');
-            } else { // for other codes just log the code
-                console.warn('Server responded with error code ', xhr.status);
-            }
+            processResponseError(e, this._reflector(), this._serialiser(), customErrorHandlerFor, this.toaster);
         }).bind(self);
 
         // calbacks, that will be bound by editor child elements:
@@ -732,6 +707,13 @@ export const TgEntityBinderBehavior = {
             // 'tg-action' will augment this function with its own '_afterExecution' logic (spinner stopping etc.).
             console.warn("SERVER ERROR: ", errorResult);
         }).bind(this);
+
+        //Toaster object Can be used in other components on binder to show toasts.
+        self.toaster = {
+            openToastForError : self._openToastForError.bind(self),
+            openToast: self._openToast.bind(self),
+            openToastWithoutEntity: self._openToastWithoutEntity.bind(self)
+        };
     },
 
     ///////////// toast related //////////////////
@@ -801,11 +783,6 @@ export const TgEntityBinderBehavior = {
         this._toastGreeting().msgHeading = "Error";
         console.log('about to show ... this._toastGreeting().isCritical = ', isCritical);
         this._toastGreeting().show();
-    },
-
-    _toastMsgForError: function (errorResult) {
-        var ex = errorResult.ex;
-        return this._reflector().stackTrace(ex);
     },
 
     _toastMsgForErrorObject: function (errorObject) {
@@ -880,11 +857,17 @@ export const TgEntityBinderBehavior = {
         if (self._reflector().isEntity(bindingEntity)) {
             modPropHolder['id'] = bindingEntity.get('id');
             modPropHolder['version'] = bindingEntity['version'];
-            modPropHolder['@@touchedProps'] = bindingEntity['@@touchedProps'].names.slice(); // need to perform array copy because bindingEntity['@@touchedProps'].names is mutable array (see tg-reflector.setAndRegisterPropertyTouch/convertPropertyValue for more details of how it can be mutated)
+            modPropHolder['@@touchedProps'] = bindingEntity['@@touchedProps'].names.slice(); // need to perform array copy because bindingEntity['@@touchedProps'].names is mutable array (see tg-reflector.setAndRegisterPropertyTouch/tg_convertPropertyValue for more details of how it can be mutated)
+            
+            // function that converts arrays of entities to array of strings or otherwise return the same (or equal) value;
+            // this is needed to provide modifHolder with flatten 'val' and 'origVal' arrays that do not contain fully-fledged entities but rather string representations of those;
+            // this is because modifHolder deserialises as simple LinkedHashMap on server and inner values will not be deserialised as entities but rather as simple Java bean objects;
+            // also, we do not support conversion of array of entities on the server side -- such properties are immutable from client-side editor perspective (see EntityResourceUtils.convert method with isEntityType+isCollectional conditions)
+            const convert = value => Array.isArray(value) ? value.map(el => self._reflector().tg_convert(el)) : value;
             
             bindingEntity.traverseProperties(function (propertyName) {
-                const value = bindingEntity.get(propertyName);
-                const originalValue = _originalBindingEntity.get(propertyName);
+                const value = convert(bindingEntity.get(propertyName));
+                const originalValue = convert(_originalBindingEntity.get(propertyName));
                 const valId = bindingEntity['@' + propertyName + '_id'];
                 const origValId = _originalBindingEntity['@' + propertyName + '_id'];
                 
@@ -1040,7 +1023,7 @@ export const TgEntityBinderBehavior = {
         bindingView['@@origin'] = entity;
         // We use exactly the same object for touchedProps over long period of time up until saving (see tg-selection-criteria-behavior/tg-entity-master-behavior._postSavedDefault) -- then new object with empty arrays will be created;
         //  this single object resides in current version of currBindingEntity;
-        //  mutation of this object's arrays occurs in tg-reflector.setAndRegisterPropertyTouch/convertPropertyValue;
+        //  mutation of this object's arrays occurs in tg-reflector.setAndRegisterPropertyTouch/tg_convertPropertyValue;
         //  we must copy these arrays (array.slice()) when using; at this stage the only place where they are used is function _extractModifiedPropertiesHolder.
         bindingView['@@touchedProps'] = prevCurrBindingEntity ? prevCurrBindingEntity['@@touchedProps'] : {
             names: [],
@@ -1051,7 +1034,7 @@ export const TgEntityBinderBehavior = {
             // value conversion of property value performs here only for specialised properties (see method '_isNecessaryForConversion');
             // conversion for other properties performs in corresponding editors (tg-editor-behavior).
             if (self._isNecessaryForConversion(propertyName)) {
-                self._reflector().convertPropertyValue(bindingView, propertyName, entity, previousModifiedPropertiesHolder);
+                self._reflector().tg_convertPropertyValue(bindingView, propertyName, entity, previousModifiedPropertiesHolder);
             }
             // meta-state is provided for all properties, not only specialised
             if (self._reflector().isError(entity.prop(propertyName).validationResult())) {
@@ -1090,25 +1073,25 @@ export const TgEntityBinderBehavior = {
      * In case of stale entity (previousEntity has been passed into this method), original values should be taken from the previous version of the entity to be able to mimic restoration of stale instance.
      */
     _extractOriginalBindingView: function (entity, previousOriginalBindingEntity) {
-        var stale = previousOriginalBindingEntity !== null;
-        var self = this;
-        var originalBindingView = self._reflector().newEntityEmpty();
-
-        originalBindingView["_type"] = entity["_type"];
-        originalBindingView["id"] = entity.get('id');
-        originalBindingView["version"] = entity["version"];
+        const stale = previousOriginalBindingEntity !== null;
+        const self = this;
+        const originalBindingView = self._reflector().newEntityEmpty();
+        
+        originalBindingView['_type'] = entity['_type'];
+        originalBindingView['id'] = entity.get('id');
+        originalBindingView['version'] = entity['version'];
         // this property of the bindingView will hold the reference to fully-fledged entity,
         //   this entity can be used effectively to process 'dot-notated' properties (for e.g. retrieving the values)
-        originalBindingView["@@origin"] = (stale === true ? previousOriginalBindingEntity['@@origin'] : entity);
-
+        originalBindingView['@@origin'] = (stale === true ? self._reflector().tg_getFullEntity(previousOriginalBindingEntity) : entity);
+        
         entity.traverseProperties(function (propertyName) {
             // value conversion of original property value performs here only for specialised properties (see method '_isNecessaryForConversion');
             // conversion for other properties performs in corresponding editors (tg-editor-behavior).
             if (self._isNecessaryForConversion(propertyName)) {
-                self._reflector().convertOriginalPropertyValue(originalBindingView, propertyName, originalBindingView["@@origin"]);
+                self._reflector().tg_convertOriginalPropertyValue(originalBindingView, propertyName, self._reflector().tg_getFullEntity(originalBindingView));
             }
         });
-
+        
         // console.log("       entity + originalBindingView", entity, bindingView);
         return originalBindingView;
     },
@@ -1128,8 +1111,8 @@ export const TgEntityBinderBehavior = {
      * Sets the value of entity property ('propNameFromFuncEntityToAssign') to the property editor with propertyName 'propNameToBeAssigned'.
      */
     setEditorValue4Property: function (propNameToBeAssigned, entity, propNameFromFuncEntityToAssign) {
-        var editor = this.$.masterDom.querySelector('[id=editor_4_' + propNameToBeAssigned + ']');
-        editor.assignValue(entity, propNameFromFuncEntityToAssign, editor.reflector().getPropertyValue.bind(editor.reflector()));
+        const editor = this.$.masterDom.querySelector('[id=editor_4_' + propNameToBeAssigned + ']');
+        editor.assignValue(entity, propNameFromFuncEntityToAssign, editor.reflector().tg_getBindingValueFromFullEntity.bind(editor.reflector()));
         editor.commit();
     },
 

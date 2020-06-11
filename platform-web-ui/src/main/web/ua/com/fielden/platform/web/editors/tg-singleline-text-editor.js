@@ -30,16 +30,9 @@ const customInputTemplate = html`
 const propertyActionTemplate = html`<slot name="property-action"></slot>`;
 
 export class TgSinglelineTextEditor extends TgEditor {
-
+    
     static get template() { 
         return createEditorTemplate(additionalTemplate, html``, customInputTemplate, html``, html``, propertyActionTemplate);
-    }
-    
-    /**
-     * Converts the value into string representation (which is used in edititing / comm values).
-     */
-    convertToString (value) {
-        return value === null ? "" : "" + value;
     }
     
     /**
@@ -48,6 +41,7 @@ export class TgSinglelineTextEditor extends TgEditor {
     convertFromString (strValue) {
         return strValue === '' ? null : strValue;
     }
+    
 }
 
 customElements.define('tg-singleline-text-editor', TgSinglelineTextEditor);

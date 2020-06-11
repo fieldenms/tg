@@ -1,6 +1,7 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
-
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
+
+import { _millisDateRepresentation } from '/resources/reflection/tg-date-utils.js';
 
 /**
  * Used for decimal and money formatting. If the scale value for formatting wasn't specified then the default one is used.
@@ -24,6 +25,8 @@ const DEFAULT_DISPLAY_AS = "";
 const _UNDEFINED_CONFIG_TITLE = '_______________________undefined';
 const _LINK_CONFIG_TITLE = '_______________________link';
 const KEY_NOT_ASSIGNED = "[key is not assigned]"; // closely resembles AbstractEntity.KEY_NOT_ASSIGNED
+
+const STANDARD_COLLECTION_SEPARATOR = ', ';
 
 /**
  * Determines whether the result represents the error.
@@ -65,6 +68,23 @@ var _createEntityTypePropPrototype = function () {
     };
     EntityTypeProp.prototype = Object.create(Object.prototype);
     EntityTypeProp.prototype.constructor = EntityTypeProp;
+
+    /**
+     * Returns property type.
+     */
+    EntityTypeProp.prototype.type = function () {
+        if (typeof this._typeName === 'undefined') {
+            return null; // the type is unknown; collectional properties are the example
+        }
+        return this._typeName.indexOf(':') > -1 ? _typeTable[this._typeName.substring(1)] : this._typeName;
+    }
+
+    /**
+     * Returns short collection's key for the property of "short collection" type.
+     */
+    EntityTypeProp.prototype.shortCollectionKey = function () {
+        return typeof this._shortCollectionKey === 'undefined' ? null : this._shortCollectionKey;
+    }
 
     /**
      * Returns specific time-zone for the property of type date.
@@ -109,6 +129,13 @@ var _createEntityTypePropPrototype = function () {
      */
     EntityTypeProp.prototype.isTime = function () {
         return typeof this._time === 'undefined' ? false : this._time;
+    }
+
+    /**
+     * Returns 'DATE', 'TIME' or null (means both) for the portion to be displayed for this property.
+     */
+    EntityTypeProp.prototype.datePortion = function () {
+        return this.isDate() ? 'DATE' : (this.isTime() ? 'TIME' : null);
     }
 
     /** 
@@ -605,11 +632,8 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
      * Note: this method closely resembles AbstractEntity.toString method.
      */
     Entity.prototype.toString = function () {
-        if (this.get('key') === null) {
-            return KEY_NOT_ASSIGNED;
-        }
-        const convertedKey = _convert(this.get('key'));
-        return convertedKey === null || convertedKey === '' ? KEY_NOT_ASSIGNED : ('' + convertedKey);
+        const convertedKey = _toString(_convert(this.get('key')), this.type(), 'key');
+        return convertedKey === '' && !this.type().isUnionEntity() ? KEY_NOT_ASSIGNED : convertedKey;
     }
     
     return Entity;
@@ -635,24 +659,7 @@ const _createDynamicEntityKeyPrototype = function () {
     DynamicEntityKey.prototype._convertDynamicEntityKey = function () {
         const compositeEntity = this._entity;
         const type = compositeEntity.constructor.prototype.type.call(compositeEntity);
-        const compositeKeyNames = type.compositeKeyNames();
-        const compositeKeySeparator = type.compositeKeySeparator();
-
-        let str = "";
-        let first = true;
-        for (let i = 0; i < compositeKeyNames.length; i++) {
-            const compositePartName = compositeKeyNames[i];
-            const compositePart = compositeEntity.get(compositePartName);
-            if (compositePart !== null) {
-                if (first) {
-                    str = str + _convert(compositePart);
-                    first = false;
-                } else {
-                    str = str + compositeKeySeparator + _convert(compositePart);
-                }
-            }
-        }
-        return str;
+        return _toStringForKeys(type.compositeKeyNames().map(name => [name, compositeEntity.get(name)]), type, type.compositeKeySeparator());
     };
 
     /**
@@ -836,10 +843,23 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
     }
 
     /** 
-     * Returns entity type property with the specified name.
+     * Finds EntityTypeProp meta-info instance from specified 'name'. Returns 'null' for property '' meaning there is no EntityTypeProp for "entity itself".
+     * 
+     * @param name -- property name; can be dot-notated
      */
     EntityType.prototype.prop = function (name) {
-        return typeof this._props !== 'undefined' && this._props && this._props[name] ? this._props[name] : null;
+        const dotIndex = name.indexOf('.');
+        if (dotIndex > -1) {
+            const first = name.slice(0, dotIndex);
+            const rest = name.slice(dotIndex + 1);
+            return this.prop(first).type().prop(rest);
+        } else {
+            const prop = typeof this._props !== 'undefined' && this._props && this._props[name];
+            if (!prop && this.isCompositeEntity() && name === 'key') {
+                return { type: function () { return 'DynamicEntityKey'; } };
+            }
+            return prop ? prop : null;
+        }
     }
 
     /** 
@@ -966,21 +986,30 @@ const _isDynamicEntityKey = function (obj) {
 };
 
 const _isPropertyValueObject = function (value, subValueName) {
-    return value !== null && typeof value === 'object' && typeof value[subValueName] !== 'undefined';
+    return typeof value === 'object' && typeof value[subValueName] !== 'undefined';
 };
 
+/**
+ * Checks whether non-null 'value' represents money value.
+ */
 const _isMoney = function (value) {
     return _isPropertyValueObject(value, 'amount');
 };
 const _moneyVal = function (value) {
     return value['amount'];
 };
+/**
+ * Checks whether non-null 'value' represents colour value.
+ */
 const _isColour = function (value) {
     return _isPropertyValueObject(value, 'hashlessUppercasedColourValue');
 };
 const _colourVal = function (value) {
     return value['hashlessUppercasedColourValue'];
 };
+/**
+ * Checks whether non-null 'value' represents hyperlink value.
+ */
 const _isHyperlink = function (value) {
     return _isPropertyValueObject(value, 'value');
 };
@@ -1008,12 +1037,12 @@ const _equalsEx = function (value1, value2) {
         return _entitiesEqualsEx(value1, value2);
     } else if (Array.isArray(value1)) {
         return _arraysEqualsEx(value1, value2);
-    } else if (_isMoney(value1)) {
-        return _isMoney(value2) && _equalsEx(_moneyVal(value1), _moneyVal(value2));
-    } else if (_isColour(value1)) {
-        return _isColour(value2) && _equalsEx(_colourVal(value1), _colourVal(value2));
-    } else if (_isHyperlink(value1)) {
-        return _isHyperlink(value2) && _equalsEx(_hyperlinkVal(value1), _hyperlinkVal(value2));
+    } else if (value1 !== null && _isMoney(value1)) {
+        return value2 !== null && _isMoney(value2) && _equalsEx(_moneyVal(value1), _moneyVal(value2));
+    } else if (value1 !== null && _isColour(value1)) {
+        return value2 !== null && _isColour(value2) && _equalsEx(_colourVal(value1), _colourVal(value2));
+    } else if (value1 !== null && _isHyperlink(value1)) {
+        return value2 !== null && _isHyperlink(value2) && _equalsEx(_hyperlinkVal(value1), _hyperlinkVal(value2));
     }
     return value1 === value2;
 };
@@ -1089,29 +1118,219 @@ const _convert = function (value) {
     } else if (value instanceof _DEKPrototype) {
         return value._convertDynamicEntityKey();
     } else if (value instanceof _EPrototype) {
-        return _convert(value.get('key'));
-    } else if (typeof value === "number") { // for number value -- return the same value for editors (includes date, integer, decimal number editors)
+        return value.toString();
+    } else if (typeof value === 'number') { // for number value -- return the same value for editors (includes date, integer, decimal number editors)
         return value;
-    } else if (typeof value === "boolean") { // for boolean value -- return the same value for editors
+    } else if (typeof value === 'boolean') { // for boolean value -- return the same value for editors
         return value;
-    } else if (typeof value === "object" && value.hasOwnProperty("amount") && value.hasOwnProperty("currency") && value.hasOwnProperty("taxPercent")) { // for money related value -- return the same value for editors
+    } else if (typeof value === 'object' && value.hasOwnProperty('amount') && value.hasOwnProperty('currency') && value.hasOwnProperty('taxPercent')) { // for money related value -- return the same value for editors
         return value;
-    } else if (typeof value === "string") { // for string value -- return the same value for editors
+    } else if (typeof value === 'string') { // for string value -- return the same value for editors
         return value;
-    } else if (Array.isArray(value)) { // for Array value -- return the same value for tg-entity-search-criteria editor
-        // Array items should be converted one-by-one (no entity-typed items should remain being entity-typed)
-        var convertedArray = [];
-        for (var index = 0; index < value.length; index++) {
-            convertedArray.push(_convert(value[index]));
-        }
-        return convertedArray;
-    } else if (typeof value === "object" && (value.hasOwnProperty("hashlessUppercasedColourValue") || value.hasOwnProperty("value"))) {
+    } else if (Array.isArray(value)) { // for Array value -- return the same value for tg-entity-editor and tg-collectional-representor
+        return value.slice(); // binding value must return a new shallow array copy to get distinct instances for _currBindingEntity and _originalBindingEntity; this is because binding value may be altered directly inside some editors (e.g. tg-collectional-editor)
+    } else if (typeof value === 'object' && (value.hasOwnProperty('hashlessUppercasedColourValue') || value.hasOwnProperty('value'))) {
         return value;
-    } else if (typeof value === "object" && Object.getOwnPropertyNames(value).length === 0) {
+    } else if (typeof value === 'object' && Object.getOwnPropertyNames(value).length === 0) {
+        // Some functional actions have properties with type Map<String, ...>.
+        // Initial value of such properties, retrieved from server, is always {}.
+        // That's because they are processed manually on client and only gets back to server with some data.
+        // Here we allows such processing instead of throwing 'unsupported type' exception.
         return value;
     } else {
         throw new _UCEPrototype(value);
     }
+};
+
+/**
+ * Converts property's 'fullValue' into binding entity value representation. Takes care of id-based value conversion for entity-typed properties. Also takes care about entity's description.
+ */
+const _convertFullPropertyValue = function (bindingView, propertyName, fullValue) {
+    bindingView[propertyName] = _convert(fullValue);
+    if (_isEntity(fullValue)) {
+        if (fullValue.get('id') !== null) {
+            bindingView['@' + propertyName + '_id'] = fullValue.get('id');
+        }
+        try {
+            const desc = fullValue.get('desc');
+            bindingView['@' + propertyName + '_desc'] = _convert(desc);
+        } catch (strictProxyError) {
+            console.warn('Extend fetch provider to see description in tooltip of entity-typed value. Original error: [' + strictProxyError + '].');
+        }
+    }
+};
+
+/**
+ * Determines the type of property from 'entityType' and 'property'.
+ * 
+ * Returns 'DynamicEntityKey' for 'key' property of composite 'entityType'.
+ * 
+ * @param entityType -- entity type
+ * @param property -- property name; can be dot-notated or '' meaning "entity itself"
+ */
+const _determinePropertyType = function (entityType, property) {
+    return '' === property ? entityType : entityType.prop(property).type();
+};
+
+/**
+ * Converts property value, converted to editor binding representation ('bindingValue'), to string.
+ * 
+ * @param bindingValue -- binding representation of property value; for entity-typed property it is string; for array it is shallow array copy; for all other values -- it is the same value
+ * @param rootEntityType -- the type of entity holding this property
+ * @param property -- property name of the property; can be dot-notated or '' meaning "entity itself"
+ */
+const _toString = function (bindingValue, rootEntityType, property) {
+    const propertyType = _determinePropertyType(rootEntityType, property);
+    if (propertyType === 'boolean') {
+        return bindingValue === null ? 'false' : '' + bindingValue;
+    } else if (bindingValue === null) {
+        return '';
+    } else if (typeof bindingValue === 'string') {
+        return bindingValue; // this covers converted entity-typed properties, DynamicEntityKey instances and string properties -- no further conversion required
+    } else if (typeof bindingValue === 'number') {
+        if (propertyType === 'Date') {
+            const prop = rootEntityType.prop(property);
+            return _millisDateRepresentation(bindingValue, prop.timeZone(), prop.datePortion());
+        } else {
+            return '' + bindingValue; // Integer value (or Long, but very rare) and BigDecimal value
+        }
+    } else if (_isMoney(bindingValue)) {
+        return '' + _moneyVal(bindingValue); // represents number, so needs "'' +" conversion prefix
+    } else if (Array.isArray(bindingValue)) {
+        // Here we have standard logic of converting collections using the most common ', ' separator.
+        // To apply custom separator please use _toStringForCollection method (see tg-entity-editor.convertToString).
+        return _toStringForCollection(bindingValue, rootEntityType, property, STANDARD_COLLECTION_SEPARATOR);
+    } else if (_isColour(bindingValue)) {
+        return _colourVal(bindingValue); // represents string -- no conversion required
+    } else if (_isHyperlink(bindingValue)) {
+        return _hyperlinkVal(bindingValue); // represents string -- no conversion required
+    } else if (typeof bindingValue === 'object' && Object.getOwnPropertyNames(bindingValue).length === 0) {
+        // See method _convert that explains the use case of the properties with {} value.
+        // We provide ability to even convert binding representation of these properties to string, which is, naturally, ''.
+        // This is done to provide consistency between supported types of properties in both _convert and _toString functions.
+        // The main case, however, does not require _toString support -- this is because such properties do not bind to any existing editor.
+        return '';
+    } else {
+        throw new _UCEPrototype(bindingValue);
+    }
+};
+
+/**
+ * Converts property value, converted to editor binding representation ('bindingValue'), to string for display purposes.
+ * 
+ * @param bindingValue -- binding representation of property value; for entity-typed property it is string; for array it is shallow array copy; for all other values -- it is the same value
+ * @param rootEntityType -- the type of entity holding this property
+ * @param property -- property name of the property; can be dot-notated or '' meaning "entity itself"
+ * @param locale -- optional; application-wide server-driven locale; this is to be used for number properties conversion (BigDecimal, Integer / Long, Money) and can be omitted for other types
+ */
+const _toStringForDisplay = function (bindingValue, rootEntityType, property, locale) {
+    const propertyType = _determinePropertyType(rootEntityType, property);
+    const prop = rootEntityType.prop(property);
+    // for all numeric types and Colour we have non-standard display formatting; all other types will be displayed the same fashion as it is in standard conversion
+    if (propertyType === 'Colour') {
+        return bindingValue === null ? '' : '#' + _toString(bindingValue, rootEntityType, property);
+    } else if (propertyType === 'BigDecimal') {
+        return _formatDecimal(bindingValue, locale, prop.scale(), prop.trailingZeros());
+    } else if (propertyType === 'Integer' || propertyType === 'Long') {
+        return _formatInteger(bindingValue, locale);
+    } else if (propertyType === 'Money') {
+        return _formatMoney(bindingValue, locale, prop.scale(), prop.trailingZeros());
+    } else {
+        return _toString(bindingValue, rootEntityType, property);
+    }
+};
+
+/**
+ * Converts collectional property value, converted to editor binding representation ('bindingValue'), to string.
+ * 
+ * @param bindingValue -- binding representation of property value that is the same as fully-fledged value; this can be null or array of entities or numbers or strings etc.
+ * @param rootEntityType -- the type of entity holding this property
+ * @param property -- property name of the property; can be dot-notated
+ * @param separator -- string value to glue string representations of values with
+ * @param mappingFunction -- maps resulting elements before actual element-by-element toString conversion and glueing them all together; this is optional
+ */
+const _toStringForCollection = function (bindingValue, rootEntityType, property, separator, mappingFunction) {
+    if (bindingValue === null || bindingValue.length === 0) {
+        return '';
+    } else {
+        let resultingCollection = bindingValue;
+        const entityTypeProp = rootEntityType.prop(property);
+        const shortCollectionKey = entityTypeProp.shortCollectionKey();
+        if (shortCollectionKey) { // existence of shortCollectionKey indicates that the property is indeed "short collection"
+            resultingCollection = bindingValue.map(entity => entity ? entity.get(shortCollectionKey) : entity);
+        }
+        return resultingCollection
+            .map(element => _toString(_convert(mappingFunction ? mappingFunction(element) : element), rootEntityType, property)) // note that collection of 'boolean'/'Date' values are not [yet] supported due to non-existence of collection element type on the client EntityTypeProp for collectional property (see _toString method); this looks like artificial collections to be supported; however they can be, if needed 
+            .filter(str => str !== '') // filter out empty strings not to include them into resulting string (especially important for functions that use 'mappingFunction')
+            .join(separator);
+    }
+};
+
+/**
+ * Converts composite entity's keyNamesAndValues to string.
+ * 
+ * @param keyNamesAndValues -- non-empty array of elements (also arrays) consisting on [0] index of composite key property name and on [1] index of actual value of that composite key
+ * @param entityType -- the type of composite entity
+ * @param separator -- string value to glue string representations of values with
+ * @param mappingFunction -- maps resulting elements before actual element-by-element toString conversion and glueing them all together; this is optional
+ */
+const _toStringForKeys = function (keyNamesAndValues, entityType, separator, mappingFunction) {
+    return keyNamesAndValues
+        .map(keyNameAndValue => _toString(_convert(mappingFunction ? mappingFunction(keyNameAndValue[1]) : keyNameAndValue[1]), entityType, keyNameAndValue[0]))
+        .filter(str => str !== '') // filter out empty strings not to include them into resulting string (especially important for functions that use 'mappingFunction')
+        .join(separator);
+};
+
+/**
+ * Converts collectional property value, converted to editor binding representation ('bindingValue'), to tooltip's string representation.
+ * 
+ * @param bindingValue -- binding representation of property value that is the same as fully-fledged value; this can be null or array of entities or numbers or strings etc.
+ * @param rootEntityType -- the type of entity holding this property
+ * @param property -- property name of the property; can be dot-notated
+ */
+const _toStringForCollectionAsTooltip = function (bindingValue, rootEntityType, property) {
+    const convertedCollection = _toString(bindingValue, rootEntityType, property);
+    if (convertedCollection === '') {
+        return '';
+    }
+    const desc = _toStringForCollection(bindingValue, rootEntityType, property, STANDARD_COLLECTION_SEPARATOR, entity => entity ? entity.get('desc') : entity); // maps entity descriptions; this includes descs from short collection sub-keys
+    return '<b>' + convertedCollection + '</b>' + (desc !== '' ? '<br>' + desc : '');
+};
+
+/**
+ * Formats integer number in to string based on locale. If the value is null then returns empty string.
+ */
+const _formatInteger = function (value, locale) {
+    if (value !== null) {
+        return value.toLocaleString(locale);
+    }
+    return '';
+};
+
+/**
+ * Formats number with floating point in to string based on locale. If the value is null then returns empty string.
+ */
+const _formatDecimal = function (value, locale, scale, trailingZeros) {
+    if (value !== null) {
+        const definedScale = typeof scale === 'undefined' || scale === null || scale < 0 || scale > 20 /* 0 and 20 are allowed bounds for scale*/ ? DEFAULT_SCALE : scale;
+        const options = { maximumFractionDigits: definedScale };
+        if (trailingZeros !== false) {
+            options.minimumFractionDigits = definedScale;
+        }
+        return value.toLocaleString(locale, options);
+    }
+    return '';
+};
+
+/**
+ * Formats money number in to string based on locale. If the value is null then returns empty string.
+ */
+const _formatMoney = function (value, locale, scale, trailingZeros) {
+    if (value !== null) {
+        const strValue = _formatDecimal(Math.abs(value.amount), locale, scale, trailingZeros);
+        return (value.amount < 0 ? '-$' : '$') + strValue;
+    }
+    return '';
 };
 
 /**
@@ -1353,10 +1572,63 @@ export const TgReflector = Polymer({
     /**
      * Converts the property value, that has got from deserialised entity instance, to the form, that is suitable for editors binding.
      */
-    convert: function (value) {
+    tg_convert: function (value) {
         return _convert(value);
     },
-
+    
+    /**
+     * Determines the type of property from 'entityType' and 'property'.
+     * 
+     * Returns 'DynamicEntityKey' for 'key' property of composite 'entityType'.
+     * 
+     * @param entityType -- entity type
+     * @param property -- property name; can be dot-notated or '' meaning "entity itself"
+     */
+    tg_determinePropertyType: function (entityType, property) {
+        return _determinePropertyType(entityType, property);
+    },
+    
+    /**
+     * Converts property value to string.
+     * 
+     * Terms:
+     * binding value -- binding representation of fully-fledged property value; for entity-typed property it is string; for array it is shallow array copy; for all other values -- it is the same value.
+     * 
+     * @param value -- the value of property; can be fully-fledged (by default) or binding value (if opts.bindingValue === true)
+     * @param rootEntityType -- the type of entity holding this property
+     * @param property -- property name of the property; can be dot-notated
+     * @param opts.bindingValue -- if true then 'value' represents binding value representation, otherwise -- fully-fledged value
+     * 
+     * @param opts.display -- if true then 'value' will be converted to "display" string representation, aka #F1F1F1 for colour or 10,000.50 and $37.7878 for numeric props, otherwise -- to editing value representation (F1F1F1 or 10000.5 and 37.7878)
+     * @param   opts.locale -- optional; works only for opts.display === true; application-wide server-driven locale; this is to be used for number properties conversion (BigDecimal, Integer / Long, Money) and can be omitted for other types
+     *    otherwise
+     * @param opts.collection -- true if 'value' represents collection, false otherwise; this is to be used with custom parameters for collection conversion:
+     * @param   opts.asTooltip -- if true then collection of entities will be converted to standard tooltip representation
+     *          or
+     * @param   opts.separator -- string value to glue string representations of collectional values with; ', ' by default
+     * @param   opts.mappingFunction -- maps resulting collectional elements before actual element-by-element toString conversion and glueing them all together; optional
+     *    otherwise
+     *        standard toString conversion
+     */
+    tg_toString: function (value, rootEntityType, property, opts) {
+        const isBindingValue = opts && opts.bindingValue;
+        if (!isBindingValue) {
+            return this.tg_toString(_convert(value), rootEntityType, property, Object.assign({}, opts, { bindingValue: true })); // copy opts with bindingValue assigned as true
+        } else {
+            if (opts && opts.display) {
+                return _toStringForDisplay(value, rootEntityType, property, opts.locale);
+            } else if (opts && opts.collection) {
+                if (opts.asTooltip) {
+                    return _toStringForCollectionAsTooltip(value, rootEntityType, property);
+                } else {
+                    return _toStringForCollection(value, rootEntityType, property, opts.separator || STANDARD_COLLECTION_SEPARATOR, opts.mappingFunction);
+                }
+            } else {
+                return _toString(value, rootEntityType, property);
+            }
+        }
+    },
+    
     /**
      * Returns indication whether 'obj' represents 'mock not found entity'. Synced with 'EntityResourceUtils.isMockNotFoundEntity' method.
      */
@@ -1373,11 +1645,11 @@ export const TgReflector = Polymer({
      * This implementation takes care of the aspect of property validity and, in case where the property is invalid, then the values are taken from previously bound property ('previousModifiedPropertiesHolder').
      * This ensures that corresponding editor will show invalid value, that was edited by the user and did not pass server-side validation (fully fledged entity contains previous valid value in this case + validation error).
      */
-    convertPropertyValue: function (bindingView, propertyName, entity, previousModifiedPropertiesHolder) {
+    tg_convertPropertyValue: function (bindingView, propertyName, entity, previousModifiedPropertiesHolder) {
         if (this.isError(entity.prop(propertyName).validationResult())) {
             if (previousModifiedPropertiesHolder === null) { // is a brand new instance just received from server?
                 // bind the received from server property value
-                this._convertFullPropertyValue(bindingView, propertyName, this._getErroneousFullPropertyValue(entity, propertyName));
+                _convertFullPropertyValue(bindingView, propertyName, this._getErroneousFullPropertyValue(entity, propertyName));
             } else { // otherwise, this entity instance has already been received before and should be handled accordingly
                 if (typeof previousModifiedPropertiesHolder[propertyName].val === 'undefined') {
                     // EDGE-CASE: if the value becomes invalid not because the action done upon this property -- 
@@ -1396,7 +1668,7 @@ export const TgReflector = Polymer({
             }
         } else {
             var fullValue = entity.get(propertyName);
-            this._convertFullPropertyValue(bindingView, propertyName, fullValue);
+            _convertFullPropertyValue(bindingView, propertyName, fullValue);
 
             const touchedProps = bindingView['@@touchedProps'];
             const touchedPropIndex = touchedProps.names.indexOf(propertyName);
@@ -1415,8 +1687,8 @@ export const TgReflector = Polymer({
     /**
      * Converts original value of property with 'propertyName' name from fully-fledged entity 'entity' into the 'originalBindingView' binding entity.
      */
-    convertOriginalPropertyValue: function (originalBindingView, propertyName, entity) {
-        this._convertFullPropertyValue(originalBindingView, propertyName, entity.getOriginal(propertyName));
+    tg_convertOriginalPropertyValue: function (originalBindingView, propertyName, entity) {
+        _convertFullPropertyValue(originalBindingView, propertyName, entity.getOriginal(propertyName));
     },
 
     /**
@@ -1426,58 +1698,26 @@ export const TgReflector = Polymer({
         const lastInvalidValue = entity.prop(propertyName).lastInvalidValue();
         return this.isMockNotFoundEntity(lastInvalidValue) ? lastInvalidValue.get('desc') : lastInvalidValue;
     },
-    
+
     /**
-     * Converts property's 'fullValue' into binding entity value representation. Takes care of id-based value conversion for entity-typed properties. Also takes care about entity's description.
+     * Formats integer number in to string based on locale. If the value is null then returns empty string.
      */
-    _convertFullPropertyValue: function (bindingView, propertyName, fullValue) {
-        bindingView[propertyName] = this.convert(fullValue);
-        if (this.isEntity(fullValue)) {
-            if (fullValue.get('id') !== null) {
-                bindingView['@' + propertyName + '_id'] = fullValue.get('id');
-            }
-            try {
-                const desc = fullValue.get('desc');
-                bindingView['@' + propertyName + '_desc'] = this.convert(desc);
-            } catch (strictProxyError) {
-                console.warn('Extend fetch provider to see description in tooltip of entity-typed value. Original error: [' + strictProxyError + '].');
-            }
-        }
+    tg_formatInteger: function (value, locale) {
+        return _formatInteger(value, locale);
     },
 
     /**
-     * Formates the numbers in to string based on specified loacles. If the value is null then returns empty string.
+     * Formats number with floating point in to string based on locale. If the value is null then returns empty string.
      */
-    formatNumber: function (value, locale) {
-        if (value !== null) {
-            return value.toLocaleString(locale);
-        }
-        return '';
+    tg_formatDecimal: function (value, locale, scale, trailingZeros) {
+        return _formatDecimal(value, locale, scale, trailingZeros);
     },
 
     /**
-     * Formates numbers with floating point in to string based on locales. If the value is null then returns empty string.
+     * Formats money number in to string based on locale. If the value is null then returns empty string.
      */
-    formatDecimal: function (value, locale, scale, trailingZeros) {
-        if (value !== null) {
-            const definedScale = typeof scale === 'undefined' || scale === null || scale < 0 || scale > 20 /* 0 and 20 are allowed bounds for scale*/ ? DEFAULT_SCALE : scale;
-            const options = { maximumFractionDigits: definedScale };
-            if (trailingZeros !== false) {
-                options.minimumFractionDigits = definedScale;
-            }
-            return value.toLocaleString(locale, options);
-        }
-        return '';
-    },
-
-    /**
-     * Format money numbers in to string based on locales. If the value is null then returns empty string.
-     */
-    formatMoney: function (value, locale, scale, trailingZeros) {
-        if (value !== null) {
-            return '$' + this.formatDecimal(value.amount, locale, scale, trailingZeros);
-        }
-        return '';
+    tg_formatMoney: function (value, locale, scale, trailingZeros) {
+        return _formatMoney(value, locale, scale, trailingZeros);
     },
 
     /**
@@ -1485,17 +1725,24 @@ export const TgReflector = Polymer({
      *
      * This supports the retrieval of binding value for dot-notation properties with the use of bindingEntity's '@@origin'.
      */
-    getBindingValue: function (bindingEntity, dotNotatedName) {
-        return this.isDotNotated(dotNotatedName) ? this.convert(this._getValueFor(bindingEntity, dotNotatedName)) : bindingEntity.get(dotNotatedName);
+    tg_getBindingValue: function (bindingEntity, dotNotatedName) {
+        return this.isDotNotated(dotNotatedName) ? this.tg_convert(this.tg_getFullValue(bindingEntity, dotNotatedName)) : bindingEntity.get(dotNotatedName);
     },
 
     /**
-     * Returns the binding value for the specified 'bindingEntity' and 'dotNotatedName' of the property.
+     * Returns the binding value for the specified 'fullyFledgedEntity' and 'dotNotatedName' of the property.
      *
-     * This supports the retrieval of binding value for dot-notation properties with the use of bindingEntity's '@@origin'.
+     * This supports the retrieval of binding value for dot-notation properties.
      */
-    getPropertyValue: function (fullyFledgedEntity, dotNotatedName) {
-        return this.convert(fullyFledgedEntity.get(dotNotatedName));
+    tg_getBindingValueFromFullEntity: function (fullyFledgedEntity, dotNotatedName) {
+        return this.tg_convert(fullyFledgedEntity.get(dotNotatedName));
+    },
+
+    /**
+     * Returns fully-fledged entity from which 'bindingEntity' has been originated.
+     */
+    tg_getFullEntity: function (bindingEntity) {
+        return bindingEntity['@@origin'];
     },
 
     /**
@@ -1503,8 +1750,8 @@ export const TgReflector = Polymer({
      *
      * This method does no conversion of the value to 'binding' representation.
      */
-    _getValueFor: function (bindingEntity, dotNotatedName) {
-        return bindingEntity["@@origin"].get(dotNotatedName);
+    tg_getFullValue: function (bindingEntity, dotNotatedName) {
+        return this.tg_getFullEntity(bindingEntity).get(dotNotatedName);
     },
 
     /**

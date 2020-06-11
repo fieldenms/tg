@@ -14,6 +14,7 @@ import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MAST
 import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.okCancel;
 import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.yesNo;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
+import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.editAction;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.multi;
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.single;
@@ -132,6 +133,7 @@ import ua.com.fielden.platform.web.PrefDim.Unit;
 import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig.CentreConfigActions;
 import ua.com.fielden.platform.web.action.StandardMastersWebUiConfig;
 import ua.com.fielden.platform.web.action.post.FileSaverPostAction;
+import ua.com.fielden.platform.web.action.pre.EntityNavigationPreAction;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.EntityCentre;
@@ -158,6 +160,7 @@ import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.layout.api.impl.FlexLayoutConfig;
 import ua.com.fielden.platform.web.layout.api.impl.LayoutComposer;
 import ua.com.fielden.platform.web.minijs.JsCode;
+import ua.com.fielden.platform.web.ref_hierarchy.ReferenceHierarchyWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.AbstractWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.SecurityMatrixWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.UserRoleWebUiConfig;
@@ -981,6 +984,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 /*  */.addMenuItem("Entity Centre 2").description("Entity centre description").centre(entityCentre2).done()
                 /*  */.addMenuItem("Entity Centre 3").description("Entity centre description").centre(entityCentre3).done()
                 /*  */.addMenuItem("Entity Centre 4").description("Entity centre description").centre(entityCentre4).done()
+                /*  */.addMenuItem("Compound Entity Centre").description("Centre for compound entity.").centre(tgCompoundEntityWebUiConfig.centre).done()
                 /*  */.addMenuItem("Criteria Validation / Defining").description("Criteria Validation / Defining").centre(entityCentre5).done()
                 /*  */.addMenuItem("Collectional Serialisation Test").description("Collectional Serialisation Test description").centre(collectionalSerialisationTestCentre).done()
                 /*  */.addMenuItem("Third view").description("Third view description").view(null).done().done()
@@ -1394,6 +1398,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         longDesc("Start coninuous creatio of entities").
                         withNoParentCentreRefresh().
                         build())
+                .addGroupAction(ReferenceHierarchyWebUiConfig.mkAction())
                 .endTopActionsGroup().also().beginTopActionsGroup("group 2");
 
 
@@ -1724,9 +1729,24 @@ public class WebUiConfig extends AbstractWebUiConfig {
         }
 
         IResultSetBuilder2Properties<TgPersistentEntityWithProperties> beforeAddProp = afterSummary.
-                withAction(EDIT_ACTION.mkAction(TgPersistentEntityWithProperties.class))
+                withAction(editAction().withContext(context().withCurrentEntity().withSelectionCrit().build())
+                        .preAction(new EntityNavigationPreAction("Cool entity"))
+                        .icon("editor:mode-edit")
+                        .withStyle("color: green")
+                        .shortDesc("Edit entity")
+                        .longDesc("Opens master for editing this entity")
+                        .withNoParentCentreRefresh()
+                        .build())
                 .also()
                 .addEditableProp("desc")
+                    .withAction(
+                        action(TgPersistentEntityWithProperties.class)
+                        .withContext(context().withCurrentEntity().build())
+                        .shortDesc("Edit (simple master)")
+                        .longDesc("Opens TgPersistentEntityWithProperties master for editing. No wrapping master (e.g. EntityEditAction / EntityNavigationMaster) is used around it.")
+                        .withNoParentCentreRefresh()
+                        .build()
+                    )
                 .also();
                 if (withCalculatedAndCustomProperties) {
                 beforeAddProp = beforeAddProp.addProp(mkProp("DR", "Defect Radio", String.class)).width(26).
@@ -1787,6 +1807,14 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 beforeSummaryConfForBigDecimalProp)
                 .also()
                 .addEditableProp("entityProp").asAutocompleter().withMatcher(ContextMatcher.class).minWidth(40)
+                    .withAction(editAction().withContext(context().withCurrentEntity().withSelectionCrit().build())
+                        .preAction(new EntityNavigationPreAction("Cool entity"))
+                        .icon("editor:mode-edit")
+                        .withStyle("color: green")
+                        .shortDesc("Edit entity")
+                        .longDesc("Opens master for editing this entity")
+                        .withNoParentCentreRefresh()
+                        .build())
                 .also()
                 .addEditableProp("booleanProp").minWidth(49)
                 .also()
@@ -1836,13 +1864,21 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //                .also()
                 //                .addProp(mkProp("Custom Prop 2", "Custom property 2 with concrete value", "OK2"))
 
-                        .addPrimaryAction(action(EntityEditAction.class).withContext(context().withCurrentEntity().withSelectionCrit().build())
-                                .icon("editor:mode-edit")
-                                .withStyle("color: green")
-                                .shortDesc("Edit entity")
-                                .longDesc("Opens master for editing this entity")
-                                .withNoParentCentreRefresh()
-                                .build())
+                .addPrimaryAction(editAction().withContext(context().withCurrentEntity().withSelectionCrit().build())
+                        .preAction(new EntityNavigationPreAction("Cool entity"))
+                        .icon("editor:mode-edit")
+                        .withStyle("color: green")
+                        .shortDesc("Edit entity")
+                        .longDesc("Opens master for editing this entity")
+                        .withNoParentCentreRefresh()
+                        .build())
+//                .addPrimaryAction(action(EntityEditAction.class).withContext(context().withCurrentEntity().withSelectionCrit().build())
+//                        .icon("editor:mode-edit")
+//                        .withStyle("color: green")
+//                        .shortDesc("Edit entity")
+//                        .longDesc("Opens master for editing this entity")
+//                        .withNoParentCentreRefresh()
+//                        .build())
                 //                .addPrimaryAction(
                 //                        EntityActionConfig.createMasterInvocationActionConfig()
                 //EntityActionConfig.createMasterInDialogInvocationActionConfig()

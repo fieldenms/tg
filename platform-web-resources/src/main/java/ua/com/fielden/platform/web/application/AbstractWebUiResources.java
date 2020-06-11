@@ -29,6 +29,7 @@ import ua.com.fielden.platform.web.factories.webui.EntityValidationResourceFacto
 import ua.com.fielden.platform.web.factories.webui.FileResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.MainWebUiComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.MasterComponentResourceFactory;
+import ua.com.fielden.platform.web.factories.webui.MasterInfoProviderResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.MasterTestsComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.SerialisationTestResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.ServiceWorkerResourceFactory;
@@ -132,6 +133,9 @@ public abstract class AbstractWebUiResources extends Application {
         router.attach("/test/serialisation", new SerialisationTestResourceFactory(injector));
         // For egi example TODO remove later.
         router.attach("/test/egi", new EgiExampleResourceFactory(injector));
+
+        //Attache master retrieve resources
+        router.attach("/master/{entityType}", new MasterInfoProviderResourceFactory(webApp, deviceProvider, dates, restUtil));
 
         // Registering entity centres:
         attachCentreResources(router, webApp, restUtil);

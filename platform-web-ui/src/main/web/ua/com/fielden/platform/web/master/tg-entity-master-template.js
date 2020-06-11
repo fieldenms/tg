@@ -1,5 +1,6 @@
 <!--@imports-->
 import { TgEntityMasterTemplateBehavior, Polymer, html } from '/resources/master/tg-entity-master-template-behavior.js';
+import { TgReflector } from '/app/tg-reflector.js';
 
 // <!-- TODO this import should be generated <link rel="import" href="/resources/master/actions/tg-action.html"> -->
 

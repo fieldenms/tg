@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.sample.domain;
 
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
+
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.entity.DefaultEntityProducerWithContext;
@@ -36,7 +38,7 @@ public class TgPersistentEntityWithPropertiesProducer extends DefaultEntityProdu
     
     @Override
     public TgPersistentEntityWithProperties provideDefaultValues(final TgPersistentEntityWithProperties entity) {
-        return provideProducerInitProp(coTgPersistentEntityWithProperties, entity, serialiser);
+        return provideProducerInitProp(coTgPersistentEntityWithProperties, currentEntityNotEmpty() && chosenPropertyEqualsTo(DESC) ? refetchInstrumentedEntityById(currentEntity().getId()) : entity, serialiser);
     }
     
     private static TgPersistentEntityWithProperties provideProducerInitProp(final ITgPersistentEntityWithProperties co, final TgPersistentEntityWithProperties entity, final ISerialiser serialiser) {

@@ -14,6 +14,11 @@ public class EntityNavigationPreAction implements IPreAction {
 
     private final String navigationType;
 
+    /**
+     * Creates pre-action for action that allows to navigate to another entity without closing dialog, such action can work only on EGI.
+     *
+     * @param navigationType - type description that is used to inform user what type of entity is currently opened and is navigating.
+     */
     public EntityNavigationPreAction(final String navigationType) {
         this.navigationType = navigationType;
     }
@@ -33,7 +38,6 @@ public class EntityNavigationPreAction implements IPreAction {
                 + "            master.$.menu.maintainPreviouslyOpenedMenuItem = false;%n"
                 + "        }%n"
                 + "        this.removeEventListener('tg-entity-centre-refreshed', action._updateNavigationProps);%n"
-                + "        delete action.currentlyLoadedEntity;%n"
                 + "        delete action.count;%n"
                 + "        delete action.entInd;%n"
                 + "        delete action.hasPrev;%n"
@@ -85,11 +89,14 @@ public class EntityNavigationPreAction implements IPreAction {
                 + "                        action.modifyFunctionalEntity(master._currBindingEntity, master, action);%n"
                 + "                    }%n"
                 + "                    if (master.$.menu) {%n"
+                + "                         master.$.menu.currentSection()._showBlockingPane();%n"
                 + "                         master.$.menu.maintainPreviouslyOpenedMenuItem = true;%n"
                 + "                    }%n"
                 + "                    master.addEventListener('data-loaded-and-focused', action._restoreNavigationButtonState);%n"
                 + "                    master.addEventListener('tg-master-navigation-error', action._restoreNavigationButtonState);%n"
-                + "                    master.save().then(function(value) {}, function (error) {%n"
+                + "                    master.save().then(function(value) {%n"
+                + "                        action._fireNavigationChangeEvent(true);%n"
+                + "                    }, function (error) {%n"
                 + "                        action._fireNavigationChangeEvent(true);%n"
                 + "                    }.bind(self));%n"
                 + "                }.bind(self), function (error) {%n"

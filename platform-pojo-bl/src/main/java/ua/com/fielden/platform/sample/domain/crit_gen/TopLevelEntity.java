@@ -1,18 +1,27 @@
 package ua.com.fielden.platform.sample.domain.crit_gen;
 
+import static ua.com.fielden.platform.entity.annotation.CritOnly.Type.MULTI;
+import static ua.com.fielden.platform.entity.annotation.CritOnly.Type.SINGLE;
+
+import java.util.Date;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
+import ua.com.fielden.platform.entity.annotation.DateOnly;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.Required;
+import ua.com.fielden.platform.entity.annotation.TimeOnly;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
 
 /**
  * Entity for testing purposes.
@@ -79,7 +88,139 @@ public class TopLevelEntity extends AbstractEntity<String> {
     @Title(value = "range string property", desc = "range string property description")
     @CritOnly(Type.RANGE)
     private String critSRangeProperty;
-
+    
+    @IsProperty
+    @PersistentType(userType = IUtcDateTimeType.class)
+    private Date datePropUtc;
+    
+    @IsProperty
+    @DateOnly
+    private Date datePropDateOnly;
+    
+    @IsProperty
+    @TimeOnly
+    private Date datePropTimeOnly;
+    
+    @IsProperty
+    @PersistentType(userType = IUtcDateTimeType.class)
+    @CritOnly(SINGLE)
+    private Date datePropUtcSingle;
+    
+    @IsProperty
+    @DateOnly
+    @CritOnly(SINGLE)
+    private Date datePropDateOnlySingle;
+    
+    @IsProperty
+    @TimeOnly
+    @CritOnly(SINGLE)
+    private Date datePropTimeOnlySingle;
+    
+    @IsProperty
+    @PersistentType(userType = IUtcDateTimeType.class)
+    @CritOnly(MULTI)
+    private Date datePropUtcMulti;
+    
+    @IsProperty
+    @DateOnly
+    @CritOnly(MULTI)
+    private Date datePropDateOnlyMulti;
+    
+    @IsProperty
+    @TimeOnly
+    @CritOnly(MULTI)
+    private Date datePropTimeOnlyMulti;
+    
+    @Observable
+    public TopLevelEntity setDatePropTimeOnlyMulti(final Date datePropTimeOnlyMulti) {
+        this.datePropTimeOnlyMulti = datePropTimeOnlyMulti;
+        return this;
+    }
+    
+    public Date getDatePropTimeOnlyMulti() {
+        return datePropTimeOnlyMulti;
+    }
+    
+    @Observable
+    public TopLevelEntity setDatePropDateOnlyMulti(final Date datePropDateOnlyMulti) {
+        this.datePropDateOnlyMulti = datePropDateOnlyMulti;
+        return this;
+    }
+    
+    public Date getDatePropDateOnlyMulti() {
+        return datePropDateOnlyMulti;
+    }
+    
+    @Observable
+    public TopLevelEntity setDatePropUtcMulti(final Date datePropUtcMulti) {
+        this.datePropUtcMulti = datePropUtcMulti;
+        return this;
+    }
+    
+    public Date getDatePropUtcMulti() {
+        return datePropUtcMulti;
+    }
+    
+    @Observable
+    public TopLevelEntity setDatePropTimeOnlySingle(final Date datePropTimeOnlySingle) {
+        this.datePropTimeOnlySingle = datePropTimeOnlySingle;
+        return this;
+    }
+    
+    public Date getDatePropTimeOnlySingle() {
+        return datePropTimeOnlySingle;
+    }
+    
+    @Observable
+    public TopLevelEntity setDatePropDateOnlySingle(final Date datePropDateOnlySingle) {
+        this.datePropDateOnlySingle = datePropDateOnlySingle;
+        return this;
+    }
+    
+    public Date getDatePropDateOnlySingle() {
+        return datePropDateOnlySingle;
+    }
+    
+    @Observable
+    public TopLevelEntity setDatePropUtcSingle(final Date datePropUtcSingle) {
+        this.datePropUtcSingle = datePropUtcSingle;
+        return this;
+    }
+    
+    public Date getDatePropUtcSingle() {
+        return datePropUtcSingle;
+    }
+    
+    @Observable
+    public TopLevelEntity setDatePropTimeOnly(final Date datePropTimeOnly) {
+        this.datePropTimeOnly = datePropTimeOnly;
+        return this;
+    }
+    
+    public Date getDatePropTimeOnly() {
+        return datePropTimeOnly;
+    }
+    
+    @Observable
+    public TopLevelEntity setDatePropDateOnly(final Date datePropDateOnly) {
+        this.datePropDateOnly = datePropDateOnly;
+        return this;
+    }
+    
+    public Date getDatePropDateOnly() {
+        return datePropDateOnly;
+    }
+    
+    @Observable
+    public TopLevelEntity setDatePropUtc(final Date datePropUtc) {
+        this.datePropUtc = datePropUtc;
+        return this;
+    }
+    
+    public Date getDatePropUtc() {
+        return datePropUtc;
+    }
+    
     public Integer getIntegerProp() {
         return integerProp;
     }
