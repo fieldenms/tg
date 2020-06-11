@@ -10,7 +10,7 @@
     <script type="module">
         import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js'; // fullbleed class
         import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js'; // Roboto font
-        import '/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties.js';
+        import '/master_ui/ua.com.fielden.platform.entity.SecurityMatrixInsertionPoint.js';
     </script>
     <custom-style>
         <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning">
@@ -23,9 +23,9 @@
 </head>
 
 <body unresolved class="fullbleed">
-    <tg-tgpersistententitywithproperties-master id="master" entity-type="ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties"
-        entity-id="15" current-state="EDIT">
-    </tg-tgpersistententitywithproperties-master>
+    <tg-securitymatrixinsertionpoint-master id="master" entity-type="ua.com.fielden.platform.entity.SecurityMatrixInsertionPoint"
+        entity-id="new" current-state="EDIT">
+    </tg-securitymatrixinsertionpoint-master>
     <script>
         (function () {
             window.addEventListener('WebComponentsReady', function (e) {
@@ -41,7 +41,12 @@
                 master.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {
                     console.log("postSaved");
                 };
-                master.retrieve();
+                master.retrieve().then(function(ironRequest) {
+                    if (master.saveOnActivation === true) {
+                        return master.save(); // saving promise
+                    }
+                    return Promise.resolve(ironRequest); // retrieval promise; resolves immediately
+                });
             });
         })();
     </script>

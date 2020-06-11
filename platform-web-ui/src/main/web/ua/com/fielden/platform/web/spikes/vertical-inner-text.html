@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Vertical text example</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 10pt;
+        }
+
+        .layout {
+            display: flex;
+        }
+
+        .vertical {
+            flex-direction: column;
+        }
+
+        .horizontal {
+            flex-direction: row;
+        }
+
+        .flex {
+            flex: 1;
+            flex-basis: 0.000000001px;
+        }
+
+        .start-justified {
+            justify-content: flex-start;
+        }
+
+        .center-aligned {
+            align-items: center;
+        }
+
+        .relative {
+            position: relative;
+        }
+
+        .element-to-focus {
+            margin: 10px;
+            min-height: 0;
+            background-color: white;
+            border-radius: 2px;
+        }
+
+        .base-container {
+            min-height: 0;
+        }
+
+        .scroll-container {
+            padding-bottom: 15px;
+            -webkit-overflow-scrolling: touch;
+            overflow: auto;
+        }
+
+        .tree-table-header-row {
+            font-size: 0.9rem;
+            font-weight: 400;
+            min-height: 3rem;
+            color: #757575;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
+            min-width: -webkit-fit-content;
+            min-width: -moz-fit-content;
+            min-width: fit-content;
+            flex-grow: 0;
+            flex-shrink: 0;
+        }
+
+        .header-column {
+            box-sizing: border-box;
+        }
+
+        .header-column[column-type=hierarchy] {
+            padding: 0 0.6rem;
+        }
+
+        .header-column[column-type=regular] {
+            padding: 0.6rem;
+            writing-mode: vertical-lr;
+            transform: rotate(180deg);
+        }
+
+        .truncate {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
+    </custom-style>
+</head>
+
+<body>
+    <div class="layout vertical">
+        <div class="layout vertical">
+            <div class="layout vertical">
+                <div class="layout vertical">
+                    <div class="layout vertical">
+                        <div class="layout vertical">
+                            <div class="layout vertical">
+                                <div class="layout vertical">
+                                    <div class="layout vertical">
+                                        <div class="element-to-focus layout vertical relative">
+                                            <div class="base-container layout horizontal relative">
+                                                <div class="scroll-container layout vertical flex">
+                                                    <div class="table-header-row layout horizontal">
+                                                        <div class="header-column layout horizontal center-aligned"
+                                                            column-type="hierarchy"
+                                                            style="min-width: 200px;width: 200px;flex-grow: 1;">
+                                                            <div class="truncate">Text To Test</div>
+                                                        </div>
+                                                        <div class="header-column layout horizontal start-justified"
+                                                            column-type="regular"
+                                                            style="min-width: 40px;width: 40px;flex-grow: 0;flex-shrink: 0;">
+                                                            <div class="truncate">TEXT_1_ROT</div>
+                                                        </div>
+                                                        <div class="header-column layout horizontal start-justified"
+                                                            column-type="regular"
+                                                            style="min-width: 40px;width: 40px;flex-grow: 0;flex-shrink: 0;">
+                                                            <div class="truncate">TEXT_2_ROT</div>
+                                                        </div>
+                                                        <div class="header-column layout horizontal start-justified"
+                                                            column-type="regular"
+                                                            style="min-width: 40px;width: 40px;flex-grow: 0;flex-shrink: 0;">
+                                                            <div class="truncate">TEXT_3_ROT</div>
+                                                        </div>
+                                                        <div class="header-column layout horizontal start-justified"
+                                                            column-type="regular"
+                                                            style="min-width: 40px;width: 40px;flex-grow: 0;flex-shrink: 0;">
+                                                            <div class="truncate">TEXT_4_ROT</div>
+                                                        </div>
+                                                        <div class="header-column layout horizontal start-justified"
+                                                            column-type="regular"
+                                                            style="min-width: 40px;width: 40px;flex-grow: 0;flex-shrink: 0;">
+                                                            <div class="truncate">TEXT_5_ROT</div>
+                                                        </div>
+                                                        <div class="header-column layout horizontal start-justified"
+                                                            column-type="regular"
+                                                            style="min-width: 40px;width: 40px;flex-grow: 0;flex-shrink: 0;">
+                                                            <div class="truncate">TEXT_6_ROT</div>
+                                                        </div>
+                                                        <div class="header-column layout horizontal start-justified"
+                                                            column-type="regular"
+                                                            style="min-width: 40px;width: 40px;flex-grow: 0;flex-shrink: 0;">
+                                                            <div class="truncate">TEXT_7_ROT</div>
+                                                        </div>
+                                                        <div class="header-column layout horizontal start-justified"
+                                                            column-type="regular"
+                                                            style="min-width: 40px;width: 40px;flex-grow: 0;flex-shrink: 0;">
+                                                            <div class="truncate">TEXT_8_ROT</div>
+                                                        </div>
+                                                        <div class="header-column layout horizontal start-justified"
+                                                            column-type="regular"
+                                                            style="min-width: 40px;width: 40px;flex-grow: 0;flex-shrink: 0;">
+                                                            <div class="truncate">TEXT_9_ROT</div>
+                                                        </div>
+                                                        <div class="header-column layout horizontal start-justified"
+                                                            column-type="regular"
+                                                            style="min-width: 40px;width: 40px;flex-grow: 0;flex-shrink: 0;">
+                                                            <div class="truncate">TEXT_10_ROT</div>
+                                                        </div>
+                                                        <div class="header-column layout horizontal start-justified"
+                                                            column-type="regular"
+                                                            style="min-width: 40px;width: 40px;flex-grow: 0;flex-shrink: 0;">
+                                                            <div class="truncate">TEXT_11_ROT</div>
+                                                        </div>
+                                                        <div class="header-column layout horizontal start-justified"
+                                                            column-type="regular"
+                                                            style="min-width: 40px;width: 40px;flex-grow: 0;flex-shrink: 0;">
+                                                            <div class="truncate">TEXT_12_ROT</div>
+                                                        </div>
+                                                        <div class="header-column layout horizontal start-justified"
+                                                            column-type="regular"
+                                                            style="min-width: 40px;width: 40px;flex-grow: 0;flex-shrink: 0;">
+                                                            <div class="truncate">TEXT_13_ROT</div>
+                                                        </div>
+                                                        <div class="header-column layout horizontal start-justified"
+                                                            column-type="regular"
+                                                            style="min-width: 40px;width: 40px;flex-grow: 0;flex-shrink: 0;">
+                                                            <div class="truncate">TEXT_14_ROT</div>
+                                                        </div>
+                                                        <div class="header-column layout horizontal start-justified"
+                                                            column-type="regular"
+                                                            style="min-width: 40px;width: 40px;flex-grow: 0;flex-shrink: 0;">
+                                                            <div class="truncate">TEXT_15_ROT</div>
+                                                        </div>
+                                                        <div class="header-column layout horizontal start-justified"
+                                                            column-type="regular"
+                                                            style="min-width: 40px;width: 40px;flex-grow: 0;flex-shrink: 0;">
+                                                            <div class="truncate">TEXT_16_ROT</div>
+                                                        </div>
+                                                        <div class="header-column layout horizontal start-justified"
+                                                            column-type="regular"
+                                                            style="min-width: 40px;width: 40px;flex-grow: 0;flex-shrink: 0;">
+                                                            <div class="truncate">TEXT_17_ROT</div>
+                                                        </div>
+                                                        <div class="header-column layout horizontal start-justified"
+                                                            column-type="regular"
+                                                            style="min-width: 40px;width: 40px;flex-grow: 0;flex-shrink: 0;">
+                                                            <div class="truncate">TEXT_18_ROT</div>
+                                                        </div>
+                                                        <div class="header-column layout horizontal start-justified"
+                                                            column-type="regular"
+                                                            style="min-width: 40px;width: 40px;flex-grow: 0;flex-shrink: 0;">
+                                                            <div class="truncate">TEXT_19_ROT</div>
+                                                        </div>
+                                                        <div class="header-column layout horizontal start-justified"
+                                                            column-type="regular"
+                                                            style="min-width: 40px;width: 40px;flex-grow: 0;flex-shrink: 0;">
+                                                            <div class="truncate">TEXT_20_ROT</div>
+                                                        </div>
+                                                        <div class="header-column layout horizontal start-justified"
+                                                            column-type="regular"
+                                                            style="min-width: 40px;width: 40px;flex-grow: 0;flex-shrink: 0;">
+                                                            <div class="truncate">TEXT_21_ROT</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</script>
+
+</html>
