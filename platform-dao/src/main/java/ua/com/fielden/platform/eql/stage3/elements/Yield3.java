@@ -18,7 +18,7 @@ public class Yield3 {
     public Yield3(final ISingleOperand3 operand, final String alias, final boolean isHeader, final Class<?> type, final Object hibType) {
         this.operand = operand;
         this.alias = alias;
-        this.column = StringUtils.isEmpty(alias) || isHeader ? null : new Column(alias.replace(".", "_").toUpperCase() + "_");
+        this.column = StringUtils.isEmpty(alias) || isHeader ? null : new Column("C_" + alias.replace(".", "_").toUpperCase() + "_");
         this.isHeader = isHeader;
         this.hibType = hibType;
         this.type = type;
