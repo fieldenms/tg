@@ -195,6 +195,27 @@ Polymer({
     },
 
     /** 
+    /**
+     * Offloads the loaded element from light DOM of this element loader.
+     */
+    offloadDom: function () {
+        if (this.loadedElement && this.loadedElement.parentNode !== null) {
+            this.removeChild(this.loadedElement);
+            // this.loadedElement = null;
+            // this.wasLoaded = false;
+        }
+    },
+
+    /**
+     * Inserts the loaded element into light DOM of this element loader.
+     */
+    loadDom: function () {
+        if (this.loadedElement && this.loadedElement.parentNode === null) {
+            this.appendChild(this.loadedElement);
+        }
+    },
+
+    /** 
      * Enforces reloading of a resource that has failed to load during previous attampts.
      * Thsi method should not be confused with the actual element reloading, which would require deregistering of the element and handling of already existing instances.
      */

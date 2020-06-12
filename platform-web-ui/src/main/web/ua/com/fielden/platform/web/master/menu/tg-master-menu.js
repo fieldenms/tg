@@ -741,9 +741,16 @@ Polymer({
         const oldSection = this._section(oldRoute);
         const action = this.querySelector('tg-ui-action[data-route=' + newRoute + ']');
 
-        if (oldSection && oldSection._element && typeof oldSection._element.removeOwnKeyBindings === 'function') {
-            oldSection._element.removeOwnKeyBindings();
+        if (oldSection && oldSection._element) {
+            oldSection.offloadDom();
+            if (typeof oldSection._element.removeOwnKeyBindings === 'function') {
+                oldSection._element.removeOwnKeyBindings();
+            }
         }
+
+        // if (oldSection && oldSection._element && typeof oldSection._element.removeOwnKeyBindings === 'function') {
+        //     oldSection._element.removeOwnKeyBindings();
+        // }
         action._run();
     }
 });
