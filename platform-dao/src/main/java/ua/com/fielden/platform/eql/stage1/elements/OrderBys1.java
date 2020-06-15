@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
-import static java.util.stream.Collectors.toList;
-
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -15,7 +14,7 @@ public class OrderBys1 {
     }
 
     public OrderBys2 transform(final PropsResolutionContext context) {
-        return new OrderBys2(models.stream().map(el -> el.transform(context)).collect(toList()));
+        return new OrderBys2(models.stream().map(el -> el.transform(context)).collect(ArrayList::new, List::addAll, List::addAll));
     }
 
     @Override

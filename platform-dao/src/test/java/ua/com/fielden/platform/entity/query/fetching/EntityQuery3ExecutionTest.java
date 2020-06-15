@@ -7,6 +7,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.math.BigDecimal;
@@ -23,6 +24,7 @@ import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.sample.domain.ITeAverageFuelUsage;
+import ua.com.fielden.platform.sample.domain.ITeVehicleFuelUsage;
 import ua.com.fielden.platform.sample.domain.ITeVehicleModel;
 import ua.com.fielden.platform.sample.domain.ITgBogie;
 import ua.com.fielden.platform.sample.domain.ITgEntityWithComplexSummaries;
@@ -692,6 +694,42 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
         System.out.println(items.size());
         System.out.println(items.get(0).getConstValueProp());
     }
+    
+    @Test
+    public void eql3_query_executes_correctly77() {
+        final ITeVehicleFuelUsage co = getInstance(ITeVehicleFuelUsage.class);
+        final EntityResultQueryModel<TeVehicleFuelUsage> qry = select(TeVehicleFuelUsage.class).as("a").model();
+        co.getAllEntities(from(qry).with("EQL3", null).with(orderBy().prop("a.key").desc().model()).model());
+    }
+
+    @Test
+    public void eql3_query_executes_correctly78() {
+        final ITeVehicleFuelUsage co = getInstance(ITeVehicleFuelUsage.class);
+        final EntityResultQueryModel<TeVehicleFuelUsage> qry = select(TeVehicleFuelUsage.class).model();
+        co.getAllEntities(from(qry).with("EQL3", null).with(orderBy().prop("key").desc().model()).model());
+    }
+
+    @Test
+    public void eql3_query_executes_correctly79() {
+        final ITgVehicle co = getInstance(ITgVehicle.class);
+        final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).model();
+        co.getAllEntities(from(qry).with("EQL3", null).with(orderBy().prop("lastFuelUsage.key").desc().model()).model());
+    }
+    
+    @Test
+    public void eql3_query_executes_correctly80() {
+        final ITgVehicle co = getInstance(ITgVehicle.class);
+        final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).as("a").model();
+        co.getAllEntities(from(qry).with("EQL3", null).with(orderBy().prop("a.lastFuelUsage.key").desc().model()).model());
+    }
+    
+    @Test
+    public void eql3_query_executes_correctly81() {
+        final ITgVehicle co = getInstance(ITgVehicle.class);
+        final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).as("a").leftJoin(TgOrgUnit4.class).as("b").on().val(1).eq().val(1).model();
+        co.getAllEntities(from(qry).with("EQL3", null).with(orderBy().prop("b.parent.key").desc().prop("a.lastFuelUsage.key").asc().model()).model());
+    }
+
     
     @Override
     protected void populateDomain() {
