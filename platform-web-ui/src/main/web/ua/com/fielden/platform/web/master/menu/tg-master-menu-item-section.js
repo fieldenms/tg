@@ -110,10 +110,7 @@ Polymer({
     _getElement: function (customAction) {
         const self = this;
         if (self._element) {
-            if (!self._element.parentNode) {
-                this.$.elementLoader.loadDom();
-            }
-            return Promise.resolve(self._element);
+            return Promise.resolve(this.$.elementLoader.loadDom());
         } else {
             self.$.elementLoader.import = customAction.componentUri;
             self.$.elementLoader.elementName = customAction.elementName;

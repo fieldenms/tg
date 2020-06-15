@@ -137,6 +137,8 @@ Polymer({
         this.appendChild(element);
 
         this.loadedElement = element;
+
+        return this.loadedElement;
     },
 
     /** 
@@ -194,25 +196,18 @@ Polymer({
         }
     },
 
-    /** 
     /**
      * Offloads the loaded element from light DOM of this element loader.
      */
     offloadDom: function () {
-        if (this.loadedElement && this.loadedElement.parentNode !== null) {
-            this.removeChild(this.loadedElement);
-            // this.loadedElement = null;
-            // this.wasLoaded = false;
-        }
+        _removeAllLightDOMChildrenFrom(this);
     },
 
     /**
      * Inserts the loaded element into light DOM of this element loader.
      */
     loadDom: function () {
-        if (this.loadedElement && this.loadedElement.parentNode === null) {
-            this.appendChild(this.loadedElement);
-        }
+        return this.insert(this.loadedElement);
     },
 
     /** 
