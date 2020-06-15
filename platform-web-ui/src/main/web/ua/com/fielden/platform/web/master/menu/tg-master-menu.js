@@ -748,9 +748,6 @@ Polymer({
             }
         }
 
-        // if (oldSection && oldSection._element && typeof oldSection._element.removeOwnKeyBindings === 'function') {
-        //     oldSection._element.removeOwnKeyBindings();
-        // }
         action._run();
     }
 });

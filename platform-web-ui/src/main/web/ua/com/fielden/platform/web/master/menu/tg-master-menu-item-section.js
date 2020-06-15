@@ -110,7 +110,7 @@ Polymer({
     _getElement: function (customAction) {
         const self = this;
         if (self._element) {
-            return Promise.resolve(this.$.elementLoader.loadDom());
+            return Promise.resolve(this.loadDom());
         } else {
             self.$.elementLoader.import = customAction.componentUri;
             self.$.elementLoader.elementName = customAction.elementName;
@@ -191,17 +191,11 @@ Polymer({
     },
 
     offloadDom: function () {
-        const elementToLoad = this.shadowRoot.querySelector("#elementLoader");
-        if (elementToLoad) {
-            elementToLoad.offloadDom();
-        }
+        this.$.elementLoader.offloadDom();
     },
 
     loadDom: function () {
-        const elementToLoad = this.shadowRoot.querySelector("#elementLoader");
-        if (elementToLoad) {
-            elementToLoad.loadDom();
-        }
+        return this.$.elementLoader.loadDom();
     },
 
     _handleDataLoaded: function () {
