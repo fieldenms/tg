@@ -706,7 +706,6 @@ const TgEntityCentreBehaviorImpl = {
                     if (this.actionDialog === null) {
                         this.actionDialog = createDialog(self.uuid + '');
                     }
-                    document.body.appendChild(this.actionDialog);
                     this.actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
                 }.bind(self), 1);
             } else {
@@ -724,7 +723,6 @@ const TgEntityCentreBehaviorImpl = {
                 if (this.centreConfigDialog === null) {
                     this.centreConfigDialog = createDialog(self.uuid + '_centreConfig');
                 }
-                document.body.appendChild(this.centreConfigDialog);
                 this.centreConfigDialog.showDialog(action, closeEventChannel, closeEventTopics);
             }.bind(self), 1);
         }).bind(self);

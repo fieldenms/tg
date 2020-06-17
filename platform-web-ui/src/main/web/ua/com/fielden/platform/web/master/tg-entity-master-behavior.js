@@ -634,7 +634,6 @@ const TgEntityMasterBehaviorImpl = {
                 if (this._actionDialog === null) {
                     this._actionDialog = createDialog(self.uuid);
                 }
-                document.body.appendChild(this.actionDialog);
                 this._actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
             }.bind(self), 1);
         }).bind(self);

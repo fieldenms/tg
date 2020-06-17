@@ -437,7 +437,7 @@ Polymer({
         'ctrl+down': '_lastEntry'
     },
 
-    ready: function() {
+    created: function () {
         this.noAutoFocus = true;
         this.noCancelOnOutsideClick = true;
         this.noCancelOnEscKey = true;
@@ -462,6 +462,9 @@ Polymer({
 
         this._setIsRunning(false);
 
+    },
+
+    ready: function() {
         if (this.mobile && isIPhoneOs()) {
             this.$.titleBar.appendChild(this.createBackButton());
             this.$.titleBar.classList.remove('horizontal');
@@ -950,6 +953,8 @@ Polymer({
         } else {
             var self = this;
             if (self.isRunning === false) {
+                //Add this dialog to body before opening it.
+                document.body.appendChild(this);
                 self._lastAction = this._customiseAction(customAction);
                 self._setIsRunning(true);
                 self.staticTitle = customAction.shortDesc;
@@ -989,7 +994,6 @@ Polymer({
                     })
                     .catch(function(error) {
                         console.error(error);
-                        self._setIsRunning(false);
                         self.$.toaster.text = 'There was an error displaying the dialog.';
                         self.$.toaster.hasMore = true;
                         self.$.toaster.msgText = 'There was an error displaying the dialog.<br><br> \
@@ -997,9 +1001,7 @@ Polymer({
                         self.$.toaster.showProgress = false;
                         self.$.toaster.isCritical = true;
                         self.$.toaster.show();
-                        if (self._lastAction) {
-                            self._lastAction.restoreActionState();
-                        }
+                        self._finishErroneousOpening();
                     });
             }
         }
@@ -1174,6 +1176,7 @@ Polymer({
         this._lastElement = element;
         const self = this;
         if (element.noUI === true) { // is this is the end of action execution?
+            self._resetState();
             self._setIsRunning(false);
         } else { // otherwise show master in dialog
             this._openOnce(closeEventChannel, closeEventTopics, action, null, null);    
@@ -1281,6 +1284,7 @@ Polymer({
         if (this._lastAction) {
             this._lastAction.restoreActionState();
         }
+        this._resetState();
     },
 
     /**
@@ -1365,6 +1369,7 @@ Polymer({
         this._resetAnimationBlockingSpinnerState();
         this.$.loadingPanel.classList.remove("visible");
         this.$.dialogLoader.classList.remove("hidden");
+        document.body.removeChild(this);
     },
 
     //Resets the state of spinner on navigation action, blocking pane counter and removes potentialy setted animation properties.
