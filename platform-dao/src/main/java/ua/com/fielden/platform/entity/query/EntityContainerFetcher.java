@@ -34,12 +34,11 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 import ua.com.fielden.platform.entity.query.stream.ScrollableResultStream;
 import ua.com.fielden.platform.eql.meta.EntityInfo;
-import ua.com.fielden.platform.eql.meta.LongMetadata;
 import ua.com.fielden.platform.eql.meta.ShortMetadata;
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
+import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ResultQuery2;
-import ua.com.fielden.platform.eql.stage3.elements.Table;
 import ua.com.fielden.platform.eql.stage3.elements.Yield3;
 import ua.com.fielden.platform.eql.stage3.elements.Yields3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ResultQuery3;
@@ -143,24 +142,21 @@ public class EntityContainerFetcher {
             return new QueryModelResult<>((Class<E>)entQuery.type(), sql, getResultPropsInfos(entQuery.getYields()), entQuery.getValuesForSqlParams(), qem.fetchModel);
         } else {
             final ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator gen1 = new ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator(domainMetadataAnalyser.getDbVersion(), filter, username, executionContext.dates(), qem.getParamValues());
-            Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo = null;
-            Map<String, Table> tables = null;
             
+            Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo = null;
             try {
-                final LongMetadata lmg = new LongMetadata(executionContext.getDomainMetadata().htd, executionContext.getDomainMetadata().hibTypesInjector, executionContext.getDomainMetadata().entityTypes, domainMetadataAnalyser.getDbVersion());
-                final ShortMetadata mtg = new ShortMetadata(lmg, filter, username, executionContext.dates(), qem.getParamValues());
+                final ShortMetadata mtg = new ShortMetadata(executionContext.getDomainMetadata().lmd, filter, username, executionContext.dates(), qem.getParamValues());
                 final Set<Class<? extends AbstractEntity<?>>> emd = new HashSet<>();
                 emd.addAll(executionContext.getDomainMetadata().getPersistedEntityMetadataMap().keySet());
                 emd.addAll(executionContext.getDomainMetadata().getModelledEntityMetadataMap().keySet());
                 domainInfo = mtg.generate(emd);
-                tables = mtg.generateTables(executionContext.getDomainMetadata().getPersistedEntityMetadataMap().keySet());
             } catch (final Exception e) {
                 e.printStackTrace();
             }
             
             final PropsResolutionContext resolutionContext = new PropsResolutionContext(domainInfo);
             final ResultQuery2 s1tr = gen1.generateEntQueryAsResultQuery(qem.queryModel, qem.orderModel, qem.fetchModel).transform(resolutionContext);
-            final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<ResultQuery3> s2tr = s1tr.transform(new TransformationContext(tables, groupChildren(s1tr.collectProps(), domainInfo)));
+            final TransformationResult<ResultQuery3> s2tr = s1tr.transform(new TransformationContext(executionContext.getDomainMetadata().lmd.getTables(), groupChildren(s1tr.collectProps(), domainInfo)));
             final ResultQuery3 entQuery3 = s2tr.item;
             final String sql3 = entQuery3.sql(domainMetadataAnalyser.getDbVersion());
             return new QueryModelResult<>((Class<E>)entQuery3.resultType, sql3, getResultPropsInfos(entQuery3.yields), s2tr.updatedContext.getParamValues(), qem.fetchModel);

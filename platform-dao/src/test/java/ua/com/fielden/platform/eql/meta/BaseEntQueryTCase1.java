@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.eql.meta;
 
+import static ua.com.fielden.platform.entity.query.DbVersion.H2;
+import static ua.com.fielden.platform.test.PlatformTestDomainTypes.entityTypes;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Date;
@@ -13,14 +16,17 @@ import org.hibernate.type.TypeResolver;
 
 import com.google.inject.Guice;
 
-import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.query.metadata.PropertyCategory;
 import ua.com.fielden.platform.entity.query.metadata.PropertyColumn;
 import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
+import ua.com.fielden.platform.persistence.types.ColourType;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
+import ua.com.fielden.platform.persistence.types.HyperlinkType;
+import ua.com.fielden.platform.persistence.types.PropertyDescriptorType;
 import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
@@ -37,7 +43,8 @@ import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgWagonSlot;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.sample.domain.TgWorkshop;
-import ua.com.fielden.platform.test.PlatformTestDomainTypes;
+import ua.com.fielden.platform.types.Colour;
+import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
 
 public class BaseEntQueryTCase1 {
@@ -72,16 +79,24 @@ public class BaseEntQueryTCase1 {
 
     public static final Map<Class, Class> hibTypeDefaults = new HashMap<>();
 
-    protected static final DomainMetadata DOMAIN_METADATA = new DomainMetadata(hibTypeDefaults, 
-            Guice.createInjector(new HibernateUserTypesModule()), 
-            PlatformTestDomainTypes.entityTypes, 
-            DbVersion.H2);
+    protected static final DomainMetadata DOMAIN_METADATA;
 
-    protected static final DomainMetadataAnalyser DOMAIN_METADATA_ANALYSER = new DomainMetadataAnalyser(DOMAIN_METADATA);
+    protected static final DomainMetadataAnalyser DOMAIN_METADATA_ANALYSER;
 
     static {
         hibTypeDefaults.put(Date.class, DateTimeType.class);
         hibTypeDefaults.put(Money.class, SimpleMoneyType.class);
+        hibTypeDefaults.put(Date.class, DateTimeType.class);
+        hibTypeDefaults.put(PropertyDescriptor.class, PropertyDescriptorType.class);
+        hibTypeDefaults.put(Colour.class, ColourType.class);
+        hibTypeDefaults.put(Hyperlink.class, HyperlinkType.class);
+
+        DOMAIN_METADATA = new DomainMetadata(hibTypeDefaults, 
+                Guice.createInjector(new HibernateUserTypesModule()), 
+                entityTypes, 
+                H2);
+        
+        DOMAIN_METADATA_ANALYSER = new DomainMetadataAnalyser(DOMAIN_METADATA);
     }
     
     public static PropertyMetadata ppi(final String name, final Class javaType, final boolean nullable, final Object hibType, final String column, final PropertyCategory type/*, final EntityTypeInfo <? extends AbstractEntity<?>> entityCategory*/) {

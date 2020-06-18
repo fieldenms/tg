@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.meta;
 
 import static java.lang.String.format;
+import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
@@ -34,6 +35,8 @@ import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -69,6 +72,8 @@ import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.meta.LongPropertyMetadata.Builder;
 import ua.com.fielden.platform.eql.meta.model.PropColumn;
+import ua.com.fielden.platform.eql.stage3.elements.Column;
+import ua.com.fielden.platform.eql.stage3.elements.Table;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -93,7 +98,8 @@ public class LongMetadata {
      * Map between java type and hibernate persistence type (implementers of Type, IUserTypeInstantiate, ICompositeUserTypeInstantiate).
      */
     private final ConcurrentMap<Class<?>, Object> hibTypesDefaults;
-
+    private final ConcurrentMap<Class<? extends AbstractEntity<?>>, SortedMap<String, LongPropertyMetadata>> entityPropsMetadata;
+    private final Map<String, Table> tables = new HashMap<>();
 
     private final List<Class<? extends AbstractEntity<?>>> entityTypes;
     
@@ -107,6 +113,7 @@ public class LongMetadata {
         this.dbVersion = dbVersion;
 
         this.hibTypesDefaults = new ConcurrentHashMap<>(entityTypes.size());
+        this.entityPropsMetadata = new ConcurrentHashMap<>(entityTypes.size());
         
         this.entityTypes = new ArrayList<>(entityTypes);
         
@@ -133,6 +140,39 @@ public class LongMetadata {
         this.hibTypesDefaults.put(boolean.class, H_BOOLEAN);
 
         this.hibTypesInjector = hibTypesInjector;
+        
+        entityTypes.parallelStream().forEach(entityType -> {
+            try {
+                final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo = new EntityTypeInfo<>(entityType);
+                switch (parentInfo.category) {
+                case PERSISTED:
+                case QUERY_BASED:
+                    entityPropsMetadata.put(entityType, generatePropertyMetadatasForEntity(parentInfo));
+                    break;
+//                case QUERY_BASED:
+//                    modelledEntityMetadataMap.put(entityType, generateModelledEntityMetadata(parentInfo));
+//                    break;
+//                case UNION:
+//                    modelledEntityMetadataMap.put(entityType, generateUnionedEntityMetadata(parentInfo));
+//                    break;
+                default:
+                    //pureEntityMetadataMap.put(entityType, generatePureEntityMetadata(parentInfo));
+                    //System.out.println("PURE ENTITY: " + entityType);
+                    //throw new IllegalStateException("Not yet supported category: " + baseInfoForDomainMetadata.getCategory(entityType) + " of " + entityType);
+                }
+            } catch (final Exception e) {
+                e.printStackTrace();
+                throw new IllegalStateException("Couldn't generate persistence metadata for entity [" + entityType + "] due to: " + e);
+            }
+        });
+        
+        try {
+            tables.putAll(generateTables(entityTypes));
+        } catch (final Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
     }
     
     /**
@@ -165,7 +205,7 @@ public class LongMetadata {
             } else { // trying to mimic hibernate logic when no type has been specified - use hibernate's map of defaults
                 final BasicType result = typeResolver.basic(propType.getName());
                 if (result == null) {
-                    throw new EqlException(propField.getName() + " has no hibType (1)");
+                    throw new EqlException(propField.getName() + " of type " + propType.getName() + " has no hibType (1)");
                 }
                 return result;
             }
@@ -175,7 +215,7 @@ public class LongMetadata {
             if (isNotEmpty(hibernateTypeName)) {
                 final BasicType result = typeResolver.basic(hibernateTypeName);
                 if (result == null) {
-                    throw new EqlException(propField.getName() + " has no hibType (2)");
+                    throw new EqlException(propField.getName() + " of type " + propType.getName() + " has no hibType (2)");
                 }
                 return result;
             } else if (hibTypesInjector != null && !Void.class.equals(hibernateUserTypeImplementor)) { // Hibernate type is definitely either IUserTypeInstantiate or ICompositeUserTypeInstantiate
@@ -277,7 +317,7 @@ public class LongMetadata {
      * @return
      * @throws Exception
      */
-    public SortedMap<String, LongPropertyMetadata> generatePropertyMetadatasForEntity(final EntityTypeInfo <? extends AbstractEntity<?>> parentInfo) throws Exception {
+    private SortedMap<String, LongPropertyMetadata> generatePropertyMetadatasForEntity(final EntityTypeInfo <? extends AbstractEntity<?>> parentInfo) throws Exception {
         final SortedMap<String, LongPropertyMetadata> result = new TreeMap<>();
 
         safeMapAdd(result, generateIdPropertyMetadata(parentInfo));
@@ -436,4 +476,47 @@ public class LongMetadata {
 
         return expressionModelInProgress.end().model();
     }
+    
+    private final Map<String, Table> generateTables(final Collection<Class<? extends AbstractEntity<?>>> entities) throws Exception {
+        final Map<String, Table> result = entities.stream()
+                .filter(t -> isPersistedEntityType(t))
+                .collect(toMap(k -> k.getName(), k -> generateTable(k)));
+        return result;
+    }
+    
+    private final Table generateTable(final Class<? extends AbstractEntity<?>> entityType) {
+        final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo = new EntityTypeInfo<>(entityType);
+        final Map<String, Column> columns = new HashMap<>();
+        try {
+            for (final LongPropertyMetadata el : generatePropertyMetadatasForEntity(parentInfo).values()) {
+
+                if (el.column != null) {
+                    columns.put(el.name, new Column(el.column.name));
+                } else if (!el.subitems().isEmpty()) {
+                    for (final LongPropertyMetadata subitem : el.subitems()) {
+                        if (subitem.expressionModel == null) {
+                            final String colName = subitem.column.name.endsWith("_") && subitem.column.name.substring(0, subitem.column.name.length() - 1).contains("_") ? subitem.column.name.substring(0, subitem.column.name.length() - 1) : subitem.column.name;
+                            columns.put(el.name + "." + subitem.name, new Column(colName));    
+                        }
+                    }
+                }
+                
+                
+            }
+        } catch (final Exception e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
+        
+        return new Table(parentInfo.tableName, columns);
+    }
+    
+    public Map<String, Table> getTables() {
+        return Collections.unmodifiableMap(tables);
+    }
+    
+    public Map<Class<? extends AbstractEntity<?>>, SortedMap<String, LongPropertyMetadata>> getEntityPropsMetadata() {
+        return Collections.unmodifiableMap(entityPropsMetadata);
+    }
+
 }

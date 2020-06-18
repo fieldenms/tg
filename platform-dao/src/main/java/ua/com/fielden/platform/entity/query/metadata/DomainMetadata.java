@@ -86,11 +86,12 @@ import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.dbschema.ColumnDefinitionExtractor;
 import ua.com.fielden.platform.eql.dbschema.TableDdl;
+import ua.com.fielden.platform.eql.meta.LongMetadata;
 import ua.com.fielden.platform.utils.StreamUtils;
 
 public class DomainMetadata {
     private static final Logger LOGGER = Logger.getLogger(DomainMetadata.class);
-
+    public final LongMetadata lmd;
     
     private static final TypeResolver typeResolver = new TypeResolver();
     private static final Type H_LONG = typeResolver.basic("long");
@@ -126,14 +127,14 @@ public class DomainMetadata {
             final List<Class<? extends AbstractEntity<?>>> entityTypes, //
             final DbVersion dbVersion) {
         this.dbVersion = dbVersion;
-        
+
         this.hibTypesDefaults = new ConcurrentHashMap<>(entityTypes.size());
         this.persistedEntityMetadataMap = new ConcurrentHashMap<>(entityTypes.size());
         this.modelledEntityMetadataMap = new ConcurrentHashMap<>(entityTypes.size());
         this.pureEntityMetadataMap = new ConcurrentHashMap<>(entityTypes.size());
         
         this.entityTypes = new ArrayList<>(entityTypes);
-        
+
         // initialise meta-data for basic entity properties, which is RDBMS dependent
         if (dbVersion != DbVersion.ORACLE) {
             id = new PropertyColumn("_ID");
@@ -161,6 +162,8 @@ public class DomainMetadata {
         this.hibTypesDefaults.put(boolean.class, H_BOOLEAN);
 
         this.hibTypesInjector = hibTypesInjector;
+        
+        this.lmd = new LongMetadata(htd, hibTypesInjector, entityTypes, dbVersion);
 
         // the following operations are a bit heave and benefit from parallel processing
         entityTypes.parallelStream().forEach(entityType -> {

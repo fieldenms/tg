@@ -83,7 +83,7 @@ public class EqlTestCase {
     protected static final TypeResolver typeResolver = new TypeResolver();
 
     public static final Map<Class, Class> hibTypeDefaults = new HashMap<>();
-    private static Injector injector = Guice.createInjector(new HibernateUserTypesModule(), new HelperIocModule());//Guice.createInjector(new HibernateUserTypesModule());
+    private static Injector injector = Guice.createInjector(new HibernateUserTypesModule(), new HelperIocModule());
     
     protected static final DomainMetadata DOMAIN_METADATA;
 
@@ -104,12 +104,12 @@ public class EqlTestCase {
                 injector, 
                 PlatformTestDomainTypes.entityTypes, 
                 H2);
-        final LongMetadata lmg = new LongMetadata(DOMAIN_METADATA.htd, DOMAIN_METADATA.hibTypesInjector, DOMAIN_METADATA.entityTypes, H2);
+        final LongMetadata lmg = DOMAIN_METADATA.lmd;
         final ShortMetadata mdg = new ShortMetadata(lmg, null, null, injector.getInstance(IDates.class), emptyMap());
         
         try {
             metadata.putAll(mdg.generate(new HashSet<>(PlatformTestDomainTypes.entityTypes)));
-            tables.putAll(mdg.generateTables(PlatformTestDomainTypes.entityTypes));
+            tables.putAll(lmg.getTables());
         } catch (final Exception e) {
             e.printStackTrace();
         }
@@ -137,7 +137,7 @@ public class EqlTestCase {
 
     protected static final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> metadata(final IFilter filter, final String username, final IDates dates, final Map<String, Object> paramValues) {
         final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> result = new HashMap<>();
-        final LongMetadata lmg = new LongMetadata(DOMAIN_METADATA.htd, DOMAIN_METADATA.hibTypesInjector, DOMAIN_METADATA.entityTypes, H2);
+        final LongMetadata lmg = DOMAIN_METADATA.lmd;
         final ShortMetadata mdg = new ShortMetadata(lmg, filter, username, dates, paramValues);
         try {
             result.putAll(mdg.generate(new HashSet<>(PlatformTestDomainTypes.entityTypes)));    

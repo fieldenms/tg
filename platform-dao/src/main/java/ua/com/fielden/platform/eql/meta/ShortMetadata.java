@@ -8,7 +8,6 @@ import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersis
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -23,8 +22,6 @@ import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator;
 import ua.com.fielden.platform.eql.stage1.builders.StandAloneExpressionBuilder;
 import ua.com.fielden.platform.eql.stage1.elements.operands.Expression1;
-import ua.com.fielden.platform.eql.stage3.elements.Column;
-import ua.com.fielden.platform.eql.stage3.elements.Table;
 import ua.com.fielden.platform.utils.IDates;
 
 public class ShortMetadata {
@@ -54,49 +51,14 @@ public class ShortMetadata {
         return result;
     }
     
-    public final Map<String, Table> generateTables(final Collection<Class<? extends AbstractEntity<?>>> entities) throws Exception {
-        final Map<String, Table> result = entities.stream()
-                .filter(t -> isPersistedEntityType(t))
-                .collect(toMap(k -> k.getName(), k -> generateTable(k)));
-        return result;
-    }
-    
-    private final Table generateTable(final Class<? extends AbstractEntity<?>> entityType) {
-        final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo = new EntityTypeInfo<>(entityType);
-        final Map<String, Column> columns = new HashMap<>();
-        try {
-            for (final LongPropertyMetadata el : lmg.generatePropertyMetadatasForEntity(parentInfo).values()) {
-
-                if (el.column != null) {
-                    columns.put(el.name, new Column(el.column.name));
-                } else if (!el.subitems().isEmpty()) {
-                    for (final LongPropertyMetadata subitem : el.subitems()) {
-                        if (subitem.expressionModel == null) {
-                            final String colName = subitem.column.name.endsWith("_") && subitem.column.name.substring(0, subitem.column.name.length() - 1).contains("_") ? subitem.column.name.substring(0, subitem.column.name.length() - 1) : subitem.column.name;
-                            columns.put(el.name + "." + subitem.name, new Column(colName));    
-                        }
-                    }
-                }
-                
-                
-            }
-        } catch (final Exception e1) {
-            // TODO Auto-generated catch block
-            e1.printStackTrace();
-        }
-        
-        return new Table(parentInfo.tableName, columns);
-    }
-    
     private <ET extends AbstractEntity<?>> EntityCategory determineCategory(final Class<ET> entityType) {
         final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo = new EntityTypeInfo<>(entityType);
         return parentInfo.category;
     }
 
     private <T extends AbstractEntity<?>> void addProps(final EntityInfo<T> entityInfo, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> allEntitiesInfo) {
-        final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo = new EntityTypeInfo<>(entityInfo.javaType());
         try {
-            for (final Entry<String, LongPropertyMetadata> el : lmg.generatePropertyMetadatasForEntity(parentInfo).entrySet()) {
+            for (final Entry<String, LongPropertyMetadata> el : lmg.getEntityPropsMetadata().get(entityInfo.javaType()).entrySet()) {
                 final String name = el.getKey();
                 final boolean required = !el.getValue().nullable;
                 final Class<?> javaType = el.getValue().javaType;
