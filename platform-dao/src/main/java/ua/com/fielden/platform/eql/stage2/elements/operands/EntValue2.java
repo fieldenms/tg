@@ -7,7 +7,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.type.StringType;
+import org.hibernate.type.TypeResolver;
 
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
@@ -18,6 +18,7 @@ public class EntValue2 implements ISingleOperand2<EntValue3> {
     private final boolean ignoreNull;
     private static String yes = "Y";
     private static String no = "N";
+    private static TypeResolver tr = new TypeResolver();
 
     public EntValue2(final Object value) {
         this(value, false);
@@ -79,7 +80,7 @@ public class EntValue2 implements ISingleOperand2<EntValue3> {
     @Override
     public Object hibType() {
         // TODO EQL
-        return value != null ? StringType.INSTANCE : null;
+        return value != null ? tr.basic(type().getName()) : null;
     }
     
 

@@ -3,11 +3,10 @@ package ua.com.fielden.platform.eql.stage3.elements.operands;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.joining;
 
-import java.math.BigDecimal;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-
-import org.hibernate.type.BigDecimalType;
+import java.util.Set;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
 
@@ -27,12 +26,26 @@ public class Expression3 implements ISingleOperand3 {
     
     @Override
     public Class<?> type() {
-        return items.isEmpty() ? first.type() :  BigDecimal.class;
+        // TODO EQL
+        final Set<Class<?>> types = new HashSet<>();
+        types.add(first.type());
+        for (final CompoundSingleOperand3 item : items) {
+            types.add(item.operand.type());
+        }
+        
+        return types.iterator().next();
     }
 
     @Override
     public Object hibType() {
-        return items.isEmpty() ? first.hibType() : BigDecimalType.INSTANCE;
+        // TODO EQL
+        final Set<Object> hibTypes = new HashSet<>();
+        hibTypes.add(first.hibType());
+        for (final CompoundSingleOperand3 item : items) {
+            hibTypes.add(item.operand.hibType());
+        }
+        
+        return hibTypes.iterator().next();
     }
 
     @Override

@@ -141,7 +141,7 @@ public class EntQueryGenerator {
     private List<Pair<TokenCategory, Object>> linearizeTokens(final List<Pair<TokenCategory, Object>> tokens) {
         final List<Pair<TokenCategory, Object>> result = new ArrayList<>();
         for (final Pair<TokenCategory, Object> pair : tokens) {
-            if (ORDER_TOKENS.equals(pair.getKey())) {
+            if (ORDER_TOKENS == pair.getKey()) {
                 result.addAll(linearizeTokens(((OrderingModel) pair.getValue()).getTokens()));
             } else {
                 result.add(pair);
@@ -158,7 +158,7 @@ public class EntQueryGenerator {
             final List<Pair<TokenCategory, Object>> linearizedTokens = linearizeTokens(orderModel.getTokens());
             for (final Iterator<Pair<TokenCategory, Object>> iterator = linearizedTokens.iterator(); iterator.hasNext();) {
                 final Pair<TokenCategory, Object> pair = iterator.next();
-                if (SORT_ORDER.equals(pair.getKey())) {
+                if (SORT_ORDER == pair.getKey()) {
                     orderBy.add(pair.getKey(), pair.getValue());
                     if (iterator.hasNext()) {
                         orderBy.setChild(new OrderByBuilder(orderBy, this));

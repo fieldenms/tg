@@ -1,13 +1,10 @@
 package ua.com.fielden.platform.eql.stage2.elements.operands;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-
-import org.hibernate.type.BigDecimalType;
 
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
@@ -56,15 +53,34 @@ public class Expression2 implements ISingleOperand2<Expression3> {
 
     @Override
     public Class<?> type() {
-        return items.isEmpty() ? first.type() : BigDecimal.class;
+        return determineType();//items.isEmpty() ? first.type() : BigDecimal.class;
     }
 
     @Override
     public Object hibType() {
-        return items.isEmpty() ? first.hibType() : BigDecimalType.INSTANCE;
+        return determineHibType();//items.isEmpty() ? first.hibType() : BigDecimalType.INSTANCE;
     }
 
+    private Class<?> determineType() {
+        final Set<Class<?>> types = new HashSet<>();
+        types.add(first.type());
+        for (final CompoundSingleOperand2 item : items) {
+            types.add(item.operand.type());
+        }
+        
+        return types.iterator().next();
+    }
     
+    private Object determineHibType() {
+        final Set<Object> hibTypes = new HashSet<>();
+        hibTypes.add(first.hibType());
+        for (final CompoundSingleOperand2 item : items) {
+            hibTypes.add(item.operand.hibType());
+        }
+        
+        return hibTypes.iterator().next();
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;

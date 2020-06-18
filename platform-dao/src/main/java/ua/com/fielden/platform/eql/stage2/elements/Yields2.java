@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.elements;
 
 import static java.util.Collections.unmodifiableCollection;
+import static java.util.Collections.unmodifiableSortedMap;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -25,6 +26,10 @@ public class Yields2 {
     
     public Collection<Yield2> getYields() {
         return unmodifiableCollection(yieldsMap.values());
+    }
+    
+    public SortedMap<String, Yield2> getYieldsMap() {
+        return unmodifiableSortedMap(yieldsMap);
     }
     
     public TransformationResult<Yields3> transform(final TransformationContext context) {

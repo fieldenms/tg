@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.stage3.elements;
 
 import static java.util.Collections.unmodifiableCollection;
+import static java.util.Collections.unmodifiableSortedMap;
 import static java.util.stream.Collectors.joining;
 
 import java.util.Collection;
@@ -23,6 +24,9 @@ public class Yields3 {
         return unmodifiableCollection(yieldsMap.values());
     }
 
+    public SortedMap<String, Yield3> getYieldsMap() {
+        return unmodifiableSortedMap(yieldsMap);
+    }
     public String sql(final DbVersion dbVersion) {
         return "SELECT\n" + getYields().stream().filter(t -> !t.isHeader).map(y -> y.sql(dbVersion)).collect(joining(", "));
     }

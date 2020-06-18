@@ -31,7 +31,7 @@ public class SubQuery2 extends AbstractQuery2 implements ISingleOperand2<SubQuer
         final TransformationResult<Conditions3> conditionsTr = conditions.transform(sourcesTr.updatedContext);
         final TransformationResult<Yields3> yieldsTr = yields.transform(conditionsTr.updatedContext);
         final TransformationResult<GroupBys3> groupsTr = groups.transform(yieldsTr.updatedContext);
-        final TransformationResult<OrderBys3> orderingsTr = orderings.transform(groupsTr.updatedContext);
+        final TransformationResult<OrderBys3> orderingsTr = orderings.transform(groupsTr.updatedContext, yieldsTr.item);
 
         final EntQueryBlocks3 entQueryBlocks = new EntQueryBlocks3(sourcesTr.item, conditionsTr.item, yieldsTr.item, groupsTr.item, orderingsTr.item);
 

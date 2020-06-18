@@ -24,6 +24,7 @@ import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.sample.domain.ITeAverageFuelUsage;
+import ua.com.fielden.platform.sample.domain.ITeVehicle;
 import ua.com.fielden.platform.sample.domain.ITeVehicleFuelUsage;
 import ua.com.fielden.platform.sample.domain.ITeVehicleModel;
 import ua.com.fielden.platform.sample.domain.ITgBogie;
@@ -728,6 +729,83 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
         final ITgVehicle co = getInstance(ITgVehicle.class);
         final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).as("a").leftJoin(TgOrgUnit4.class).as("b").on().val(1).eq().val(1).model();
         co.getAllEntities(from(qry).with("EQL3", null).with(orderBy().prop("b.parent.key").desc().prop("a.lastFuelUsage.key").asc().model()).model());
+    }
+
+    @Test
+    public void eql3_query_executes_correctly82() {
+        final ITgVehicle co = getInstance(ITgVehicle.class);
+        final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).model();
+        co.getAllEntities(from(qry).with("EQL3", null).with(orderBy().prop("purchasePrice").desc().model()).model());
+    }
+
+    @Test
+    public void eql3_query_executes_correctly83() {
+        final ITeVehicle co = getInstance(ITeVehicle.class);
+        final EntityResultQueryModel<TeVehicle> qry = select(TeVehicle.class).model();
+        co.getAllEntities(from(qry).with("EQL3", null).with(orderBy().prop("key").desc().model()).model());
+    }
+    
+    @Test
+    public void eql3_query_executes_correctly84() {
+        final ITeVehicleFuelUsage co = getInstance(ITeVehicleFuelUsage.class);
+        final EntityResultQueryModel<TeVehicleFuelUsage> qry = select(TeVehicleFuelUsage.class).model();
+        co.getAllEntities(from(qry).with("EQL3", null).with(orderBy().prop("date").desc().prop("vehicle.initDate").desc().model()).model());
+    }
+    
+    @Test
+    public void eql3_query_executes_correctly85() {
+        final ITeVehicle co = getInstance(ITeVehicle.class);
+        final EntityResultQueryModel<TeVehicle> qry = select(TeVehicle.class).model();
+        co.getAllEntities(from(qry).with("EQL3", null).with(orderBy().yield("key").desc().model()).model());
+    }
+    
+    @Test
+    public void eql3_query_executes_correctly86() {
+        final ITeVehicle co = getInstance(ITeVehicle.class);
+        final EntityResultQueryModel<TeVehicle> qry = select(TeVehicle.class).model();
+        co.getAllEntities(from(qry).with("EQL3", null).with(orderBy().yield("purchasePrice").desc().model()).model());
+    }
+    
+    @Test
+    public void eql3_query_executes_correctly87() {
+        final ITeVehicle co = getInstance(ITeVehicle.class);
+        final EntityResultQueryModel<TeVehicle> qry = select(TeVehicle.class).model();
+        co.getAllEntities(from(qry).with("EQL3", null).with(orderBy().yield("purchasePrice.amount").desc().model()).model());
+    }
+
+    @Test
+    public void eql3_query_executes_correctly88() {
+        final ITeVehicleFuelUsage co = getInstance(ITeVehicleFuelUsage.class);
+        final EntityResultQueryModel<TeVehicleFuelUsage> qry = select(TeVehicleFuelUsage.class).model();
+        co.getAllEntities(from(qry).with("EQL3", null).with(orderBy().yield("vehicle.purchasePrice").desc().model()).model());
+    }
+
+    @Test
+    public void eql3_query_executes_correctly89() {
+        final ITeVehicleFuelUsage co = getInstance(ITeVehicleFuelUsage.class);
+        final EntityResultQueryModel<TeVehicleFuelUsage> qry = select(TeVehicleFuelUsage.class).model();
+        co.getAllEntities(from(qry).with("EQL3", null).with(orderBy().yield("vehicle.purchasePrice.amount").desc().model()).model());
+    }
+    
+    @Test
+    public void eql3_query_executes_correctly90() {
+        final ITeVehicleFuelUsage co = getInstance(ITeVehicleFuelUsage.class);
+        final EntityResultQueryModel<TeVehicleFuelUsage> qry = select(TeVehicleFuelUsage.class).model();
+        co.getAllEntities(from(qry).with("EQL3", null).with(orderBy().yield("key").desc().model()).model());
+    }
+
+    @Test
+    public void eql3_query_executes_correctly91() {
+        final ITgVehicle co = getInstance(ITgVehicle.class);
+        final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).model();
+        co.getAllEntities(from(qry).with("EQL3", null).with(orderBy().yield("lastFuelUsage.key").desc().model()).model());
+    }
+
+    @Test
+    public void eql3_query_executes_correctly92() {
+        final ITeVehicleFuelUsage co = getInstance(ITeVehicleFuelUsage.class);
+        final EntityResultQueryModel<TeVehicleFuelUsage> qry = select(TeVehicleFuelUsage.class).model();
+        co.getAllEntities(from(qry).with("EQL3", null).with(orderBy().yield("vehicle.key").desc().model()).model());
     }
 
     

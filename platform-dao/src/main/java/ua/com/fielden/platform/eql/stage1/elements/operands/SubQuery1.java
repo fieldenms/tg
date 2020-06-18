@@ -34,7 +34,7 @@ public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuer
         final Conditions2 conditions2 = conditions.transform(enhancedContext);
         final Yields2 yields2 = yields.transform(enhancedContext);
         final GroupBys2 groups2 = groups.transform(enhancedContext);
-        final OrderBys2 orderings2 = orderings.transform(enhancedContext);
+        final OrderBys2 orderings2 = orderings.transform(enhancedContext, yields, sources2.main);
         final Yields2 enhancedYields2 = enhanceYields(yields2, sources2);
         final EntQueryBlocks2 entQueryBlocks = new EntQueryBlocks2(sources2, conditions2, enhancedYields2, groups2, orderings2);
 

@@ -26,11 +26,11 @@ public class Conditions3 implements ICondition3 {
         if (!allConditionsAsDnf.isEmpty()) {
             final String sqlBody = allConditionsAsDnf.stream().map(dl -> dl.stream().map(cond -> cond.sql(dbVersion)).collect(joining(" AND "))).collect(joining(" OR "));
             if (atWhere) {
-                return "\nWHERE " + sqlBody;    
+                return "\nWHERE " + (negated ? " NOT " : "") + sqlBody;    
             } else if (allConditionsAsDnf.size() == 1) {
-                return sqlBody;
+                return (negated ? " NOT " : "") + sqlBody;
             } else {
-                return "(" + sqlBody + ")";
+                return (negated ? " NOT " : "") + "(" + sqlBody + ")";
             }
         } else {
             return "";

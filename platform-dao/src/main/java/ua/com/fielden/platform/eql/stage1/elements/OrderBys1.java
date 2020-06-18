@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Objects;
 
 import ua.com.fielden.platform.eql.stage2.elements.OrderBys2;
+import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
+import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySource3;
 
 public class OrderBys1 {
     private final List<OrderBy1> models;
@@ -13,8 +15,8 @@ public class OrderBys1 {
         this.models = models;
     }
 
-    public OrderBys2 transform(final PropsResolutionContext context) {
-        return new OrderBys2(models.stream().map(el -> el.transform(context)).collect(ArrayList::new, List::addAll, List::addAll));
+    public OrderBys2 transform(final PropsResolutionContext context, final Yields1 yields1, final IQrySource2<? extends IQrySource3> mainSource) {
+        return new OrderBys2(models.stream().map(el -> el.transform(context, yields1, mainSource)).collect(ArrayList::new, List::addAll, List::addAll));
     }
 
     @Override

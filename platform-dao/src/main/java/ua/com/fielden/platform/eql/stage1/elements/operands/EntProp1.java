@@ -39,15 +39,7 @@ public class EntProp1 implements ISingleOperand1<EntProp2> {
             final List<IQrySource2<? extends IQrySource3>> item = it.next();
             final PropResolution resolution = resolveProp(item, this);
             if (resolution != null) {
-                final AbstractPropInfo<?> lastResolutionItem = resolution.getPath().get(resolution.getPath().size() - 1);
-                if (lastResolutionItem instanceof ComponentTypePropInfo && ((ComponentTypePropInfo) lastResolutionItem).getProps().size() == 1) {
-                    final List<AbstractPropInfo<?>> enhancedPath = new ArrayList<>(resolution.getPath());
-                    final AbstractPropInfo<?> autoResolvedItem = (AbstractPropInfo<?>) ((ComponentTypePropInfo) lastResolutionItem).getProps().values().iterator().next();
-                    enhancedPath.add(autoResolvedItem);
-                    return new EntProp2(resolution.getSource(), enhancedPath);
-                } else {
-                    return new EntProp2(resolution.getSource(), resolution.getPath());    
-                }
+                return new EntProp2(resolution.getSource(), enhancePath(resolution.getPath()));
             }
         }
 
@@ -55,7 +47,17 @@ public class EntProp1 implements ISingleOperand1<EntProp2> {
         
     }
     
-    private PropResolution resolvePropAgainstSource(final IQrySource2<? extends IQrySource3> source, final EntProp1 entProp) {
+    public static final List<AbstractPropInfo<?>> enhancePath(final List<AbstractPropInfo<?>> originalPath) {
+        final List<AbstractPropInfo<?>> enhancedPath = new ArrayList<>(originalPath);
+        final AbstractPropInfo<?> lastResolutionItem = originalPath.get(originalPath.size() - 1);
+        if (lastResolutionItem instanceof ComponentTypePropInfo && ((ComponentTypePropInfo) lastResolutionItem).getProps().size() == 1) {
+            final AbstractPropInfo<?> autoResolvedItem = (AbstractPropInfo<?>) ((ComponentTypePropInfo) lastResolutionItem).getProps().values().iterator().next();
+            enhancedPath.add(autoResolvedItem);
+        }
+        return enhancedPath;
+    }
+    
+    public static PropResolution resolvePropAgainstSource(final IQrySource2<? extends IQrySource3> source, final EntProp1 entProp) {
         final ResolutionContext asIsResolution = source.entityInfo().resolve(new ResolutionContext(entProp.name));
         if (source.alias() != null && (entProp.name.startsWith(source.alias() + ".") || entProp.name.equals(source.alias()))) {
             final String aliaslessPropName = entProp.name.equals(source.alias()) ? ID : entProp.name.substring(source.alias().length() + 1);

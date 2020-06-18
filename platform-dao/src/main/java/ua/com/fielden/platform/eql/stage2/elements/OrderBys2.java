@@ -9,6 +9,7 @@ import java.util.Set;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage3.elements.OrderBy3;
 import ua.com.fielden.platform.eql.stage3.elements.OrderBys3;
+import ua.com.fielden.platform.eql.stage3.elements.Yields3;
 
 public class OrderBys2 {
     private final List<OrderBy2> models;
@@ -17,11 +18,11 @@ public class OrderBys2 {
         this.models = models;
     }
 
-    public TransformationResult<OrderBys3> transform(final TransformationContext context) {
+    public TransformationResult<OrderBys3> transform(final TransformationContext context, final Yields3 yields) {
             final List<OrderBy3> transformed = new ArrayList<>();
             TransformationContext currentContext = context;
             for (final OrderBy2 orderBy : models) {
-                final TransformationResult<OrderBy3> orderByTr = orderBy.transform(currentContext);
+                final TransformationResult<OrderBy3> orderByTr = orderBy.transform(currentContext, yields);
                 transformed.add(orderByTr.item);
                 currentContext = orderByTr.updatedContext;
             }
@@ -31,7 +32,9 @@ public class OrderBys2 {
     public Set<EntProp2> collectProps() {
         final Set<EntProp2> result = new HashSet<>();
         for (final OrderBy2 orderBy : models) {
-            result.addAll(orderBy.operand.collectProps());
+            if (orderBy.operand != null) {
+                result.addAll(orderBy.operand.collectProps());
+            }
         }
         return result;
     }
