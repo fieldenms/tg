@@ -1956,8 +1956,8 @@ export const TgReflector = Polymer({
                 throw 'For new entities (null id) previouslyAppliedEntity should always exist.';
             }
         } else if (Number.isInteger(idNumber)) {
-            if (_isEntity(previouslyAppliedEntity)) {
-                throw 'For existing entities (id exists) previouslyAppliedEntity should always be empty.';
+            if (!_isEntity(previouslyAppliedEntity)) {
+                throw 'For existing entities (id exists) previouslyAppliedEntity should always exist.';
             }
         } else {
             throw 'Unknown id number [' + idNumber + ']';

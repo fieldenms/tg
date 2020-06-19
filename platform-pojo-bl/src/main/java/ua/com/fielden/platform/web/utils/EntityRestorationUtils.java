@@ -91,10 +91,12 @@ public class EntityRestorationUtils {
     }
     
     /**
-     * Constructs a validation prototype having an <code>id</code> and the <code>previouslyAppliedEntity</code> information.
+     * Constructs a validation prototype.
      *
-     * @param id -- the validation prototype's identifier for retrieval from the database or <code>null</code> if a "new" validation prototype is about to be created.
-     * @param previouslyAppliedEntity -- this argument contains the previously applied entity instance.
+     * @param previouslyAppliedEntity -- previously applied entity instance (new or persisted) with all previous modifications applied;
+     *                                   if exists (in validate / save requests) then it will be used as validation prototype;
+     *                                   otherwise, the entity will be retrieved using {@code id} or produced with {@code producer}.
+     * @param id -- validation prototype's identifier for retrieval from the database or <code>null</code> if a "new" validation prototype is about to be produced
      * 
      * @return
      */
@@ -107,10 +109,10 @@ public class EntityRestorationUtils {
             throw new EntityProducingException("Producer does not exist during validation prototype creation.");
         }
         final T entity;
-        if (id != null) {
-            entity = findByIdWithFiltering(id, companion);
-        } else if (previouslyAppliedEntity != null) {
+        if (previouslyAppliedEntity != null) {
             entity = previouslyAppliedEntity;
+        } else if (id != null) {
+            entity = findByIdWithFiltering(id, companion);
         } else {
             entity = producer.newEntity();
         }
