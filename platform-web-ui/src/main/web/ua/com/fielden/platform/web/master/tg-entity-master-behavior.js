@@ -390,11 +390,13 @@ const TgEntityMasterBehaviorImpl = {
 
                 if (isContinuouslyCreated === true) { // continuous creation has occured, which is very much like entity has been produced -- _previouslyAppliedEntity should be updated by newly returned instance
                     this._previouslyAppliedEntity = potentiallySavedOrNewEntity;
-                } else if (potentiallySavedOrNewEntity.type().isPersistent()) { // entity became (or was) persisted -- _previouslyAppliedEntity should be reset to empty
-                    this._previouslyAppliedEntity = null;
+                } else if (potentiallySavedOrNewEntity.type().isPersistent()) { // entity became (or was) persisted -- _previouslyAppliedEntity should be updated
+                    this._previouslyAppliedEntity = _previouslyAppliedEntity;
                 } else { // non-persistent entity has been saved -- _previouslyAppliedEntity should be updated by newly returned instance
                     this._previouslyAppliedEntity = potentiallySavedOrNewEntity;
                 }
+            } else { // update _previouslyAppliedEntity also for unsuccessful save
+                this._previouslyAppliedEntity = potentiallySavedOrNewEntity;
             }
 
             // custom external action
@@ -921,16 +923,19 @@ const TgEntityMasterBehaviorImpl = {
     },
 
     /**
-     * Overridden to populate '_previouslyAppliedEntity' in case where 'new' entity arrives.
+     * Overridden to populate '_previouslyAppliedEntity'.
      */
     _postRetrievedDefaultForDescendants: function (entity, bindingEntity, customObject) {
         TgEntityBinderBehavior._postRetrievedDefaultForDescendants.call(this, entity, bindingEntity, customObject);
-
-        if (entity.id === null) {
-            this._previouslyAppliedEntity = entity;
-        } else {
-            this._previouslyAppliedEntity = null;
-        }
+        this._previouslyAppliedEntity = entity; // both new and persisted entities
+    },
+    
+    /**
+     * Overridden to populate '_previouslyAppliedEntity'.
+     */
+    _postValidatedDefaultForDescendants: function (entity, bindingEntity, customObject) {
+        TgEntityBinderBehavior._postValidatedDefaultForDescendants.call(this, entity, bindingEntity, customObject);
+        this._previouslyAppliedEntity = entity; // both new and persisted entities
     },
 
     //////////////////////////////////////// SAVING ////////////////////////////////////////

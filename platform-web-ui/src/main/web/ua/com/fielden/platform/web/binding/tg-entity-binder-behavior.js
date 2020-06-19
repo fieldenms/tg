@@ -689,6 +689,8 @@ export const TgEntityBinderBehavior = {
                 this._continuations = {};
             }
             const newBindingEntity = this._postEntityReceived(validatedEntity, false);
+            
+            this._postValidatedDefaultForDescendants(validatedEntity, newBindingEntity, customObject);
             // custom external action
             if (this.postValidated) {
                 this.postValidated(validatedEntity, newBindingEntity, customObject);
@@ -844,6 +846,12 @@ export const TgEntityBinderBehavior = {
     _postRetrievedDefaultForDescendants: function (entity, newBindingEntity, customObject) { },
 
     //////////////////////////////////////// VALIDATION ////////////////////////////////////////
+    /**
+     * This callback is intended to be invoked just before the custom 'postValidated' callback.
+     * Override it in descendants to provide some custom behaviour.
+     */
+    _postValidatedDefaultForDescendants: function (entity, newBindingEntity, customObject) { },
+    
     _reset: function (modifiedPropertiesHolder) {
         delete modifiedPropertiesHolder['@modified']; // remove it not to serialise this purely technical property
         return modifiedPropertiesHolder;
