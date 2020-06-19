@@ -91,17 +91,16 @@ public class EntityRestorationUtils {
     }
     
     /**
-     * Constructs a validation prototype having an <code>id</code> and the <code>originallyProducedEntity</code> information.
+     * Constructs a validation prototype having an <code>id</code> and the <code>previouslyAppliedEntity</code> information.
      *
      * @param id -- the validation prototype's identifier for retrieval from the database or <code>null</code> if a "new" validation prototype is about to be created.
-     * @param originallyProducedEntity -- for the case of <code>null</code> <code>id</code>, this argument contains the originally produced entity instance to avoid producing it multiple times;
-     *                                    it can also be <code>null</code> intentionally to trigger the creation by a producer.
+     * @param previouslyAppliedEntity -- this argument contains the previously applied entity instance.
      * 
      * @return
      */
     public static <T extends AbstractEntity<?>> T createValidationPrototype(
             final Long id,
-            final T originallyProducedEntity,
+            final T previouslyAppliedEntity,
             final IEntityDao<T> companion, 
             final IEntityProducer<T> producer) {
         if (producer == null) {
@@ -110,8 +109,8 @@ public class EntityRestorationUtils {
         final T entity;
         if (id != null) {
             entity = findByIdWithFiltering(id, companion);
-        } else if (originallyProducedEntity != null) {
-            entity = originallyProducedEntity;
+        } else if (previouslyAppliedEntity != null) {
+            entity = previouslyAppliedEntity;
         } else {
             entity = producer.newEntity();
         }
@@ -119,64 +118,61 @@ public class EntityRestorationUtils {
     }
     
     /**
-     * Constructs a validation prototype having an <code>id</code>, <code>originallyProducedEntity</code> and the <code>context</code> information.
+     * Constructs a validation prototype having an <code>id</code>, <code>previouslyAppliedEntity</code> and the <code>context</code> information.
      *
-     * @param id -- the validation prototype's identifier for retrieval from the database or <code>null</code> if a "new" validation prototype is about to be created.
-     * @param originallyProducedEntity -- for the case of <code>null</code> <code>id</code>, this parameter contains the originally produced entity instance to avoid producing it multiple times;
-     *                                    it can also be <code>null</code> intentionally to trigger the creation by a producer.
-     * @param context -- for the case of <code>null</code> <code>id</code> and <code>null</code> <code>originallyProducedEntity</code>, this parameter contains the context from which the entity (validation prototype) is be produced.
+     * @param id -- the validation prototype's identifier for retrieval from the database or <code>null</code> if a "new" validation prototype is about to be created
+     * @param previouslyAppliedEntity -- this parameter contains the previously applied entity instance
+     * @param context -- for the case of <code>null</code> <code>id</code> and <code>null</code> <code>previouslyAppliedEntity</code>, this parameter contains the context from which the entity (validation prototype) is be produced
      * 
      * @return
      */
     public static <T extends AbstractEntity<?>> T createValidationPrototypeWithContext(
             final Long id,
-            final T originallyProducedEntity,
+            final T previouslyAppliedEntity,
             final CentreContext<T, AbstractEntity<?>> context,
             final IEntityDao<T> companion, 
             final IEntityProducer<T> producer) {
         final DefaultEntityProducerWithContext<T> defProducer = (DefaultEntityProducerWithContext<T>) producer;
         defProducer.setContext(context);
-        return createValidationPrototype(id, originallyProducedEntity, companion, defProducer);
+        return createValidationPrototype(id, previouslyAppliedEntity, companion, defProducer);
     }
     
     ////////////////////////////////////// ENTITY CONSTRUCTION //////////////////////////////////////
     /**
-     * Constructs validation prototype having an <code>id</code> and the <code>originallyProducedEntity</code> information;
+     * Constructs validation prototype having an <code>id</code> and the <code>previouslyAppliedEntity</code> information;
      * then applies <code>modifiedPropertiesHolder</code> to it.
      *
      * @param modifiedPropertiesHolder -- a set of properties with original and new values to be applied to the validation prototype
      * @param id -- the validation prototype's identifier for retrieval from the database or <code>null</code> if a "new" validation prototype is about to be created
-     * @param originallyProducedEntity -- for a case of <code>null</code> <code>id</code>, this argument contains the originally produced entity instance to avoid producing it multiple times;
-     *                                    it can also be <code>null</code> intentionally to trigger the creation by a producer
+     * @param previouslyAppliedEntity -- this argument contains the previously applied entity instance to avoid producing it multiple times
      * 
      * @return -- applied validation prototype and <code>modifiedPropertiesHolder</code>
      */
     public static <T extends AbstractEntity<?>> Pair<T, Map<String, Object>> constructEntity(
             final Map<String, Object> modifiedPropertiesHolder,
-            final T originallyProducedEntity,
+            final T previouslyAppliedEntity,
             final IEntityDao<T> companion, 
             final IEntityProducer<T> producer,
             final ICompanionObjectFinder companionFinder) {
         final Object arrivedIdVal = modifiedPropertiesHolder.get(AbstractEntity.ID);
         final Long id = arrivedIdVal == null ? null : Long.parseLong(arrivedIdVal + "");
-        return applyModifHolder(modifiedPropertiesHolder, createValidationPrototype(id, originallyProducedEntity, companion, producer), companionFinder);
+        return applyModifHolder(modifiedPropertiesHolder, createValidationPrototype(id, previouslyAppliedEntity, companion, producer), companionFinder);
     }
     
     /**
-     * Constructs validation prototype having an <code>id</code>, <code>originallyProducedEntity</code> and the <code>context</code> information;
+     * Constructs validation prototype having an <code>id</code>, <code>previouslyAppliedEntity</code> and the <code>context</code> information;
      * then applies <code>modifiedPropertiesHolder</code> to it.
      *
      * @param modifiedPropertiesHolder -- a set of properties with original and new values to be applied against the validation prototype.
      * @param id -- the validation prototype's identifier for retrieval from the database or <code>null</code> if a "new" validation prototype is about to be created.
-     * @param originallyProducedEntity -- for the case of <code>null</code> <code>id</code>, this parameter contains originally produced entity instance not to produce it multiple times;
-     *                                    it can also be <code>null</code> intentionally to trigger the creation by a producer.
-     * @param context -- for the case of <code>null</code> <code>id</code> and <code>null</code> <code>originallyProducedEntity</code>, this argument contains the context from which the entity (validation prototype) is to be produced.
+     * @param previouslyAppliedEntity -- this parameter contains previously applied entity instance.
+     * @param context -- for the case of <code>null</code> <code>id</code> and <code>null</code> <code>previouslyAppliedEntity</code>, this argument contains the context from which the entity (validation prototype) is to be produced.
      * 
      * @return -- applied validation prototype and <code>modifiedPropertiesHolder</code>
      */
     public static <T extends AbstractEntity<?>> Pair<T, Map<String, Object>> constructEntityWithContext(
             final Map<String, Object> modifiedPropertiesHolder,
-            final T originallyProducedEntity,
+            final T previouslyAppliedEntity,
             final CentreContext<T, AbstractEntity<?>> context,
             final int tabCount,
             final IEntityDao<T> companion, 
@@ -185,7 +181,7 @@ public class EntityRestorationUtils {
         logger.debug(tabs(tabCount) + "constructEntity: started.");
         final Object arrivedIdVal = modifiedPropertiesHolder.get(AbstractEntity.ID);
         final Long id = arrivedIdVal == null ? null : Long.parseLong(arrivedIdVal + "");
-        final T validationPrototypeWithContext = createValidationPrototypeWithContext(id, originallyProducedEntity, context, companion, producer);
+        final T validationPrototypeWithContext = createValidationPrototypeWithContext(id, previouslyAppliedEntity, context, companion, producer);
         logger.debug(tabs(tabCount) + "constructEntity: validationPrototypeWithContext.");
         final Pair<T, Map<String, Object>> constructed = applyModifHolder(modifiedPropertiesHolder, validationPrototypeWithContext, companionFinder);
         logger.debug(tabs(tabCount) + "constructEntity: finished.");

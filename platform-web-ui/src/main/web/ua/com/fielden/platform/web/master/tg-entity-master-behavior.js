@@ -275,7 +275,7 @@ const TgEntityMasterBehaviorImpl = {
          * In case if new entity is operated on, this instance holds an original fully-fledged contextually produced entity, otherwise 'null'.
          * It is updated everytime when refresh process successfully completes.
          */
-        _originallyProducedEntity: {
+        _previouslyAppliedEntity: {
             type: Object,
             value: null
         },
@@ -332,7 +332,7 @@ const TgEntityMasterBehaviorImpl = {
                     null, null, this.getMasterEntity ? this.getMasterEntity : null
                 );
                 this._reflector().setCustomProperty(masterTypeCarrier, "@@funcEntityType", this.entityType);
-                return this._reflector().createSavingInfoHolder(this._originallyProducedEntity, this._reset(holder), masterTypeCarrier, this._continuations);
+                return this._reflector().createSavingInfoHolder(this._previouslyAppliedEntity, this._reset(holder), masterTypeCarrier, this._continuations);
             }.bind(this);
 
             const contextHolder = this._reflector().createContextHolder(
@@ -388,12 +388,12 @@ const TgEntityMasterBehaviorImpl = {
                 // in case where successful save occured we need to reset @@touchedProps that are transported with bindingEntity
                 newBindingEntity["@@touchedProps"] = { names: [], values: [], counts: [] };
 
-                if (isContinuouslyCreated === true) { // continuous creation has occured, which is very much like entity has been produced -- _originallyProducedEntity should be updated by newly returned instance
-                    this._originallyProducedEntity = potentiallySavedOrNewEntity;
-                } else if (potentiallySavedOrNewEntity.type().isPersistent()) { // entity became (or was) persisted -- _originallyProducedEntity should be reset to empty
-                    this._originallyProducedEntity = null;
-                } else { // non-persistent entity has been saved -- _originallyProducedEntity should be updated by newly returned instance
-                    this._originallyProducedEntity = potentiallySavedOrNewEntity;
+                if (isContinuouslyCreated === true) { // continuous creation has occured, which is very much like entity has been produced -- _previouslyAppliedEntity should be updated by newly returned instance
+                    this._previouslyAppliedEntity = potentiallySavedOrNewEntity;
+                } else if (potentiallySavedOrNewEntity.type().isPersistent()) { // entity became (or was) persisted -- _previouslyAppliedEntity should be reset to empty
+                    this._previouslyAppliedEntity = null;
+                } else { // non-persistent entity has been saved -- _previouslyAppliedEntity should be updated by newly returned instance
+                    this._previouslyAppliedEntity = potentiallySavedOrNewEntity;
                 }
             }
 
@@ -412,7 +412,7 @@ const TgEntityMasterBehaviorImpl = {
                     this._createContextHolderForEmbeddedViews = (function () {
                         const holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
                         this._reflector().setCustomProperty(this.savingContext, "@@funcEntityType", this.entityType);
-                        return this._reflector().createSavingInfoHolder(this._originallyProducedEntity, this._reset(holder), this.savingContext, this._continuations);
+                        return this._reflector().createSavingInfoHolder(this._previouslyAppliedEntity, this._reset(holder), this.savingContext, this._continuations);
                     }).bind(this);
                 }
             }
@@ -914,22 +914,22 @@ const TgEntityMasterBehaviorImpl = {
 
     //////////////////////////////////////// VALIDATION ////////////////////////////////////////
     /**
-     * Overridden in tg-entity-master to use originallyProducedEntity which is not applicable in centre's selection criteria.
+     * Overridden in tg-entity-master to use previouslyAppliedEntity which is not applicable in centre's selection criteria.
      */
     _validateForDescendants: function (preparedModifHolder) {
-        return this._validator().validate(this._originallyProducedEntity, preparedModifHolder);
+        return this._validator().validate(this._previouslyAppliedEntity, preparedModifHolder);
     },
 
     /**
-     * Overridden to populate '_originallyProducedEntity' in case where 'new' entity arrives.
+     * Overridden to populate '_previouslyAppliedEntity' in case where 'new' entity arrives.
      */
     _postRetrievedDefaultForDescendants: function (entity, bindingEntity, customObject) {
         TgEntityBinderBehavior._postRetrievedDefaultForDescendants.call(this, entity, bindingEntity, customObject);
 
         if (entity.id === null) {
-            this._originallyProducedEntity = entity;
+            this._previouslyAppliedEntity = entity;
         } else {
-            this._originallyProducedEntity = null;
+            this._previouslyAppliedEntity = null;
         }
     },
 
@@ -954,11 +954,11 @@ const TgEntityMasterBehaviorImpl = {
      */
     _saveModifiedProperties: function (modifiedPropertiesHolder) {
         const idNumber = modifiedPropertiesHolder.id;
-        const originallyProducedEntity = this._reflector()._validateOriginallyProducedEntity(this._originallyProducedEntity, idNumber);
+        const previouslyAppliedEntity = this._reflector()._validatePreviouslyAppliedEntity(this._previouslyAppliedEntity, idNumber);
         console.debug(':MASTER:SAVE1', '|type', this.entityType, '|id', idNumber);
         console.debug(':MASTER:SAVE2', '|mph', modifiedPropertiesHolder);
-        console.debug(':MASTER:SAVE3', '|ope', originallyProducedEntity);
-        this._ajaxSaver().body = JSON.stringify(this._serialiser().serialise(this._reflector().createSavingInfoHolder(originallyProducedEntity, modifiedPropertiesHolder, null, this._continuations)));
+        console.debug(':MASTER:SAVE3', '|ope', previouslyAppliedEntity);
+        this._ajaxSaver().body = JSON.stringify(this._serialiser().serialise(this._reflector().createSavingInfoHolder(previouslyAppliedEntity, modifiedPropertiesHolder, null, this._continuations)));
         return this._ajaxSaver().generateRequest().completes;
     },
 

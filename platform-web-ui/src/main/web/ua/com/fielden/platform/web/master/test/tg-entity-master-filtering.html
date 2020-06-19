@@ -109,13 +109,13 @@
                 const context = reflector.createContextHolder(null, 'ONE', null, null, () => [entity], null, null);
                 context['chosenProperty'] = '';
                 
-                const _originallyProducedEntity = reflector.newEntity('ua.com.fielden.platform.entity.EntityEditAction');
-                _originallyProducedEntity.entityId = '83';
-                _originallyProducedEntity.key = 'NO_KEY';
+                const _previouslyAppliedEntity = reflector.newEntity('ua.com.fielden.platform.entity.EntityEditAction');
+                _previouslyAppliedEntity.entityId = '83';
+                _previouslyAppliedEntity.key = 'NO_KEY';
                 
                 master.getMasterEntity = (function () {
                     reflector.setCustomProperty(context, '@@funcEntityType', 'ua.com.fielden.platform.entity.EntityEditAction');
-                    return reflector.createSavingInfoHolder(_originallyProducedEntity, master._extractModifiedPropertiesHolder(master._extractBindingView(_originallyProducedEntity, null, null), master._extractOriginalBindingView(_originallyProducedEntity, null)), context, {});
+                    return reflector.createSavingInfoHolder(_previouslyAppliedEntity, master._extractModifiedPropertiesHolder(master._extractBindingView(_previouslyAppliedEntity, null, null), master._extractOriginalBindingView(_previouslyAppliedEntity, null)), context, {});
                 }).bind(this); // this triggers retrieval with getMasterEntity() context and entityId = 'find_or_new' -- see _getMasterEntityAssigned method in master behavior
             });
             
@@ -128,13 +128,13 @@
                 entity.id = 83;
                 const context = reflector.createContextHolder(null, 'ALL', null, null, () => [entity], null, null);
                 
-                const _originallyProducedEntity = reflector.newEntity('ua.com.fielden.platform.entity.EntityNavigationAction');
-                _originallyProducedEntity.entityId = '83';
-                _originallyProducedEntity.key = 'NO_KEY';
+                const _previouslyAppliedEntity = reflector.newEntity('ua.com.fielden.platform.entity.EntityNavigationAction');
+                _previouslyAppliedEntity.entityId = '83';
+                _previouslyAppliedEntity.key = 'NO_KEY';
                 
                 master.getMasterEntity = (function () {
                     reflector.setCustomProperty(context, '@@funcEntityType', 'ua.com.fielden.platform.entity.EntityNavigationAction');
-                    return reflector.createSavingInfoHolder(_originallyProducedEntity, master._extractModifiedPropertiesHolder(master._extractBindingView(_originallyProducedEntity, null, null), master._extractOriginalBindingView(_originallyProducedEntity, null)), context, {});
+                    return reflector.createSavingInfoHolder(_previouslyAppliedEntity, master._extractModifiedPropertiesHolder(master._extractBindingView(_previouslyAppliedEntity, null, null), master._extractOriginalBindingView(_previouslyAppliedEntity, null)), context, {});
                 }).bind(this); // this triggers retrieval with getMasterEntity() context and entityId = 'find_or_new' -- see _getMasterEntityAssigned method in master behavior
             });
             
@@ -147,19 +147,19 @@
                 compoundMasterMain.getMasterEntity = (function () {
                     const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.compound.TgCompoundEntity');
                     entity.id = 94;
-                    const _originallyProducedEntity = reflector.newEntity('ua.com.fielden.platform.sample.domain.compound.master.menu.actions.TgCompoundEntityMaster_OpenMain_MenuItem');
-                    _originallyProducedEntity.id = null;
-                    _originallyProducedEntity.key = entity;
+                    const _previouslyAppliedEntity = reflector.newEntity('ua.com.fielden.platform.sample.domain.compound.master.menu.actions.TgCompoundEntityMaster_OpenMain_MenuItem');
+                    _previouslyAppliedEntity.id = null;
+                    _previouslyAppliedEntity.key = entity;
                     const context = reflector.createContextHolder(null, null, 'true', null, null, () => {
-                        const _originallyProducedEntity = reflector.newEntity('ua.com.fielden.platform.sample.domain.compound.ui_actions.OpenTgCompoundEntityMasterAction');
-                        _originallyProducedEntity.id = null;
-                        _originallyProducedEntity.key = entity;
+                        const _previouslyAppliedEntity = reflector.newEntity('ua.com.fielden.platform.sample.domain.compound.ui_actions.OpenTgCompoundEntityMasterAction');
+                        _previouslyAppliedEntity.id = null;
+                        _previouslyAppliedEntity.key = entity;
                         const context = reflector.createContextHolder(null, 'ONE', null, null, () => [entity], null, null);
                         reflector.setCustomProperty(context, '@@funcEntityType', 'ua.com.fielden.platform.sample.domain.compound.ui_actions.OpenTgCompoundEntityMasterAction');
-                        return reflector.createSavingInfoHolder(_originallyProducedEntity, compoundMasterMain._extractModifiedPropertiesHolder(compoundMasterMain._extractBindingView(_originallyProducedEntity, null, null), compoundMasterMain._extractOriginalBindingView(_originallyProducedEntity, null)), context, {});
+                        return reflector.createSavingInfoHolder(_previouslyAppliedEntity, compoundMasterMain._extractModifiedPropertiesHolder(compoundMasterMain._extractBindingView(_previouslyAppliedEntity, null, null), compoundMasterMain._extractOriginalBindingView(_previouslyAppliedEntity, null)), context, {});
                     }, null);
                     reflector.setCustomProperty(context, '@@funcEntityType', 'ua.com.fielden.platform.sample.domain.compound.master.menu.actions.TgCompoundEntityMaster_OpenMain_MenuItem');
-                    return reflector.createSavingInfoHolder(_originallyProducedEntity, compoundMasterMain._extractModifiedPropertiesHolder(compoundMasterMain._extractBindingView(_originallyProducedEntity, null, null), compoundMasterMain._extractOriginalBindingView(_originallyProducedEntity, null)), context, {});
+                    return reflector.createSavingInfoHolder(_previouslyAppliedEntity, compoundMasterMain._extractModifiedPropertiesHolder(compoundMasterMain._extractBindingView(_previouslyAppliedEntity, null, null), compoundMasterMain._extractOriginalBindingView(_previouslyAppliedEntity, null)), context, {});
                 }).bind(this); // this triggers retrieval with getMasterEntity() context and entityId = 'find_or_new' -- see _getMasterEntityAssigned method in master behavior
             });
             
@@ -172,19 +172,19 @@
                 compoundMasterDetail.getMasterEntity = (function () {
                     const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.compound.TgCompoundEntity');
                     entity.id = 95;
-                    const _originallyProducedEntity = reflector.newEntity('ua.com.fielden.platform.sample.domain.compound.master.menu.actions.TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem');
-                    _originallyProducedEntity.id = null;
-                    _originallyProducedEntity.key = entity;
+                    const _previouslyAppliedEntity = reflector.newEntity('ua.com.fielden.platform.sample.domain.compound.master.menu.actions.TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem');
+                    _previouslyAppliedEntity.id = null;
+                    _previouslyAppliedEntity.key = entity;
                     const context = reflector.createContextHolder(null, null, 'true', null, null, () => {
-                        const _originallyProducedEntity = reflector.newEntity('ua.com.fielden.platform.sample.domain.compound.ui_actions.OpenTgCompoundEntityMasterAction');
-                        _originallyProducedEntity.id = null;
-                        _originallyProducedEntity.key = entity;
+                        const _previouslyAppliedEntity = reflector.newEntity('ua.com.fielden.platform.sample.domain.compound.ui_actions.OpenTgCompoundEntityMasterAction');
+                        _previouslyAppliedEntity.id = null;
+                        _previouslyAppliedEntity.key = entity;
                         const context = reflector.createContextHolder(null, 'ONE', null, null, () => [entity], null, null);
                         reflector.setCustomProperty(context, '@@funcEntityType', 'ua.com.fielden.platform.sample.domain.compound.ui_actions.OpenTgCompoundEntityMasterAction');
-                        return reflector.createSavingInfoHolder(_originallyProducedEntity, compoundMasterDetail._extractModifiedPropertiesHolder(compoundMasterDetail._extractBindingView(_originallyProducedEntity, null, null), compoundMasterDetail._extractOriginalBindingView(_originallyProducedEntity, null)), context, {});
+                        return reflector.createSavingInfoHolder(_previouslyAppliedEntity, compoundMasterDetail._extractModifiedPropertiesHolder(compoundMasterDetail._extractBindingView(_previouslyAppliedEntity, null, null), compoundMasterDetail._extractOriginalBindingView(_previouslyAppliedEntity, null)), context, {});
                     }, null);
                     reflector.setCustomProperty(context, '@@funcEntityType', 'ua.com.fielden.platform.sample.domain.compound.master.menu.actions.TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem');
-                    return reflector.createSavingInfoHolder(_originallyProducedEntity, compoundMasterDetail._extractModifiedPropertiesHolder(compoundMasterDetail._extractBindingView(_originallyProducedEntity, null, null), compoundMasterDetail._extractOriginalBindingView(_originallyProducedEntity, null)), context, {});
+                    return reflector.createSavingInfoHolder(_previouslyAppliedEntity, compoundMasterDetail._extractModifiedPropertiesHolder(compoundMasterDetail._extractBindingView(_previouslyAppliedEntity, null, null), compoundMasterDetail._extractOriginalBindingView(_previouslyAppliedEntity, null)), context, {});
                 }).bind(this); // this triggers retrieval with getMasterEntity() context and entityId = 'find_or_new' -- see _getMasterEntityAssigned method in master behavior
             });
             

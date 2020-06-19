@@ -182,8 +182,8 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
             final IEntityCentreConfig eccCompanion = companionFinder.find(EntityCentreConfig.class);
             final IMainMenuItem mmiCompanion = companionFinder.find(MainMenuItem.class);
             final IUser userCompanion = companionFinder.find(User.class);
-            // originallyProducedEntity is always empty during retrieval to kick in creation through producer
-            final T emptyOriginallyProducedEntity = null;
+            // previouslyAppliedEntity is always empty during retrieval to kick in creation through producer
+            final T emptyPreviouslyAppliedEntity = null;
             if (envelope != null) {
                 if (FIND_OR_NEW == entityIdKind) {
                     final SavingInfoHolder savingInfoHolder = restoreSavingInfoHolder(envelope, restUtil);
@@ -198,7 +198,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
                     
                     final T entity = EntityRestorationUtils.createValidationPrototypeWithContext(
                             null, 
-                            emptyOriginallyProducedEntity, 
+                            emptyPreviouslyAppliedEntity, 
                             CentreResourceUtils.createCentreContext(
                                     funcEntity, /* only master context, the rest should be empty */
                                     new ArrayList<AbstractEntity<?>>(),
@@ -219,7 +219,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
                     
                     final T entity = EntityRestorationUtils.createValidationPrototypeWithContext(
                             null,
-                            emptyOriginallyProducedEntity,
+                            emptyPreviouslyAppliedEntity,
                             CentreResourceUtils.createCentreContext(
                                     masterEntity, /* master context */
                                     !centreContextHolder.proxiedPropertyNames().contains("selectedEntities") ? centreContextHolder.getSelectedEntities() : new ArrayList<>(),
@@ -235,7 +235,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
                 }
             } else {
                 LOGGER.debug("ENTITY_RESOURCE: retrieve finished.");
-                return restUtil.rawListJsonRepresentation(EntityRestorationUtils.createValidationPrototype(entityId, emptyOriginallyProducedEntity, companion, producer));
+                return restUtil.rawListJsonRepresentation(EntityRestorationUtils.createValidationPrototype(entityId, emptyPreviouslyAppliedEntity, companion, producer));
             }
         }, restUtil);
     }
@@ -299,7 +299,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
      * All parameters, except <code>savingInfoHolder</code> and <code>functionalEntityType</code>, could be taken from injector -- they are needed for centre context
      * deserialisation.
      *
-     * @param disregardOriginallyProducedEntities -- indicates whether it is necessary to disregard originallyProducedEntity while restoring this entity and its parent functional entities
+     * @param disregardPreviouslyAppliedEntities -- indicates whether it is necessary to disregard previouslyAppliedEntity while restoring this entity and its parent functional entities
      * @param savingInfoHolder
      *            -- the actual holder of information about functional entity
      * @param functionalEntityType
@@ -314,7 +314,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
      * @return
      */
     public static <T extends AbstractEntity<?>> T restoreEntityFrom(
-            final boolean disregardOriginallyProducedEntities,
+            final boolean disregardPreviouslyAppliedEntities,
             final SavingInfoHolder savingInfoHolder,
             final Class<T> functionalEntityType,
             final EntityFactory entityFactory,
@@ -339,9 +339,9 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
         //LOGGER.debug(tabs(tabCount) + "restoreEntityFrom (" + functionalEntityType.getSimpleName() + "): utils.");
         final CentreContextHolder centreContextHolder = !savingInfoHolder.proxiedPropertyNames().contains("centreContextHolder") ? savingInfoHolder.getCentreContextHolder() : null;
         //LOGGER.debug(tabs(tabCount) + "restoreEntityFrom (" + functionalEntityType.getSimpleName() + "): master entity restore...");
-        final AbstractEntity<?> funcEntity = restoreMasterFunctionalEntity(disregardOriginallyProducedEntities, webUiConfig, companionFinder, user, userProvider, critGenerator, entityFactory, centreContextHolder, tabCount + 1, device, domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion);
+        final AbstractEntity<?> funcEntity = restoreMasterFunctionalEntity(disregardPreviouslyAppliedEntities, webUiConfig, companionFinder, user, userProvider, critGenerator, entityFactory, centreContextHolder, tabCount + 1, device, domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion);
         //LOGGER.debug(tabs(tabCount) + "restoreEntityFrom (" + functionalEntityType.getSimpleName() + "): master entity has been restored.");
-        final T restored = restoreEntityFrom(disregardOriginallyProducedEntities, webUiConfig, user, userProvider, savingInfoHolder, entityFactory, functionalEntityType, companion, entityProducer, companionFinder, critGenerator, funcEntity /* master context */, tabCount + 1, device, domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion);
+        final T restored = restoreEntityFrom(disregardPreviouslyAppliedEntities, webUiConfig, user, userProvider, savingInfoHolder, entityFactory, functionalEntityType, companion, entityProducer, companionFinder, critGenerator, funcEntity /* master context */, tabCount + 1, device, domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion);
         final DateTime end = new DateTime();
         final Period pd = new Period(start, end);
         //LOGGER.debug(tabs(tabCount) + "restoreEntityFrom (" + functionalEntityType.getSimpleName() + "): duration: " + pd.getSeconds() + " s " + pd.getMillis() + " ms.");
@@ -349,7 +349,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
     }
 
     public static AbstractEntity<?> restoreMasterFunctionalEntity(
-            final boolean disregardOriginallyProducedEntities,
+            final boolean disregardPreviouslyAppliedEntities,
             final IWebUiConfig webUiConfig,
             final ICompanionObjectFinder companionFinder,
             final User user,
@@ -381,7 +381,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
             }
 
             if (entityType != null) {
-                entity = restoreEntityFrom(disregardOriginallyProducedEntities, outerContext, entityType, entityFactory, webUiConfig, companionFinder, user, userProvider, critGenerator, tabCount + 1, device, domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion);
+                entity = restoreEntityFrom(disregardPreviouslyAppliedEntities, outerContext, entityType, entityFactory, webUiConfig, companionFinder, user, userProvider, critGenerator, tabCount + 1, device, domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion);
             }
         }
         final DateTime end = new DateTime();
@@ -392,7 +392,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
     }
 
     private static <T extends AbstractEntity<?>> T restoreEntityFrom(
-            final boolean disregardOriginallyProducedEntities,
+            final boolean disregardPreviouslyAppliedEntities,
             final IWebUiConfig webUiConfig,
             final User user,
             final IUserProvider userProvider,
@@ -412,13 +412,13 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
             final IUser userCompanion) {
         //LOGGER.debug(tabs(tabCount) + "restoreEntityFrom (PRIVATE): started.");
         final Map<String, Object> modifiedPropertiesHolder = savingInfoHolder.getModifHolder();
-        final T originallyProducedEntity = disregardOriginallyProducedEntities ? null : // in case where full context should be used for entity restoration -- originallyProducedEntity will be disregarded
-            (!savingInfoHolder.proxiedPropertyNames().contains("originallyProducedEntity") ? (T) savingInfoHolder.getOriginallyProducedEntity() : null);
+        final T previouslyAppliedEntity = disregardPreviouslyAppliedEntities ? null : // in case where full context should be used for entity restoration -- previouslyAppliedEntity will be disregarded
+            (!savingInfoHolder.proxiedPropertyNames().contains("previouslyAppliedEntity") ? (T) savingInfoHolder.getPreviouslyAppliedEntity() : null);
         final T applied;
         final CentreContextHolder centreContextHolder = !savingInfoHolder.proxiedPropertyNames().contains("centreContextHolder") ? savingInfoHolder.getCentreContextHolder() : null;
         if (centreContextHolder == null) {
             //LOGGER.debug(tabs(tabCount) + "restoreEntityFrom (PRIVATE): constructEntity from modifiedPropertiesHolder.");
-            applied = EntityRestorationUtils.constructEntity(modifiedPropertiesHolder, originallyProducedEntity, companion, producer, companionFinder).getKey();
+            applied = EntityRestorationUtils.constructEntity(modifiedPropertiesHolder, previouslyAppliedEntity, companion, producer, companionFinder).getKey();
             //LOGGER.debug(tabs(tabCount) + "restoreEntityFrom (PRIVATE): constructEntity from modifiedPropertiesHolder finished.");
         } else {
             //LOGGER.debug(tabs(tabCount) + "restoreEntityFrom (PRIVATE): constructEntity from modifiedPropertiesHolder+centreContextHolder started.");
@@ -438,7 +438,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
             
             applied = EntityRestorationUtils.constructEntityWithContext(
                     modifiedPropertiesHolder,
-                    originallyProducedEntity,
+                    previouslyAppliedEntity,
                     centreContext,
                     tabCount + 1,
                     companion,

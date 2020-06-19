@@ -33,8 +33,8 @@ public class SavingInfoHolder extends AbstractEntity<NoKey> {
     private final Map<String, Object> modifHolder = new HashMap<>();
     
     @IsProperty
-    @Title(value = "Originally Produced Entity", desc = "The entity (new only) that was produced during master's contextual retrieval and then reused during validation, saving and autocompletion processes as a validation prototype")
-    private AbstractEntity<?> originallyProducedEntity;
+    @Title(value = "Previously Applied Entity", desc = "The entity that was produced / fetched on retrieval phase + all client-side modifications applied during retrieve / validate / save requests. This is to be used during validation, saving and autocompletion processes as a validation prototype, against which one latest modification (or few) is to be applied.")
+    private AbstractEntity<?> previouslyAppliedEntity;
     
     @IsProperty
     @Title(value = "Centre context holder", desc = "Centre context holder")
@@ -85,13 +85,13 @@ public class SavingInfoHolder extends AbstractEntity<NoKey> {
     }
     
     @Observable
-    public SavingInfoHolder setOriginallyProducedEntity(final AbstractEntity<?> originallyProducedEntity) {
-        this.originallyProducedEntity = originallyProducedEntity;
+    public SavingInfoHolder setPreviouslyAppliedEntity(final AbstractEntity<?> previouslyAppliedEntity) {
+        this.previouslyAppliedEntity = previouslyAppliedEntity;
         return this;
     }
 
-    public AbstractEntity<?> getOriginallyProducedEntity() {
-        return originallyProducedEntity;
+    public AbstractEntity<?> getPreviouslyAppliedEntity() {
+        return previouslyAppliedEntity;
     }
 
     @Observable

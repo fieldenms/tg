@@ -1823,12 +1823,12 @@ export const TgReflector = Polymer({
     /**
      * Creates the context holder to be transferred with actions, centre autocompletion process, query enhancing process etc.
      *
-     * @param originallyProducedEntity -- in case if new entity is operated on, this instance holds an original fully-fledged contextually produced entity.
+     * @param previouslyAppliedEntity -- in case if new entity is operated on, this instance holds an original fully-fledged contextually produced entity.
      */
     createContextHolder: function (
         requireSelectionCriteria, requireSelectedEntities, requireMasterEntity,
         createModifiedPropertiesHolder, getSelectedEntities, getMasterEntity,
-        originallyProducedEntity
+        previouslyAppliedEntity
     ) {
         var centreContextHolder = this.newEntity("ua.com.fielden.platform.entity.functional.centre.CentreContextHolder");
         centreContextHolder.id = null;
@@ -1838,8 +1838,8 @@ export const TgReflector = Polymer({
 
         if (requireSelectionCriteria !== null) {
             this.provideSelectionCriteria(requireSelectionCriteria, centreContextHolder, createModifiedPropertiesHolder);
-            if (originallyProducedEntity) {
-                centreContextHolder['originallyProducedEntity'] = originallyProducedEntity;
+            if (previouslyAppliedEntity) {
+                centreContextHolder['previouslyAppliedEntity'] = previouslyAppliedEntity;
             }
         }
         if (requireSelectedEntities !== null) {
@@ -1864,22 +1864,22 @@ export const TgReflector = Polymer({
     },
 
     /**
-     * Creates the holder of modified properties, originallyProducedEntity and savingContext.
+     * Creates the holder of modified properties, previouslyAppliedEntity and savingContext.
      *
      * There are three cases:
-     *    1) modifiedPropertiesHolder.id !== null and the entity will be fetched from persistent storage (in this case originallyProducedEntity is always null, savingContext is not applicable)
-     *    2) modifiedPropertiesHolder.id === null && originallyProducedEntity !== null and the entity will be deserialised from originallyProducedEntity and modifHolder applied (in this case savingContext is not applicable)
+     *    1) modifiedPropertiesHolder.id !== null and the entity will be fetched from persistent storage (in this case previouslyAppliedEntity is always null, savingContext is not applicable)
+     *    2) modifiedPropertiesHolder.id === null && previouslyAppliedEntity !== null and the entity will be deserialised from previouslyAppliedEntity and modifHolder applied (in this case savingContext is not applicable)
      *    3) otherwise the entity will be produced through savingContext-dependent producer (only in this case savingContext is applicable)
      *
-     * @param originallyProducedEntity -- in case if new entity is operated on, this instance holds an original fully-fledged contextually produced entity.
+     * @param previouslyAppliedEntity -- in case if new entity is operated on, this instance holds an original fully-fledged contextually produced entity.
      */
-    createSavingInfoHolder: function (originallyProducedEntity, modifiedPropertiesHolder, savingContext, continuationsMap) {
+    createSavingInfoHolder: function (previouslyAppliedEntity, modifiedPropertiesHolder, savingContext, continuationsMap) {
         const savingInfoHolder = this.newEntity("ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder");
         savingInfoHolder.id = null;
         savingInfoHolder['key'] = 'NO_KEY';
         savingInfoHolder['desc'] = 'savingInfoHolder description';
         savingInfoHolder['modifHolder'] = modifiedPropertiesHolder;
-        savingInfoHolder['originallyProducedEntity'] = originallyProducedEntity;
+        savingInfoHolder['previouslyAppliedEntity'] = previouslyAppliedEntity;
 
         if (savingContext) { // if saving context was defined (not 'undefined'):
             savingInfoHolder['centreContextHolder'] = savingContext;
@@ -1948,21 +1948,21 @@ export const TgReflector = Polymer({
     },
 
     /**
-     * Validates the presence of originallyProducedEntity based on number representation of entity id.
+     * Validates the presence of previouslyAppliedEntity based on number representation of entity id.
      */
-    _validateOriginallyProducedEntity: function (originallyProducedEntity, idNumber) {
+    _validatePreviouslyAppliedEntity: function (previouslyAppliedEntity, idNumber) {
         if (idNumber === null) {
-            if (!_isEntity(originallyProducedEntity)) {
-                throw 'For new entities (null id) originallyProducedEntity should always exist.';
+            if (!_isEntity(previouslyAppliedEntity)) {
+                throw 'For new entities (null id) previouslyAppliedEntity should always exist.';
             }
         } else if (Number.isInteger(idNumber)) {
-            if (_isEntity(originallyProducedEntity)) {
-                throw 'For existing entities (id exists) originallyProducedEntity should always be empty.';
+            if (_isEntity(previouslyAppliedEntity)) {
+                throw 'For existing entities (id exists) previouslyAppliedEntity should always be empty.';
             }
         } else {
             throw 'Unknown id number [' + idNumber + ']';
         }
-        return originallyProducedEntity;
+        return previouslyAppliedEntity;
     },
 
     /**

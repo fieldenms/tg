@@ -213,7 +213,7 @@ export class TgEntityEditor extends TgEditor {
             * In case if new entity is operated on, this instance holds an original fully-fledged contextually produced entity, otherwise 'null'.
             * It is updated everytime when refresh process successfully completes.
             */
-           originallyProducedEntity: {
+           previouslyAppliedEntity: {
                type: Object
            },
    
@@ -587,11 +587,11 @@ export class TgEntityEditor extends TgEditor {
         let contextHolder = null;
         if (this.multi === false && this.asPartOfEntityMaster) {
             const modifHolder = this.createModifiedPropertiesHolder();
-            const originallyProducedEntity = this.reflector()._validateOriginallyProducedEntity(this.originallyProducedEntity, modifHolder.id);
+            const previouslyAppliedEntity = this.reflector()._validatePreviouslyAppliedEntity(this.previouslyAppliedEntity, modifHolder.id);
             contextHolder = this.reflector().createContextHolder(
                 "true", null, null,
                 function () { return modifHolder; }, null, null,
-                originallyProducedEntity
+                previouslyAppliedEntity
             );
             this.reflector().setCustomProperty(contextHolder, "@@searchString", inputText);
         } else {

@@ -82,8 +82,8 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
             final CentreContextHolder centreContextHolder = restoreCentreContextHolder(envelope, restUtil);
 
             final Map<String, Object> modifHolder = !centreContextHolder.proxiedPropertyNames().contains("modifHolder") ? centreContextHolder.getModifHolder() : new HashMap<>();
-            final CONTEXT originallyProducedEntity = !centreContextHolder.proxiedPropertyNames().contains("originallyProducedEntity") ? (CONTEXT) centreContextHolder.getOriginallyProducedEntity() : null;
-            final CONTEXT context = EntityRestorationUtils.constructEntity(modifHolder, originallyProducedEntity, companion, producer, coFinder).getKey();
+            final CONTEXT previouslyAppliedEntity = !centreContextHolder.proxiedPropertyNames().contains("previouslyAppliedEntity") ? (CONTEXT) centreContextHolder.getPreviouslyAppliedEntity() : null;
+            final CONTEXT context = EntityRestorationUtils.constructEntity(modifHolder, previouslyAppliedEntity, companion, producer, coFinder).getKey();
             // logger.debug("context = " + context);
 
             final String searchStringVal = (String) centreContextHolder.getCustomObject().get("@@searchString"); // custom property inside paramsHolder

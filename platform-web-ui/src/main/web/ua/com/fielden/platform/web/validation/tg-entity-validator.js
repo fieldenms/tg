@@ -76,16 +76,16 @@ Polymer({
     /**
      * Starts the process of entity validation.
      *
-     * @param ope -- originallyProducedEntity, - in case if new entity is operated on, this instance holds an original fully-fledged contextually produced entity.
+     * @param pae -- previouslyAppliedEntity, - in case if new entity is operated on, this instance holds an original fully-fledged contextually produced entity.
      * @param modifiedPropertiesHolder -- the entity with modified properties
      */
-    validate: function (ope, modifiedPropertiesHolder) {
+    validate: function (pae, modifiedPropertiesHolder) {
         const idNumber = modifiedPropertiesHolder.id;
-        const originallyProducedEntity = this._serialiser.$.reflector._validateOriginallyProducedEntity(ope, idNumber);
+        const previouslyAppliedEntity = this._serialiser.$.reflector._validatePreviouslyAppliedEntity(pae, idNumber);
         console.debug(':MASTER:VALIDATE1', '|type', this.entityType, '|id', idNumber);
         console.debug(':MASTER:VALIDATE2', '|mph', modifiedPropertiesHolder);
-        console.debug(':MASTER:VALIDATE3', '|ope', originallyProducedEntity);
-        var ser = this._serialiser.serialise(this._serialiser.$.reflector.createSavingInfoHolder(originallyProducedEntity, modifiedPropertiesHolder, null));
+        console.debug(':MASTER:VALIDATE3', '|pae', previouslyAppliedEntity);
+        var ser = this._serialiser.serialise(this._serialiser.$.reflector.createSavingInfoHolder(previouslyAppliedEntity, modifiedPropertiesHolder, null));
         this.$.ajaxSender.body = JSON.stringify(ser);
         return this.$.ajaxSender.generateRequest().completes;
     },
