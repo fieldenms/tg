@@ -363,8 +363,8 @@ const TgSelectionCriteriaBehaviorImpl = {
         this.fire('tg-save-as-desc-changed', newSaveAsDesc);
     },
 
-    _extractModifiedPropertiesHolder: function (bindingEntity, _originalBindingEntity) {
-        const modPropHolder = TgEntityBinderBehavior._extractModifiedPropertiesHolder.call(this, bindingEntity, _originalBindingEntity);
+    _extractModifiedPropertiesHolder: function (bindingEntity, _baseBindingEntity) {
+        const modPropHolder = TgEntityBinderBehavior._extractModifiedPropertiesHolder.call(this, bindingEntity, _baseBindingEntity);
         if (this._reflector().isEntity(bindingEntity)) {
             modPropHolder["@@metaValues"] = {};
             modPropHolder["@@wasRun"] = this._wasRun;

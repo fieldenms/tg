@@ -564,8 +564,8 @@ Polymer({
         const context = newValue();
         const sectionTitleValues = context.modifHolder.sectionTitle;
         const menuToOpenValues = context.modifHolder.menuToOpen;
-        this.sectionTitle = (typeof sectionTitleValues.val !== 'undefined') ? sectionTitleValues.val : sectionTitleValues.origVal;
-        const menuToOpen = (typeof menuToOpenValues.val !== 'undefined') ? menuToOpenValues.val : menuToOpenValues.origVal;
+        this.sectionTitle = (typeof sectionTitleValues.val !== 'undefined') ? sectionTitleValues.val : sectionTitleValues.baseVal;
+        const menuToOpen = (typeof menuToOpenValues.val !== 'undefined') ? menuToOpenValues.val : menuToOpenValues.baseVal;
         if (menuToOpen !== null) {
             // If menuToOpen was explicitly specified in 'open compound master producer' (according to some domain rules),
             //  we need to override default menu item -- domain-specific menu item takes precedence.

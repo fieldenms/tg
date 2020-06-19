@@ -131,6 +131,14 @@ export const TgEntityBinderBehavior = {
             type: Object,
             notify: true
         },
+        
+        /**
+         * Represents the immutable view of current entity for binding.
+         */
+        _baseBindingEntity: {
+            type: Object,
+            notify: true
+        },
 
         /**
          * This modif holder is needed for lazy value conversion in concrete editors.
@@ -145,7 +153,7 @@ export const TgEntityBinderBehavior = {
          * Please, note that this property recomputes and caches manually strictly when _currBindingEntity and _originalBindingEntity changes (_postEntityReceived method).
          *
          * Also, invalid entity value will be 'modified', even though the entities from server arrive with valid value only (+invalid validation result).
-         * Client-side logic handles this gracefully in method _extractBindingView(entity, previousModifiedPropertiesHolder, prevCurrBindingEntity).
+         * Client-side logic handles this gracefully in method _extractBindingView(entity, previousModifiedPropertiesHolder).
          *
          * This property can not be used in tg-selection-criteria-behavior due to the fact that it will be isModified from previous, not from original version of centre.
          * Currently _centreChanged property is used (see tg-entity-centre-behavior and tg-selection-criteria-behavior).
@@ -399,6 +407,7 @@ export const TgEntityBinderBehavior = {
     _resetState: function () {
         this._currEntity = null;
         this._currBindingEntity = null;
+        this._baseBindingEntity = null;
         this._originalBindingEntity = null;
     },
 
@@ -479,7 +488,7 @@ export const TgEntityBinderBehavior = {
         self._resetState();
 
         self._createModifiedPropertiesHolder = (function () {
-            var mph = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
+            var mph = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._baseBindingEntity);
             return this._reset(mph);
         }).bind(self);
 
@@ -563,7 +572,7 @@ export const TgEntityBinderBehavior = {
             //   and pass it to debouncing function. The main reason for that is the following:
             //     'slf._currBindingEntity' instance inside the debounced function can be altered by the results
             //     of previous validations!
-            const holder = slf._extractModifiedPropertiesHolder(slf._currBindingEntity, slf._originalBindingEntity);
+            const holder = slf._extractModifiedPropertiesHolder(slf._currBindingEntity, slf._baseBindingEntity);
             holder['@validationCounter'] = slf._validationCounter;
             // After the first 'validate' invocation arrives -- debouncer will wait 50 milliseconds
             //   for the next 'validate' invocation, and if it arrives -- the recent one will become as active ( and
@@ -857,7 +866,7 @@ export const TgEntityBinderBehavior = {
         return modifiedPropertiesHolder;
     },
 
-    _extractModifiedPropertiesHolder: function (bindingEntity, _originalBindingEntity) {
+    _extractModifiedPropertiesHolder: function (bindingEntity, _baseBindingEntity) {
         const modPropHolder = {
             '@modified': false
         };
@@ -865,31 +874,32 @@ export const TgEntityBinderBehavior = {
         if (self._reflector().isEntity(bindingEntity)) {
             modPropHolder['id'] = bindingEntity.get('id');
             modPropHolder['version'] = bindingEntity['version'];
-            modPropHolder['@@touchedProps'] = bindingEntity['@@touchedProps'].names.slice(); // need to perform array copy because bindingEntity['@@touchedProps'].names is mutable array (see tg-reflector.setAndRegisterPropertyTouch/tg_convertPropertyValue for more details of how it can be mutated)
+            modPropHolder['@@touchedProps'] = bindingEntity['@@touchedProps'].names.slice(); // need to perform array copy because bindingEntity['@@touchedProps'].names is mutable array (see tg-reflector.setAndRegisterPropertyTouch for more details of how it can be mutated)
             
             // function that converts arrays of entities to array of strings or otherwise return the same (or equal) value;
-            // this is needed to provide modifHolder with flatten 'val' and 'origVal' arrays that do not contain fully-fledged entities but rather string representations of those;
+            // this is needed to provide modifHolder with flatten 'val' and 'baseVal' arrays that do not contain fully-fledged entities but rather string representations of those;
             // this is because modifHolder deserialises as simple LinkedHashMap on server and inner values will not be deserialised as entities but rather as simple Java bean objects;
             // also, we do not support conversion of array of entities on the server side -- such properties are immutable from client-side editor perspective (see EntityResourceUtils.convert method with isEntityType+isCollectional conditions)
             const convert = value => Array.isArray(value) ? value.map(el => self._reflector().tg_convert(el)) : value;
             
             bindingEntity.traverseProperties(function (propertyName) {
                 const value = convert(bindingEntity.get(propertyName));
-                const originalValue = convert(_originalBindingEntity.get(propertyName));
+                self._reflector().tg_convertPropertyValue(_baseBindingEntity, propertyName, self._reflector().tg_getFullEntity(_baseBindingEntity), self._previousModifiedPropertiesHolder);
+                const baseValue = convert(_baseBindingEntity.get(propertyName));
                 const valId = bindingEntity['@' + propertyName + '_id'];
-                const origValId = _originalBindingEntity['@' + propertyName + '_id'];
+                const baseValId = _baseBindingEntity['@' + propertyName + '_id'];
                 
                 // VERY IMPORTANT: the property is considered to be 'modified'
-                //                 in the case when its value does not equal to original value.
+                //                 in the case when its value does not equal to base value.
                 //
                 //                 The 'modified' property is marked by existence of 'val' sub-property.
                 //
                 //                 All modified properties will be applied on the server upon the validation prototype.
-                if (!self._reflector().equalsEx(value, originalValue)) {
+                if (!self._reflector().equalsEx(value, baseValue)) {
                     // the property is 'modified'
                     modPropHolder[propertyName] = {
                         'val': value,
-                        'origVal': originalValue
+                        'baseVal': baseValue
                     };
                     modPropHolder['@modified'] = true;
                     if (typeof valId !== 'undefined') {
@@ -898,11 +908,11 @@ export const TgEntityBinderBehavior = {
                 } else {
                     // the property is 'unmodified'
                     modPropHolder[propertyName] = {
-                        'origVal': originalValue
+                        'baseVal': baseValue
                     };
                 }
-                if (typeof origValId !== 'undefined') {
-                    modPropHolder[propertyName]['origValId'] = origValId;
+                if (typeof baseValId !== 'undefined') {
+                    modPropHolder[propertyName]['baseValId'] = baseValId;
                 }
             });
         }
@@ -943,7 +953,7 @@ export const TgEntityBinderBehavior = {
         // extract previous version of modified properties holder, to merge it with new version of validated entity for invalida properties!
         var previousModifiedPropertiesHolder = null;
         if (self._currBindingEntity !== null) {
-            previousModifiedPropertiesHolder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
+            previousModifiedPropertiesHolder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._baseBindingEntity);
             self._reset(previousModifiedPropertiesHolder);
         }
         const previousEntity = self._currEntity;
@@ -958,7 +968,8 @@ export const TgEntityBinderBehavior = {
         // before the next assignment -- the editors should be already prepared for "refresh cycle" (for Retrieve and Save actions)
         var oldCurrBindingEntity = self._currBindingEntity;
         self._previousModifiedPropertiesHolder = previousModifiedPropertiesHolder;
-        self._currBindingEntity = self._extractBindingView(self._currEntity, previousModifiedPropertiesHolder, self._currBindingEntity);
+        self._baseBindingEntity = self._extractBindingView(self._currEntity, previousModifiedPropertiesHolder);
+        self._currBindingEntity = self._extractBindingView(self._currEntity, previousModifiedPropertiesHolder);
         self._originalBindingEntity = self._extractOriginalBindingView(self._currEntity, isEntityStale ? self._originalBindingEntity : null);
 
         self._bindingEntityModified = self._hasModified(self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity));
@@ -1021,7 +1032,7 @@ export const TgEntityBinderBehavior = {
      * @param previousModifiedPropertiesHolder -- a container holding original and current value for all entity properties used to represent invalid properties to the user;
      *                                            this container is always null for brand new entity instances that arrive from the sever for the first time (i.e. further client-server conversation re new instances should populate this container).
      */
-    _extractBindingView: function (entity, previousModifiedPropertiesHolder, prevCurrBindingEntity) {
+    _extractBindingView: function (entity, previousModifiedPropertiesHolder) {
         const self = this;
         const bindingView = self._reflector().newEntity(entity.type().fullClassName());
         bindingView['id'] = entity.get('id');
@@ -1029,11 +1040,11 @@ export const TgEntityBinderBehavior = {
         // this property of the bindingView will hold the reference to fully-fledged entity,
         //   this entity can be used effectively to process 'dot-notated' properties (for e.g. retrieving the values)
         bindingView['@@origin'] = entity;
-        // We use exactly the same object for touchedProps over long period of time up until saving (see tg-selection-criteria-behavior/tg-entity-master-behavior._postSavedDefault) -- then new object with empty arrays will be created;
+        // We use the same object for touchedProps over short period of time up until next binding view will be created -- then new object with empty arrays will be created;
         //  this single object resides in current version of currBindingEntity;
-        //  mutation of this object's arrays occurs in tg-reflector.setAndRegisterPropertyTouch/tg_convertPropertyValue;
+        //  mutation of this object's arrays occurs in tg-reflector.setAndRegisterPropertyTouch;
         //  we must copy these arrays (array.slice()) when using; at this stage the only place where they are used is function _extractModifiedPropertiesHolder.
-        bindingView['@@touchedProps'] = prevCurrBindingEntity ? prevCurrBindingEntity['@@touchedProps'] : {
+        bindingView['@@touchedProps'] = {
             names: [],
             values: [],
             counts: []

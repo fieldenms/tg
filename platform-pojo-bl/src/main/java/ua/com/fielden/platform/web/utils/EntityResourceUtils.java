@@ -178,43 +178,24 @@ public class EntityResourceUtils {
         final boolean isCriteriaEntity = EntityQueryCriteria.class.isAssignableFrom(type);
 
         final Set<String> touchedProps = new LinkedHashSet<>((List<String>) modifiedPropertiesHolder.get("@@touchedProps"));
-
-        // iterate through untouched properties first:
-        //  (the order of application does not really matter - untouched properties were really applied earlier through some definers, that originate from touched properties)
-        for (final Map.Entry<String, Object> nameAndVal : modifiedPropertiesHolder.entrySet()) {
-            final String name = nameAndVal.getKey();
-            if (!name.equals(AbstractEntity.ID) && !name.equals(AbstractEntity.VERSION) && !name.startsWith("@") /* custom properties disregarded */ && !touchedProps.contains(name)) {
-                final Map<String, Object> valAndOrigVal = (Map<String, Object>) nameAndVal.getValue();
-                // The 'modified' properties are marked using the existence of "val" sub-property.
-                if (valAndOrigVal.containsKey("val")) { // this is a modified property
-                    applyModifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale, isCriteriaEntity);
-                    // logPropertyApplication("   Apply untouched   modified", true, true, type, name, isEntityStale, valAndOrigVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
-                } else { // this is unmodified property
-                    // IMPORTANT:
-                    // Untouched properties should not be applied, but validation for conflicts should be performed.
-                    validateUnmodifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale, isCriteriaEntity);
-                    // logPropertyApplication("Validate untouched unmodified", false, true, type, name, isEntityStale, valAndOrigVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
-                }
-            }
-        }
         // iterate through touched properties:
         //  (the order of application is strictly the same as was done by the user in Web UI client - the only difference is
         //  such that properties, that were touched twice or more times, will be applied only once)
         for (final String touchedProp : touchedProps) {
             final String name = touchedProp;
-            final Map<String, Object> valAndOrigVal = (Map<String, Object>) modifiedPropertiesHolder.get(name);
+            final Map<String, Object> valAndBaseVal = (Map<String, Object>) modifiedPropertiesHolder.get(name);
             // The 'modified' properties are marked using the existence of "val" sub-property.
-            if (valAndOrigVal.containsKey("val")) { // this is a modified property
-                applyModifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale, isCriteriaEntity);
-                // logPropertyApplication("   Apply   touched   modified", true, true, type, name, isEntityStale, valAndOrigVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
+            if (valAndBaseVal.containsKey("val")) { // this is a modified property
+                processPropertyValue(false, type, name, valAndBaseVal, entity, companionFinder, isEntityStale, isCriteriaEntity);
+                // logPropertyApplication("   Apply   touched   modified", true, true, type, name, isEntityStale, valAndBaseVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
             } else { // this is unmodified property
                 // IMPORTANT:
                 // Unlike to the case of untouched properties, all touched properties should be applied,
                 //  even unmodified ones.
                 // This is necessary in order to mimic the user interaction with the entity (like was in Swing client)
                 //  to have the ACE handlers executed for all touched properties.
-                applyUnmodifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale, isCriteriaEntity);
-                // logPropertyApplication("   Apply   touched unmodified", true, true, type, name, isEntityStale, valAndOrigVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
+                processPropertyValue(true, type, name, valAndBaseVal, entity, companionFinder, isEntityStale, isCriteriaEntity);
+                // logPropertyApplication("   Apply   touched unmodified", true, true, type, name, isEntityStale, valAndBaseVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
             }
         }
         // IMPORTANT: the check for invalid will populate 'required' checks.
@@ -237,12 +218,12 @@ public class EntityResourceUtils {
      * @param type
      * @param name
      * @param isEntityStale
-     * @param valAndOrigVal
+     * @param valAndBaseVal
      * @param entity
      * @param propertiesToLogArray -- specifies what properties are interested
      */
     @SuppressWarnings("unused")
-    private static <M extends AbstractEntity<?>> void logPropertyApplication(final String actionCaption, final boolean apply, final boolean shortLog, final Class<M> type, final String name, final boolean isEntityStale, final Map<String, Object> valAndOrigVal, final M entity, final String... propertiesToLogArray) {
+    private static <M extends AbstractEntity<?>> void logPropertyApplication(final String actionCaption, final boolean apply, final boolean shortLog, final Class<M> type, final String name, final boolean isEntityStale, final Map<String, Object> valAndBaseVal, final M entity, final String... propertiesToLogArray) {
         final Set<String> propertiesToLog = new LinkedHashSet<>(Arrays.asList(propertiesToLogArray));
         if (propertiesToLog.contains(name)) {
             final StringBuilder builder = new StringBuilder(actionCaption);
@@ -254,8 +235,8 @@ public class EntityResourceUtils {
             if (!shortLog) {
                 builder.append(format("isEntityStale [%8s] ", isEntityStale));
             }
-            builder.append(format("val [%8s] ", valAndOrigVal.getOrDefault("val", "")));
-            builder.append(format("origVal [%8s] ", valAndOrigVal.get("origVal")));
+            builder.append(format("val [%8s] ", valAndBaseVal.getOrDefault("val", "")));
+            builder.append(format("baseVal [%8s] ", valAndBaseVal.get("baseVal")));
             if (apply) {
                 builder.append("=>\t");
                 for (final String propertyToLog: propertiesToLog) {
@@ -269,58 +250,44 @@ public class EntityResourceUtils {
     /**
      * Validates / applies the property value against the entity.
      *
-     * @param apply - indicates whether property application should be performed; if <code>false</code> then only validation will be performed
-     * @param shouldApplyOriginalValue - indicates whether the 'origVal' should be applied or 'val'
+     * @param shouldApplyBaseValue - indicates whether the 'baseVal' should be applied or 'val'
      * @param type
      * @param name
-     * @param valAndOrigVal
+     * @param valAndBaseVal
      * @param entity
      * @param companionFinder
      * @param isEntityStale
      * @param isCriteriaEntity
      */
-    private static <M extends AbstractEntity<?>> void processPropertyValue(final boolean apply, final boolean shouldApplyOriginalValue, final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale, final boolean isCriteriaEntity) {
-        if (apply) {
-            // in case where application is necessary (modified touched, modified untouched, unmodified touched) the value (valueToBeApplied) should be checked on existence and then (if successful) it should be applied
-            final String valueToBeAppliedName = shouldApplyOriginalValue ? "origVal" : "val";
-            final Object valToBeApplied = valAndOrigVal.get(valueToBeAppliedName);
-            final Object convertedValue = convert(type, name, valToBeApplied, reflectedValueId(valAndOrigVal, valueToBeAppliedName), companionFinder);
-            final Object valueToBeApplied;
-            if (valToBeApplied != null && convertedValue == null) {
-                final Class<?> propType = determinePropertyType(type, name);
-                if (isEntityType(propType)) {
-                    valueToBeApplied = createMockNotFoundEntity((Class<AbstractEntity<?>>) propType, (String) valToBeApplied); // here valToBeApplied must be string; look at 'convert' method with 'reflectedValue' parameter always string for entity-typed 'propertyType'
-                } else {
-                    valueToBeApplied = convertedValue;
-                }
+    private static <M extends AbstractEntity<?>> void processPropertyValue(final boolean shouldApplyBaseValue, final Class<M> type, final String name, final Map<String, Object> valAndBaseVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale, final boolean isCriteriaEntity) {
+        // in case where application is necessary (modified touched, modified untouched, unmodified touched) the value (valueToBeApplied) should be checked on existence and then (if successful) it should be applied
+        final String valueToBeAppliedName = shouldApplyBaseValue ? "baseVal" : "val";
+        final Object valToBeApplied = valAndBaseVal.get(valueToBeAppliedName);
+        final Object convertedValue = convert(type, name, valToBeApplied, reflectedValueId(valAndBaseVal, valueToBeAppliedName), companionFinder);
+        final Object valueToBeApplied;
+        if (valToBeApplied != null && convertedValue == null) {
+            final Class<?> propType = determinePropertyType(type, name);
+            if (isEntityType(propType)) {
+                valueToBeApplied = createMockNotFoundEntity((Class<AbstractEntity<?>>) propType, (String) valToBeApplied); // here valToBeApplied must be string; look at 'convert' method with 'reflectedValue' parameter always string for entity-typed 'propertyType'
             } else {
                 valueToBeApplied = convertedValue;
             }
-            validateAnd(() -> {
-                // Value application should be enforced.
-                // This is necessary not only for 'touched unmodified' properties (made earlier), but also for 'touched modified' and 'untouched modified' (new logic, 2017-12).
-                // This is necessary because without enforcement property application (with respective definers execution) could be avoided for seemingly 'modified' properties.
-                // This is due to the fact that 'modified' property value is always different from original value, but could be equal to the actual value of the property immediately before application.
-                // This situation occurs where the property was modified indirectly from definers of other properties in method 'apply'.
-                // 'enforce == true' guarantees that property application with validators / definers will always be actioned.
-                entity.getProperty(name).setValue(valueToBeApplied, true);
-            }, () -> {
-                return valueToBeApplied;
-            }, () -> {
-                return shouldApplyOriginalValue ? valueToBeApplied : convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), companionFinder);
-            }, type, name, valAndOrigVal, entity, companionFinder, isEntityStale, isCriteriaEntity);
         } else {
-            // in case where no application is needed (unmodified untouched) the value should be validated only
-            validateAnd(() -> {
-                // do nothing
-            }, () -> {
-                return shouldApplyOriginalValue
-                        ? convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), companionFinder)
-                                : convert(type, name, valAndOrigVal.get("val"), reflectedValueId(valAndOrigVal, "val"), companionFinder);
-            }, () -> {
-                return convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), companionFinder);
-            }, type, name, valAndOrigVal, entity, companionFinder, isEntityStale, isCriteriaEntity);
+            valueToBeApplied = convertedValue;
         }
+        validateAnd(() -> {
+            // Value application should be enforced.
+            // This is necessary not only for 'touched unmodified' properties (made earlier), but also for 'touched modified' and 'untouched modified' (new logic, 2017-12).
+            // This is necessary because without enforcement property application (with respective definers execution) could be avoided for seemingly 'modified' properties.
+            // This is due to the fact that 'modified' property value is always different from original value, but could be equal to the actual value of the property immediately before application.
+            // This situation occurs where the property was modified indirectly from definers of other properties in method 'apply'.
+            // 'enforce == true' guarantees that property application with validators / definers will always be actioned.
+            entity.getProperty(name).setValue(valueToBeApplied, true);
+        }, () -> {
+            return valueToBeApplied;
+        }, () -> {
+            return shouldApplyBaseValue ? valueToBeApplied : convert(type, name, valAndBaseVal.get("baseVal"), reflectedValueId(valAndBaseVal, "baseVal"), companionFinder);
+        }, type, name, valAndBaseVal, entity, companionFinder, isEntityStale, isCriteriaEntity);
     }
     
     /**
@@ -429,64 +396,19 @@ public class EntityResourceUtils {
     }
 
     /**
-     * Extracts reflected value ID for 'val' or 'origVal' reflectedValueName if it exists.
+     * Extracts reflected value ID for 'val' or 'baseVal' reflectedValueName if it exists.
      *
-     * @param valAndOrigVal
+     * @param valAndBaseVal
      * @param reflectedValueName
      * @return
      */
-    private static Optional<Long> reflectedValueId(final Map<String, Object> valAndOrigVal, final String reflectedValueName) {
-        final Object reflectedValueId = valAndOrigVal.get(reflectedValueName + "Id");
+    private static Optional<Long> reflectedValueId(final Map<String, Object> valAndBaseVal, final String reflectedValueName) {
+        final Object reflectedValueId = valAndBaseVal.get(reflectedValueName + "Id");
         if (reflectedValueId == null) {
             return Optional.empty();
         } else {
             return Optional.of(extractLongValueFrom(reflectedValueId));
         }
-    }
-
-    /**
-     * Applies the modified (touched / untouched) property value ('val') against the entity.
-     *
-     * @param type
-     * @param name
-     * @param valAndOrigVal
-     * @param entity
-     * @param companionFinder
-     * @param isEntityStale
-     * @param isCriteriaEntity
-     */
-    private static <M extends AbstractEntity<?>> void applyModifiedPropertyValue(final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale, final boolean isCriteriaEntity) {
-        processPropertyValue(true, false, type, name, valAndOrigVal, entity, companionFinder, isEntityStale, isCriteriaEntity);
-    }
-
-    /**
-     * Applies the unmodified (touched) property value ('origVal') against the entity (using 'enforced mutation').
-     *
-     * @param type
-     * @param name
-     * @param valAndOrigVal
-     * @param entity
-     * @param companionFinder
-     * @param isEntityStale
-     * @param isCriteriaEntity
-     */
-    private static <M extends AbstractEntity<?>> void applyUnmodifiedPropertyValue(final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale, final boolean isCriteriaEntity) {
-        processPropertyValue(true, true, type, name, valAndOrigVal, entity, companionFinder, isEntityStale, isCriteriaEntity);
-    }
-
-    /**
-     * Validates the unmodified (untouched) property value for 'changed by other user' warning.
-     *
-     * @param type
-     * @param name
-     * @param valAndOrigVal
-     * @param entity
-     * @param companionFinder
-     * @param isEntityStale
-     * @param isCriteriaEntity
-     */
-    private static <M extends AbstractEntity<?>> void validateUnmodifiedPropertyValue(final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale, final boolean isCriteriaEntity) {
-        processPropertyValue(false, true, type, name, valAndOrigVal, entity, companionFinder, isEntityStale, isCriteriaEntity);
     }
     
     /**

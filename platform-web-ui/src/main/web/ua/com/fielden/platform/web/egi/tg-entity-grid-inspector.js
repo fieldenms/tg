@@ -2238,7 +2238,7 @@ Polymer({
         const entity = this.master._currBindingEntity["@@origin"];
         const egiEntityToUpdate = this.egiModel[this.master.editableRow];
         const entityToUpdate = egiEntityToUpdate.entity;
-        const modifPropHolder = this.master._extractModifiedPropertiesHolder(this.master._currBindingEntity, this.master._originalBindingEntity);
+        const modifPropHolder = this.master._extractModifiedPropertiesHolder(this.master._currBindingEntity, this.master._baseBindingEntity);
         this.master.editors.forEach(editor => {
             entityToUpdate.set(editor.propertyName, entity.get(editor.propertyName));
             if (typeof modifPropHolder[editor.propertyName].val !== 'undefined') {

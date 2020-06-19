@@ -324,7 +324,7 @@ const TgEntityMasterBehaviorImpl = {
 
         self._createContextHolder = (function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber) {
             const getThisMasterEntity = function () {
-                const holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
+                const holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._baseBindingEntity);
 
                 // @@funcEntityType is really a master entity type, which in this case is not functional!!!
                 const masterTypeCarrier = this.savingContext ? this.savingContext : this._reflector().createContextHolder(
@@ -385,9 +385,6 @@ const TgEntityMasterBehaviorImpl = {
             const newBindingEntity = this._postEntityReceived(potentiallySavedOrNewEntity, isContinuouslyCreated);
 
             if (potentiallySavedOrNewEntity.isValidWithoutException()) {
-                // in case where successful save occured we need to reset @@touchedProps that are transported with bindingEntity
-                newBindingEntity["@@touchedProps"] = { names: [], values: [], counts: [] };
-
                 if (isContinuouslyCreated === true) { // continuous creation has occured, which is very much like entity has been produced -- _previouslyAppliedEntity should be updated by newly returned instance
                     this._previouslyAppliedEntity = potentiallySavedOrNewEntity;
                 } else if (potentiallySavedOrNewEntity.type().isPersistent()) { // entity became (or was) persisted -- _previouslyAppliedEntity should be updated
@@ -412,7 +409,7 @@ const TgEntityMasterBehaviorImpl = {
                     // Context creator should assigned only after successful master entity saving.
                     // In case of successful assignment it gets promoted to embedded views by means of binding.
                     this._createContextHolderForEmbeddedViews = (function () {
-                        const holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
+                        const holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._baseBindingEntity);
                         this._reflector().setCustomProperty(this.savingContext, "@@funcEntityType", this.entityType);
                         return this._reflector().createSavingInfoHolder(this._previouslyAppliedEntity, this._reset(holder), this.savingContext, this._continuations);
                     }).bind(this);
@@ -549,7 +546,7 @@ const TgEntityMasterBehaviorImpl = {
         }).bind(self);
 
         self._createSavingPromise = (function () {
-            const holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
+            const holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._baseBindingEntity);
 
             // There is no need check at the client side whether _hasModified(holder).
             // This check will be too restrictive from the perspective of developer-driven usage of 'save' method.

@@ -492,7 +492,7 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
      * for each property (mainly for logging purposes).
      *
      * Please, note that 'touched' property does not mean 'modified' from technical perspective.
-     * But, even if it is not modified -- such property will be forced to be mutated on server (with its origVal) 
+     * But, even if it is not modified -- such property will be forced to be mutated on server (with its baseVal) 
      * to have properly invoked its ACE handlers.
      *
      * IMPORTANT: this method is applicable only to binding entities (not fully-fledged)!
@@ -1655,9 +1655,9 @@ export const TgReflector = Polymer({
                     // EDGE-CASE: if the value becomes invalid not because the action done upon this property -- 
                     //   but because the action on other property -- the previous version of modifiedPropsHolder will not hold
                     //   invalid 'attempted value' -- but originalVal exists and should be used in this case!
-                    bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName].origVal;
-                    if (typeof previousModifiedPropertiesHolder[propertyName].origValId !== 'undefined') {
-                        bindingView['@' + propertyName + '_id'] = previousModifiedPropertiesHolder[propertyName].origValId;
+                    bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName].baseVal;
+                    if (typeof previousModifiedPropertiesHolder[propertyName].baseValId !== 'undefined') {
+                        bindingView['@' + propertyName + '_id'] = previousModifiedPropertiesHolder[propertyName].baseValId;
                     }
                 } else {
                     bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName].val;
@@ -1669,15 +1669,6 @@ export const TgReflector = Polymer({
         } else {
             var fullValue = entity.get(propertyName);
             _convertFullPropertyValue(bindingView, propertyName, fullValue);
-
-            const touchedProps = bindingView['@@touchedProps'];
-            const touchedPropIndex = touchedProps.names.indexOf(propertyName);
-            if (touchedPropIndex > -1 && !this.equalsEx(bindingView.get(propertyName), touchedProps.values[touchedPropIndex])) {
-                // make the property untouched in case where its value was sucessfully mutated through definer of other property (it means that the value is valid and different from the value originated from user's touch)
-                touchedProps.names.splice(touchedPropIndex, 1);
-                touchedProps.counts.splice(touchedPropIndex, 1);
-                touchedProps.values.splice(touchedPropIndex, 1);
-            }
         }
         if (typeof bindingView[propertyName] === 'undefined' || bindingView[propertyName] === undefined) {
             throw "Illegal value exception: the property [" + propertyName + "] can not be assigned as [" + bindingView[propertyName] + "].";
