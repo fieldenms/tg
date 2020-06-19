@@ -24,6 +24,7 @@ import org.joda.time.DateTime;
 import org.joda.time.Period;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.generation.EntQueryGenerator;
 import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
 import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails;
@@ -180,6 +181,9 @@ public class EntityContainerFetcher {
             if (yield.isHeader) {
                 result.add(new ResultQueryYieldDetails(yield.alias, yieldType, yieldHibType, null, isUnionEntityType(yieldType) ? UNION_ENTITY_HEADER : COMPOSITE_TYPE_HEADER));
             } else {
+                if (yield.column == null) {
+                    throw new EqlException("There is no column for yield with alias [" + yield.alias + "] of type [" + yield.type + "].");    
+                }
                 result.add(new ResultQueryYieldDetails(yield.alias, yieldType, yieldHibType, yield.column.name, USUAL_PROP));    
             }
             

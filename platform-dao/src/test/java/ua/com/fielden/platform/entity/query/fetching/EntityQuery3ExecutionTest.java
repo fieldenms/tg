@@ -808,7 +808,22 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
         co.getAllEntities(from(qry).with("EQL3", null).with(orderBy().yield("vehicle.key").desc().model()).model());
     }
 
-    
+    @Test
+    public void eql3_query_executes_correctly93() {
+        final ITgVehicle co = getInstance(ITgVehicle.class);
+        final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).model();
+        co.getAllEntities(from(qry).with("EQL3", null).with(orderBy().yield("lastFuelUsageQty").desc().model()).model());
+    }
+
+    @Test
+    public void eql3_query_executes_correctly94() {
+        final ITgVehicle co = getInstance(ITgVehicle.class);
+        final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).model();
+        co.getAllEntities(from(qry).with("EQL3", null)
+                .with(fetch(TgVehicle.class).with("lastFuelUsageQty"))
+                .with(orderBy().yield("lastFuelUsageQty").desc().model()).model());
+    }
+
     @Override
     protected void populateDomain() {
         super.populateDomain();

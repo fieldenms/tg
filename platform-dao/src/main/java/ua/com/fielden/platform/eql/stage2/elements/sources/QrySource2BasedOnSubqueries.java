@@ -13,6 +13,7 @@ import org.hibernate.type.LongType;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.meta.EntityInfo;
@@ -45,6 +46,9 @@ public class QrySource2BasedOnSubqueries extends AbstractElement2 implements IQr
         this.alias = alias;
         validateYieldsMatrix();
         this.entityInfo = produceEntityInfoFrom(domainInfo);
+        if (entityInfo == null) {
+            throw new EqlException("DomainMetadata for type [" + sourceType() + "] is missing.");
+        }
     }
 
     private static Map<String, List<Yield2>> populateYieldMatrixFromQueryModels(final List<SourceQuery2> models) {

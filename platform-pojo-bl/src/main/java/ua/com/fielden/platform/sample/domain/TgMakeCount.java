@@ -23,7 +23,7 @@ public class TgMakeCount extends AbstractEntity<TgVehicleMake> {
             yield().prop("make").as("key").
             yield().countAll().as("count").
             yield().countAll().as("cost.amount").
-            yield().countAll().as("cost").
+            //yield().countAll().as("cost").
             modelAsEntity(TgMakeCount.class);
 
     @IsProperty

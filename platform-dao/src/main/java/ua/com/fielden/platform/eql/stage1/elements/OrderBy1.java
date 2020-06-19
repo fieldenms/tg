@@ -46,7 +46,7 @@ public class OrderBy1 {
     public List<OrderBy2> transformForYield(final PropsResolutionContext context, final Yields1 yields1, final IQrySource2<? extends IQrySource3> mainSource) {
         if (yields1.getYieldsMap().containsKey(yieldName)) {
             final Yield1 yield = yields1.getYieldsMap().get(yieldName);
-            if (yield.operand instanceof EntProp1) {
+            if (yield.operand instanceof EntProp1 /* && not calculated*/) {
                 return (new OrderBy1(yield.operand, isDesc)).transformForOperand(context, yield.operand.transform(context), yield.operand);
             } else {
                 return asList(new OrderBy2(yieldName, isDesc));

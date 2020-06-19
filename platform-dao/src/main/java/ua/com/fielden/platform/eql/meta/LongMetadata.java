@@ -436,8 +436,12 @@ public class LongMetadata {
             } else {
                 return resultInProgress.subitems(getCompositeUserTypeColumns((ICompositeUserTypeInstantiate) hibType, null, extractExpressionModelFromCalculatedProperty(entityType, propField))).build();
             }           
-        } else {
-            return resultInProgress.build();
+        } else { // synthetic entity
+            if (!(hibType instanceof ICompositeUserTypeInstantiate)) {
+                return resultInProgress.build();
+            } else {
+                return resultInProgress.subitems(getCompositeUserTypeColumns((ICompositeUserTypeInstantiate) hibType, null, null)).build();
+            }           
         }
     }
     
