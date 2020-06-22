@@ -188,14 +188,6 @@ public class EntityResourceUtils {
             if (valAndBaseVal.containsKey("val")) { // this is a modified property
                 processPropertyValue(false, type, name, valAndBaseVal, entity, companionFinder, isEntityStale, isCriteriaEntity);
                 // logPropertyApplication("   Apply   touched   modified", true, true, type, name, isEntityStale, valAndBaseVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
-            } else { // this is unmodified property
-                // IMPORTANT:
-                // Unlike to the case of untouched properties, all touched properties should be applied,
-                //  even unmodified ones.
-                // This is necessary in order to mimic the user interaction with the entity (like was in Swing client)
-                //  to have the ACE handlers executed for all touched properties.
-                processPropertyValue(true, type, name, valAndBaseVal, entity, companionFinder, isEntityStale, isCriteriaEntity);
-                // logPropertyApplication("   Apply   touched unmodified", true, true, type, name, isEntityStale, valAndBaseVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
             }
         }
         // IMPORTANT: the check for invalid will populate 'required' checks.
