@@ -30,7 +30,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -174,8 +173,6 @@ public class EntityResourceUtils {
      */
     public static <M extends AbstractEntity<?>> M apply(final Map<String, Object> modifiedPropertiesHolder, final M entity, final ICompanionObjectFinder companionFinder) {
         final Class<M> type = (Class<M>) entity.getType();
-        final boolean isEntityStale = entity.getVersion() > getVersion(modifiedPropertiesHolder);
-        final boolean isCriteriaEntity = EntityQueryCriteria.class.isAssignableFrom(type);
 
         final Set<String> touchedProps = new LinkedHashSet<>((List<String>) modifiedPropertiesHolder.get("@@touchedProps"));
         // iterate through touched properties:
@@ -186,8 +183,8 @@ public class EntityResourceUtils {
             final Map<String, Object> valAndBaseVal = (Map<String, Object>) modifiedPropertiesHolder.get(name);
             // The 'modified' properties are marked using the existence of "val" sub-property.
             if (valAndBaseVal.containsKey("val")) { // this is a modified property
-                processPropertyValue(false, type, name, valAndBaseVal, entity, companionFinder, isEntityStale, isCriteriaEntity);
-                // logPropertyApplication("   Apply   touched   modified", true, true, type, name, isEntityStale, valAndBaseVal, entity /* insert interested properties here for e.g. [, "propX", "propY", "prop1", "prop2"] */);
+                processPropertyValue(type, name, valAndBaseVal, entity, companionFinder);
+                logPropertyApplication("   Apply   touched   modified", true, true, type, name, valAndBaseVal, entity, "tcAlert", "locationSubsystem", "service", "outageCausing", "waType");
             }
         }
         // IMPORTANT: the check for invalid will populate 'required' checks.
@@ -209,13 +206,12 @@ public class EntityResourceUtils {
      * @param shortLog -- specifies shorter or wider (with 'type' and staleness) view of information
      * @param type
      * @param name
-     * @param isEntityStale
      * @param valAndBaseVal
      * @param entity
      * @param propertiesToLogArray -- specifies what properties are interested
      */
     @SuppressWarnings("unused")
-    private static <M extends AbstractEntity<?>> void logPropertyApplication(final String actionCaption, final boolean apply, final boolean shortLog, final Class<M> type, final String name, final boolean isEntityStale, final Map<String, Object> valAndBaseVal, final M entity, final String... propertiesToLogArray) {
+    private static <M extends AbstractEntity<?>> void logPropertyApplication(final String actionCaption, final boolean apply, final boolean shortLog, final Class<M> type, final String name, final Map<String, Object> valAndBaseVal, final M entity, final String... propertiesToLogArray) {
         final Set<String> propertiesToLog = new LinkedHashSet<>(Arrays.asList(propertiesToLogArray));
         if (propertiesToLog.contains(name)) {
             final StringBuilder builder = new StringBuilder(actionCaption);
@@ -224,9 +220,6 @@ public class EntityResourceUtils {
                 builder.append(format("type [%40s] ", type.getSimpleName()));
             }
             builder.append(format("name [%8s] ", name));
-            if (!shortLog) {
-                builder.append(format("isEntityStale [%8s] ", isEntityStale));
-            }
             builder.append(format("val [%8s] ", valAndBaseVal.getOrDefault("val", "")));
             builder.append(format("baseVal [%8s] ", valAndBaseVal.get("baseVal")));
             if (apply) {
@@ -248,12 +241,10 @@ public class EntityResourceUtils {
      * @param valAndBaseVal
      * @param entity
      * @param companionFinder
-     * @param isEntityStale
-     * @param isCriteriaEntity
      */
-    private static <M extends AbstractEntity<?>> void processPropertyValue(final boolean shouldApplyBaseValue, final Class<M> type, final String name, final Map<String, Object> valAndBaseVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale, final boolean isCriteriaEntity) {
+    private static <M extends AbstractEntity<?>> void processPropertyValue(final Class<M> type, final String name, final Map<String, Object> valAndBaseVal, final M entity, final ICompanionObjectFinder companionFinder) {
         // in case where application is necessary (modified touched, modified untouched, unmodified touched) the value (valueToBeApplied) should be checked on existence and then (if successful) it should be applied
-        final String valueToBeAppliedName = shouldApplyBaseValue ? "baseVal" : "val";
+        final String valueToBeAppliedName = "val";
         final Object valToBeApplied = valAndBaseVal.get(valueToBeAppliedName);
         final Object convertedValue = convert(type, name, valToBeApplied, reflectedValueId(valAndBaseVal, valueToBeAppliedName), companionFinder);
         final Object valueToBeApplied;
@@ -267,13 +258,7 @@ public class EntityResourceUtils {
         } else {
             valueToBeApplied = convertedValue;
         }
-        validateAnd(() -> {
-            entity.getProperty(name).setValue(valueToBeApplied);
-        }, () -> {
-            return valueToBeApplied;
-        }, () -> {
-            return shouldApplyBaseValue ? valueToBeApplied : convert(type, name, valAndBaseVal.get("baseVal"), reflectedValueId(valAndBaseVal, "baseVal"), companionFinder);
-        }, type, name, valAndBaseVal, entity, companionFinder, isEntityStale, isCriteriaEntity);
+        entity.getProperty(name).setValue(valueToBeApplied);
     }
     
     /**
@@ -342,43 +327,6 @@ public class EntityResourceUtils {
             return (T) createMockNotFoundEntity(type, str.replaceFirst(quote(NOT_FOUND_MOCK_PREFIX), ""));
         }
         return specificConverter.apply(str);
-    }
-    
-    /**
-     * Validates the property on subject of conflicts and <code>perform[s]Action</code>.
-     *
-     * @param performAction -- the action to be performed in case of successful validation
-     * @param calculateStaleNewValue -- function to lazily calculate 'staleNewValue' (heavy operation)
-     * @param calculateStaleOriginalValue -- function to lazily calculate 'staleOriginalValue' (heavy operation)
-     * @param type
-     * @param name
-     * @param valAndOrigVal
-     * @param entity
-     * @param companionFinder
-     * @param isEntityStale
-     * @param isCriteriaEntity
-     */
-    private static <M extends AbstractEntity<?>> void validateAnd(final Runnable performAction, final Supplier<Object> calculateStaleNewValue, final Supplier<Object> calculateStaleOriginalValue, final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale, final boolean isCriteriaEntity) {
-        if (!isEntityStale) {
-            performAction.run();
-        } else {
-            final Object staleOriginalValue = calculateStaleOriginalValue.get();
-            final Object freshValue = entity.get(name);
-            final Object staleNewValue = calculateStaleNewValue.get();
-            if (!isCriteriaEntity && EntityUtils.isConflicting(staleNewValue, staleOriginalValue, freshValue)) {
-                // 1) are we trying to revert the value to previous stale value to perform "recovery" to actual persisted value? (this is following of 'Please revert property value to resolve conflict' instruction)
-                // or 2) has previously touched / untouched property value "recovered" to actual persisted value?
-                if (EntityUtils.equalsEx(staleNewValue, staleOriginalValue)) {
-                    logger.info(format("Property [%s] has been recently changed by another user for type [%s] to the value [%s]. Original value is [%s].", name, entity.getClass().getSimpleName(), freshValue, staleOriginalValue));
-                    entity.getProperty(name).setDomainValidationResult(Result.warning(entity, CONFLICT_WARNING));
-                } else {
-                    logger.info(format("Property [%s] has been recently changed by another user for type [%s] to the value [%s]. Stale original value is [%s], newValue is [%s]. Please revert property value to resolve conflict.", name, entity.getClass().getSimpleName(), freshValue, staleOriginalValue, staleNewValue));
-                    entity.getProperty(name).setDomainValidationResult(new PropertyConflict(entity, CONFLICT_WARNING + " " + format(RESOLVE_CONFLICT_INSTRUCTION, staleOriginalValue == null ? "" : staleOriginalValue)));
-                }
-            } else {
-                performAction.run();
-            }
-        }
     }
 
     /**
