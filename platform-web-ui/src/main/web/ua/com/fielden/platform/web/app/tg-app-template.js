@@ -416,6 +416,23 @@ Polymer({
         e.returnValue = "Do you really want to close the application?";
         return e.returnValue;
     },
+
+    _handleUnhandledPromiseError: function(e) {
+        console.error(e.reason);
+        this.toaster.openToastForError("Error in promise", e.reason, true);
+    },
+
+    _handleHandledPromiseError: function (e) {
+        console.error(e.reason);
+        this.toaster.openToastForError("Error in promise catch clause", e.reason, true);
+    },
+
+    _handleError: function (e) {
+        console.error(e);
+        const errorMsg = e.message + " in: " + e.filename + " at Ln: " + e.lineno + ", Co: " + e.colno
+                        + "<br>" + (e.error.stack ?  e.error.stack : JSON.stringify(e.error));
+        this.toaster.openToastForError(e.message, errorMsg, true);
+    },
     
     /**
      * Animation finish event handler. This handler opens master or centre if module transition occured because of user action.
@@ -496,6 +513,9 @@ Polymer({
         this._openMasterAttrs = {currentState: "EDIT", centreUuid: this.uuid};
         //Binding to 'this' functions those are used outside the scope of this component.
         this._checkWhetherCanLeave = this._checkWhetherCanLeave.bind(this);
+        this._handleError = this._handleError.bind(this);
+        this._handleUnhandledPromiseError = this._handleUnhandledPromiseError.bind(this);
+        this._handleHandledPromiseError = this._handleHandledPromiseError.bind(this);
         this._saveMenuVisibilityChanges = function (visibleItems, invisibleItems) {
             if (this._saveIdentifier) {
                 this.cancelAsync(this._saveIdentifier);
@@ -562,6 +582,9 @@ Polymer({
         });
         
         window.addEventListener("beforeunload", this._checkWhetherCanLeave);
+        window.addEventListener('error', this._handleError, true);
+        window.addEventListener('rejectionhandled', this._handleHandledPromiseError, true);
+        window.addEventListener('unhandledrejection', this._handleUnhandledPromiseError, true);
     },
     
     detached: function () {
