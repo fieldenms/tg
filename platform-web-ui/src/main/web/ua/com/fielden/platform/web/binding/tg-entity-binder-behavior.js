@@ -884,7 +884,11 @@ export const TgEntityBinderBehavior = {
             
             bindingEntity.traverseProperties(function (propertyName) {
                 const value = convert(bindingEntity.get(propertyName));
-                self._reflector().tg_convertPropertyValue(_baseBindingEntity, propertyName, self._reflector().tg_getFullEntity(_baseBindingEntity), self._previousModifiedPropertiesHolder);
+                if (typeof _baseBindingEntity[propertyName] === 'undefined') {
+                    // provide value conversion in case if it was not performed earlier;
+                    // such value conversion is only needed for semi-lazy _baseBindingEntity (aka not _originalBindingEntity -- conversion for this entity will be performed in tg-editor._originalEntitychanged);
+                    self._reflector().tg_convertPropertyValue(_baseBindingEntity, propertyName, self._reflector().tg_getFullEntity(_baseBindingEntity), self._previousModifiedPropertiesHolder);
+                }
                 const baseValue = convert(_baseBindingEntity.get(propertyName));
                 const valId = bindingEntity['@' + propertyName + '_id'];
                 const baseValId = _baseBindingEntity['@' + propertyName + '_id'];
