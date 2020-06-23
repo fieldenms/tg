@@ -95,6 +95,7 @@ import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.money.impl.MoneyWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.singlelinetext.impl.SinglelineTextWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.spinner.impl.SpinnerWidget;
+import ua.com.fielden.platform.web.view.master.exceptions.EntityCentreConfigurationException;
 
 /**
  * A package private helper class to decompose the task of implementing the Entity Centre DSL. It has direct access to protected fields in {@link EntityCentreBuilder}.
@@ -104,6 +105,8 @@ import ua.com.fielden.platform.web.view.master.api.widgets.spinner.impl.SpinnerW
  * @param <T>
  */
 class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilderAlsoDynamicProps<T>, IResultSetBuilderWidgetSelector<T>, IResultSetBuilder3Ordering<T>, IResultSetBuilder0HideEgi<T>, IResultSetBuilder4OrderingDirection<T>, IResultSetBuilder7SecondaryAction<T>, IExpandedCardLayoutConfig<T>, ISummaryCardLayout<T>, IInsertionPointsFlexible<T> {
+
+    private static final String EDITABLE_SUB_PROP_DISALLOWED = "EGI can not edit two or more level sub-property: %s. Only first level properties are allowed.";
 
     private final EntityCentreBuilder<T> builder;
     private final ResultSetSecondaryActionsBuilder secondaryActionBuilder = new ResultSetSecondaryActionsBuilder();
@@ -143,6 +146,9 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
 
     @Override
     public IResultSetBuilderWidgetSelector<T> addEditableProp(final String propName) {
+        if (propName.contains(".")) {
+            throw  new EntityCentreConfigurationException(String.format(EDITABLE_SUB_PROP_DISALLOWED, propName));
+        }
         this.addProp(propName);
         this.widget = createWidget(propName);
         return this;
