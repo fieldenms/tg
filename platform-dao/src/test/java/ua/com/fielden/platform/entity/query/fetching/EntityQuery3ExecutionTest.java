@@ -469,7 +469,6 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     }
 
     @Test
-    @Ignore
     public void eql3_query_executes_correctly41() {
         final EntityResultQueryModel<TeVehicle> qry = select(TeWorkOrder.class).yield().prop("vehicle").modelAsEntity(TeVehicle.class);
         
@@ -728,7 +727,7 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     public void eql3_query_executes_correctly81() {
         final ITgVehicle co = getInstance(ITgVehicle.class);
         final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).as("a").leftJoin(TgOrgUnit4.class).as("b").on().val(1).eq().val(1).model();
-        co.getAllEntities(from(qry).with("EQL3", null).with(orderBy().prop("b.parent.key").desc().prop("a.lastFuelUsage.key").asc().model()).model());
+        co.getAllEntities(from(qry).with("EQL3", null).with(orderBy().prop("parent.key").desc().prop("lastFuelUsage.key").asc().model()).model());
     }
 
     @Test

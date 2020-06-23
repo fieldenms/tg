@@ -139,7 +139,7 @@ public class EqlStage1TestCase extends EqlTestCase {
     }
 
     protected static QrySource1BasedOnPersistentType source(final Class<? extends AbstractEntity<?>> sourceType) {
-        return new QrySource1BasedOnPersistentType(sourceType, nextId());
+        return new QrySource1BasedOnPersistentType(sourceType, null, nextId());
     }
 
     protected static Sources1 sources(final Class<? extends AbstractEntity<?>> sourceType, final String alias) {

@@ -22,6 +22,7 @@ import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator;
 import ua.com.fielden.platform.eql.stage1.builders.StandAloneExpressionBuilder;
 import ua.com.fielden.platform.eql.stage1.elements.operands.Expression1;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.IDates;
 
 public class ShortMetadata {
@@ -45,7 +46,7 @@ public class ShortMetadata {
 
     public final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> generate(final Set<Class<? extends AbstractEntity<?>>> entities) throws Exception {
         final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> result = entities.stream()
-                .filter(t -> isPersistedEntityType(t) || isSyntheticEntityType(t) || isSyntheticBasedOnPersistentEntityType(t)/* || isUnionEntityType(t)*/)
+                .filter(t -> isPersistedEntityType(t) || isSyntheticEntityType(t) || isSyntheticBasedOnPersistentEntityType(t) || isUnionEntityType(t))
                 .collect(toMap(k -> k, k -> new EntityInfo<>(k, determineCategory(k))));
         result.values().stream().forEach(ei -> addProps(ei, result));
         return result;
@@ -75,7 +76,12 @@ public class ShortMetadata {
                         } else {
                             final ExpressionModel subExpressionModel = sub.expressionModel;
                             final Expression1 subExpr = subExpressionModel == null ? null : (Expression1) (new StandAloneExpressionBuilder(qb(), subExpressionModel)).getResult().getValue();
-                            ef.addProp(new PrimTypePropInfo(sub.name, sub.hibType, sub.javaType, subExpr));
+                            if (EntityUtils.isEntityType(sub.javaType)) {
+                                ef.addProp(new EntityTypePropInfo(sub.name, allEntitiesInfo.get(sub.javaType), sub.hibType, false, subExpr));
+                            } else {
+                                ef.addProp(new PrimTypePropInfo(sub.name, sub.hibType, sub.javaType, subExpr));    
+                            }
+                            
                         }
                     }
                     entityInfo.addProp(new UnionTypePropInfo(name, ef, hibType, required));

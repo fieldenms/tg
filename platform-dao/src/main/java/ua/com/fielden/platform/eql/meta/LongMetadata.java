@@ -1,12 +1,15 @@
 package ua.com.fielden.platform.eql.meta;
 
 import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
+import static ua.com.fielden.platform.entity.AbstractUnionEntity.commonProperties;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -15,6 +18,7 @@ import static ua.com.fielden.platform.entity.query.metadata.DomainMetadataUtils.
 import static ua.com.fielden.platform.entity.query.metadata.DomainMetadataUtils.generateUnionEntityPropertyExpression;
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.PERSISTED;
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.QUERY_BASED;
+import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.UNION;
 import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.COLLECTIONAL;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
@@ -74,9 +78,9 @@ import ua.com.fielden.platform.eql.meta.LongPropertyMetadata.Builder;
 import ua.com.fielden.platform.eql.meta.model.PropColumn;
 import ua.com.fielden.platform.eql.stage3.elements.Column;
 import ua.com.fielden.platform.eql.stage3.elements.Table;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.types.tuples.T3;
-import ua.com.fielden.platform.utils.EntityUtils;
 
 public class LongMetadata {
     
@@ -147,6 +151,7 @@ public class LongMetadata {
                 switch (parentInfo.category) {
                 case PERSISTED:
                 case QUERY_BASED:
+                case UNION:
                     entityPropsMetadata.put(entityType, generatePropertyMetadatasForEntity(parentInfo));
                     break;
 //                case QUERY_BASED:
@@ -309,7 +314,15 @@ public class LongMetadata {
             }
         }
     }
-
+    
+    private LongPropertyMetadata generateDescPropertyMetadata(final EntityTypeInfo <? extends AbstractEntity<?>> parentInfo) throws Exception {
+        if (parentInfo.category == UNION) {
+            return new LongPropertyMetadata.Builder(DESC, String.class, false).hibType(H_STRING).expression(generateUnionEntityPropertyExpression((Class<? extends AbstractUnionEntity>) parentInfo.entityType, DESC)).build(); 
+        } else {
+            return null; // will be generated via getCommonPropInfo(..)
+        }
+    }
+    
     /**
      * Generates persistence info for common properties of provided entity type.
      *
@@ -323,6 +336,7 @@ public class LongMetadata {
         safeMapAdd(result, generateIdPropertyMetadata(parentInfo));
         safeMapAdd(result, generateVersionPropertyMetadata(parentInfo));
         safeMapAdd(result, generateKeyPropertyMetadata(parentInfo));
+        safeMapAdd(result, generateDescPropertyMetadata(parentInfo));
 
         for (final Field field : getRealProperties(parentInfo.entityType)) {
             if (!result.containsKey(field.getName())) {
@@ -414,11 +428,30 @@ public class LongMetadata {
         
         if (mapTo != null) {
             final String columnName = getColumnName(propName, mapTo, parentPrefix);
-            if (EntityUtils.isUnionEntityType(propType)) {
-                final List<Field> propsFields = unionProperties((Class<? extends AbstractUnionEntity>) propType);
+            if (isUnionEntityType(propType)) {
+                final Class<? extends AbstractUnionEntity> unionPropType = (Class<? extends AbstractUnionEntity>) propType;
+                final List<Field> propsFields = unionProperties(unionPropType);
                 final List<LongPropertyMetadata> subitems = new ArrayList<>();
-                subitems.add(new LongPropertyMetadata.Builder(KEY, String.class, false).hibType(H_STRING).expression(generateUnionEntityPropertyExpression2((Class<? extends AbstractUnionEntity>) propType, KEY, propName)).build());
-                subitems.add(new LongPropertyMetadata.Builder(ID, Long.class, false).hibType(H_LONG).expression(generateUnionEntityPropertyExpression2((Class<? extends AbstractUnionEntity>) propType, ID, propName)).build());
+                subitems.add(new LongPropertyMetadata.Builder(KEY, String.class, false).hibType(H_STRING).expression(generateUnionEntityPropertyContextualExpression(unionPropType, KEY, propName)).build());
+                subitems.add(new LongPropertyMetadata.Builder(ID, Long.class, false).hibType(H_LONG).expression(generateUnionEntityPropertyContextualExpression(unionPropType, ID, propName)).build());
+                
+                final List<String> commonProps = commonProperties(unionPropType);
+                final List<String> unionPropsNames = propsFields.stream().map(up -> up.getName()).collect(toList());
+                final Class<?> firstUnionEntityPropType = propsFields.get(0).getType(); // e.g. WagonSlot in TgBogieLocation
+                for (final String commonProp : commonProps) {
+                    if (unionPropsNames.contains(commonProp)) {
+                        throw new EntityDefinitionException(format("The name of common prop [%s] conflicts with union prop [%s] in union entity [%s].", commonProp, commonProp, unionPropType.getSimpleName()));
+                    }
+                    final Class<?> javaType = determinePropertyType(firstUnionEntityPropType, commonProp);
+                    final Object subHt = getHibernateType(Finder.findFieldByName(firstUnionEntityPropType, commonProp));
+                    final T3<Type, IUserTypeInstantiate, ICompositeUserTypeInstantiate> hibernateTypes3_ = getHibernateConverter(subHt);
+                    final Object subHibType = hibernateTypes3_ == null ? null : (hibernateTypes3_._1 != null ? hibernateTypes3_._1 : (hibernateTypes3._2 != null ? hibernateTypes3_._2 : (hibernateTypes3_._3 != null ? hibernateTypes3_._3 : null)));
+                               
+                    
+                    subitems.add(new LongPropertyMetadata.Builder(commonProp, javaType, false).hibType(subHibType).expression(generateUnionEntityPropertyContextualExpression(unionPropType, commonProp, propName)).build());
+                }                    
+                
+                
                 for (final Field subpropField : propsFields) {
                     subitems.add(getCommonPropInfo(subpropField, (Class<? extends AbstractEntity<?>>) propType, columnName));
                 }
@@ -466,7 +499,7 @@ public class LongMetadata {
         return new PropertyMetadata.Builder(propField.getName(), determinePropertyType(parentInfo.entityType, propField.getName()), true, parentInfo).category(COLLECTIONAL).build();
     }
     
-    public static ExpressionModel generateUnionEntityPropertyExpression2(final Class<? extends AbstractUnionEntity> entityType, final String commonPropName, final String contextPropName) {
+    public static ExpressionModel generateUnionEntityPropertyContextualExpression(final Class<? extends AbstractUnionEntity> entityType, final String commonPropName, final String contextPropName) {
         final List<Field> props = unionProperties(entityType);
         final Iterator<Field> iterator = props.iterator();
         final String firstUnionPropName = contextPropName + "." + iterator.next().getName();

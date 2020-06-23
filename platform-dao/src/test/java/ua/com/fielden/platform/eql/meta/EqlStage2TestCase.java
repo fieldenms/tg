@@ -13,13 +13,19 @@ import java.util.List;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.EntityRetrievalModel;
+import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage1.elements.operands.EntProp1;
 import ua.com.fielden.platform.eql.stage2.elements.EntQueryBlocks2;
 import ua.com.fielden.platform.eql.stage2.elements.GroupBys2;
+import ua.com.fielden.platform.eql.stage2.elements.OrderBy2;
 import ua.com.fielden.platform.eql.stage2.elements.OrderBys2;
 import ua.com.fielden.platform.eql.stage2.elements.Yield2;
 import ua.com.fielden.platform.eql.stage2.elements.Yields2;
@@ -53,7 +59,18 @@ public class EqlStage2TestCase extends EqlTestCase {
     protected static AbstractPropInfo<?> pi(final Class<?> type, final String propName) {
         return metadata.get(type).getProps().get(propName);
     }
-    
+
+    protected static AbstractPropInfo<?> pi(final Class<?> type, final String propName, final String subPropName) {
+        final AbstractPropInfo<?> propInfo = metadata.get(type).getProps().get(propName);
+        if (propInfo instanceof ComponentTypePropInfo) {
+            return (AbstractPropInfo<?>) ((ComponentTypePropInfo) propInfo).getProps().get(subPropName);
+        } else if (propInfo instanceof UnionTypePropInfo) {
+            return (AbstractPropInfo<?>) ((UnionTypePropInfo) propInfo).propEntityInfo.getProps().get(subPropName);
+        } else {
+            throw new EqlException("Can't obtain metadata for property " + propName + " and subproperty " + subPropName + " within type " + type);
+        }
+    }
+
     protected static <T extends AbstractEntity<?>> ResultQuery2 qryCountAll(final ICompoundCondition0<T> unfinishedQry) {
         final AggregatedResultQueryModel countQry = unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate();
         final PropsResolutionContext resolutionContext = new PropsResolutionContext(metadata);
@@ -61,8 +78,12 @@ public class EqlStage2TestCase extends EqlTestCase {
     }
     
     protected static <T extends AbstractEntity<?>> ResultQuery2 qry(final EntityResultQueryModel<T> qry) {
+        return qry(qry, null);
+    }
+
+    protected static <T extends AbstractEntity<?>> ResultQuery2 qry(final EntityResultQueryModel<T> qry, final OrderingModel order) {
         final PropsResolutionContext resolutionContext = new PropsResolutionContext(metadata);
-        return qb().generateEntQueryAsResultQuery(qry, null, null).transform(resolutionContext);
+        return qb().generateEntQueryAsResultQuery(qry, order, new EntityRetrievalModel<T>(EntityQueryUtils.fetch(qry.getResultType()), DOMAIN_METADATA_ANALYSER)).transform(resolutionContext);
     }
 
     protected static ResultQuery2 qry(final AggregatedResultQueryModel qry) {
@@ -78,10 +99,41 @@ public class EqlStage2TestCase extends EqlTestCase {
         return new EntQueryBlocks2(sources, conditions, yields, emptyGroupBys2, emptyOrderBys2);
     }
 
+    protected static EntQueryBlocks2 qb2(final Sources2 sources, final Conditions2 conditions, final Yields2 yields, final OrderBys2 orderBys) {
+        return new EntQueryBlocks2(sources, conditions, yields, emptyGroupBys2, orderBys);
+    }
+
     protected static Yields2 yields(final Yield2 ... yields) {
         return new Yields2(asList(yields));
     }
-    
+
+    protected static <T extends AbstractEntity<?>> Yields2 autoYields(final IQrySource2<? extends IQrySource3> main, final fetch<T> fetch) {
+        final List<Yield2> yields = new ArrayList<>();
+        final EntityRetrievalModel<T> fm = new EntityRetrievalModel<T>(fetch, DOMAIN_METADATA_ANALYSER);
+        for (final String prop : fm.getPrimProps()) {
+            if (!prop.contains(".")) {
+                yields.add(yield(prop(main, pi(fetch.getEntityType(), prop)), prop));    
+            }
+        }
+        for (final String prop : fm.getRetrievalModels().keySet()) {
+            yields.add(yield(prop(main, pi(fetch.getEntityType(), prop)), prop));
+        }
+        
+        return new Yields2(yields);
+    }
+
+    protected static OrderBy2 orderDesc(final EntProp2 prop) {
+        return new OrderBy2(prop, true);
+    }
+
+    protected static OrderBy2 orderAsc(final EntProp2 prop) {
+        return new OrderBy2(prop, false);
+    }
+
+    protected static OrderBys2 orderBys(final OrderBy2 ... orderBys) {
+        return new OrderBys2(asList(orderBys));
+    }
+
     protected static Yield2 yieldCountAll(final String alias) {
         return new Yield2(new CountAll2(), alias, false);
     }
@@ -205,6 +257,14 @@ public class EqlStage2TestCase extends EqlTestCase {
 
     protected static SourceQuery2 srcqry(final Sources2 sources, final Conditions2 conditions, final Yields2 yields) {
         return new SourceQuery2(qb2(sources, conditions, yields), EntityAggregates.class);
+    }
+
+    protected static ResultQuery2 qry(final Sources2 sources, final Yields2 yields , final Class<? extends AbstractEntity<?>> resultType) {
+        return new ResultQuery2(qb2(sources, emptyConditions2, yields), resultType);
+    }
+
+    protected static ResultQuery2 qry(final Sources2 sources, final Yields2 yields , final OrderBys2 orderBys, final Class<? extends AbstractEntity<?>> resultType) {
+        return new ResultQuery2(qb2(sources, emptyConditions2, yields, orderBys), resultType);
     }
 
     protected static ResultQuery2 qry(final Sources2 sources, final Yields2 yields) {

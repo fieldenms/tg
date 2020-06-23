@@ -8,6 +8,7 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.VA
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.util.ArrayList;
@@ -23,6 +24,7 @@ import ua.com.fielden.platform.eql.stage1.elements.operands.SourceQuery1;
 import ua.com.fielden.platform.eql.stage1.elements.sources.QrySource1BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage1.elements.sources.QrySource1BasedOnSubqueries;
 import ua.com.fielden.platform.eql.stage1.elements.sources.QrySource1BasedOnVoid;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -72,7 +74,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
         final Class<AbstractEntity<?>> resultType = (Class<AbstractEntity<?>>) firstValue();
         if (isPersistedEntityType(resultType)) {
             return pair(QRY_SOURCE, new QrySource1BasedOnPersistentType(resultType, (String) secondValue(), getQueryBuilder().nextCondtextId()));    
-        } else if (isSyntheticEntityType(resultType) || isSyntheticBasedOnPersistentEntityType(resultType)) {
+        } else if (isSyntheticEntityType(resultType) || isSyntheticBasedOnPersistentEntityType(resultType) || isUnionEntityType(resultType)) {
             return pair(QRY_SOURCE, buildQrySourceBasedOnSyntheticEntityType(resultType, (String) secondValue()));
         } else {
             throw new EqlStage1ProcessingException("Not yet.");
@@ -83,6 +85,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
         final EntityTypeInfo<T> parentInfo = new EntityTypeInfo<>(resultType);
         final List<EntityResultQueryModel<T>> models = new ArrayList<>();
         models.addAll(parentInfo.entityModels);
+        models.addAll(parentInfo.unionEntityModels);
         final List<SourceQuery1> queries = new ArrayList<>();
         for (final QueryModel<T> qryModel : models) {
             queries.add(getQueryBuilder().generateEntQueryAsSyntheticEntityQuery(qryModel, resultType));

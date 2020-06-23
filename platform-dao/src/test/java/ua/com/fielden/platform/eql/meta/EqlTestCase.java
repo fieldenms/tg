@@ -23,6 +23,7 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.generation.ioc.HelperIocModule;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
+import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator;
 import ua.com.fielden.platform.eql.stage3.elements.Table;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
@@ -32,6 +33,7 @@ import ua.com.fielden.platform.persistence.types.HyperlinkType;
 import ua.com.fielden.platform.persistence.types.PropertyDescriptorType;
 import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
 import ua.com.fielden.platform.sample.domain.TeVehicle;
+import ua.com.fielden.platform.sample.domain.TeVehicleFuelUsage;
 import ua.com.fielden.platform.sample.domain.TeVehicleMake;
 import ua.com.fielden.platform.sample.domain.TeVehicleModel;
 import ua.com.fielden.platform.sample.domain.TeWorkOrder;
@@ -55,6 +57,7 @@ import ua.com.fielden.platform.utils.IDates;
 public class EqlTestCase {
     protected static final Class<TeWorkOrder> WORK_ORDER = TeWorkOrder.class;
     protected static final Class<TeVehicle> VEHICLE = TeVehicle.class;
+    protected static final Class<TeVehicleFuelUsage> VEHICLE_FUEL_USAGE = TeVehicleFuelUsage.class;
     protected static final Class<TgVehicleFinDetails> VEHICLE_FIN_DETAILS = TgVehicleFinDetails.class;
     protected static final Class<TeVehicleModel> MODEL = TeVehicleModel.class;
     protected static final Class<TeVehicleMake> MAKE = TeVehicleMake.class;
@@ -86,6 +89,7 @@ public class EqlTestCase {
     private static Injector injector = Guice.createInjector(new HibernateUserTypesModule(), new HelperIocModule());
     
     protected static final DomainMetadata DOMAIN_METADATA;
+    protected static final DomainMetadataAnalyser DOMAIN_METADATA_ANALYSER;
 
     public static final Map<String, Table> tables = new HashMap<>();
     public static final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> metadata = new HashMap<>();
@@ -104,6 +108,7 @@ public class EqlTestCase {
                 injector, 
                 PlatformTestDomainTypes.entityTypes, 
                 H2);
+        DOMAIN_METADATA_ANALYSER = new DomainMetadataAnalyser(DOMAIN_METADATA);
         final LongMetadata lmg = DOMAIN_METADATA.lmd;
         final ShortMetadata mdg = new ShortMetadata(lmg, null, null, injector.getInstance(IDates.class), emptyMap());
         

@@ -147,9 +147,7 @@ public class EntityContainerFetcher {
             Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo = null;
             try {
                 final ShortMetadata mtg = new ShortMetadata(executionContext.getDomainMetadata().lmd, filter, username, executionContext.dates(), qem.getParamValues());
-                final Set<Class<? extends AbstractEntity<?>>> emd = new HashSet<>();
-                emd.addAll(executionContext.getDomainMetadata().getPersistedEntityMetadataMap().keySet());
-                emd.addAll(executionContext.getDomainMetadata().getModelledEntityMetadataMap().keySet());
+                final Set<Class<? extends AbstractEntity<?>>> emd = new HashSet<>(executionContext.getDomainMetadata().lmd.getEntityPropsMetadata().keySet());
                 domainInfo = mtg.generate(emd);
             } catch (final Exception e) {
                 e.printStackTrace();
