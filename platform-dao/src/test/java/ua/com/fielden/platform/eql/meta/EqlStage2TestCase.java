@@ -215,12 +215,12 @@ public class EqlStage2TestCase extends EqlTestCase {
         return new ExistenceTest2(true, subqry(sources, conditions, yields, resultType));
     }
 
-    protected static NullTest2 isNull(final ISingleOperand2<? extends ISingleOperand3> operand) {
-        return new NullTest2(operand, false);
+    protected static Conditions2 isNull(final ISingleOperand2<? extends ISingleOperand3> operand) {
+        return cond(new NullTest2(operand, false));
     }
 
-    protected static NullTest2 isNotNull(final ISingleOperand2<? extends ISingleOperand3> operand) {
-        return new NullTest2(operand, true);
+    protected static Conditions2 isNotNull(final ISingleOperand2<? extends ISingleOperand3> operand) {
+        return cond(new NullTest2(operand, true));
     }
 
     protected static ComparisonTest2 eq(final EntProp2 op1, final EntProp2 op2) {
