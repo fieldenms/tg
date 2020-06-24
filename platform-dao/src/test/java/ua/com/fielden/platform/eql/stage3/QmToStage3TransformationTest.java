@@ -27,6 +27,8 @@ import ua.com.fielden.platform.eql.stage3.elements.sources.QrySource3BasedOnSubq
 import ua.com.fielden.platform.eql.stage3.elements.sources.QrySource3BasedOnTable;
 import ua.com.fielden.platform.sample.domain.TeVehicle;
 import ua.com.fielden.platform.sample.domain.TeVehicleModel;
+import ua.com.fielden.platform.sample.domain.TgWagonSlot;
+import ua.com.fielden.platform.sample.domain.TgWorkshop;
 
 public class QmToStage3TransformationTest extends EqlStage3TestCase {
 
@@ -941,6 +943,30 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
 
         final IQrySources3 sources = sources(model);
         final ResultQuery3 expQry = qryCountAll(sources);
+        
+        assertEquals(expQry, actQry);
+    }
+    
+    @Test
+    public void is_null_condition_is_correctly_transformed_for_union_property() {
+        final ResultQuery3 actQry = qryCountAll(select(BOGIE).where().prop("location").isNull());
+        
+        final QrySource3BasedOnTable bogie = source(BOGIE, "1");
+        
+        final Conditions3 conditions = or(and(or(and(isNullSingle(expr(entityProp("location.wagonSlot", bogie, TgWagonSlot.class))), isNullSingle(expr(entityProp("location.workshop", bogie, TgWorkshop.class)))))));
+        final ResultQuery3 expQry = qryCountAll(sources(bogie), conditions);
+        
+        assertEquals(expQry, actQry);
+    }
+    
+    @Test
+    public void is_not_null_condition_is_correctly_transformed_for_union_property() {
+        final ResultQuery3 actQry = qryCountAll(select(BOGIE).where().prop("location").isNotNull());
+        
+        final QrySource3BasedOnTable bogie = source(BOGIE, "1");
+        
+        final Conditions3 conditions = or(and(or(and(isNotNullSingle(expr(entityProp("location.wagonSlot", bogie, TgWagonSlot.class)))), and(isNotNullSingle(expr(entityProp("location.workshop", bogie, TgWorkshop.class)))))));
+        final ResultQuery3 expQry = qryCountAll(sources(bogie), conditions);
         
         assertEquals(expQry, actQry);
     }

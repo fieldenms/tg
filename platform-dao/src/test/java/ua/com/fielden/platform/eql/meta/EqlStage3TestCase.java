@@ -130,11 +130,19 @@ public class EqlStage3TestCase extends EqlTestCase {
         return new ComparisonTest3(op1, NE, op2);
     }
         
-    protected static NullTest3 isNotNull(final ISingleOperand3 op1) {
+    protected static Conditions3 isNotNull(final ISingleOperand3 op1) {
+        return cond(new NullTest3(op1, true));
+    }
+
+    protected static Conditions3 isNull(final ISingleOperand3 op1) {
+        return cond(new NullTest3(op1, false));
+    }
+    
+    protected static NullTest3 isNotNullSingle(final ISingleOperand3 op1) {
         return new NullTest3(op1, true);
     }
 
-    protected static NullTest3 isNull(final ISingleOperand3 op1) {
+    protected static NullTest3 isNullSingle(final ISingleOperand3 op1) {
         return new NullTest3(op1, false);
     }
 

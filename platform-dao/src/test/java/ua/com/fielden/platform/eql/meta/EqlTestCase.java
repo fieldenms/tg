@@ -38,6 +38,7 @@ import ua.com.fielden.platform.sample.domain.TeVehicleMake;
 import ua.com.fielden.platform.sample.domain.TeVehicleModel;
 import ua.com.fielden.platform.sample.domain.TeWorkOrder;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
+import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
@@ -70,8 +71,9 @@ public class EqlTestCase {
     protected static final Class<TgOrgUnit2> ORG2 = TgOrgUnit2.class;
     protected static final Class<TgOrgUnit1> ORG1 = TgOrgUnit1.class;
     protected static final Class<TgWagonSlot> WAGON_SLOT = TgWagonSlot.class;
-    protected static final Class<Boolean> BOOLEAN = boolean.class;
     protected static final Class<TgWorkshop> WORKSHOP = TgWorkshop.class;
+    protected static final Class<TgBogie> BOGIE = TgBogie.class;
+    protected static final Class<Boolean> BOOLEAN = boolean.class;
     protected static final Class<String> STRING = String.class;
     protected static final Type H_BOOLEAN = StandardBasicTypes.YES_NO;
     protected static final Class<Date> DATE = Date.class;

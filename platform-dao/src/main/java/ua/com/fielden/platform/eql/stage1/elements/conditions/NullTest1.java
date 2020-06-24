@@ -1,13 +1,23 @@
 package ua.com.fielden.platform.eql.stage1.elements.conditions;
 
+import static java.util.Arrays.asList;
+import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
+import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
+import ua.com.fielden.platform.eql.meta.UnionTypePropInfo;
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
+import ua.com.fielden.platform.eql.stage2.elements.conditions.Conditions2;
+import ua.com.fielden.platform.eql.stage2.elements.conditions.ICondition2;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.NullTest2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 
-public class NullTest1 implements ICondition1<NullTest2> {
+public class NullTest1 implements ICondition1<Conditions2> {
     private final ISingleOperand1<? extends ISingleOperand2<?>> operand;
     private final boolean negated;
 
@@ -17,8 +27,33 @@ public class NullTest1 implements ICondition1<NullTest2> {
     }
 
     @Override
-    public NullTest2 transform(final PropsResolutionContext context) {
-        return new NullTest2(operand.transform(context), negated);
+    public Conditions2 transform(final PropsResolutionContext context) {
+        final ISingleOperand2<?> transformedOperand = operand.transform(context);
+        if (transformedOperand instanceof EntProp2 && isUnionEntityType(((EntProp2) transformedOperand).type)) {
+            final EntProp2 prop = (EntProp2) transformedOperand;
+            final UnionTypePropInfo<?> lastResolutionItem = (UnionTypePropInfo<?>)prop.getPath().get(prop.getPath().size() - 1);
+            final List<ICondition2<?>> nullTests = new ArrayList<>();
+            
+            for (final AbstractPropInfo<?> el: lastResolutionItem.propEntityInfo.getProps().values()) {
+                if (!el.hasExpression()) {
+                    final List<AbstractPropInfo<?>> subPropPath = new ArrayList<>(prop.getPath());
+                    subPropPath.add(el);
+                    nullTests.add(new NullTest2(new EntProp2(prop.source, subPropPath), negated));
+                }
+            }
+            
+            if (negated) {
+                final List<List<? extends ICondition2<?>>> negatedNullTests = new ArrayList<>();
+                for (final ICondition2<?> nt : nullTests) {
+                    negatedNullTests.add(asList(nt));
+                }
+                return new Conditions2(false, negatedNullTests);
+            } else {
+                return new Conditions2(false, asList(nullTests));
+            }
+        }
+        
+        return new Conditions2(false, asList(asList(new NullTest2(transformedOperand, negated))));
     }
 
     @Override
