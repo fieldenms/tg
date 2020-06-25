@@ -406,8 +406,8 @@ export const TgEntityBinderBehavior = {
      */
     _resetState: function () {
         this._currEntity = null;
-        this._currBindingEntity = null;
         this._baseBindingEntity = null;
+        this._currBindingEntity = null;
         this._originalBindingEntity = null;
     },
 
@@ -961,12 +961,6 @@ export const TgEntityBinderBehavior = {
             self._reset(previousModifiedPropertiesHolder);
         }
         const previousEntity = self._currEntity;
-        // Determine whether the entity is stale in sense of stale property conflicts (errors).
-        const isEntityStale = self._hasStaleConflicts(entity);
-        if (isEntityStale) {
-            // version of entity should be taken from previous entity to correctly restore stale entity at the client-side
-            entity.version = self._extractPreviousEntityVersion(previousEntity, entity.version, self._originalBindingEntity);
-        }
         // New entity should be promoted to the local cache:
         self._currEntity = entity;
         // before the next assignment -- the editors should be already prepared for "refresh cycle" (for Retrieve and Save actions)
@@ -974,7 +968,7 @@ export const TgEntityBinderBehavior = {
         self._previousModifiedPropertiesHolder = previousModifiedPropertiesHolder;
         self._baseBindingEntity = self._extractBindingView(self._currEntity, previousModifiedPropertiesHolder);
         self._currBindingEntity = self._extractBindingView(self._currEntity, previousModifiedPropertiesHolder);
-        self._originalBindingEntity = self._extractOriginalBindingView(self._currEntity, isEntityStale ? self._originalBindingEntity : null);
+        self._originalBindingEntity = self._extractOriginalBindingView(self._currEntity, null);
 
         self._bindingEntityModified = self._hasModified(self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity));
         // console.debug('_bindingEntityModified = ', self._bindingEntityModified, ' type = ', self._currBindingEntity.type()._simpleClassName());
@@ -987,46 +981,6 @@ export const TgEntityBinderBehavior = {
         }
         console.log("       _postEntityReceived: _currBindingEntity + _originalBindingEntity", self._currBindingEntity, self._originalBindingEntity);
         return self._currBindingEntity;
-    },
-
-    /**
-     * Returns 'true' in case where the entity has at least one stale conflict, 'false' otherwise.
-     *
-     * Please, note that in sense of versions the entity could be stale, but this method still returns 'false' if no stale conflicts exist,
-     * and thus the entity will be treated as NOT 'stale'.
-     * That means that fully resolvable staleness will not be appearing to the user -- this is the case where behind the scenes
-     * the entity has been saved one or more times (by other user) but saving did not actually change the entity to the level of conflicts appearance.
-     * However, warnings 'The property has been recently changed by another user.' could exist in this case.
-     */
-    _hasStaleConflicts: function (entity) {
-        const self = this;
-        var hasStaleConflicts = false;
-        entity.traverseProperties(function (propertyName) {
-            const validationResult = entity.prop(propertyName).validationResult();
-            if (self._reflector().isError(validationResult) && (validationResult['@resultType'] === 'ua.com.fielden.platform.web.utils.PropertyConflict')) {
-                hasStaleConflicts = true;
-            }
-        });
-        return hasStaleConflicts;
-    },
-
-    /**
-     * Extracts the version of previous entity for the case where new entity is stale.
-     *
-     * This method validates existence of previous entity / originalBindingEntity and the fact that the version has been increased.
-     * These validations are required because new entity should not be stale otherwise.
-     */
-    _extractPreviousEntityVersion: function (previousEntity, currentEntityVersion, _originalBindingEntity) {
-        if (previousEntity == null) {
-            throw 'Previous version of entity does not exist, but somehow the stale entity has arrived from the server.';
-        }
-        if (currentEntityVersion <= previousEntity.version) {
-            throw 'Previous version of entity has [' + previousEntity.version + '] version, that is not lower than the version of stale new entity (' + currentEntityVersion + ').';
-        }
-        if (_originalBindingEntity === null) {
-            throw 'Previous version of _originalBindingEntity does not exist, but somehow the stale entity has arrived from the server.';
-        }
-        return previousEntity.version;
     },
 
     /**
