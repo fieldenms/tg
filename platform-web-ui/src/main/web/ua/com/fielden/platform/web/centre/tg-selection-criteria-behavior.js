@@ -557,7 +557,7 @@ const TgSelectionCriteriaBehaviorImpl = {
         return new Promise(function (resolve, reject) {
             var _persistedModifiedPropertiesHolder = null;
             if (action === RunActions.run) {
-                _persistedModifiedPropertiesHolder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
+                _persistedModifiedPropertiesHolder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._baseBindingEntity);
             } else if (self._wasRun === null) {
                 throw '_wasRun is not initialised, however this is not Run action, and _wasRun should be defined as yes at this stage.';
             }
@@ -654,7 +654,7 @@ const TgSelectionCriteriaBehaviorImpl = {
      */
     createContextHolder: function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber) {
         const self = this;
-        const modifHolder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
+        const modifHolder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._baseBindingEntity);
         return this._createContextHolder(function () {
             return self._reset(modifHolder);
         }, requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber);
