@@ -1,7 +1,7 @@
-package ua.com.fielden.platform.web.view.master.exceptions;
+package ua.com.fielden.platform.web.centre.exceptions;
 
 /**
- * The Exception that is thrown because of incorrect entity centre configuration.
+ * A runtime exception that indicates erroneous situation in an Entity Centre configuration.
  *
  * @author TG Team
  *

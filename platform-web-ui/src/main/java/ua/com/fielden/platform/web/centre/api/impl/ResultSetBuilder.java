@@ -3,12 +3,14 @@ package ua.com.fielden.platform.web.centre.api.impl;
 import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
 import static ua.com.fielden.platform.utils.EntityUtils.isCollectional;
 import static ua.com.fielden.platform.utils.EntityUtils.isDate;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isInteger;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
+import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
 import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp.dynamicProps;
 import static ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.mkInsertionPoint;
@@ -82,6 +84,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.summary.ISummaryCardLayo
 import ua.com.fielden.platform.web.centre.api.resultset.summary.IWithSummary;
 import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.tooltip.IWithTooltip;
+import ua.com.fielden.platform.web.centre.exceptions.EntityCentreConfigurationException;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
 import ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.EntityAutocompletionWidget;
@@ -95,7 +98,6 @@ import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.money.impl.MoneyWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.singlelinetext.impl.SinglelineTextWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.spinner.impl.SpinnerWidget;
-import ua.com.fielden.platform.web.view.master.exceptions.EntityCentreConfigurationException;
 
 /**
  * A package private helper class to decompose the task of implementing the Entity Centre DSL. It has direct access to protected fields in {@link EntityCentreBuilder}.
@@ -106,7 +108,7 @@ import ua.com.fielden.platform.web.view.master.exceptions.EntityCentreConfigurat
  */
 class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilderAlsoDynamicProps<T>, IResultSetBuilderWidgetSelector<T>, IResultSetBuilder3Ordering<T>, IResultSetBuilder0HideEgi<T>, IResultSetBuilder4OrderingDirection<T>, IResultSetBuilder7SecondaryAction<T>, IExpandedCardLayoutConfig<T>, ISummaryCardLayout<T>, IInsertionPointsFlexible<T> {
 
-    private static final String EDITABLE_SUB_PROP_DISALLOWED = "EGI can not edit two or more level sub-property: %s. Only first level properties are allowed.";
+    private static final String ERR_EDITABLE_SUB_PROP_DISALLOWED = "Dot-notated property [%s] cannot be added as editable. Only first-level properties are supported.";
 
     private final EntityCentreBuilder<T> builder;
     private final ResultSetSecondaryActionsBuilder secondaryActionBuilder = new ResultSetSecondaryActionsBuilder();
@@ -133,7 +135,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         }
 
         if (!"this".equals(propName) && !EntityUtils.isProperty(this.builder.getEntityType(), propName)) {
-            throw new IllegalArgumentException(String.format("Provided value '%s' is not a valid property expression for entity '%s'", propName, builder.getEntityType().getSimpleName()));
+            throw new IllegalArgumentException(format("Provided value [%s] is not a valid property expression for entity [%s]", propName, builder.getEntityType().getSimpleName()));
         }
 
         this.propName = Optional.of(propName);
@@ -147,7 +149,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     @Override
     public IResultSetBuilderWidgetSelector<T> addEditableProp(final String propName) {
         if (propName.contains(".")) {
-            throw  new EntityCentreConfigurationException(String.format(EDITABLE_SUB_PROP_DISALLOWED, propName));
+            throw  new EntityCentreConfigurationException(format(ERR_EDITABLE_SUB_PROP_DISALLOWED, propName));
         }
         this.addProp(propName);
         this.widget = createWidget(propName);
@@ -161,27 +163,27 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         final Class<?> propertyType = isEntityItself ? root : PropertyTypeDeterminator.determinePropertyType(root, resultPropName);
         final String widgetPropName = "".equals(resultPropName) ? AbstractEntity.KEY : resultPropName;
         if (isEntityType(propertyType)) {
-            return of(new EntityAutocompletionWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(widgetPropName, root).getValue()), widgetPropName, (Class<AbstractEntity<?>>)propertyType));
+            return of(new EntityAutocompletionWidget(pair("", TitlesDescsGetter.getTitleAndDesc(widgetPropName, root).getValue()), widgetPropName, (Class<AbstractEntity<?>>)propertyType));
         } else if (isString(propertyType)) {
-            return of(new SinglelineTextWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName));
+            return of(new SinglelineTextWidget(pair("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName));
         } else if (isInteger(propertyType)) {
-            return of(new SpinnerWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName));
+            return of(new SpinnerWidget(pair("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName));
         } else if (Money.class.isAssignableFrom(propertyType)) {
-            return of(new MoneyWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName));
+            return of(new MoneyWidget(pair("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName));
         } else if (BigDecimal.class.isAssignableFrom(propertyType)) {
-            return of(new DecimalWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName));
+            return of(new DecimalWidget(pair("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName));
         } else if (Hyperlink.class.isAssignableFrom(propertyType)){
-            return of(new HyperlinkWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName));
+            return of(new HyperlinkWidget(pair("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName));
         } else if (Colour.class.isAssignableFrom(propertyType)) {
-            return of(new ColourWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName));
+            return of(new ColourWidget(pair("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName));
         } else if (isBoolean(propertyType)) {
-            return of(new CheckboxWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName));
+            return of(new CheckboxWidget(pair("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName));
         } else if (isDate(propertyType)) {
-            return of(new DateTimePickerWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName, false,
+            return of(new DateTimePickerWidget(pair("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName, false,
                     DefaultValueContract.getTimeZone(root, propName),
                     DefaultValueContract.getTimePortionToDisplay(root, propName)));
         } else if (isCollectional(propertyType)) {
-            return of(new CollectionalRepresentorWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()),propName));
+            return of(new CollectionalRepresentorWidget(pair("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()),propName));
         }
         return empty();
     }
@@ -197,7 +199,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     public IResultSetBuilder4OrderingDirection<T> order(final int orderSeq) {
         if (builder.resultSetOrdering.containsKey(orderSeq)) {
             final Pair<String, EntityCentreConfig.OrderDirection> pair = builder.resultSetOrdering.get(orderSeq);
-            throw new IllegalArgumentException(format("Ordering by property '%s' with sequence %s conflicts with ordering by property '%s'@'%s' (%s), which has the same sequence.",
+            throw new IllegalArgumentException(format("Ordering by property [%s] with sequence [%s] conflicts with ordering by property [%s@%s] (%s), which has the same sequence.",
                     propName, orderSeq, pair.getKey(), builder.getEntityType().getSimpleName(), pair.getValue()));
         }
         this.orderSeq = orderSeq;
@@ -206,13 +208,13 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
 
     @Override
     public IResultSetBuilder4aWidth<T> desc() {
-        this.builder.resultSetOrdering.put(orderSeq, new Pair<>(propName.get(), OrderDirection.DESC));
+        this.builder.resultSetOrdering.put(orderSeq, pair(propName.get(), OrderDirection.DESC));
         return this;
     }
 
     @Override
     public IResultSetBuilder4aWidth<T> asc() {
-        this.builder.resultSetOrdering.put(orderSeq, new Pair<>(propName.get(), OrderDirection.ASC));
+        this.builder.resultSetOrdering.put(orderSeq, pair(propName.get(), OrderDirection.ASC));
         return this;
     }
 
@@ -385,7 +387,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         }
 
         completePropIfNeeded();
-        this.builder.queryEnhancerConfig = new Pair<>(type, Optional.ofNullable(contextConfig));
+        this.builder.queryEnhancerConfig = pair(type, Optional.ofNullable(contextConfig));
         return this;
     }
 
@@ -609,7 +611,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         final boolean isEntityItself = "".equals(resultPropName); // empty property means "entity itself"
         final Class<?> propType = isEntityItself ? root : PropertyTypeDeterminator.determinePropertyType(root, resultPropName);
         final String widgetPropName = "".equals(resultPropName) ? AbstractEntity.KEY : resultPropName;
-        final EntityAutocompletionWidget editor = new EntityAutocompletionWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(widgetPropName, root).getValue()), widgetPropName, (Class<AbstractEntity<?>>)propType);
+        final EntityAutocompletionWidget editor = new EntityAutocompletionWidget(pair("", getTitleAndDesc(widgetPropName, root).getValue()), widgetPropName, (Class<AbstractEntity<?>>)propType);
         this.widget = Optional.of(editor);
         return new ResultSetAutocompleterConfig<>(this, editor);
     }
