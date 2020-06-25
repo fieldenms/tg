@@ -968,7 +968,7 @@ export const TgEntityBinderBehavior = {
         self._previousModifiedPropertiesHolder = previousModifiedPropertiesHolder;
         self._baseBindingEntity = self._extractBindingView(self._currEntity, previousModifiedPropertiesHolder);
         self._currBindingEntity = self._extractBindingView(self._currEntity, previousModifiedPropertiesHolder);
-        self._originalBindingEntity = self._extractOriginalBindingView(self._currEntity, null);
+        self._originalBindingEntity = self._extractOriginalBindingView(self._currEntity);
 
         self._bindingEntityModified = self._hasModified(self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity));
         // console.debug('_bindingEntityModified = ', self._bindingEntityModified, ' type = ', self._currBindingEntity.type()._simpleClassName());
@@ -1045,12 +1045,9 @@ export const TgEntityBinderBehavior = {
     },
 
     /**
-     * Extracts binding view from 'entity' for its original values taking into account that entity could be 'stale'.
-     *
-     * In case of stale entity (previousEntity has been passed into this method), original values should be taken from the previous version of the entity to be able to mimic restoration of stale instance.
+     * Extracts binding view from 'entity' for its original values.
      */
-    _extractOriginalBindingView: function (entity, previousOriginalBindingEntity) {
-        const stale = previousOriginalBindingEntity !== null;
+    _extractOriginalBindingView: function (entity) {
         const self = this;
         const originalBindingView = self._reflector().newEntityEmpty();
         
@@ -1059,7 +1056,7 @@ export const TgEntityBinderBehavior = {
         originalBindingView['version'] = entity['version'];
         // this property of the bindingView will hold the reference to fully-fledged entity,
         //   this entity can be used effectively to process 'dot-notated' properties (for e.g. retrieving the values)
-        originalBindingView['@@origin'] = (stale === true ? self._reflector().tg_getFullEntity(previousOriginalBindingEntity) : entity);
+        originalBindingView['@@origin'] = entity;
         
         entity.traverseProperties(function (propertyName) {
             // value conversion of original property value performs here only for specialised properties (see method '_isNecessaryForConversion');
