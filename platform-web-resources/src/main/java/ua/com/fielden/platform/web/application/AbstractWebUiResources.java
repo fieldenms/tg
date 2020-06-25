@@ -26,6 +26,7 @@ import ua.com.fielden.platform.web.factories.webui.EgiExampleResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EntityAutocompletionResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EntityResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EntityValidationResourceFactory;
+import ua.com.fielden.platform.web.factories.webui.ErrorLoggerResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.FileResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.MainWebUiComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.MasterComponentResourceFactory;
@@ -134,8 +135,11 @@ public abstract class AbstractWebUiResources extends Application {
         // For egi example TODO remove later.
         router.attach("/test/egi", new EgiExampleResourceFactory(injector));
 
-        //Attache master retrieve resources
+        //Attache master retrieve resource
         router.attach("/master/{entityType}", new MasterInfoProviderResourceFactory(webApp, deviceProvider, dates, restUtil));
+
+        //Attache client side error logger resource
+        router.attach("/error", new ErrorLoggerResourceFactory(webApp, deviceProvider, dates, restUtil));
 
         // Registering entity centres:
         attachCentreResources(router, webApp, restUtil);
