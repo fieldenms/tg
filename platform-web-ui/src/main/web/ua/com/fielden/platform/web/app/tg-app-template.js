@@ -24,6 +24,7 @@ import { TgEntityMasterBehavior } from '/resources/master/tg-entity-master-behav
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js'
 import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';
 import { tearDownEvent, deepestActiveElement, generateUUID, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
+import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 
 const template = html`
     <style>
@@ -45,6 +46,7 @@ const template = html`
             </template>
         </neon-animated-pages>
     </div>
+    <iron-ajax id="errorSender" headers="[[_headers]]" url="/error" method="POST" content-type="text/plain" handle-as="text" on-response="_processErrorResponse" on-error="_processError"></iron-ajax>
     <tg-entity-master
         id="masterDom"
         entity-type="[[entityType]]"
@@ -144,6 +146,23 @@ Polymer({
         },
         appTitle: String,
         entityType: String,
+
+        /**
+         * Additional headers for 'iron-ajax' client-side requests. These only contain 
+         * our custom 'Time-Zone' header that indicates real time-zone for the client application.
+         * The time-zone then is to be assigned to threadlocal 'IDates.timeZone' to be able
+         * to compute 'Now' moment properly.
+         */
+        _headers: {
+            type: String,
+            value: _timeZoneHeader
+        },
+
+        /**
+         * Queue of errors to log on server.
+         */
+        _errorQueue: Array,
+        
         _manager: {
             type: Object,
             value: IronOverlayManager
@@ -197,7 +216,7 @@ Polymer({
         "menu-search-list-closed": "_restoreLastFocusedElement",
         "tg-module-menu-closed": "_restoreLastFocusedElement"
     },
-    
+
     _searchMenu: function (event) {
         const selectedElement = this.shadowRoot.querySelector("[name='" + this.$.pages.selected + "']");
         if (selectedElement && selectedElement.searchMenu) {
@@ -418,22 +437,52 @@ Polymer({
     },
 
     _handleUnhandledPromiseError: function(e) {
-        console.error(e.reason);
-        this.toaster.openToastForError("Error in promise", e.reason, true);
+        //console.error(e.reason);
+        this._sentError(e, "Error in promise: " + e.reason);
+        //this.toaster.openToastForError("Error in promise", e.reason, true);
     },
 
     _handleHandledPromiseError: function (e) {
-        console.error(e.reason);
-        this.toaster.openToastForError("Error in promise catch clause", e.reason, true);
+        //console.error(e.reason);
+        this._sentError(e, "Error in promise catch clause: " + e.reason);
+        //this.toaster.openToastForError("Error in promise catch clause", e.reason, true);
     },
 
     _handleError: function (e) {
-        console.error(e);
-        const errorMsg = e.message + " in: " + e.filename + " at Ln: " + e.lineno + ", Co: " + e.colno
-                        + "<br>" + (e.error.stack ?  e.error.stack : JSON.stringify(e.error));
-        this.toaster.openToastForError(e.message, errorMsg, true);
+        //console.error(e);
+        const errorDetail = e.detail ? e.detail : e;
+        const errorMsg = errorDetail.message + " in: " + errorDetail.filename + " at Ln: " + errorDetail.lineno + ", Co: " + errorDetail.colno
+                        + "\n" + ((errorDetail.error && errorDetail.error.stack) ?  errorDetail.error.stack : JSON.stringify(errorDetail.error));
+        this._sentError(errorDetail, errorMsg);
+        //this.toaster.openToastForError(e.message, errorMsg, true);
+    },
+
+    _sentError: function (e, errorMsg) {
+        if (e.error && e.error.restoreState) {
+            e.error.restoreState();
+        }
+        if (this.$.errorSender.loading) {
+            this._errorQueue.push(errorMsg);
+        } else {
+            this.$.errorSender.body = errorMsg;
+            this.$.errorSender.generateRequest();
+        }
     },
     
+    _processErrorResponse: function (e) {
+        this._processNextError();
+    },
+
+    _processError: function (e) {
+        this._processNextError();
+    },
+
+    _processNextError: function () {
+        if (this._errorQueue.length > 0) {
+            this._sentError(this._errorQueue.shift());
+        }
+    },
+
     /**
      * Animation finish event handler. This handler opens master or centre if module transition occured because of user action.
      * 
@@ -513,9 +562,14 @@ Polymer({
         this._openMasterAttrs = {currentState: "EDIT", centreUuid: this.uuid};
         //Binding to 'this' functions those are used outside the scope of this component.
         this._checkWhetherCanLeave = this._checkWhetherCanLeave.bind(this);
+        
+        //Configuring error handler related properties.
+        this._errorQueue = [];
         this._handleError = this._handleError.bind(this);
         this._handleUnhandledPromiseError = this._handleUnhandledPromiseError.bind(this);
         this._handleHandledPromiseError = this._handleHandledPromiseError.bind(this);
+        
+        //Configuring menu visibility save functionality.
         this._saveMenuVisibilityChanges = function (visibleItems, invisibleItems) {
             if (this._saveIdentifier) {
                 this.cancelAsync(this._saveIdentifier);
@@ -551,7 +605,15 @@ Polymer({
             }
         }.bind(this);
         
+        //Add error handling errors
+        window.addEventListener('error', this._handleError, true);
+        window.addEventListener('rejectionhandled', this._handleHandledPromiseError, true);
+        window.addEventListener('unhandledrejection', this._handleUnhandledPromiseError, true);
+
+        //Add error resize event listener
         this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
+        
+        //Add URI (location) change event handler to set history state. 
         window.addEventListener('location-changed', this._replaceStateWithNumber.bind(this));
     },
     
@@ -582,9 +644,6 @@ Polymer({
         });
         
         window.addEventListener("beforeunload", this._checkWhetherCanLeave);
-        window.addEventListener('error', this._handleError, true);
-        window.addEventListener('rejectionhandled', this._handleHandledPromiseError, true);
-        window.addEventListener('unhandledrejection', this._handleUnhandledPromiseError, true);
     },
     
     detached: function () {
