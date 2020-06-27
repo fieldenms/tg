@@ -26,7 +26,7 @@ public abstract class AbstractFunctionalEntityWithCentreContext<K extends Compar
         return context;
     }
     
-    void setContext(final CentreContext<?, ?> context) {
+    public void setContext(final CentreContext<?, ?> context) {
         this.context = context;
     }
     

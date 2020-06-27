@@ -14,6 +14,7 @@ import org.apache.log4j.Logger;
 import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.entity.EntityProducingException;
 import ua.com.fielden.platform.entity.IEntityProducer;
@@ -110,6 +111,12 @@ public class EntityRestorationUtils {
         }
         final T entity;
         if (previouslyAppliedEntity != null) {
+            if (previouslyAppliedEntity instanceof AbstractFunctionalEntityWithCentreContext) {
+                // The context of previously applied entity would be provided here as part of createValidationPrototype method.
+                // This context was initially planned to be used as part of producing logic.
+                // However, this limits our capabilities to decompose parent context on entities that have already been produced previously, and even some modifications would have been applied against them (via validation / saving).
+                ((AbstractFunctionalEntityWithCentreContext<?>) previouslyAppliedEntity).setContext(((DefaultEntityProducerWithContext<T>) producer).getContext());
+            }
             entity = previouslyAppliedEntity;
         } else if (id != null) {
             entity = findByIdWithFiltering(id, companion);
