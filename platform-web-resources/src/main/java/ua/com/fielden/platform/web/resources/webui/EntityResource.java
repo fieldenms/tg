@@ -194,7 +194,8 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
                     } catch (final ClassNotFoundException e) {
                         throw new IllegalStateException(e);
                     }
-                    final AbstractEntity<?> funcEntity = restoreEntityFrom(true, savingInfoHolder, funcEntityType, factory, webUiConfig, companionFinder, user, userProvider, critGenerator, 0, device(), domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion);
+                    // full context, fully-fledged restoration. This means that producers for embedded master entities could use IContextDecomposer extension for context decomposition on deep levels.
+                    final AbstractEntity<?> funcEntity = restoreEntityFrom(savingInfoHolder, funcEntityType, factory, webUiConfig, companionFinder, user, userProvider, critGenerator, 0, device(), domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion);
                     
                     final T entity = EntityRestorationUtils.createValidationPrototypeWithContext(
                             null, 
@@ -214,7 +215,8 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
                 } else {
                     final CentreContextHolder centreContextHolder = restoreCentreContextHolder(envelope, restUtil);
                     
-                    final AbstractEntity<?> masterEntity = restoreMasterFunctionalEntity(true, webUiConfig, companionFinder, user, userProvider, critGenerator, factory, centreContextHolder, 0, device(), domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion);
+                    // full context, fully-fledged restoration. This means that producers could use IContextDecomposer extension for context decomposition on deep levels.
+                    final AbstractEntity<?> masterEntity = restoreMasterFunctionalEntity(webUiConfig, companionFinder, user, userProvider, critGenerator, factory, centreContextHolder, 0, device(), domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion);
                     final Optional<EntityActionConfig> actionConfig = restoreActionConfig(webUiConfig, centreContextHolder);
                     
                     final T entity = EntityRestorationUtils.createValidationPrototypeWithContext(
@@ -287,19 +289,19 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
         final List<String> contProps = !savingInfoHolder.proxiedPropertyNames().contains("continuationProperties") ? savingInfoHolder.getContinuationProperties() : new ArrayList<>();
         final Map<String, IContinuationData> continuations = conts != null && !conts.isEmpty() ?
                 EntityResourceContinuationsHelper.createContinuationsMap(conts, contProps) : new LinkedHashMap<>();
-        final T applied = restoreEntityFrom(false, savingInfoHolder, entityType, entityFactory, webUiConfig, companionFinder, user, userProvider, critGenerator, 0, device, domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion);
+        // The parent context of restored [+with new applied modifications] entity will be empty. Every definer / validator / companion's save should not rely on context but only on entity properties.
+        final T applied = restoreEntityFrom(savingInfoHolder, entityType, entityFactory, webUiConfig, companionFinder, user, userProvider, critGenerator, 0, device, domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion);
 
         return EntityResourceContinuationsHelper.saveWithContinuations(applied, continuations, companion);
     }
 
     /**
      * Restores the functional entity from the <code>savingInfoHolder</code>, that represents it. The <code>savingInfoHolder</code> could potentially contain
-     * <code>contreContextHolder</code> inside, which will be deserialised as well.
+     * <code>centreContextHolder</code> inside, which will be deserialised as well.
      * <p>
      * All parameters, except <code>savingInfoHolder</code> and <code>functionalEntityType</code>, could be taken from injector -- they are needed for centre context
      * deserialisation.
      *
-     * @param disregardPreviouslyAppliedEntities -- indicates whether it is necessary to disregard previouslyAppliedEntity while restoring this entity and its parent functional entities
      * @param savingInfoHolder
      *            -- the actual holder of information about functional entity
      * @param functionalEntityType
@@ -314,7 +316,6 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
      * @return
      */
     public static <T extends AbstractEntity<?>> T restoreEntityFrom(
-            final boolean disregardPreviouslyAppliedEntities,
             final SavingInfoHolder savingInfoHolder,
             final Class<T> functionalEntityType,
             final EntityFactory entityFactory,
@@ -339,9 +340,9 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
         //LOGGER.debug(tabs(tabCount) + "restoreEntityFrom (" + functionalEntityType.getSimpleName() + "): utils.");
         final CentreContextHolder centreContextHolder = !savingInfoHolder.proxiedPropertyNames().contains("centreContextHolder") ? savingInfoHolder.getCentreContextHolder() : null;
         //LOGGER.debug(tabs(tabCount) + "restoreEntityFrom (" + functionalEntityType.getSimpleName() + "): master entity restore...");
-        final AbstractEntity<?> funcEntity = restoreMasterFunctionalEntity(disregardPreviouslyAppliedEntities, webUiConfig, companionFinder, user, userProvider, critGenerator, entityFactory, centreContextHolder, tabCount + 1, device, domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion);
+        final AbstractEntity<?> funcEntity = restoreMasterFunctionalEntity(webUiConfig, companionFinder, user, userProvider, critGenerator, entityFactory, centreContextHolder, tabCount + 1, device, domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion);
         //LOGGER.debug(tabs(tabCount) + "restoreEntityFrom (" + functionalEntityType.getSimpleName() + "): master entity has been restored.");
-        final T restored = restoreEntityFrom(disregardPreviouslyAppliedEntities, webUiConfig, user, userProvider, savingInfoHolder, entityFactory, functionalEntityType, companion, entityProducer, companionFinder, critGenerator, funcEntity /* master context */, tabCount + 1, device, domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion);
+        final T restored = restoreEntityFrom(webUiConfig, user, userProvider, savingInfoHolder, entityFactory, functionalEntityType, companion, entityProducer, companionFinder, critGenerator, funcEntity /* master context */, tabCount + 1, device, domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion);
         final DateTime end = new DateTime();
         final Period pd = new Period(start, end);
         //LOGGER.debug(tabs(tabCount) + "restoreEntityFrom (" + functionalEntityType.getSimpleName() + "): duration: " + pd.getSeconds() + " s " + pd.getMillis() + " ms.");
@@ -349,7 +350,6 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
     }
 
     public static AbstractEntity<?> restoreMasterFunctionalEntity(
-            final boolean disregardPreviouslyAppliedEntities,
             final IWebUiConfig webUiConfig,
             final ICompanionObjectFinder companionFinder,
             final User user,
@@ -381,7 +381,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
             }
 
             if (entityType != null) {
-                entity = restoreEntityFrom(disregardPreviouslyAppliedEntities, outerContext, entityType, entityFactory, webUiConfig, companionFinder, user, userProvider, critGenerator, tabCount + 1, device, domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion);
+                entity = restoreEntityFrom(outerContext, entityType, entityFactory, webUiConfig, companionFinder, user, userProvider, critGenerator, tabCount + 1, device, domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion);
             }
         }
         final DateTime end = new DateTime();
@@ -392,7 +392,6 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
     }
 
     private static <T extends AbstractEntity<?>> T restoreEntityFrom(
-            final boolean disregardPreviouslyAppliedEntities,
             final IWebUiConfig webUiConfig,
             final User user,
             final IUserProvider userProvider,
@@ -412,8 +411,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
             final IUser userCompanion) {
         //LOGGER.debug(tabs(tabCount) + "restoreEntityFrom (PRIVATE): started.");
         final Map<String, Object> modifiedPropertiesHolder = savingInfoHolder.getModifHolder();
-        final T previouslyAppliedEntity = disregardPreviouslyAppliedEntities ? null : // in case where full context should be used for entity restoration -- previouslyAppliedEntity will be disregarded
-            (!savingInfoHolder.proxiedPropertyNames().contains("previouslyAppliedEntity") ? (T) savingInfoHolder.getPreviouslyAppliedEntity() : null);
+        final T previouslyAppliedEntity = (!savingInfoHolder.proxiedPropertyNames().contains("previouslyAppliedEntity") ? (T) savingInfoHolder.getPreviouslyAppliedEntity() : null);
         final T applied;
         final CentreContextHolder centreContextHolder = !savingInfoHolder.proxiedPropertyNames().contains("centreContextHolder") ? savingInfoHolder.getCentreContextHolder() : null;
         if (centreContextHolder == null) {

@@ -155,7 +155,7 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
 
             // create context, if any
             final Optional<CentreContext<T, ?>> context = createCentreContext(
-                true, // full context, fully-fledged restoration. This means that IValueMatcherWithCentreContext descendants (centre matchers) could use IContextDecomposer for context decomposition on deep levels.
+                // full context, fully-fledged restoration. This means that IValueMatcherWithCentreContext descendants (centre matchers) could use IContextDecomposer for context decomposition on deep levels.
                 webUiConfig,
                 companionFinder,
                 user,
