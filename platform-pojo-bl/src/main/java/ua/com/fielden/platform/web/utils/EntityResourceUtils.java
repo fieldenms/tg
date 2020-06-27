@@ -184,7 +184,7 @@ public class EntityResourceUtils {
             // The 'modified' properties are marked using the existence of "val" sub-property.
             if (valAndBaseVal.containsKey("val")) { // this is a modified property
                 processPropertyValue(type, name, valAndBaseVal, entity, companionFinder);
-                logPropertyApplication("   Apply   touched   modified", true, true, type, name, valAndBaseVal, entity, "tcAlert", "locationSubsystem", "service", "outageCausing", "waType");
+                logPropertyApplication("   Apply   touched   modified", true, true, type, name, valAndBaseVal, entity, touchedProps.toArray(new String[] {}));
             }
         }
         // IMPORTANT: the check for invalid will populate 'required' checks.

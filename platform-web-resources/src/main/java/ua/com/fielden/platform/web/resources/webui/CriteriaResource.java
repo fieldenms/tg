@@ -520,7 +520,7 @@ public class CriteriaResource extends AbstractWebResource {
         centre.getDynamicProperties().forEach(resProp -> {
             resProp.dynamicColBuilderType.ifPresent(propDefinerClass -> {
                 final Optional<CentreContext<AbstractEntity<?>, ?>> optionalCentreContext = CentreResourceUtils.createCentreContext(
-                        true, // full context, fully-fledged restoration. This means that IQueryEnhancer descendants (centre query enhancers) could use IContextDecomposer for context decomposition on deep levels.
+                        true, // full context, fully-fledged restoration. This means that IDynamicColumnBuilder descendants could use IContextDecomposer for context decomposition on deep levels.
                         webUiConfig,
                         companionFinder,
                         user,
