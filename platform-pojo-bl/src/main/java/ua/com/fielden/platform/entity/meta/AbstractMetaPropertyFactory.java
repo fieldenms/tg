@@ -31,7 +31,7 @@ import ua.com.fielden.platform.entity.annotation.mutator.MoneyParam;
 import ua.com.fielden.platform.entity.annotation.mutator.PropParam;
 import ua.com.fielden.platform.entity.annotation.mutator.StrParam;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
-import ua.com.fielden.platform.entity.exceptions.PropertyBceDefinitionException;
+import ua.com.fielden.platform.entity.exceptions.PropertyBceOrAceDefinitionException;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.entity.validation.EntityExistsValidator;
@@ -51,7 +51,6 @@ import ua.com.fielden.platform.entity.validation.annotation.Max;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.StringConverter;
@@ -68,6 +67,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
     public static final String UNRECOGNISED_VALIDATION_ANNOTATION = "Unrecognised validation annotation has been encountered.";
     public static final String INJECTOR_IS_MISSING = "Meta-property factory is not fully initialised -- injector is missing";
     public static final String HANDLER_WITH_ANOTHER_HANDLER_AS_PARAMETER = "BCE/ACE handlers should not have a another BCE/ACE handler as its parameter.";
+    public static final String ERR_INVALID_PROPERTY_NAME_FOR_PROP_PARAM = "Invalid property name [%s] for entity [%s].";
 
     protected final FinalValidator[] persistedOnlyFinalValidator = new FinalValidator[]{new FinalValidator(true)};
     protected final FinalValidator[] notPersistedOnlyFinalValidator = new FinalValidator[]{new FinalValidator(false)};
@@ -212,10 +212,10 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
         for (final ClassParam param : params) {
             final Class<?> type = param.value();
             if (IBeforeChangeEventHandler.class.isAssignableFrom(type)) {
-                throw new PropertyBceDefinitionException(HANDLER_WITH_ANOTHER_HANDLER_AS_PARAMETER);
+                throw new PropertyBceOrAceDefinitionException(HANDLER_WITH_ANOTHER_HANDLER_AS_PARAMETER);
             }
             if (IAfterChangeEventHandler.class.isAssignableFrom(type)) {
-                throw new PropertyBceDefinitionException(HANDLER_WITH_ANOTHER_HANDLER_AS_PARAMETER);
+                throw new PropertyBceOrAceDefinitionException(HANDLER_WITH_ANOTHER_HANDLER_AS_PARAMETER);
             }
 
             final Object value = injector.getInstance(type);
@@ -224,7 +224,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
             try {
                 paramField.set(handler, value);
             } catch (final Exception ex) {
-                throw new PropertyBceDefinitionException("Could not initialise parameter " + param.name() + "@" + handler.getClass().getName(), ex);
+                throw new PropertyBceOrAceDefinitionException("Could not initialise parameter " + param.name() + "@" + handler.getClass().getName(), ex);
             }
         }
     }
@@ -240,10 +240,10 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
         for (final ClassParam param : params) {
             final Class<?> type = param.value();
             if (IBeforeChangeEventHandler.class.isAssignableFrom(type)) {
-                throw new PropertyBceDefinitionException(HANDLER_WITH_ANOTHER_HANDLER_AS_PARAMETER);
+                throw new PropertyBceOrAceDefinitionException(HANDLER_WITH_ANOTHER_HANDLER_AS_PARAMETER);
             }
             if (IAfterChangeEventHandler.class.isAssignableFrom(type)) {
-                throw new PropertyBceDefinitionException(HANDLER_WITH_ANOTHER_HANDLER_AS_PARAMETER);
+                throw new PropertyBceOrAceDefinitionException(HANDLER_WITH_ANOTHER_HANDLER_AS_PARAMETER);
             }
 
             final Field paramField = Finder.getFieldByName(handler.getClass(), param.name());
@@ -251,7 +251,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
             try {
                 paramField.set(handler, type);
             } catch (final Exception ex) {
-                throw new PropertyBceDefinitionException("Could not initialise parameter " + param.name() + "@" + handler.getClass().getName(), ex);
+                throw new PropertyBceOrAceDefinitionException("Could not initialise parameter " + param.name() + "@" + handler.getClass().getName(), ex);
             }
         }
     }
@@ -270,7 +270,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
             try {
                 paramField.set(handler, param.value());
             } catch (final Exception ex) {
-                throw new PropertyBceDefinitionException("Could not initialise parameter " + param.name() + "@" + handler.getClass().getName(), ex);
+                throw new PropertyBceOrAceDefinitionException("Could not initialise parameter " + param.name() + "@" + handler.getClass().getName(), ex);
             }
         }
     }
@@ -289,7 +289,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
             try {
                 paramField.set(handler, param.value());
             } catch (final Exception ex) {
-                throw new PropertyBceDefinitionException("Could not initialise parameter " + param.name() + "@" + handler.getClass().getName(), ex);
+                throw new PropertyBceOrAceDefinitionException("Could not initialise parameter " + param.name() + "@" + handler.getClass().getName(), ex);
             }
         }
     }
@@ -308,7 +308,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
             try {
                 paramField.set(handler, param.value());
             } catch (final Exception ex) {
-                throw new PropertyBceDefinitionException("Could not initialise parameter " + param.name() + "@" + handler.getClass().getName(), ex);
+                throw new PropertyBceOrAceDefinitionException("Could not initialise parameter " + param.name() + "@" + handler.getClass().getName(), ex);
             }
         }
     }
@@ -322,18 +322,17 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
      */
     private void initPropHandlerParameters(final AbstractEntity<?> entity, final PropParam[] params, final Object handler) {
         for (final PropParam param : params) {
-            final Field paramField = Finder.getFieldByName(handler.getClass(), param.name());
-            final Class<?> propType = PropertyTypeDeterminator.determinePropertyType(entity.getClass(), param.propName());
-            if (!paramField.getType().isAssignableFrom(propType)) {
-                throw new PropertyBceDefinitionException(format("Parameter %s@%s is not assignable from property %s@%s due to incompatible types [%s] and [%s].",
-                        param.name(), handler.getClass().getName(), param.propName(), entity.getType().getName(), paramField.getType().getName(), propType.getName()));
+            final String propName = param.propName();
+            if (!Finder.isPropertyPresent(entity.getClass(), propName)) {
+                throw new PropertyBceOrAceDefinitionException(format(ERR_INVALID_PROPERTY_NAME_FOR_PROP_PARAM, propName, entity.getType().getName()));
             }
-            final Object propValue = entity.get(param.propName());
+            
+            final Field paramField = Finder.getFieldByName(handler.getClass(), param.name());
             paramField.setAccessible(true);
             try {
-                paramField.set(handler, propValue);
+                paramField.set(handler, param.propName());
             } catch (final Exception ex) {
-                throw new PropertyBceDefinitionException(format("Could not initialise parameter %s@%s", param.name(), handler.getClass().getName()), ex);
+                throw new PropertyBceOrAceDefinitionException(format("Could not initialise parameter %s@%s", param.name(), handler.getClass().getName()), ex);
             }
         }
     }
@@ -352,7 +351,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
             try {
                 paramField.set(handler, StringConverter.toDate(param.value(), dates));
             } catch (final Exception ex) {
-                throw new PropertyBceDefinitionException("Could not initialise parameter " + param.name() + "@" + handler.getClass().getName(), ex);
+                throw new PropertyBceOrAceDefinitionException("Could not initialise parameter " + param.name() + "@" + handler.getClass().getName(), ex);
             }
         }
     }
@@ -371,7 +370,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
             try {
                 paramField.set(handler, StringConverter.toDateTime(param.value(), dates));
             } catch (final Exception ex) {
-                throw new PropertyBceDefinitionException("Could not initialise parameter " + param.name() + "@" + handler.getClass().getName(), ex);
+                throw new PropertyBceOrAceDefinitionException("Could not initialise parameter " + param.name() + "@" + handler.getClass().getName(), ex);
             }
         }
     }
@@ -390,7 +389,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
             try {
                 paramField.set(handler, StringConverter.toMoney(param.value()));
             } catch (final Exception ex) {
-                throw new PropertyBceDefinitionException("Could not initialise parameter " + param.name() + "@" + handler.getClass().getName(), ex);
+                throw new PropertyBceOrAceDefinitionException("Could not initialise parameter " + param.name() + "@" + handler.getClass().getName(), ex);
             }
         }
     }
@@ -411,7 +410,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
             try {
                 value = Enum.valueOf(enumType, param.value());
             } catch (final Exception e) {
-                throw new PropertyBceDefinitionException(format("Value [%s] is not of type [%s].", param.value(), enumType.getName()));
+                throw new PropertyBceOrAceDefinitionException(format("Value [%s] is not of type [%s].", param.value(), enumType.getName()));
             }
 
             final Field paramField = Finder.getFieldByName(handler.getClass(), param.name());
@@ -419,7 +418,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
             try {
                 paramField.set(handler, value);
             } catch (final Exception ex) {
-                throw new PropertyBceDefinitionException("Could not initialise parameter " + param.name() + "@" + handler.getClass().getName(), ex);
+                throw new PropertyBceOrAceDefinitionException("Could not initialise parameter " + param.name() + "@" + handler.getClass().getName(), ex);
             }
         }
     }
