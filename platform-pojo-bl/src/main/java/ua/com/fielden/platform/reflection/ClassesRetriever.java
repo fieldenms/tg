@@ -129,7 +129,7 @@ public class ClassesRetriever {
             return getClassesInPackage(path, packageName, (testClass) -> isClassDerivedFrom(testClass, superClass)).stream()
                     .map(type -> (Class<? extends T>) type).collect(toList());
         } catch (final Exception ex) {
-            throw new ReflectionException(format("Could not get classes on pathe [%s] in package [%s].", path, packageName), ex);
+            throw new ReflectionException(format("Could not get classes on path [%s] in package [%s].", path, packageName), ex);
         }
     }
 

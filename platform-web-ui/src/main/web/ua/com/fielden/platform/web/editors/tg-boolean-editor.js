@@ -85,8 +85,7 @@ export class TgBooleanEditor extends TgEditor {
             return editingValue === 'true';
         }).bind(this);
     }
-
-        
+    
     /**
      * This method returns a default value for '_editingValue', which is used 
      *  for representing the value when no entity was bound to this editor yet.
@@ -97,13 +96,6 @@ export class TgBooleanEditor extends TgEditor {
         return 'false';
     }
     
-    /**
-     * Converts the value into string representation (which is used in edititing / comm values).
-     */
-    convertToString (value) {
-        return "" + value;
-    }
-
     /**
      * Converts the value from string representation (which is used in edititing / comm values) into concrete type of this editor component (String).
      */

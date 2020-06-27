@@ -11,6 +11,7 @@ import org.restlet.security.Authenticator;
 
 import com.google.inject.Injector;
 
+import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebResourceLoader;
@@ -28,6 +29,7 @@ import ua.com.fielden.platform.web.factories.webui.EntityValidationResourceFacto
 import ua.com.fielden.platform.web.factories.webui.FileResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.MainWebUiComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.MasterComponentResourceFactory;
+import ua.com.fielden.platform.web.factories.webui.MasterInfoProviderResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.MasterTestsComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.SerialisationTestResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.ServiceWorkerResourceFactory;
@@ -120,7 +122,7 @@ public abstract class AbstractWebUiResources extends Application {
         final RestServerUtil restUtil = injector.getInstance(RestServerUtil.class);
 
         // Attach main application resource.
-        router.attach("/", new AppIndexResourceFactory(webResourceLoader, webApp, userProvider, deviceProvider, dates));
+        router.attach("/", new AppIndexResourceFactory(webResourceLoader, webApp, userProvider, deviceProvider, dates, injector.getInstance(ICriteriaGenerator.class)));
         router.attach("/app/tg-app-config.js", new WebUiPreferencesResourceFactory(webResourceLoader, deviceProvider, dates));
         router.attach("/app/tg-app.js", new MainWebUiComponentResourceFactory(webResourceLoader, deviceProvider, dates));
         // type meta info resource
@@ -131,6 +133,9 @@ public abstract class AbstractWebUiResources extends Application {
         router.attach("/test/serialisation", new SerialisationTestResourceFactory(injector));
         // For egi example TODO remove later.
         router.attach("/test/egi", new EgiExampleResourceFactory(injector));
+
+        //Attache master retrieve resources
+        router.attach("/master/{entityType}", new MasterInfoProviderResourceFactory(webApp, deviceProvider, dates, restUtil));
 
         // Registering entity centres:
         attachCentreResources(router, webApp, restUtil);

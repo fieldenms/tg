@@ -11,6 +11,7 @@ import static ua.com.fielden.platform.companion.AbstractEntityReader.ERR_MISSING
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllInclCalc;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithoutCritOnly;
 import static ua.com.fielden.platform.utils.EntityUtils.fetch;
@@ -26,8 +27,10 @@ import org.joda.time.DateTime;
 import org.junit.Test;
 
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
@@ -52,8 +55,10 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
     public void test_that_entity_with_simple_key_is_handled_correctly() {
         final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
 
+        final EntityResultQueryModel<EntityWithMoney> query = select(EntityWithMoney.class).model();
+        final OrderingModel orderBy = orderBy().prop(AbstractEntity.ID).asc().model();
         // find all
-        final List<EntityWithMoney> result = dao.getPage(0, 25).data();
+        final List<EntityWithMoney> result = dao.getPage(from(query).with(orderBy).model(), 0, 25).data();
         assertEquals("Incorrect number of retrieved entities.", 4, result.size());
         assertEquals("Incorrect key value.", "KEY1", result.get(0).getKey());
         // find by id
@@ -344,8 +349,10 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
         final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
         final EntityWithDynamicCompositeKeyDao daoComposite = co$(EntityWithDynamicCompositeKey.class);
 
+        final EntityResultQueryModel<EntityWithDynamicCompositeKey> query = select(EntityWithDynamicCompositeKey.class).model();
+        final OrderingModel orderBy = orderBy().prop(AbstractEntity.ID).asc().model();
         // find all
-        final List<EntityWithDynamicCompositeKey> result = daoComposite.getPage(0, 25).data();
+        final List<EntityWithDynamicCompositeKey> result = daoComposite.getPage(from(query).with(orderBy).model(), 0, 25).data();
         assertEquals("Incorrect number of retrieved entities.", 2, result.size());
         assertEquals("Incorrect key value.", new DynamicEntityKey(result.get(0)), result.get(0).getKey());
         // find by key
@@ -361,7 +368,10 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
     public void test_that_unfiltered_pagination_works() {
         final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
 
-        final IPage<EntityWithMoney> page = dao.firstPage(2);
+        final EntityResultQueryModel<EntityWithMoney> query = select(EntityWithMoney.class).model();
+        final OrderingModel orderBy = orderBy().prop(AbstractEntity.ID).asc().model();
+
+        final IPage<EntityWithMoney> page = dao.firstPage(from(query).with(orderBy).model(), 2);
         assertEquals("Incorrect number of instances on the page.", 2, page.data().size());
         assertTrue("Page should have the next one.", page.hasNext());
 
@@ -407,11 +417,32 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void test_entity_exists_using_entity() {
-        final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
+    public void entityExists_is_true_for_persisted_entities() {
+        final EntityWithMoneyDao co = co$(EntityWithMoney.class);
 
-        final EntityWithMoney entity = dao.findByKey("key1");
-        assertTrue(dao.entityExists(entity));
+        final EntityWithMoney entity = co.findByKey("key1");
+        assertTrue(co.entityExists(entity));
+    }
+
+    @Test
+    public void entityExists_is_true_IDs_matching_persisted_entities() {
+        final EntityWithMoneyDao co = co$(EntityWithMoney.class);
+
+        final EntityWithMoney entity = co.findByKey("key1");
+        assertTrue(co.entityExists(entity.getId()));
+    }
+
+    @Test
+    public void entityExists_is_false_for_not_persisted_entities() {
+        final EntityWithMoneyDao co = co$(EntityWithMoney.class);
+        final EntityWithMoney entity = co.new_();
+        assertFalse(co.entityExists(entity));
+    }
+
+    @Test
+    public void entityExists_is_false_for_IDs_not_matching_any_persisted_entities() {
+        final EntityWithMoneyDao co = co$(EntityWithMoney.class);
+        assertFalse(co.entityExists(-1L));
     }
 
     @Test
@@ -656,18 +687,15 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void test_entity_staleness_check() {
+    public void isStale_holds_only_for_stale_entities() {
         final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
 
         final EntityWithMoney entity = dao.findByKey("key1");
+        assertTrue(0L == dao.save(entity).getVersion());
         // update entity to simulate staleness
-        entity.setDesc("new desc");
-        dao.save(entity);
+        assertTrue(1L == dao.save(entity.setDesc("new desc")).getVersion());
 
-        dao.findByKey("key1");
         assertTrue("This version should have been recognised as stale.", dao.isStale(entity.getId(), 0L));
-        //assertTrue("This version should have been recognised as stale.", dao.isStale(entity.getId(), 1L));
-        //assertFalse("This version should have been recognised as current.", dao.isStale(entity.getId(), 2L));
         assertFalse("This version should have been recognised as current.", dao.isStale(entity.getId(), 1L));
     }
 

@@ -2,11 +2,17 @@ package ua.com.fielden.platform.ui.entity.centre;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.util.List;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserDao;
@@ -45,7 +51,9 @@ public class EntityCentreAnalysisConfigPersistenceTest extends AbstractDaoTestCa
         final EntityCentreAnalysisConfig analysis = new_composite(EntityCentreAnalysisConfig.class, config2, "ANALYSIS 1");
         dao.save(analysis);
 
-        final List<EntityCentreAnalysisConfig> result = dao.getPage(0, 25).data();
+        final EntityResultQueryModel<EntityCentreAnalysisConfig> query = select(EntityCentreAnalysisConfig.class).model();
+        final OrderingModel orderBy = orderBy().prop(AbstractEntity.ID).asc().model();
+        final List<EntityCentreAnalysisConfig> result = dao.getPage(from(query).with(orderBy).model(), 0, 25).data();
         assertEquals("Incorrect number of retrieved configurations.", 1, result.size());
         assertTrue("Incorrectly saved binary property.", EntityUtils.equalsEx("ANALYSIS 1", result.get(0).getTitle()));
     }

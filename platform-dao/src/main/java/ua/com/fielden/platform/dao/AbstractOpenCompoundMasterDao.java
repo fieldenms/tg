@@ -100,11 +100,11 @@ public abstract class AbstractOpenCompoundMasterDao<T extends AbstractFunctional
         // otherwise let's construct an EQL statement to check existence of one-2-many associations with entity
         ISubsequentCompletedAndYielded<AbstractEntity<?>> queryPart = select().yield().val(1).as("#common_one#");
         for(final T3<String, Class<? extends AbstractEntity<?>>, BiFunction<IWhere0<? extends AbstractEntity<?>>, Object, ICompleted<? extends AbstractEntity<?>>>> pair: compoundMasterConfig) {
-            queryPart = queryPart.yield().caseWhen().exists(pair._3.apply(select(pair._2).where(), entity.getKey()).model())
+            queryPart = queryPart.yield().caseWhen().exists(pair._3.apply(select(pair._2).where(), entity.getKey()).model().setFilterable(true))
                     .then().val(1).otherwise().val(0).endAsInt().as(pair._1);
         }
         for (final T3<String, Class<? extends AbstractEntity<?>>, Map<String, Function<Object, Object>>> pair : parameters) {
-            queryPart = queryPart.yield().caseWhen().exists(select(pair._2).model())
+            queryPart = queryPart.yield().caseWhen().exists(select(pair._2).model().setFilterable(true))
                     .then().val(1).otherwise().val(0).endAsInt().as(pair._1);
         }
         final Map<String, Object> queryParams = new HashMap<>();

@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.sample.domain.compound.producers;
 
+import static ua.com.fielden.platform.web.utils.EntityRestorationUtils.findByKeyWithFiltering;
+
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.entity.DefaultEntityProducerWithContext;
@@ -26,7 +28,7 @@ public class TgCompoundEntityDetailProducer extends DefaultEntityProducerWithCon
     protected TgCompoundEntityDetail provideDefaultValues(final TgCompoundEntityDetail entity) {
         if (keyOfMasterEntityInstanceOf(TgCompoundEntity.class)) {
             final TgCompoundEntity instance = keyOfMasterEntity(TgCompoundEntity.class);
-            return co$(TgCompoundEntityDetail.class).findByKeyAndFetch(co$(TgCompoundEntityDetail.class).getFetchProvider().fetchModel(), instance);
+            return findByKeyWithFiltering(co$(TgCompoundEntityDetail.class), instance);
         } else {
             throw new CompoundModuleException("Not supported.");
         }

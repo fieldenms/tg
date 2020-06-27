@@ -46,7 +46,7 @@ public class SecondLevelEntityDaoStub implements ISecondLevelEntity {
     }
 
     @Override
-    public SecondLevelEntity findById(final Long id, final fetch<SecondLevelEntity> fetchModel) {
+    public SecondLevelEntity findById(final boolean filtered, final Long id, final fetch<SecondLevelEntity> fetchModel) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -64,19 +64,7 @@ public class SecondLevelEntityDaoStub implements ISecondLevelEntity {
     }
 
     @Override
-    public SecondLevelEntity findByKeyAndFetch(final fetch<SecondLevelEntity> fetchModel, final Object... keyValues) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public IPage<SecondLevelEntity> firstPage(final int pageCapacity) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public IPage<SecondLevelEntity> getPage(final int pageNo, final int pageCapacity) {
+    public SecondLevelEntity findByKeyAndFetch(final boolean filtered, final fetch<SecondLevelEntity> fetchModel, final Object... keyValues) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -188,19 +176,19 @@ public class SecondLevelEntityDaoStub implements ISecondLevelEntity {
     }
 
     @Override
-    public Stream<SecondLevelEntity> stream(QueryExecutionModel<SecondLevelEntity, ?> qem, int fetchSize) {
+    public Stream<SecondLevelEntity> stream(final QueryExecutionModel<SecondLevelEntity, ?> qem, final int fetchSize) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public Stream<SecondLevelEntity> stream(QueryExecutionModel<SecondLevelEntity, ?> qem) {
+    public Stream<SecondLevelEntity> stream(final QueryExecutionModel<SecondLevelEntity, ?> qem) {
         // TODO Auto-generated method stub
         return null;
     }
 
 	@Override
-	public boolean exists(EntityResultQueryModel<SecondLevelEntity> model, Map<String, Object> paramValues) {
+	public boolean exists(final EntityResultQueryModel<SecondLevelEntity> model, final Map<String, Object> paramValues) {
 		// TODO Auto-generated method stub
 		return false;
 	}
