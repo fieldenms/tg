@@ -8,9 +8,9 @@ import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeK
 import com.google.inject.Inject;
 
 /**
- * This is a test DOA with a composite key implemented by {@link DynamicEntityKey}.
+ * This is a test DAO with a composite key implemented by {@link DynamicEntityKey}.
  * 
- * @author 01es
+ * @author TG Team
  * 
  */
 @EntityType(EntityWithDynamicCompositeKey.class)
