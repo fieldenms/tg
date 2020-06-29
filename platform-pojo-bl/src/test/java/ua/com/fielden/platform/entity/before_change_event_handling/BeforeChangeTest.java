@@ -18,9 +18,7 @@ import org.junit.Test;
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
-import ua.com.fielden.platform.entity.exceptions.PropertyBceOrAceDefinitionException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.meta.AbstractMetaPropertyFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
@@ -54,7 +52,7 @@ public class BeforeChangeTest {
     }
 
     @Test
-    public void all_BCE_handler_param_are_assigned_as_per_definition() {
+    public void all_BCE_handler_params_are_assigned_as_per_definition() {
         final Entity entity = factory.newByKey(Entity.class, "key");
 
         final Map<IBeforeChangeEventHandler<String>, Result> handlers = entity.<String>getProperty("property1").getValidators().get(ValidationAnnotation.BEFORE_CHANGE);
@@ -77,7 +75,7 @@ public class BeforeChangeTest {
     public void instantiation_of_entity_with_BCE_that_has_invalid_propParam_fails() {
         try {
             factory.newByKey(EntityWithInvalidBceDefinition.class, "key");
-            fail("Instation should have fa8led due to inalid property reference.");
+            fail("Instantiation should have failed due to inalid property reference.");
         } catch (final Exception ex) {
             final String stackTrace = ExceptionUtils.getStackTrace(ex);
             assertTrue(stackTrace.contains(format(ERR_INVALID_PROPERTY_NAME_FOR_PROP_PARAM, "property2", EntityWithInvalidBceDefinition.class.getName())));
