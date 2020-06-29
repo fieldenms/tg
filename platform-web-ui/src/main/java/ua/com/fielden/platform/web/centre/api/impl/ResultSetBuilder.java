@@ -57,17 +57,18 @@ import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHa
 import ua.com.fielden.platform.web.centre.api.resultset.IDynamicColumnBuilder;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetAutocompleterConfig;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder0Checkbox;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder0HideEgi;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1Toolbar;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aScroll;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1bPageCapacity;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cHeaderWrap;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cVisibleRowsCount;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1dFitBehaviour;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1eRowHeight;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1bCheckbox;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aHideEgi;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cToolbar;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1dScroll;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1fPageCapacity;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1gMaxPageCapacity;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1hHeaderWrap;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1iVisibleRowsCount;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1jFitBehaviour;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1kRowHeight;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2Properties;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2aDraggable;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1eDraggable;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder3Ordering;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder4OrderingDirection;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder4aWidth;
@@ -106,7 +107,7 @@ import ua.com.fielden.platform.web.view.master.api.widgets.spinner.impl.SpinnerW
  *
  * @param <T>
  */
-class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilderAlsoDynamicProps<T>, IResultSetBuilderWidgetSelector<T>, IResultSetBuilder3Ordering<T>, IResultSetBuilder0HideEgi<T>, IResultSetBuilder4OrderingDirection<T>, IResultSetBuilder7SecondaryAction<T>, IExpandedCardLayoutConfig<T>, ISummaryCardLayout<T>, IInsertionPointsFlexible<T> {
+class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilderAlsoDynamicProps<T>, IResultSetBuilderWidgetSelector<T>, IResultSetBuilder3Ordering<T>, IResultSetBuilder1aHideEgi<T>, IResultSetBuilder4OrderingDirection<T>, IResultSetBuilder7SecondaryAction<T>, IExpandedCardLayoutConfig<T>, ISummaryCardLayout<T>, IInsertionPointsFlexible<T> {
 
     private static final String ERR_EDITABLE_SUB_PROP_DISALLOWED = "Dot-notated property [%s] cannot be added as editable. Only first-level properties are supported.";
 
@@ -521,25 +522,25 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IResultSetBuilder0Checkbox<T> hideEgi() {
+    public IResultSetBuilder1bCheckbox<T> hideEgi() {
         this.builder.egiHidden = true;
         return this;
     }
 
     @Override
-    public IResultSetBuilder1Toolbar<T> hideCheckboxes() {
+    public IResultSetBuilder1cToolbar<T> hideCheckboxes() {
         this.builder.hideCheckboxes = true;
         return this;
     }
 
     @Override
-    public IResultSetBuilder1aScroll<T> hideToolbar() {
+    public IResultSetBuilder1dScroll<T> hideToolbar() {
         this.builder.hideToolbar = true;
         return this;
     }
 
     @Override
-    public IResultSetBuilder2aDraggable<T> notScrollable() {
+    public IResultSetBuilder1eDraggable<T> notScrollable() {
         this.builder.scrollConfig = ScrollConfig.configScroll()
                 .withFixedCheckboxesAndPrimaryActions()
                 .withFixedSecondaryActions()
@@ -550,43 +551,49 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IResultSetBuilder1cHeaderWrap<T> setPageCapacity(final int pageCapacity) {
+    public IResultSetBuilder1gMaxPageCapacity<T> setPageCapacity(final int pageCapacity) {
         this.builder.pageCapacity = pageCapacity;
         return this;
     }
 
     @Override
-    public IResultSetBuilder1dFitBehaviour<T> setVisibleRowsCount(final int visibleRowsCount) {
+    public IResultSetBuilder1hHeaderWrap<T> setMaxPageCapacity(final int maxPageCapacity) {
+        this.builder.maxPageCapacity = maxPageCapacity;
+        return this;
+    }
+
+    @Override
+    public IResultSetBuilder1jFitBehaviour<T> setVisibleRowsCount(final int visibleRowsCount) {
         this.builder.visibleRowsCount = visibleRowsCount;
         return this;
     }
 
     @Override
-    public IResultSetBuilder2aDraggable<T> withScrollingConfig(final IScrollConfig scrollConfig) {
+    public IResultSetBuilder1eDraggable<T> withScrollingConfig(final IScrollConfig scrollConfig) {
         this.builder.scrollConfig = scrollConfig;
         return this;
     }
 
     @Override
-    public IResultSetBuilder1aScroll<T> setToolbar(final IToolbarConfig toolbar) {
+    public IResultSetBuilder1dScroll<T> setToolbar(final IToolbarConfig toolbar) {
         this.builder.toolbarConfig = toolbar;
         return this;
     }
 
     @Override
-    public IResultSetBuilder1bPageCapacity<T> draggable() {
+    public IResultSetBuilder1fPageCapacity<T> draggable() {
         builder.draggable = true;
         return this;
     }
 
     @Override
-    public IResultSetBuilder1dFitBehaviour<T> setHeight(final String height) {
+    public IResultSetBuilder1jFitBehaviour<T> setHeight(final String height) {
         this.builder.egiHeight = height;
         return this;
     }
 
     @Override
-    public IResultSetBuilder1eRowHeight<T> fitToHeight() {
+    public IResultSetBuilder1kRowHeight<T> fitToHeight() {
         this.builder.fitToHeight = true;
         return this;
     }
@@ -627,7 +634,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IResultSetBuilder1cVisibleRowsCount<T> wrapHeader(final int headerLineNumber) {
+    public IResultSetBuilder1iVisibleRowsCount<T> wrapHeader(final int headerLineNumber) {
         this.builder.setHeaderLineNumber(headerLineNumber);
         return this;
     }

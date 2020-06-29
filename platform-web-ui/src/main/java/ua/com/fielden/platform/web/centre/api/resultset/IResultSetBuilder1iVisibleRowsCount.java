@@ -10,9 +10,9 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  *
  * @param <T>
  */
-public interface IResultSetBuilder1cVisibleRowsCount<T extends AbstractEntity<?>> extends IResultSetBuilder1dFitBehaviour<T> {
+public interface IResultSetBuilder1iVisibleRowsCount<T extends AbstractEntity<?>> extends IResultSetBuilder1jFitBehaviour<T> {
 
-    IResultSetBuilder1dFitBehaviour<T> setVisibleRowsCount(int visibleRowsCount);
+    IResultSetBuilder1jFitBehaviour<T> setVisibleRowsCount(int visibleRowsCount);
 
     /**
      * Set the height for egi. The height parameter could be anything that one can specify as height css style for element (e.g. '100%', 640px, 'fit-content', '100vh', etc.)
@@ -20,5 +20,5 @@ public interface IResultSetBuilder1cVisibleRowsCount<T extends AbstractEntity<?>
      * @param height
      * @return
      */
-    IResultSetBuilder1dFitBehaviour<T> setHeight(String height);
+    IResultSetBuilder1jFitBehaviour<T> setHeight(String height);
 }
