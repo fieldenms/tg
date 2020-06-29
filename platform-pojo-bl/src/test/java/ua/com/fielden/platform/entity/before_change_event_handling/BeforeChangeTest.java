@@ -52,7 +52,7 @@ public class BeforeChangeTest {
     }
 
     @Test
-    public void all_BCE_handler_param_are_assigned_as_per_definition() {
+    public void all_BCE_handler_params_are_assigned_as_per_definition() {
         final Entity entity = factory.newByKey(Entity.class, "key");
 
         final Map<IBeforeChangeEventHandler<String>, Result> handlers = entity.<String>getProperty("property1").getValidators().get(ValidationAnnotation.BEFORE_CHANGE);
