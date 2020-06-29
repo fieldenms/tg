@@ -3,6 +3,7 @@ package ua.com.fielden.platform.entity.validation;
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.math.BigDecimal;
@@ -15,6 +16,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.test_entities.EntityWithGreaterAndMaxValidations;
 import ua.com.fielden.platform.entity.validation.test_entities.EntityWithGreaterOrEqualValidation;
+import ua.com.fielden.platform.entity.validation.test_entities.EntityWithMaxValidationWithPropParam;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
@@ -167,6 +169,58 @@ public class GreaterEqualAndMaxPropertyValidatorTest {
         assertFalse(mpMoneyProp.isValid());
         assertEquals(format(GreaterOrEqualValidator.ERR_VALUE_SHOULD_BE_GREATER_THAN_OR_EQUAL_TO, limit), mpMoneyProp.getFirstFailure().getMessage());
         entity.setMoneyProp(new Money(limit));
+        assertTrue(mpMoneyProp.isValid());
+    }
+
+    @Test
+    public void max_limit_as_property_with_missing_value_fails_validation_with_meaningful_error() {
+        final EntityWithMaxValidationWithPropParam entity = factory.newEntity(EntityWithMaxValidationWithPropParam.class);
+        assertNull(entity.getMaxLimitProp());
+
+        final MetaProperty<BigDecimal> mpInitProp = entity.getProperty("intProp");
+        entity.setIntProp(42);
+        assertFalse(mpInitProp.isValid());
+        assertEquals(MaxValueValidator.ERR_LIMIT_VALUE_COULD_NOT_BE_DETERMINED, mpInitProp.getFirstFailure().getMessage());
+    }
+
+    @Test
+    public void value_must_not_exceed_max_limit_as_property() {
+        final EntityWithMaxValidationWithPropParam entity = factory.newEntity(EntityWithMaxValidationWithPropParam.class);
+        entity.setMaxLimitProp(new BigDecimal("1.50"));
+        assertEquals(new BigDecimal("1.50"), entity.getMaxLimitProp());
+
+        final MetaProperty<BigDecimal> mpInitProp = entity.getProperty("intProp");
+        entity.setIntProp(2);
+        assertFalse(mpInitProp.isValid());
+        assertEquals(format(MaxValueValidator.ERR_VALUE_SHOULD_NOT_EXCEED_MAX, entity.getMaxLimitProp()), mpInitProp.getFirstFailure().getMessage());
+
+        entity.setIntProp(1);
+        assertTrue(mpInitProp.isValid());
+    }
+
+    @Test
+    public void adjusting_max_limit_as_property_revalidates_dependent_properties() {
+        final EntityWithMaxValidationWithPropParam entity = factory.newEntity(EntityWithMaxValidationWithPropParam.class);
+        entity.setMaxLimitProp(new BigDecimal("1.50"));
+        assertEquals(new BigDecimal("1.50"), entity.getMaxLimitProp());
+        
+        final MetaProperty<BigDecimal> mpInitProp = entity.getProperty("intProp");
+        entity.setIntProp(2);
+        assertFalse(mpInitProp.isValid());
+        assertEquals(format(MaxValueValidator.ERR_VALUE_SHOULD_NOT_EXCEED_MAX, entity.getMaxLimitProp()), mpInitProp.getFirstFailure().getMessage());
+        
+        entity.setMaxLimitProp(new BigDecimal("2.00"));
+        assertTrue(mpInitProp.isValid());
+    }
+
+    @Test
+    public void max_limit_constant_takes_precedence_over_limit_as_property() {
+        final EntityWithMaxValidationWithPropParam entity = factory.newEntity(EntityWithMaxValidationWithPropParam.class);
+        entity.setMaxLimitProp(new BigDecimal("1.50"));
+        assertEquals(new BigDecimal("1.50"), entity.getMaxLimitProp());
+        
+        final MetaProperty<BigDecimal> mpMoneyProp = entity.getProperty("moneyProp");
+        entity.setMoneyProp(Money.of("42.00"));
         assertTrue(mpMoneyProp.isValid());
     }
 
