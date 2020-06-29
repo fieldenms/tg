@@ -55,6 +55,7 @@ public class Entity extends AbstractEntity<String> {
             integer = { @IntParam(name = "intParam1", value = 1),
                         @IntParam(name = "intParam2", value = 12) },
             str = { @StrParam(name = "strParam", value = "string value") },
+            prop = { @PropParam(name = "propNameParam", propName = "property2") },
             dbl = { @DblParam(name = "dblParam", value = 0.65) },
             date = { @DateParam(name = "dateParam", value = "2011-12-01 00:00:00") },
             date_time = { @DateTimeParam(name = "dateTimeParam", value = "2011-12-01 00:00:00") },
