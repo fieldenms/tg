@@ -49,7 +49,7 @@ public class PathsToTreeTransformator {
         final Map<IQrySource2<?>, List<ChildGroup>> result = new HashMap<>();
         for (final Entry<IQrySource2<?>, List<Child>> el : transform(props, domainInfo).entrySet()) {
 //           System.out.println("------> " + el.getKey() + " count = " + el.getValue().size());
-            for (Child ch : el.getValue()) {
+            for (final Child ch : el.getValue()) {
 //                System.out.println(ch);
             }
             
@@ -128,7 +128,7 @@ public class PathsToTreeTransformator {
         final Set<Child> dependencies = new HashSet<>();
         if (propInfo.hasExpression()) {
             final IQrySource2<?>  cs = contextSource != null ?  contextSource : lastPersistentSource;
-            expr2 = expressionToS2(cs, propInfo, domainInfo);
+            expr2 = expressionToS2(cs, propInfo, domainInfo, context.stream().collect(joining("_")));
             final Map<IQrySource2<?>, List<Child>> dependenciesResult = transform(expr2.collectProps(), domainInfo);
 
             for (final Entry<IQrySource2<?>, List<Child>> drEntry : dependenciesResult.entrySet()) {
@@ -188,8 +188,8 @@ public class PathsToTreeTransformator {
         return t2(path, nextProps);
     }
     
-    private static Expression2 expressionToS2(final IQrySource2<?> contextSource, final AbstractPropInfo<?> propInfo, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
-        final PropsResolutionContext prc = new PropsResolutionContext(domainInfo, asList(asList(contextSource)), contextSource.contextId() + "_" + propInfo.name); 
+    private static Expression2 expressionToS2(final IQrySource2<?> contextSource, final AbstractPropInfo<?> propInfo, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo, final String context) {
+        final PropsResolutionContext prc = new PropsResolutionContext(domainInfo, asList(asList(contextSource)), contextSource.contextId() + "_" + (isEmpty(context) ? "" : context + "_") + propInfo.name); 
         return propInfo.expression.transform(prc);
     }
     

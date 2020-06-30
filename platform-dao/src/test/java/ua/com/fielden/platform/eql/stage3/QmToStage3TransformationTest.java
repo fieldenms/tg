@@ -6,6 +6,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 
 import org.junit.Ignore;
@@ -17,6 +18,7 @@ import ua.com.fielden.platform.eql.meta.EqlStage3TestCase;
 import ua.com.fielden.platform.eql.stage3.elements.Yield3;
 import ua.com.fielden.platform.eql.stage3.elements.Yields3;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.Conditions3;
+import ua.com.fielden.platform.eql.stage3.elements.functions.MaxOf3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ResultQuery3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.SourceQuery3;
@@ -30,6 +32,30 @@ import ua.com.fielden.platform.sample.domain.TgWagonSlot;
 import ua.com.fielden.platform.sample.domain.TgWorkshop;
 
 public class QmToStage3TransformationTest extends EqlStage3TestCase {
+    
+    @Test
+    public void calc_props_of_component_type_are_resolved_correctly() {
+        final ResultQuery3 actQry = qryCountAll(select(ORG5).where().anyOfProps("maxVehPrice", "maxVehPurchasePrice").isNotNull());
+        final String orgUnit5 = "1";
+        
+        final QrySource3BasedOnTable ou5 = source(ORG5, orgUnit5);
+
+        final QrySource3BasedOnTable veh1 = source(VEHICLE, orgUnit5, "maxVehPrice_amount_1");
+        final IQrySources3 subQrySources1 = sources(veh1); 
+        final Conditions3 subQryConditions1 = cond(eq(expr(entityProp("station", veh1, ORG5)), expr(entityProp(ID, ou5, ORG5))));
+        final SubQuery3 expSubQry1 = subqry(subQrySources1, subQryConditions1, yields(new Yield3(new MaxOf3(expr(prop("price.amount", veh1, BigDecimal.class, H_BIG_DECIMAL))), "")), BigDecimal.class);
+
+        final QrySource3BasedOnTable veh2 = source(VEHICLE, orgUnit5, "maxVehPurchasePrice_amount_1");
+        final IQrySources3 subQrySources2 = sources(veh2); 
+        final Conditions3 subQryConditions2 = cond(eq(expr(entityProp("station", veh2, ORG5)), expr(entityProp(ID, ou5, ORG5))));
+        final SubQuery3 expSubQry2 = subqry(subQrySources2, subQryConditions2, yields(new Yield3(new MaxOf3(expr(prop("purchasePrice.amount", veh2, BigDecimal.class, H_BIG_DECIMAL))), "")), BigDecimal.class);
+
+        final IQrySources3 sources = sources(ou5);
+        final Conditions3 conditions = or(and(or(isNotNull(expr(expSubQry1)), isNotNull(expr(expSubQry2)))));
+        final ResultQuery3 expQry = qryCountAll(sources, conditions);
+        assertEquals(expQry, actQry);
+
+    }
     
     @Test
     public void yielding_entity_id_under_different_alias_preserves_entity_type_info() {

@@ -6,6 +6,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -29,6 +30,7 @@ import ua.com.fielden.platform.sample.domain.ITeVehicleFuelUsage;
 import ua.com.fielden.platform.sample.domain.ITeVehicleModel;
 import ua.com.fielden.platform.sample.domain.ITgBogie;
 import ua.com.fielden.platform.sample.domain.ITgEntityWithComplexSummaries;
+import ua.com.fielden.platform.sample.domain.ITgOrgUnit5;
 import ua.com.fielden.platform.sample.domain.ITgVehicle;
 import ua.com.fielden.platform.sample.domain.TeAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TeVehicle;
@@ -822,6 +824,13 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
                 .with(fetch(TgVehicle.class).with("lastFuelUsageQty"))
                 .with(orderBy().yield("lastFuelUsageQty").desc().model()).model());
     }
+        
+    @Test
+    public void eql3_query_executes_correctly95() {
+        final ITgOrgUnit5 co = getInstance(ITgOrgUnit5.class);
+        final EntityResultQueryModel<TgOrgUnit5> qry = select(TgOrgUnit5.class).where().anyOfProps("maxVehPrice", "maxVehPurchasePrice").gt().val(0).model();
+        co.getAllEntities(from(qry).with("EQL3", null).with(fetchKeyAndDescOnly(TgOrgUnit5.class)).model());
+    }     
 
     @Override
     protected void populateDomain() {
