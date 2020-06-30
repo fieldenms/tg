@@ -1,18 +1,19 @@
 package ua.com.fielden.platform.entity.query;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType.COMPOSITE_TYPE_HEADER;
 import static ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType.UNION_ENTITY_HEADER;
 import static ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType.USUAL_PROP;
 import static ua.com.fielden.platform.eql.stage2.elements.PathsToTreeTransformator.groupChildren;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.Stream;
@@ -25,8 +26,6 @@ import org.joda.time.Period;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
-import ua.com.fielden.platform.entity.query.generation.EntQueryGenerator;
-import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
 import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails;
 import ua.com.fielden.platform.entity.query.generation.elements.Yield;
 import ua.com.fielden.platform.entity.query.generation.elements.Yields;
@@ -40,15 +39,23 @@ import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ResultQuery2;
+import ua.com.fielden.platform.eql.stage2.elements.sources.ChildGroup;
 import ua.com.fielden.platform.eql.stage3.elements.Yield3;
 import ua.com.fielden.platform.eql.stage3.elements.Yields3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ResultQuery3;
 import ua.com.fielden.platform.streaming.SequentialGroupingStream;
-import ua.com.fielden.platform.utils.EntityUtils;
 
 public class EntityContainerFetcher {
     private final QueryExecutionContext executionContext;    
     private final Logger logger = Logger.getLogger(this.getClass());
+    public static Long dur = 0l;
+    public static Long dur1 = 0l;
+    public static Long dur2 = 0l;
+    public static Long dur3 = 0l;
+    public static Long dur4 = 0l;
+    public static Long dur5 = 0l;
+    public static Long dur6 = 0l;
+    public static Long count = 0l;
 
     public EntityContainerFetcher(final QueryExecutionContext executionContext) {
         this.executionContext = executionContext;
@@ -135,31 +142,53 @@ public class EntityContainerFetcher {
     }
 
     private <E extends AbstractEntity<?>> QueryModelResult<E> getModelResult(final QueryProcessingModel<E, ?> qem, final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username) {
-        if (!qem.getParamValues().containsKey("EQL3")) {
-            final EntQueryGenerator gen = new EntQueryGenerator(domainMetadataAnalyser, filter, username, executionContext.dates());
-
-            final EntQuery entQuery = gen.generateEntQueryAsResultQuery(qem.queryModel, qem.orderModel, qem.queryModel.getResultType(), qem.fetchModel, qem.getParamValues());
-            final String sql = entQuery.sql();
-            return new QueryModelResult<>((Class<E>)entQuery.type(), sql, getResultPropsInfos(entQuery.getYields()), entQuery.getValuesForSqlParams(), qem.fetchModel);
-        } else {
-            final ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator gen1 = new ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator(domainMetadataAnalyser.getDbVersion(), filter, username, executionContext.dates(), qem.getParamValues());
-            
-            Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo = null;
+        QueryModelResult<E> result;
+        count = count + 1;
+        final DateTime st = new DateTime();
+//        if (!qem.getParamValues().containsKey("EQL3")) {
+//            final EntQueryGenerator gen = new EntQueryGenerator(domainMetadataAnalyser, filter, username, executionContext.dates());
+//
+//            final EntQuery entQuery = gen.generateEntQueryAsResultQuery(qem.queryModel, qem.orderModel, qem.queryModel.getResultType(), qem.fetchModel, qem.getParamValues());
+//            final String sql = entQuery.sql();
+//            result = new QueryModelResult<>((Class<E>)entQuery.type(), sql, getResultPropsInfos(entQuery.getYields()), entQuery.getValuesForSqlParams(), qem.fetchModel);
+//        } else {
             try {
-                final ShortMetadata mtg = new ShortMetadata(executionContext.getDomainMetadata().lmd, filter, username, executionContext.dates(), qem.getParamValues());
-                final Set<Class<? extends AbstractEntity<?>>> emd = new HashSet<>(executionContext.getDomainMetadata().lmd.getEntityPropsMetadata().keySet());
-                domainInfo = mtg.generate(emd);
+                final ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator gen1 = new ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator(domainMetadataAnalyser.getDbVersion(), filter, username, executionContext.dates(), qem.getParamValues());
+                final DateTime st1 = new DateTime();
+                final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo = (new ShortMetadata(executionContext.getDomainMetadata().lmd, filter, username, executionContext.dates(), qem.getParamValues())).generate(executionContext.getDomainMetadata().lmd.getEntityPropsMetadata().keySet());
+                final Period pd1 = new Period(st1, new DateTime());
+                dur1 = dur1 + 60000 * pd1.getMinutes() + 1000 * pd1.getSeconds() + pd1.getMillis();
+                final PropsResolutionContext resolutionContext = new PropsResolutionContext(domainInfo);
+
+                final DateTime st2 = new DateTime();
+                final ResultQuery2 s1tr = gen1.generateEntQueryAsResultQuery(qem.queryModel, qem.orderModel, qem.fetchModel).transform(resolutionContext);
+                final Period pd2 = new Period(st2, new DateTime());
+                dur2 = dur2 + 60000 * pd2.getMinutes() + 1000 * pd2.getSeconds() + pd2.getMillis();
+
+                final DateTime st3 = new DateTime();
+                
+                final Map<String, List<ChildGroup>> grouped = groupChildren(s1tr.collectProps(), domainInfo);
+                final Period pd3 = new Period(st3, new DateTime());
+                dur3 = dur3 + 60000 * pd3.getMinutes() + 1000 * pd3.getSeconds() + pd3.getMillis();
+                
+                final DateTime st4 = new DateTime();
+                final TransformationResult<ResultQuery3> s2tr = s1tr.transform(new TransformationContext(executionContext.getDomainMetadata().lmd.getTables(), grouped));
+                final Period pd4 = new Period(st4, new DateTime());
+                dur4 = dur4 + 60000 * pd4.getMinutes() + 1000 * pd4.getSeconds() + pd4.getMillis();
+                final ResultQuery3 entQuery3 = s2tr.item;
+                final String sql3 = entQuery3.sql(domainMetadataAnalyser.getDbVersion());
+                result =  new QueryModelResult<>((Class<E>)entQuery3.resultType, sql3, getResultPropsInfos(entQuery3.yields), s2tr.updatedContext.getParamValues(), qem.fetchModel);
             } catch (final Exception e) {
                 e.printStackTrace();
+                throw new EqlException("Can't accomplish QueryModelResult creation due to: " + e);
+                // TODO: handle exception
             }
-            
-            final PropsResolutionContext resolutionContext = new PropsResolutionContext(domainInfo);
-            final ResultQuery2 s1tr = gen1.generateEntQueryAsResultQuery(qem.queryModel, qem.orderModel, qem.fetchModel).transform(resolutionContext);
-            final TransformationResult<ResultQuery3> s2tr = s1tr.transform(new TransformationContext(executionContext.getDomainMetadata().lmd.getTables(), groupChildren(s1tr.collectProps(), domainInfo)));
-            final ResultQuery3 entQuery3 = s2tr.item;
-            final String sql3 = entQuery3.sql(domainMetadataAnalyser.getDbVersion());
-            return new QueryModelResult<>((Class<E>)entQuery3.resultType, sql3, getResultPropsInfos(entQuery3.yields), s2tr.updatedContext.getParamValues(), qem.fetchModel);
-        }
+//        }
+        
+        final Period pd = new Period(st, new DateTime());
+        dur = dur + 60000 * pd.getMinutes() + 1000 * pd.getSeconds() + pd.getMillis();
+
+        return result;
     }
 
     private SortedSet<ResultQueryYieldDetails> getResultPropsInfos(final Yields model) {
@@ -173,8 +202,9 @@ public class EntityContainerFetcher {
     private SortedSet<ResultQueryYieldDetails> getResultPropsInfos(final Yields3 model) {
         final SortedSet<ResultQueryYieldDetails> result = new TreeSet<>();
         for (final Yield3 yield : model.getYields()) {
-            final Class<?> yieldType = AbstractEntity.ID.equals(yield.alias) && (EntityUtils.isPersistedEntityType(yield.operand.type()) || EntityUtils.isSyntheticBasedOnPersistentEntityType((Class<? extends AbstractEntity<?>>) yield.operand.type()))  ? Long.class : 
+            final Class<?> yieldType = ID.equals(yield.alias) && (isPersistedEntityType(yield.operand.type()) || isSyntheticBasedOnPersistentEntityType((Class<? extends AbstractEntity<?>>) yield.operand.type()))  ? Long.class : 
                 yield.type != null ? yield.type : yield.operand.type();
+            //System.out.println(yield.operand);
             final Object yieldHibType = yield.hibType != null ? yield.hibType : yield.operand.hibType();
             if (yield.isHeader) {
                 result.add(new ResultQueryYieldDetails(yield.alias, yieldType, yieldHibType, null, isUnionEntityType(yieldType) ? UNION_ENTITY_HEADER : COMPOSITE_TYPE_HEADER));

@@ -1,8 +1,6 @@
 package ua.com.fielden.platform.eql.stage3.elements.functions;
 
-import java.math.BigInteger;
-
-import org.hibernate.type.BigIntegerType;
+import org.hibernate.type.IntegerType;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
 
@@ -15,13 +13,13 @@ public class CountAll3 extends AbstractFunction3 {
     }
    
     @Override
-    public Class<BigInteger> type() {
-        return BigInteger.class;
+    public Class<Integer> type() {
+        return Integer.class;
     }
     
     @Override
     public Object hibType() {
-        return BigIntegerType.INSTANCE;
+        return IntegerType.INSTANCE;
     }
     
     @Override

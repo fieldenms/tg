@@ -23,7 +23,6 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -134,6 +133,16 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     private final ICompoundCondition0<TgVehicle> singleResultQueryStub = select(TgVehicle.class).where().prop("key").eq().val("CAR1");
     private final ITgPublishedYearly coPublishedYearly = getInstance(ITgPublishedYearly.class);
 
+    @Test
+    public void eql3_query_executes_correctly95() {
+        final ITgOrgUnit5 co = getInstance(ITgOrgUnit5.class);
+        final EntityResultQueryModel<TgOrgUnit5> qry = select(TgOrgUnit5.class).model();//where().prop("maxVehPrice").gt().val(0).model();
+        co.getAllEntities(from(qry)
+                .with(fetchKeyAndDescOnly(TgOrgUnit5.class))
+                //.with(fetchIdOnly(TgOrgUnit5.class)) -- FAILS due to StackOverflow
+                .model());
+    }
+    
     /////////////////////////////////////// WITHOUT ASSERTIONS /////////////////////////////////////////
 
     @Test

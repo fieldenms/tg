@@ -34,6 +34,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isOneToOne;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.lang.reflect.Field;
@@ -193,11 +194,7 @@ public class LongMetadata {
         final String propName = propField.getName();
         final Class<?> propType = propField.getType();
         
-        if (isUnionEntityType(propType)) {
-            return H_LONG;
-        }
-        
-        if (isPersistedEntityType(propType)) {
+        if (isPersistedEntityType(propType) || isUnionEntityType(propType) || (isEntityType(propType) && isSyntheticEntityType((Class<? extends AbstractEntity<?>>)propType))) {
             return H_LONG;
         }
 
@@ -272,7 +269,7 @@ public class LongMetadata {
             } else if (isEntityType(getKeyType(parentInfo.entityType))) {
                 return new LongPropertyMetadata.Builder(ID, Long.class, false).hibType(H_LONG).expression(expr().prop(KEY).model()).build();
             } else {
-                return null;
+                return new LongPropertyMetadata.Builder(ID, Long.class, false).hibType(H_LONG).build(); //return null;
             }
         case UNION:
             return new LongPropertyMetadata.Builder(ID, Long.class, false).hibType(H_LONG).expression(generateUnionEntityPropertyExpression((Class<? extends AbstractUnionEntity>) parentInfo.entityType, ID)).build();
@@ -306,7 +303,7 @@ public class LongMetadata {
                 if (isSyntheticBasedOnPersistentEntityType(parentInfo.entityType)) {
                     return new LongPropertyMetadata.Builder(KEY, keyType, false).column(key).hibType(typeResolver.basic(keyType.getName())).build();
                 }
-                return null; //FIXME
+                return new LongPropertyMetadata.Builder(KEY, keyType, false).column(key).hibType(typeResolver.basic(keyType.getName())).build(); //return null; //FIXME
             case UNION:
                 return new LongPropertyMetadata.Builder(KEY, String.class, false).hibType(H_STRING).expression(generateUnionEntityPropertyExpression((Class<? extends AbstractUnionEntity>) parentInfo.entityType, KEY)).build();
             default:
@@ -332,7 +329,6 @@ public class LongMetadata {
      */
     private SortedMap<String, LongPropertyMetadata> generatePropertyMetadatasForEntity(final EntityTypeInfo <? extends AbstractEntity<?>> parentInfo) throws Exception {
         final SortedMap<String, LongPropertyMetadata> result = new TreeMap<>();
-
         safeMapAdd(result, generateIdPropertyMetadata(parentInfo));
         safeMapAdd(result, generateVersionPropertyMetadata(parentInfo));
         safeMapAdd(result, generateKeyPropertyMetadata(parentInfo));
@@ -426,7 +422,7 @@ public class LongMetadata {
                 Builder(propName, propType, nullable).
                 hibType(hibType);
         
-        if (mapTo != null) {
+        if (mapTo != null && !isSyntheticEntityType(entityType) && calculated == null /* 2 last conditions are to overcome incorrect metadata combinations*/) {
             final String columnName = getColumnName(propName, mapTo, parentPrefix);
             if (isUnionEntityType(propType)) {
                 final Class<? extends AbstractUnionEntity> unionPropType = (Class<? extends AbstractUnionEntity>) propType;

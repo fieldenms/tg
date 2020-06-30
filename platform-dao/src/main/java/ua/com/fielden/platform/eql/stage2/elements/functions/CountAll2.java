@@ -2,10 +2,9 @@ package ua.com.fielden.platform.eql.stage2.elements.functions;
 
 import static java.util.Collections.emptySet;
 
-import java.math.BigInteger;
 import java.util.Set;
 
-import org.hibernate.type.BigIntegerType;
+import org.hibernate.type.IntegerType;
 
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
@@ -15,13 +14,13 @@ import ua.com.fielden.platform.eql.stage3.elements.functions.CountAll3;
 public class CountAll2 extends AbstractFunction2<CountAll3> {
 
     @Override
-    public Class<BigInteger> type() {
-        return BigInteger.class;
+    public Class<Integer> type() {
+        return Integer.class;
     }
     
     @Override
     public Object hibType() {
-        return BigIntegerType.INSTANCE;
+        return IntegerType.INSTANCE;
     }
 
     @Override

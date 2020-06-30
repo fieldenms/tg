@@ -82,6 +82,7 @@ public class EqlTestCase {
     protected static final Class<BigInteger> BIG_INTEGER = BigInteger.class;
     protected static final Class<BigDecimal> BIG_DECIMAL = BigDecimal.class;
     protected static final Type H_LONG = StandardBasicTypes.LONG;
+    protected static final Type H_INTEGER = StandardBasicTypes.INTEGER;
     protected static final Type H_STRING = StandardBasicTypes.STRING;
     protected static final Type H_BIG_DECIMAL = StandardBasicTypes.BIG_DECIMAL;
     protected static final Type H_BIG_INTEGER = StandardBasicTypes.BIG_INTEGER;

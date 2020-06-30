@@ -6,7 +6,6 @@ import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
-import java.math.BigInteger;
 import java.util.HashMap;
 
 import org.junit.Ignore;
@@ -31,7 +30,7 @@ import ua.com.fielden.platform.sample.domain.TgWagonSlot;
 import ua.com.fielden.platform.sample.domain.TgWorkshop;
 
 public class QmToStage3TransformationTest extends EqlStage3TestCase {
-
+    
     @Test
     public void yielding_entity_id_under_different_alias_preserves_entity_type_info() {
         final AggregatedResultQueryModel qry = select(TeVehicleModel.class).
@@ -72,9 +71,9 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         
         final QrySource3BasedOnSubqueries qtyQrySource = source("2", vehSourceSubQry);
         final IQrySources3 qtyQrySources = sources(qtyQrySource);
-        final Yields3 qtyQryYields = yields(yieldPropExpr("qty", qtyQrySource, "", BigInteger.class, H_BIG_INTEGER));
+        final Yields3 qtyQryYields = yields(yieldPropExpr("qty", qtyQrySource, "", Integer.class, H_INTEGER));
         
-        final Yields3 modelQryYields = yields(yieldModel(subqry(qtyQrySources, qtyQryYields, BigInteger.class), "qty"));
+        final Yields3 modelQryYields = yields(yieldModel(subqry(qtyQrySources, qtyQryYields, Integer.class), "qty"));
         
         final ResultQuery3 expQry = qry(sources(modelSource), modelQryYields);
 

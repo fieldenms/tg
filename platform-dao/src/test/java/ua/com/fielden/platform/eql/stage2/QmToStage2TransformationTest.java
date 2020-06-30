@@ -7,7 +7,6 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.LJ;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -75,7 +74,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         
         final QrySource2BasedOnSubqueries qtyQrySource = source("2", vehSourceSubQry);
         final Sources2 qtyQrySources = sources(qtyQrySource);
-        final Yields2 qtyQryYields = yields(yield(prop(qtyQrySource, new PrimTypePropInfo<BigInteger>("qty", H_BIG_INTEGER, BIG_INTEGER)), ""));
+        final Yields2 qtyQryYields = yields(yield(prop(qtyQrySource, new PrimTypePropInfo<Integer>("qty", H_INTEGER, INTEGER)), ""));
         
         
         final Yields2 modelQryYields = yields(yield(subqry(qtyQrySources, qtyQryYields), "qty"));
@@ -116,7 +115,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
 
         final QrySource2BasedOnSubqueries qtyQrySource = source("3", vehSourceSubQry1, vehSourceSubQry2);
         final Sources2 qtyQrySources = sources(qtyQrySource);
-        final Yields2 qtyQryYields = yields(yield(prop(qtyQrySource, new PrimTypePropInfo<BigInteger>("qty", H_BIG_INTEGER, BIG_INTEGER)), ""));
+        final Yields2 qtyQryYields = yields(yield(prop(qtyQrySource, new PrimTypePropInfo<Integer>("qty", H_INTEGER, INTEGER)), ""));
         
         
         final Yields2 modelQryYields = yields(yield(subqry(qtyQrySources, qtyQryYields), "qty"));
