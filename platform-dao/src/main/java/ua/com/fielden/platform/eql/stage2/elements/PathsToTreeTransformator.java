@@ -45,15 +45,15 @@ public class PathsToTreeTransformator {
         return id;
     }
 
-    public static Map<String, List<ChildGroup>> groupChildren(final Set<EntProp2> props, final  Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
-        final Map<String, List<ChildGroup>> result = new HashMap<>();
+    public static Map<IQrySource2<?>, List<ChildGroup>> groupChildren(final Set<EntProp2> props, final  Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
+        final Map<IQrySource2<?>, List<ChildGroup>> result = new HashMap<>();
         for (final Entry<IQrySource2<?>, List<Child>> el : transform(props, domainInfo).entrySet()) {
 //           System.out.println("------> " + el.getKey() + " count = " + el.getValue().size());
-            for (final Child ch : el.getValue()) {
+            for (Child ch : el.getValue()) {
 //                System.out.println(ch);
             }
             
-            result.put(el.getKey().contextId(), convertToGroup(new TreeSet<Child>(el.getValue()), emptyList()));
+            result.put(el.getKey(), convertToGroup(new TreeSet<Child>(el.getValue()), emptyList()));
         }
         return result;
     }
@@ -128,7 +128,7 @@ public class PathsToTreeTransformator {
         final Set<Child> dependencies = new HashSet<>();
         if (propInfo.hasExpression()) {
             final IQrySource2<?>  cs = contextSource != null ?  contextSource : lastPersistentSource;
-            expr2 = expressionToS2(cs, propInfo, domainInfo, context.stream().collect(joining("_")));
+            expr2 = expressionToS2(cs, propInfo, domainInfo);
             final Map<IQrySource2<?>, List<Child>> dependenciesResult = transform(expr2.collectProps(), domainInfo);
 
             for (final Entry<IQrySource2<?>, List<Child>> drEntry : dependenciesResult.entrySet()) {
@@ -151,7 +151,6 @@ public class PathsToTreeTransformator {
         newContext.add(propInfo.name);
         final String childContext = newContext.stream().collect(joining("_"));
         final String sourceContextId = isEmpty(childContext) ? contextId : contextId + "_" + childContext;
-        //System.out.println("adding [" + propInfo.name + "]" + " -->  " + sourceContextId);
         final QrySource2BasedOnPersistentType source = propInfo instanceof EntityTypePropInfo ? new QrySource2BasedOnPersistentType(((EntityTypePropInfo) propInfo).javaType(), ((EntityTypePropInfo) propInfo).propEntityInfo, sourceContextId) 
                  : null;
         final T2<String, Map<String, List<AbstractPropInfo<?>>>> next = getPathAndNextProps(subprops);
@@ -189,8 +188,8 @@ public class PathsToTreeTransformator {
         return t2(path, nextProps);
     }
     
-    private static Expression2 expressionToS2(final IQrySource2<?> contextSource, final AbstractPropInfo<?> propInfo, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo, final String context) {
-        final PropsResolutionContext prc = new PropsResolutionContext(domainInfo, asList(asList(contextSource)), contextSource.contextId() + "_" + (isEmpty(context) ? "" : context + "_") + propInfo.name);
+    private static Expression2 expressionToS2(final IQrySource2<?> contextSource, final AbstractPropInfo<?> propInfo, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
+        final PropsResolutionContext prc = new PropsResolutionContext(domainInfo, asList(asList(contextSource)), contextSource.contextId() + "_" + propInfo.name); 
         return propInfo.expression.transform(prc);
     }
     

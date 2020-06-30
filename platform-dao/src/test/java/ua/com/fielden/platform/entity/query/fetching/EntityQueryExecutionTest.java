@@ -23,6 +23,7 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -133,16 +134,6 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     private final ICompoundCondition0<TgVehicle> singleResultQueryStub = select(TgVehicle.class).where().prop("key").eq().val("CAR1");
     private final ITgPublishedYearly coPublishedYearly = getInstance(ITgPublishedYearly.class);
 
-    @Test
-    public void eql3_query_executes_correctly95() {
-        final ITgOrgUnit5 co = getInstance(ITgOrgUnit5.class);
-        final EntityResultQueryModel<TgOrgUnit5> qry = select(TgOrgUnit5.class).model();//where().prop("maxVehPrice").gt().val(0).model();
-        co.getAllEntities(from(qry)
-                .with(fetchKeyAndDescOnly(TgOrgUnit5.class))
-                //.with(fetchIdOnly(TgOrgUnit5.class)) -- FAILS due to StackOverflow
-                .model());
-    }
-    
     /////////////////////////////////////// WITHOUT ASSERTIONS /////////////////////////////////////////
 
     @Test
@@ -717,8 +708,8 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         final AggregatedResultQueryModel qry = select(TgVehicle.class).where().prop("lastFuelUsage.qty").gt().val(100).yield().countAll().as("aa").modelAsAggregate();
         final List<EntityAggregates> vehicles = aggregateDao.getAllEntities(from(qry).model());
         assertEquals("Incorrect count", 1, vehicles.size());
-        //	final TgVehicle vehicle = vehicles.get(0);
-        //	assertEquals("Incorrect key", "CAR2", vehicle.getKey());
+        //  final TgVehicle vehicle = vehicles.get(0);
+        //  assertEquals("Incorrect key", "CAR2", vehicle.getKey());
     }
 
     @Test
@@ -1171,8 +1162,8 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         yield().prop("v.price.amount").as("pa").yield().prop("v.lastMeterReading").as("lmr").modelAsAggregate();
         final List<EntityAggregates> values = aggregateDao.getAllEntities(from(model).model());
         assertEquals("Incorrect count", 1, values.size());
-        //    	assertEquals("Incorrect value", new BigDecimal("105.75"), values.get(0).get("lmr"));
-        //    	assertEquals("Incorrect value", new BigDecimal("200.00"), values.get(0).get("pa"));
+        //      assertEquals("Incorrect value", new BigDecimal("105.75"), values.get(0).get("lmr"));
+        //      assertEquals("Incorrect value", new BigDecimal("200.00"), values.get(0).get("pa"));
     }
 
     @Test
@@ -1493,11 +1484,11 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         assertEquals("Mercedes", vehicleMakeDao.getEntity(from(queryModel).with("makeParam", "MERC").model()).getDesc());
         assertEquals("Audi", vehicleMakeDao.getEntity(from(queryModel).with("makeParam", "AUDI").model()).getDesc());
 
-        //	try {
-        //	    vehicleMakeDao.getAllEntities(from(queryModel).with("wrongParam", "AUDI").model());
-        //	    fail("Setting param value with wrong param name should not lead to exception");
-        //	} catch (final RuntimeException e) {
-        //	}
+        //  try {
+        //      vehicleMakeDao.getAllEntities(from(queryModel).with("wrongParam", "AUDI").model());
+        //      fail("Setting param value with wrong param name should not lead to exception");
+        //  } catch (final RuntimeException e) {
+        //  }
     }
 
     @Test

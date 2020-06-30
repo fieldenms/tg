@@ -1,16 +1,12 @@
 package ua.com.fielden.platform.eql.stage2.elements.sources;
 
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.QUERY_BASED;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import org.hibernate.type.LongType;
@@ -19,9 +15,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
-import ua.com.fielden.platform.entity.query.metadata.EntityCategory;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
-import ua.com.fielden.platform.eql.meta.ComponentTypePropInfo;
 import ua.com.fielden.platform.eql.meta.EntityInfo;
 import ua.com.fielden.platform.eql.meta.EntityTypePropInfo;
 import ua.com.fielden.platform.eql.meta.PrimTypePropInfo;
@@ -34,15 +28,12 @@ import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.SourceQuery2;
 import ua.com.fielden.platform.eql.stage3.elements.operands.SourceQuery3;
 import ua.com.fielden.platform.eql.stage3.elements.sources.QrySource3BasedOnSubqueries;
-import ua.com.fielden.platform.utils.EntityUtils;
 
 public class QrySource2BasedOnSubqueries extends AbstractElement2 implements IQrySource2<QrySource3BasedOnSubqueries> {
     private final List<SourceQuery2> models = new ArrayList<>();
     private final Map<String, List<Yield2>> yieldsMatrix;
     private final EntityInfo<?> entityInfo;
     private final String alias;
-    public static long uch = 0;
-    public static long uce = 0;
 
     public QrySource2BasedOnSubqueries(final List<SourceQuery2> models, final String alias, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo, final String contextId) {
         super(contextId);
@@ -98,38 +89,35 @@ public class QrySource2BasedOnSubqueries extends AbstractElement2 implements IQr
         return firstModel().yields;
     }
 
-//    @Override
-//    public int hashCode() {
-//        uch = uch + 1;
-//        final int prime = 31;
-//        int result = 1;
-//        result = prime * result + models.hashCode();
-//        return result;
-//    }
-//
-//    @Override
-//    public boolean equals(final Object obj) {
-//        uce = uce + 1;
-//        
-//        if (this == obj) {
-//            return true;
-//        }
-//        if (obj == null) {
-//            return false;
-//        }
-//        if (!(obj instanceof QrySource2BasedOnSubqueries)) {
-//            return false;
-//        }
-//        final QrySource2BasedOnSubqueries other = (QrySource2BasedOnSubqueries) obj;
-//        if (models == null) {
-//            if (other.models != null) {
-//                return false;
-//            }
-//        } else if (!models.equals(other.models)) {
-//            return false;
-//        }
-//        return true;
-//    }
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + models.hashCode();
+        return result;
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (!(obj instanceof QrySource2BasedOnSubqueries)) {
+            return false;
+        }
+        final QrySource2BasedOnSubqueries other = (QrySource2BasedOnSubqueries) obj;
+        if (models == null) {
+            if (other.models != null) {
+                return false;
+            }
+        } else if (!models.equals(other.models)) {
+            return false;
+        }
+        return true;
+    }
 
     @Override
     public EntityInfo<?> entityInfo() {
@@ -138,44 +126,7 @@ public class QrySource2BasedOnSubqueries extends AbstractElement2 implements IQr
     
     private EntityInfo<?> produceEntityInfoFrom(final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
         if (!EntityAggregates.class.equals(sourceType())) {
-            if (isPersistedEntityType(sourceType())) {
-                if (getYields().getYields().size() == 1 && getYields().getYields().iterator().next().alias.equals(ID)) {
-                    final EntityInfo<?> actualEi = new EntityInfo<>(sourceType(), QUERY_BASED);
-                    actualEi.addProp(domainInfo.get(sourceType()).getProps().get(ID));
-                    return actualEi;    
-                } else {
-                    return domainInfo.get(sourceType());    
-                }
-            } else {
-                final EntityInfo<?> declaredEi = domainInfo.get(sourceType());
-                final EntityInfo<?> actualEi = new EntityInfo<>(sourceType(), QUERY_BASED);
-                for (final Entry<String, AbstractPropInfo<?>> declaredProp : declaredEi.getProps().entrySet()) {
-                   
-                    if (declaredProp.getValue().hasExpression()) {
-                        actualEi.addProp(declaredProp.getValue());
-                    } else if (declaredProp.getValue() instanceof ComponentTypePropInfo<?>){
-                        final ComponentTypePropInfo<?> prop = (ComponentTypePropInfo<?>) declaredProp.getValue();
-                        for (String leafPropPath : prop.generateLeafItemsPaths()) {
-                            if (yieldsMatrix.containsKey(leafPropPath)) {
-                                actualEi.addProp(declaredProp.getValue());
-                                break;
-                            }
-                        }
-                    } else {
-                        if (yieldsMatrix.containsKey(declaredProp.getKey())) {
-                            actualEi.addProp(declaredProp.getValue());
-                        } else {
-                    //        System.out.println("skipping " + declaredProp.getKey() + " in " + sourceType().getSimpleName());
-                        }
-
-                    }
-                }
-                for (final Yield2 yield : getYields().getYields()) {
-                    //if(declaredEi.getProps().containsKey(yield.alias))
-                }
-                
-                return actualEi;
-            }
+            return domainInfo.get(sourceType());
         } else {
             final EntityInfo<EntityAggregates> entAggEntityInfo = new EntityInfo<>(EntityAggregates.class, null);
             for (final Yield2 yield : getYields().getYields()) {
@@ -187,7 +138,6 @@ public class QrySource2BasedOnSubqueries extends AbstractElement2 implements IQr
             return entAggEntityInfo;
         }
     }
-
 
     @Override
     public String alias() {
@@ -222,10 +172,5 @@ public class QrySource2BasedOnSubqueries extends AbstractElement2 implements IQr
             result.addAll(model.collectProps());
         }
         return result;
-    }
-    
-    @Override
-    public String toString() {
-        return sourceType().getSimpleName() + yieldsMatrix.keySet();
     }
 }

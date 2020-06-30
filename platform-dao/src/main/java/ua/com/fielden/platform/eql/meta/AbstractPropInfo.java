@@ -14,8 +14,6 @@ public abstract class AbstractPropInfo<T> implements IResolvable<T> {
     public final String name;
     public final Expression1 expression;
     public final Object hibType;
-    public static long uch = 0;
-    public static long uce = 0;
 
     /**
      * Principal constructor.
@@ -38,7 +36,6 @@ public abstract class AbstractPropInfo<T> implements IResolvable<T> {
 
     @Override
     public int hashCode() {
-        uch = uch + 1;
         final int prime = 31;
         int result = 1;
         result = prime * result + name.hashCode();
@@ -49,7 +46,6 @@ public abstract class AbstractPropInfo<T> implements IResolvable<T> {
 
     @Override
     public boolean equals(final Object obj) {
-        uce = uce + 1;
         if (this == obj) {
             return true;
         }

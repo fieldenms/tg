@@ -2,10 +2,7 @@ package ua.com.fielden.platform.eql.meta;
 
 import static java.util.Collections.unmodifiableSortedMap;
 
-import java.util.HashSet;
-import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -47,20 +44,6 @@ public class ComponentTypePropInfo<T> extends AbstractPropInfo<T> {
         return String.format("%20s %20s", name, javaType.getSimpleName());
     }
 
-    public Set<String> generateLeafItemsPaths() {
-        final Set<String> result = new HashSet<>();
-        for (Entry<String, AbstractPropInfo<?>> prop : props.entrySet()) {
-            if (prop.getValue() instanceof ComponentTypePropInfo) {
-                for (String path : ((ComponentTypePropInfo<?>) prop.getValue()).generateLeafItemsPaths()) {
-                    result.add(name + "." + path);
-                }
-            } else {
-                result.add(name + "." + prop.getKey());
-            }
-        }
-        return result;
-    }
-    
     @Override
     public int hashCode() {
         final int prime = 31;
