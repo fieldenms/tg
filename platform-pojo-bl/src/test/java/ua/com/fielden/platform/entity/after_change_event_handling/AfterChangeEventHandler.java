@@ -19,6 +19,7 @@ import ua.com.fielden.platform.types.Money;
 public class AfterChangeEventHandler implements IAfterChangeEventHandler<Object> {
 
     private String strParam;
+    private String propNameParam;
     private int intParam1;
     private int intParam2;
     private double dblParam;
@@ -118,6 +119,10 @@ public class AfterChangeEventHandler implements IAfterChangeEventHandler<Object>
 
     public EnumForParams getEnumParam() {
         return enumParam;
+    }
+
+    public String getPropNameParam() {
+        return propNameParam;
     }
 
 }

@@ -24,6 +24,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.joda.time.DateTime;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
@@ -33,9 +34,11 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
+import ua.com.fielden.platform.persistence.composite.EntityWithSingleMemberDynamicCompositeKey;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
+import ua.com.fielden.platform.sample.domain.TgVehicleFinDetailsDao;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
@@ -325,6 +328,7 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
 
         final String requiredKeyMember = null;
         final EntityWithMoney optionalKeyMember = co$(EntityWithMoney.class).findByKey("KEY1");
+        assertNotNull(optionalKeyMember);
 
         final EntityWithDynamicCompositeKey entity = co.findByKey(requiredKeyMember, optionalKeyMember);
         assertNull(entity);
@@ -343,7 +347,62 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
         assertNull(entity.getKeyPartTwo());
     }
 
-    
+    @Test
+    public void finding_composite_entities_with_single_key_member_by_string_representation_of_that_key_is_supported() {
+        final EntityWithMoney keyMember = co(EntityWithMoney.class).findByKey("KEY1");
+        final EntityWithSingleMemberDynamicCompositeKeyDao co = co(EntityWithSingleMemberDynamicCompositeKey.class);
+        final EntityWithSingleMemberDynamicCompositeKey entity = save(co.new_().setKeyMemember(keyMember));
+        
+        final EntityWithSingleMemberDynamicCompositeKey foundByKey = co.findByKey(keyMember);
+        assertNotNull(foundByKey);
+        assertEquals(entity, foundByKey);
+        
+        final EntityWithSingleMemberDynamicCompositeKey entityFoundByString = co.findByKey(entity.toString());
+        assertNotNull(entityFoundByString);
+        assertEquals(entity, entityFoundByString);
+    }
+
+    @Test
+    public void finding_composite_entities_with_multiple_key_members_by_string_representation_of_that_key_is_supported() {
+        final EntityWithDynamicCompositeKeyDao co = co(EntityWithDynamicCompositeKey.class);
+
+        final String requiredKeyMember = "key-1-1";
+        final EntityWithMoney optionalKeyMember = co(EntityWithMoney.class).findByKey("KEY1");
+
+        final EntityWithDynamicCompositeKey foundByKey = co.findByKey(requiredKeyMember, optionalKeyMember);
+        assertNotNull(foundByKey);
+        
+        final EntityWithDynamicCompositeKey foundByKeyAsString = co.findByKey(foundByKey.toString());
+        assertNotNull(foundByKeyAsString);
+        assertEquals(foundByKey, foundByKeyAsString);
+    }
+
+    @Test
+    public void finding_one_2_one_entities_by_string_representation_of_their_key_is_supported() {
+        assertTrue("Expecting a one-2-one association for this test.", isOneToOne(TgVehicleFinDetails.class));
+
+        final TgVehicleMake audi = save(new_(TgVehicleMake.class, "AUDI", "Audi"));
+        final TgVehicleModel m318 = save(new_(TgVehicleModel.class, "318", "318").setMake(audi));
+        final TgVehicle car1 = save(new_(TgVehicle.class, "CAR1", "CAR1 DESC")
+                .setInitDate(date("2001-01-01 00:00:00"))
+                .setModel(m318).setPrice(new Money("20"))
+                .setPurchasePrice(new Money("10"))
+                .setActive(true)
+                .setLeased(false));
+
+        final TgVehicleFinDetails savedOne2One = save(new_(TgVehicleFinDetails.class, car1).setCapitalWorksNo("CAP_NO1"));
+        assertTrue(savedOne2One.isPersisted());
+        
+        final TgVehicleFinDetailsDao co = co(TgVehicleFinDetails.class);
+        final TgVehicleFinDetails foundOne2OneByKeyValue = co.findByKey(car1);
+        assertNotNull(foundOne2OneByKeyValue);
+        assertEquals(savedOne2One, foundOne2OneByKeyValue);
+
+        final TgVehicleFinDetails foundOne2OneByKeyAsString = co.findByKey(savedOne2One.toString());
+        assertNotNull(foundOne2OneByKeyAsString);
+        assertEquals(savedOne2One, foundOne2OneByKeyAsString);
+    }
+
     @Test
     public void test_that_entity_with_composite_key_is_handled_correctly() {
         final EntityWithMoneyDao dao = co$(EntityWithMoney.class);
