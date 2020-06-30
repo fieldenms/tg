@@ -314,6 +314,7 @@ export class TgEntityEditor extends TgEditor {
                    return (function (event) {
                        if (event.keyCode === 13 && this.opened === true) { // 'Enter' has been pressed
                            this._done();
+                           tearDownEvent(event);
                        } else if ((event.keyCode === 38 /*up*/ || event.keyCode === 40 /*down*/) && !event.ctrlKey) { // up/down arrow keys
                            // By default up/down arrow keys work like home/end for and input field
                            // That's why this event should be suppressed.

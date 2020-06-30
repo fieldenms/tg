@@ -9,12 +9,12 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  *
  * @param <T>
  */
-public interface IResultSetBuilder0HideEgi<T extends AbstractEntity<?>> extends IResultSetBuilder0Checkbox<T> {
+public interface IResultSetBuilder1aHideEgi<T extends AbstractEntity<?>> extends IResultSetBuilder1bCheckbox<T> {
 
     /**
      * Hides EGI.
      *
      * @return
      */
-    IResultSetBuilder0Checkbox<T> hideEgi();
+    IResultSetBuilder1bCheckbox<T> hideEgi();
 }

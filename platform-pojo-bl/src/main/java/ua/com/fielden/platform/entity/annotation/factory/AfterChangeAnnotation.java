@@ -10,6 +10,7 @@ import ua.com.fielden.platform.entity.annotation.mutator.DblParam;
 import ua.com.fielden.platform.entity.annotation.mutator.EnumParam;
 import ua.com.fielden.platform.entity.annotation.mutator.IntParam;
 import ua.com.fielden.platform.entity.annotation.mutator.MoneyParam;
+import ua.com.fielden.platform.entity.annotation.mutator.PropParam;
 import ua.com.fielden.platform.entity.annotation.mutator.StrParam;
 import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
 
@@ -37,6 +38,11 @@ public class AfterChangeAnnotation<T> {
             @Override
             public StrParam[] str() {
                 return new StrParam[0];
+            }
+
+            @Override
+            public PropParam[] prop() {
+                return new PropParam[0];
             }
 
             @Override
