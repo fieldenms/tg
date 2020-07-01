@@ -1327,6 +1327,26 @@
                 });
             });
             
+            test('setEditorValue4Property method works', function (done) {
+                master.postValidated = function (validatedEntity, bindingEntity, customObject) {
+                    done();
+                };
+                master.retrieve().then(function () {
+                    const funcEntity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties');
+                    funcEntity.stringProp = 'TEST';
+                    master.setEditorValue4Property('key', funcEntity, 'stringProp');
+                });
+            });
+            
+            test('setEditorValue4PropertyFromConcreteValue method works', function (done) {
+                master.postValidated = function (validatedEntity, bindingEntity, customObject) {
+                    done();
+                };
+                master.retrieve().then(function () {
+                    master.setEditorValue4PropertyFromConcreteValue('key', 'TEST');
+                });
+            });
+            
         });
     </script>
 </body>
