@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.web.view.master.exceptions;
 
 /**
- * A runtime exception that indicates erroneous situation pertaining to an entity master configuration. 
+ * A runtime exception that indicates erroneous situation in an Entity Master configuration. 
  * 
  * @author TG Team
  *

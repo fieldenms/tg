@@ -202,14 +202,19 @@ const TgEgiMasterBehaviorImpl = {
             } else if (IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'esc')) {
                 this.egi._cancelMaster();
                 tearDownEvent(event);
-            } else if (IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'enter') || IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'alt+down')) {
-                this._lastFocusedEditor = getActiveParentAnd(element => element.hasAttribute('tg-editor'));
-                this._saveAndEditNextRow();
+            } else if (IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'alt+down')) {
+                this._saveFocusedEditorAndEditNextRow();
                 tearDownEvent(event);
             }
         } else {
             tearDownEvent(event);
         }
+    },
+
+    _saveFocusedEditorAndEditNextRow: function () {
+        this._lastFocusedEditor = getActiveParentAnd(element => element.hasAttribute('tg-editor'));
+        this._saveAndEditNextRow();
+        
     },
 
     _onCaptureKeyDown: function(event) {
@@ -220,6 +225,9 @@ const TgEgiMasterBehaviorImpl = {
                 } else {
                     this._onTabDown(event);
                 }
+            } else if (IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'enter')) {
+                this._saveFocusedEditorAndEditNextRow();
+                tearDownEvent(event);
             }
         }
     },
