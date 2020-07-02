@@ -792,6 +792,21 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
         IAddToResultTickManager setPageCapacity(final int pageCapacity);
         
         /**
+         * Gets maximum page capacity for result-set.
+         * 
+         * @return
+         */
+        int getMaxPageCapacity();
+        
+        /**
+         * Sets maximum page capacity for result-set.
+         * 
+         * @param maxPageCapacity
+         * @return
+         */
+        IAddToResultTickManager setMaxPageCapacity(final int maxPageCapacity);
+        
+        /**
          * Gets result-set visible rows count.
          * 
          * @return

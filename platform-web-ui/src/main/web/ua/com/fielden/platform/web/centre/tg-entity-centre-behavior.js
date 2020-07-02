@@ -330,6 +330,17 @@ const TgEntityCentreBehaviorImpl = {
         },
 
         /**
+         * Postal subscription.
+         * It can be populated anywhere but bare in mind that all postal subscriptions will be disposed in detached callback.
+         */
+        _subscriptions: {
+            type: Array,
+            value: function () {
+                return [];
+            }
+        },
+
+        /**
          * The currently selected view.
          */
         _selectedView: {
@@ -812,23 +823,23 @@ const TgEntityCentreBehaviorImpl = {
         }.bind(this);
 
         ///////////////////////// Detail postSaved listener //////////////////////////////////////
-        this.masterSavedListener = postal.subscribe({
+        this._subscriptions.push(postal.subscribe({
             channel: "centre_" + self.$.selection_criteria.uuid,
             topic: "detail.saved",
             callback: function (data, envelope) {
                 self._postFunctionalEntitySaved(data.savingException, data.entity, data.shouldRefreshParentCentreAfterSave, data.selectedEntitiesInContext);
             }
-        });
+        }));
 
         /////////////////////// Execute action for this centre subscriber////////////////////////
         //This event can be published from entity master which holds the call back that should be executed for this centre.
-        this.masterExecuteListener = postal.subscribe({
+        this._subscriptions.push(postal.subscribe({
             channel: "centre_" + self.$.selection_criteria.uuid,
             topic: "execute",
             callback: function (callback, envelope) {
                 callback(self);
             }
-        });
+        }));
 
         //Select the result view if autoRun is true
         if (self.autoRun || self.queryPart) {
@@ -851,8 +862,9 @@ const TgEntityCentreBehaviorImpl = {
     },
 
     detached: function () {
-        this.masterSavedListener.unsubscribe();
-        this.masterExecuteListener.unsubscribe();
+        while (this._subscriptions.length !== 0) {
+            this._subscriptions.pop().unsubscribe();
+        }
     },
 
     focusNextView: function (e) {

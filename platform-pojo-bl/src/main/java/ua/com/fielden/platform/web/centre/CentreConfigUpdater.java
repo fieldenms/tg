@@ -8,6 +8,7 @@ import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModification;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
+import ua.com.fielden.platform.entity.annotation.Dependent;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Required;
@@ -15,6 +16,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
+import ua.com.fielden.platform.entity.annotation.mutator.PropParam;
 import ua.com.fielden.platform.entity.annotation.mutator.StrParam;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.validation.GreaterOrEqualValidator;
@@ -33,12 +35,12 @@ public class CentreConfigUpdater extends AbstractFunctionalEntityForCollectionMo
 
     @IsProperty(CustomisableColumn.class)
     @Title("Customisable Columns")
-    private Set<CustomisableColumn> customisableColumns = new LinkedHashSet<>();
+    private final Set<CustomisableColumn> customisableColumns = new LinkedHashSet<>();
 
     @IsProperty(value = String.class)
     @Title(value = "Sorting values", desc = "Values of sorting properties -- 'asc', 'desc' or 'none' (the order is important and should be strictly the same as in 'sortingIds' property)")
     @AfterChange(CentreConfigUpdaterSortingValsDefiner.class)
-    private List<String> sortingVals = new ArrayList<>(); // this list should not contain duplicates, please ensure that when setSortingVals invocation is performing
+    private final List<String> sortingVals = new ArrayList<>(); // this list should not contain duplicates, please ensure that when setSortingVals invocation is performing
 
     @IsProperty
     @Title(value = "Trigger Re-run", desc = "Indicates whether successful saving of this entity should trigger re-run.")
@@ -56,13 +58,22 @@ public class CentreConfigUpdater extends AbstractFunctionalEntityForCollectionMo
     @Title(value = "Page Capacity", desc = "The maximum number of entities retrieved.")
     @Required
     @BeforeChange({@Handler(value = GreaterValidator.class, str = {@StrParam(name = "limit", value = "0")}),
-                   @Handler(value = MaxValueValidator.class, str = {@StrParam(name = "limit", value = "300")})})
+                   @Handler(value = MaxValueValidator.class, prop = {@PropParam(name = "limitPropName", propName = "maxPageCapacity")})})
+    @Dependent("visibleRowsCount")
     private Integer pageCapacity;
+    
+    @IsProperty
+    @Title(value = "Max Page Capacity", desc = "The maximum possible value for page capacity.")
+    @Required
+    @BeforeChange({@Handler(value = GreaterValidator.class, str = {@StrParam(name = "limit", value = "0")})})
+    @Dependent("pageCapacity")
+    private Integer maxPageCapacity;
 
     @IsProperty
     @Title(value = "Visible Rows", desc = "The number of visible rows. Value 0 (zero) stands for \"display all data retrieved\".")
     @Required
-    @BeforeChange({@Handler(value = GreaterOrEqualValidator.class, str = {@StrParam(name = "limit", value = "0")})})
+    @BeforeChange({@Handler(value = GreaterOrEqualValidator.class, str = {@StrParam(name = "limit", value = "0")}),
+                   @Handler(value = MaxValueValidator.class, prop = {@PropParam(name = "limitPropName", propName = "pageCapacity")})})
     private Integer visibleRowsCount;
 
     @IsProperty
@@ -89,6 +100,16 @@ public class CentreConfigUpdater extends AbstractFunctionalEntityForCollectionMo
 
     public Integer getVisibleRowsCount() {
         return visibleRowsCount;
+    }
+
+    @Observable
+    public CentreConfigUpdater setMaxPageCapacity(final Integer maxPageCapacity) {
+        this.maxPageCapacity = maxPageCapacity;
+        return this;
+    }
+
+    public Integer getMaxPageCapacity() {
+        return maxPageCapacity;
     }
 
     @Observable

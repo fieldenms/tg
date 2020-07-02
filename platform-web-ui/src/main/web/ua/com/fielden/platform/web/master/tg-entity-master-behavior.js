@@ -282,12 +282,14 @@ const TgEntityMasterBehaviorImpl = {
         },
 
         /**
-         * Postal subscription to 'detail.saved' events that redirects such events further to parent channels (centreUuid).
-         * It gets populated in attached callback only once, even though the same master instance gets used several time.
+         * Postal subscription.
+         * It can be populated anywhere but bare in mind that all postal subscriptions will be disposed in detached callback.
          */
-        _centreRefreshRedirector: {
-            type: Object,
-            value: null
+        _subscriptions: {
+            type: Array,
+            value: function () {
+                return [];
+            }
         },
 
         /**
@@ -656,6 +658,12 @@ const TgEntityMasterBehaviorImpl = {
         }.bind(self));
     }, // end of ready callback
 
+    detached: function () {
+        while (this._subscriptions.length !== 0) {
+            this._subscriptions.pop().unsubscribe();
+        }
+    },
+
     /**
      * Publishes a closure to be executed by an Entity Centre identified by centreUuid (opening centre).
      */
@@ -1006,7 +1014,7 @@ const TgEntityMasterBehaviorImpl = {
     },
 
     /**
-     * Registers _centreRefreshRedirector if not registered yet.
+     * Registers centre refresh redirector.
      *
      * In case where 'centre refresh' postal event occurs in entity master there is a need to generate similar event and pass it further to parent component in hierarchy.
      * In this case the 'chain reaction' of such events will occur which will trigger 'centre refresh' in all centres in hierarchy of components up to top standalone centre.
@@ -1022,27 +1030,25 @@ const TgEntityMasterBehaviorImpl = {
      */
     registerCentreRefreshRedirector: function () {
         const self = this;
-        if (self._centreRefreshRedirector === null) {
-            self._centreRefreshRedirector = postal.subscribe({
-                channel: 'centre_' + self.uuid,
-                topic: 'detail.saved',
-                callback: function (data, envelope) {
-                    if (data.shouldRefreshParentCentreAfterSave === true) { // only redirect in case where refreshing is actually needed, this significantly reduces unnecessary events flow; however we should be carefull when changing 'shouldRefreshParentCentreAfterSave' API (refer '_postFunctionalEntitySaved' method in tg-entity-centre-behavior)
-                        const newData = {
-                            savingException: data.savingException, // leave data.savingException and data.entity the same, this allows flexibility of changing 'refreshEntities' method in tg-entity-centre-behavior according to such information
-                            entity: data.entity,
-                            shouldRefreshParentCentreAfterSave: true,
-                            selectedEntitiesInContext: [] // provide empty selectedEntitiesInContext, this ensures that parent centre will always be refreshed as per 'refreshEntities' method in tg-entity-centre-behavior
-                        };
-                        postal.publish({
-                            channel: 'centre_' + self.centreUuid,
-                            topic: 'detail.saved',
-                            data: newData
-                        });
-                    }
+        self._subscriptions.push(postal.subscribe({
+            channel: 'centre_' + self.uuid,
+            topic: 'detail.saved',
+            callback: function (data, envelope) {
+                if (data.shouldRefreshParentCentreAfterSave === true) { // only redirect in case where refreshing is actually needed, this significantly reduces unnecessary events flow; however we should be carefull when changing 'shouldRefreshParentCentreAfterSave' API (refer '_postFunctionalEntitySaved' method in tg-entity-centre-behavior)
+                    const newData = {
+                        savingException: data.savingException, // leave data.savingException and data.entity the same, this allows flexibility of changing 'refreshEntities' method in tg-entity-centre-behavior according to such information
+                        entity: data.entity,
+                        shouldRefreshParentCentreAfterSave: true,
+                        selectedEntitiesInContext: [] // provide empty selectedEntitiesInContext, this ensures that parent centre will always be refreshed as per 'refreshEntities' method in tg-entity-centre-behavior
+                    };
+                    postal.publish({
+                        channel: 'centre_' + self.centreUuid,
+                        topic: 'detail.saved',
+                        data: newData
+                    });
                 }
-            });
-        }
+            }
+        }));
     }
 };
 

@@ -9,12 +9,12 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  *
  * @param <T>
  */
-public interface IResultSetBuilder2aDraggable<T extends AbstractEntity<?>> extends IResultSetBuilder1bPageCapacity<T> {
+public interface IResultSetBuilder1eDraggable<T extends AbstractEntity<?>> extends IResultSetBuilder1fPageCapacity<T> {
 
     /**
      * Makes EGI rows draggable (by default it is false)
      *
      * @return
      */
-    IResultSetBuilder1bPageCapacity<T>  draggable();
+    IResultSetBuilder1fPageCapacity<T>  draggable();
 }
