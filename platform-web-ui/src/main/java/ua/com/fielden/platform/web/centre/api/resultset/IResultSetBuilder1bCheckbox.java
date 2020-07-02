@@ -11,8 +11,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  *
  * @param <T>
  */
-public interface IResultSetBuilder0Checkbox<T extends AbstractEntity<?>> extends IResultSetBuilder1Toolbar<T> {
+public interface IResultSetBuilder1bCheckbox<T extends AbstractEntity<?>> extends IResultSetBuilder1cToolbar<T> {
 
-	IResultSetBuilder1Toolbar<T> hideCheckboxes();
+	IResultSetBuilder1cToolbar<T> hideCheckboxes();
 
 }

@@ -58,6 +58,13 @@ public @interface Handler {
     StrParam[] str() default {};
 
     /**
+     * Should be used for specifying property-driven parameters of the handler.
+     *
+     * @return
+     */
+    PropParam[] prop() default {};
+
+    /**
      * Should be used for specifying double parameters of the handler.
      *
      * @return

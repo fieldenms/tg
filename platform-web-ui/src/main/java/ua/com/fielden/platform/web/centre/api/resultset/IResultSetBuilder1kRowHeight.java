@@ -9,7 +9,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  *
  * @param <T>
  */
-public interface IResultSetBuilder1eRowHeight<T extends AbstractEntity<?>> extends IResultSetBuilder2Properties<T>{
+public interface IResultSetBuilder1kRowHeight<T extends AbstractEntity<?>> extends IResultSetBuilder2Properties<T>{
 
     /**
      * Specifies egi's row height

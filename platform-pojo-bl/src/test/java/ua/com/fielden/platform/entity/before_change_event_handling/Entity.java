@@ -19,6 +19,7 @@ import ua.com.fielden.platform.entity.annotation.mutator.EnumParam;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.annotation.mutator.IntParam;
 import ua.com.fielden.platform.entity.annotation.mutator.MoneyParam;
+import ua.com.fielden.platform.entity.annotation.mutator.PropParam;
 import ua.com.fielden.platform.entity.annotation.mutator.StrParam;
 
 /**
@@ -29,7 +30,6 @@ import ua.com.fielden.platform.entity.annotation.mutator.StrParam;
  */
 @KeyType(String.class)
 public class Entity extends AbstractEntity<String> {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty
     @MapTo
@@ -41,6 +41,7 @@ public class Entity extends AbstractEntity<String> {
                     integer = { @IntParam(name = "intParam1", value = 1),
                                 @IntParam(name = "intParam2", value = 12) },
                     str = { @StrParam(name = "strParam", value = "string value") },
+                    prop = { @PropParam(name = "propNameParam", propName = "property2") },
                     dbl = { @DblParam(name = "dblParam", value = 0.65) },
                     date = { @DateParam(name = "dateParam", value = "2011-12-01 00:00:00") },
                     date_time = { @DateTimeParam(name = "dateTimeParam", value = "2011-12-01 00:00:00") },
@@ -54,6 +55,7 @@ public class Entity extends AbstractEntity<String> {
             integer = { @IntParam(name = "intParam1", value = 1),
                         @IntParam(name = "intParam2", value = 12) },
             str = { @StrParam(name = "strParam", value = "string value") },
+            prop = { @PropParam(name = "propNameParam", propName = "property2") },
             dbl = { @DblParam(name = "dblParam", value = 0.65) },
             date = { @DateParam(name = "dateParam", value = "2011-12-01 00:00:00") },
             date_time = { @DateTimeParam(name = "dateTimeParam", value = "2011-12-01 00:00:00") },
@@ -67,15 +69,15 @@ public class Entity extends AbstractEntity<String> {
     @MapTo
     @Title(value = "Property 2", desc = "Description")
     @AfterChange(value = InvalidAfterChangeEventHandler.class)
-    private String property2;
+    private Integer property2;
 
     @Observable
-    public Entity setProperty2(final String property2) {
+    public Entity setProperty2(final Integer property2) {
         this.property2 = property2;
         return this;
     }
 
-    public String getProperty2() {
+    public Integer getProperty2() {
         return property2;
     }
 
