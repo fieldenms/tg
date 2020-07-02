@@ -5,6 +5,7 @@ import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restorat
 import '/resources/actions/tg-ui-action.js';
 import '/resources/components/postal-lib.js';
 import { tearDownEvent, isInHierarchy, deepestActiveElement, FOCUSABLE_ELEMENTS_SELECTOR } from '/resources/reflection/tg-polymer-utils.js';
+import {createDialog} from '/resources/egi/tg-dialog-util.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import { TgElementSelectorBehavior, queryElements } from '/resources/components/tg-element-selector-behavior.js';
 
@@ -98,13 +99,6 @@ const createColumnAction = function (entityCentre) {
     actionModel.requireSelectedEntities = 'NONE';
     actionModel.requireMasterEntity = 'false';
     return actionModel;
-};
-
-const createDialog = function (id) {
-    const dialog = document.createElement('tg-custom-action-dialog');
-    dialog.setAttribute("id", id);
-    document.body.appendChild(dialog);
-    return dialog;
 };
 
 const MSG_SAVE_OR_CANCEL = "Please save or cancel changes.";
@@ -720,6 +714,9 @@ const TgEntityCentreBehaviorImpl = {
             const closeEventTopics = ['save.post.success', 'refresh.post.success'];
             if (!self.$.egi.isEditing()) {
                 this.async(function () {
+                    if (this.actionDialog === null) {
+                        this.actionDialog = createDialog(self.uuid + '');
+                    }
                     this.actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
                 }.bind(self), 1);
             } else {
@@ -734,6 +731,9 @@ const TgEntityCentreBehaviorImpl = {
             const closeEventChannel = self.uuid;
             const closeEventTopics = ['save.post.success', 'refresh.post.success'];
             this.async(function () {
+                if (this.centreConfigDialog === null) {
+                    this.centreConfigDialog = createDialog(self.uuid + '_centreConfig');
+                }
                 this.centreConfigDialog.showDialog(action, closeEventChannel, closeEventTopics);
             }.bind(self), 1);
         }).bind(self);
@@ -815,14 +815,6 @@ const TgEntityCentreBehaviorImpl = {
 
     attached: function () {
         const self = this;
-
-        if (this.actionDialog === null) {
-            this.actionDialog = createDialog(self.uuid + '');
-        }
-
-        if (this.centreConfigDialog === null) {
-            this.centreConfigDialog = createDialog(self.uuid + '_centreConfig');
-        }
 
         /* Provide predicate for egi that determines whether inline master can be opened or not.
          * It can not be opened if another master in dialog is opened. */
