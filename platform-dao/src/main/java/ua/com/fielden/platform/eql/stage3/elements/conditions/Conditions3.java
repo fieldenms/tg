@@ -25,13 +25,10 @@ public class Conditions3 implements ICondition3 {
     public String sql(final DbVersion dbVersion, final boolean atWhere) {
         if (!allConditionsAsDnf.isEmpty()) {
             final String sqlBody = allConditionsAsDnf.stream().map(dl -> dl.stream().map(cond -> cond.sql(dbVersion)).collect(joining(" AND "))).collect(joining(" OR "));
-            if (atWhere) {
-                return "\nWHERE " + (negated ? " NOT " : "") + sqlBody;    
-            } else if (allConditionsAsDnf.size() == 1) {
-                return (negated ? " NOT " : "") + sqlBody;
-            } else {
-                return (negated ? " NOT " : "") + "(" + sqlBody + ")";
-            }
+            final boolean parenthesesNeeded = allConditionsAsDnf.size() > 1 || negated;
+            final String sqlStart = atWhere ? "\nWHERE " : "";
+            final String negation = negated ? " NOT " : "";
+            return sqlStart + negation + (parenthesesNeeded ? "(" : "") + sqlBody + (parenthesesNeeded ? ")" : ""); 
         } else {
             return "";
         }
