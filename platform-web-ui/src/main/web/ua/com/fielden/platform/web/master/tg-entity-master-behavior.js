@@ -2,6 +2,7 @@ import '/resources/egi/tg-custom-action-dialog.js';
 import '/resources/components/postal-lib.js';
 
 import { tearDownEvent, isInHierarchy, deepestActiveElement, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
+import {createDialog} from '/resources/egi/tg-dialog-util.js';
 import { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';
 import { createEntityActionThenCallback } from '/resources/master/actions/tg-entity-master-closing-utils.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
@@ -631,6 +632,9 @@ const TgEntityMasterBehaviorImpl = {
             const closeEventChannel = self.uuid;
             const closeEventTopics = ['save.post.success', 'refresh.post.success'];
             this.async(function () {
+                if (this._actionDialog === null) {
+                    this._actionDialog = createDialog(self.uuid);
+                }
                 this._actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
             }.bind(self), 1);
         }).bind(self);
@@ -652,25 +656,6 @@ const TgEntityMasterBehaviorImpl = {
             }
         }.bind(self));
     }, // end of ready callback
-
-    attached: function () {
-        const self = this;
-
-        // we'd like to limit the number of dialogs created per entity master type
-        // this way the same instance is reused by different master instances of the same type
-        // that is why dialogs ID is defined as the master entity type
-        // the dialog is never removed from document.body
-        if (self._actionDialog == null) {
-            const dialog = document.body.querySelector('tg-custom-action-dialog[id="' + self.uuid + '"]');
-            if (dialog) {
-                self._actionDialog = dialog;
-            } else {
-                self._actionDialog = document.createElement('tg-custom-action-dialog');
-                self._actionDialog.setAttribute("id", self.uuid);
-                document.body.appendChild(self._actionDialog);
-            }
-        }
-    },
 
     detached: function () {
         while (this._subscriptions.length !== 0) {
