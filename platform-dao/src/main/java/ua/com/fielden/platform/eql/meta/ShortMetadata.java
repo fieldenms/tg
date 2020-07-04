@@ -87,8 +87,8 @@ public class ShortMetadata {
                     entityInfo.addProp(new UnionTypePropInfo(name, ef, hibType, required));
                 } else if (isPersistedEntityType(javaType)) {
                     entityInfo.addProp(new EntityTypePropInfo(name, allEntitiesInfo.get(javaType), hibType, required, expr));
-                } else if (ID.equals(name)){
-                    entityInfo.addProp(new EntityTypePropInfo(name, allEntitiesInfo.get(entityInfo.javaType()), hibType, required, expr));
+//                } else if (ID.equals(name)){
+//                    entityInfo.addProp(new EntityTypePropInfo(name, allEntitiesInfo.get(entityInfo.javaType()), hibType, required, expr));
                 } else {
                     if (el.getValue().subitems().isEmpty()) {
                         entityInfo.addProp(new PrimTypePropInfo(name, hibType, javaType, expr));    

@@ -2,8 +2,6 @@ package ua.com.fielden.platform.eql.meta;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +27,7 @@ public class ResolutionContext {
     }
     
     public boolean isSuccessful() {
-        return pending.isEmpty() || (pending.size() == 1 && pending.get(0).equals(ID) && !resolved.isEmpty() && isPersistedEntityType(resolved.get(resolved.size() - 1).javaType()));
+        return pending.isEmpty();// || (pending.size() == 1 && pending.get(0).equals(ID) && !resolved.isEmpty() && isPersistedEntityType(resolved.get(resolved.size() - 1).javaType()));
     }
     
     public List<AbstractPropInfo<?>> getResolved() {

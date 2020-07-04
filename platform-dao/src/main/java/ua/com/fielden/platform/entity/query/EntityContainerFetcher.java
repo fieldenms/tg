@@ -173,7 +173,7 @@ public class EntityContainerFetcher {
     private SortedSet<ResultQueryYieldDetails> getResultPropsInfos(final Yields3 model) {
         final SortedSet<ResultQueryYieldDetails> result = new TreeSet<>();
         for (final Yield3 yield : model.getYields()) {
-            final Class<?> yieldType = AbstractEntity.ID.equals(yield.alias) && (EntityUtils.isPersistedEntityType(yield.operand.type()) || EntityUtils.isSyntheticBasedOnPersistentEntityType((Class<? extends AbstractEntity<?>>) yield.operand.type()))  ? Long.class : 
+            final Class<?> yieldType = //ID.equals(yield.alias) && (isPersistedEntityType(yield.operand.type()) || isSyntheticBasedOnPersistentEntityType((Class<? extends AbstractEntity<?>>) yield.operand.type()))  ? Long.class : 
                 yield.type != null ? yield.type : yield.operand.type();
             final Object yieldHibType = yield.hibType != null ? yield.hibType : yield.operand.hibType();
             if (yield.isHeader) {
