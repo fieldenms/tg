@@ -437,30 +437,25 @@ Polymer({
     },
 
     _handleUnhandledPromiseError: function(e) {
-        //console.error(e.reason);
         this._sentError(e, "Error in promise: " + e.reason);
-        //this.toaster.openToastForError("Error in promise", e.reason, true);
     },
 
     _handleHandledPromiseError: function (e) {
-        //console.error(e.reason);
         this._sentError(e, "Error in promise catch clause: " + e.reason);
-        //this.toaster.openToastForError("Error in promise catch clause", e.reason, true);
     },
 
     _handleError: function (e) {
-        //console.error(e);
         const errorDetail = e.detail ? e.detail : e;
         const errorMsg = errorDetail.message + " in: " + errorDetail.filename + " at Ln: " + errorDetail.lineno + ", Co: " + errorDetail.colno
                         + "\n" + ((errorDetail.error && errorDetail.error.stack) ?  errorDetail.error.stack : JSON.stringify(errorDetail.error));
         this._sentError(errorDetail, errorMsg);
-        //this.toaster.openToastForError(e.message, errorMsg, true);
     },
 
     _sentError: function (e, errorMsg) {
         if (e.error && e.error.restoreState) {
             e.error.restoreState();
         }
+        this.toaster.openToastForError("Unexpected error happened", errorMsg, true);
         if (this.$.errorSender.loading) {
             this._errorQueue.push(errorMsg);
         } else {

@@ -25,6 +25,7 @@ export function processResponseError (e, reflector, serialiser, customHandler, t
             customHandler && customHandler('Service Error (' + xhr.status + ').');
         } else { // for other codes just log the code
             console.warn('Server responded with error code ', xhr.status);
+            throw new Error('Unexpected server error happend with status: ' + xhr.status);
         }
 }
 
