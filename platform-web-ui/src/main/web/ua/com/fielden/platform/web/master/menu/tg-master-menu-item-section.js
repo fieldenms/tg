@@ -191,6 +191,7 @@ Polymer({
     },
 
     offloadDom: function () {
+        this._resetBlockingState();
         this.$.elementLoader.offloadDom();
     },
 
