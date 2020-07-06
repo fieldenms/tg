@@ -309,7 +309,7 @@ const TgSelectionCriteriaBehaviorImpl = {
 
             if (potentiallySavedEntity.isValidWithoutException()) {
                 // in case where successful save occured we need to reset @@touchedProps that are transported with bindingEntity
-                newBindingEntity["@@touchedProps"] = { names: [], values: [], counts: [] };
+                newBindingEntity["@@touchedProps"] = { names: [], values: [], counts: [], enforced: [] };
             }
 
             // custom external action

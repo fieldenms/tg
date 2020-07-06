@@ -918,6 +918,11 @@ export const TgEntityBinderBehavior = {
                 if (typeof baseValId !== 'undefined') {
                     modPropHolder[propertyName]['baseValId'] = baseValId;
                 }
+                // insert 'enforce' parameter if it was used during setAndRegisterPropertyTouch
+                const index = modPropHolder['@@touchedProps'].indexOf(propertyName);
+                if (index > -1 && bindingEntity['@@touchedProps'].enforced[index] === true) {
+                    modPropHolder[propertyName]['enforce'] = true;
+                }
             });
         }
         console.log('       _extractModifiedPropertiesHolder: modPropHolder', modPropHolder);
@@ -1005,7 +1010,8 @@ export const TgEntityBinderBehavior = {
         bindingView['@@touchedProps'] = {
             names: [],
             values: [],
-            counts: []
+            counts: [],
+            enforced: []
         };
         entity.traverseProperties(function (propertyName) {
             // value conversion of property value performs here only for specialised properties (see method '_isNecessaryForConversion');

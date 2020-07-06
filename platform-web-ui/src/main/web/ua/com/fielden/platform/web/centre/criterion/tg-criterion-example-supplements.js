@@ -122,7 +122,8 @@ Polymer({
         bindingView["@@touchedProps"] = {
             names: [],
             values: [],
-            counts: []
+            counts: [],
+            enforced: []
         };
 
         bindingView["@@origin"] = this._reflector.newEntity('ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties');

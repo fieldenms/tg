@@ -492,38 +492,49 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
      * for each property (mainly for logging purposes).
      *
      * Please, note that 'touched' property does not mean 'modified' from technical perspective.
-     * But, even if it is not modified -- such property will be forced to be mutated on server (with its baseVal) 
-     * to have properly invoked its ACE handlers.
+     * This is rare case but possible -- user has changed the same property (or even multiple ones) to some value and reverted it back.
+     * These two consecutive modifications will not be applied as if they did not happen. This will be very consistent to the case where
+     * two validations are debounced (in 50ms timeframe) or stale request aborted / results discarded.
+     * 
+     * @param opts.enforce -- in some specific cases the value will not be changed from previous but must be enforced; custom client-side
+     * control of this behavior is defined by this parameter; 'true' to enforce setting of touched property even if it is not modified from previous;
+     * 'false' (or empty 'opts') to make setting as per usual aka will not performed if not modified from previous.
      *
      * IMPORTANT: this method is applicable only to binding entities (not fully-fledged)!
      */
-    Entity.prototype.setAndRegisterPropertyTouch = function (propertyName, value) {
+    Entity.prototype.setAndRegisterPropertyTouch = function (propertyName, value, opts) {
         const result = this.set(propertyName, value);
-
-        const touched = this["@@touchedProps"];
+        
+        const touched = this['@@touchedProps'];
         const names = touched.names;
         const values = touched.values;
         const counts = touched.counts;
+        const enforced = touched.enforced;
         const index = names.indexOf(propertyName);
+        const enforce = opts && opts.enforce;
         if (index > -1) {
             const prevCount = counts[index];
+            const prevEnforced = enforced[index];
             names.splice(index, 1);
             values.splice(index, 1);
             counts.splice(index, 1);
+            enforced.splice(index, 1);
             names.push(propertyName);
             values.push(value);
             counts.push(prevCount + 1);
+            enforced.push(prevEnforced || enforce);
         } else {
             names.push(propertyName);
             values.push(value);
             counts.push(1);
+            enforced.push(enforce);
         }
         // need to reset previously cached ID after the property was modified (touched) by the user -- the cached ID becomes stale in that case, and server-side reconstruction of entity-typed property should be KEY-based instead of ID-based. 
         if (typeof this['@' + propertyName + '_id'] !== 'undefined') {
             delete this['@' + propertyName + '_id'];
         }
-        console.debug('Just TOUCHED', propertyName, '(', counts[counts.length - 1], ' time). Names =', names.slice(), 'Values =', values.slice(), 'Counts =', counts.slice());
-
+        console.debug('Just TOUCHED', propertyName, '(', counts[counts.length - 1], ' time). Names =', names.slice(), 'Values =', values.slice(), 'Counts =', counts.slice(), 'Enforced =', enforced.slice());
+        
         return result;
     }
 

@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.utils;
 
+import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
 import static java.util.Locale.getDefault;
 import static java.util.regex.Pattern.quote;
@@ -181,10 +182,14 @@ public class EntityResourceUtils {
         for (final String touchedProp : touchedProps) {
             final String name = touchedProp;
             final Map<String, Object> valAndBaseVal = (Map<String, Object>) modifiedPropertiesHolder.get(name);
+            final boolean enforce = valAndBaseVal.containsKey("enforce") && TRUE.equals(valAndBaseVal.get("enforce"));
             // The 'modified' properties are marked using the existence of "val" sub-property.
             if (valAndBaseVal.containsKey("val")) { // this is a modified property
-                processPropertyValue(type, name, valAndBaseVal, entity, companionFinder);
+                processPropertyValue(type, name, valAndBaseVal, entity, companionFinder, enforce);
                 logPropertyApplication("   Apply   touched   modified", true, true, type, name, valAndBaseVal, entity, touchedProps.toArray(new String[] {}));
+            } else if (enforce) { // this is unmodified property but it needs to be enforced (controlled by client-side setting)
+                entity.getProperty(name).setValue(entity.get(name), true);
+                logPropertyApplication("   Apply   touched unmodified", true, true, type, name, valAndBaseVal, entity, touchedProps.toArray(new String[] {}));
             }
         }
         // IMPORTANT: the check for invalid will populate 'required' checks.
@@ -241,8 +246,9 @@ public class EntityResourceUtils {
      * @param valAndBaseVal
      * @param entity
      * @param companionFinder
+     * @param enforce -- indicates whether to enforce value setting
      */
-    private static <M extends AbstractEntity<?>> void processPropertyValue(final Class<M> type, final String name, final Map<String, Object> valAndBaseVal, final M entity, final ICompanionObjectFinder companionFinder) {
+    private static <M extends AbstractEntity<?>> void processPropertyValue(final Class<M> type, final String name, final Map<String, Object> valAndBaseVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean enforce) {
         // in case where application is necessary (modified touched, modified untouched, unmodified touched) the value (valueToBeApplied) should be checked on existence and then (if successful) it should be applied
         final String valueToBeAppliedName = "val";
         final Object valToBeApplied = valAndBaseVal.get(valueToBeAppliedName);
@@ -258,7 +264,11 @@ public class EntityResourceUtils {
         } else {
             valueToBeApplied = convertedValue;
         }
-        entity.getProperty(name).setValue(valueToBeApplied);
+        if (enforce) {
+            entity.getProperty(name).setValue(valueToBeApplied, true);
+        } else {
+            entity.getProperty(name).setValue(valueToBeApplied);
+        }
     }
     
     /**
