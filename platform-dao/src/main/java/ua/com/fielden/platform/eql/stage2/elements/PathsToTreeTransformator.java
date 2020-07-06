@@ -26,7 +26,10 @@ import ua.com.fielden.platform.eql.meta.ComponentTypePropInfo;
 import ua.com.fielden.platform.eql.meta.EntityInfo;
 import ua.com.fielden.platform.eql.meta.EntityTypePropInfo;
 import ua.com.fielden.platform.eql.meta.UnionTypePropInfo;
+import ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator;
+import ua.com.fielden.platform.eql.stage1.builders.StandAloneExpressionBuilder;
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
+import ua.com.fielden.platform.eql.stage1.elements.operands.Expression1;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.Expression2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.Child;
@@ -45,9 +48,9 @@ public class PathsToTreeTransformator {
         return id;
     }
 
-    public static Map<IQrySource2<?>, List<ChildGroup>> groupChildren(final Set<EntProp2> props, final  Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
+    public static Map<IQrySource2<?>, List<ChildGroup>> groupChildren(final Set<EntProp2> props, final  Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo, final EntQueryGenerator gen) {
         final Map<IQrySource2<?>, List<ChildGroup>> result = new HashMap<>();
-        for (final Entry<IQrySource2<?>, List<Child>> el : transform(props, domainInfo).entrySet()) {
+        for (final Entry<IQrySource2<?>, List<Child>> el : transform(props, domainInfo, gen).entrySet()) {
 //           System.out.println("------> " + el.getKey() + " count = " + el.getValue().size());
             for (final Child ch : el.getValue()) {
 //                System.out.println(ch);
@@ -58,11 +61,11 @@ public class PathsToTreeTransformator {
         return result;
     }
     
-    protected static final Map<IQrySource2<?>, List<Child>> transform(final Set<EntProp2> props, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
+    protected static final Map<IQrySource2<?>, List<Child>> transform(final Set<EntProp2> props, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo, final EntQueryGenerator gen) {
         final Map<IQrySource2<?>, List<Child>> sourceChildren = new HashMap<>();
 
         for (final Entry<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>> sourceProps : groupBySource(props).entrySet()) {
-            final T3<List<Child>, Map<IQrySource2<?>, List<Child>>, List<Child>> genRes = generateChildren(sourceProps.getKey(), sourceProps.getKey(), sourceProps.getKey().contextId(), sourceProps.getValue(), emptyList(), domainInfo, sourceProps.getKey());
+            final T3<List<Child>, Map<IQrySource2<?>, List<Child>>, List<Child>> genRes = generateChildren(sourceProps.getKey(), sourceProps.getKey(), sourceProps.getKey().contextId(), sourceProps.getValue(), emptyList(), domainInfo, sourceProps.getKey(), gen);
             assert(genRes._3.size() == 0);
             sourceChildren.put(sourceProps.getKey(), genRes._1);
             sourceChildren.putAll(genRes._2);
@@ -103,13 +106,13 @@ public class PathsToTreeTransformator {
         return result;
     }
 
-    private static T3<List<Child>, Map<IQrySource2<?>, List<Child>>, List<Child>> generateChildren(final IQrySource2<?> contextSource, final IQrySource2<?> lastPersistentSource, final String contextId, final Map<String, List<AbstractPropInfo<?>>> props, final List<String> context, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo, final IQrySource2<?> contextParentSource) {
+    private static T3<List<Child>, Map<IQrySource2<?>, List<Child>>, List<Child>> generateChildren(final IQrySource2<?> contextSource, final IQrySource2<?> lastPersistentSource, final String contextId, final Map<String, List<AbstractPropInfo<?>>> props, final List<String> context, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo, final IQrySource2<?> contextParentSource, final EntQueryGenerator gen) {
         final List<Child> result = new ArrayList<>();
         final Map<IQrySource2<?>, List<Child>> other = new HashMap<>();
         final List<Child> unionResult = new ArrayList<>();
         
         for (final Entry<AbstractPropInfo<?>, Map<String, List<AbstractPropInfo<?>>>> propEntry : groupByFirstProp(props).entrySet()) {
-            final T3<List<Child>, Map<IQrySource2<?>, List<Child>>, List<Child>> genRes = generateChild(contextSource, lastPersistentSource, propEntry.getKey(), propEntry.getValue(), context, contextId, domainInfo, contextParentSource);
+            final T3<List<Child>, Map<IQrySource2<?>, List<Child>>, List<Child>> genRes = generateChild(contextSource, lastPersistentSource, propEntry.getKey(), propEntry.getValue(), context, contextId, domainInfo, contextParentSource, gen);
             result.addAll(genRes._1);
             other.putAll(genRes._2);
             unionResult.addAll(genRes._3);
@@ -118,7 +121,7 @@ public class PathsToTreeTransformator {
         return t3(result, other, unionResult);
     }
     
-    private static T3<List<Child>, Map<IQrySource2<?>, List<Child>>, List<Child>> generateChild(final IQrySource2<?> contextSource, final IQrySource2<?> lastPersistentSource, final AbstractPropInfo<?> propInfo, final Map<String, List<AbstractPropInfo<?>>> subprops, final List<String> context, final String contextId, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo, final IQrySource2<?> contextParentSource) {
+    private static T3<List<Child>, Map<IQrySource2<?>, List<Child>>, List<Child>> generateChild(final IQrySource2<?> contextSource, final IQrySource2<?> lastPersistentSource, final AbstractPropInfo<?> propInfo, final Map<String, List<AbstractPropInfo<?>>> subprops, final List<String> context, final String contextId, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo, final IQrySource2<?> contextParentSource, final EntQueryGenerator gen) {
         final List<Child> result = new ArrayList<>();
         final Map<IQrySource2<?>, List<Child>> other = new HashMap<>();
         final List<Child> unionResult = new ArrayList<>();
@@ -128,8 +131,8 @@ public class PathsToTreeTransformator {
         final Set<Child> dependencies = new HashSet<>();
         if (propInfo.hasExpression()) {
             final IQrySource2<?>  cs = contextSource != null ?  contextSource : lastPersistentSource;
-            expr2 = expressionToS2(cs, propInfo, domainInfo, context.stream().collect(joining("_")));
-            final Map<IQrySource2<?>, List<Child>> dependenciesResult = transform(expr2.collectProps(), domainInfo);
+            expr2 = expressionToS2(cs, propInfo, domainInfo, context.stream().collect(joining("_")), gen);
+            final Map<IQrySource2<?>, List<Child>> dependenciesResult = transform(expr2.collectProps(), domainInfo, gen);
 
             for (final Entry<IQrySource2<?>, List<Child>> drEntry : dependenciesResult.entrySet()) {
                 if (!drEntry.getKey().equals(cs)) {
@@ -157,7 +160,7 @@ public class PathsToTreeTransformator {
         final List<Child> children = new ArrayList<>();
         if (!next._2.isEmpty()) {
             final IQrySource2<?>  updateLps = source != null ? source : lastPersistentSource;
-            final T3<List<Child>, Map<IQrySource2<?>, List<Child>>, List<Child>> genRes = generateChildren(source, updateLps, contextId, next._2, newContext, domainInfo, contextParentSource);
+            final T3<List<Child>, Map<IQrySource2<?>, List<Child>>, List<Child>> genRes = generateChildren(source, updateLps, contextId, next._2, newContext, domainInfo, contextParentSource, gen);
             children.addAll(genRes._1);
             other.putAll(genRes._2);
             if (source == null && !genRes._3.isEmpty()) {
@@ -188,9 +191,10 @@ public class PathsToTreeTransformator {
         return t2(path, nextProps);
     }
     
-    private static Expression2 expressionToS2(final IQrySource2<?> contextSource, final AbstractPropInfo<?> propInfo, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo, final String context) {
+    private static Expression2 expressionToS2(final IQrySource2<?> contextSource, final AbstractPropInfo<?> propInfo, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo, final String context, final EntQueryGenerator gen) {
         final PropsResolutionContext prc = new PropsResolutionContext(domainInfo, asList(asList(contextSource)), contextSource.contextId() + "_" + (isEmpty(context) ? "" : context + "_") + propInfo.name); 
-        return propInfo.expression.transform(prc);
+        final Expression1 exp = (Expression1) (new StandAloneExpressionBuilder(gen, propInfo.expression)).getResult().getValue();
+        return exp.transform(prc);
     }
     
     private static List<ChildGroup> convertToGroup(final SortedSet<Child> children, final List<String> parentPrefix) {

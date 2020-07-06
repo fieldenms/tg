@@ -7,7 +7,6 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 
 import org.hibernate.type.StandardBasicTypes;
@@ -113,10 +112,10 @@ public class EqlTestCase {
                 H2);
         DOMAIN_METADATA_ANALYSER = new DomainMetadataAnalyser(DOMAIN_METADATA);
         final LongMetadata lmg = DOMAIN_METADATA.lmd;
-        final ShortMetadata mdg = new ShortMetadata(lmg, null, null, injector.getInstance(IDates.class), emptyMap());
+        //final ShortMetadata mdg = new ShortMetadata(lmg, null, null, injector.getInstance(IDates.class), null, emptyMap());
         
         try {
-            metadata.putAll(mdg.generate(new HashSet<>(PlatformTestDomainTypes.entityTypes)));
+            metadata.putAll(lmg.getDomainInfo());//mdg.generate(/*new HashSet<>(PlatformTestDomainTypes.entityTypes)*/));
             tables.putAll(lmg.getTables());
         } catch (final Exception e) {
             e.printStackTrace();
@@ -146,9 +145,9 @@ public class EqlTestCase {
     protected static final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> metadata(final IFilter filter, final String username, final IDates dates, final Map<String, Object> paramValues) {
         final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> result = new HashMap<>();
         final LongMetadata lmg = DOMAIN_METADATA.lmd;
-        final ShortMetadata mdg = new ShortMetadata(lmg, filter, username, dates, paramValues);
+        //final ShortMetadata mdg = new ShortMetadata(lmg, filter, username, dates, null, paramValues);
         try {
-            result.putAll(mdg.generate(new HashSet<>(PlatformTestDomainTypes.entityTypes)));    
+            result.putAll(lmg.getDomainInfo());//mdg.generate(/*new HashSet<>(PlatformTestDomainTypes.entityTypes)*/));    
         } catch (final Exception e) {
             e.printStackTrace();
         }

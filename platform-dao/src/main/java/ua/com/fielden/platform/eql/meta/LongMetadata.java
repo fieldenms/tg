@@ -72,6 +72,7 @@ import ua.com.fielden.platform.entity.query.IUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICaseWhenFunctionWhen;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneExprOperationAndClose;
+import ua.com.fielden.platform.entity.query.metadata.EntityCategory;
 import ua.com.fielden.platform.entity.query.metadata.EntityTypeInfo;
 import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
@@ -82,6 +83,7 @@ import ua.com.fielden.platform.eql.stage3.elements.Table;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.types.tuples.T3;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 public class LongMetadata {
     
@@ -107,6 +109,8 @@ public class LongMetadata {
     private final Map<String, Table> tables = new HashMap<>();
 
     private final List<Class<? extends AbstractEntity<?>>> entityTypes;
+    
+    private final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo;
     
     private Injector hibTypesInjector;
 
@@ -178,7 +182,65 @@ public class LongMetadata {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+        
+        domainInfo = entityPropsMetadata.keySet().stream()
+                .filter(t -> isPersistedEntityType(t) || isSyntheticEntityType(t) || isSyntheticBasedOnPersistentEntityType(t) || isUnionEntityType(t))
+                .collect(toMap(k -> k, k -> new EntityInfo<>(k, determineCategory(k))));
+        domainInfo.values().stream().forEach(ei -> addProps(ei, domainInfo));
 
+    }
+    
+    private <T extends AbstractEntity<?>> void addProps(final EntityInfo<T> entityInfo, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> allEntitiesInfo) {
+        try {
+            for (final Entry<String, LongPropertyMetadata> el : entityPropsMetadata.get(entityInfo.javaType()).entrySet()) {
+                final String name = el.getKey();
+                final boolean required = !el.getValue().nullable;
+                final Class<?> javaType = el.getValue().javaType;
+                final Object hibType = el.getValue().hibType;
+                final ExpressionModel expr = el.getValue().expressionModel;
+                
+                if (isUnionEntityType(javaType)) {
+                    final EntityInfo<? extends AbstractUnionEntity> ef = new EntityInfo<>((Class<? extends AbstractUnionEntity>)javaType, UNION);
+                    for (final LongPropertyMetadata sub : el.getValue().subitems()) {
+                        if (sub.expressionModel == null) {
+                            ef.addProp(new EntityTypePropInfo(sub.name, allEntitiesInfo.get(sub.javaType), sub.hibType, false, null));
+                        } else {
+                            final ExpressionModel subExpr = sub.expressionModel;
+                            if (EntityUtils.isEntityType(sub.javaType)) {
+                                ef.addProp(new EntityTypePropInfo(sub.name, allEntitiesInfo.get(sub.javaType), sub.hibType, false, subExpr));
+                            } else {
+                                ef.addProp(new PrimTypePropInfo(sub.name, sub.hibType, sub.javaType, subExpr));    
+                            }
+                            
+                        }
+                    }
+                    entityInfo.addProp(new UnionTypePropInfo(name, ef, hibType, required));
+                } else if (isPersistedEntityType(javaType)) {
+                    entityInfo.addProp(new EntityTypePropInfo(name, allEntitiesInfo.get(javaType), hibType, required, expr));
+//                } else if (ID.equals(name)){
+//                    entityInfo.addProp(new EntityTypePropInfo(name, allEntitiesInfo.get(entityInfo.javaType()), hibType, required, expr));
+                } else {
+                    if (el.getValue().subitems().isEmpty()) {
+                        entityInfo.addProp(new PrimTypePropInfo(name, hibType, javaType, expr));    
+                    } else {
+                        final ComponentTypePropInfo propTpi = new ComponentTypePropInfo(name, javaType, hibType);
+                        for (final LongPropertyMetadata sub : el.getValue().subitems()) {
+                            final ExpressionModel subExpr = sub.expressionModel;
+                            propTpi.addProp(new PrimTypePropInfo(sub.name, sub.hibType, sub.javaType, subExpr));
+                        }
+                        entityInfo.addProp(propTpi);
+                    }
+                }
+            }
+        } catch (final Exception e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
+    }
+    
+    private static <ET extends AbstractEntity<?>> EntityCategory determineCategory(final Class<ET> entityType) {
+        final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo = new EntityTypeInfo<>(entityType);
+        return parentInfo.category;
     }
     
     /**
@@ -548,8 +610,8 @@ public class LongMetadata {
         return Collections.unmodifiableMap(tables);
     }
     
-    public Map<Class<? extends AbstractEntity<?>>, SortedMap<String, LongPropertyMetadata>> getEntityPropsMetadata() {
-        return Collections.unmodifiableMap(entityPropsMetadata);
+    public Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> getDomainInfo() {
+        return Collections.unmodifiableMap(domainInfo);
     }
-
+    
 }

@@ -2,7 +2,7 @@ package ua.com.fielden.platform.eql.meta;
 
 import java.util.Objects;
 
-import ua.com.fielden.platform.eql.stage1.elements.operands.Expression1;
+import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 
 public class PrimTypePropInfo<T> extends AbstractPropInfo<T> {
     private final Class<T> propType;
@@ -11,7 +11,7 @@ public class PrimTypePropInfo<T> extends AbstractPropInfo<T> {
         this(name, hibType, propType, null);
     }
     
-    public PrimTypePropInfo(final String name, final Object hibType, final Class<T> propType, final Expression1 expression) {
+    public PrimTypePropInfo(final String name, final Object hibType, final Class<T> propType, final ExpressionModel expression) {
         super(name, hibType, expression);
         this.propType = propType;
     }

@@ -13,6 +13,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.joda.time.DateTime;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.IFilter;
@@ -51,8 +53,11 @@ public class EntQueryGenerator {
         this.username = username;
         this.dates = dates;
         this.paramValues.putAll(paramValues);
-        if (dates != null && dates.now() != null) {
-            this.paramValues.put(NOW, dates.now().toDate());
+        if (dates != null) {
+            final DateTime now = dates.now();
+            if (now != null) {
+                this.paramValues.put(NOW, now.toDate());
+            }
         }
     }
     

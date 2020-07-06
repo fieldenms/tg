@@ -61,14 +61,14 @@ public class EqlStage3TestCase extends EqlTestCase {
 
         final PropsResolutionContext resolutionContext = new PropsResolutionContext(metadata());
         final ResultQuery2 rq2 = qb().generateEntQueryAsResultQuery(countQry, null, null).transform(resolutionContext);
-        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<ResultQuery3> s2tr = rq2.transform(new TransformationContext(tables, groupChildren(rq2.collectProps(), metadata())));
+        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<ResultQuery3> s2tr = rq2.transform(new TransformationContext(tables, groupChildren(rq2.collectProps(), metadata(), qb())));
         return s2tr.item;
     }
     
     protected static ResultQuery3 qry(final AggregatedResultQueryModel qry) {
         final PropsResolutionContext resolutionContext = new PropsResolutionContext(metadata());
         final ResultQuery2 rq2 = qb().generateEntQueryAsResultQuery(qry, null, null).transform(resolutionContext);
-        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<ResultQuery3> s2tr = rq2.transform(new TransformationContext(tables, groupChildren(rq2.collectProps(), metadata())));
+        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<ResultQuery3> s2tr = rq2.transform(new TransformationContext(tables, groupChildren(rq2.collectProps(), metadata(), qb())));
         return s2tr.item;
     }
     
@@ -77,7 +77,7 @@ public class EqlStage3TestCase extends EqlTestCase {
 
         final PropsResolutionContext resolutionContext = new PropsResolutionContext(metadata(paramValues));
         final ResultQuery2 rq2 = qb(paramValues).generateEntQueryAsResultQuery(countQry, null, null).transform(resolutionContext);
-        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<ResultQuery3> s2tr = rq2.transform(new TransformationContext(tables, groupChildren(rq2.collectProps(), metadata(paramValues))));
+        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<ResultQuery3> s2tr = rq2.transform(new TransformationContext(tables, groupChildren(rq2.collectProps(), metadata(paramValues), qb())));
         return s2tr.item;
     }
 

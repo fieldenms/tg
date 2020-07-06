@@ -2,7 +2,7 @@ package ua.com.fielden.platform.eql.meta;
 
 import java.util.Objects;
 
-import ua.com.fielden.platform.eql.stage1.elements.operands.Expression1;
+import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 
 /**
  * A structure that captures a query source yield-able property resolution related info within a query source of type <code>PARENT</code>. 
@@ -12,7 +12,7 @@ import ua.com.fielden.platform.eql.stage1.elements.operands.Expression1;
  */
 public abstract class AbstractPropInfo<T> implements IResolvable<T> {
     public final String name;
-    public final Expression1 expression;
+    public final ExpressionModel expression;
     public final Object hibType;
 
     /**
@@ -24,7 +24,7 @@ public abstract class AbstractPropInfo<T> implements IResolvable<T> {
         this(name, hibType, null);
     }
     
-    public AbstractPropInfo(final String name, final Object hibType, final Expression1 expression) {
+    public AbstractPropInfo(final String name, final Object hibType, final ExpressionModel expression) {
         this.name = name;
         this.expression = expression;
         this.hibType = hibType;
