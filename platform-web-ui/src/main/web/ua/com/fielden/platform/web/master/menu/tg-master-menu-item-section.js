@@ -191,8 +191,10 @@ Polymer({
     },
 
     offloadDom: function () {
-        this._resetBlockingState();
-        this.$.elementLoader.offloadDom();
+        if (this.$.elementLoader.wasLoaded && this._element.wasLoaded()) {
+            this._resetBlockingState();
+            this.$.elementLoader.offloadDom();
+        }
     },
 
     loadDom: function () {
@@ -201,6 +203,9 @@ Polymer({
 
     _handleDataLoaded: function () {
         this._hideBlockingPane();
+        if (!this.offsetParent) {
+            this.offloadDom();
+        }
     },
 
     _handleError: function (e) {
