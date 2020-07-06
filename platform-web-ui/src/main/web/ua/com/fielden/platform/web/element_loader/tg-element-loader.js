@@ -137,6 +137,8 @@ Polymer({
         this.appendChild(element);
 
         this.loadedElement = element;
+
+        return this.loadedElement;
     },
 
     /** 
@@ -192,6 +194,20 @@ Polymer({
             }
 
         }
+    },
+
+    /**
+     * Offloads the loaded element from light DOM of this element loader.
+     */
+    offloadDom: function () {
+        _removeAllLightDOMChildrenFrom(this);
+    },
+
+    /**
+     * Inserts the loaded element into light DOM of this element loader.
+     */
+    loadDom: function () {
+        return this.insert(this.loadedElement);
     },
 
     /** 

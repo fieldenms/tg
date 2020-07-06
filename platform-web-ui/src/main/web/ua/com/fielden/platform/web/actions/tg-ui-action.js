@@ -622,6 +622,7 @@ Polymer({
                 })
                 .catch(function (error) {
                     console.error(error);
+                    throw error;
                 });
         }).bind(self);
     },
