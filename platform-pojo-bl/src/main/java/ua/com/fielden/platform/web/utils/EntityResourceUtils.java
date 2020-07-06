@@ -185,10 +185,11 @@ public class EntityResourceUtils {
             final boolean enforce = valAndBaseVal.containsKey("enforce") && TRUE.equals(valAndBaseVal.get("enforce"));
             // The 'modified' properties are marked using the existence of "val" sub-property.
             if (valAndBaseVal.containsKey("val")) { // this is a modified property
-                processPropertyValue(type, name, valAndBaseVal, entity, companionFinder, enforce);
+                processPropertyValue("val", type, name, valAndBaseVal, entity, companionFinder, enforce);
                 logPropertyApplication("   Apply   touched   modified", true, true, type, name, valAndBaseVal, entity, touchedProps.toArray(new String[] {}));
             } else if (enforce) { // this is unmodified property but it needs to be enforced (controlled by client-side setting)
-                entity.getProperty(name).setValue(entity.get(name), true);
+                processPropertyValue("baseVal", type, name, valAndBaseVal, entity, companionFinder, enforce);
+                // TODO entity.get(name) can be stale, what can we do about it? entity.getProperty(name).setValue(entity.get(name), true);
                 logPropertyApplication("   Apply   touched unmodified", true, true, type, name, valAndBaseVal, entity, touchedProps.toArray(new String[] {}));
             }
         }
@@ -248,9 +249,8 @@ public class EntityResourceUtils {
      * @param companionFinder
      * @param enforce -- indicates whether to enforce value setting
      */
-    private static <M extends AbstractEntity<?>> void processPropertyValue(final Class<M> type, final String name, final Map<String, Object> valAndBaseVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean enforce) {
+    private static <M extends AbstractEntity<?>> void processPropertyValue(final String valueToBeAppliedName, final Class<M> type, final String name, final Map<String, Object> valAndBaseVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean enforce) {
         // in case where application is necessary (modified touched, modified untouched, unmodified touched) the value (valueToBeApplied) should be checked on existence and then (if successful) it should be applied
-        final String valueToBeAppliedName = "val";
         final Object valToBeApplied = valAndBaseVal.get(valueToBeAppliedName);
         final Object convertedValue = convert(type, name, valToBeApplied, reflectedValueId(valAndBaseVal, valueToBeAppliedName), companionFinder);
         final Object valueToBeApplied;
