@@ -724,7 +724,9 @@ Polymer({
         const action = this.querySelector('tg-ui-action[data-route=' + newRoute + ']');
 
         if (oldSection && oldSection._element) {
-            oldSection.offloadDom();
+            if (newRoute !== oldRoute) {
+                oldSection.offloadDom();
+            }
             if (typeof oldSection._element.removeOwnKeyBindings === 'function') {
                 oldSection._element.removeOwnKeyBindings();
             }
