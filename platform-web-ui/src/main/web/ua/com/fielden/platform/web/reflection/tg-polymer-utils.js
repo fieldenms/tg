@@ -195,6 +195,15 @@ export class EntityStub {
 };
 
 /**
+ * Returns true if specified text contains html tags which are not allowed to be inserted as html text. 
+ *  
+ */
+export const containsRestictedTags = function (htmlText) {
+    const offensiveTag = new RegExp('<html|<body|<script|<img|<a', 'mi');
+    return offensiveTag.exec(htmlText) !== null;
+}
+
+/**
  * Returns 'true' if client application was loaded on mobile device, 'false' otherwise (see AbstractWebResource and DeviceProfile for more details).
  * 
  * It is recommended to use word "Mobi" for mobile device detection, see https://developer.mozilla.org/en-US/docs/Web/HTTP/Browser_detection_using_the_user_agent for more info.

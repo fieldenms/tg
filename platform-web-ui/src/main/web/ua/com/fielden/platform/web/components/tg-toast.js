@@ -7,7 +7,7 @@ import '/resources/polymer/@polymer/paper-toast/paper-toast.js';
 import '/resources/polymer/@polymer/paper-spinner/paper-spinner.js';
 import '/resources/polymer/@polymer/polymer/lib/elements/dom-bind.js';
 
-import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, containsRestictedTags } from '/resources/reflection/tg-polymer-utils.js';
 
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
@@ -66,11 +66,6 @@ const PROGRESS_DURATION = 3600000; // 1 hour
 const CRITICAL_DURATION = 5000; // 5 seconds
 const MORE_DURATION = 4000; // 4 seconds
 const STANDARD_DURATION = 2000; // 2 seconds
-
-function containsRestictedTags(htmlText) {
-    const offensiveTag = new RegExp('<html|<body|<script|<img|<a', 'mi');
-    return offensiveTag.exec(htmlText) !== null;
-}
 
 Polymer({
     // attributes="msgHeading -- TODO was this ever needed?"
@@ -185,7 +180,7 @@ Polymer({
                 <template>
                     <paper-dialog id="msgDialog" class="toast-dialog" on-iron-overlay-closed="_dialogClosed" with-backdrop entry-animation="scale-up-animation" exit-animation="fade-out-animation">
                         <paper-dialog-scrollable>
-                            <p id="msgPar" style="padding: 10px;"></p>
+                            <p id="msgPar" style="padding: 10px;white-space: pre;"></p>
                         </paper-dialog-scrollable>
                         <div class="buttons">
                             <paper-button dialog-confirm affirmative autofocus>

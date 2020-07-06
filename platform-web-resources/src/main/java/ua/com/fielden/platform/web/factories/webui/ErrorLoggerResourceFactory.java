@@ -27,7 +27,7 @@ public class ErrorLoggerResourceFactory extends Restlet {
     public void handle(final Request request, final Response response) {
         super.handle(request, response);
 
-        if (Method.POST.equals(request.getMethod())) {
+        if (Method.PUT.equals(request.getMethod())) {
             new ErrorLoggerResource(getContext(),
                     request,
                     response,

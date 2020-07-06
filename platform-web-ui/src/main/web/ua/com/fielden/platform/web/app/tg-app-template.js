@@ -23,7 +23,7 @@ import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizabl
 import { TgEntityMasterBehavior } from '/resources/master/tg-entity-master-behavior.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js'
 import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';
-import { tearDownEvent, deepestActiveElement, generateUUID, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, deepestActiveElement, generateUUID, isMobileApp, containsRestictedTags } from '/resources/reflection/tg-polymer-utils.js';
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 
 const template = html`
@@ -46,7 +46,7 @@ const template = html`
             </template>
         </neon-animated-pages>
     </div>
-    <iron-ajax id="errorSender" headers="[[_headers]]" url="/error" method="POST" content-type="text/plain" handle-as="text" on-response="_processErrorResponse" on-error="_processError"></iron-ajax>
+    <iron-ajax id="errorSender" headers="[[_headers]]" url="/error" method="PUT" content-type="text/plain" handle-as="text" on-response="_processErrorResponse"></iron-ajax>
     <tg-entity-master
         id="masterDom"
         entity-type="[[entityType]]"
@@ -113,6 +113,11 @@ function addAllElements (elementsToAdd, addToArray, removeFromArray) {
         });
     }
     return addToArray;
+};
+function replaceNewline (input) {
+    const newline = "\r\n";
+    new RegExp('<html|<body|<script|<img|<a', 'mi');
+    return input.replace(/\n/gi, containsRestictedTags(input) ? newline : '<br');
 };
 Polymer({
 
@@ -437,44 +442,46 @@ Polymer({
     },
 
     _handleUnhandledPromiseError: function(e) {
-        this._sentError(e, "Error in promise: " + e.reason);
+        this._sentError(e.composedPath()[0], e, "Error in promise: " + e.reason);
     },
 
     _handleHandledPromiseError: function (e) {
-        this._sentError(e, "Error in promise catch clause: " + e.reason);
+        this._sentError(e.composedPath()[0], e, "Error in promise catch clause: " + e.reason);
     },
 
     _handleError: function (e) {
         const errorDetail = e.detail ? e.detail : e;
         const errorMsg = errorDetail.message + " in: " + errorDetail.filename + " at Ln: " + errorDetail.lineno + ", Co: " + errorDetail.colno
                         + "\n" + ((errorDetail.error && errorDetail.error.stack) ?  errorDetail.error.stack : JSON.stringify(errorDetail.error));
-        this._sentError(errorDetail, errorMsg);
+        this._sentError(e.composedPath()[0], errorDetail, errorMsg);
     },
 
-    _sentError: function (e, errorMsg) {
-        if (e.error && e.error.restoreState) {
-            e.error.restoreState();
-        }
-        this.toaster.openToastForError("Unexpected error happened", errorMsg, true);
-        if (this.$.errorSender.loading) {
+    _sentError: function (from, e, errorMsg) {
+        if (from !== this.$.errorSender) {
+            if (e.error && e.error.restoreState) {
+                e.error.restoreState();
+                this.toaster.openToastForError("Unexpected error happened", replaceNewline(errorMsg), true);
+            }
             this._errorQueue.push(errorMsg);
-        } else {
-            this.$.errorSender.body = errorMsg;
-            this.$.errorSender.generateRequest();
+            if (!this.$.errorSender.loading) {
+                this._sentErrorMsg(this._errorQueue[0]);
+            }
         }
+    },
+
+    _sentErrorMsg: function (errorMsg) {
+        this.$.errorSender.body = errorMsg;
+        this.$.errorSender.generateRequest();
     },
     
     _processErrorResponse: function (e) {
         this._processNextError();
     },
 
-    _processError: function (e) {
-        this._processNextError();
-    },
-
     _processNextError: function () {
+        this._errorQueue.shift();
         if (this._errorQueue.length > 0) {
-            this._sentError(this._errorQueue.shift());
+            this._sentErrorMsg(this._errorQueue[0]);
         }
     },
 

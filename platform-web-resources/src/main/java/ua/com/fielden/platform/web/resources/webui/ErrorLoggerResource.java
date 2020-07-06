@@ -8,7 +8,7 @@ import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.representation.Representation;
 import org.restlet.representation.StringRepresentation;
-import org.restlet.resource.Post;
+import org.restlet.resource.Put;
 
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
@@ -23,9 +23,9 @@ public class ErrorLoggerResource extends AbstractWebResource {
     /**
      * Handles POST request resulting from tg-selection-criteria <code>validate()</code> method.
      */
-    @Post
+    @Put
     @Override
-    public Representation post(final Representation envelope) {
+    public Representation put(final Representation envelope) {
         try {
             LOGGER.error("Error happened on " + device().name() + " device:\n" + envelope.getText());
         } catch (final IOException e) {
