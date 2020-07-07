@@ -608,9 +608,9 @@ Polymer({
         }.bind(this);
         
         //Add error handling errors
-        window.addEventListener('error', this._handleError, true);
-        window.addEventListener('rejectionhandled', this._handleHandledPromiseError, true);
-        window.addEventListener('unhandledrejection', this._handleUnhandledPromiseError, true);
+        window.addEventListener('error', this._handleError);
+        window.addEventListener('rejectionhandled', this._handleHandledPromiseError);
+        window.addEventListener('unhandledrejection', this._handleUnhandledPromiseError);
 
         //Add error resize event listener
         this.addEventListener("iron-resize", this._resizeEventListener.bind(this));

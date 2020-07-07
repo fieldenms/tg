@@ -464,7 +464,13 @@ Polymer({
 
             const postMasterInfoRetrieve = function () {
                 if (this.preAction) {
-                    const result = this.preAction(this)
+                    let result = null;
+                    try {
+                        result = this.preAction(this);
+                    } catch (e) {
+                        e.restoreState = function() {};
+                        throw e;
+                    }
                     const promise = result instanceof Promise ? result : Promise.resolve(result);
     
                     promise.then(function (value) {
@@ -566,14 +572,22 @@ Polymer({
                     }
                 });
 
-                if (potentiallySavedOrNewEntity.isValidWithoutException()) {
-                    if (self.postActionSuccess) {
-                        self.postActionSuccess(potentiallySavedOrNewEntity, self, master);
+                try {
+                    if (potentiallySavedOrNewEntity.isValidWithoutException()) {
+                        if (self.postActionSuccess) {
+                            self.postActionSuccess(potentiallySavedOrNewEntity, self, master);
+                        }
+                    } else {
+                        if (self.postActionError) {
+                            self.postActionError(potentiallySavedOrNewEntity, self, master);
+                        }
                     }
-                } else {
-                    if (self.postActionError) {
-                        self.postActionError(potentiallySavedOrNewEntity, self, master);
-                    }
+                } catch (e) {
+                    e.restoreState = function() {
+                        self.isActionInProgress = false;
+                        self.restoreActionState();
+                    };
+                    throw e;
                 }
 
                 if (!self.skipAutomaticActionCompletion) {
