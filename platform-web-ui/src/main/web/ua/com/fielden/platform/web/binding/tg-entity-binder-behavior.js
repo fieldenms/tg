@@ -882,7 +882,11 @@ export const TgEntityBinderBehavior = {
             // also, we do not support conversion of array of entities on the server side -- such properties are immutable from client-side editor perspective (see EntityResourceUtils.convert method with isEntityType+isCollectional conditions)
             const convert = value => Array.isArray(value) ? value.map(el => self._reflector().tg_convert(el)) : value;
             
-            bindingEntity.traverseProperties(function (propertyName) {
+            // Only consider explicitly touched properties accumulated since previous fully completed validation cycle.
+            // This will ensure modifiedPropertiesHolder to be as lean as possible as it will contain only several properties
+            //   touched by setAndRegisterPropertyTouch using custom API call or through tg-editor-originated modifications.
+            // Most likely it should contain only one modification (or slightly more or zero in case of quick user interactions).
+            modPropHolder['@@touchedProps'].forEach(function (propertyName) {
                 const value = convert(bindingEntity.get(propertyName));
                 if (typeof _baseBindingEntity[propertyName] === 'undefined') {
                     // provide value conversion in case if it was not performed earlier;
