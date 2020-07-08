@@ -451,7 +451,7 @@ Polymer({
 
     _handleError: function (e) {
         const errorDetail = e.detail ? e.detail : e;
-        const errorMsg = errorDetail.message + " in: " + errorDetail.filename + " at Ln: " + errorDetail.lineno + ", Co: " + errorDetail.colno
+        const errorMsg = errorDetail.message + " Error happened in: " + errorDetail.filename + " at Ln: " + errorDetail.lineno + ", Co: " + errorDetail.colno
                         + "\n" + ((errorDetail.error && errorDetail.error.stack) ?  errorDetail.error.stack : JSON.stringify(errorDetail.error));
         this._sentError(e.composedPath()[0], errorDetail, errorMsg);
     },
@@ -460,8 +460,8 @@ Polymer({
         if (from !== this.$.errorSender) {
             if (e.error && e.error.restoreState) {
                 e.error.restoreState();
-                this.toaster.openToastForError("Unexpected error happened", replaceNewline(errorMsg), true);
             }
+            this.toaster.openToastForError("Unexpected error happened", replaceNewline(errorMsg), true);
             this._errorQueue.push(errorMsg);
             if (!this.$.errorSender.loading) {
                 this._sentErrorMsg(this._errorQueue[0]);
