@@ -1741,6 +1741,27 @@ export const TgReflector = Polymer({
     },
 
     /**
+     * Returns the binding value for the specified 'context' and 'dotNotatedName' of the property.
+     * Context must be represented either by 'CentreContextHolder' or 'SavingInfoHolder'.
+     * 
+     * In case of 'CentreContextHolder' the value will be taken from selection criteria entity of the centre context (the name should contain _from/_to, _is/_not and similar suffixes).
+     * In case of 'SavingInfoHolder' the value will be taken from master entity of the context.
+     */
+    tg_getBindingValueFromContext: function (context, dotNotatedName) {
+        const values = context && context.modifHolder && context.modifHolder[dotNotatedName];
+        if (values) {
+            if (typeof values.val !== 'undefined') {
+                return values.val;
+            } else if (typeof values.baseVal !== 'undefined') {
+                return values.baseVal;
+            }
+        } else if (context && context.previouslyAppliedEntity) {
+            return this.tg_getBindingValueFromFullEntity(context.previouslyAppliedEntity, dotNotatedName);
+        }
+        throw new Error('Context [' + context + '] is not sufficient for binding value retrieval.');
+    },
+
+    /**
      * Returns fully-fledged entity from which 'bindingEntity' has been originated.
      */
     tg_getFullEntity: function (bindingEntity) {
