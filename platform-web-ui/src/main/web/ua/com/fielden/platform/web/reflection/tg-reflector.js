@@ -1658,10 +1658,10 @@ export const TgReflector = Polymer({
      */
     tg_convertPropertyValue: function (bindingView, propertyName, entity, previousModifiedPropertiesHolder) {
         if (this.isError(entity.prop(propertyName).validationResult())) {
-            if (previousModifiedPropertiesHolder === null) { // is a brand new instance just received from server?
+            if (previousModifiedPropertiesHolder === null || !previousModifiedPropertiesHolder[propertyName]) { // is a brand new instance just received from server?
                 // bind the received from server property value
                 _convertFullPropertyValue(bindingView, propertyName, this._getErroneousFullPropertyValue(entity, propertyName));
-            } else { // otherwise, this entity instance has already been received before and should be handled accordingly
+            } else { // otherwise, this entity instance has already been received before and should be handled accordingly TODO the following logic should be deleted in favour of the above and _getErroneousFullPropertyValue should be used
                 if (typeof previousModifiedPropertiesHolder[propertyName].val === 'undefined') {
                     // EDGE-CASE: if the value becomes invalid not because the action done upon this property -- 
                     //   but because the action on other property -- the previous version of modifiedPropsHolder will not hold
