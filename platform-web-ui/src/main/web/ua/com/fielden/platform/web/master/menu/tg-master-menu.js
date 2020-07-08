@@ -544,10 +544,8 @@ Polymer({
 
     _getMasterEntityChanged: function (newValue, oldValue) {
         const context = newValue();
-        const sectionTitleValues = context.modifHolder.sectionTitle;
-        const menuToOpenValues = context.modifHolder.menuToOpen;
-        this.sectionTitle = (typeof sectionTitleValues.val !== 'undefined') ? sectionTitleValues.val : sectionTitleValues.baseVal;
-        const menuToOpen = (typeof menuToOpenValues.val !== 'undefined') ? menuToOpenValues.val : menuToOpenValues.baseVal;
+        this.sectionTitle = this._reflector.tg_getBindingValueFromContext(context, 'sectionTitle');
+        const menuToOpen = this._reflector.tg_getBindingValueFromContext(context, 'menuToOpen');
         if (menuToOpen !== null) {
             // If menuToOpen was explicitly specified in 'open compound master producer' (according to some domain rules),
             //  we need to override default menu item -- domain-specific menu item takes precedence.
