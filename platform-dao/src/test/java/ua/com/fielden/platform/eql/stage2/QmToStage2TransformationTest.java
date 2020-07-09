@@ -3,6 +3,7 @@ package ua.com.fielden.platform.eql.stage2;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.LJ;
@@ -16,6 +17,7 @@ import java.util.Map;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -492,7 +494,25 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
 
         assertEquals(expQry, actQry);
     }
-
+    
+    @Test
+    public void resolution_context_for_correlated_source_query_skips_qry_sources_declared_within_the_same_from_stmt() {
+        try {
+            qryCountAll(
+                    select(TeVehicle.class).as("veh").
+                    join(
+                            select(TeVehicleModel.class).
+                            where().
+                            prop("make").eq().extProp("veh.model.make").model()
+                            ).as("mk").
+                    on().val(1).eq().val(1).
+                    where().val(1).eq().val(1));
+            fail("Should have failed while trying to resolve property [veh.model.make]");
+        } catch (final EqlStage1ProcessingException e) {
+            assertEquals("Can't resolve property [veh.model.make].", e.getMessage());
+        }
+    }
+    
     @Test
     public void test_05() {
         qryCountAll(select(AUTHOR).where().exists(select(TgAuthorRoyalty.class).where().prop("authorship.author").eq().extProp("id").model()));

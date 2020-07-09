@@ -20,18 +20,16 @@ public class PropsResolutionContext {
     private final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo;
     public final String sourceId;
 
-    public PropsResolutionContext(final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
-        this.domainInfo = new HashMap<>(domainInfo);
-        this.sources = buildSourcesStackForNewQuery(emptyList());
-        this.sourceId = null;
-    }
-    
     public PropsResolutionContext(final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo, final List<List<IQrySource2<? extends IQrySource3>>> sources, final String sourceId) {
         this.domainInfo = new HashMap<>(domainInfo);
         this.sources = sources;
         this.sourceId = sourceId;
     }
 
+    public PropsResolutionContext(final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
+        this(domainInfo, buildSourcesStackForNewQuery(emptyList()), null);
+    }
+    
     private static List<List<IQrySource2<? extends IQrySource3>>> buildSourcesStackForNewQuery(final List<List<IQrySource2<? extends IQrySource3>>> existingSources) {
         final List<List<IQrySource2<? extends IQrySource3>>> srcs = new ArrayList<>();
         srcs.add(new ArrayList<>());
@@ -43,7 +41,11 @@ public class PropsResolutionContext {
         return new PropsResolutionContext(domainInfo, buildSourcesStackForNewQuery(sources), sourceId);
     }
 
-    public PropsResolutionContext produceForUncorrelatedSubquery() {
+    public PropsResolutionContext produceForCorrelatedSourceQuery() {
+        return new PropsResolutionContext(domainInfo, buildSourcesStackForNewQuery(sources.subList(1, sources.size())), sourceId);
+    }
+    
+    public PropsResolutionContext produceForUncorrelatedSourceQuery() {
         return new PropsResolutionContext(domainInfo, buildSourcesStackForNewQuery(emptyList()), sourceId);
     }
     

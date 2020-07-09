@@ -42,7 +42,7 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableToS2<S
 
     @Override
     public SourceQuery2 transform(final PropsResolutionContext context) {
-        final PropsResolutionContext localResolutionContext = isCorrelated ? context.produceForCorrelatedSubquery() : context.produceForUncorrelatedSubquery();
+        final PropsResolutionContext localResolutionContext = isCorrelated ? context.produceForCorrelatedSourceQuery() : context.produceForUncorrelatedSourceQuery();
         // .produceForUncorrelatedSubquery() should be used only for cases of synthetic entities (where source query can only be uncorrelated) -- simple queries as source queries are accessible for correlation
         final T2<Sources2,PropsResolutionContext> sourcesTr = sources.transform(localResolutionContext);
         final PropsResolutionContext enhancedContext = sourcesTr._2; 
