@@ -488,8 +488,7 @@ export const TgEntityBinderBehavior = {
         self._resetState();
 
         self._createModifiedPropertiesHolder = (function () {
-            var mph = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._baseBindingEntity);
-            return this._reset(mph);
+            return this._extractModifiedPropertiesHolder(this._currBindingEntity, this._baseBindingEntity);
         }).bind(self);
 
         self._provideExceptionOccured = (function (entity, exceptionOccured) {
@@ -583,9 +582,9 @@ export const TgEntityBinderBehavior = {
                 this.cancelDebouncer('invoke-validation');
                 // cancel previous validation before starting new one! The results of previous validation are irrelevant!
                 slf._validator().abortValidationIfAny();
-                // IMPORTANT: no need to check whether the _hasModified(holder) === true -- because the error recovery should happen!
+                // IMPORTANT: no need to check whether the 'holder' has modified properties because the error recovery should happen!
                 // (if the entity was not modified -- _validate(holder) will start the error recovery process)
-                slf._validationPromise = slf._validateForDescendants(slf._reset(holder));
+                slf._validationPromise = slf._validateForDescendants(holder);
             }, 50);
         }).bind(self);
 
@@ -860,16 +859,9 @@ export const TgEntityBinderBehavior = {
      * Override it in descendants to provide some custom behaviour.
      */
     _postValidatedDefaultForDescendants: function (entity, newBindingEntity, customObject) { },
-    
-    _reset: function (modifiedPropertiesHolder) {
-        delete modifiedPropertiesHolder['@modified']; // remove it not to serialise this purely technical property
-        return modifiedPropertiesHolder;
-    },
 
     _extractModifiedPropertiesHolder: function (bindingEntity, _baseBindingEntity) {
-        const modPropHolder = {
-            '@modified': false
-        };
+        const modPropHolder = {};
         const self = this;
         if (self._reflector().isEntity(bindingEntity)) {
             modPropHolder['id'] = bindingEntity.get('id');
@@ -909,7 +901,6 @@ export const TgEntityBinderBehavior = {
                         'val': value,
                         'baseVal': baseValue
                     };
-                    modPropHolder['@modified'] = true;
                     if (typeof valId !== 'undefined') {
                         modPropHolder[propertyName]['valId'] = valId;
                     }
@@ -933,17 +924,30 @@ export const TgEntityBinderBehavior = {
         return modPropHolder;
     },
 
-    _idConvert: function (id) {
-        return id === null ? "new" : ("" + id);
+    _isChangedFromOriginal: function () {
+        const self = this;
+        if (self._reflector().isEntity(self._currBindingEntity)) {
+            // function that converts arrays of entities to array of strings or otherwise return the same (or equal) value;
+            // this is needed to provide modifHolder with flatten 'val' and 'baseVal' arrays that do not contain fully-fledged entities but rather string representations of those;
+            // this is because modifHolder deserialises as simple LinkedHashMap on server and inner values will not be deserialised as entities but rather as simple Java bean objects;
+            // also, we do not support conversion of array of entities on the server side -- such properties are immutable from client-side editor perspective (see EntityResourceUtils.convert method with isEntityType+isCollectional conditions)
+            const convert = value => Array.isArray(value) ? value.map(el => self._reflector().tg_convert(el)) : value;
+            let changed = false;
+            self._currBindingEntity.traverseProperties(function (propertyName) {
+                const value = convert(self._currBindingEntity.get(propertyName));
+                const originalValue = convert(self._originalBindingEntity.get(propertyName));
+                if (!self._reflector().equalsEx(value, originalValue)) {
+                    changed = true;
+                    return;
+                }
+            });
+            return changed;
+        }
+        return false; // if the the _currBindingEntity is not yet defined then we return false
     },
 
-    /**
-     * Returns 'true' if the entity has been modified from original, 'false' otherwise.
-     *
-     * @param modifiedPropertiesHolder -- the entity with modified properties
-     */
-    _hasModified: function (modifiedPropertiesHolder) {
-        return modifiedPropertiesHolder["@modified"];
+    _idConvert: function (id) {
+        return id === null ? "new" : ("" + id);
     },
 
     //////////////////////////////////////// BINDING & UTILS ////////////////////////////////////////
@@ -967,7 +971,6 @@ export const TgEntityBinderBehavior = {
         var previousModifiedPropertiesHolder = null;
         if (self._currBindingEntity !== null) {
             previousModifiedPropertiesHolder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._baseBindingEntity);
-            self._reset(previousModifiedPropertiesHolder);
         }
         const previousEntity = self._currEntity;
         // New entity should be promoted to the local cache:
@@ -979,7 +982,7 @@ export const TgEntityBinderBehavior = {
         self._currBindingEntity = self._extractBindingView(self._currEntity, previousModifiedPropertiesHolder);
         self._originalBindingEntity = self._extractOriginalBindingView(self._currEntity);
 
-        self._bindingEntityModified = self._hasModified(self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity));
+        self._bindingEntityModified = self._isChangedFromOriginal();
         // console.debug('_bindingEntityModified = ', self._bindingEntityModified, ' type = ', self._currBindingEntity.type()._simpleClassName());
         self._bindingEntityNotPersistentOrNotPersistedOrModified = !self._currBindingEntity.type().isPersistent() ||
             !self._currBindingEntity.isPersisted() ||

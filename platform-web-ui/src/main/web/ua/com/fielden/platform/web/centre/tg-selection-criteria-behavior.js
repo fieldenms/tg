@@ -567,7 +567,7 @@ const TgSelectionCriteriaBehaviorImpl = {
             resolve(
                 self._runModifiedProperties(
                     self._createContextHolderForRunning(function () {
-                            return action === RunActions.run ? self._reset(_persistedModifiedPropertiesHolder) : null;
+                            return action === RunActions.run ? _persistedModifiedPropertiesHolder : null;
                         },
                         action,
                         isAutoRunning,
@@ -656,7 +656,7 @@ const TgSelectionCriteriaBehaviorImpl = {
         const self = this;
         const modifHolder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._baseBindingEntity);
         return this._createContextHolder(function () {
-            return self._reset(modifHolder);
+            return modifHolder;
         }, requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber);
     },
 

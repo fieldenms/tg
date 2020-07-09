@@ -335,7 +335,7 @@ const TgEntityMasterBehaviorImpl = {
                     null, null, this.getMasterEntity ? this.getMasterEntity : null
                 );
                 this._reflector().setCustomProperty(masterTypeCarrier, "@@funcEntityType", this.entityType);
-                return this._reflector().createSavingInfoHolder(this._previouslyAppliedEntity, this._reset(holder), masterTypeCarrier, this._continuations);
+                return this._reflector().createSavingInfoHolder(this._previouslyAppliedEntity, holder, masterTypeCarrier, this._continuations);
             }.bind(this);
 
             const contextHolder = this._reflector().createContextHolder(
@@ -414,7 +414,7 @@ const TgEntityMasterBehaviorImpl = {
                     this._createContextHolderForEmbeddedViews = (function () {
                         const holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._baseBindingEntity);
                         this._reflector().setCustomProperty(this.savingContext, "@@funcEntityType", this.entityType);
-                        return this._reflector().createSavingInfoHolder(this._previouslyAppliedEntity, this._reset(holder), this.savingContext, this._continuations);
+                        return this._reflector().createSavingInfoHolder(this._previouslyAppliedEntity, holder, this.savingContext, this._continuations);
                     }).bind(this);
                 }
             }
@@ -551,11 +551,11 @@ const TgEntityMasterBehaviorImpl = {
         self._createSavingPromise = (function () {
             const holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._baseBindingEntity);
 
-            // There is no need check at the client side whether _hasModified(holder).
+            // There is no need check at the client side whether 'holder' has modified properties.
             // This check will be too restrictive from the perspective of developer-driven usage of 'save' method.
             // It means that developer could perform manually saving of 'unmodified' entity for some reasons.
             // However, please check the _bindingEntityModified property (tg-entity-binder-behavior) and its usage for more information.
-            return this._saveModifiedProperties(this._reset(holder));
+            return this._saveModifiedProperties(holder);
         }).bind(self);
 
         self.save = (function (newContinuation, continuationProperty) {
