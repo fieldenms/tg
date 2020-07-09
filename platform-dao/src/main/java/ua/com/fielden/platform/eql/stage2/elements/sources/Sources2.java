@@ -9,6 +9,7 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 
@@ -28,7 +29,6 @@ import ua.com.fielden.platform.eql.stage3.elements.sources.JoinedQrySource3;
 import ua.com.fielden.platform.eql.stage3.elements.sources.QrySource3BasedOnTable;
 import ua.com.fielden.platform.eql.stage3.elements.sources.SingleQrySource3;
 import ua.com.fielden.platform.types.tuples.T2;
-
 
 public class Sources2  {
     public final IQrySource2<? extends IQrySource3> main;
@@ -78,8 +78,8 @@ public class Sources2  {
         IQrySources3 currMainSources = new SingleQrySource3(source);
         TransformationContext currentContext = context;
         for (final ChildGroup fc : children) {
-            for (final T2<String, IQrySource2<?>> el : fc.paths) {
-                currentContext = currentContext.cloneWithResolutions(t2(el._1, el._2), t2(source, fc.expr == null ? fc.mainName : fc.expr));
+            for (final Entry<String, IQrySource2<?>> el : fc.paths.entrySet()) {
+                currentContext = currentContext.cloneWithResolutions(t2(el.getKey(), el.getValue()), t2(source, fc.expr == null ? fc.mainName : fc.expr));
             }
 
             if (!fc.items.isEmpty()) {
@@ -120,7 +120,7 @@ public class Sources2  {
         final int prime = 31;
         int result = 1;
         result = prime * result + compounds.hashCode();
-        result = prime * result + main.hashCode();
+        result = prime * result + main.contextId().hashCode();
         return result;
     }
 
@@ -136,6 +136,6 @@ public class Sources2  {
 
         final Sources2 other = (Sources2) obj;
 
-        return Objects.equals(main, other.main) && Objects.equals(compounds, other.compounds);
+        return Objects.equals(main.contextId(), other.main.contextId()) && Objects.equals(compounds, other.compounds);
     }
 }

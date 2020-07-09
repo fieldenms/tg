@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 
 import org.hibernate.type.LongType;
@@ -19,7 +20,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
-import ua.com.fielden.platform.entity.query.metadata.EntityCategory;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.meta.ComponentTypePropInfo;
 import ua.com.fielden.platform.eql.meta.EntityInfo;
@@ -34,7 +34,6 @@ import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.SourceQuery2;
 import ua.com.fielden.platform.eql.stage3.elements.operands.SourceQuery3;
 import ua.com.fielden.platform.eql.stage3.elements.sources.QrySource3BasedOnSubqueries;
-import ua.com.fielden.platform.utils.EntityUtils;
 
 public class QrySource2BasedOnSubqueries extends AbstractElement2 implements IQrySource2<QrySource3BasedOnSubqueries> {
     private final List<SourceQuery2> models = new ArrayList<>();
@@ -99,7 +98,7 @@ public class QrySource2BasedOnSubqueries extends AbstractElement2 implements IQr
     @Override
     public int hashCode() {
         final int prime = 31;
-        int result = 1;
+        int result = super.hashCode();
         result = prime * result + models.hashCode();
         return result;
     }
@@ -109,21 +108,18 @@ public class QrySource2BasedOnSubqueries extends AbstractElement2 implements IQr
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
+        
+        if (!super.equals(obj)) {
             return false;
         }
+
         if (!(obj instanceof QrySource2BasedOnSubqueries)) {
             return false;
         }
+        
         final QrySource2BasedOnSubqueries other = (QrySource2BasedOnSubqueries) obj;
-        if (models == null) {
-            if (other.models != null) {
-                return false;
-            }
-        } else if (!models.equals(other.models)) {
-            return false;
-        }
-        return true;
+
+        return Objects.equals(models, other.models) && Objects.equals(alias, other.alias);
     }
 
     @Override
@@ -151,7 +147,7 @@ public class QrySource2BasedOnSubqueries extends AbstractElement2 implements IQr
                         actualEi.addProp(declaredProp.getValue());
                     } else if (declaredProp.getValue() instanceof ComponentTypePropInfo<?>){
                         final ComponentTypePropInfo<?> prop = (ComponentTypePropInfo<?>) declaredProp.getValue();
-                        for (String leafPropPath : prop.generateLeafItemsPaths()) {
+                        for (final String leafPropPath : prop.generateLeafItemsPaths()) {
                             if (yieldsMatrix.containsKey(leafPropPath)) {
                                 actualEi.addProp(declaredProp.getValue());
                                 break;

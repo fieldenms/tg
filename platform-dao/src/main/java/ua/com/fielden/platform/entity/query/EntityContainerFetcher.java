@@ -38,7 +38,6 @@ import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ResultQuery2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.ChildGroup;
-import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
 import ua.com.fielden.platform.eql.stage3.elements.Yield3;
 import ua.com.fielden.platform.eql.stage3.elements.Yields3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ResultQuery3;
@@ -148,7 +147,7 @@ public class EntityContainerFetcher {
 
                 final ResultQuery2 s1tr = gen1.generateEntQueryAsResultQuery(qem.queryModel, qem.orderModel, qem.fetchModel).transform(resolutionContext);
 
-                final Map<IQrySource2<?>, List<ChildGroup>> grouped = groupChildren(s1tr.collectProps(), domainInfo, gen1);
+                final Map<String, List<ChildGroup>> grouped = groupChildren(s1tr.collectProps(), domainInfo, gen1);
                 final TransformationResult<ResultQuery3> s2tr = s1tr.transform(new TransformationContext(executionContext.getDomainMetadata().lmd.getTables(), grouped));
                 final ResultQuery3 entQuery3 = s2tr.item;
                 final String sql3 = entQuery3.sql(domainMetadataAnalyser.getDbVersion());

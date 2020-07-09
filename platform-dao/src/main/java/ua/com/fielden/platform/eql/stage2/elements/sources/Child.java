@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.stage2.elements.operands.Expression2;
 
@@ -55,7 +54,7 @@ public class Child implements Comparable<Child> {
         result = prime * result + main.hashCode();
         result = prime * result + ((fullPath == null) ? 0 : fullPath.hashCode());
         result = prime * result + ((source == null) ? 0 : source.hashCode());
-        result = prime * result + parentSource.hashCode();
+        result = prime * result + parentSource.contextId().hashCode();
         result = prime * result + dependencies.hashCode();
         return result;
     }
@@ -100,7 +99,7 @@ public class Child implements Comparable<Child> {
 
         final Child other = (Child) obj;
         
-        return Objects.equals(main, other.main) && Objects.equals(items, other.items) && Objects.equals(fullPath, other.fullPath) && Objects.equals(source, other.source) && Objects.equals(parentSource, other.parentSource) && Objects.equals(dependencies, other.dependencies);
+        return Objects.equals(main, other.main) && Objects.equals(items, other.items) && Objects.equals(fullPath, other.fullPath) && Objects.equals(source, other.source) && Objects.equals(parentSource.contextId(), other.parentSource.contextId()) && Objects.equals(dependencies, other.dependencies);
     }
     
     private boolean dependsOn(final Child child) {

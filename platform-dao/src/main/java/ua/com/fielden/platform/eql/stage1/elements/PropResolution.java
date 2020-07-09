@@ -29,7 +29,7 @@ public class PropResolution {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + source.hashCode();
+        result = prime * result + source.contextId().hashCode();
         result = prime * result + path.hashCode();
         return result;
     }
@@ -46,6 +46,6 @@ public class PropResolution {
         
         final PropResolution other = (PropResolution) obj;
         
-        return Objects.equals(source, other.source) && (path == other.path);
+        return Objects.equals(source.contextId(), other.source.contextId()) && (path == other.path);
     }
 }

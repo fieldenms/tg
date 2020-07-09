@@ -1,11 +1,10 @@
 package ua.com.fielden.platform.eql.stage2.elements.sources;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 import ua.com.fielden.platform.eql.stage2.elements.operands.Expression2;
-import ua.com.fielden.platform.types.tuples.T2;
 
 public class ChildGroup {
     final String mainName;
@@ -13,11 +12,11 @@ public class ChildGroup {
     final boolean required;
     final List<ChildGroup> items;
     
-    final Set<T2<String, IQrySource2<?>>> paths;
+    final Map<String, IQrySource2<?>> paths;
     
     final Expression2 expr;
     
-    public ChildGroup(final String mainName, final List<ChildGroup> items, final Set<T2<String, IQrySource2<?>>> paths, final boolean required, final QrySource2BasedOnPersistentType source, final Expression2 expr) {
+    public ChildGroup(final String mainName, final List<ChildGroup> items, final Map<String, IQrySource2<?>> paths, final boolean required, final QrySource2BasedOnPersistentType source, final Expression2 expr) {
         this.mainName = mainName;
         this.items = items;
         this.required = required;

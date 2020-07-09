@@ -41,7 +41,8 @@ public class QrySource2BasedOnVoid implements IQrySource2<QrySource3BasedOnVoid>
 
     @Override
     public String contextId() {
-        throw new EqlException("This method shouldn't be invoked.");
+        return "";
+        //throw new EqlException("This method shouldn't be invoked.");
     }
     
     @Override

@@ -48,9 +48,9 @@ public class PathsToTreeTransformator {
         return id;
     }
 
-    public static Map<IQrySource2<?>, List<ChildGroup>> groupChildren(final Set<EntProp2> props, final  Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo, final EntQueryGenerator gen) {
-        final Map<IQrySource2<?>, List<ChildGroup>> result = new HashMap<>();
-        for (final Entry<IQrySource2<?>, List<Child>> el : transform(props, domainInfo, gen).entrySet()) {
+    public static Map<String, List<ChildGroup>> groupChildren(final Set<EntProp2> props, final  Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo, final EntQueryGenerator gen) {
+        final Map<String, List<ChildGroup>> result = new HashMap<>();
+        for (final Entry<String, List<Child>> el : transform(props, domainInfo, gen).entrySet()) {
 //           System.out.println("------> " + el.getKey() + " count = " + el.getValue().size());
             for (final Child ch : el.getValue()) {
 //                System.out.println(ch);
@@ -61,11 +61,11 @@ public class PathsToTreeTransformator {
         return result;
     }
     
-    protected static final Map<IQrySource2<?>, List<Child>> transform(final Set<EntProp2> props, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo, final EntQueryGenerator gen) {
-        final Map<IQrySource2<?>, List<Child>> sourceChildren = new HashMap<>();
+    protected static final Map<String, List<Child>> transform(final Set<EntProp2> props, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo, final EntQueryGenerator gen) {
+        final Map<String, List<Child>> sourceChildren = new HashMap<>();
 
-        for (final Entry<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>> sourceProps : groupBySource(props).entrySet()) {
-            final T3<List<Child>, Map<IQrySource2<?>, List<Child>>, List<Child>> genRes = generateChildren(sourceProps.getKey(), sourceProps.getKey(), sourceProps.getKey().contextId(), sourceProps.getValue(), emptyList(), domainInfo, sourceProps.getKey(), gen);
+        for (final Entry<String, T2<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>>> sourceProps : groupBySource(props).entrySet()) {
+            final T3<List<Child>, Map<String, List<Child>>, List<Child>> genRes = generateChildren(sourceProps.getValue()._1, sourceProps.getValue()._1, sourceProps.getKey(), sourceProps.getValue()._2, emptyList(), domainInfo, sourceProps.getValue()._1, gen);
             assert(genRes._3.size() == 0);
             sourceChildren.put(sourceProps.getKey(), genRes._1);
             sourceChildren.putAll(genRes._2);
@@ -74,16 +74,16 @@ public class PathsToTreeTransformator {
         return sourceChildren;
     }
 
-    private static final Map<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>>  groupBySource(final Set<EntProp2> props) {
-        final Map<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>> result = new HashMap<>();
+    private static final Map<String, T2<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>>>  groupBySource(final Set<EntProp2> props) {
+        final Map<String, T2<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>>> result = new HashMap<>();
         for (final EntProp2 prop : props) {
-            final Map<String, List<AbstractPropInfo<?>>> existing = result.get(prop.source);
+            final T2<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>> existing = result.get(prop.source.contextId());
             if (existing != null) {
-                existing.put(prop.name, prop.getPath());
+                existing._2.put(prop.name, prop.getPath());
             } else {
                 final Map<String, List<AbstractPropInfo<?>>> added = new HashMap<>();
                 added.put(prop.name, prop.getPath());
-                result.put(prop.source, added);
+                result.put(prop.source.contextId(), t2(prop.source, added));
             }
         }
         return result;
@@ -106,13 +106,13 @@ public class PathsToTreeTransformator {
         return result;
     }
 
-    private static T3<List<Child>, Map<IQrySource2<?>, List<Child>>, List<Child>> generateChildren(final IQrySource2<?> contextSource, final IQrySource2<?> lastPersistentSource, final String contextId, final Map<String, List<AbstractPropInfo<?>>> props, final List<String> context, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo, final IQrySource2<?> contextParentSource, final EntQueryGenerator gen) {
+    private static T3<List<Child>, Map<String, List<Child>>, List<Child>> generateChildren(final IQrySource2<?> contextSource, final IQrySource2<?> lastPersistentSource, final String contextId, final Map<String, List<AbstractPropInfo<?>>> props, final List<String> context, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo, final IQrySource2<?> contextParentSource, final EntQueryGenerator gen) {
         final List<Child> result = new ArrayList<>();
-        final Map<IQrySource2<?>, List<Child>> other = new HashMap<>();
+        final Map<String, List<Child>> other = new HashMap<>();
         final List<Child> unionResult = new ArrayList<>();
         
         for (final Entry<AbstractPropInfo<?>, Map<String, List<AbstractPropInfo<?>>>> propEntry : groupByFirstProp(props).entrySet()) {
-            final T3<List<Child>, Map<IQrySource2<?>, List<Child>>, List<Child>> genRes = generateChild(contextSource, lastPersistentSource, propEntry.getKey(), propEntry.getValue(), context, contextId, domainInfo, contextParentSource, gen);
+            final T3<List<Child>, Map<String, List<Child>>, List<Child>> genRes = generateChild(contextSource, lastPersistentSource, propEntry.getKey(), propEntry.getValue(), context, contextId, domainInfo, contextParentSource, gen);
             result.addAll(genRes._1);
             other.putAll(genRes._2);
             unionResult.addAll(genRes._3);
@@ -121,9 +121,9 @@ public class PathsToTreeTransformator {
         return t3(result, other, unionResult);
     }
     
-    private static T3<List<Child>, Map<IQrySource2<?>, List<Child>>, List<Child>> generateChild(final IQrySource2<?> contextSource, final IQrySource2<?> lastPersistentSource, final AbstractPropInfo<?> propInfo, final Map<String, List<AbstractPropInfo<?>>> subprops, final List<String> context, final String contextId, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo, final IQrySource2<?> contextParentSource, final EntQueryGenerator gen) {
+    private static T3<List<Child>, Map<String, List<Child>>, List<Child>> generateChild(final IQrySource2<?> contextSource, final IQrySource2<?> lastPersistentSource, final AbstractPropInfo<?> propInfo, final Map<String, List<AbstractPropInfo<?>>> subprops, final List<String> context, final String contextId, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo, final IQrySource2<?> contextParentSource, final EntQueryGenerator gen) {
         final List<Child> result = new ArrayList<>();
-        final Map<IQrySource2<?>, List<Child>> other = new HashMap<>();
+        final Map<String, List<Child>> other = new HashMap<>();
         final List<Child> unionResult = new ArrayList<>();
         
         
@@ -132,13 +132,13 @@ public class PathsToTreeTransformator {
         if (propInfo.hasExpression()) {
             final IQrySource2<?>  cs = contextSource != null ?  contextSource : lastPersistentSource;
             expr2 = expressionToS2(cs, propInfo, domainInfo, context.stream().collect(joining("_")), gen);
-            final Map<IQrySource2<?>, List<Child>> dependenciesResult = transform(expr2.collectProps(), domainInfo, gen);
+            final Map<String, List<Child>> dependenciesResult = transform(expr2.collectProps(), domainInfo, gen);
 
-            for (final Entry<IQrySource2<?>, List<Child>> drEntry : dependenciesResult.entrySet()) {
-                if (!drEntry.getKey().equals(cs)) {
+            for (final Entry<String, List<Child>> drEntry : dependenciesResult.entrySet()) {
+                if (!drEntry.getKey().equals(cs.contextId())) {
                     other.put(drEntry.getKey(), drEntry.getValue());
                 } else {
-                    if (!cs.equals(contextSource)) {
+                    if (contextSource == null || !cs.contextId().equals(contextSource.contextId())) {
                         unionResult.addAll(drEntry.getValue());
                     } else {
                         dependencies.addAll(drEntry.getValue());
@@ -160,7 +160,7 @@ public class PathsToTreeTransformator {
         final List<Child> children = new ArrayList<>();
         if (!next._2.isEmpty()) {
             final IQrySource2<?>  updateLps = source != null ? source : lastPersistentSource;
-            final T3<List<Child>, Map<IQrySource2<?>, List<Child>>, List<Child>> genRes = generateChildren(source, updateLps, contextId, next._2, newContext, domainInfo, contextParentSource, gen);
+            final T3<List<Child>, Map<String, List<Child>>, List<Child>> genRes = generateChildren(source, updateLps, contextId, next._2, newContext, domainInfo, contextParentSource, gen);
             children.addAll(genRes._1);
             other.putAll(genRes._2);
             if (source == null && !genRes._3.isEmpty()) {
@@ -233,12 +233,12 @@ public class PathsToTreeTransformator {
             final Child first = map.get(item).iterator().next();
             final SortedSet<Child> mergedItems = new TreeSet<>();
             
-            final Set<T2<String, IQrySource2<?>>> groupPaths = new HashSet<>();
+            final Map<String, IQrySource2<?>> groupPaths = new HashMap<>();
             
             for (final Child c : map.get(item)) {
                 mergedItems.addAll(c.getItems());
                 if (c.fullPath != null) {
-                    groupPaths.add(t2(c.fullPath, c.parentSource));    
+                    groupPaths.put(c.fullPath, c.parentSource);    
                 }
             }
             

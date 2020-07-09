@@ -76,7 +76,7 @@ public class EntProp2 implements ISingleOperand2<Expression3> {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + source.hashCode();
+        result = prime * result + source.contextId().hashCode();
         result = prime * result + path.hashCode();
         return result;
     }
@@ -93,6 +93,6 @@ public class EntProp2 implements ISingleOperand2<Expression3> {
 
         final EntProp2 other = (EntProp2) obj;
 
-        return Objects.equals(path, other.path) && Objects.equals(source, other.source);
+        return Objects.equals(path, other.path) && Objects.equals(source.contextId(), other.source.contextId());
     }
 }
