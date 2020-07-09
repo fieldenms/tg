@@ -13,6 +13,12 @@ import org.restlet.resource.Put;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 
+/**
+ * Logs client side errors.
+ *
+ * @author TG Team
+ *
+ */
 public class ErrorLoggerResource extends AbstractWebResource {
     private final static Logger LOGGER = Logger.getLogger(ErrorLoggerResource.class);
 
@@ -21,7 +27,7 @@ public class ErrorLoggerResource extends AbstractWebResource {
     }
 
     /**
-     * Handles POST request resulting from tg-selection-criteria <code>validate()</code> method.
+     * Handles PUT request resulting from error sender ajax on client.
      */
     @Put
     @Override

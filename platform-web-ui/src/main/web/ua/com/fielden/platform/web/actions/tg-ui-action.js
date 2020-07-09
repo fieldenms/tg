@@ -464,13 +464,8 @@ Polymer({
 
             const postMasterInfoRetrieve = function () {
                 if (this.preAction) {
-                    let result = null;
-                    try {
-                        result = this.preAction(this);
-                    } catch (e) {
-                        e.restoreState = function() {};
-                        throw e;
-                    }
+                    const result = this.preAction(this);
+                    
                     const promise = result instanceof Promise ? result : Promise.resolve(result);
     
                     promise.then(function (value) {

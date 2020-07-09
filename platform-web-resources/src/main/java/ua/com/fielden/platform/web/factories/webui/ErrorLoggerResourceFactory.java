@@ -9,6 +9,12 @@ import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.webui.ErrorLoggerResource;
 
+/**
+ * Resource factory that logs client side errors.
+ *
+ * @author TG Team
+ *
+ */
 public class ErrorLoggerResourceFactory extends Restlet {
 
 
@@ -21,7 +27,7 @@ public class ErrorLoggerResourceFactory extends Restlet {
     }
 
     /**
-     * Invokes on POST request from client.
+     * Invokes on PUT request from client.
      */
     @Override
     public void handle(final Request request, final Response response) {
