@@ -13,8 +13,8 @@ export function processResponseError (e, reflector, serialiser, customHandler, t
             // continue with custom error handling of the error result
             customHandler && customHandler(deserialisedResult);
         } else {
-            //throw new Error('Responses with status code 500 suppose to carry an error cause!');
             customHandler && customHandler('Responses with status code 500 suppose to carry an error cause!');
+            throw new Error('Responses with status code 500 suppose to carry an error cause!');
         }
     } else if (xhr.status === 403) { // forbidden!
         // TODO should prompt for login in place...

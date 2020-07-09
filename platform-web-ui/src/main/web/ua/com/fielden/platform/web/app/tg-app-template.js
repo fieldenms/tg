@@ -117,7 +117,7 @@ function addAllElements (elementsToAdd, addToArray, removeFromArray) {
 function replaceNewline (input) {
     const newline = "\r\n";
     new RegExp('<html|<body|<script|<img|<a', 'mi');
-    return input.replace(/\n/gi, containsRestictedTags(input) ? newline : '<br');
+    return input.replace(/\n/gi, containsRestictedTags(input) ? newline : '<br>');
 };
 Polymer({
 
@@ -442,11 +442,8 @@ Polymer({
     },
 
     _handleUnhandledPromiseError: function(e) {
-        this._sentError(e.composedPath()[0], e, "Error in promise: " + e.reason);
-    },
-
-    _handleHandledPromiseError: function (e) {
-        this._sentError(e.composedPath()[0], e, "Error in promise catch clause: " + e.reason);
+        const errorMsg = e.reason.message + "\n" +e.reason.stack;
+        this._sentError(e.composedPath()[0], e, errorMsg);
     },
 
     _handleError: function (e) {
@@ -569,7 +566,6 @@ Polymer({
         this._errorQueue = [];
         this._handleError = this._handleError.bind(this);
         this._handleUnhandledPromiseError = this._handleUnhandledPromiseError.bind(this);
-        this._handleHandledPromiseError = this._handleHandledPromiseError.bind(this);
         
         //Configuring menu visibility save functionality.
         this._saveMenuVisibilityChanges = function (visibleItems, invisibleItems) {
@@ -609,7 +605,7 @@ Polymer({
         
         //Add error handling errors
         window.addEventListener('error', this._handleError);
-        window.addEventListener('rejectionhandled', this._handleHandledPromiseError);
+        window.addEventListener('rejectionhandled', this._handleUnhandledPromiseError);
         window.addEventListener('unhandledrejection', this._handleUnhandledPromiseError);
 
         //Add error resize event listener
