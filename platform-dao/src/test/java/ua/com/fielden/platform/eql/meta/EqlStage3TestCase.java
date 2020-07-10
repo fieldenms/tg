@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.meta;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.NE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.IJ;
@@ -23,6 +24,7 @@ import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
+import ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator;
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ResultQuery2;
@@ -60,15 +62,17 @@ public class EqlStage3TestCase extends EqlTestCase {
         final AggregatedResultQueryModel countQry = unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate();
 
         final PropsResolutionContext resolutionContext = new PropsResolutionContext(metadata());
-        final ResultQuery2 rq2 = qb().generateEntQueryAsResultQuery(countQry, null, null).transform(resolutionContext);
-        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<ResultQuery3> s2tr = rq2.transform(new TransformationContext(tables, groupChildren(rq2.collectProps(), metadata(), qb())));
+        final EntQueryGenerator qb = qb();
+        final ResultQuery2 rq2 = qb.generateEntQueryAsResultQuery(countQry, null, null).transform(resolutionContext);
+        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<ResultQuery3> s2tr = rq2.transform(new TransformationContext(tables, groupChildren(rq2.collectProps(), metadata(), qb)));
         return s2tr.item;
     }
     
     protected static ResultQuery3 qry(final AggregatedResultQueryModel qry) {
         final PropsResolutionContext resolutionContext = new PropsResolutionContext(metadata());
-        final ResultQuery2 rq2 = qb().generateEntQueryAsResultQuery(qry, null, null).transform(resolutionContext);
-        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<ResultQuery3> s2tr = rq2.transform(new TransformationContext(tables, groupChildren(rq2.collectProps(), metadata(), qb())));
+        final EntQueryGenerator qb = qb();
+        final ResultQuery2 rq2 = qb.generateEntQueryAsResultQuery(qry, null, null).transform(resolutionContext);
+        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<ResultQuery3> s2tr = rq2.transform(new TransformationContext(tables, groupChildren(rq2.collectProps(), metadata(), qb)));
         return s2tr.item;
     }
     
@@ -76,8 +80,9 @@ public class EqlStage3TestCase extends EqlTestCase {
         final AggregatedResultQueryModel countQry = unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate();
 
         final PropsResolutionContext resolutionContext = new PropsResolutionContext(metadata(paramValues));
-        final ResultQuery2 rq2 = qb(paramValues).generateEntQueryAsResultQuery(countQry, null, null).transform(resolutionContext);
-        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<ResultQuery3> s2tr = rq2.transform(new TransformationContext(tables, groupChildren(rq2.collectProps(), metadata(paramValues), qb())));
+        final EntQueryGenerator qb = qb(paramValues);
+        final ResultQuery2 rq2 = qb.generateEntQueryAsResultQuery(countQry, null, null).transform(resolutionContext);
+        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<ResultQuery3> s2tr = rq2.transform(new TransformationContext(tables, groupChildren(rq2.collectProps(), metadata(paramValues), qb)));
         return s2tr.item;
     }
 
@@ -109,6 +114,11 @@ public class EqlStage3TestCase extends EqlTestCase {
         return new EntProp3(name, source, entityType, LongType.INSTANCE);
     }
 
+    protected static ISingleOperand3 idProp(final IQrySource3 source) {
+        return new EntProp3(ID, source, Long.class, LongType.INSTANCE);
+    }
+
+    
     protected static ISingleOperand3 stringProp(final String name, final IQrySource3 source) {
         return new EntProp3(name, source, String.class, StringType.INSTANCE);
     }
@@ -350,6 +360,10 @@ public class EqlStage3TestCase extends EqlTestCase {
         return new Yield3(expr(stringProp(propName, source)), alias, false, String.class, H_STRING);
     }
 
+    protected static Yield3 yieldIdExpr(final IQrySource3 source, final String alias) {
+        return new Yield3(expr(idProp(source)), alias, false, Long.class, H_LONG);
+    }
+    
     protected static Yield3 yieldPropExpr(final String propName, final IQrySource3 source, final String alias, final Class<?> type, final Type hibType) {
         return new Yield3(expr(prop(propName, source, type, hibType)), alias, false, type, hibType);
     }
