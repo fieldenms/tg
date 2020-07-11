@@ -606,7 +606,7 @@ const TgEntityMasterBehaviorImpl = {
                 this._currBindingEntity.setAndRegisterPropertyTouch('key', this._currBindingEntity.get('key'), { enforce: true });
                 this._currBindingEntity['@key_id'] = prevCompoundMasterEntityId;
             } else { // main entity (compound master) has been saved (for the first time)
-                this._currBindingEntity.setAndRegisterPropertyTouch('key', 'IRRELEVANT');
+                this._currBindingEntity.setAndRegisterPropertyTouch('key', this._currBindingEntity.get('key') + '_DIFF'); // we know only ID of newly saved main entity; simulate 'touched modified' situation to be able to apply that ID on server (ID-based restoration that will ignore 'key' = '..._DIFF' value)
                 this._currBindingEntity['@key_id'] = savedEntityId;
             }
 
