@@ -1752,8 +1752,6 @@ export const TgReflector = Polymer({
         if (values) {
             if (typeof values.val !== 'undefined') {
                 return values.val;
-            } else if (typeof values.baseVal !== 'undefined') {
-                return values.baseVal;
             }
         } else if (context && context.previouslyAppliedEntity) {
             return this.tg_getBindingValueFromFullEntity(context.previouslyAppliedEntity, dotNotatedName);

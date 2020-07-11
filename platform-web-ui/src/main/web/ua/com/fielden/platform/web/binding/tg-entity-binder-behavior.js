@@ -860,6 +860,19 @@ export const TgEntityBinderBehavior = {
      */
     _postValidatedDefaultForDescendants: function (entity, newBindingEntity, customObject) { },
 
+    /**
+     * Creates a bag of modified from previous properties. Only explicitly touched properties are considered (setAndRegisterPropertyTouch).
+     * The property is modified if its binding value representation is not equal to previous binding value representation.
+     * If the property is not modified then it is possibly enforced and such entry will be present.
+     * 
+     * The schema will be as follows:
+     *   untouched            : no entry
+     *   touched
+     *     modified           : { val: ... }                  -- most cases will be covered by this situation
+     *     unmodified         : no entry                      -- this situation is possible if the user quickly changes the value and back
+     *     unmodified enforced: { enforce: true }             -- client-side custom code may enforce setting of unmodified value ({ enforce: true } setting)
+     *     modified enforced  : { val: ..., enforce: true }   -- client-side custom code may enforce setting of   modified value (if both modified and unmodified are possible we still need to use { enforce: true } setting)
+     */
     _extractModifiedPropertiesHolder: function (bindingEntity, _baseBindingEntity) {
         const modPropHolder = {};
         const self = this;
@@ -869,7 +882,7 @@ export const TgEntityBinderBehavior = {
             modPropHolder['@@touchedProps'] = bindingEntity['@@touchedProps'].names.slice(); // need to perform array copy because bindingEntity['@@touchedProps'].names is mutable array (see tg-reflector.setAndRegisterPropertyTouch for more details of how it can be mutated)
             
             // function that converts arrays of entities to array of strings or otherwise return the same (or equal) value;
-            // this is needed to provide modifHolder with flatten 'val' and 'baseVal' arrays that do not contain fully-fledged entities but rather string representations of those;
+            // this is needed to provide modifHolder with flatten 'val' arrays that do not contain fully-fledged entities but rather string representations of those;
             // this is because modifHolder deserialises as simple LinkedHashMap on server and inner values will not be deserialised as entities but rather as simple Java bean objects;
             // also, we do not support conversion of array of entities on the server side -- such properties are immutable from client-side editor perspective (see EntityResourceUtils.convert method with isEntityType+isCollectional conditions)
             const convert = value => Array.isArray(value) ? value.map(el => self._reflector().tg_convert(el)) : value;
@@ -882,12 +895,10 @@ export const TgEntityBinderBehavior = {
                 const value = convert(bindingEntity.get(propertyName));
                 if (typeof _baseBindingEntity[propertyName] === 'undefined') {
                     // provide value conversion in case if it was not performed earlier;
-                    // such value conversion is only needed for semi-lazy _baseBindingEntity (aka not _originalBindingEntity -- conversion for this entity will be performed in tg-editor._originalEntitychanged);
+                    // such value conversion is only needed for semi-lazy _baseBindingEntity (aka not _originalBindingEntity -- conversion for this entity will be performed in tg-editor._originalEntityChanged);
                     self._reflector().tg_convertPropertyValue(_baseBindingEntity, propertyName, self._reflector().tg_getFullEntity(_baseBindingEntity), self._previousModifiedPropertiesHolder);
                 }
                 const baseValue = convert(_baseBindingEntity.get(propertyName));
-                const valId = bindingEntity['@' + propertyName + '_id'];
-                const baseValId = _baseBindingEntity['@' + propertyName + '_id'];
                 
                 // VERY IMPORTANT: the property is considered to be 'modified'
                 //                 in the case when its value does not equal to base value.
@@ -898,24 +909,18 @@ export const TgEntityBinderBehavior = {
                 if (!self._reflector().equalsEx(value, baseValue)) {
                     // the property is 'modified'
                     modPropHolder[propertyName] = {
-                        'val': value,
-                        'baseVal': baseValue
+                        'val': value
                     };
+                    const valId = bindingEntity['@' + propertyName + '_id'];
                     if (typeof valId !== 'undefined') {
                         modPropHolder[propertyName]['valId'] = valId;
                     }
-                } else {
-                    // the property is 'unmodified'
-                    modPropHolder[propertyName] = {
-                        'baseVal': baseValue
-                    };
-                }
-                if (typeof baseValId !== 'undefined') {
-                    modPropHolder[propertyName]['baseValId'] = baseValId;
                 }
                 // insert 'enforce' parameter if it was used during setAndRegisterPropertyTouch
-                const index = modPropHolder['@@touchedProps'].indexOf(propertyName);
-                if (index > -1 && bindingEntity['@@touchedProps'].enforced[index] === true) {
+                if (bindingEntity['@@touchedProps'].enforced[modPropHolder['@@touchedProps'].indexOf(propertyName)] === true) {
+                    if (typeof modPropHolder[propertyName] === 'undefined') {
+                        modPropHolder[propertyName] = {};
+                    }
                     modPropHolder[propertyName]['enforce'] = true;
                 }
             });
@@ -928,7 +933,7 @@ export const TgEntityBinderBehavior = {
         const self = this;
         if (self._reflector().isEntity(self._currBindingEntity)) {
             // function that converts arrays of entities to array of strings or otherwise return the same (or equal) value;
-            // this is needed to provide modifHolder with flatten 'val' and 'baseVal' arrays that do not contain fully-fledged entities but rather string representations of those;
+            // this is needed to provide modifHolder with flatten 'val' arrays that do not contain fully-fledged entities but rather string representations of those;
             // this is because modifHolder deserialises as simple LinkedHashMap on server and inner values will not be deserialised as entities but rather as simple Java bean objects;
             // also, we do not support conversion of array of entities on the server side -- such properties are immutable from client-side editor perspective (see EntityResourceUtils.convert method with isEntityType+isCollectional conditions)
             const convert = value => Array.isArray(value) ? value.map(el => self._reflector().tg_convert(el)) : value;

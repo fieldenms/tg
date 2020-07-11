@@ -182,12 +182,12 @@ public class EntityResourceUtils {
         //  such that properties, that were touched twice or more times, will be applied only once)
         for (final String touchedProp : touchedProps) {
             final String name = touchedProp;
-            final Map<String, Object> valAndBaseVal = (Map<String, Object>) modifiedPropertiesHolder.get(name);
-            final boolean enforce = valAndBaseVal.containsKey("enforce") && TRUE.equals(valAndBaseVal.get("enforce"));
+            final Map<String, Object> valAndEnforce = (Map<String, Object>) modifiedPropertiesHolder.get(name);
+            final boolean enforce = TRUE.equals(valAndEnforce.get("enforce"));
             // The 'modified' properties are marked using the existence of "val" sub-property.
-            if (valAndBaseVal.containsKey("val")) { // this is a modified property
-                processPropertyValue(valAndBaseVal.get("val"), reflectedValueId(valAndBaseVal, "val"), type, name, entity, companionFinder, enforce);
-                logPropertyApplication("   Apply   touched   modified", true, true, type, name, valAndBaseVal, entity, touchedProps.toArray(new String[] {}));
+            if (valAndEnforce.containsKey("val")) { // this is a modified property
+                processPropertyValue(valAndEnforce.get("val"), reflectedValueId(valAndEnforce, "val"), type, name, entity, companionFinder, enforce);
+                logPropertyApplication("   Apply   touched   modified", true, true, type, name, valAndEnforce, entity, touchedProps.toArray(new String[] {}));
             } else if (enforce) { // this is unmodified property but it needs to be enforced (controlled by client-side setting)
                 final Object lastAttemptedValue = entity.getProperty(name).getLastAttemptedValue(); // this could be invalid value -- lastAttemptedValue must be taken
                 if (lastAttemptedValue instanceof AbstractEntity) { // only entity-typed value can be stale here -- need to get fresh instance as we do in modified touched properties case
@@ -197,7 +197,7 @@ public class EntityResourceUtils {
                 } else {
                     entity.getProperty(name).setValue(lastAttemptedValue, true);
                 }
-                logPropertyApplication("   Apply   touched unmodified", true, true, type, name, valAndBaseVal, entity, touchedProps.toArray(new String[] {}));
+                logPropertyApplication("   Apply   touched unmodified", true, true, type, name, valAndEnforce, entity, touchedProps.toArray(new String[] {}));
             }
         }
         // IMPORTANT: the check for invalid will populate 'required' checks.
@@ -219,12 +219,12 @@ public class EntityResourceUtils {
      * @param shortLog -- specifies shorter or wider (with 'type' and staleness) view of information
      * @param type
      * @param name
-     * @param valAndBaseVal
+     * @param valAndEnforce
      * @param entity
      * @param propertiesToLogArray -- specifies what properties are interested
      */
     @SuppressWarnings("unused")
-    private static <M extends AbstractEntity<?>> void logPropertyApplication(final String actionCaption, final boolean apply, final boolean shortLog, final Class<M> type, final String name, final Map<String, Object> valAndBaseVal, final M entity, final String... propertiesToLogArray) {
+    private static <M extends AbstractEntity<?>> void logPropertyApplication(final String actionCaption, final boolean apply, final boolean shortLog, final Class<M> type, final String name, final Map<String, Object> valAndEnforce, final M entity, final String... propertiesToLogArray) {
         final Set<String> propertiesToLog = new LinkedHashSet<>(Arrays.asList(propertiesToLogArray));
         if (propertiesToLog.contains(name)) {
             final StringBuilder builder = new StringBuilder(actionCaption);
@@ -233,8 +233,8 @@ public class EntityResourceUtils {
                 builder.append(format("type [%40s] ", type.getSimpleName()));
             }
             builder.append(format("name [%8s] ", name));
-            builder.append(format("val [%8s] ", valAndBaseVal.getOrDefault("val", "")));
-            builder.append(format("baseVal [%8s] ", valAndBaseVal.get("baseVal")));
+            builder.append(format("val [%8s] ", valAndEnforce.getOrDefault("val", "")));
+            builder.append(format("enforce [%8s] ", valAndEnforce.getOrDefault("enforce", "")));
             if (apply) {
                 builder.append("=>\t");
                 for (final String propertyToLog: propertiesToLog) {
@@ -345,19 +345,14 @@ public class EntityResourceUtils {
     }
 
     /**
-     * Extracts reflected value ID for 'val' or 'baseVal' reflectedValueName if it exists.
+     * Extracts reflected value ID for 'val' reflectedValueName if it exists.
      *
-     * @param valAndBaseVal
+     * @param valAndEnforce
      * @param reflectedValueName
      * @return
      */
-    private static Optional<Long> reflectedValueId(final Map<String, Object> valAndBaseVal, final String reflectedValueName) {
-        final Object reflectedValueId = valAndBaseVal.get(reflectedValueName + "Id");
-        if (reflectedValueId == null) {
-            return Optional.empty();
-        } else {
-            return Optional.of(extractLongValueFrom(reflectedValueId));
-        }
+    private static Optional<Long> reflectedValueId(final Map<String, Object> valAndEnforce, final String reflectedValueName) {
+        return ofNullable(valAndEnforce.get(reflectedValueName + "Id")).map(reflectedValueId -> extractLongValueFrom(reflectedValueId));
     }
     
     /**
