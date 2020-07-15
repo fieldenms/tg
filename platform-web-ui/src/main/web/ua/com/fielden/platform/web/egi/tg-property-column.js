@@ -49,9 +49,9 @@ Polymer({
     },
 
     /** Executes a custom action and returns true if the action was provided. Otherwise, simply returns false to indicate that there was no custom action to be executed. */
-    runAction: function (entity) {
+    runAction: function (currentEntity) {
         if (this.customAction) {
-            this.customAction.currentEntity = entity;
+            this.customAction.currentEntity = currentEntity;
             this.customAction._run();
             return true;
         }

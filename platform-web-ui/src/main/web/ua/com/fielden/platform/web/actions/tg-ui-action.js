@@ -267,13 +267,18 @@ Polymer({
         },
 
         ////////////////////////////////////// SUBSECTION: NOT MANDATORY PROPERTIES //////////////////////////////////////
+
         /**
          * The 'currentEntity' should contain the entity that was clicked (result-set actions)
          * or the entity on which primary/secondary action was chosen. 
-         * Otherwise, as in case of a Top Level action, the 'currentEntity' should be empty.
+         * Otherwise, as in case of a Top Level action, the 'currentEntity' should be empty or specified in another way 
+         * (in preAction for example).
         */
         currentEntity: {
-            type: Object
+            type: Function,
+            value: function () {
+                return () => null;
+            }
         },
 
         /** Indicates of the action is currently in progress.
@@ -479,7 +484,7 @@ Polymer({
             self.persistActiveElement();
 
             
-            if (this.dynamicAction && this.currentEntity) {
+            if (this.dynamicAction && this.currentEntity()) {
                 const currentEntityType = this._calculateCurrentEntityType();
                 if (this._previousEntityType !== currentEntityType) {
                     if (!this.elementName) {//Element name for dynamic action is not specified at first run
@@ -660,9 +665,9 @@ Polymer({
         const self = this;
         // creates the context and
         const context = self.createContextHolder(self.requireSelectionCriteria, self.requireSelectedEntities, self.requireMasterEntity, self.actionKind, self.numberOfAction);
-        // enhances it with the information of 'currentEntity' (primary / secondary actions) and
-        if (self.currentEntity) {
-            self._enhanceContextWithCurrentEntity(context, self.currentEntity, self.requireSelectedEntities);
+        // enhances it with the information of 'currentEntity()' (primary / secondary actions) and
+        if (self.currentEntity()) {
+            self._enhanceContextWithCurrentEntity(context, self.currentEntity(), self.requireSelectedEntities);
         }
         // enhances it with information of what 'property' was chosen (property result-set actions)
         if (self.chosenProperty !== null) {
@@ -721,17 +726,17 @@ Polymer({
     },
 
     _calculateCurrentEntityType: function () {
-        if (this.currentEntity && this.chosenProperty) {
+        if (this.currentEntity() && this.chosenProperty) {
             let currentProperty = this.chosenProperty;
-            let currentValue = this.currentEntity.get(currentProperty);
+            let currentValue = this.currentEntity().get(currentProperty);
             while (!this._reflector.isEntity(currentValue)) {
                 const lastDotIndex = currentProperty.lastIndexOf(".");
                 currentProperty = lastDotIndex >=0 ? currentProperty.substring(0, lastDotIndex) : "";
-                currentValue = currentProperty ? this.currentEntity.get(currentProperty) : this.currentEntity;
+                currentValue = currentProperty ? this.currentEntity().get(currentProperty) : this.currentEntity();
             }
             return currentValue.type().notEnhancedFullClassName(); 
-        } else if (this.currentEntity) {
-            return this.currentEntity.type().notEnhancedFullClassName();
+        } else if (this.currentEntity()) {
+            return this.currentEntity().type().notEnhancedFullClassName();
         }
     },
 

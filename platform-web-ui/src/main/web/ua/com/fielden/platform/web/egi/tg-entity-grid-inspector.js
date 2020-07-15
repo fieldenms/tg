@@ -18,7 +18,6 @@ import '/resources/egi/tg-secondary-action-button.js';
 import '/resources/egi/tg-secondary-action-dropdown.js';
 import '/resources/egi/tg-egi-cell.js';
 import '/resources/egi/tg-responsive-toolbar.js';
-import '/resources/egi/tg-egi-action-wrapper.js';
 
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
@@ -520,7 +519,7 @@ const template = html`
                                 <paper-checkbox class="blue body" checked="[[egiEntity.selected]]" on-change="_selectionChanged" on-mousedown="_checkSelectionState" on-keydown="_checkSelectionState"></paper-checkbox>
                             </div>
                             <div class="action-cell" hidden$="[[!_primaryActionFixedAndVisible(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
-                                <tg-egi-action-wrapper class="action" icon="[[primaryAction.icon]]" icon-style="[[primaryAction.iconStyle]]" tooltip="[[primaryAction.longDesc]]" on-tap="_runPrimaryAction"></tg-egi-action-wrapper>
+                                <tg-ui-action class="action" show-dialog="[[primaryAction.showDialog]]" toaster="[[primaryAction.toaster]]" current-entity="[[_currentEntity(egiEntity.entity)]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" action-kind="[[primaryAction.actionKind]]" number-of-action="[[primaryAction.numberOfAction]]" dynamic-action="[[primaryAction.dynamicAction]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" ui-role="[[primaryAction.uiRole]]" icon-style="[[primaryAction.iconStyle]]"></tg-ui-action>
                             </div>
                             <template is="dom-repeat" items="[[fixedColumns]]" as="column">
                                 <tg-egi-cell column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'true')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapFixedAction"></tg-egi-cell>
@@ -549,7 +548,7 @@ const template = html`
                                 <paper-checkbox class="blue body" checked="[[egiEntity.selected]]" on-change="_selectionChanged" on-mousedown="_checkSelectionState" on-keydown="_checkSelectionState"></paper-checkbox>
                             </div>
                             <div class="action-cell" hidden$="[[!_primaryActionNotFixedAndVisible(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
-                                <tg-egi-action-wrapper class="action" icon="[[primaryAction.icon]]" icon-style="[[primaryAction.iconStyle]]" tooltip="[[primaryAction.longDesc]]" on-tap="_runPrimaryAction"></tg-egi-action-wrapper>
+                                <tg-ui-action class="action" show-dialog="[[primaryAction.showDialog]]" toaster="[[primaryAction.toaster]]" current-entity="[[_currentEntity(egiEntity.entity)]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" action-kind="[[primaryAction.actionKind]]" number-of-action="[[primaryAction.numberOfAction]]" dynamic-action="[[primaryAction.dynamicAction]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" ui-role="[[primaryAction.uiRole]]" icon-style="[[primaryAction.iconStyle]]"></tg-ui-action>
                             </div>
                             <template is="dom-repeat" items="[[columns]]" as="column">
                                 <tg-egi-cell column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'false')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapAction"></tg-egi-cell>
@@ -574,7 +573,7 @@ const template = html`
                     <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
                         <div class="table-data-row" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" is-editing$="[[egiEntity.editing]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
                             <div class="action-cell" hidden$="[[!_isSecondaryActionPresent]]">
-                                <tg-secondary-action-button class="action" actions="[[_secondaryActions]]" current-entity="[[egiEntity.entity]]" is-single="[[_isSingleSecondaryAction]]" dropdown-trigger="[[_openDropDown]]" run-single-action="[[_runSecondaryAction]]"></tg-secondary-action-button>
+                                <tg-secondary-action-button class="action" actions="[[_secondaryActions]]" current-entity="[[_currentEntity(egiEntity.entity)]]" is-single="[[_isSingleSecondaryAction]]" dropdown-trigger="[[_openDropDown]]"></tg-secondary-action-button>
                             </div>
                         </div>
                     </template>
@@ -898,8 +897,6 @@ Polymer({
         _secondaryActions: Array,
         //The callback to open drop down for secondary action.
         _openDropDown: Function,
-        //The callback to run single secondary action. 
-        _runSecondaryAction: Function,
 
         //Double tap related
         _tapOnce: Boolean
@@ -958,19 +955,6 @@ Polymer({
         //Init secondary action drop down trigger
         this._openDropDown = function (currentEntity, currentAction) {
             this.$.secondaryActionDropDown.open(currentEntity, currentAction);
-        }.bind(this);
-
-        //Initiates the single secondary action runner.
-        this._runSecondaryAction = function (entity, actionWrapper) {
-            if (this._isSecondaryActionPresent && this._isSingleSecondaryAction && (!this._previouslyRunSecondaryAction || !this._secondaryActions[0].isActionInProgress)) {
-                if (this._previouslyRunSecondaryAction) {
-                    this._previouslyRunSecondaryAction.action = null;
-                }
-                this._previouslyRunSecondaryAction = actionWrapper;
-                this._previouslyRunSecondaryAction.action = this._secondaryActions[0];
-                this._secondaryActions[0].currentEntity = entity;
-                this._secondaryActions[0]._run();
-            }
         }.bind(this);
 
         //Initiate entity master for inline editing
@@ -1320,7 +1304,7 @@ Polymer({
     },
 
     _tapColumn: function (entity, column) {
-        if (column.runAction(entity) === false) {
+        if (column.runAction(this._currentEntity(entity)) === false) {
             // if the clicked property is a hyperlink and there was no custom action associted with it
             // then let's open the linked resources
             if (this.isHyperlinkProp(entity, column) === true) {
@@ -1423,7 +1407,7 @@ Polymer({
     _selectionChanged: function (e) {
         if (this.egiModel) {
             const index = e.model.entityIndex;
-            const target = e.target || e.srcElement;
+            var target = e.target || e.srcElement;
             //Perform selection range selection or single selection.
             if (target.checked && this._rangeSelection && this._lastSelectedIndex >= 0) {
                 this._selectRange(this._lastSelectedIndex, index);
@@ -1451,19 +1435,6 @@ Polymer({
 
     _checkSelectionState: function (event) {
         this._rangeSelection = event.shiftKey;
-    },
-
-    _runPrimaryAction: function (e, detail) {
-        if (!this._previouslyRunPrimaryAction || !this.primaryAction.isActionInProgress) {
-            if (this._previouslyRunPrimaryAction) {
-                this._previouslyRunPrimaryAction.action = null;
-            }
-            const target = e.target || e.srcElement;
-            this._previouslyRunPrimaryAction = target;
-            this._previouslyRunPrimaryAction.action = this.primaryAction;
-            this.primaryAction.currentEntity = this.filteredEntities[e.model.entityIndex];
-            this.primaryAction._run();
-        }
     },
 
     _tapFixedAction: function (e, detail) {
@@ -2028,6 +1999,13 @@ Polymer({
 
     _selectTooltip: function (selected) {
         return (selected ? 'Unselect' : 'Select') + ' this entity';
+    },
+
+    _currentEntity: function (entity) {
+        const egi = this;
+        return function () {
+            return this.supportsNavigation && egi.editingEntity ? egi.editingEntity : entity;
+        };
     },
 
     _getTooltip: function (entity, column, action) {
