@@ -183,21 +183,25 @@ public class EntityResourceUtils {
         for (final String touchedProp : touchedProps) {
             final String name = touchedProp;
             final Map<String, Object> valAndEnforce = (Map<String, Object>) modifiedPropertiesHolder.get(name);
-            final boolean enforce = TRUE.equals(valAndEnforce.get("enforce"));
-            // The 'modified' properties are marked using the existence of "val" sub-property.
-            if (valAndEnforce.containsKey("val")) { // this is a modified property
-                processPropertyValue(valAndEnforce.get("val"), reflectedValueId(valAndEnforce, "val"), type, name, entity, companionFinder, enforce);
-                logPropertyApplication("   Apply   touched   modified", true, true, type, name, valAndEnforce, entity, touchedProps.toArray(new String[] {}));
-            } else if (enforce) { // this is unmodified property but it needs to be enforced (controlled by client-side setting)
-                final Object lastAttemptedValue = entity.getProperty(name).getLastAttemptedValue(); // this could be invalid value -- lastAttemptedValue must be taken
-                if (lastAttemptedValue instanceof AbstractEntity) { // only entity-typed value can be stale here -- need to get fresh instance as we do in modified touched properties case
-                    final AbstractEntity entityTypedVal = (AbstractEntity) lastAttemptedValue;
-                    final String reflectedValue = isMockNotFoundEntity(lastAttemptedValue) ? entityTypedVal.getDesc() : entityTypedVal.toString(); // this is very consistent with tg-reflector._getErroneousFullPropertyValue
-                    processPropertyValue(reflectedValue, ofNullable(entityTypedVal.getId()), type, name, entity, companionFinder, true);
-                } else {
-                    entity.getProperty(name).setValue(lastAttemptedValue, true);
+            if (valAndEnforce != null) { // otherwise it means 'touched unmodified' case (without enforcement)
+                final boolean enforce = TRUE.equals(valAndEnforce.get("enforce"));
+                // The 'modified' properties are marked using the existence of "val" sub-property.
+                if (valAndEnforce.containsKey("val")) { // this is a modified property
+                    processPropertyValue(valAndEnforce.get("val"), reflectedValueId(valAndEnforce, "val"), type, name, entity, companionFinder, enforce);
+                    logPropertyApplication("   Apply   touched   modified", true, true, type, name, valAndEnforce, entity, touchedProps.toArray(new String[] {}));
+                } else if (enforce) { // this is unmodified property but it needs to be enforced (controlled by client-side setting)
+                    final Object lastAttemptedValue = entity.getProperty(name).getLastAttemptedValue(); // this could be invalid value -- lastAttemptedValue must be taken
+                    if (lastAttemptedValue instanceof AbstractEntity) { // only entity-typed value can be stale here -- need to get fresh instance as we do in modified touched properties case
+                        final AbstractEntity entityTypedVal = (AbstractEntity) lastAttemptedValue;
+                        final String reflectedValue = isMockNotFoundEntity(lastAttemptedValue) ? entityTypedVal.getDesc() : entityTypedVal.toString(); // this is very consistent with tg-reflector._getErroneousFullPropertyValue
+                        processPropertyValue(reflectedValue, ofNullable(entityTypedVal.getId()), type, name, entity, companionFinder, true);
+                    } else {
+                        entity.getProperty(name).setValue(lastAttemptedValue, true);
+                    }
+                    logPropertyApplication("   Apply   touched unmodified", true, true, type, name, valAndEnforce, entity, touchedProps.toArray(new String[] {}));
                 }
-                logPropertyApplication("   Apply   touched unmodified", true, true, type, name, valAndEnforce, entity, touchedProps.toArray(new String[] {}));
+            } else {
+                logPropertyApplication("   Log     touched unmodified", false, true, type, name, valAndEnforce, entity, touchedProps.toArray(new String[] {}));
             }
         }
         // IMPORTANT: the check for invalid will populate 'required' checks.
@@ -233,8 +237,10 @@ public class EntityResourceUtils {
                 builder.append(format("type [%40s] ", type.getSimpleName()));
             }
             builder.append(format("name [%8s] ", name));
-            builder.append(format("val [%8s] ", valAndEnforce.getOrDefault("val", "")));
-            builder.append(format("enforce [%8s] ", valAndEnforce.getOrDefault("enforce", "")));
+            if (valAndEnforce != null) {
+                builder.append(format("val [%8s] ", valAndEnforce.getOrDefault("val", "")));
+                builder.append(format("enforce [%8s] ", valAndEnforce.getOrDefault("enforce", "")));
+            }
             if (apply) {
                 builder.append("=>\t");
                 for (final String propertyToLog: propertiesToLog) {
