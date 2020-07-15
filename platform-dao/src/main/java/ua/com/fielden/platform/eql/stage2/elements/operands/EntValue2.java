@@ -34,7 +34,7 @@ public class EntValue2 implements ISingleOperand2<EntValue3> {
     }
     
     private boolean needsParameter() {
-        return !(value instanceof Long || value instanceof Integer || value instanceof Short || yes.equals(value) || no.equals(value));
+        return true;//!(value instanceof Long || value instanceof Integer || value instanceof Short || yes.equals(value) || no.equals(value));
     }
 
     private Object preprocessValue(final Object value) {
