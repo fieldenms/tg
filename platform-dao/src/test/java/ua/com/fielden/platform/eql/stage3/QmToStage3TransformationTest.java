@@ -12,6 +12,7 @@ import java.util.HashMap;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.eql.meta.EqlStage3TestCase;
@@ -34,6 +35,38 @@ import ua.com.fielden.platform.sample.domain.TgWorkshop;
 public class QmToStage3TransformationTest extends EqlStage3TestCase {
     
     @Test
+    public void invoking_id_property_on_persistent_property_of_entity_type_does_not_generate_extra_join() {
+        final ResultQuery3 actQry = qryCountAll(select(MODEL).where().prop("make.id").isNotNull());
+        final String model1 = "1";
+        
+        final QrySource3BasedOnTable model = source(MODEL, model1);
+        final Conditions3 conditions = or(isNotNull(expr(prop("make", model, Long.class, H_LONG))));
+        final ResultQuery3 expQry = qryCountAll(sources(model), conditions);
+        
+        assertEquals(expQry, actQry);
+    }
+    
+    @Test
+    public void invoking_id_property_on_calculated_property_of_entity_type_does_not_generate_extra_join() {
+        final ResultQuery3 actQry = qryCountAll(select(VEHICLE).where().prop("modelMake.id").isNotNull());
+        final String veh1 = "1";
+        
+        final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
+        final QrySource3BasedOnTable model = source(MODEL, veh1, "model");
+        
+        final IQrySources3 sources = 
+                ij(
+                        veh,
+                        model,
+                        eq(entityProp("model", veh, MODEL), idProp(model))
+                  );
+        final Conditions3 conditions = or(isNotNull(expr(expr(entityProp("make", model, MAKE)))));
+        final ResultQuery3 expQry = qryCountAll(sources, conditions);
+        
+        assertEquals(expQry, actQry);
+    }
+    
+    @Test
     public void calc_props_of_component_type_are_resolved_correctly() {
         final ResultQuery3 actQry = qryCountAll(select(ORG5).where().anyOfProps("maxVehPrice", "maxVehPurchasePrice").isNotNull());
         final String orgUnit5 = "1";
@@ -54,7 +87,8 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Conditions3 conditions = or(and(or(isNotNull(expr(expSubQry1)), isNotNull(expr(expSubQry2)))));
         final ResultQuery3 expQry = qryCountAll(sources, conditions);
         assertEquals(expQry, actQry);
-
+        System.out.println(expQry.sql(DbVersion.H2));
+        System.out.println(actQry.sql(DbVersion.H2));
     }
     
     @Test
