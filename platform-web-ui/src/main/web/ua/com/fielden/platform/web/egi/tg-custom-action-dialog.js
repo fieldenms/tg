@@ -954,7 +954,9 @@ Polymer({
         } else {
             var self = this;
             if (self.isRunning === false) {
-                //Add this dialog to body before opening it.
+                //Add this dialog to body before opening it. Dialog should be added to document DOM because it's 'ready' callback will be invoked immediately before first attaching.
+                //Also shadow DOM of dialog component won't be defined until dialog is attached for the first time. It is important because
+                //_getElement method relies on existance of $.elementLoader in shadow DOM of dialog.
                 self._addToDom();
                 self._lastAction = this._customiseAction(customAction);
                 self._setIsRunning(true);

@@ -226,8 +226,8 @@ const TgEntityCentreBehaviorImpl = {
 
         /**
          * A dialog instance that is used for displaying entity (functional and not) masters as part of centre actions logic.
-         * This dialog is of type tg-custom-action-dialog and gets created dynamically on attached event.
-         * Right away it is appended to document.body.
+         * This dialog is of type tg-custom-action-dialog and gets created on demand when needed i.e. on first _showDialog invocation.
+         * It is appended to document.body just before dialog opening and is removed just after dialog closing.
          */
         actionDialog: {
             type: Object,
