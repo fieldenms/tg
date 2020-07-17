@@ -819,7 +819,7 @@ const TgEntityCentreBehaviorImpl = {
         /* Provide predicate for egi that determines whether inline master can be opened or not.
          * It can not be opened if another master in dialog is opened. */
         this.$.egi.canOpenMaster = function () {
-            return !this.actionDialog.opened;
+            return this.actionDialog === null || !this.actionDialog.opened;
         }.bind(this);
 
         ///////////////////////// Detail postSaved listener //////////////////////////////////////
