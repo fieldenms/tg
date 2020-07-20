@@ -95,10 +95,7 @@ const _findSelectedEntitiesIn = function (centreContextHolder) {
     }
 };
 
-/**
- * Removes the specified styles from element 
- */
-export const removeStyles = function (element, styles) {
+const removeStyles = function (element, styles) {
     if (styles && styles.length > 0) {
         styles.split(";").map(function (style) {
             return style.trim().split(":");
@@ -110,10 +107,7 @@ export const removeStyles = function (element, styles) {
     }
 };
 
-/**
- * Set the specified styles for element
- */
-export const addStyles = function (element, styles) {
+const addStyles = function (element, styles) {
     if (styles && styles.length > 0) {
         styles.split(";").map(function (style) {
             return style.trim().split(":");
@@ -294,7 +288,6 @@ Polymer({
         },
 
         ////////////////////////////////////// SUBSECTION: NOT MANDATORY PROPERTIES //////////////////////////////////////
-
         /**
          * The 'currentEntity' should contain the entity that was clicked (result-set actions)
          * or the entity on which primary/secondary action was chosen. 
