@@ -176,9 +176,14 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     @Override
     public final String genMainWebUIComponent() {
         final Pair<DomElement, JsCode> generatedMenu = desktopMainMenuConfig.generateMenuActions();
-        return ResourceLoader.getText("ua/com/fielden/platform/web/app/tg-app-template.js").
+        final String mainWebUiComponent = ResourceLoader.getText("ua/com/fielden/platform/web/app/tg-app-template.js").
                 replace("<!--menu action dom-->", generatedMenu.getKey().toString()).
                 replace("//actionsObject", generatedMenu.getValue().toString());
+        if (Workflows.deployment == workflow || Workflows.vulcanizing == workflow) {
+            return mainWebUiComponent.replace("// use empty console.log", "console.log = () => {};\n");
+        } else {
+            return mainWebUiComponent;
+        }
     }
 
     @Override
@@ -193,7 +198,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     }
 
     private static boolean isDevelopmentWorkflow(final Workflows workflow) {
-        return Workflows.development.equals(workflow) || Workflows.vulcanizing.equals(workflow);
+        return Workflows.development == workflow || Workflows.vulcanizing == workflow;
     }
 
     /**

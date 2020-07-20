@@ -98,7 +98,8 @@ function findModule (moduleName, menuConfig) {
         }
     }
     return "menu";
-};
+}
+
 function addAllElements (elementsToAdd, addToArray, removeFromArray) {
     addToArray = addToArray || [];
     if (elementsToAdd) {
@@ -113,11 +114,13 @@ function addAllElements (elementsToAdd, addToArray, removeFromArray) {
         });
     }
     return addToArray;
-};
+}
+
 function replaceNewline (input) {
     const newline = "\r\n";
     return input.replace(/\n/gi, containsRestictedTags(input) ? newline : '<br>');
-};
+}
+
 Polymer({
 
     _template: template,
@@ -394,7 +397,7 @@ Polymer({
     },
 
     /**
-     * Selectes the specified view. If the view is opened in different module then play transition animation between modules.
+     * Selects the specified view. If the view is opened in different module then play transition animation between modules.
      * 
      * @param {String} selected 
      */
@@ -616,6 +619,7 @@ Polymer({
     
     attached: function () {
         const self = this;
+        // use empty console.log
         this.async(function () {
             self.topLevelActions = [
                 //actionsObject
