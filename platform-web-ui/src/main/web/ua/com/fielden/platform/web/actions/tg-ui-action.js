@@ -12,7 +12,7 @@ import '/resources/components/postal-lib.js';
 
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
-import { tearDownEvent, removeStyles, addStyles } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
@@ -59,17 +59,14 @@ const template = html`
             width: var(--tg-ui-action-icon-button-width, 40px);
             padding: var(--tg-ui-action-icon-button-padding, 8px);
         }
-        [hidden] {
-            display: none !important;
-        }
     </style>
     <iron-ajax id="masterRetriever" headers="[[_headers]]" url="[[_masterUri]]" method="GET" handle-as="json" on-error="_processMasterError">
     </iron-ajax>
-    <paper-icon-button id="iActionButton" hidden$="[[!isIconButton]]" icon="[[icon]]" on-tap="_run" disabled$="[[actionDisabled]]" tooltip-text$="[[longDesc]]"></paper-icon-button>
-    <paper-button id="bActionButton" hidden$="[[isIconButton]]" raised roll="button" on-tap="_run" style="width:100%" disabled$="[[actionDisabled]]" tooltip-text$="[[longDesc]]">
+    <paper-icon-button id="iActionButton" hidden$="[[!isIconButton]]" icon="[[icon]]" on-tap="_run" disabled$="[[_computeDisabled(isActionInProgress, disabled)]]" tooltip-text$="[[longDesc]]"></paper-icon-button>
+    <paper-button id="bActionButton" hidden$="[[isIconButton]]" raised roll="button" on-tap="_run" style="width:100%" disabled$="[[_computeDisabled(isActionInProgress, disabled)]]" tooltip-text$="[[longDesc]]">
         <span>[[shortDesc]]</span>
     </paper-button>
-    <paper-spinner id="spinner" active="[[isActionInProgress]]"  hidden$="[[!spinnerVisible]]" class="blue" alt="in progress"></paper-spinner>
+    <paper-spinner id="spinner" active="[[isActionInProgress]]" class="blue" style="display: none;" alt="in progress"></paper-spinner>
 `;
 
 /**
@@ -95,6 +92,36 @@ const _findSelectedEntitiesIn = function (centreContextHolder) {
         return undefined;
     } else {
         return _findSelectedEntitiesIn(centreContextHolder.masterEntity.centreContextHolder);
+    }
+};
+
+/**
+ * Removes the specified styles from element 
+ */
+export const removeStyles = function (element, styles) {
+    if (styles && styles.length > 0) {
+        styles.split(";").map(function (style) {
+            return style.trim().split(":");
+        }).forEach(function (style) {
+            if (style.length === 2) {
+                delete element.style[style[0]];
+            }
+        });
+    }
+};
+
+/**
+ * Set the specified styles for element
+ */
+export const addStyles = function (element, styles) {
+    if (styles && styles.length > 0) {
+        styles.split(";").map(function (style) {
+            return style.trim().split(":");
+        }).forEach(function (style) {
+            if (style.length === 2) {
+                element.style[style[0]] = style[1];
+            }
+        });
     }
 };
 
@@ -287,17 +314,7 @@ Polymer({
         isActionInProgress: {
             type: Boolean,
             value: false,
-            observer: 'isActionInProgressChanged',
-            notify: true
-        },
-
-        /**
-         * Indicates whether spinner should be visible or not.
-         */
-        spinnerVisible: {
-            type: Boolean,
-            value: false,
-            notify: true
+            observer: 'isActionInProgressChanged'
         },
 
         /**
@@ -306,15 +323,6 @@ Polymer({
         disabled: {
             type: Boolean,
             value: false
-        },
-
-        /**
-         * Computed property that computes action's disabled state based on disabled property and action progress.
-         */
-        actionDisabled: {
-            type: Boolean,
-            computed: '_computeDisabled(isActionInProgress, disabled)',
-            notify: true
         },
 
         /**
@@ -692,7 +700,7 @@ Polymer({
      * Should be invoked after the parent of action has become visible
      */
     _updateSpinnerIfNeeded: function () {
-        if (this.$.spinner.offsetParent !== null) {
+        if (this.$.spinner.style.display !== 'none') {
             this.$.spinner.style.left = (this.offsetWidth / 2 - this.$.spinner.offsetWidth / 2) + 'px';
             this.$.spinner.style.top = (this.offsetHeight / 2 - this.$.spinner.offsetHeight / 2) + 'px';
         }
@@ -701,7 +709,7 @@ Polymer({
     /* Timer callback that performs spinner activation. */
     _startSpinnerCallback: function () {
         // Position and make spinner visible
-        this.spinnerVisible = true;
+        this.$.spinner.style.removeProperty('display');
         this._updateSpinnerIfNeeded();
     },
 
@@ -713,7 +721,7 @@ Polymer({
         if (newValue === true && this._isSpinnerRequired === true) {
             this._startSpinnerTimer = setTimeout(this._startSpinnerCallback.bind(this), 700);
         } else {
-            this.spinnerVisible = false;
+            this.$.spinner.style.display = 'none';
         }
     },
 

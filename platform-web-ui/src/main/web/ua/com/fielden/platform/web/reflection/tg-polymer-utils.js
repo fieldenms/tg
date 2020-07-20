@@ -195,36 +195,6 @@ export class EntityStub {
 };
 
 /**
- * Removes the specified styles from element 
- */
-export const removeStyles = function (element, styles) {
-    if (styles && styles.length > 0) {
-        styles.split(";").map(function (style) {
-            return style.trim().split(":");
-        }).forEach(function (style) {
-            if (style.length === 2) {
-                delete element.style[style[0]];
-            }
-        });
-    }
-};
-
-/**
- * Set the specified styles for element
- */
-export const addStyles = function (element, styles) {
-    if (styles && styles.length > 0) {
-        styles.split(";").map(function (style) {
-            return style.trim().split(":");
-        }).forEach(function (style) {
-            if (style.length === 2) {
-                element.style[style[0]] = style[1];
-            }
-        });
-    }
-};
-
-/**
  * Returns 'true' if client application was loaded on mobile device, 'false' otherwise (see AbstractWebResource and DeviceProfile for more details).
  * 
  * It is recommended to use word "Mobi" for mobile device detection, see https://developer.mozilla.org/en-US/docs/Web/HTTP/Browser_detection_using_the_user_agent for more info.
