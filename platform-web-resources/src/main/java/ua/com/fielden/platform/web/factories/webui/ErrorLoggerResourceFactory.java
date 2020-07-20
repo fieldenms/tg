@@ -5,6 +5,9 @@ import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
 
+import com.google.inject.Injector;
+
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.webui.ErrorLoggerResource;
@@ -17,17 +20,18 @@ import ua.com.fielden.platform.web.resources.webui.ErrorLoggerResource;
  */
 public class ErrorLoggerResourceFactory extends Restlet {
 
-
+    private final IUserProvider userProvider;
     private final IDeviceProvider deviceProvider;
     private final IDates dates;
 
-    public ErrorLoggerResourceFactory(final IDeviceProvider deviceProvider, final IDates dates) {
-        this.deviceProvider = deviceProvider;
-        this.dates = dates;
+    public ErrorLoggerResourceFactory(final Injector injector) {
+        this.deviceProvider = injector.getInstance(IDeviceProvider.class);
+        this.dates = injector.getInstance(IDates.class);
+        this.userProvider = injector.getInstance(IUserProvider.class);
     }
 
     /**
-     * Invokes on PUT request from client.
+     * Handles PUT requests.
      */
     @Override
     public void handle(final Request request, final Response response) {
@@ -37,6 +41,7 @@ public class ErrorLoggerResourceFactory extends Restlet {
             new ErrorLoggerResource(getContext(),
                     request,
                     response,
+                    userProvider,
                     deviceProvider,
                     dates).handle();
         }

@@ -139,7 +139,7 @@ public abstract class AbstractWebUiResources extends Application {
         router.attach("/master/{entityType}", new MasterInfoProviderResourceFactory(webApp, deviceProvider, dates, restUtil));
 
         //Attache client side error logger resource
-        router.attach("/error", new ErrorLoggerResourceFactory(deviceProvider, dates));
+        router.attach("/error", new ErrorLoggerResourceFactory(injector));
 
         // Registering entity centres:
         attachCentreResources(router, webApp, restUtil);
