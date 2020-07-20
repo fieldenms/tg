@@ -116,7 +116,6 @@ function addAllElements (elementsToAdd, addToArray, removeFromArray) {
 };
 function replaceNewline (input) {
     const newline = "\r\n";
-    new RegExp('<html|<body|<script|<img|<a', 'mi');
     return input.replace(/\n/gi, containsRestictedTags(input) ? newline : '<br>');
 };
 Polymer({
