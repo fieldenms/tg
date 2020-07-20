@@ -907,6 +907,7 @@ Polymer({
             this._parentDialog = null;
         }
         this.close();
+        this._removeFromDom();
     },
 
     _handleCloseEvent: function(data, envelope) {
@@ -953,8 +954,10 @@ Polymer({
         } else {
             var self = this;
             if (self.isRunning === false) {
-                //Add this dialog to body before opening it.
-                document.body.appendChild(this);
+                //Add this dialog to body before opening it. Dialog should be added to document DOM because it's 'ready' callback will be invoked immediately before first attaching.
+                //Also shadow DOM of dialog component won't be defined until dialog is attached for the first time. It is important because
+                //_getElement method relies on existance of $.elementLoader in shadow DOM of dialog.
+                self._addToDom();
                 self._lastAction = this._customiseAction(customAction);
                 self._setIsRunning(true);
                 self.staticTitle = customAction.shortDesc;
@@ -1005,6 +1008,14 @@ Polymer({
                     });
             }
         }
+    },
+
+    _addToDom: function () {
+        document.body.appendChild(this);
+    },
+
+    _removeFromDom: function () {
+        document.body.removeChild(this);
     },
     
     _customiseAction: function (newAction) {
@@ -1178,6 +1189,7 @@ Polymer({
         if (element.noUI === true) { // is this is the end of action execution?
             self._resetState();
             self._setIsRunning(false);
+            self._removeFromDom();
         } else { // otherwise show master in dialog
             this._openOnce(closeEventChannel, closeEventTopics, action, null, null);    
         }
@@ -1285,6 +1297,7 @@ Polymer({
             this._lastAction.restoreActionState();
         }
         this._resetState();
+        this._removeFromDom();
     },
 
     /**
@@ -1369,7 +1382,6 @@ Polymer({
         this._resetAnimationBlockingSpinnerState();
         this.$.loadingPanel.classList.remove("visible");
         this.$.dialogLoader.classList.remove("hidden");
-        document.body.removeChild(this);
     },
 
     //Resets the state of spinner on navigation action, blocking pane counter and removes potentialy setted animation properties.
