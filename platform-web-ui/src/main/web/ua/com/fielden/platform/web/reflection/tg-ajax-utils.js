@@ -29,7 +29,7 @@ export function processResponseError (e, reflector, serialiser, customHandler, t
     } else { // for other codes just log the code
         console.warn('Server responded with error code ', xhr.status);
         if (!e.detail.request.aborted) {
-            throw new Error('Unexpected server error happened with status: ' + xhr.status + ". Please contact with support.");
+            throw new Error("Unexpected server error with status [" + xhr.status + "] occurred. Please contact support.");
         }
     }
 }
