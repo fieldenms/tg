@@ -16,16 +16,16 @@ import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 
 /**
- * Logs client side errors.
+ * Logs client-side errors.
  *
  * @author TG Team
  *
  */
-public class ErrorLoggerResource extends AbstractWebResource {
-    private final static Logger LOGGER = Logger.getLogger(ErrorLoggerResource.class);
+public class WebClientErrorLoggerResource extends AbstractWebResource {
+    private final static Logger LOGGER = Logger.getLogger(WebClientErrorLoggerResource.class);
     private final IUserProvider userProvider;
 
-    public ErrorLoggerResource(
+    public WebClientErrorLoggerResource(
             final Context context,
             final Request request,
             final Response response,
@@ -37,7 +37,7 @@ public class ErrorLoggerResource extends AbstractWebResource {
     }
 
     /**
-     * Handles PUT request resulting from error sender ajax on client.
+     * Handles PUT requests from the Error Sender on the client-side.
      */
     @Put
     @Override

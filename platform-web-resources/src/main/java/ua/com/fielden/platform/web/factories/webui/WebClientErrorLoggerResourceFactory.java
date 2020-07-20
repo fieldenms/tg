@@ -10,21 +10,21 @@ import com.google.inject.Injector;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
-import ua.com.fielden.platform.web.resources.webui.ErrorLoggerResource;
+import ua.com.fielden.platform.web.resources.webui.WebClientErrorLoggerResource;
 
 /**
- * Resource factory that logs client side errors.
+ * Resource factory that logs client-side errors.
  *
  * @author TG Team
  *
  */
-public class ErrorLoggerResourceFactory extends Restlet {
+public class WebClientErrorLoggerResourceFactory extends Restlet {
 
     private final IUserProvider userProvider;
     private final IDeviceProvider deviceProvider;
     private final IDates dates;
 
-    public ErrorLoggerResourceFactory(final Injector injector) {
+    public WebClientErrorLoggerResourceFactory(final Injector injector) {
         this.deviceProvider = injector.getInstance(IDeviceProvider.class);
         this.dates = injector.getInstance(IDates.class);
         this.userProvider = injector.getInstance(IUserProvider.class);
@@ -38,7 +38,7 @@ public class ErrorLoggerResourceFactory extends Restlet {
         super.handle(request, response);
 
         if (Method.PUT.equals(request.getMethod())) {
-            new ErrorLoggerResource(getContext(),
+            new WebClientErrorLoggerResource(getContext(),
                     request,
                     response,
                     userProvider,
