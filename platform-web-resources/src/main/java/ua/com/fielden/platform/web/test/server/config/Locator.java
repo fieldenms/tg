@@ -100,7 +100,7 @@ public class Locator<T extends AbstractFunctionalEntityWithCentreContext<?>> {
              + "    action.openMasterAction = document.createElement('tg-ui-action');\n"
              + "    action.openMasterAction.shortDesc = '" + format("Edit %s", entityTitle) + "';\n"
              + "    action.openMasterAction.longDesc = '" + format("Edit %s", entityTitle) + "';\n"
-             + "    action.openMasterAction.componentUri = '/master_ui/ua.com.fielden.platform.entity.EntityEditAction';\n"
+             + "    action.openMasterAction.componentUri = '/master_ui/ua.com.fielden.platform.entity.EntityEditAction.js';\n"
              + "    action.openMasterAction.elementName = 'tg-EntityEditAction-master';\n"
              + "    action.openMasterAction.showDialog = self._showDialog;\n"
              + "    action.openMasterAction.createContextHolder = self._createContextHolder;\n"

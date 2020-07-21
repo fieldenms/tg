@@ -61,7 +61,7 @@ class MasterWithCentre<T extends AbstractEntity<?>> implements IMaster<T> {
                 .replace("<!--@tg-entity-master-content-->",
                         format(""
                         + "<tg-element-loader id='loader' context='[[_createContextHolderForEmbeddedViews]]' context-property='getMasterEntity' "
-                        + "    import='/centre_ui/%s' "
+                        + "    import='/centre_ui/%s.js' "
                         + "    element-name='tg-%s-centre'>"
                         + "</tg-element-loader>",
                         entityCentre.getMenuItemType().getName(), entityCentre.getMenuItemType().getSimpleName()))

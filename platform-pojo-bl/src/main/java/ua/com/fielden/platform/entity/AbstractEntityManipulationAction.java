@@ -59,10 +59,10 @@ public abstract class AbstractEntityManipulationAction extends AbstractFunctiona
         return importUri;
     }
 
-    public void setEntityTypeForEntityMaster(Class<? extends AbstractEntity<?>> entityTypeAsClass) {
+    public void setEntityTypeForEntityMaster(final Class<? extends AbstractEntity<?>> entityTypeAsClass) {
         this.entityTypeAsClass = entityTypeAsClass;
         setEntityType(entityTypeAsClass.getName());
-        setImportUri(format("/master_ui/%s", getEntityType()));
+        setImportUri(format("/master_ui/%s.js", getEntityType()));
         setElementName(format("tg-%s-master", this.entityTypeAsClass.getSimpleName()));
     }
 

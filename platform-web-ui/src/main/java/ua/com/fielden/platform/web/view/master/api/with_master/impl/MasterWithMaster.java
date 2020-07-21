@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.view.master.api.with_master.impl;
 
 import static java.lang.String.format;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
@@ -42,7 +43,7 @@ class MasterWithMaster<T extends AbstractEntity<?>> extends AbstractMasterWithMa
 
     @Override
     protected String getImportUri(final Class<? extends AbstractEntity<?>> entityType) {
-        return format("'/master_ui/%s'", entityType.getName());
+        return format("'/master_ui/%s.js'", entityType.getName());
     }
 
 }

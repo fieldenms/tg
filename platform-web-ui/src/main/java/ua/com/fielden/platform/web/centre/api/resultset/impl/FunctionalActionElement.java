@@ -175,7 +175,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
     }
 
     private String generateComponentUri() {
-        return conf().functionalEntity.map(entityType -> "/master_ui/" + entityType.getName()).orElse("");
+        return conf().functionalEntity.map(entityType -> "/master_ui/" + entityType.getName() + ".js").orElse("");
     }
 
     public String getDataRoute() {
