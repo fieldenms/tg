@@ -977,7 +977,9 @@ Polymer({
                                         }
                                     }
                                     if (ironRequest && typeof ironRequest.successful !== 'undefined' && ironRequest.successful === true) {
-                                        return Promise.resolve(self._showMaster(customAction, element, closeEventChannel, closeEventTopics));
+                                        return Promise.resolve(self._showMaster(customAction, element, closeEventChannel, closeEventTopics, false));
+                                    } else  if (ironRequest && ironRequest.response && ironRequest.response.ex && ironRequest.response.ex.continuationTypeStr) {
+                                        return Promise.resolve(self._showMaster(customAction, element, closeEventChannel, closeEventTopics, true));
                                     } else {
                                         return Promise.reject('Retrieval / saving promise was not successful.');
                                     }
@@ -988,7 +990,7 @@ Polymer({
                         } else {
                             return Promise.resolve()
                                 .then(function() {
-                                    return Promise.resolve(self._showMaster(customAction, element, closeEventChannel, closeEventTopics));
+                                    return Promise.resolve(self._showMaster(customAction, element, closeEventChannel, closeEventTopics, false));
                                 })
                                 .catch(function(error) {
                                     self._finishErroneousOpening();
@@ -1183,13 +1185,15 @@ Polymer({
         }
     },
     
-    _showMaster: function(action, element, closeEventChannel, closeEventTopics) {
+    _showMaster: function(action, element, closeEventChannel, closeEventTopics, actionWithContinuation) {
         this._lastElement = element;
         const self = this;
         if (element.noUI === true) { // is this is the end of action execution?
             self._resetState();
             self._setIsRunning(false);
-            self._removeFromDom();
+            if (!actionWithContinuation) {
+                self._removeFromDom();
+            }
         } else { // otherwise show master in dialog
             this._openOnce(closeEventChannel, closeEventTopics, action, null, null);    
         }
