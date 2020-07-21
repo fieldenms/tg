@@ -2003,7 +2003,10 @@ Polymer({
 
     _currentEntity: function (entity) {
         const egi = this;
+        // Return old fashion javascript function (not arrow function). This function will be called by 
+        // action therefore this of the function will be the action (in case of arrow function this wpuld be the EGI).
         return function () {
+            //this - is the action that calls this function.
             return this.supportsNavigation && egi.editingEntity ? egi.editingEntity : entity;
         };
     },

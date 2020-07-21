@@ -43,7 +43,9 @@ Polymer({
          */
         currentEntity: {
             type: Function,
-            value: function () {return () => null}
+            value: function () {
+                return () => null;
+            }
         },
 
         isSingle: {
