@@ -13,6 +13,7 @@ import '/resources/views/tg-app-view.js';
 import '/resources/master/tg-entity-master.js';
 import '/resources/actions/tg-ui-action.js';
 import '/resources/components/tg-message-panel.js';
+import '/resources/components/tg-global-error-handler.js';
 
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
@@ -23,8 +24,7 @@ import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizabl
 import { TgEntityMasterBehavior } from '/resources/master/tg-entity-master-behavior.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js'
 import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';
-import { tearDownEvent, deepestActiveElement, generateUUID, isMobileApp, containsRestictedTags } from '/resources/reflection/tg-polymer-utils.js';
-import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
+import { tearDownEvent, deepestActiveElement, generateUUID, isMobileApp} from '/resources/reflection/tg-polymer-utils.js';
 
 const template = html`
     <style>
@@ -33,6 +33,7 @@ const template = html`
         }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
+    <tg-global-error-handler id="errorHandler" toaster="[[toaster]]"></tg-global-error-handler>
     <app-location id="location" no-decode dwell-time="-1" route="{{_route}}" url-space-regex="^/#/" use-hash-as-path></app-location>
     <app-route route="{{_route}}" pattern="/:moduleName" data="{{_routeData}}" tail="{{_subroute}}"></app-route>
     <tg-message-panel></tg-message-panel>
@@ -46,7 +47,6 @@ const template = html`
             </template>
         </neon-animated-pages>
     </div>
-    <iron-ajax id="errorSender" headers="[[_headers]]" url="/error" method="PUT" content-type="text/plain" handle-as="text" on-response="_processErrorResponse"></iron-ajax>
     <tg-entity-master
         id="masterDom"
         entity-type="[[entityType]]"
@@ -116,11 +116,6 @@ function addAllElements (elementsToAdd, addToArray, removeFromArray) {
     return addToArray;
 }
 
-function replaceNewline (input) {
-    const newline = "\r\n";
-    return input.replace(/\n/gi, containsRestictedTags(input) ? newline : '<br>');
-}
-
 Polymer({
 
     _template: template,
@@ -154,22 +149,6 @@ Polymer({
         appTitle: String,
         entityType: String,
 
-        /**
-         * Additional headers for 'iron-ajax' client-side requests. These only contain 
-         * our custom 'Time-Zone' header that indicates real time-zone for the client application.
-         * The time-zone then is to be assigned to threadlocal 'IDates.timeZone' to be able
-         * to compute 'Now' moment properly.
-         */
-        _headers: {
-            type: String,
-            value: _timeZoneHeader
-        },
-
-        /**
-         * Queue of errors to log on server.
-         */
-        _errorQueue: Array,
-        
         _manager: {
             type: Object,
             value: IronOverlayManager
@@ -443,47 +422,6 @@ Polymer({
         return e.returnValue;
     },
 
-    _handleUnhandledPromiseError: function(e) {
-        const errorMsg = e.reason.message + "\n" +e.reason.stack;
-        this._sentError(e.composedPath()[0], e, errorMsg);
-    },
-
-    _handleError: function (e) {
-        const errorDetail = e.detail ? e.detail : e;
-        const errorMsg = errorDetail.message + " Error happened in: " + errorDetail.filename + " at Ln: " + errorDetail.lineno + ", Co: " + errorDetail.colno
-                        + "\n" + ((errorDetail.error && errorDetail.error.stack) ?  errorDetail.error.stack : JSON.stringify(errorDetail.error));
-        this._sentError(e.composedPath()[0], errorDetail, errorMsg);
-    },
-
-    _sentError: function (from, e, errorMsg) {
-        if (from !== this.$.errorSender) {
-            if (e.error && e.error.restoreState) {
-                e.error.restoreState();
-            }
-            this.toaster.openToastForError("Unexpected error happened", replaceNewline(errorMsg), true);
-            this._errorQueue.push(errorMsg);
-            if (!this.$.errorSender.loading) {
-                this._sentErrorMsg(this._errorQueue[0]);
-            }
-        }
-    },
-
-    _sentErrorMsg: function (errorMsg) {
-        this.$.errorSender.body = errorMsg;
-        this.$.errorSender.generateRequest();
-    },
-    
-    _processErrorResponse: function (e) {
-        this._processNextError();
-    },
-
-    _processNextError: function () {
-        this._errorQueue.shift();
-        if (this._errorQueue.length > 0) {
-            this._sentErrorMsg(this._errorQueue[0]);
-        }
-    },
-
     /**
      * Animation finish event handler. This handler opens master or centre if module transition occured because of user action.
      * 
@@ -564,11 +502,6 @@ Polymer({
         //Binding to 'this' functions those are used outside the scope of this component.
         this._checkWhetherCanLeave = this._checkWhetherCanLeave.bind(this);
         
-        //Configuring error handler related properties.
-        this._errorQueue = [];
-        this._handleError = this._handleError.bind(this);
-        this._handleUnhandledPromiseError = this._handleUnhandledPromiseError.bind(this);
-        
         //Configuring menu visibility save functionality.
         this._saveMenuVisibilityChanges = function (visibleItems, invisibleItems) {
             if (this._saveIdentifier) {
@@ -605,11 +538,6 @@ Polymer({
             }
         }.bind(this);
         
-        //Add error handling errors
-        window.addEventListener('error', this._handleError);
-        window.addEventListener('rejectionhandled', this._handleUnhandledPromiseError);
-        window.addEventListener('unhandledrejection', this._handleUnhandledPromiseError);
-
         //Add error resize event listener
         this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
         

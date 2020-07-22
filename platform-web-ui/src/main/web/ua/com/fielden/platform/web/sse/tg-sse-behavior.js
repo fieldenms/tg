@@ -1,5 +1,6 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
-import { random } from '/resources/reflection/tg-numeric-utils.js'
+import { random } from '/resources/reflection/tg-numeric-utils.js';
+import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
 
 export const TgSseBehavior = {
 
@@ -136,6 +137,10 @@ export const TgSseBehavior = {
                         self._timerIdForReconnection = null;
                     }
                 }, 15000);
+            }
+
+            if (!self.errorHandler) {
+                throw new UnreportableError(e);
             }
 
         }, false);

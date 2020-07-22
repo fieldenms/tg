@@ -1,0 +1,127 @@
+import {PolymerElement, html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
+
+import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
+import { containsRestictedTags } from '/resources/reflection/tg-polymer-utils.js';
+
+import '/resources/polymer/@polymer/iron-ajax/iron-ajax.js';
+
+export class UnreportableError extends Error {
+    constructor(...params) {
+        super(params);
+
+        if (Error.captureStackTrace) {
+        Error.captureStackTrace(this, UnreportableError);
+        }
+
+        this.name = "UnreportableError";
+    }
+  }
+
+function replaceNewline (input) {
+    const newline = "\r\n";
+    return input.replace(/\n/gi, containsRestictedTags(input) ? newline : '<br>');
+}
+
+const template = html`
+    <iron-ajax id="errorSender" headers="[[_headers]]" url="/error" method="PUT" content-type="text/plain" handle-as="text" on-response="_processErrorResponse"></iron-ajax>`;
+
+class TgGlobalErrorHandler extends PolymerElement {
+
+    static get template() { 
+        return template;
+    }
+
+    static get properties () {
+        return {
+            
+
+            //The maximal length of error queue. If more errors happens then they will be handled with alternative handler
+            maxErrorQueueLength: {
+                type: Number,
+                value: 10
+            },
+
+            toaster: Object,
+
+            //Queue of errors to log on server.
+            _errorQueue: Array,
+
+            /**
+             * Additional headers for 'iron-ajax' client-side requests. These only contain 
+             * our custom 'Time-Zone' header that indicates real time-zone for the client application.
+             * The time-zone then is to be assigned to threadlocal 'IDates.timeZone' to be able
+             * to compute 'Now' moment properly.
+             */
+            _headers: {
+                type: String,
+                value: _timeZoneHeader
+            },
+        };
+    }
+
+    ready () {
+        super.ready();
+
+        //Configuring error handler related properties.
+        this._errorQueue = [];
+        this._handleError = this._handleError.bind(this);
+        this._handleUnhandledPromiseError = this._handleUnhandledPromiseError.bind(this);
+
+        //Add error handling errors
+        window.addEventListener('error', this._handleError);
+        window.addEventListener('rejectionhandled', this._handleUnhandledPromiseError);
+        window.addEventListener('unhandledrejection', this._handleUnhandledPromiseError);
+    }
+
+    errorHandler (errorMsg) {
+        this.$.errorSender.body = errorMsg;
+        this.$.errorSender.generateRequest();
+    }
+    alternativeErrorHandler (errorMsg) {
+        console.error(errorMsg);
+    }
+
+    _handleUnhandledPromiseError (e) {
+        const errorMsg = e.reason.message + "\n" + e.reason.stack;
+        this._acceptError(e.composedPath()[0], e, errorMsg);
+    }
+
+    _handleError (e) {
+        const errorDetail = e.detail ? e.detail : e;
+        const errorMsg = errorDetail.message + " Error happened in: " + errorDetail.filename + " at Ln: " + errorDetail.lineno + ", Co: " + errorDetail.colno
+                        + "\n" + ((errorDetail.error && errorDetail.error.stack) ?  errorDetail.error.stack : JSON.stringify(errorDetail.error));
+        this._acceptError(e.composedPath()[0], errorDetail, errorMsg);
+    }
+
+    _acceptError (from, e, errorMsg) {
+        if (from !== this.$.errorSender) {
+            if (e.error && e.error.restoreState) {
+                e.error.restoreState();
+            }
+            if ( !e.error || !(e.error instanceof UnreportableError)) {
+                this.toaster.openToastForError("Unexpected error happened", replaceNewline(errorMsg), true);
+            }
+            if (this._errorQueue.length >= this.maxErrorQueueLength) {
+                this.alternativeErrorHandler(errorMsg);
+            } else {
+                this._errorQueue.push(errorMsg);
+                if (!this.$.errorSender.loading) {
+                    this.errorHandler(this._errorQueue[0]);
+                }
+            }
+        }
+    }
+    
+    _processErrorResponse (e) {
+        this._processNextError();
+    }
+
+    _processNextError () {
+        this._errorQueue.shift();
+        if (this._errorQueue.length > 0) {
+            this.errorHandler(this._errorQueue[0]);
+        }
+    }
+}
+
+customElements.define('tg-global-error-handler', TgGlobalErrorHandler);
