@@ -177,7 +177,7 @@ Polymer({
                     // TODO during 'import' method invocation the server error json can arrive instead of piece of DOM -- need to handle this somehow
                     console.warn("error happened", error);
                     // loading error
-                    throw new Error(error);
+                    throw new Error(`Could not load element <tt>${elementName}</tt> due to [<i>${error}</i>].`);
                 });
             } else {
                 return new Promise((resolve, reject) => {
