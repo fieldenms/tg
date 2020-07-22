@@ -48,6 +48,10 @@ Polymer({
             value: function () {
                 return () => null;
             },
+            /**
+             * This current entity observer is still needed even thou currentEntity is a function. It simplifies choosen entity management logic.
+             * Current entity function changes every time after another secondary action is pressed.
+             */
             observer: "_currentEntityChanged"
         },
 
