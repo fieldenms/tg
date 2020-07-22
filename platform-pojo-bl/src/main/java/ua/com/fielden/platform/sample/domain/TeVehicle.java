@@ -234,7 +234,7 @@ public class TeVehicle extends AbstractEntity<String> {
 
     @IsProperty
     @Title(value = "Financial details", desc = "Fin Details")
-    private TgVehicleFinDetails finDetails;
+    private TeVehicleFinDetails finDetails;
     
     @IsProperty
     @CritOnly
@@ -268,12 +268,12 @@ public class TeVehicle extends AbstractEntity<String> {
     }
     
     @Observable
-    public TeVehicle setFinDetails(final TgVehicleFinDetails finDetails) {
+    public TeVehicle setFinDetails(final TeVehicleFinDetails finDetails) {
         this.finDetails = finDetails;
         return this;
     }
 
-    public TgVehicleFinDetails getFinDetails() {
+    public TeVehicleFinDetails getFinDetails() {
         return finDetails;
     }
 
