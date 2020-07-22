@@ -51,11 +51,7 @@ public class PathsToTreeTransformator {
     public static Map<String, List<ChildGroup>> groupChildren(final Set<EntProp2> props, final  Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo, final EntQueryGenerator gen) {
         final Map<String, List<ChildGroup>> result = new HashMap<>();
         for (final Entry<String, List<Child>> el : transform(props, domainInfo, gen).entrySet()) {
-//           System.out.println("------> " + el.getKey() + " count = " + el.getValue().size());
-            for (final Child ch : el.getValue()) {
-//                System.out.println(ch);
-            }
-            
+//            assert (!el.getValue().isEmpty());
             result.put(el.getKey(), convertToGroup(new TreeSet<Child>(el.getValue()), emptyList()));
         }
         return result;
@@ -79,7 +75,7 @@ public class PathsToTreeTransformator {
         for (final EntProp2 prop : props) {
             final T2<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>> existing = result.get(prop.source.contextId());
             if (existing != null) {
-                existing._2.put(prop.name, prop.getPath());
+                existing._2.put(prop.name, prop.getPath()); // NOTE: for rare cases where two EntProp2 are identical except isId value replacement can occur, but with identical value of path 
             } else {
                 final Map<String, List<AbstractPropInfo<?>>> added = new HashMap<>();
                 added.put(prop.name, prop.getPath());
@@ -128,7 +124,7 @@ public class PathsToTreeTransformator {
         
         
         Expression2 expr2 = null;
-        final Set<Child> dependencies = new HashSet<>();
+        final List<Child> dependencies = new ArrayList<>();
         if (propInfo.hasExpression()) {
             final IQrySource2<?>  cs = contextSource != null ?  contextSource : lastPersistentSource;
             expr2 = expressionToS2(cs, propInfo, domainInfo, context.stream().collect(joining("_")), gen);
@@ -246,12 +242,14 @@ public class PathsToTreeTransformator {
             newParentPrefix.add(item);
 
             if (unions.contains(item)) {
-                result.addAll(convertToGroup(mergedItems, newParentPrefix));
+                if (!mergedItems.isEmpty()) {
+                    result.addAll(convertToGroup(mergedItems, newParentPrefix));    
+                }
                 final String itemName = parentPrefix.isEmpty() ? item : newParentPrefix.stream().collect(Collectors.joining("."));
                 result.add(new ChildGroup(itemName, emptyList(), groupPaths, first.required, mapSources.get(item).isEmpty() ? first.source : mapSources.get(item).entrySet().iterator().next().getValue(), first.expr));
 
             } else {
-                final List<ChildGroup> groupItems = convertToGroup(mergedItems, emptyList());
+                final List<ChildGroup> groupItems = mergedItems.isEmpty() ? emptyList() : convertToGroup(mergedItems, emptyList());
                 final String itemName = parentPrefix.isEmpty() ? item : newParentPrefix.stream().collect(Collectors.joining("."));
                 result.add(new ChildGroup(itemName, groupItems, groupPaths, first.required, mapSources.get(item).isEmpty() ? first.source : mapSources.get(item).entrySet().iterator().next().getValue(), first.expr));
             }

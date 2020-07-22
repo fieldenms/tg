@@ -831,6 +831,48 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
         final EntityResultQueryModel<TgOrgUnit5> qry = select(TgOrgUnit5.class).where().anyOfProps("maxVehPrice", "maxVehPurchasePrice").gt().val(0).model();
         co.getAllEntities(from(qry).with("EQL3", null).with(fetchKeyAndDescOnly(TgOrgUnit5.class)).model());
     }     
+    
+    @Test
+    public void eql3_query_executes_correctly96() {
+        final ITeVehicleModel co = getInstance(ITeVehicleModel.class);
+        final EntityResultQueryModel<TeVehicleModel> qry = select(TeVehicleModel.class).where().anyOfProps("make", "make.id", "make.key").isNotNull().model();
+        co.getAllEntities(from(qry).with("EQL3", null).with(fetchKeyAndDescOnly(TeVehicleModel.class)).model());
+    }     
+
+    @Test
+    public void eql3_query_executes_correctly97() {
+        final ITeVehicleModel co = getInstance(ITeVehicleModel.class);
+        final EntityResultQueryModel<TeVehicleModel> qry = select(TeVehicleModel.class).where().anyOfProps("make.id", "make", "make.key").isNotNull().model();
+        co.getAllEntities(from(qry).with("EQL3", null).with(fetchKeyAndDescOnly(TeVehicleModel.class)).model());
+    }     
+
+    @Test
+    public void eql3_query_executes_correctly98() {
+        final ITeVehicleModel co = getInstance(ITeVehicleModel.class);
+        final EntityResultQueryModel<TeVehicleModel> qry = select(TeVehicleModel.class).where().anyOfProps("make", "make.id", "make.key").isNotNull().model();
+        co.getAllEntities(from(qry).with("EQL3", null).with(fetchKeyAndDescOnly(TeVehicleModel.class)).model());
+    }     
+
+    @Test
+    public void eql3_query_executes_correctly99() {
+        final AggregatedResultQueryModel qry = select(TeVehicleModel.class).yield().prop("make.id").as("makeid").yield().prop("make").as("make").modelAsAggregate();
+        final List<EntityAggregates> res = run(qry);
+        System.out.println(res.get(0).get("makeid").toString());
+        System.out.println(res.get(0).get("make").toString());
+    }
+    
+    @Test
+    public void eql3_query_executes_correctly100() {
+        final AggregatedResultQueryModel qry = select(TeVehicle.class).yield().prop("modelMake2").as("make").yield().prop("modelMake2.id").as("makeid").modelAsAggregate();
+        final List<EntityAggregates> res = run(qry);
+        System.out.println(res.get(0).get("makeid").toString());
+        System.out.println(res.get(0).get("make").toString());
+    }
+
+    @Test
+    public void eql3_query_executes_correctly101() {
+        run(select(TeVehicleModel.class).where().prop("make").isNotNull().yield().prop("make.id").as("make").modelAsAggregate());
+    }
 
     @Override
     protected void populateDomain() {
@@ -906,6 +948,9 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
 
         final TgVehicle car1 = save(new_(TgVehicle.class, "CAR1", "CAR1 DESC").setInitDate(date("2001-01-01 00:00:00")).setModel(m318).setPrice(new Money("20")).setPurchasePrice(new Money("10")).setActive(true).setLeased(false));
         final TgVehicle car2 = save(new_(TgVehicle.class, "CAR2", "CAR2 DESC").setInitDate(date("2007-01-01 00:00:00")).setModel(m316).setPrice(new Money("200")).setPurchasePrice(new Money("100")).setActive(false).setLeased(true).setLastMeterReading(new BigDecimal("105")).setStation(orgUnit5).setReplacedBy(car1));
+
+        final TeVehicle car1_ = save(new_(TeVehicle.class, "CAR11", "CAR11 DESC").setInitDate(date("2001-01-01 00:00:00")).setModel(m318_).setPrice(new Money("20")).setPurchasePrice(new Money("10")).setActive(true).setLeased(false));
+        final TeVehicle car2_ = save(new_(TeVehicle.class, "CAR22", "CAR22 DESC").setInitDate(date("2007-01-01 00:00:00")).setModel(m316_).setPrice(new Money("200")).setPurchasePrice(new Money("100")).setActive(false).setLeased(true).setLastMeterReading(new BigDecimal("105")).setStation(orgUnit5).setReplacedBy(car1_));
 
         save(new_(TgVehicleFinDetails.class, car1).setCapitalWorksNo("CAP_NO1"));
 

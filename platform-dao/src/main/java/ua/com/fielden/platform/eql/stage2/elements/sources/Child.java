@@ -1,11 +1,9 @@
 package ua.com.fielden.platform.eql.stage2.elements.sources;
 
 import static java.util.Collections.unmodifiableList;
-import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.stage2.elements.operands.Expression2;
@@ -20,11 +18,11 @@ public class Child implements Comparable<Child> {
     public final IQrySource2<?> parentSource;
 
     public final Expression2 expr;
-    public final Set<Child> dependencies;
+    public final List<Child> dependencies;
 
     final int id;
     
-    public Child(final AbstractPropInfo<?> main, final List<Child> items, final String fullPath, final boolean required, final QrySource2BasedOnPersistentType source, final Expression2 expr, final IQrySource2<?> parentSource, final Set<Child> dependencies, final int id) {
+    public Child(final AbstractPropInfo<?> main, final List<Child> items, final String fullPath, final boolean required, final QrySource2BasedOnPersistentType source, final Expression2 expr, final IQrySource2<?> parentSource, final List<Child> dependencies, final int id) {
         this.main = main;
         this.items = items;
         this.fullPath = fullPath;
@@ -36,10 +34,10 @@ public class Child implements Comparable<Child> {
         this.id = id;
  //       assert(items.isEmpty() || !items.isEmpty() && source !=null );
  //       assert(dependencies.isEmpty() || !dependencies.isEmpty() && expr != null);
-        assert(parentSource != null);
-        if (source == null && fullPath == null && !isUnionEntityType(main.javaType())) {
-          //  throw new EqlException("Incorrect state.");
-        }
+//        assert(parentSource != null);
+//        if (source == null && fullPath == null && !isUnionEntityType(main.javaType())) {
+//          //  throw new EqlException("Incorrect state.");
+//        }
     }
     
     public List<Child> getItems() {
@@ -55,7 +53,7 @@ public class Child implements Comparable<Child> {
         result = prime * result + ((fullPath == null) ? 0 : fullPath.hashCode());
         result = prime * result + ((source == null) ? 0 : source.hashCode());
         result = prime * result + parentSource.contextId().hashCode();
-        result = prime * result + dependencies.hashCode();
+        //result = prime * result + dependencies.hashCode();
         return result;
     }
     
@@ -99,7 +97,7 @@ public class Child implements Comparable<Child> {
 
         final Child other = (Child) obj;
         
-        return Objects.equals(main, other.main) && Objects.equals(items, other.items) && Objects.equals(fullPath, other.fullPath) && Objects.equals(source, other.source) && Objects.equals(parentSource.contextId(), other.parentSource.contextId()) && Objects.equals(dependencies, other.dependencies);
+        return Objects.equals(main, other.main) && Objects.equals(items, other.items) && Objects.equals(fullPath, other.fullPath) && Objects.equals(source, other.source) && Objects.equals(parentSource.contextId(), other.parentSource.contextId());// && Objects.equals(dependencies, other.dependencies);
     }
     
     private boolean dependsOn(final Child child) {

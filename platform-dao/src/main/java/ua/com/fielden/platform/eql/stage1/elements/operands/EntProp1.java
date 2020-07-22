@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.stage1.elements.operands;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -39,7 +40,9 @@ public class EntProp1 implements ISingleOperand1<EntProp2> {
             final List<IQrySource2<? extends IQrySource3>> item = it.next();
             final PropResolution resolution = resolveProp(item, this);
             if (resolution != null) {
-                return new EntProp2(resolution.getSource(), enhancePath(resolution.getPath()));
+                final List<AbstractPropInfo<?>> path = resolution.getPath();
+                final boolean isId = (name.equals(ID) || name.endsWith("." + ID)) && isEntityType(path.get(path.size() - 1).javaType());
+                return new EntProp2(resolution.getSource(), enhancePath(path), isId);
             }
         }
 
@@ -48,13 +51,14 @@ public class EntProp1 implements ISingleOperand1<EntProp2> {
     }
     
     public static final List<AbstractPropInfo<?>> enhancePath(final List<AbstractPropInfo<?>> originalPath) {
-        final List<AbstractPropInfo<?>> enhancedPath = new ArrayList<>(originalPath);
         final AbstractPropInfo<?> lastResolutionItem = originalPath.get(originalPath.size() - 1);
         if (lastResolutionItem instanceof ComponentTypePropInfo && ((ComponentTypePropInfo) lastResolutionItem).getProps().size() == 1) {
+            final List<AbstractPropInfo<?>> enhancedPath = new ArrayList<>(originalPath);
             final AbstractPropInfo<?> autoResolvedItem = (AbstractPropInfo<?>) ((ComponentTypePropInfo) lastResolutionItem).getProps().values().iterator().next();
             enhancedPath.add(autoResolvedItem);
+            return enhancedPath;
         }
-        return enhancedPath;
+        return originalPath;
     }
     
     public static PropResolution resolvePropAgainstSource(final IQrySource2<? extends IQrySource3> source, final EntProp1 entProp) {
@@ -75,8 +79,8 @@ public class EntProp1 implements ISingleOperand1<EntProp2> {
     
     private PropResolution resolveProp(final List<IQrySource2<? extends IQrySource3>> sources, final EntProp1 entProp) {
         final List<PropResolution> result = new ArrayList<>();
-        for (final IQrySource2<? extends IQrySource3> pair : sources) {
-            final PropResolution resolution = resolvePropAgainstSource(pair, entProp);
+        for (final IQrySource2<? extends IQrySource3> source : sources) {
+            final PropResolution resolution = resolvePropAgainstSource(source, entProp);
             if (resolution != null) {
                 result.add(resolution);
             }

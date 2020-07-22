@@ -40,7 +40,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final String model1 = "1";
         
         final QrySource3BasedOnTable model = source(MODEL, model1);
-        final Conditions3 conditions = or(isNotNull(expr(prop("make", model, Long.class, H_LONG))));
+        final Conditions3 conditions = or(isNotNull(expr(prop("make", model, LONG, H_LONG))));
         final ResultQuery3 expQry = qryCountAll(sources(model), conditions);
         
         assertEquals(expQry, actQry);
