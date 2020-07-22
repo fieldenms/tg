@@ -88,7 +88,8 @@ public class HibernateConfigurationFactory {
                 defaultHibernateTypes,//
                 Guice.createInjector(new HibernateUserTypesModule()), //
                 applicationEntityTypes, //
-                determineDbVersion(props));
+                determineDbVersion(props),
+                determineEql2(props));
         
         idOnlyProxiedEntityTypeCache = new IdOnlyProxiedEntityTypeCache(domainMetadata);
 
@@ -105,6 +106,11 @@ public class HibernateConfigurationFactory {
 
     public static DbVersion determineDbVersion(final Properties props) {
         return determineDbVersion(props.getProperty(DIALECT));
+    }
+    
+    private static boolean determineEql2(final Properties props) {
+        final String prop = props.getProperty("eql2");
+        return (prop != null && prop.toLowerCase().equals("true"));
     }
 
     public static DbVersion determineDbVersion(final String dialect) {
@@ -125,7 +131,7 @@ public class HibernateConfigurationFactory {
     }
 
     public Configuration build() {
-        setSafely(cfg, "hibernate.current_session_context_class", "thread");
+        setSafely(cfg, "hibernate.current_session_context_class", "thread");        
 
         setSafely(cfg, SHOW_SQL, "false");
         setSafely(cfg, FORMAT_SQL, "true");

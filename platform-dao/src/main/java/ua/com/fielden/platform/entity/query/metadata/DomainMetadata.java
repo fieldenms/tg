@@ -108,6 +108,7 @@ public class DomainMetadata {
     //    private final static PropertyMetadata idProperty(final Class<? extends AbstractEntity<?>> entityType) { return new PropertyMetadata.Builder(AbstractEntity.ID, entityType, /*Long.class,*/ false).column(id).hibType(TypeFactory.basic("long")).type(ID).build();}
 
     public final DbVersion dbVersion;
+    public final boolean eql2;
     /**
      * Map between java type and hibernate persistence type (implementers of Type, IUserTypeInstantiate, ICompositeUserTypeInstantiate).
      */
@@ -126,7 +127,17 @@ public class DomainMetadata {
             final Injector hibTypesInjector, //
             final List<Class<? extends AbstractEntity<?>>> entityTypes, //
             final DbVersion dbVersion) {
+        this(hibTypesDefaults, hibTypesInjector, entityTypes, dbVersion, false);
+    }
+    
+    public DomainMetadata(//
+            final Map<Class, Class> hibTypesDefaults, //
+            final Injector hibTypesInjector, //
+            final List<Class<? extends AbstractEntity<?>>> entityTypes, //
+            final DbVersion dbVersion,
+            final boolean eql2) {
         this.dbVersion = dbVersion;
+        this.eql2 = eql2;
 
         this.hibTypesDefaults = new ConcurrentHashMap<>(entityTypes.size());
         this.persistedEntityMetadataMap = new ConcurrentHashMap<>(entityTypes.size());

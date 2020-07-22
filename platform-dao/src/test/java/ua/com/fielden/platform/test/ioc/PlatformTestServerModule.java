@@ -116,6 +116,7 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bind(ITgVehicle.class).to(TgVehicleDao.class);
         bind(ITeVehicle.class).to(TeVehicleDao.class);
         bind(ITgVehicleFinDetails.class).to(TgVehicleFinDetailsDao.class);
+        bind(ITeVehicleFinDetails.class).to(TeVehicleFinDetailsDao.class);
         bind(ITgPersonName.class).to(TgPersonNameDao.class);
         bind(ITgAuthor.class).to(TgAuthorDao.class);
         bind(ITgFuelUsage.class).to(TgFuelUsageDao.class);
