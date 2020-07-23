@@ -472,7 +472,12 @@ Polymer({
                         self.showDialog(self);
                     }, function (error) {
                         self.restoreActionState();
-                        console.log("The action was rejected with error: " + error);
+                        if (error instanceof Error) {
+                            console.error("The action was rejected with error: " + error);
+                            throw error;
+                        } else {
+                            console.log("The action was rejected with error: " + error);
+                        }
                     });
                 } else {
                     this.showDialog(this);
