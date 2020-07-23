@@ -288,9 +288,18 @@ Polymer({
         if (newValue && oldValue === undefined) {
             self.async(function () {
                 self.postAction = function (smth) {
-                    var result = newValue(smth);
-                    self._afterExecution();
-                    return result;
+                    try {
+                        const result = newValue(smth);
+                        self._afterExecution();
+                        return result;
+                    } catch (e) {
+                        const preRestoreState = e.restoreState;
+                        e.restoreState = function () {
+                            preRestoreState && preRestoreState();
+                            self._afterExecution();
+                        };
+                        throw e;
+                    }
                 };
             });
         }
@@ -302,9 +311,18 @@ Polymer({
         if (newValue && oldValue === undefined) {
             self.async(function () {
                 self.postActionError = function (smth) {
-                    var result = newValue(smth);
-                    self._afterExecution();
-                    return result;
+                    try {
+                        var result = newValue(smth);
+                        self._afterExecution();
+                        return result;
+                    } catch (e) {
+                        const preRestoreState = e.restoreState;
+                        e.restoreState = function () {
+                            preRestoreState && preRestoreState();
+                            self._afterExecution();
+                        };
+                        throw e;
+                    }
                 };
             });
         }
