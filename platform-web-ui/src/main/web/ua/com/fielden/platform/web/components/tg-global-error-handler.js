@@ -83,7 +83,7 @@ class TgGlobalErrorHandler extends PolymerElement {
 
     _handleUnhandledPromiseError (e) {
         const errorMsg = e.reason.message + "\n" + e.reason.stack;
-        this._acceptError(e.composedPath()[0], e, errorMsg);
+        this._acceptError(e.composedPath()[0], e.reason, errorMsg);
     }
 
     _handleError (e) {
@@ -95,28 +95,25 @@ class TgGlobalErrorHandler extends PolymerElement {
 
     _acceptError (from, e, errorMsg) {
         if (from !== this.$.errorSender) {
-            if (e.error && e.error.restoreState) {
+            const error = e.error || e;
+            if (error.restoreState) {
                 e.error.restoreState();
             }
-            if ( !e.error || !(e.error instanceof UnreportableError)) {
+            if ( !(error instanceof UnreportableError)) {
                 this.toaster.openToastForError("Unexpected error happened", replaceNewline(errorMsg), true);
             }
             if (this._errorQueue.length >= this.maxErrorQueueLength) {
                 this.alternativeErrorHandler(errorMsg);
             } else {
                 this._errorQueue.push(errorMsg);
-                if (!this.$.errorSender.loading) {
-                    this.errorHandler(this._errorQueue[0]);
-                }
+            }
+            if (!this.$.errorSender.loading) {
+                this.errorHandler(this._errorQueue[0]);
             }
         }
     }
     
     _processErrorResponse (e) {
-        this._processNextError();
-    }
-
-    _processNextError () {
         this._errorQueue.shift();
         if (this._errorQueue.length > 0) {
             this.errorHandler(this._errorQueue[0]);

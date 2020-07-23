@@ -180,7 +180,7 @@ Polymer({
                 <template>
                     <paper-dialog id="msgDialog" class="toast-dialog" on-iron-overlay-closed="_dialogClosed" with-backdrop entry-animation="scale-up-animation" exit-animation="fade-out-animation">
                         <paper-dialog-scrollable>
-                            <p id="msgPar" style="padding: 10px;white-space: pre;"></p>
+                            <p id="msgPar" style="padding: 10px;white-space: break-spaces;"></p>
                         </paper-dialog-scrollable>
                         <div class="buttons">
                             <paper-button dialog-confirm affirmative autofocus>

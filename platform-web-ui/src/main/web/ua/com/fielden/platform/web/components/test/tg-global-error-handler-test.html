@@ -47,16 +47,16 @@
                 }
             }
             
-            test('main error handler is called three times', function (done) {
+            test('main error handler is called five times', function (done) {
                 let errors = 0;
                 errorHandler.errorHandler = (msg) => { errors++ };
                 errorHandler.alternativeErrorHandler = (msg) => {};
                 dispatchError(5);
-                assert.equal(3, errors, 'The error handler should be called only three times.');
+                assert.equal(5, errors, 'The error handler should be called only five times.');
                 done();
             });
 
-            test('main alternative handler is called two times', function (done) {
+            test('alternative error handler is called two times', function (done) {
                 let errors = 0;
                 errorHandler.errorHandler = (msg) => {};
                 errorHandler.alternativeErrorHandler = (msg) => { errors++ };

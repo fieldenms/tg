@@ -27,6 +27,7 @@ import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';
 import {TgBackButtonBehavior} from '/resources/views/tg-back-button-behavior.js'
 import { tearDownEvent, isInHierarchy, allDefined, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp, isIPhoneOs } from '/resources/reflection/tg-polymer-utils.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
+import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
 
 const template = html`
     <style>
@@ -1001,12 +1002,13 @@ Polymer({
                         console.error(error);
                         self.$.toaster.text = 'There was an error displaying the dialog.';
                         self.$.toaster.hasMore = true;
-                        self.$.toaster.msgText = 'There was an error displaying the dialog.<br><br> \
-                                                  <b>Error cause:</b><br>' + error.message;
+                        self.$.toaster.msgText = `There was an error displaying the dialog.<br><br>` +
+                                                  `<b>Error cause:</b><br>${error.message}`;
                         self.$.toaster.showProgress = false;
                         self.$.toaster.isCritical = true;
                         self.$.toaster.show();
                         self._finishErroneousOpening();
+                        throw new UnreportableError(error);
                     });
             }
         }
