@@ -560,6 +560,17 @@ Polymer({
             // One exception from that rule: embedded masters in master-with-master -- the flag is configured from MasterWithMasterBuilder API.
             master.shouldRefreshParentCentreAfterSave = self.shouldRefreshParentCentreAfterSave;
 
+            master._restoreStateAfterSave = function () {
+                if (!self.skipAutomaticActionCompletion) {
+                    // action execution completes
+                    self.isActionInProgress = false;
+
+                    if (this.noUI === true) {
+                        self.restoreActionState();
+                    }
+                }
+            };
+
             master.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {
                 postal.publish({
                     channel: "centre_" + this.centreUuid,
@@ -583,21 +594,14 @@ Polymer({
                         }
                     }
                 } catch (e) {
-                    e.restoreState = function() {
-                        self.isActionInProgress = false;
-                        self.restoreActionState();
+                    e.restoreState = function () {
+                        master._restoreStateAfterSave();
                     };
                     throw e;
                 }
 
-                if (!self.skipAutomaticActionCompletion) {
-                    // action execution completes
-                    self.isActionInProgress = false;
-
-                    if (this.noUI === true) {
-                        self.restoreActionState();
-                    }
-                }
+                master._restoreStateAfterSave();
+                
             };
 
             master.postSavedError = function (errorResult) {
