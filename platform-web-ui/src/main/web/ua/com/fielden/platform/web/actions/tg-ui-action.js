@@ -596,6 +596,7 @@ Polymer({
                 } catch (e) {
                     e.restoreState = function () {
                         master._restoreStateAfterSave();
+                        master.restoreAfterSave();
                     };
                     throw e;
                 }
