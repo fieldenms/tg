@@ -659,6 +659,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
         private final EnhancementPropertiesMap<Integer> propertiesGrowFactors;
         private final EnhancementRootsMap<List<Pair<String, Ordering>>> rootsListsOfOrderings;
         private int pageCapacity;
+        private int maxPageCapacity;
         private int visibleRowsCount;
         private int numberOfHeaderLines;
 
@@ -788,6 +789,17 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
         }
 
         @Override
+        public int getMaxPageCapacity() {
+            return maxPageCapacity;
+        }
+
+        @Override
+        public IAddToResultTickManager setMaxPageCapacity(final int maxPageCapacity) {
+            this.maxPageCapacity = maxPageCapacity;
+            return this;
+        }
+
+        @Override
         public int getVisibleRowsCount() {
             return visibleRowsCount;
         }
@@ -811,7 +823,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
 
         @Override
         public int hashCode() {
-            return 31 * super.hashCode() + Objects.hash(propertiesGrowFactors, propertiesWidths, rootsListsOfOrderings, pageCapacity, visibleRowsCount, numberOfHeaderLines);
+            return 31 * super.hashCode() + Objects.hash(propertiesGrowFactors, propertiesWidths, rootsListsOfOrderings, pageCapacity, maxPageCapacity, visibleRowsCount, numberOfHeaderLines);
         }
 
         @Override
@@ -823,6 +835,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
                             Objects.equals(propertiesWidths, other.propertiesWidths) &&
                             Objects.equals(rootsListsOfOrderings, other.rootsListsOfOrderings) &&
                             pageCapacity == other.pageCapacity &&
+                            maxPageCapacity == other.maxPageCapacity &&
                             numberOfHeaderLines == other.numberOfHeaderLines &&
                             visibleRowsCount == other.visibleRowsCount;
                 }

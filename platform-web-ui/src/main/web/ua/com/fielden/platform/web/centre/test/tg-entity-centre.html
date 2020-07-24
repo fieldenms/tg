@@ -111,6 +111,31 @@
                 
                 centre.retrieve();
             });
+            
+            test('setEditorValue4Property method works', function (done) {
+                centre.$.selection_criteria.postValidated = function () {
+                    centre.discard().then(function () {
+                        done();
+                    });
+                };
+                centre.$.selection_criteria.retrieve().then(function () {
+                    const funcEntity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties');
+                    funcEntity.stringProp = ['TEST'];
+                    centre.$.selection_criteria.setEditorValue4Property('tgFetchProviderTestEntity_property', funcEntity, 'stringProp');
+                });
+            });
+            
+            test('setEditorValue4PropertyFromConcreteValue method works', function (done) {
+                centre.$.selection_criteria.postValidated = function () {
+                    centre.discard().then(function () {
+                        done();
+                    });
+                };
+                centre.$.selection_criteria.retrieve().then(function () {
+                    centre.$.selection_criteria.setEditorValue4PropertyFromConcreteValue('tgFetchProviderTestEntity_property', ['TEST']);
+                });
+            });
+            
         });
     </script>
 

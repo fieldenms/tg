@@ -1,8 +1,10 @@
 package ua.com.fielden.platform.companion.helper;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
 import java.lang.reflect.Field;
 import java.util.Collection;
@@ -124,20 +126,26 @@ public class KeyConditionBuilder {
                 realKeyValues = keyValues;
             }
 
-            if (keyMembers.size() != realKeyValues.length) {
+            // there could be a case where only one string value is provided, which in fact represents a composite key
+            // that is why comparing the number of key members with the number of values provided to identify an error is not sufficient
+            // we should admit a single string representation
+            if (realKeyValues.length == 1 && realKeyValues[0] instanceof String) {
+                return entryPoint.condition(buildConditionForKeyMember(dbVersion, KEY, String.class, realKeyValues[0]));
+            } else if (keyMembers.size() != realKeyValues.length) {
                 throw new EntityCompanionException(format("The number of provided values (%s) does not match the number of properties in the entity composite key (%s).", realKeyValues.length, keyMembers.size()));
             }
 
             ICompoundCondition0<T> cc = entryPoint.condition(buildConditionForKeyMember(dbVersion, keyMembers.get(0).getName(), keyMembers.get(0).getType(), realKeyValues[0]));
-
             for (int index = 1; index < keyMembers.size(); index++) {
                 cc = cc.and().condition(buildConditionForKeyMember(dbVersion, keyMembers.get(index).getName(), keyMembers.get(index).getType(), realKeyValues[index]));
             }
             return cc;
         } else if (keyValues.length != 1) {
             throw new EntityCompanionException(format("Only one key value is expected instead of %s when looking for an entity by a non-composite key.", keyValues.length));
+        } else if (isEntityType(keyType) && keyValues[0] instanceof String) {
+            return entryPoint.condition(buildConditionForKeyMember(dbVersion, KEY + "." + KEY, keyType, keyValues[0]));
         } else {
-            return entryPoint.condition(buildConditionForKeyMember(dbVersion, AbstractEntity.KEY, keyType, keyValues[0]));
+            return entryPoint.condition(buildConditionForKeyMember(dbVersion, KEY , keyType, keyValues[0]));
         }
     }
 

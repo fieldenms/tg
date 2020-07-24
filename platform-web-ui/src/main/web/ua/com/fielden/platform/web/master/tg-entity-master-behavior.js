@@ -2,6 +2,7 @@ import '/resources/egi/tg-custom-action-dialog.js';
 import '/resources/components/postal-lib.js';
 
 import { tearDownEvent, isInHierarchy, deepestActiveElement, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
+import {createDialog} from '/resources/egi/tg-dialog-util.js';
 import { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';
 import { createEntityActionThenCallback } from '/resources/master/actions/tg-entity-master-closing-utils.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
@@ -190,8 +191,8 @@ const TgEntityMasterBehaviorImpl = {
 
         /**
          * A dialog instance that is used for displaying entity (functional and not) masters as part of master actions logic.
-         * This dialog is of type tg-custom-action-dialog and gets created dynamically on attached event.
-         * Right away it is appended to document.body.
+         * This dialog is of type tg-custom-action-dialog and gets created on demand when needed i.e. on first _showDialog invocation.
+         * It is appended to document.body just before dialog opening and is removed just after dialog closing.
          */
         _actionDialog: {
             type: Object,
@@ -281,12 +282,14 @@ const TgEntityMasterBehaviorImpl = {
         },
 
         /**
-         * Postal subscription to 'detail.saved' events that redirects such events further to parent channels (centreUuid).
-         * It gets populated in attached callback only once, even though the same master instance gets used several time.
+         * Postal subscription.
+         * It can be populated anywhere but bare in mind that all postal subscriptions will be disposed in detached callback.
          */
-        _centreRefreshRedirector: {
-            type: Object,
-            value: null
+        _subscriptions: {
+            type: Array,
+            value: function () {
+                return [];
+            }
         },
 
         /**
@@ -630,6 +633,9 @@ const TgEntityMasterBehaviorImpl = {
             const closeEventChannel = self.uuid;
             const closeEventTopics = ['save.post.success', 'refresh.post.success'];
             this.async(function () {
+                if (this._actionDialog === null) {
+                    this._actionDialog = createDialog(self.uuid);
+                }
                 this._actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
             }.bind(self), 1);
         }).bind(self);
@@ -652,22 +658,9 @@ const TgEntityMasterBehaviorImpl = {
         }.bind(self));
     }, // end of ready callback
 
-    attached: function () {
-        const self = this;
-
-        // we'd like to limit the number of dialogs created per entity master type
-        // this way the same instance is reused by different master instances of the same type
-        // that is why dialogs ID is defined as the master entity type
-        // the dialog is never removed from document.body
-        if (self._actionDialog == null) {
-            const dialog = document.body.querySelector('tg-custom-action-dialog[id="' + self.uuid + '"]');
-            if (dialog) {
-                self._actionDialog = dialog;
-            } else {
-                self._actionDialog = document.createElement('tg-custom-action-dialog');
-                self._actionDialog.setAttribute("id", self.uuid);
-                document.body.appendChild(self._actionDialog);
-            }
+    detached: function () {
+        while (this._subscriptions.length !== 0) {
+            this._subscriptions.pop().unsubscribe();
         }
     },
 
@@ -1021,7 +1014,7 @@ const TgEntityMasterBehaviorImpl = {
     },
 
     /**
-     * Registers _centreRefreshRedirector if not registered yet.
+     * Registers centre refresh redirector.
      *
      * In case where 'centre refresh' postal event occurs in entity master there is a need to generate similar event and pass it further to parent component in hierarchy.
      * In this case the 'chain reaction' of such events will occur which will trigger 'centre refresh' in all centres in hierarchy of components up to top standalone centre.
@@ -1037,27 +1030,25 @@ const TgEntityMasterBehaviorImpl = {
      */
     registerCentreRefreshRedirector: function () {
         const self = this;
-        if (self._centreRefreshRedirector === null) {
-            self._centreRefreshRedirector = postal.subscribe({
-                channel: 'centre_' + self.uuid,
-                topic: 'detail.saved',
-                callback: function (data, envelope) {
-                    if (data.shouldRefreshParentCentreAfterSave === true) { // only redirect in case where refreshing is actually needed, this significantly reduces unnecessary events flow; however we should be carefull when changing 'shouldRefreshParentCentreAfterSave' API (refer '_postFunctionalEntitySaved' method in tg-entity-centre-behavior)
-                        const newData = {
-                            savingException: data.savingException, // leave data.savingException and data.entity the same, this allows flexibility of changing 'refreshEntities' method in tg-entity-centre-behavior according to such information
-                            entity: data.entity,
-                            shouldRefreshParentCentreAfterSave: true,
-                            selectedEntitiesInContext: [] // provide empty selectedEntitiesInContext, this ensures that parent centre will always be refreshed as per 'refreshEntities' method in tg-entity-centre-behavior
-                        };
-                        postal.publish({
-                            channel: 'centre_' + self.centreUuid,
-                            topic: 'detail.saved',
-                            data: newData
-                        });
-                    }
+        self._subscriptions.push(postal.subscribe({
+            channel: 'centre_' + self.uuid,
+            topic: 'detail.saved',
+            callback: function (data, envelope) {
+                if (data.shouldRefreshParentCentreAfterSave === true) { // only redirect in case where refreshing is actually needed, this significantly reduces unnecessary events flow; however we should be carefull when changing 'shouldRefreshParentCentreAfterSave' API (refer '_postFunctionalEntitySaved' method in tg-entity-centre-behavior)
+                    const newData = {
+                        savingException: data.savingException, // leave data.savingException and data.entity the same, this allows flexibility of changing 'refreshEntities' method in tg-entity-centre-behavior according to such information
+                        entity: data.entity,
+                        shouldRefreshParentCentreAfterSave: true,
+                        selectedEntitiesInContext: [] // provide empty selectedEntitiesInContext, this ensures that parent centre will always be refreshed as per 'refreshEntities' method in tg-entity-centre-behavior
+                    };
+                    postal.publish({
+                        channel: 'centre_' + self.centreUuid,
+                        topic: 'detail.saved',
+                        data: newData
+                    });
                 }
-            });
-        }
+            }
+        }));
     }
 };
 

@@ -5,6 +5,7 @@ import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restorat
 import '/resources/actions/tg-ui-action.js';
 import '/resources/components/postal-lib.js';
 import { tearDownEvent, isInHierarchy, deepestActiveElement, FOCUSABLE_ELEMENTS_SELECTOR } from '/resources/reflection/tg-polymer-utils.js';
+import {createDialog} from '/resources/egi/tg-dialog-util.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import { TgElementSelectorBehavior, queryElements } from '/resources/components/tg-element-selector-behavior.js';
 
@@ -98,13 +99,6 @@ const createColumnAction = function (entityCentre) {
     actionModel.requireSelectedEntities = 'NONE';
     actionModel.requireMasterEntity = 'false';
     return actionModel;
-};
-
-const createDialog = function (id) {
-    const dialog = document.createElement('tg-custom-action-dialog');
-    dialog.setAttribute("id", id);
-    document.body.appendChild(dialog);
-    return dialog;
 };
 
 const MSG_SAVE_OR_CANCEL = "Please save or cancel changes.";
@@ -232,8 +226,8 @@ const TgEntityCentreBehaviorImpl = {
 
         /**
          * A dialog instance that is used for displaying entity (functional and not) masters as part of centre actions logic.
-         * This dialog is of type tg-custom-action-dialog and gets created dynamically on attached event.
-         * Right away it is appended to document.body.
+         * This dialog is of type tg-custom-action-dialog and gets created on demand when needed i.e. on first _showDialog invocation.
+         * It is appended to document.body just before dialog opening and is removed just after dialog closing.
          */
         actionDialog: {
             type: Object,
@@ -333,6 +327,17 @@ const TgEntityCentreBehaviorImpl = {
         _url: {
             type: String,
             computed: '_computeUrl(miType, saveAsName)'
+        },
+
+        /**
+         * Postal subscription.
+         * It can be populated anywhere but bare in mind that all postal subscriptions will be disposed in detached callback.
+         */
+        _subscriptions: {
+            type: Array,
+            value: function () {
+                return [];
+            }
         },
 
         /**
@@ -709,6 +714,9 @@ const TgEntityCentreBehaviorImpl = {
             const closeEventTopics = ['save.post.success', 'refresh.post.success'];
             if (!self.$.egi.isEditing()) {
                 this.async(function () {
+                    if (this.actionDialog === null) {
+                        this.actionDialog = createDialog(self.uuid + '');
+                    }
                     this.actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
                 }.bind(self), 1);
             } else {
@@ -723,6 +731,9 @@ const TgEntityCentreBehaviorImpl = {
             const closeEventChannel = self.uuid;
             const closeEventTopics = ['save.post.success', 'refresh.post.success'];
             this.async(function () {
+                if (this.centreConfigDialog === null) {
+                    this.centreConfigDialog = createDialog(self.uuid + '_centreConfig');
+                }
                 this.centreConfigDialog.showDialog(action, closeEventChannel, closeEventTopics);
             }.bind(self), 1);
         }).bind(self);
@@ -805,38 +816,30 @@ const TgEntityCentreBehaviorImpl = {
     attached: function () {
         const self = this;
 
-        if (this.actionDialog === null) {
-            this.actionDialog = createDialog(self.uuid + '');
-        }
-
-        if (this.centreConfigDialog === null) {
-            this.centreConfigDialog = createDialog(self.uuid + '_centreConfig');
-        }
-
         /* Provide predicate for egi that determines whether inline master can be opened or not.
          * It can not be opened if another master in dialog is opened. */
         this.$.egi.canOpenMaster = function () {
-            return !this.actionDialog.opened;
+            return this.actionDialog === null || !this.actionDialog.opened;
         }.bind(this);
 
         ///////////////////////// Detail postSaved listener //////////////////////////////////////
-        this.masterSavedListener = postal.subscribe({
+        this._subscriptions.push(postal.subscribe({
             channel: "centre_" + self.$.selection_criteria.uuid,
             topic: "detail.saved",
             callback: function (data, envelope) {
                 self._postFunctionalEntitySaved(data.savingException, data.entity, data.shouldRefreshParentCentreAfterSave, data.selectedEntitiesInContext);
             }
-        });
+        }));
 
         /////////////////////// Execute action for this centre subscriber////////////////////////
         //This event can be published from entity master which holds the call back that should be executed for this centre.
-        this.masterExecuteListener = postal.subscribe({
+        this._subscriptions.push(postal.subscribe({
             channel: "centre_" + self.$.selection_criteria.uuid,
             topic: "execute",
             callback: function (callback, envelope) {
                 callback(self);
             }
-        });
+        }));
 
         //Select the result view if autoRun is true
         if (self.autoRun || self.queryPart) {
@@ -859,8 +862,9 @@ const TgEntityCentreBehaviorImpl = {
     },
 
     detached: function () {
-        this.masterSavedListener.unsubscribe();
-        this.masterExecuteListener.unsubscribe();
+        while (this._subscriptions.length !== 0) {
+            this._subscriptions.pop().unsubscribe();
+        }
     },
 
     focusNextView: function (e) {
