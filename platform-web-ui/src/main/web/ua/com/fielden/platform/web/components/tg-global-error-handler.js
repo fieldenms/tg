@@ -15,7 +15,19 @@ export class UnreportableError extends Error {
 
         this.name = "UnreportableError";
     }
-  }
+}
+
+/**
+ * Augments non-empty catched 'error' state restoration logic with 'restoreStateFunction', that is applicable in current context.
+ */
+export function enhanceStateRestoration (error, restoreStateFunction) {
+    const preRestoreState = error.restoreState;
+    error.restoreState = function () {
+        preRestoreState && preRestoreState();
+        restoreStateFunction();
+    };
+    return error;
+};
 
 function replaceNewline (input) {
     const newline = "\r\n";

@@ -17,6 +17,7 @@ import { TgReflector } from '/app/tg-reflector.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 import {processResponseError, toastMsgForError} from '/resources/reflection/tg-ajax-utils.js';
+import { enhanceStateRestoration } from '/resources/components/tg-global-error-handler.js';
 
 const template = html`
     <style>
@@ -594,11 +595,10 @@ Polymer({
                         }
                     }
                 } catch (e) {
-                    e.restoreState = function () {
+                    throw enhanceStateRestoration(e, () => {
                         master._restoreStateAfterSave();
                         master.restoreAfterSave();
-                    };
-                    throw e;
+                    });
                 }
 
                 master._restoreStateAfterSave();

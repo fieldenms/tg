@@ -8,6 +8,7 @@ import { createEntityActionThenCallback } from '/resources/master/actions/tg-ent
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 import { TgRequiredPropertiesFocusTraversalBehavior } from '/resources/components/tg-required-properties-focus-traversal-behavior.js';
 import { queryElements } from '/resources/components/tg-element-selector-behavior.js';
+import { enhanceStateRestoration } from '/resources/components/tg-global-error-handler.js';
 
 export const selectEnabledEditor = function (editor) {
     const selectedElement = editor.shadowRoot.querySelector('.custom-input:not([hidden]):not([disabled])');
@@ -527,12 +528,7 @@ const TgEntityMasterBehaviorImpl = {
                 try {
                     this.postSavedError.bind(this)(errorResult);
                 } catch (e) {
-                    const preRestoreState = e.restoreState;
-                    e.restoreState = function () {
-                        preRestoreState && preRestoreState();
-                        this.restoreAfterSave();
-                    }.bind(this);
-                    throw e;
+                    throw enhanceStateRestoration(e, () => this.restoreAfterSave());
                 }
             }
             this.restoreAfterSave();
