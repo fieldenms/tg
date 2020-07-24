@@ -524,7 +524,16 @@ const TgEntityMasterBehaviorImpl = {
 
             // custom external action
             if (this.postSavedError) {
-                this.postSavedError.bind(this)(errorResult);
+                try {
+                    this.postSavedError.bind(this)(errorResult);
+                } catch (e) {
+                    const preRestoreState = e.restoreState;
+                    e.restoreState = function () {
+                        preRestoreState && preRestoreState();
+                        this.restoreAfterSave();
+                    }.bind(this);
+                    throw e;
+                }
             }
             this.restoreAfterSave();
         }).bind(self);
