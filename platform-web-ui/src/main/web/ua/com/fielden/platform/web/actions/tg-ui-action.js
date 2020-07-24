@@ -561,12 +561,12 @@ Polymer({
             // One exception from that rule: embedded masters in master-with-master -- the flag is configured from MasterWithMasterBuilder API.
             master.shouldRefreshParentCentreAfterSave = self.shouldRefreshParentCentreAfterSave;
 
-            master._restoreStateAfterSave = function () {
+            const restoreStateAfterSave = function () {
                 if (!self.skipAutomaticActionCompletion) {
                     // action execution completes
                     self.isActionInProgress = false;
 
-                    if (this.noUI === true) {
+                    if (master.noUI === true) {
                         self.restoreActionState();
                     }
                 }
@@ -596,12 +596,12 @@ Polymer({
                     }
                 } catch (e) {
                     throw enhanceStateRestoration(e, () => {
-                        master._restoreStateAfterSave();
+                        restoreStateAfterSave();
                         master.restoreAfterSave();
                     });
                 }
 
-                master._restoreStateAfterSave();
+                restoreStateAfterSave();
                 
             };
 
