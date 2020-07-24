@@ -6,6 +6,7 @@ import org.apache.log4j.Logger;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
+import org.restlet.data.Status;
 import org.restlet.representation.Representation;
 import org.restlet.representation.StringRepresentation;
 import org.restlet.resource.Put;
@@ -44,14 +45,15 @@ public class WebClientErrorLoggerResource extends AbstractWebResource {
     public Representation put(final Representation envelope) {
         try {
             final User user = userProvider.getUser();
-            final String logHeader = format("Client-side [%s] error for user [%s]:\n", device().name(), user.getKey()); 
+            final String logHeader = format("Client-side [%s] error for user [%s]:\n", device().name(), user.getKey());
             final String loggerDetails = envelope.getText();
             LOGGER.error(logHeader + loggerDetails);
             return new StringRepresentation("success");
         } catch (final Exception e) {
             LOGGER.debug(e);
+            getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
             return new StringRepresentation("failure");
         }
-        
+
     }
 }

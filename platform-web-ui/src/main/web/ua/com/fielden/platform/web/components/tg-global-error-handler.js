@@ -39,7 +39,7 @@ function replaceNewline (input) {
 }
 
 const template = html`
-    <iron-ajax id="errorSender" headers="[[_headers]]" url="/error" method="PUT" content-type="text/plain" handle-as="text" on-response="_processErrorResponse"></iron-ajax>`;
+    <iron-ajax id="errorSender" headers="[[_headers]]" url="/error" method="PUT" content-type="text/plain" handle-as="text" on-response="_processResponse"></iron-ajax>`;
 
 class TgGlobalErrorHandler extends PolymerElement {
 
@@ -138,7 +138,7 @@ class TgGlobalErrorHandler extends PolymerElement {
         }
     }
     
-    _processErrorResponse (e) {
+    _processResponse (e) {
         this._errorQueue.shift();
         if (this._errorQueue.length > 0) {
             this.errorHandler(this._errorQueue[0]);
