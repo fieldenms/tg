@@ -538,7 +538,7 @@ Polymer({
             }
         }.bind(this);
         
-        //Add error resize event listener
+        //Add iron-resize event listener
         this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
         
         //Add URI (location) change event handler to set history state. 
@@ -547,7 +547,7 @@ Polymer({
     
     attached: function () {
         const self = this;
-        // use empty console.log
+        //@use-empty-console.log
         this.async(function () {
             self.topLevelActions = [
                 //actionsObject

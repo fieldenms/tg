@@ -180,7 +180,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
                 replace("<!--menu action dom-->", generatedMenu.getKey().toString()).
                 replace("//actionsObject", generatedMenu.getValue().toString());
         if (Workflows.deployment == workflow || Workflows.vulcanizing == workflow) {
-            return mainWebUiComponent.replace("// use empty console.log", "console.log = () => {};\n");
+            return mainWebUiComponent.replace("//@use-empty-console.log", "console.log = () => {};\n");
         } else {
             return mainWebUiComponent;
         }
