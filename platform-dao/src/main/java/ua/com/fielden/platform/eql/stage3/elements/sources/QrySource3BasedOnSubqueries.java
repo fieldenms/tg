@@ -9,31 +9,32 @@ import java.util.Map;
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.eql.stage3.elements.Column;
 import ua.com.fielden.platform.eql.stage3.elements.Yield3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.SourceQuery3;
 
 public class QrySource3BasedOnSubqueries implements IQrySource3 {
     private final List<SourceQuery3> models = new ArrayList<>();
     public final String contextId;
-    private final Map<String, Column> columns = new HashMap<>();
+    public final int sqlId;
+    private final Map<String, String> columns = new HashMap<>();
     
-    public QrySource3BasedOnSubqueries(final List<SourceQuery3> models, final String contextId) {
+    public QrySource3BasedOnSubqueries(final List<SourceQuery3> models, final String contextId, final int sqlId) {
         this.models.addAll(models);
         this.contextId = contextId;
+        this.sqlId = sqlId;
         for (final Yield3 entry : models.get(0).yields.getYields()) {
             columns.put(entry.alias, entry.column);
         }
     }
 
     @Override
-    public Column column(final String colName) {
+    public String column(final String colName) {
          return columns.get(colName);
     }
 
     @Override
     public String sqlAlias() {
-        return "Q_" + contextId;
+        return "Q_" + (sqlId == 0 ? contextId : sqlId);
     }
 
     @Override

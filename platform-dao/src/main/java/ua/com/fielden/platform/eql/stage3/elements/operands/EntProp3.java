@@ -23,7 +23,7 @@ public class EntProp3 implements ISingleOperand3 {
         if (source.column(name) == null) {
             System.out.println("CAN'T find column for " + name + " in " +  source);
         }
-        return source.sqlAlias() + "." + source.column(name).name;
+        return source.sqlAlias() + "." + source.column(name);
     }
     
     @Override

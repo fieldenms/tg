@@ -195,15 +195,16 @@ public class QrySource2BasedOnSubqueries extends AbstractElement2 implements IQr
     public TransformationResult<QrySource3BasedOnSubqueries> transform(final TransformationContext context) {
         
         final List<SourceQuery3> transformedQueries = new ArrayList<>();
-        TransformationContext currentResolutionContext = context;
-
+        TransformationContext currentResolutionContext = context.cloneWithNextSqlId();
+        final int sqlId = currentResolutionContext.sqlId;
+        
         for (final SourceQuery2 model : models) {
             final TransformationResult<SourceQuery3> modelTr = model.transform(currentResolutionContext/*.produceNewOne() // as already invoked as part of EntQuery1.transform(..)*/);
             transformedQueries.add(modelTr.item);
             currentResolutionContext = modelTr.updatedContext; // TODO should be just resolutionContext with propsResolutions added from this model transformation   
         }
            
-        final QrySource3BasedOnSubqueries transformedSource = new QrySource3BasedOnSubqueries(transformedQueries, contextId);//resolutionContext.getDomainInfo());
+        final QrySource3BasedOnSubqueries transformedSource = new QrySource3BasedOnSubqueries(transformedQueries, contextId, sqlId);//resolutionContext.getDomainInfo());
         return new TransformationResult<QrySource3BasedOnSubqueries>(transformedSource, currentResolutionContext);
     }
 

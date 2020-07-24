@@ -10,26 +10,26 @@ import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 public class Yield3 {
     public final ISingleOperand3 operand;
     public final String alias;
-    public final Column column;
+    public final String column;
     public final boolean isHeader;
     public final Class<?> type;
     public final Object hibType;
 
-    public Yield3(final ISingleOperand3 operand, final String alias, final boolean isHeader, final Class<?> type, final Object hibType) {
+    public Yield3(final ISingleOperand3 operand, final String alias, final int columnId, final boolean isHeader, final Class<?> type, final Object hibType) {
         this.operand = operand;
         this.alias = alias;
-        this.column = StringUtils.isEmpty(alias) || isHeader ? null : new Column("C_" + alias.replace(".", "_").toUpperCase() + "_");
+        this.column = StringUtils.isEmpty(alias) || isHeader ? null : "C_" + (columnId == 0 ? alias.replace(".", "_").toUpperCase() + "_" : columnId);
         this.isHeader = isHeader;
         this.hibType = hibType;
         this.type = type;
     }
 
     public Yield3(final ISingleOperand3 operand, final String alias) {
-        this(operand, alias, false, null, null);
+        this(operand, alias, 0, false, null, null);
     }
 
     public String sql(final DbVersion dbVersion) {
-        return operand.sql(dbVersion) + (column == null ? "" : " AS " + column.name);
+        return operand.sql(dbVersion) + (column == null ? "" : " AS " + column);
     }
     
     @Override

@@ -31,9 +31,9 @@ public class Yield2 {
     public TransformationResult<Yield3> transform(final TransformationContext context) {
         final Object hibType = operand instanceof EntProp2 ? ((EntProp2) operand).hibType : null;
         final Class<?> type = operand instanceof EntProp2 ? ((EntProp2) operand).type : null;
-        
-        final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);
-        return new TransformationResult<Yield3>(new Yield3(operandTransformationResult.item, alias, isHeader, type, hibType), operandTransformationResult.updatedContext);
+        final TransformationContext newContext = context.cloneWithNextSqlId();
+        final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(newContext);
+        return new TransformationResult<Yield3>(new Yield3(operandTransformationResult.item, alias, newContext.sqlId, isHeader, type, hibType), operandTransformationResult.updatedContext);
     }
 
     @Override

@@ -34,6 +34,7 @@ import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 import ua.com.fielden.platform.entity.query.stream.ScrollableResultStream;
 import ua.com.fielden.platform.eql.meta.EntityInfo;
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
+import ua.com.fielden.platform.eql.stage2.elements.TablesAndSourceChildren;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ResultQuery2;
@@ -46,6 +47,7 @@ import ua.com.fielden.platform.streaming.SequentialGroupingStream;
 public class EntityContainerFetcher {
     private final QueryExecutionContext executionContext;    
     private final Logger logger = Logger.getLogger(this.getClass());
+    //public static long dur = 0;
 
     public EntityContainerFetcher(final QueryExecutionContext executionContext) {
         this.executionContext = executionContext;
@@ -103,6 +105,7 @@ public class EntityContainerFetcher {
         final List<?> res = query.list();
         final Period pd = new Period(st, new DateTime());
         logger.info(format("Query exec duration: %s m %s s %s ms for type [%s].", pd.getMinutes(), pd.getSeconds(), pd.getMillis(), modelResult.getResultType().getSimpleName()));
+        //dur = dur + 60000 * pd.getMinutes() + 1000 * pd.getSeconds() + pd.getMillis();
         return entityRawResultConverter.transformFromNativeResult(resultTree, res);
     }
 
@@ -147,7 +150,7 @@ public class EntityContainerFetcher {
                 final ResultQuery2 s1tr = gen1.generateEntQueryAsResultQuery(qem.queryModel, qem.orderModel, qem.fetchModel).transform(resolutionContext);
 
                 final Map<String, List<ChildGroup>> grouped = groupChildren(s1tr.collectProps(), domainInfo, gen1);
-                final TransformationResult<ResultQuery3> s2tr = s1tr.transform(new TransformationContext(executionContext.getDomainMetadata().lmd.getTables(), grouped));
+                final TransformationResult<ResultQuery3> s2tr = s1tr.transform(new TransformationContext(new TablesAndSourceChildren(executionContext.getDomainMetadata().lmd.getTables(), grouped)));
                 final ResultQuery3 entQuery3 = s2tr.item;
                 final String sql3 = entQuery3.sql(domainMetadataAnalyser.getDbVersion());
                 result =  new QueryModelResult<>((Class<E>)entQuery3.resultType, sql3, getResultPropsInfos(entQuery3.yields), s2tr.updatedContext.getParamValues(), qem.fetchModel);
@@ -181,7 +184,7 @@ public class EntityContainerFetcher {
                 if (yield.column == null) {
                     throw new EqlException("There is no column for yield with alias [" + yield.alias + "] of type [" + yield.type + "].");    
                 }
-                result.add(new ResultQueryYieldDetails(yield.alias, yieldType, yieldHibType, yield.column.name, USUAL_PROP));    
+                result.add(new ResultQueryYieldDetails(yield.alias, yieldType, yieldHibType, yield.column, USUAL_PROP));    
             }
             
         }

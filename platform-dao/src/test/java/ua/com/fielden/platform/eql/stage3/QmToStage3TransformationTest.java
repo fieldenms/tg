@@ -136,7 +136,6 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Yields3 modelQryYields = yields(yieldModel(subqry(qtyQrySources, qtyQryYields, Integer.class), "qty"));
         
         final ResultQuery3 expQry = qry(sources(modelSource), modelQryYields);
-
         assertEquals(expQry, actQry);
     }
     

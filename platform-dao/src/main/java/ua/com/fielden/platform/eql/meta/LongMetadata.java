@@ -78,7 +78,6 @@ import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.meta.LongPropertyMetadata.Builder;
 import ua.com.fielden.platform.eql.meta.model.PropColumn;
-import ua.com.fielden.platform.eql.stage3.elements.Column;
 import ua.com.fielden.platform.eql.stage3.elements.Table;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -581,17 +580,17 @@ public class LongMetadata {
     
     private final Table generateTable(final Class<? extends AbstractEntity<?>> entityType) {
         final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo = new EntityTypeInfo<>(entityType);
-        final Map<String, Column> columns = new HashMap<>();
+        final Map<String, String> columns = new HashMap<>();
         try {
             for (final LongPropertyMetadata el : generatePropertyMetadatasForEntity(parentInfo).values()) {
 
                 if (el.column != null) {
-                    columns.put(el.name, new Column(el.column.name));
+                    columns.put(el.name, el.column.name);
                 } else if (!el.subitems().isEmpty()) {
                     for (final LongPropertyMetadata subitem : el.subitems()) {
                         if (subitem.expressionModel == null) {
                             final String colName = subitem.column.name.endsWith("_") && subitem.column.name.substring(0, subitem.column.name.length() - 1).contains("_") ? subitem.column.name.substring(0, subitem.column.name.length() - 1) : subitem.column.name;
-                            columns.put(el.name + "." + subitem.name, new Column(colName));    
+                            columns.put(el.name + "." + subitem.name, colName);    
                         }
                     }
                 }

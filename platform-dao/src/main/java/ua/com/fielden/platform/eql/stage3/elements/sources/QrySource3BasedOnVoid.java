@@ -4,12 +4,11 @@ import static ua.com.fielden.platform.entity.query.DbVersion.ORACLE;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
-import ua.com.fielden.platform.eql.stage3.elements.Column;
 
 public class QrySource3BasedOnVoid implements IQrySource3 {
     
     @Override
-    public Column column(final String colName) {
+    public String column(final String colName) {
          throw new EqlException("This method shouldn't be invoked.");
     }
 

@@ -3,26 +3,27 @@ package ua.com.fielden.platform.eql.stage3.elements.sources;
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.eql.stage3.elements.Column;
 import ua.com.fielden.platform.eql.stage3.elements.Table;
 
 public class QrySource3BasedOnTable implements IQrySource3 {
     public final Table table;
     public final String contextId;
+    public final int sqlId;
     
-    public QrySource3BasedOnTable(final Table table, final String contextId) {
+    public QrySource3BasedOnTable(final Table table, final String contextId, final int sqlId) {
         this.table = table;
         this.contextId = contextId;
+        this.sqlId = sqlId;
     }
 
     @Override
-    public Column column(final String colName) {
+    public String column(final String colName) {
          return table.columns.get(colName);
     }
 
     @Override
     public String sqlAlias() {
-        return "T_" + contextId;
+        return "T_" + (sqlId == 0 ? contextId : sqlId);
     }
 
     @Override

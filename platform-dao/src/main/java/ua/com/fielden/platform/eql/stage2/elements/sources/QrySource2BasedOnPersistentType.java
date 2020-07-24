@@ -32,8 +32,9 @@ public class QrySource2BasedOnPersistentType extends AbstractElement2 implements
 
     @Override
     public TransformationResult<QrySource3BasedOnTable> transform(final TransformationContext context) {
-        final QrySource3BasedOnTable transformedSource = new QrySource3BasedOnTable(context.getTable(sourceType().getName()), contextId);
-        return new TransformationResult<QrySource3BasedOnTable>(transformedSource, context/*.cloneWithAdded(transformedSource, this)*/);
+        final TransformationContext newContext = context.cloneWithNextSqlId();
+        final QrySource3BasedOnTable transformedSource = new QrySource3BasedOnTable(newContext.getTable(sourceType().getName()), contextId, newContext.sqlId);
+        return new TransformationResult<QrySource3BasedOnTable>(transformedSource, newContext/*.cloneWithAdded(transformedSource, this)*/);
     }
 
     @Override

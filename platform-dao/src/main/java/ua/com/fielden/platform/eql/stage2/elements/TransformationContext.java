@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.stage2.elements;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.unmodifiableMap;
 
 import java.util.HashMap;
@@ -17,18 +18,24 @@ import ua.com.fielden.platform.types.tuples.T2;
 
 public class TransformationContext {
 
-    private final Map<String, Table> tables = new HashMap<>();
-    private final Map<String, List<ChildGroup>> sourceChildren = new HashMap<>();
+    private final TablesAndSourceChildren tablesAndSourceChildren;
     private final Map<String, Map<String, T2<IQrySource3, Object>>> resolutions = new HashMap<>();
     private final Map<String, Object> paramValues = new HashMap<>();
+    public final int sqlId;
  
-    public TransformationContext(final Map<String, Table> tables, final Map<String, List<ChildGroup>> sourceChildren) {
-        this.tables.putAll(tables);
-        this.sourceChildren.putAll(sourceChildren);
+    public TransformationContext(final TablesAndSourceChildren tablesAndSourceChildren) {
+        this(tablesAndSourceChildren, emptyMap(), emptyMap(), 0);
+    }
+    
+    private TransformationContext(final TablesAndSourceChildren tablesAndSourceChildren, final Map<String, Map<String, T2<IQrySource3, Object>>> resolutions, final Map<String, Object> paramValues, final int sqlId) {
+        this.tablesAndSourceChildren = tablesAndSourceChildren;
+        this.resolutions.putAll(resolutions);
+        this.paramValues.putAll(paramValues);
+        this.sqlId = sqlId;
     }
    
     public Table getTable(final String sourceFullClassName) {
-        return tables.get(sourceFullClassName);
+        return tablesAndSourceChildren.getTables().get(sourceFullClassName);
     }
 
     public int getNextParamId() {
@@ -40,14 +47,17 @@ public class TransformationContext {
     }
 
     public List<ChildGroup> getSourceChildren(final IQrySource2<?> source) {
-        final List<ChildGroup> result = sourceChildren.get(source.contextId());
+        final List<ChildGroup> result = tablesAndSourceChildren.getSourceChildren().get(source.contextId());
         return result != null ? result : emptyList();
     }
 
+    public TransformationContext cloneWithNextSqlId() {
+        return new TransformationContext(tablesAndSourceChildren, resolutions, paramValues, sqlId + 1);
+    }
+    
     public TransformationContext cloneWithResolutions(final T2<String, IQrySource2<?>> sr1, final T2<IQrySource3, Object> sr2) {
-        final TransformationContext result = new TransformationContext(tables, sourceChildren);
-        result.resolutions.putAll(resolutions);
-        result.paramValues.putAll(paramValues);
+        final TransformationContext result = new TransformationContext(tablesAndSourceChildren, resolutions, paramValues, sqlId); 
+        
         final Map<String, T2<IQrySource3, Object>> existing = result.resolutions.get(sr1._2.contextId());
         if (existing != null) {
             existing.put(sr1._1, sr2);
@@ -61,9 +71,7 @@ public class TransformationContext {
     }
 
     public TransformationContext cloneWithParamValue(final String paramName, final Object paramValue) {
-        final TransformationContext result = new TransformationContext(tables, sourceChildren);
-        result.resolutions.putAll(resolutions);
-        result.paramValues.putAll(paramValues);
+        final TransformationContext result = new TransformationContext(tablesAndSourceChildren, resolutions, paramValues, sqlId);
         result.paramValues.put(paramName, paramValue);
         return result;
     }

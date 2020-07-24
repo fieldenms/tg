@@ -26,6 +26,7 @@ import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator;
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
+import ua.com.fielden.platform.eql.stage2.elements.TablesAndSourceChildren;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ResultQuery2;
 import ua.com.fielden.platform.eql.stage3.elements.EntQueryBlocks3;
@@ -64,7 +65,7 @@ public class EqlStage3TestCase extends EqlTestCase {
         final PropsResolutionContext resolutionContext = new PropsResolutionContext(metadata());
         final EntQueryGenerator qb = qb();
         final ResultQuery2 rq2 = qb.generateEntQueryAsResultQuery(countQry, null, null).transform(resolutionContext);
-        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<ResultQuery3> s2tr = rq2.transform(new TransformationContext(tables, groupChildren(rq2.collectProps(), metadata(), qb)));
+        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<ResultQuery3> s2tr = rq2.transform(new TransformationContext(new TablesAndSourceChildren(tables, groupChildren(rq2.collectProps(), metadata(), qb))));
         return s2tr.item;
     }
     
@@ -72,7 +73,7 @@ public class EqlStage3TestCase extends EqlTestCase {
         final PropsResolutionContext resolutionContext = new PropsResolutionContext(metadata());
         final EntQueryGenerator qb = qb();
         final ResultQuery2 rq2 = qb.generateEntQueryAsResultQuery(qry, null, null).transform(resolutionContext);
-        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<ResultQuery3> s2tr = rq2.transform(new TransformationContext(tables, groupChildren(rq2.collectProps(), metadata(), qb)));
+        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<ResultQuery3> s2tr = rq2.transform(new TransformationContext(new TablesAndSourceChildren(tables, groupChildren(rq2.collectProps(), metadata(), qb))));
         return s2tr.item;
     }
     
@@ -82,24 +83,24 @@ public class EqlStage3TestCase extends EqlTestCase {
         final PropsResolutionContext resolutionContext = new PropsResolutionContext(metadata(paramValues));
         final EntQueryGenerator qb = qb(paramValues);
         final ResultQuery2 rq2 = qb.generateEntQueryAsResultQuery(countQry, null, null).transform(resolutionContext);
-        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<ResultQuery3> s2tr = rq2.transform(new TransformationContext(tables, groupChildren(rq2.collectProps(), metadata(paramValues), qb)));
+        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<ResultQuery3> s2tr = rq2.transform(new TransformationContext(new TablesAndSourceChildren(tables, groupChildren(rq2.collectProps(), metadata(paramValues), qb))));
         return s2tr.item;
     }
 
     protected static QrySource3BasedOnTable source(final Class<? extends AbstractEntity<?>> sourceType, final String sourceForContextId) {
-        return new QrySource3BasedOnTable(tables.get(sourceType.getName()), sourceForContextId);
+        return new QrySource3BasedOnTable(tables.get(sourceType.getName()), sourceForContextId, 0);
     }
 
     protected static QrySource3BasedOnSubqueries source(final String sourceForContextId, final SourceQuery3 ... sourceQueries) {
-        return new QrySource3BasedOnSubqueries(Arrays.asList(sourceQueries), sourceForContextId);
+        return new QrySource3BasedOnSubqueries(Arrays.asList(sourceQueries), sourceForContextId, 0);
     }
     
     protected static QrySource3BasedOnTable source(final Class<? extends AbstractEntity<?>> sourceType, final String sourceForContextId, final String subcontextId) {
-        return new QrySource3BasedOnTable(tables.get(sourceType.getName()), sourceForContextId + "_" + subcontextId);
+        return new QrySource3BasedOnTable(tables.get(sourceType.getName()), sourceForContextId + "_" + subcontextId, 0);
     }
 
     protected static QrySource3BasedOnTable source(final Class<? extends AbstractEntity<?>> sourceType, final QrySource3BasedOnTable sourceForContextId, final String subcontextId) {
-        return new QrySource3BasedOnTable(tables.get(sourceType.getName()), sourceForContextId.contextId + "_" + subcontextId);
+        return new QrySource3BasedOnTable(tables.get(sourceType.getName()), sourceForContextId.contextId + "_" + subcontextId, 0);
     }
     
     protected static Expression3 expr(final ISingleOperand3 op1) {
@@ -353,19 +354,19 @@ public class EqlStage3TestCase extends EqlTestCase {
     }
 
     protected static Yield3 yieldEntityExpr(final String propName, final IQrySource3 source, final String alias, final Class<? extends AbstractEntity<?>> propType) {
-        return new Yield3(expr(entityProp(propName, source, propType)), alias, false, propType, H_LONG);
+        return new Yield3(expr(entityProp(propName, source, propType)), alias, 0, false, propType, H_LONG);
     }
 
     protected static Yield3 yieldStringExpr(final String propName, final IQrySource3 source, final String alias) {
-        return new Yield3(expr(stringProp(propName, source)), alias, false, String.class, H_STRING);
+        return new Yield3(expr(stringProp(propName, source)), alias, 0,false, String.class, H_STRING);
     }
 
     protected static Yield3 yieldIdExpr(final IQrySource3 source, final String alias) {
-        return new Yield3(expr(idProp(source)), alias, false, Long.class, H_LONG);
+        return new Yield3(expr(idProp(source)), alias, 0, false, Long.class, H_LONG);
     }
     
     protected static Yield3 yieldPropExpr(final String propName, final IQrySource3 source, final String alias, final Class<?> type, final Type hibType) {
-        return new Yield3(expr(prop(propName, source, type, hibType)), alias, false, type, hibType);
+        return new Yield3(expr(prop(propName, source, type, hibType)), alias, 0, false, type, hibType);
     }
 
     protected static Yield3 yieldProp(final String propName, final IQrySource3 source, final String alias) {

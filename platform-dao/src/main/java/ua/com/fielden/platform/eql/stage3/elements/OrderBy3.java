@@ -23,7 +23,7 @@ public class OrderBy3 {
     }
 
     public String sql(final DbVersion dbVersion) {
-        return (operand != null ? operand.sql(dbVersion) : yield.column.name) +  (isDesc ? " DESC" : " ASC");
+        return (operand != null ? operand.sql(dbVersion) : yield.column) +  (isDesc ? " DESC" : " ASC");
     }
 
     @Override

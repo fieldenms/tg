@@ -4,9 +4,9 @@ import java.util.Map;
 
 public class Table {
     public final String name;
-    public final Map<String, Column> columns;
+    public final Map<String, String> columns;
 
-    public Table(final String name, final Map<String, Column> columns) {
+    public Table(final String name, final Map<String, String> columns) {
         this.name = name;
         this.columns = columns;
     }
