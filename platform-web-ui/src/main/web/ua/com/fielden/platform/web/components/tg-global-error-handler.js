@@ -93,11 +93,20 @@ class TgGlobalErrorHandler extends PolymerElement {
         this._acceptError(e.composedPath()[0], errorDetail, errorMsg);
     }
 
+    /**
+     * Receives error or error events and then analyses whether they are reportable or have restoreState
+     * to perform appropriate tasks with them. Also sends error to the server if possible otherwise adds error to
+     * the queue for further processing. Shows toast to the user for errors of type other than UnreportableError.
+     * 
+     * @param {*} from 
+     * @param {*} e -- event of type ErrorEvent (syntax error, throwing of Error etc.) or promise rejection error
+     * @param {*} errorMsg 
+     */
     _acceptError (from, e, errorMsg) {
         if (from !== this.$.errorSender) {
             const error = e.error || e;
             if (error.restoreState) {
-                e.error.restoreState();
+                error.restoreState();
             }
             if ( !(error instanceof UnreportableError)) {
                 this.toaster.openToastForError("Unexpected error happened", replaceNewline(errorMsg), true);
