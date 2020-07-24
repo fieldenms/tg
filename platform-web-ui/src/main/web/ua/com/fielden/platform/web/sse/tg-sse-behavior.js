@@ -139,9 +139,7 @@ export const TgSseBehavior = {
                 }, 15000);
             }
 
-            if (!self.errorHandler) {
-                throw new UnreportableError(e);
-            }
+            throw new UnreportableError(e);
 
         }, false);
     },

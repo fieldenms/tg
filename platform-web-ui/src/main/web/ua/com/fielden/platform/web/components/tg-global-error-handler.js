@@ -10,7 +10,7 @@ export class UnreportableError extends Error {
         super(params);
 
         if (Error.captureStackTrace) {
-        Error.captureStackTrace(this, UnreportableError);
+            Error.captureStackTrace(this, UnreportableError);
         }
 
         this.name = "UnreportableError";
@@ -29,6 +29,10 @@ export function enhanceStateRestoration (error, restoreStateFunction) {
     return error;
 };
 
+/**
+ * Replaces newline symbol with \r\n sequence or <br> tag based on whether specified input contains restricted tags or not.
+ * This is done in order to format input for tg-toast (see tg-toast.js: _showMessageDlg method). 
+ */
 function replaceNewline (input) {
     const newline = "\r\n";
     return input.replace(/\n/gi, containsRestictedTags(input) ? newline : '<br>');
