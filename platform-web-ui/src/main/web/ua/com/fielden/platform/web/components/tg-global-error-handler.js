@@ -17,7 +17,9 @@ export class UnreportableError extends Error {
 }
 
 /**
- * Augments non-empty catched 'error' state restoration logic with 'restoreStateFunction', that is applicable in current context.
+ * Augments a non-empty state restoration logic for caught errors with 'restoreStateFunction', that is applicable for the current context.
+ * @param {Object} error -- an error to be processed
+ * @param {Function} restoreStateFunction -- context-specific restoration function
  */
 export function enhanceStateRestoration (error, restoreStateFunction) {
     const preRestoreState = error.restoreState;
@@ -40,6 +42,10 @@ function replaceNewline (input) {
 const template = html`
     <iron-ajax id="errorSender" headers="[[_headers]]" url="/error" method="PUT" content-type="text/plain" handle-as="text" on-response="_processResponse"></iron-ajax>`;
 
+/**
+ * A web component used as a global error handler for unhandled exceptions.
+ * Should be used only once in the application, preferably in the main scaffolding file.
+ */
 class TgGlobalErrorHandler extends PolymerElement {
 
     static get template() { 
@@ -48,20 +54,29 @@ class TgGlobalErrorHandler extends PolymerElement {
 
     static get properties () {
         return {
-            
-
-            //The maximal length of error queue. If more errors happens then they will be handled with alternative handler
+            /**
+             * @property {Number}
+             * The maximum size of the error queue. All errors that do not fit into the queue are processed by the alternative handler.
+             */
             maxErrorQueueLength: {
                 type: Number,
                 value: 10
             },
 
+            /**
+             * @property {Object}
+             * An instance of the toaster component, used for reporting errors to users.
+             */
             toaster: Object,
 
-            //Queue of errors to log on server.
+            /**
+             * @property {Array}
+             * Queue of errors to be sent to the server for processing.
+             * /
             _errorQueue: Array,
 
             /**
+             * @property {String}
              * Additional headers for 'iron-ajax' client-side requests. These only contain 
              * our custom 'Time-Zone' header that indicates real time-zone for the client application.
              * The time-zone then is to be assigned to threadlocal 'IDates.timeZone' to be able
@@ -88,10 +103,19 @@ class TgGlobalErrorHandler extends PolymerElement {
         window.addEventListener('unhandledrejection', this._handleUnhandledPromiseError);
     }
 
+    /**
+     * Sends the error message to the server. 
+     * @param {String} errorMsg -- the value of an error message.
+     */
     errorHandler (errorMsg) {
         this.$.errorSender.body = errorMsg;
         this.$.errorSender.generateRequest();
     }
+
+    /**
+     * Errors that do not fit into the error queue are processed by this method.
+     * @param {String} errorMsg -- the value of an error message.
+     */
     alternativeErrorHandler (errorMsg) {
         console.error(errorMsg);
     }

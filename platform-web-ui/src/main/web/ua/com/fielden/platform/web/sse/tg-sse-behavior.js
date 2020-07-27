@@ -139,8 +139,6 @@ export const TgSseBehavior = {
                 }, 15000);
             }
 
-            throw new UnreportableError(e);
-
         }, false);
     },
 
