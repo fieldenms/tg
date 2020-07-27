@@ -13,6 +13,7 @@ import '/resources/views/tg-app-view.js';
 import '/resources/master/tg-entity-master.js';
 import '/resources/actions/tg-ui-action.js';
 import '/resources/components/tg-message-panel.js';
+import '/resources/components/tg-global-error-handler.js';
 
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
@@ -23,7 +24,7 @@ import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizabl
 import { TgEntityMasterBehavior } from '/resources/master/tg-entity-master-behavior.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js'
 import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';
-import { tearDownEvent, deepestActiveElement, generateUUID, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, deepestActiveElement, generateUUID, isMobileApp} from '/resources/reflection/tg-polymer-utils.js';
 
 const template = html`
     <style>
@@ -32,6 +33,7 @@ const template = html`
         }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
+    <tg-global-error-handler id="errorHandler" toaster="[[toaster]]"></tg-global-error-handler>
     <app-location id="location" no-decode dwell-time="-1" route="{{_route}}" url-space-regex="^/#/" use-hash-as-path></app-location>
     <app-route route="{{_route}}" pattern="/:moduleName" data="{{_routeData}}" tail="{{_subroute}}"></app-route>
     <tg-message-panel></tg-message-panel>
@@ -96,7 +98,8 @@ function findModule (moduleName, menuConfig) {
         }
     }
     return "menu";
-};
+}
+
 function addAllElements (elementsToAdd, addToArray, removeFromArray) {
     addToArray = addToArray || [];
     if (elementsToAdd) {
@@ -111,7 +114,8 @@ function addAllElements (elementsToAdd, addToArray, removeFromArray) {
         });
     }
     return addToArray;
-};
+}
+
 Polymer({
 
     _template: template,
@@ -144,6 +148,7 @@ Polymer({
         },
         appTitle: String,
         entityType: String,
+
         _manager: {
             type: Object,
             value: IronOverlayManager
@@ -197,7 +202,7 @@ Polymer({
         "menu-search-list-closed": "_restoreLastFocusedElement",
         "tg-module-menu-closed": "_restoreLastFocusedElement"
     },
-    
+
     _searchMenu: function (event) {
         const selectedElement = this.shadowRoot.querySelector("[name='" + this.$.pages.selected + "']");
         if (selectedElement && selectedElement.searchMenu) {
@@ -371,7 +376,7 @@ Polymer({
     },
 
     /**
-     * Selectes the specified view. If the view is opened in different module then play transition animation between modules.
+     * Selects the specified view. If the view is opened in different module then play transition animation between modules.
      * 
      * @param {String} selected 
      */
@@ -416,7 +421,7 @@ Polymer({
         e.returnValue = "Do you really want to close the application?";
         return e.returnValue;
     },
-    
+
     /**
      * Animation finish event handler. This handler opens master or centre if module transition occured because of user action.
      * 
@@ -496,6 +501,8 @@ Polymer({
         this._openMasterAttrs = {currentState: "EDIT", centreUuid: this.uuid};
         //Binding to 'this' functions those are used outside the scope of this component.
         this._checkWhetherCanLeave = this._checkWhetherCanLeave.bind(this);
+        
+        //Configuring menu visibility save functionality.
         this._saveMenuVisibilityChanges = function (visibleItems, invisibleItems) {
             if (this._saveIdentifier) {
                 this.cancelAsync(this._saveIdentifier);
@@ -531,12 +538,16 @@ Polymer({
             }
         }.bind(this);
         
+        //Add iron-resize event listener
         this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
+        
+        //Add URI (location) change event handler to set history state. 
         window.addEventListener('location-changed', this._replaceStateWithNumber.bind(this));
     },
     
     attached: function () {
         const self = this;
+        //@use-empty-console.log
         this.async(function () {
             self.topLevelActions = [
                 //actionsObject

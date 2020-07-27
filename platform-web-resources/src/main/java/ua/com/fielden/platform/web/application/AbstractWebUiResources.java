@@ -26,6 +26,7 @@ import ua.com.fielden.platform.web.factories.webui.EgiExampleResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EntityAutocompletionResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EntityResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EntityValidationResourceFactory;
+import ua.com.fielden.platform.web.factories.webui.WebClientErrorLoggerResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.FileResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.MainWebUiComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.MasterComponentResourceFactory;
@@ -117,40 +118,43 @@ public abstract class AbstractWebUiResources extends Application {
     @Override
     public final Restlet createInboundRoot() {
         // Create router and web application for registering resources.
-        final Router router = new ResourceRouter(getContext());
+        final Router guardedRouter = new ResourceRouter(getContext());
 
         final RestServerUtil restUtil = injector.getInstance(RestServerUtil.class);
 
         // Attach main application resource.
-        router.attach("/", new AppIndexResourceFactory(webResourceLoader, webApp, userProvider, deviceProvider, dates, injector.getInstance(ICriteriaGenerator.class)));
-        router.attach("/app/tg-app-config.js", new WebUiPreferencesResourceFactory(webResourceLoader, deviceProvider, dates));
-        router.attach("/app/tg-app.js", new MainWebUiComponentResourceFactory(webResourceLoader, deviceProvider, dates));
+        guardedRouter.attach("/", new AppIndexResourceFactory(webResourceLoader, webApp, userProvider, deviceProvider, dates, injector.getInstance(ICriteriaGenerator.class)));
+        guardedRouter.attach("/app/tg-app-config.js", new WebUiPreferencesResourceFactory(webResourceLoader, deviceProvider, dates));
+        guardedRouter.attach("/app/tg-app.js", new MainWebUiComponentResourceFactory(webResourceLoader, deviceProvider, dates));
         // type meta info resource
-        router.attach("/app/tg-reflector.js", new TgReflectorComponentResourceFactory(webResourceLoader, deviceProvider, dates));
-        router.attach("/app/application-startup-resources.js", new ApplicationStartupResourcesComponentResourceFactory(webResourceLoader, deviceProvider, dates));
+        guardedRouter.attach("/app/tg-reflector.js", new TgReflectorComponentResourceFactory(webResourceLoader, deviceProvider, dates));
+        guardedRouter.attach("/app/application-startup-resources.js", new ApplicationStartupResourcesComponentResourceFactory(webResourceLoader, deviceProvider, dates));
 
         // serialisation testing resource
-        router.attach("/test/serialisation", new SerialisationTestResourceFactory(injector));
+        guardedRouter.attach("/test/serialisation", new SerialisationTestResourceFactory(injector));
         // For egi example TODO remove later.
-        router.attach("/test/egi", new EgiExampleResourceFactory(injector));
+        guardedRouter.attach("/test/egi", new EgiExampleResourceFactory(injector));
 
-        //Attache master retrieve resources
-        router.attach("/master/{entityType}", new MasterInfoProviderResourceFactory(webApp, deviceProvider, dates, restUtil));
+        //Attache master retrieve resource
+        guardedRouter.attach("/master/{entityType}", new MasterInfoProviderResourceFactory(webApp, deviceProvider, dates, restUtil));
+
+        //Attache client side error logger resource
+        guardedRouter.attach("/error", new WebClientErrorLoggerResourceFactory(injector));
 
         // Registering entity centres:
-        attachCentreResources(router, webApp, restUtil);
+        attachCentreResources(guardedRouter, webApp, restUtil);
 
         // Registering entity masters:
-        attachMasterResources(router, webApp, restUtil);
+        attachMasterResources(guardedRouter, webApp, restUtil);
 
         // Registering custom views:
-        attachCustomViewResources(router, restUtil);
+        attachCustomViewResources(guardedRouter, restUtil);
 
         // Registering autocompletion resources:
-        attachAutocompletionResources(router, webApp);
+        attachAutocompletionResources(guardedRouter, webApp);
 
         // register domain specific resources if any
-        registerDomainWebResources(router, webApp);
+        registerDomainWebResources(guardedRouter, webApp);
 
         // attache internal components and related resources
         //final Set<String> webComponents = new HashSet<>();
@@ -160,7 +164,7 @@ public abstract class AbstractWebUiResources extends Application {
         /////////// Configuring the guard /////////
         ///////////////////////////////////////////
         final Authenticator guard = new DefaultWebResourceGuard(getContext(), webApp.getDomainName(), webApp.getPath(), injector);
-        guard.setNext(router);
+        guard.setNext(guardedRouter);
 
         final Router mainRouter = new Router(getContext());
         // standard Polymer components and other resources should not be guarded

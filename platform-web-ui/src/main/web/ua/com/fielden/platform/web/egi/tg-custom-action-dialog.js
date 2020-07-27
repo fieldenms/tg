@@ -27,6 +27,7 @@ import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';
 import {TgBackButtonBehavior} from '/resources/views/tg-back-button-behavior.js'
 import { tearDownEvent, isInHierarchy, allDefined, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp, isIPhoneOs } from '/resources/reflection/tg-polymer-utils.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
+import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
 
 const template = html`
     <style>
@@ -977,7 +978,9 @@ Polymer({
                                         }
                                     }
                                     if (ironRequest && typeof ironRequest.successful !== 'undefined' && ironRequest.successful === true) {
-                                        return Promise.resolve(self._showMaster(customAction, element, closeEventChannel, closeEventTopics));
+                                        return Promise.resolve(self._showMaster(customAction, element, closeEventChannel, closeEventTopics, false));
+                                    } else  if (ironRequest && ironRequest.response && ironRequest.response.ex && ironRequest.response.ex.continuationTypeStr) {
+                                        return Promise.resolve(self._showMaster(customAction, element, closeEventChannel, closeEventTopics, true));
                                     } else {
                                         return Promise.reject('Retrieval / saving promise was not successful.');
                                     }
@@ -988,7 +991,7 @@ Polymer({
                         } else {
                             return Promise.resolve()
                                 .then(function() {
-                                    return Promise.resolve(self._showMaster(customAction, element, closeEventChannel, closeEventTopics));
+                                    return Promise.resolve(self._showMaster(customAction, element, closeEventChannel, closeEventTopics, false));
                                 })
                                 .catch(function(error) {
                                     self._finishErroneousOpening();
@@ -999,12 +1002,13 @@ Polymer({
                         console.error(error);
                         self.$.toaster.text = 'There was an error displaying the dialog.';
                         self.$.toaster.hasMore = true;
-                        self.$.toaster.msgText = 'There was an error displaying the dialog.<br><br> \
-                                                  <b>Error cause:</b><br>' + error.message;
+                        self.$.toaster.msgText = `There was an error displaying the dialog.<br><br>` +
+                                                  `<b>Error cause:</b><br>${error.message}`;
                         self.$.toaster.showProgress = false;
                         self.$.toaster.isCritical = true;
                         self.$.toaster.show();
                         self._finishErroneousOpening();
+                        throw new UnreportableError(error);
                     });
             }
         }
@@ -1183,13 +1187,15 @@ Polymer({
         }
     },
     
-    _showMaster: function(action, element, closeEventChannel, closeEventTopics) {
+    _showMaster: function(action, element, closeEventChannel, closeEventTopics, actionWithContinuation) {
         this._lastElement = element;
         const self = this;
         if (element.noUI === true) { // is this is the end of action execution?
             self._resetState();
             self._setIsRunning(false);
-            self._removeFromDom();
+            if (!actionWithContinuation) {
+                self._removeFromDom();
+            }
         } else { // otherwise show master in dialog
             this._openOnce(closeEventChannel, closeEventTopics, action, null, null);    
         }
