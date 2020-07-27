@@ -96,6 +96,7 @@ public class EntityNavigationPreAction implements IPreAction {
                 + "                        action._fireNavigationChangeEvent(true);%n"
                 + "                    }.bind(self));%n"
                 + "                }.bind(self), function (error) {%n"
+                + "                    this.$.egi.editEntity(entity);%n"
                 + "                    action._fireNavigationChangeEvent(true);%n"
                 + "                }.bind(self));%n"
                 + "            }%n"
