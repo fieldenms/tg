@@ -37,9 +37,8 @@ Polymer({
     properties: {
         actions: Array,
         /**
-         * The 'currentEntity' should contain the entity that was clicked (result-set actions)
-         * or the entity on which primary / secondary action was chosen. In case when no of the above cases
-         * is invoking (for e.g. as in topLevel actions) -- 'currentEntity' should be empty.
+         * The 'currentEntity' function contains the entity on which secondary action was tapped
+         * or the entity navigated to (EntityNavigationAction).
          */
         currentEntity: {
             type: Function,

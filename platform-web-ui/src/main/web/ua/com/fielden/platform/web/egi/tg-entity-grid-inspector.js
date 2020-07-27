@@ -1303,7 +1303,15 @@ Polymer({
         }
     },
 
+    /**
+     * Initiates corresponding 'tg-ui-action' (if present) with concrete function representing current entity.
+     * Opens hyperlink or attachment if 'tg-ui-action' is not present.
+     */
     _tapColumn: function (entity, column) {
+        // 'this._currentEntity(entity)' returns closure with 'entity' tapped.
+        // This closure returns either 'entity' or the entity navigated to (EntityNavigationAction).
+        // Each tapping overrides this function to provide proper context of execution.
+        // This override should occur on every 'run' of the action so it is mandatory to use 'tg-property-column.runAction' public API.
         if (column.runAction(this._currentEntity(entity)) === false) {
             // if the clicked property is a hyperlink and there was no custom action associted with it
             // then let's open the linked resources
