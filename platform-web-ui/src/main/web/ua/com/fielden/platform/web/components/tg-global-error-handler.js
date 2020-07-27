@@ -12,8 +12,7 @@ export class UnreportableError extends Error {
         if (Error.captureStackTrace) {
             Error.captureStackTrace(this, UnreportableError);
         }
-
-        this.name = "UnreportableError";
+        this.name = this.constructor.name;
     }
 }
 
