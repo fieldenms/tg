@@ -125,7 +125,7 @@ class TgGlobalErrorHandler extends PolymerElement {
                 error.restoreState();
             }
             if ( !(error instanceof UnreportableError)) {
-                this.toaster.openToastForError("Unexpected error happened", replaceNewline(errorMsg), true);
+                this.toaster.openToastForError("Unexpected error occurred.", replaceNewline(errorMsg), true);
             }
             if (this._errorQueue.length >= this.maxErrorQueueLength) {
                 this.alternativeErrorHandler(errorMsg);
