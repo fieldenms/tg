@@ -17,7 +17,6 @@ import org.hibernate.type.YesNoType;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.generation.ioc.HelperIocModule;
@@ -94,8 +93,6 @@ public class EqlTestCase {
     protected static final DomainMetadataAnalyser DOMAIN_METADATA_ANALYSER;
 
     public static final Map<String, Table> tables = new HashMap<>();
-    public static final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> metadata = new HashMap<>();
-
     
     static {
         hibTypeDefaults.put(boolean.class, YesNoType.class);
@@ -111,12 +108,8 @@ public class EqlTestCase {
                 PlatformTestDomainTypes.entityTypes, 
                 H2);
         DOMAIN_METADATA_ANALYSER = new DomainMetadataAnalyser(DOMAIN_METADATA);
-        final LongMetadata lmg = DOMAIN_METADATA.lmd;
-        //final ShortMetadata mdg = new ShortMetadata(lmg, null, null, injector.getInstance(IDates.class), null, emptyMap());
-        
         try {
-            metadata.putAll(lmg.getDomainInfo());//mdg.generate(/*new HashSet<>(PlatformTestDomainTypes.entityTypes)*/));
-            tables.putAll(lmg.getTables());
+            tables.putAll(DOMAIN_METADATA.lmd.getTables());
         } catch (final Exception e) {
             e.printStackTrace();
         }
@@ -134,24 +127,7 @@ public class EqlTestCase {
         return new EntQueryGenerator(H2, filter, username, dates, paramValues);
     }
     
-    protected static final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> metadata() {
-        return metadata(null, null, injector.getInstance(IDates.class), emptyMap());
-    }
-
-    protected static final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> metadata(final Map<String, Object> paramValues) {
-        return metadata(null, null, injector.getInstance(IDates.class), paramValues);
-    }
-
-    protected static final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> metadata(final IFilter filter, final String username, final IDates dates, final Map<String, Object> paramValues) {
-        final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> result = new HashMap<>();
-        final LongMetadata lmg = DOMAIN_METADATA.lmd;
-        //final ShortMetadata mdg = new ShortMetadata(lmg, filter, username, dates, null, paramValues);
-        try {
-            result.putAll(lmg.getDomainInfo());//mdg.generate(/*new HashSet<>(PlatformTestDomainTypes.entityTypes)*/));    
-        } catch (final Exception e) {
-            e.printStackTrace();
-        }
-        
-        return result;
+    protected static final LongMetadata metadata() {
+        return DOMAIN_METADATA.lmd;
     }
 }

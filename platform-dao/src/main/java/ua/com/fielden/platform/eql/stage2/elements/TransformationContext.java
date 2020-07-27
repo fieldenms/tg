@@ -33,9 +33,11 @@ public class TransformationContext {
         this.paramValues.putAll(paramValues);
         this.sqlId = sqlId;
     }
-   
+    
     public Table getTable(final String sourceFullClassName) {
-        return tablesAndSourceChildren.getTables().get(sourceFullClassName);
+        final int nameEnhancementStartIndex = sourceFullClassName.indexOf("$$");
+        final String properName = nameEnhancementStartIndex == -1 ? sourceFullClassName : sourceFullClassName.substring(0, nameEnhancementStartIndex);
+        return tablesAndSourceChildren.getTables().get(properName);
     }
 
     public int getNextParamId() {

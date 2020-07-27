@@ -80,10 +80,10 @@ public class EqlStage3TestCase extends EqlTestCase {
     protected static <T extends AbstractEntity<?>> ResultQuery3 qryCountAll(final ICompoundCondition0<T> unfinishedQry, final Map<String, Object> paramValues) {
         final AggregatedResultQueryModel countQry = unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate();
 
-        final PropsResolutionContext resolutionContext = new PropsResolutionContext(metadata(paramValues));
+        final PropsResolutionContext resolutionContext = new PropsResolutionContext(metadata());
         final EntQueryGenerator qb = qb(paramValues);
         final ResultQuery2 rq2 = qb.generateEntQueryAsResultQuery(countQry, null, null).transform(resolutionContext);
-        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<ResultQuery3> s2tr = rq2.transform(new TransformationContext(new TablesAndSourceChildren(tables, groupChildren(rq2.collectProps(), metadata(paramValues), qb))));
+        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<ResultQuery3> s2tr = rq2.transform(new TransformationContext(new TablesAndSourceChildren(tables, groupChildren(rq2.collectProps(), metadata(), qb))));
         return s2tr.item;
     }
 

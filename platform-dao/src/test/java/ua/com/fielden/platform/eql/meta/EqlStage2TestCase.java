@@ -57,11 +57,11 @@ public class EqlStage2TestCase extends EqlTestCase {
     protected static final Yields2 emptyYields2 = new Yields2(emptyList());
 
     protected static AbstractPropInfo<?> pi(final Class<?> type, final String propName) {
-        return metadata.get(type).getProps().get(propName);
+        return DOMAIN_METADATA.lmd.getDomainInfo((Class<? extends AbstractEntity<?>>) type).getProps().get(propName);
     }
 
     protected static AbstractPropInfo<?> pi(final Class<?> type, final String propName, final String subPropName) {
-        final AbstractPropInfo<?> propInfo = metadata.get(type).getProps().get(propName);
+        final AbstractPropInfo<?> propInfo = DOMAIN_METADATA.lmd.getDomainInfo((Class<? extends AbstractEntity<?>>) type).getProps().get(propName);
         if (propInfo instanceof ComponentTypePropInfo) {
             return (AbstractPropInfo<?>) ((ComponentTypePropInfo) propInfo).getProps().get(subPropName);
         } else if (propInfo instanceof UnionTypePropInfo) {
@@ -73,7 +73,7 @@ public class EqlStage2TestCase extends EqlTestCase {
 
     protected static <T extends AbstractEntity<?>> ResultQuery2 qryCountAll(final ICompoundCondition0<T> unfinishedQry) {
         final AggregatedResultQueryModel countQry = unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate();
-        final PropsResolutionContext resolutionContext = new PropsResolutionContext(metadata);
+        final PropsResolutionContext resolutionContext = new PropsResolutionContext(DOMAIN_METADATA.lmd);
         return qb().generateEntQueryAsResultQuery(countQry, null, null).transform(resolutionContext);
     }
     
@@ -82,12 +82,12 @@ public class EqlStage2TestCase extends EqlTestCase {
     }
 
     protected static <T extends AbstractEntity<?>> ResultQuery2 qry(final EntityResultQueryModel<T> qry, final OrderingModel order) {
-        final PropsResolutionContext resolutionContext = new PropsResolutionContext(metadata);
+        final PropsResolutionContext resolutionContext = new PropsResolutionContext(DOMAIN_METADATA.lmd);
         return qb().generateEntQueryAsResultQuery(qry, order, new EntityRetrievalModel<T>(EntityQueryUtils.fetch(qry.getResultType()), DOMAIN_METADATA_ANALYSER)).transform(resolutionContext);
     }
 
     protected static ResultQuery2 qry(final AggregatedResultQueryModel qry) {
-        final PropsResolutionContext resolutionContext = new PropsResolutionContext(metadata);
+        final PropsResolutionContext resolutionContext = new PropsResolutionContext(DOMAIN_METADATA.lmd);
         return qb().generateEntQueryAsResultQuery(qry, null, null).transform(resolutionContext);
     }
     
@@ -236,15 +236,15 @@ public class EqlStage2TestCase extends EqlTestCase {
     }
 
     protected static QrySource2BasedOnPersistentType source(final String contextId, final Class<? extends AbstractEntity<?>> sourceType, final String alias) {
-        return new QrySource2BasedOnPersistentType(sourceType, metadata.get(sourceType), alias, contextId);
+        return new QrySource2BasedOnPersistentType(sourceType, DOMAIN_METADATA.lmd.getDomainInfo(sourceType), alias, contextId);
     }
 
     protected static QrySource2BasedOnPersistentType source(final String contextId, final Class<? extends AbstractEntity<?>> sourceType) {
-        return new QrySource2BasedOnPersistentType(sourceType, metadata.get(sourceType), contextId);
+        return new QrySource2BasedOnPersistentType(sourceType, DOMAIN_METADATA.lmd.getDomainInfo(sourceType), contextId);
     }
     
     protected static QrySource2BasedOnSubqueries source(final String contextId, final SourceQuery2 ... queries) {
-        return new QrySource2BasedOnSubqueries(Arrays.asList(queries), null, metadata, contextId);
+        return new QrySource2BasedOnSubqueries(Arrays.asList(queries), null, DOMAIN_METADATA.lmd, contextId);
     }
 
     protected static ResultQuery2 qryCountAll(final Sources2 sources, final Conditions2 conditions) {

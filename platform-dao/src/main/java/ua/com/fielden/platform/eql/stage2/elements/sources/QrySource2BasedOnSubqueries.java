@@ -24,6 +24,7 @@ import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.meta.ComponentTypePropInfo;
 import ua.com.fielden.platform.eql.meta.EntityInfo;
 import ua.com.fielden.platform.eql.meta.EntityTypePropInfo;
+import ua.com.fielden.platform.eql.meta.LongMetadata;
 import ua.com.fielden.platform.eql.meta.PrimTypePropInfo;
 import ua.com.fielden.platform.eql.stage2.elements.AbstractElement2;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
@@ -41,7 +42,7 @@ public class QrySource2BasedOnSubqueries extends AbstractElement2 implements IQr
     private final EntityInfo<?> entityInfo;
     private final String alias;
 
-    public QrySource2BasedOnSubqueries(final List<SourceQuery2> models, final String alias, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo, final String contextId) {
+    public QrySource2BasedOnSubqueries(final List<SourceQuery2> models, final String alias, final LongMetadata domainInfo, final String contextId) {
         super(contextId);
         if (models == null || models.isEmpty()) {
             throw new EqlStage1ProcessingException("Couldn't produce instance of QueryBasedSource due to zero models passed to constructor!");
@@ -127,19 +128,19 @@ public class QrySource2BasedOnSubqueries extends AbstractElement2 implements IQr
         return entityInfo;
     }
     
-    private EntityInfo<?> produceEntityInfoFrom(final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo) {
+    private EntityInfo<?> produceEntityInfoFrom(final LongMetadata domainInfo) {
         if (!EntityAggregates.class.equals(sourceType())) {
             //return domainInfo.get(sourceType());
             if (isPersistedEntityType(sourceType())) {
                 if (getYields().getYields().size() == 1 && getYields().getYields().iterator().next().alias.equals(ID)) {
                     final EntityInfo<?> actualEi = new EntityInfo<>(sourceType(), QUERY_BASED);
-                    actualEi.addProp(domainInfo.get(sourceType()).getProps().get(ID));
+                    actualEi.addProp(domainInfo.getDomainInfo(sourceType()).getProps().get(ID));
                     return actualEi;    
                 } else {
-                    return domainInfo.get(sourceType());    
+                    return domainInfo.getDomainInfo(sourceType());    
                 }
             } else {
-                final EntityInfo<?> declaredEi = domainInfo.get(sourceType());
+                final EntityInfo<?> declaredEi = domainInfo.getDomainInfo(sourceType());
                 final EntityInfo<?> actualEi = new EntityInfo<>(sourceType(), QUERY_BASED);
                 for (final Entry<String, AbstractPropInfo<?>> declaredProp : declaredEi.getProps().entrySet()) {
                    
@@ -172,7 +173,7 @@ public class QrySource2BasedOnSubqueries extends AbstractElement2 implements IQr
             final EntityInfo<EntityAggregates> entAggEntityInfo = new EntityInfo<>(EntityAggregates.class, null);
             for (final Yield2 yield : getYields().getYields()) {
                 final AbstractPropInfo<?> aep = isEntityType(yield.javaType())
-                        ? new EntityTypePropInfo(yield.alias, domainInfo.get(yield.javaType()), LongType.INSTANCE, yield.hasRequiredHint)
+                        ? new EntityTypePropInfo(yield.alias, domainInfo.getDomainInfo((Class<? extends AbstractEntity<?>>)yield.javaType()), LongType.INSTANCE, yield.hasRequiredHint)
                         : new PrimTypePropInfo(yield.alias, yield.operand.hibType(), yield.javaType());
                 entAggEntityInfo.addProp(aep);
             }

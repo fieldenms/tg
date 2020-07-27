@@ -609,7 +609,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
     public void test_that_prop_name_is_without_alias_at_stage2() {
         final ResultQuery2 actQry = qryCountAll(select(TgWorkshop.class).as("w").where().prop("w.key").isNotNull());
 
-        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(TgWorkshop.class, metadata.get(WORKSHOP), "w", "0");
+        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(TgWorkshop.class, DOMAIN_METADATA.lmd.getDomainInfo(WORKSHOP), "w", "0");
         
         final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
         final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
@@ -628,7 +628,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
     public void test_q2() {
         final ResultQuery2 actQry = qryCountAll(select(AUTHOR).where().prop("surname").isNotNull());
 
-        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(AUTHOR, metadata.get(AUTHOR), null, "0");
+        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(AUTHOR, DOMAIN_METADATA.lmd.getDomainInfo(AUTHOR), null, "0");
         final Sources2 sources = new Sources2(source, emptyList());
         final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
         final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
@@ -647,7 +647,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
     public void test_q3() {
         final ResultQuery2 actQry = qryCountAll(select(AUTHOR).as("a").where().prop("a.surname").isNotNull());
 
-        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(AUTHOR, metadata.get(AUTHOR), "a", "0");
+        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(AUTHOR, DOMAIN_METADATA.lmd.getDomainInfo(AUTHOR), "a", "0");
         final Sources2 sources = new Sources2(source, Collections.<CompoundSource2> emptyList());
         final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
         final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
@@ -666,7 +666,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
     public void test_q4() {
         final ResultQuery2 actQry = qryCountAll(select(AUTHOR).where().prop("surname").isNotNull().and().prop("name").eq().iVal(null));
 
-        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(AUTHOR, metadata.get(AUTHOR), null, "0");
+        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(AUTHOR, DOMAIN_METADATA.lmd.getDomainInfo(AUTHOR), null, "0");
         final Sources2 sources = new Sources2(source, Collections.<CompoundSource2> emptyList());
         final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
         final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
@@ -685,7 +685,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
     public void test_q5() {
         final ResultQuery2 actQry = qryCountAll(select(AUTHOR).where().prop("surname").isNotNull().and().prop("name").eq().iParam("param"));
 
-        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(AUTHOR, metadata.get(AUTHOR), null, "0");
+        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(AUTHOR, DOMAIN_METADATA.lmd.getDomainInfo(AUTHOR), null, "0");
         final Sources2 sources = new Sources2(source, Collections.<CompoundSource2> emptyList());
         final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
         final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
@@ -706,7 +706,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final Map<String, Object> params = new HashMap<>();
         params.put("param", 1);
 
-        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(AUTHOR, metadata.get(AUTHOR), null, "0");
+        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(AUTHOR, DOMAIN_METADATA.lmd.getDomainInfo(AUTHOR), null, "0");
         final Sources2 sources = new Sources2(source, Collections.<CompoundSource2> emptyList());
         final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
         final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
@@ -726,14 +726,14 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final ResultQuery2 actQry = qryCountAll(select(AUTHOR).leftJoin(TgPersonName.class).as("pn").on().prop("name").eq().prop("pn.id"). //
         where().prop("surname").eq().val(1));
 
-        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(AUTHOR, metadata.get(AUTHOR), null, "0");
-        final QrySource2BasedOnPersistentType source2 = new QrySource2BasedOnPersistentType(TgPersonName.class, metadata.get(TgPersonName.class), "pn", "0");
+        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(AUTHOR, DOMAIN_METADATA.lmd.getDomainInfo(AUTHOR), null, "0");
+        final QrySource2BasedOnPersistentType source2 = new QrySource2BasedOnPersistentType(TgPersonName.class, DOMAIN_METADATA.lmd.getDomainInfo(TgPersonName.class), "pn", "0");
 
         final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
         final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
         firstAndConditionsGroup.add(new ComparisonTest2(new EntProp2(source, asList(pi(AUTHOR, "name"))), //
                 EQ, // 
-                new EntProp2(source2, asList(metadata.get(TgPersonName.class).getProps().get("id")))));
+                new EntProp2(source2, asList(DOMAIN_METADATA.lmd.getDomainInfo(TgPersonName.class).getProps().get("id")))));
         allConditions.add(firstAndConditionsGroup);
         final Conditions2 joinConditions = new Conditions2(false, allConditions);
 
@@ -759,9 +759,9 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final ResultQuery2 actQry = qryCountAll(select(AUTHOR).leftJoin(TgPersonName.class).as("pn").on().prop("name").eq().prop("pn.id"). //
         where().prop("lastRoyalty").eq().val(1));
 
-        final QrySource2BasedOnPersistentType sourceAuthor = new QrySource2BasedOnPersistentType(AUTHOR, metadata.get(AUTHOR), null, "0");
+        final QrySource2BasedOnPersistentType sourceAuthor = new QrySource2BasedOnPersistentType(AUTHOR, DOMAIN_METADATA.lmd.getDomainInfo(AUTHOR), null, "0");
 
-        final QrySource2BasedOnPersistentType sourceAuthorRoyalty = new QrySource2BasedOnPersistentType(TgAuthorRoyalty.class, metadata.get(TgAuthorRoyalty.class), null, "0");
+        final QrySource2BasedOnPersistentType sourceAuthorRoyalty = new QrySource2BasedOnPersistentType(TgAuthorRoyalty.class, DOMAIN_METADATA.lmd.getDomainInfo(TgAuthorRoyalty.class), null, "0");
 
         final List<List<? extends ICondition2<?>>> lrAllConditions2 = new ArrayList<>();
         final List<ICondition2<?>> lrFirstAndConditionsGroup2 = new ArrayList<>();
@@ -773,7 +773,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final EntQueryBlocks2 lastRoyaltyParts = new EntQueryBlocks2(new Sources2(sourceAuthorRoyalty, emptyList()), lrConditions, emptyYields2, new GroupBys2(Collections.<GroupBy2> emptyList()), new OrderBys2(null));
         final SubQuery2 lastRoyaltySubqry = new SubQuery2(lastRoyaltyParts, TgAuthorRoyalty.class);
 
-        final QrySource2BasedOnPersistentType sourcePersonName = new QrySource2BasedOnPersistentType(TgPersonName.class, metadata.get(TgPersonName.class), "pn", "0");
+        final QrySource2BasedOnPersistentType sourcePersonName = new QrySource2BasedOnPersistentType(TgPersonName.class, DOMAIN_METADATA.lmd.getDomainInfo(TgPersonName.class), "pn", "0");
 
         final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
         final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();

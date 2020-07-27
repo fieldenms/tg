@@ -582,7 +582,7 @@ public class LongMetadata {
         final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo = new EntityTypeInfo<>(entityType);
         final Map<String, String> columns = new HashMap<>();
         try {
-            for (final LongPropertyMetadata el : generatePropertyMetadatasForEntity(parentInfo).values()) {
+            for (final LongPropertyMetadata el : entityPropsMetadata.get(entityType).values()) {
 
                 if (el.column != null) {
                     columns.put(el.name, el.column.name);
@@ -609,8 +609,22 @@ public class LongMetadata {
         return Collections.unmodifiableMap(tables);
     }
     
-    public Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> getDomainInfo() {
-        return Collections.unmodifiableMap(domainInfo);
+    public EntityInfo<?> getDomainInfo(final Class<? extends AbstractEntity<?>> type) {
+        final EntityInfo<?> existing = domainInfo.get(type);
+        if (existing != null) {
+            return existing;
+        }
+        
+        try {
+            entityPropsMetadata.put(type, generatePropertyMetadatasForEntity(new EntityTypeInfo<>(type)));
+        } catch (final Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        final EntityInfo<?> created = new EntityInfo<>(type, determineCategory(type));
+        domainInfo.put(type, created);
+        addProps(created, domainInfo);
+        return created;
     }
     
 }

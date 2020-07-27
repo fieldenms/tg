@@ -32,7 +32,6 @@ import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 import ua.com.fielden.platform.entity.query.stream.ScrollableResultStream;
-import ua.com.fielden.platform.eql.meta.EntityInfo;
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.elements.TablesAndSourceChildren;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
@@ -144,12 +143,11 @@ public class EntityContainerFetcher {
         } else {
             try {
                 final ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator gen1 = new ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator(domainMetadataAnalyser.getDbVersion(), filter, username, executionContext.dates(), qem.getParamValues());
-                final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo = executionContext.getDomainMetadata().lmd.getDomainInfo();
-                final PropsResolutionContext resolutionContext = new PropsResolutionContext(domainInfo);
+                final PropsResolutionContext resolutionContext = new PropsResolutionContext(executionContext.getDomainMetadata().lmd);
 
                 final ResultQuery2 s1tr = gen1.generateEntQueryAsResultQuery(qem.queryModel, qem.orderModel, qem.fetchModel).transform(resolutionContext);
 
-                final Map<String, List<ChildGroup>> grouped = groupChildren(s1tr.collectProps(), domainInfo, gen1);
+                final Map<String, List<ChildGroup>> grouped = groupChildren(s1tr.collectProps(), executionContext.getDomainMetadata().lmd, gen1);
                 final TransformationResult<ResultQuery3> s2tr = s1tr.transform(new TransformationContext(new TablesAndSourceChildren(executionContext.getDomainMetadata().lmd.getTables(), grouped)));
                 final ResultQuery3 entQuery3 = s2tr.item;
                 final String sql3 = entQuery3.sql(domainMetadataAnalyser.getDbVersion());
