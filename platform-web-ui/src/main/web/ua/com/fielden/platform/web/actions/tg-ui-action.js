@@ -17,6 +17,7 @@ import { TgReflector } from '/app/tg-reflector.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 import {processResponseError, toastMsgForError} from '/resources/reflection/tg-ajax-utils.js';
+import { enhanceStateRestoration } from '/resources/components/tg-global-error-handler.js';
 
 const template = html`
     <style>
@@ -464,14 +465,20 @@ Polymer({
 
             const postMasterInfoRetrieve = function () {
                 if (this.preAction) {
-                    const result = this.preAction(this)
+                    const result = this.preAction(this);
+                    
                     const promise = result instanceof Promise ? result : Promise.resolve(result);
     
                     promise.then(function (value) {
                         self.showDialog(self);
                     }, function (error) {
                         self.restoreActionState();
-                        console.log("The action was rejected with error: " + error);
+                        if (error instanceof Error) {
+                            console.error("The action was rejected with error: " + error);
+                            throw error;
+                        } else {
+                            console.log("The action was rejected with error: " + error);
+                        }
                     });
                 } else {
                     this.showDialog(this);
@@ -554,6 +561,17 @@ Polymer({
             // One exception from that rule: embedded masters in master-with-master -- the flag is configured from MasterWithMasterBuilder API.
             master.shouldRefreshParentCentreAfterSave = self.shouldRefreshParentCentreAfterSave;
 
+            const restoreStateAfterSave = function () {
+                if (!self.skipAutomaticActionCompletion) {
+                    // action execution completes
+                    self.isActionInProgress = false;
+
+                    if (master.noUI === true) {
+                        self.restoreActionState();
+                    }
+                }
+            };
+
             master.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {
                 postal.publish({
                     channel: "centre_" + this.centreUuid,
@@ -566,24 +584,25 @@ Polymer({
                     }
                 });
 
-                if (potentiallySavedOrNewEntity.isValidWithoutException()) {
-                    if (self.postActionSuccess) {
-                        self.postActionSuccess(potentiallySavedOrNewEntity, self, master);
+                try {
+                    if (potentiallySavedOrNewEntity.isValidWithoutException()) {
+                        if (self.postActionSuccess) {
+                            self.postActionSuccess(potentiallySavedOrNewEntity, self, master);
+                        }
+                    } else {
+                        if (self.postActionError) {
+                            self.postActionError(potentiallySavedOrNewEntity, self, master);
+                        }
                     }
-                } else {
-                    if (self.postActionError) {
-                        self.postActionError(potentiallySavedOrNewEntity, self, master);
-                    }
+                } catch (e) {
+                    throw enhanceStateRestoration(e, () => {
+                        restoreStateAfterSave();
+                        master.restoreAfterSave();
+                    });
                 }
 
-                if (!self.skipAutomaticActionCompletion) {
-                    // action execution completes
-                    self.isActionInProgress = false;
-
-                    if (this.noUI === true) {
-                        self.restoreActionState();
-                    }
-                }
+                restoreStateAfterSave();
+                
             };
 
             master.postSavedError = function (errorResult) {
