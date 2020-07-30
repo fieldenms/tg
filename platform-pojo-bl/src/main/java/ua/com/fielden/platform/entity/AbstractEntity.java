@@ -259,6 +259,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
 public abstract class AbstractEntity<K extends Comparable> implements Comparable<AbstractEntity<K>> {
 
     public static final String ERR_IS_EDITABLE_UNINSTRUMENTED = "Uninstrumented instance is not suitable for editing.";
+    public static final String ERR_ENSURE_INSTRUMENTED = "Meta-properties for this instance of entity [%s] do not exist as it was not instrumented.";
 
     protected final Logger logger;
 
@@ -1038,7 +1039,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      */
     public final void assertInstrumented() {
         if (!isInstrumented()) {
-            throw new EntityException(format("Meta-properties for this instance of entity [%s] do not exist as it was not instrumented.", getType().getName()));
+            throw new EntityException(format(ERR_ENSURE_INSTRUMENTED, getType().getName()));
         }
     }
 
@@ -1171,6 +1172,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      * @return
      */
     public final boolean isDirty() {
+        assertInstrumented();
         return !isPersisted() ||
                 nonProxiedProperties().anyMatch(MetaProperty::isDirty);
     }
