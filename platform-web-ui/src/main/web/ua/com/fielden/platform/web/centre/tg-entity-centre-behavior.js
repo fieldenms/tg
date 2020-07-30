@@ -81,7 +81,7 @@ const createColumnAction = function (entityCentre) {
     actionModel.createContextHolder = entityCentre._createContextHolder;
     actionModel.preAction = function (action) {
         action.modifyFunctionalEntity = (function (bindingEntity, master) {
-            action.modifyValue4Property('columnParameters', bindingEntity, actionModel.columnParameters);
+            bindingEntity.setAndRegisterPropertyTouch('columnParameters', actionModel.columnParameters);
         });
         return true;
     };

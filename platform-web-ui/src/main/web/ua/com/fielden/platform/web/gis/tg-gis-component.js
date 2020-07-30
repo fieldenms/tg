@@ -458,7 +458,7 @@ GisComponent.prototype.createPopupContent = function (feature) {
             actionElement.addEventListener('click', (function(e, details) {
                 const action = this._select._tgMap.parentElement.querySelector('tg-ui-action[short-desc="' + featureType + ' Master"]');
                 action.modifyFunctionalEntity = (function (bindingEntity, master) {
-                    action.modifyValue4Property('key', bindingEntity, entity.get('key'));
+                    bindingEntity.setAndRegisterPropertyTouch('key', entity.get('key'));
                 }).bind(this);
                 action._run();
             }).bind(this));

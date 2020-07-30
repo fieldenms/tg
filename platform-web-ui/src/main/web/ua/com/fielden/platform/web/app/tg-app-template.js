@@ -529,11 +529,11 @@ Polymer({
         //Init action related functions
         this.$.menuSaveAction.modifyFunctionalEntity = function (bindingEntity, master) {
             if (this._visibleMenuItems && this._visibleMenuItems.length > 0) {
-                this.$.menuSaveAction.modifyValue4Property("visibleMenuItems", bindingEntity, this._visibleMenuItems);
+                bindingEntity.setAndRegisterPropertyTouch("visibleMenuItems", this._visibleMenuItems);
                 this._visibleMenuItems = null;
             }
             if (this._invisibleMenuItems && this._invisibleMenuItems.length > 0) {
-                this.$.menuSaveAction.modifyValue4Property("invisibleMenuItems", bindingEntity, this._invisibleMenuItems);
+                bindingEntity.setAndRegisterPropertyTouch("invisibleMenuItems", this._invisibleMenuItems);
                 this._invisibleMenuItems = null;
             }
         }.bind(this);

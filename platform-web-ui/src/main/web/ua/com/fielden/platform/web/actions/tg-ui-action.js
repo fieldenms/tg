@@ -654,19 +654,6 @@ Polymer({
     },
 
     /**
-     * Modifies the value of the currentBindingEntity's property.
-     *
-     * Warning: the method has no impact to the corresponding editor -- this method should be used
-     * only in case where no editor exists.
-     */
-    modifyValue4Property: function (propNameToBeAssigned, bindingEntity, value) {
-        if (typeof bindingEntity[propNameToBeAssigned] === 'undefined') {
-            throw 'modifyValue4Property: no property [' + propNameToBeAssigned + '] exists.';
-        }
-        bindingEntity.setAndRegisterPropertyTouch(propNameToBeAssigned, value);
-    },
-
-    /**
      * Listener that listens the changes for icon style property.
      */
     _iconStyleChanged: function (newValue, oldValue) {
