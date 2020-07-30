@@ -137,7 +137,7 @@ Polymer({
                     self.fire("menu-item-view-loaded", self.menuItem);
                     detail.postRetrieved = oldPostRetrieved;
                 };
-                detail.retrieve();
+                detail.retrieve().catch(error => {});
             } else if (this.menuItem.view.viewType === 'master') {
                 detail.postRetrieved = function (entity, bindingEntity, customObject) {
                     self.fire("menu-item-view-loaded", self.menuItem);
@@ -149,7 +149,7 @@ Polymer({
                         return detail.save(); // saving promise
                     }
                     return Promise.resolve(ironRequest); // retrieval promise; resolves immediately
-                });
+                }).catch(error => {});
             } else {
                 self.fire("menu-item-view-loaded", self.menuItem);
             }
