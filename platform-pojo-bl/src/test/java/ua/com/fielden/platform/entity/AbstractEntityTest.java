@@ -1262,4 +1262,18 @@ public class AbstractEntityTest {
         assertTrue(entity.isDirty());
     }
 
+    @Test
+    public void if_enitity_isDirty_then_it_isEditable() {
+        final EntityWithEditabilityDependenOnState entity = factory.newEntity(EntityWithEditabilityDependenOnState.class);
+        assertTrue(entity.isDirty());
+        assertTrue(entity.isEditable().isSuccessful());
+
+        // set to false, which would make entity read-only, 
+        // but only after it has been made not dirty by, for example, saving it
+        entity.setNotEditableIfFalse(false);
+        
+        assertTrue(entity.isDirty());
+        // FIXME once issue #1579 is implemented, this assertion should start holding
+        assertTrue(entity.isEditable().isSuccessful());
+    }
 }
