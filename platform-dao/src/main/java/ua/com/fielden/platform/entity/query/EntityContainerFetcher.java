@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.query;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.query.EqlQueryTransformer.transform;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType.COMPOSITE_TYPE_HEADER;
 import static ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType.UNION_ENTITY_HEADER;
@@ -142,16 +143,10 @@ public class EntityContainerFetcher {
             result = new QueryModelResult<>((Class<E>)entQuery.type(), sql, getResultPropsInfos(entQuery.getYields()), entQuery.getValuesForSqlParams(), qem.fetchModel);
         } else {
             try {
-                final ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator gen1 = new ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator(domainMetadataAnalyser.getDbVersion(), filter, username, executionContext.dates(), qem.getParamValues());
-                final PropsResolutionContext resolutionContext = new PropsResolutionContext(executionContext.getDomainMetadata().lmd);
-
-                final ResultQuery2 s1tr = gen1.generateEntQueryAsResultQuery(qem.queryModel, qem.orderModel, qem.fetchModel).transform(resolutionContext);
-
-                final Map<String, List<ChildGroup>> grouped = groupChildren(s1tr.collectProps(), executionContext.getDomainMetadata().lmd, gen1);
-                final TransformationResult<ResultQuery3> s2tr = s1tr.transform(new TransformationContext(new TablesAndSourceChildren(executionContext.getDomainMetadata().lmd.getTables(), grouped)));
-                final ResultQuery3 entQuery3 = s2tr.item;
-                final String sql3 = entQuery3.sql(domainMetadataAnalyser.getDbVersion());
-                result =  new QueryModelResult<>((Class<E>)entQuery3.resultType, sql3, getResultPropsInfos(entQuery3.yields), s2tr.updatedContext.getParamValues(), qem.fetchModel);
+                final TransformationResult<ResultQuery3> tr = transform(executionContext, qem, domainMetadataAnalyser.getDbVersion(), filter, username);
+                final ResultQuery3 entQuery3 = tr.item;
+                final String sql = entQuery3.sql(domainMetadataAnalyser.getDbVersion());
+                result = new QueryModelResult<>((Class<E>) entQuery3.resultType, sql, getResultPropsInfos(entQuery3.yields), tr.updatedContext.getParamValues(), qem.fetchModel);
             } catch (final Exception e) {
                 e.printStackTrace();
                 throw new EqlException("Can't accomplish QueryModelResult creation due to: " + e);
@@ -161,6 +156,7 @@ public class EntityContainerFetcher {
         
         return result;
     }
+
 
     private SortedSet<ResultQueryYieldDetails> getResultPropsInfos(final Yields model) {
         final SortedSet<ResultQueryYieldDetails> result = new TreeSet<>();
