@@ -663,7 +663,7 @@ Polymer({
         if (typeof bindingEntity[propNameToBeAssigned] === 'undefined') {
             throw 'modifyValue4Property: no property [' + propNameToBeAssigned + '] exists.';
         }
-        bindingEntity[propNameToBeAssigned] = value;
+        bindingEntity.setAndRegisterPropertyTouch(propNameToBeAssigned, value);
     },
 
     /**

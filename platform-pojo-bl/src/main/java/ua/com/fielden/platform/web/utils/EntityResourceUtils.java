@@ -177,6 +177,7 @@ public class EntityResourceUtils {
         final Class<M> type = (Class<M>) entity.getType();
 
         final Set<String> touchedProps = new LinkedHashSet<>((List<String>) modifiedPropertiesHolder.get("@@touchedProps"));
+        System.out.println("TOUCHED PROPERTIES: " + touchedProps);
         // iterate through touched properties:
         //  (the order of application is strictly the same as was done by the user in Web UI client - the only difference is
         //  such that properties, that were touched twice or more times, will be applied only once)
