@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.entity;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.util.ArrayList;
 import java.util.Date;
