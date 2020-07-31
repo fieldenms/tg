@@ -497,6 +497,7 @@ Polymer({
                     self.$.toaster.showProgress = false;
                     self.$.toaster.isCritical = true;
                     self.$.toaster.show();
+                    throw new UnreportableError(error);
                 });
         }
     },

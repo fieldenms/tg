@@ -95,9 +95,7 @@ template.setAttribute('strip-whitespace', '');
             col += 1;
         }
         if (!width) {
-            throw {
-                msg: "The compoent at: " + componentIndex + " index has width equal to 0"
-            };
+            throw new Error(`The compoent at: ${componentIndex} index has width equal to 0`);
         }
         return width;
     };
@@ -109,9 +107,7 @@ template.setAttribute('strip-whitespace', '');
             row += 1;
         }
         if (!height) {
-            throw {
-                msg: "The compoent at: " + componentIndex + " index has height equal to 0"
-            }
+            throw new Error(`The compoent at ${componentIndex} index has height equal to 0`);
         }
         return height;
     };
@@ -130,9 +126,7 @@ template.setAttribute('strip-whitespace', '');
         }
         // Throw exception if the specified layout spec doesn't have rows.
         if (rows === 0) {
-            throw {
-                msg: "The layout " + JSON.stringify(layoutSpec) + " must have at least one row!"
-            };
+            throw new Error(`The layout ${JSON.stringify(layoutSpec)} must have at least one row!`);
         }
         // Calculate the number of columns.
         layoutSpec[0].forEach(function (colElement) {
@@ -144,9 +138,7 @@ template.setAttribute('strip-whitespace', '');
         });
         // Throw exception if the specified layout spec doesn't have columns.
         if (cols === 0) {
-            throw {
-                msg: "The layout " + JSON.stringify(layoutSpec) + " must have at least one column!"
-            };
+            throw new Error(`The layout ${JSON.stringify(layoutSpec)} must have at least one column!`);
         }
         // Create the two dimensional array that represents the layout and fill it with object that has only one property named index equal to -1.
         // That indicates the free grid cell.
@@ -174,9 +166,7 @@ template.setAttribute('strip-whitespace', '');
                 if (elementPos) {
                     placeElementAt(componentIndex, layoutGrid, elementPos[0], elementPos[1], colSpan, rowSpan);
                 } else {
-                    throw {
-                        msg: "There is no free pace for element at index: " + componentIndex
-                    };
+                    throw new Error(`There is no free space for element at index: ${componentIndex}`);
                 }
                 componentIndex += 1;
             });
@@ -191,10 +181,11 @@ template.setAttribute('strip-whitespace', '');
             colIndex;
         for (rowIndex = row; rowIndex < row + height; rowIndex++) {
             for (colIndex = col; colIndex < col + width; colIndex++) {
+                if (!layoutGrid[rowIndex][colIndex]) {
+                    throw new Error(`The compoents at index ${componentIndex} doesn't have enough space to be placed in to the layout`);
+                }
                 if (layoutGrid[rowIndex][colIndex].index !== -1) {
-                    throw {
-                        msg: "The compoents with index " + componentIndex + " and " + layoutGrid[rowIndex][colIndex].index + " are overlapping"
-                    }
+                    throw new Error(`The compoents at indices ${componentIndex} and ${layoutGrid[rowIndex][colIndex].index} are overlapping`);
                 } else {
                     layoutGrid[rowIndex][colIndex].index = componentIndex;
                 }
