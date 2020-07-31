@@ -394,8 +394,8 @@ Polymer({
             const associationsToRemove = {};
             this.entities.forEach(entity => entity.getAssociationsToSave(associationsToSave));
             this.entities.forEach(entity => entity.getAssociationsToRemove(associationsToRemove));
-            this._currBindingEntity['associationsToSave'] = associationsToSave;
-            this._currBindingEntity['associationsToRemove'] = associationsToRemove;
+            this._currBindingEntity.setAndRegisterPropertyTouch('associationsToSave', associationsToSave);
+            this._currBindingEntity.setAndRegisterPropertyTouch('associationsToRemove', associationsToRemove);
             this.save();
         }.bind(this);
         this.postSaved = function () {
