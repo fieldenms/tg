@@ -71,7 +71,10 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableToS2<S
                     }
                 } else if (el.getValue() instanceof ComponentTypePropInfo) {
                     for (final Entry<String, AbstractPropInfo<?>> sub : ((ComponentTypePropInfo<?>) el.getValue()).getProps().entrySet()) {
-                        enhancedYields.add(new Yield2(new EntProp2(mainSource, listOf(el.getValue(), sub.getValue())), el.getKey() + "." + sub.getKey(), false));             
+                        if (!sub.getValue().hasExpression()) {
+                            enhancedYields.add(new Yield2(new EntProp2(mainSource, listOf(el.getValue(), sub.getValue())), el.getKey() + "." + sub.getKey(), false));    
+                        }
+                                     
                     }
                 }
                 
