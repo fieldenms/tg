@@ -42,7 +42,7 @@
                     // retrieve primary action
                     const editAction = centre.$.egi.$.primary_action_selector.assignedNodes()[0];
                     // and provide it with appropriate context
-                    editAction.currentEntity = entity;
+                    editAction.currentEntity = () => entity;
                     
                     const old_postRun = centre._postRun;
                     

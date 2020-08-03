@@ -235,7 +235,7 @@ Polymer({
     _buildEditAction: function(action) {
         action.shortDesc = "";
         this._actions[referenceHierarchyActions.EDIT] = (e) => {
-            action.currentEntity = e.model.entity.entity.entity;
+            action.currentEntity = () => e.model.entity.entity.entity;
             action._run();
         };
         return (entity) => {
@@ -247,7 +247,7 @@ Polymer({
 
     _buildReferenceHierarchyAction: function(action) {
         this._actions[referenceHierarchyActions.REFERENCE_HIERARCHY] = (e) => {
-            action.currentEntity = e.model.entity.entity.entity;
+            action.currentEntity = () => e.model.entity.entity.entity;
             action._run();
         }
         return (entity) => {    
