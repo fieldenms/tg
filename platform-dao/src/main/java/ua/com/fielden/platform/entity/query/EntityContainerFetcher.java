@@ -6,11 +6,9 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import static ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType.COMPOSITE_TYPE_HEADER;
 import static ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType.UNION_ENTITY_HEADER;
 import static ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType.USUAL_PROP;
-import static ua.com.fielden.platform.eql.stage2.elements.PathsToTreeTransformator.groupChildren;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -33,12 +31,7 @@ import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 import ua.com.fielden.platform.entity.query.stream.ScrollableResultStream;
-import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
-import ua.com.fielden.platform.eql.stage2.elements.TablesAndSourceChildren;
-import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
-import ua.com.fielden.platform.eql.stage2.elements.operands.ResultQuery2;
-import ua.com.fielden.platform.eql.stage2.elements.sources.ChildGroup;
 import ua.com.fielden.platform.eql.stage3.elements.Yield3;
 import ua.com.fielden.platform.eql.stage3.elements.Yields3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ResultQuery3;
@@ -47,7 +40,6 @@ import ua.com.fielden.platform.streaming.SequentialGroupingStream;
 public class EntityContainerFetcher {
     private final QueryExecutionContext executionContext;    
     private final Logger logger = Logger.getLogger(this.getClass());
-    //public static long dur = 0;
 
     public EntityContainerFetcher(final QueryExecutionContext executionContext) {
         this.executionContext = executionContext;
@@ -105,7 +97,6 @@ public class EntityContainerFetcher {
         final List<?> res = query.list();
         final Period pd = new Period(st, new DateTime());
         logger.info(format("Query exec duration: %s m %s s %s ms for type [%s].", pd.getMinutes(), pd.getSeconds(), pd.getMillis(), modelResult.getResultType().getSimpleName()));
-        //dur = dur + 60000 * pd.getMinutes() + 1000 * pd.getSeconds() + pd.getMillis();
         return entityRawResultConverter.transformFromNativeResult(resultTree, res);
     }
 

@@ -69,8 +69,8 @@ public class PathsToTreeTransformator {
         return sourceChildren;
     }
 
-    private static final Map<String, T2<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>>>  groupBySource(final Set<EntProp2> props) {
-        final Map<String, T2<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>>> result = new HashMap<>();
+    private static final SortedMap<String, T2<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>>>  groupBySource(final Set<EntProp2> props) {
+        final SortedMap<String, T2<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>>> result = new TreeMap<>();
         for (final EntProp2 prop : props) {
             final T2<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>> existing = result.get(prop.source.contextId());
             if (existing != null) {
@@ -84,18 +84,18 @@ public class PathsToTreeTransformator {
         return result;
     }
     
-    private static Map<AbstractPropInfo<?>, Map<String, List<AbstractPropInfo<?>>>> groupByFirstProp(final Map<String, List<AbstractPropInfo<?>>> props) {
-        final Map<AbstractPropInfo<?>, Map<String, List<AbstractPropInfo<?>>>> result = new HashMap<>();
+    private static SortedMap<String, T2<AbstractPropInfo<?>, Map<String, List<AbstractPropInfo<?>>>>> groupByFirstProp(final Map<String, List<AbstractPropInfo<?>>> props) {
+        final SortedMap<String, T2<AbstractPropInfo<?>, Map<String, List<AbstractPropInfo<?>>>>> result = new TreeMap<>();
 
         for (final Entry<String, List<AbstractPropInfo<?>>> propEntry : props.entrySet()) {
             final AbstractPropInfo<?> first = propEntry.getValue().get(0);
-            Map<String, List<AbstractPropInfo<?>>> existing = result.get(first);
+            T2<AbstractPropInfo<?>, Map<String, List<AbstractPropInfo<?>>>> existing = result.get(first.name);
             if (existing == null) {
-                existing = new HashMap<>();
-                result.put(first, existing);
+                existing = t2(first, new HashMap<>());
+                result.put(first.name, existing);
             }
 
-            existing.put(propEntry.getKey(), propEntry.getValue());
+            existing._2.put(propEntry.getKey(), propEntry.getValue());
         }
 
         return result;
@@ -106,8 +106,8 @@ public class PathsToTreeTransformator {
         final Map<String, List<Child>> other = new HashMap<>();
         final List<Child> unionResult = new ArrayList<>();
         
-        for (final Entry<AbstractPropInfo<?>, Map<String, List<AbstractPropInfo<?>>>> propEntry : groupByFirstProp(props).entrySet()) {
-            final T3<List<Child>, Map<String, List<Child>>, List<Child>> genRes = generateChild(contextSource, lastPersistentSource, propEntry.getKey(), propEntry.getValue(), context, contextId, domainInfo, contextParentSource, gen);
+        for (final Entry<String, T2<AbstractPropInfo<?>, Map<String, List<AbstractPropInfo<?>>>>> propEntry : groupByFirstProp(props).entrySet()) {
+            final T3<List<Child>, Map<String, List<Child>>, List<Child>> genRes = generateChild(contextSource, lastPersistentSource, propEntry.getValue()._1, propEntry.getValue()._2, context, contextId, domainInfo, contextParentSource, gen);
             result.addAll(genRes._1);
             other.putAll(genRes._2);
             unionResult.addAll(genRes._3);
