@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.error.Result.warning;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.nextTypeName;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -13,6 +14,7 @@ import java.util.Currency;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -25,7 +27,7 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
+import ua.com.fielden.platform.security.user.UserRolesUpdater;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
@@ -421,6 +423,16 @@ public class FactoryForTestingEntities {
     public EntityWithSameEntity createEntityWithSameEntityCircularlyReferencingItself() {
         final EntityWithSameEntity entity = createPersistedEntity(EntityWithSameEntity.class, 1L, "key1", "description");
         entity.setProp(entity);
+        return finalise(entity);
+    }
+
+    public UserRolesUpdater createCollectionModificationEntity() {
+        final UserRolesUpdater entity = factory.newEntity(UserRolesUpdater.class, 0L);
+        entity.beginInitialising();
+        entity.setKey(1L);
+        final LinkedHashSet<Long> chosenIds = linkedSetOf(3L);
+        entity.setChosenIds(chosenIds);
+        entity.setAddedIds(chosenIds);
         return finalise(entity);
     }
 

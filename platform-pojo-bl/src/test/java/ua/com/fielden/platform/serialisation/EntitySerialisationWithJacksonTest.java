@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -33,6 +34,8 @@ import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.security.user.UserRole;
+import ua.com.fielden.platform.security.user.UserRolesUpdater;
 import ua.com.fielden.platform.security.user.UserSecret;
 import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
 import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
@@ -120,7 +123,9 @@ public class EntitySerialisationWithJacksonTest {
                 EntityWithMoney.class,
                 EntityWithPolymorphicAEProp.class,
                 PropertyDescriptor.class,
-                UserSecret.class);
+                UserSecret.class,
+                UserRolesUpdater.class,
+                UserRole.class);
     }
 
     @Test
@@ -1314,6 +1319,18 @@ public class EntitySerialisationWithJacksonTest {
         
         assertEquals("Incorrect entityType.", EntityWithInteger.class, restoredEntity.getEntityType());
         assertEquals("Incorrect propertyName.", "prop", restoredEntity.getPropertyName());
+    }
+
+    @Test
+    public void collection_modification_entity_should_be_restored() throws Exception {
+        final UserRolesUpdater entity = factory.createCollectionModificationEntity();
+        final UserRolesUpdater restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), UserRolesUpdater.class);
+
+        assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
+        assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
+        assertEquals("Incorrect prop.", linkedSetOf(3L), restoredEntity.getAddedIds());
+        assertFalse("Incorrect prop ChangedFromOriginal.", restoredEntity.getProperty("addedIds").isChangedFromOriginal());
+        assertFalse("Incorrect prop dirtiness.", restoredEntity.getProperty("addedIds").isDirty());
     }
 
 }

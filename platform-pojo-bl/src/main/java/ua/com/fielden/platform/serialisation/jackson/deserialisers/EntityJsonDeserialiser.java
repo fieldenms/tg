@@ -4,6 +4,7 @@ import static java.util.Optional.of;
 import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
 import static ua.com.fielden.platform.entity.meta.PropertyDescriptor.fromString;
 import static ua.com.fielden.platform.entity.proxy.EntityProxyContainer.proxy;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.classFrom;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getEditableDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getRequiredDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getValueChangeCountDefault;
@@ -14,6 +15,7 @@ import static ua.com.fielden.platform.web.utils.EntityResourceUtils.entityWithMo
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.TypeVariable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +35,7 @@ import com.fasterxml.jackson.databind.type.SimpleType;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModification;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
@@ -328,12 +331,24 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
         }
     }
     
+    private static Class<?> mainParameterTypeFrom(final ParameterizedType paramType) {
+        return classFrom(paramType.getActualTypeArguments()[0]);
+    }
+    
     private static <T extends AbstractEntity<?>> ResolvedType constructType(final Class<T> type, final TypeFactory typeFactory, final Field propertyField) {
         final Class<?> fieldType = AbstractEntity.KEY.equals(propertyField.getName()) ? AnnotationReflector.getKeyType(type) : PropertyTypeDeterminator.stripIfNeeded(propertyField.getType());
         if (Set.class.isAssignableFrom(fieldType) || List.class.isAssignableFrom(fieldType)) {
-            final ParameterizedType paramType = (ParameterizedType) propertyField.getGenericType();
-            final Class<?> elementClass = PropertyTypeDeterminator.classFrom(paramType.getActualTypeArguments()[0]);
-
+            final ParameterizedType fieldGenericType = (ParameterizedType) propertyField.getGenericType();
+            final Class<?> elementClass;
+            if (
+                fieldGenericType.getActualTypeArguments()[0] instanceof TypeVariable // if collection element type is not concrete...
+                && type.getGenericSuperclass() instanceof ParameterizedType
+                && ((ParameterizedType) type.getGenericSuperclass()).getRawType().getTypeName().equals(AbstractFunctionalEntityForCollectionModification.class.getName()) // ... and generic supertype is of collectional modification type then ...
+            ) {
+                elementClass = mainParameterTypeFrom((ParameterizedType) type.getGenericSuperclass()); // ... take concrete type from class type parameters ...
+            } else {
+                elementClass = mainParameterTypeFrom(fieldGenericType); // ... otherwise take type from field type parameters
+            }
             return typeFactory.constructCollectionType((Class<? extends Collection>) fieldType, elementClass);
         } else if (Map.class.isAssignableFrom(fieldType)) {
             final ParameterizedType paramType = (ParameterizedType) propertyField.getGenericType();
