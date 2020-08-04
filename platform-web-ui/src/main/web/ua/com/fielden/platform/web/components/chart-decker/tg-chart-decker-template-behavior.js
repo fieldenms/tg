@@ -141,7 +141,7 @@ const TgChartDeckerTemplateBehaviorImpl = {
         return function (entity, idx) {
             const action = this.actions.find(a => a.getAttribute("deck-index") === deckIndex + "" && a.getAttribute("action-index") === idx + "");
             if (action) {
-                action.currentEntity = entity;
+                action.currentEntity = () => entity;
                 action._run();
             }
         }.bind(this);

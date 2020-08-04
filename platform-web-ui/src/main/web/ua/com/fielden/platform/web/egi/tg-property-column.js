@@ -48,10 +48,14 @@ Polymer({
         this.customAction = this.$.action_selector.assignedNodes().length > 0 ? this.$.action_selector.assignedNodes()[0] : null;
     },
 
-    /** Executes a custom action and returns true if the action was provided. Otherwise, simply returns false to indicate that there was no custom action to be executed. */
-    runAction: function (entity) {
+    /** 
+     * Executes a custom action and returns true if the action was provided. 
+     * Otherwise, simply returns false to indicate that there was no custom action to be executed. 
+     * the passed in currentEntity is a function that returns choosen entity. 
+     */
+    runAction: function (currentEntity) {
         if (this.customAction) {
-            this.customAction.currentEntity = entity;
+            this.customAction.currentEntity = currentEntity;
             this.customAction._run();
             return true;
         }

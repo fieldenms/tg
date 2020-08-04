@@ -40,9 +40,9 @@ public class Locator<T extends AbstractFunctionalEntityWithCentreContext<?>> {
     private final String propertyName;
     private final Supplier<Optional<EntityActionConfig>> openMasterActionSupplier;
     public final IMaster<T> masterConfig;
-    
+
     Locator(final Class<AbstractEntity<?>> entityMasterType,
-                    final Class<T> locatorEntityType, 
+                    final Class<T> locatorEntityType,
                     final String propertyName,
                     final Optional<Class<? extends IValueMatcherWithContext<T, ?>>> matcherType,
                     final Supplier<Optional<EntityActionConfig>> openMasterActionSupplier) {
@@ -51,7 +51,7 @@ public class Locator<T extends AbstractFunctionalEntityWithCentreContext<?>> {
         this.locatorEntityType = locatorEntityType;
         this.propertyName = propertyName;
         final String layout = LayoutComposer.mkVarGridForMasterFitWidth(1);
-        
+
         final IAutocompleterConfig<T> beginWith = new SimpleMasterBuilder<T>().forEntity(locatorEntityType).addProp(propertyName).asAutocompleter();
         masterConfig = matcherType.map(beginWith::withMatcher).orElse(beginWith)
                 .also()
@@ -90,7 +90,7 @@ public class Locator<T extends AbstractFunctionalEntityWithCentreContext<?>> {
     }
 
     private String generateActionInvoker() {
-        return "action.openMasterAction.currentEntity = functionalEntity.get('" + propertyName + "');\n"
+        return "action.openMasterAction.currentEntity = () => functionalEntity.get('" + propertyName + "');\n"
                 + "action.openMasterAction._run();\n";
     }
 
