@@ -1,4 +1,5 @@
 import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
+import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
 
 export function processResponseError (e, reflector, serialiser, customHandler, toaster) {
     tearDownEvent(e);
@@ -13,8 +14,10 @@ export function processResponseError (e, reflector, serialiser, customHandler, t
             // continue with custom error handling of the error result
             customHandler && customHandler(deserialisedResult);
         } else {
-            customHandler && customHandler('Responses with status code 500 suppose to carry an error cause!');
-            throw new Error('Responses with status code 500 suppose to carry an error cause!');
+            const error = new UnreportableError('Responses with status code 500 suppose to carry an error cause!');
+            customHandler && customHandler(error.message);
+            toaster && toaster.openToastForError('Unexpected server error', error.message, true);
+            throw error;
         }
     } else if (xhr.status === 403) { // forbidden!
         // TODO should prompt for login in place...
@@ -29,7 +32,10 @@ export function processResponseError (e, reflector, serialiser, customHandler, t
     } else { // for other codes just log the code
         console.warn('Server responded with error code ', xhr.status);
         if (!e.detail.request.aborted) {
-            throw new Error("Unexpected server error with status [" + xhr.status + "] occurred. Please contact support.");
+            const error = new UnreportableError('Unexpected server error with status [' + xhr.status + '] occurred. Please contact support.');
+            customHandler && customHandler(error.message);
+            toaster && toaster.openToastForError('Unexpected server error', error.message, true);
+            throw error;
         }
     }
 }
