@@ -631,7 +631,8 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
             this.set("_entities." + index + ".sorting", true);
             this._turnOnOrdering(index);
         }
-        this.provideSorting(this.entity.sortingVals, this._entities);
+        this.provideSorting(this.entity.sortingVals, this._entities); // migrates values from '_entities' to 'sortingVals' property of current binding entity
+        this.entity.setAndRegisterPropertyTouch('sortingVals', this.entity.get('sortingVals')); // registers property touch for changed 'sortingVals' property
         // invoke validation after user has toggled ordering of some property
         this._invokeValidation();
     }
