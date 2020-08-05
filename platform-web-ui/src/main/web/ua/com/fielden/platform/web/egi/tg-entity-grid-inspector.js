@@ -2256,14 +2256,12 @@ Polymer({
         const entity = this.master._currBindingEntity["@@origin"];
         const egiEntityToUpdate = this.egiModel[this.master.editableRow];
         const entityToUpdate = egiEntityToUpdate.entity;
-        const modifPropHolder = this.master._extractModifiedPropertiesHolder(this.master._currBindingEntity, this.master._baseBindingEntity);
+        const convert = value => Array.isArray(value) ? value.map(el => this._reflector.tg_convert(el)) : value;
         this.master.editors.forEach(editor => {
             entityToUpdate.set(editor.propertyName, entity.get(editor.propertyName));
-            if (typeof modifPropHolder[editor.propertyName].val !== 'undefined') {
-                egiEntityToUpdate.entityModification[editor.propertyName] = true;
-            } else {
-                egiEntityToUpdate.entityModification[editor.propertyName] = false;
-            }
+            const value = convert(this.master._currBindingEntity.get(editor.propertyName));
+            const originalValue = convert(this.master._originalBindingEntity.get(editor.propertyName));
+            egiEntityToUpdate.entityModification[editor.propertyName] = !this._reflector.equalsEx(value, originalValue);
             this.updateEntity(entityToUpdate, editor.propertyName);
         });
     },
