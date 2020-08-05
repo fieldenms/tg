@@ -83,7 +83,7 @@ public class ReferenceHierarchyWebUiConfig {
             return new JsCode(
                     "const reflector = new TgReflector();\n"
                     + "if (action.requireSelectedEntities === 'ONE') {\n"
-                    + "    action.shortDesc = reflector.getType(action.currentEntity.type().notEnhancedFullClassName()).entityTitle();\n"
+                    + "    action.shortDesc = reflector.getType(action.currentEntity().type().notEnhancedFullClassName()).entityTitle();\n"
                     + "} else if (action.requireSelectedEntities === 'ALL' && self.$.egi.getSelectedEntities().length > 0) {\n"
                     + "    action.shortDesc = reflector.getType(self.$.egi.getSelectedEntities()[0].type().notEnhancedFullClassName()).entityTitle();\n"
                     + "}\n");
