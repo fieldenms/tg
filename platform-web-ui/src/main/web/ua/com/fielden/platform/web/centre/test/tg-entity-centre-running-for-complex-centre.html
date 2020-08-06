@@ -186,7 +186,7 @@
                                         const acknowledgeWarningsAction = embeddedMaster.shadowRoot.querySelector('tg-ui-action[continuation-property="_acknowledgedForTheFirstTime"]');
                                         acknowledgeWarningsAction._masterReferenceForTestingChanged = function (newValue) {
                                             // EntityEditAction modifHolder should be present as parent context for masterEntity of acknowledge warnings action
-                                            assert.ok(newValue.savingContext.masterEntity.centreContextHolder.masterEntity.modifHolder.entityId);
+                                            assert.ok(newValue.savingContext.masterEntity.centreContextHolder.masterEntity.previouslyAppliedEntity.entityId);
                                             newValue.save().then(function () {
                                                 done();
                                             });
