@@ -924,6 +924,27 @@ export const TgEntityBinderBehavior = {
                     modPropHolder[propertyName]['enforce'] = true;
                 }
             });
+            
+            let untouchedModifiedError = '';
+            bindingEntity.traverseProperties(function (propertyName) {
+                if (!modPropHolder['@@touchedProps'].includes(propertyName)) {
+                    const value = convert(bindingEntity.get(propertyName));
+                    if (typeof _baseBindingEntity[propertyName] === 'undefined') {
+                        // provide value conversion in case if it was not performed earlier;
+                        // such value conversion is only needed for semi-lazy _baseBindingEntity (aka not _originalBindingEntity -- conversion for this entity will be performed in tg-editor._originalEntityChanged);
+                        self._reflector().tg_convertPropertyValue(_baseBindingEntity, propertyName, self._reflector().tg_getFullEntity(_baseBindingEntity), self._previousModifiedPropertiesHolder);
+                    }
+                    const baseValue = convert(_baseBindingEntity.get(propertyName));
+                    if (!self._reflector().equalsEx(value, baseValue)) {
+                        const typeSimpleName = bindingEntity.type()._simpleClassName();
+                        untouchedModifiedError = untouchedModifiedError === '' ? `Untouched modified properties deprecated; type [${typeSimpleName}].` : untouchedModifiedError;
+                        untouchedModifiedError += ` Name [${propertyName}] val [${JSON.stringify(value)}] prevVal [${JSON.stringify(baseValue)}].`;
+                    }
+                }
+            });
+            if (untouchedModifiedError !== '') {
+                throw new Error(untouchedModifiedError);
+            }
         }
         console.log('       _extractModifiedPropertiesHolder: modPropHolder', modPropHolder);
         return modPropHolder;
