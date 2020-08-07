@@ -25,6 +25,7 @@ import '/resources/polymer/@polymer/neon-animation/animations/fade-in-animation.
 import '/resources/polymer/@polymer/neon-animation/animations/fade-out-animation.js';
 import '/resources/centre/tg-entity-centre-styles.js';
 import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
+import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
 
 const customStyle = html`
     <custom-style>
