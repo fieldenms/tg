@@ -493,8 +493,8 @@ Polymer({
                     console.error(error);
                     self.$.toaster.text = 'There was an error displaying view ' + customAction.elementName;
                     self.$.toaster.hasMore = true;
-                    self.$.toaster.msgText = 'There was an error displaying the view.<br><br> \
-                                                      <b>Error cause:</b><br>' + error.message;
+                    self.$.toaster.msgText = `There was an error displaying the view.<br><br>` +
+                                              `<b>Error cause:</b><br>${error.message}`;
                     self.$.toaster.showProgress = false;
                     self.$.toaster.isCritical = true;
                     self.$.toaster.show();
