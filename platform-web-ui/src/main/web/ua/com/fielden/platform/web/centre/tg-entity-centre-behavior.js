@@ -988,14 +988,19 @@ const TgEntityCentreBehaviorImpl = {
     currentPage: function () {
         const self = this;
         if (!this.$.egi.isEditing()) {
-            self.persistActiveElement();
             return this.$.selection_criteria.currentPage()
                 .then(function () {
                     self.runInsertionPointActions();
-                    self.restoreActiveElement();
                 });
         }
         return this._saveOrCancelPromise();
+    },
+
+    currentPageTap: function () {
+        this.persistActiveElement();
+        this.currentPage()
+            .then(() => this.restoreActiveElement())
+            .catch(() => this.restoreActiveElement());
     },
 
     /**
