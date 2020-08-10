@@ -7,7 +7,7 @@ import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 
 const template = html`
     <iron-ajax id="ajaxSender" headers="[[_headers]]" url="[[_url]]" method="POST" handle-as="json" on-response="_processValidatorResponse"
-        on-error="_processValidatorError"></iron-ajax>
+        reject-with-request on-error="_processValidatorError"></iron-ajax>
 `;
 
 Polymer({

@@ -40,7 +40,7 @@ function replaceNewline (input) {
 }
 
 const template = html`
-    <iron-ajax id="errorSender" headers="[[_headers]]" url="/error" method="PUT" content-type="text/plain" handle-as="text" on-response="_processResponse"></iron-ajax>`;
+    <iron-ajax id="errorSender" headers="[[_headers]]" url="/error" method="PUT" content-type="text/plain" handle-as="text" reject-with-request on-response="_processResponse"></iron-ajax>`;
 
 /**
  * A web component used as a global error handler for unhandled exceptions.
@@ -121,12 +121,15 @@ class TgGlobalErrorHandler extends PolymerElement {
     }
 
     _handleUnhandledPromiseError (e) {
-        const errorMsg = e.reason.message + "\n" + e.reason.stack;
-        this._acceptError(e.composedPath()[0], e.reason, errorMsg);
+        const error = e.reason.error || e.reason;
+        const errorMsg = error.message + "\n" + error.stack;
+        if (!e.reason.request || "IRON-REQUEST" !== e.reason.request.tagName) {
+            this._acceptError(e.composedPath()[0], error, errorMsg);
+        }
     }
 
     _handleError (e) {
-        const errorDetail = e.detail ? e.detail : e;
+        const errorDetail = e.detail || e;
         const errorMsg = errorDetail.message + " Error happened in: " + errorDetail.filename + " at Ln: " + errorDetail.lineno + ", Co: " + errorDetail.colno
                         + "\n" + ((errorDetail.error && errorDetail.error.stack) ?  errorDetail.error.stack : JSON.stringify(errorDetail.error));
         this._acceptError(e.composedPath()[0], errorDetail, errorMsg);
