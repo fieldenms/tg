@@ -200,14 +200,19 @@ Polymer({
      * Offloads the loaded element from light DOM of this element loader.
      */
     offloadDom: function () {
-        _removeAllLightDOMChildrenFrom(this);
+        if (this.loadedElement.parentElement) {
+            _removeAllLightDOMChildrenFrom(this);
+        }
     },
 
     /**
      * Inserts the loaded element into light DOM of this element loader.
      */
     loadDom: function () {
-        return this.insert(this.loadedElement);
+        if (!this.loadedElement.parentElement) {
+            return this.insert(this.loadedElement);
+        }
+        return this.loadedElement;
     },
 
     /** 
