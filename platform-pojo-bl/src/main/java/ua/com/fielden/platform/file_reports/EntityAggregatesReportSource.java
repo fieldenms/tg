@@ -40,6 +40,7 @@ public class EntityAggregatesReportSource implements JRRewindableDataSource {
             throw new JRException("Invalid field: " + jrField.getName());
         }
 
-        return EntityUtils.toString(data[index].get(jrField.getName()), props.get(jrField.getName()));
+        final String dirty = EntityUtils.toString(data[index].get(jrField.getName()), props.get(jrField.getName()));
+        return ReportUtils.sanitizeString(dirty);
     }
 }
