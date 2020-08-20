@@ -91,7 +91,8 @@ Polymer({
 
     listeners: {
         'data-loaded-and-focused': '_handleDataLoaded',
-        'tg-error-happened': '_handleError'
+        'tg-error-happened': '_handleError',
+        'tg-view-loaded': '_handleViewLoaded'
     },
 
     ready: function () {
@@ -120,19 +121,19 @@ Polymer({
     },
 
     focusView: function () {
-        if (this.activated === true && this._element && this._element.focusView) {
+        if (this.activated === true && this._element && this.wasLoaded() && this._element.focusView) {
             this._element.focusView();
         }
     },
 
     focusNextView: function (e) {
-        if (this.activated === true && this._element && this._element.focusNextView) {
+        if (this.activated === true && this._element && this.wasLoaded() && this._element.focusNextView) {
             this._element.focusNextView(e);
         }
     },
 
     focusPreviousView: function (e) {
-        if (this.activated === true && this._element && this._element.focusNextView) {
+        if (this.activated === true && this._element && this.wasLoaded() && this._element.focusNextView) {
             this._element.focusPreviousView(e);
         }
     },
@@ -159,9 +160,6 @@ Polymer({
                     self.activated = true;
                     self._element = element;
 
-                    if (self._element && typeof self._element.addOwnKeyBindings === 'function') {
-                        self._element.addOwnKeyBindings();
-                    }
 
                     var promise = customAction._onExecuted(null, element, null);
                     if (promise) {
@@ -190,8 +188,12 @@ Polymer({
         }
     },
 
+    wasLoaded: function() {
+        return this.$.elementLoader.wasLoaded && this._element.wasLoaded();
+    },
+
     offloadDom: function () {
-        if (this.$.elementLoader.wasLoaded && this._element.wasLoaded()) {
+        if (this.wasLoaded()) {
             this._resetBlockingState();
             this.$.elementLoader.offloadDom();
         }
@@ -201,11 +203,16 @@ Polymer({
         return this.$.elementLoader.loadDom();
     },
 
-    _handleDataLoaded: function () {
-        this._hideBlockingPane();
+    _handleViewLoaded: function () {
         if (!this.offsetParent) {
             this.offloadDom();
+        } else if (self._element && typeof self._element.addOwnKeyBindings === 'function') {
+            this._element.addOwnKeyBindings();
         }
+    },
+
+    _handleDataLoaded: function () {
+        this._hideBlockingPane();
     },
 
     _handleError: function (e) {

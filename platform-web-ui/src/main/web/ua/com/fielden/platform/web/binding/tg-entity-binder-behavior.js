@@ -1133,7 +1133,7 @@ export const TgEntityBinderBehavior = {
     },
     disableViewForDescendants: function () {
         this.currentState = 'VIEW';
-        if (this.$.loader && this.$.loader.loadedElement) {
+        if (this.$.loader && this.$.loader.loadedElement && this.$.loader.loadedElement.wasLoaded()) {
             this.$.loader.loadedElement.disableView();
         }
     },
@@ -1147,7 +1147,7 @@ export const TgEntityBinderBehavior = {
     },
     enableViewForDescendants: function () {
         this.currentState = 'EDIT';
-        if (this.$.loader && this.$.loader.loadedElement) {
+        if (this.$.loader && this.$.loader.loadedElement && this.$.loader.loadedElement.wasLoaded()) {
             this.$.loader.loadedElement.enableView();
         }
     }

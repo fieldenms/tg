@@ -69,7 +69,7 @@ class MasterWithCentre<T extends AbstractEntity<?>> implements IMaster<T> {
                         "self.masterWithCentre = true;\n" +
                         "self.classList.remove('canLeave');\n" +
                         "self._focusEmbededView = function () {\n" +
-                        "    if (this.$.loader.loadedElement && this.$.loader.loadedElement.focusView) {\n" +
+                        "    if (this.wasLoaded() && this.$.loader.loadedElement.focusView) {\n" +
                         "        this.$.loader.loadedElement.focusView();\n" +
                         "    }\n" +
                         "}.bind(self);\n" +
@@ -83,12 +83,12 @@ class MasterWithCentre<T extends AbstractEntity<?>> implements IMaster<T> {
                         "    return false;\n" +
                         "}.bind(self);\n" +
                         "self._focusNextEmbededView = function (e) {\n" +
-                        "    if (this.$.loader.loadedElement && this.$.loader.loadedElement.focusNextView) {\n" +
+                        "    if (this.wasLoaded() && this.$.loader.loadedElement.focusNextView) {\n" +
                         "        this.$.loader.loadedElement.focusNextView(e);\n" +
                         "    }\n" +
                         "}.bind(self);\n" +
                         "self._focusPreviousEmbededView = function (e) {\n" +
-                        "    if (this.$.loader.loadedElement && this.$.loader.loadedElement.focusPreviousView) {\n" +
+                        "    if (this.wasLoaded() && this.$.loader.loadedElement.focusPreviousView) {\n" +
                         "        this.$.loader.loadedElement.focusPreviousView(e);\n" +
                         "    }\n" +
                         "}.bind(self);\n")
