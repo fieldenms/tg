@@ -148,7 +148,7 @@ Polymer({
     },
 
     _masterLoaded: function (_bodyLoaded, _actionBarLoaded) {
-        this.fire('tg-entity-master-content-loaded', this);
+        _bodyLoaded && _actionBarLoaded && this.fire('tg-entity-master-content-loaded', this);
     },
 
     /**
