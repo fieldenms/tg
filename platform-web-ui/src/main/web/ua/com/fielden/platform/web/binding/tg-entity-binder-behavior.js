@@ -468,9 +468,11 @@ export const TgEntityBinderBehavior = {
     },
 
     /**
-     * Initialisation block. It has all children web components already initialised.
+     * Initialisation block called as a constructor of element. It is called before any property value is set and before dom initialisation.
+     * All property initialisation are here to make shure that other methods and observers those rely on this component's properties
+     * would not fail if they were invoked before ready method.
      */
-    ready: function () {
+    created: function () {
         var self = this;
 
         self._bindingEntityModified = false;
