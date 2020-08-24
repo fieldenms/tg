@@ -27,9 +27,9 @@ public class Sources1  {
 
         final List<CompoundSource2> transformed = new ArrayList<>();
         for (final CompoundSource1 compoundSource : compounds) {
-            final CompoundSource2 compoundSourceTransformationResult = compoundSource.transform(currentContext);
-            transformed.add(compoundSourceTransformationResult);
-            currentContext = currentContext.cloneWithAdded(compoundSourceTransformationResult.source);
+            final T2<CompoundSource2, PropsResolutionContext> compoundSourceTransformationResult = compoundSource.transform(currentContext);
+            transformed.add(compoundSourceTransformationResult._1);
+            currentContext = compoundSourceTransformationResult._2;
         }
         return t2(new Sources2(mainTransformationResult, transformed), currentContext);
     }

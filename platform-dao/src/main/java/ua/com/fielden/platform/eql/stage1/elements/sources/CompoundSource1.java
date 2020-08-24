@@ -1,16 +1,18 @@
 package ua.com.fielden.platform.eql.stage1.elements.sources;
 
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
-import ua.com.fielden.platform.eql.stage1.elements.ITransformableToS2;
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage1.elements.conditions.Conditions1;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.CompoundSource2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
+import ua.com.fielden.platform.types.tuples.T2;
 
-public class CompoundSource1 implements ITransformableToS2<CompoundSource2>{
+public class CompoundSource1 {
     public final IQrySource1<? extends IQrySource2<?>> source;
     public final JoinType joinType;
     public final Conditions1 joinConditions;
@@ -21,11 +23,11 @@ public class CompoundSource1 implements ITransformableToS2<CompoundSource2>{
         this.joinConditions = joinConditions;
     }
 
-    @Override
-    public CompoundSource2 transform(final PropsResolutionContext context) {
+    public T2<CompoundSource2, PropsResolutionContext> transform(final PropsResolutionContext context) {
         final IQrySource2<?> source2 = source.transform(context);
-        final Conditions2 joinConditions2 = joinConditions.transform(context.cloneWithAdded(source2));
-        return new CompoundSource2(source2, joinType, joinConditions2);
+        final PropsResolutionContext enhancedContext = context.cloneWithAdded(source2);
+        final Conditions2 joinConditions2 = joinConditions.transform(enhancedContext);
+        return t2(new CompoundSource2(source2, joinType, joinConditions2), enhancedContext);
     }
 
     @Override
