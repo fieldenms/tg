@@ -62,7 +62,15 @@ public class EntProp2 implements ISingleOperand2<Expression3> {
     public List<AbstractPropInfo<?>> getPath() {
         return unmodifiableList(path);
     }
-
+    
+    public boolean isCalculated() {
+        return lastPart().hasExpression();
+    }
+    
+    public AbstractPropInfo<?> lastPart() {
+        return path.get(path.size() - 1);
+    }
+    
     @Override
     public boolean ignore() {
         return false;

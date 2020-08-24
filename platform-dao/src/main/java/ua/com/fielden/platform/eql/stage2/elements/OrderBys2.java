@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.elements;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -37,6 +38,10 @@ public class OrderBys2 {
             }
         }
         return result;
+    }
+    
+    public List<OrderBy2> getModels() {
+        return Collections.unmodifiableList(models);
     }
 
     @Override

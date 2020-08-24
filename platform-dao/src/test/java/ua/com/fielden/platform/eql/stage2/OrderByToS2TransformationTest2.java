@@ -1,13 +1,13 @@
 package ua.com.fielden.platform.eql.stage2;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
+import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.eql.meta.EqlStage2TestCase;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ResultQuery2;
@@ -118,16 +118,42 @@ public class OrderByToS2TransformationTest2 extends EqlStage2TestCase {
     }
 
     @Test
-    @Ignore
     public void test010() {
+        final ResultQuery2 actQry = qry(select(VEHICLE).yield().prop("lastFuelUsageQty").as("lfuq").modelAsAggregate(), orderBy().yield("lfuq").desc().model());
+        
+        assertEquals(orderBys(orderDesc("lfuq")), actQry.orderings);
+    }
+    
+    @Test
+    public void test011() {
         final ResultQuery2 actQry = qry(select(VEHICLE).model(), orderBy().yield("lastFuelUsageQty").desc().model());
         
         final QrySource2BasedOnPersistentType source = source("1", VEHICLE);
 
         final EntProp2 prop = prop(source, pi(VEHICLE, "lastFuelUsageQty"));
         
-        assertNotEquals(orderBys(orderDesc(prop)), actQry.orderings);
+        assertEquals(orderBys(orderDesc(prop)), actQry.orderings);
+        //assertNotEquals(orderBys(orderDesc(prop)), actQry.orderings);
+    }
+    
+    @Test
+    public void test012() {
+        final ResultQuery2 actQry = qry(select(ORG2).yield().prop("key").as("k").modelAsAggregate(), orderBy().yield("k").desc().model());
+        
+        final QrySource2BasedOnPersistentType source = source("1", ORG2);
+        final EntProp2 key1Prop = prop(source, pi(ORG2, "parent"), pi(ORG1, "key"));
+        final EntProp2 key2Prop = prop(source, pi(ORG2, "name"));
+        
+        assertEquals(orderBys(orderDesc(key1Prop), orderDesc(key2Prop)), actQry.orderings);
     }
 
-    
+    @Test
+    public void test013() {
+        try {
+            qry(select(MODEL).yield().prop("key").as("k").modelAsAggregate(), orderBy().yield("k1").desc().model());
+            fail("Should have failed while trying to order by non-existing yield [k1]");
+        } catch (final EqlException e) {
+            assertEquals("Can't find yield [k1]!", e.getMessage());
+        }
+    }
 }

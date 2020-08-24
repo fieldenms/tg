@@ -824,7 +824,7 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
                 .with(fetch(TgVehicle.class).with("lastFuelUsageQty"))
                 .with(orderBy().yield("lastFuelUsageQty").desc().model()).model());
     }
-        
+
     @Test
     public void eql3_query_executes_correctly95() {
         final ITgOrgUnit5 co = getInstance(ITgOrgUnit5.class);
@@ -874,6 +874,24 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
         run(select(TeVehicleModel.class).where().prop("make").isNotNull().yield().prop("make.id").as("make").modelAsAggregate());
     }
 
+    @Test
+    public void eql3_query_executes_correctly102() {
+        final AggregatedResultQueryModel qry = select(TeWorkOrder.class).groupBy().prop("vehicle.lastFuelUsage.key").yield().val(1).as("a").modelAsAggregate();
+        final List<EntityAggregates> res = aggregateDao.getAllEntities(from(qry).with(orderBy().prop("vehicle.lastFuelUsage.key").asc().model()).model());
+    }     
+    
+    @Test
+    public void eql3_query_executes_correctly103() {
+        final AggregatedResultQueryModel qry = select(TeVehicleFuelUsage.class).groupBy().prop("key").yield().val(1).as("a").modelAsAggregate();
+        final List<EntityAggregates> res = aggregateDao.getAllEntities(from(qry).with(orderBy().prop("key").asc().model()).model());
+    }  
+
+    @Test
+    public void eql3_query_executes_correctly104_() {
+        final AggregatedResultQueryModel qry = select(TgVehicle.class).yield().prop("lastFuelUsageQty").as("a").modelAsAggregate();
+        aggregateDao.getAllEntities(from(qry).with(orderBy().yield("a").asc().model()).model());
+    }
+    
     @Override
     protected void populateDomain() {
         super.populateDomain();

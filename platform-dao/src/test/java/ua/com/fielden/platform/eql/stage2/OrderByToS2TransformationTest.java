@@ -137,4 +137,16 @@ public class OrderByToS2TransformationTest extends EqlStage2TestCase {
         
         assertEquals(orderBys(orderDesc(prop)), actQry.orderings);
     }
+    
+    @Test
+    public void test012() {
+        final ResultQuery2 actQry = qry(select(VEHICLE).model(), orderBy().prop("finDetails.key").desc().model());
+        
+        final QrySource2BasedOnPersistentType source = source("1", VEHICLE);
+
+        final EntProp2 prop = prop(source, pi(VEHICLE, "finDetails"), pi(VEHICLE_FIN_DETAILS, "key"), pi(VEHICLE, "key"));
+        
+        assertEquals(orderBys(orderDesc(prop)), actQry.orderings);
+    }
+
 }

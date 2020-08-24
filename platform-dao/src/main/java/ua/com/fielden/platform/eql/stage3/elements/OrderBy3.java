@@ -15,7 +15,7 @@ public class OrderBy3 {
         this.yield = null;
         this.isDesc = isDesc;
     }
-
+    
     public OrderBy3(final Yield3 yield, final boolean isDesc) {
         this.operand = null;
         this.yield = yield;

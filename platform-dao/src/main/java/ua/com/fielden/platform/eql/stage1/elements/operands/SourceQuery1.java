@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.elements.operands;
 
+import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
@@ -35,9 +36,8 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableToS2<S
     public final boolean isCorrelated;
     
     public SourceQuery1(final EntQueryBlocks1 queryBlocks, final Class<? extends AbstractEntity<?>> resultType, final boolean isCorrelated) {
-        super(queryBlocks, resultType);
+        super(queryBlocks, requireNonNull(resultType));
         this.isCorrelated = isCorrelated;
-        assert (resultType != null);
     }
 
     @Override
@@ -49,8 +49,8 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableToS2<S
         final Sources2 sources2 = sourcesTr._1;
         final Conditions2 conditions2 = conditions.transform(enhancedContext);
         final Yields2 yields2 = yields.transform(enhancedContext);
-        final GroupBys2 groups2 = groups.transform(enhancedContext);
-        final OrderBys2 orderings2 = orderings.transform(enhancedContext, yields, sources2.main);
+        final GroupBys2 groups2 = enhance(groups.transform(enhancedContext));
+        final OrderBys2 orderings2 = enhance(orderings.transform(enhancedContext), yields2, sources2.main);
         final Yields2 enhancedYields2 = enhanceYields(yields2, sources2.main);
         final EntQueryBlocks2 entQueryBlocks = new EntQueryBlocks2(sources2, conditions2, enhancedYields2, groups2, orderings2);
         return new SourceQuery2(entQueryBlocks, resultType);

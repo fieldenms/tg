@@ -1,14 +1,35 @@
 package ua.com.fielden.platform.eql.stage1.elements.operands;
 
+import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
+import static ua.com.fielden.platform.eql.stage1.elements.operands.EntProp1.enhancePath;
+import static ua.com.fielden.platform.eql.stage2.elements.KeyPropertyExtractor.extract;
+import static ua.com.fielden.platform.eql.stage2.elements.KeyPropertyExtractor.needsExtraction;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.exceptions.EqlException;
+import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.stage1.elements.EntQueryBlocks1;
 import ua.com.fielden.platform.eql.stage1.elements.GroupBys1;
 import ua.com.fielden.platform.eql.stage1.elements.OrderBys1;
+import ua.com.fielden.platform.eql.stage1.elements.PropResolution;
 import ua.com.fielden.platform.eql.stage1.elements.Yields1;
 import ua.com.fielden.platform.eql.stage1.elements.conditions.Conditions1;
 import ua.com.fielden.platform.eql.stage1.elements.sources.Sources1;
+import ua.com.fielden.platform.eql.stage2.elements.GroupBy2;
+import ua.com.fielden.platform.eql.stage2.elements.GroupBys2;
+import ua.com.fielden.platform.eql.stage2.elements.OrderBy2;
+import ua.com.fielden.platform.eql.stage2.elements.OrderBys2;
+import ua.com.fielden.platform.eql.stage2.elements.Yield2;
+import ua.com.fielden.platform.eql.stage2.elements.Yields2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
+import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySource3;
 
 public abstract class AbstractQuery1 {
 
@@ -30,6 +51,60 @@ public abstract class AbstractQuery1 {
         this.yieldAll = queryBlocks.yieldAll;
     }
 
+    protected static GroupBys2 enhance(final GroupBys2 groupBys) {
+        final List<GroupBy2> enhanced = new ArrayList<>();
+        
+        for (GroupBy2 original : groupBys.getGroups()) {
+            enhanced.addAll(enhance(original));
+        }
+
+        return new GroupBys2(enhanced);
+    }
+    
+    protected static OrderBys2 enhance(final OrderBys2 orderBys, final Yields2 yields, final IQrySource2<? extends IQrySource3> mainSource) {
+        final List<OrderBy2> enhanced = new ArrayList<>();
+        
+        for (OrderBy2 original : orderBys.getModels()) {
+            enhanced.addAll(original.operand != null ? transformForOperand(original.operand, original.isDesc) :
+                transformForYield(original, yields, mainSource));
+        }
+        
+        return new OrderBys2(enhanced);
+    }
+    
+    private static List<OrderBy2> transformForYield(final OrderBy2 original, final Yields2 yields, final IQrySource2<? extends IQrySource3> mainSource) {
+        if (yields.getYieldsMap().containsKey(original.yieldName)) {
+            final Yield2 yield = yields.getYieldsMap().get(original.yieldName);
+            if (yield.operand instanceof EntProp2 && needsExtraction(((EntProp2) yield.operand).lastPart())) {
+                return transformForOperand((EntProp2) yield.operand, original.isDesc);
+            } else {
+                return asList(original);
+            }
+        } 
+        
+        if (yields.getYieldsMap().isEmpty()) {
+            final PropResolution propResolution = EntProp1.resolvePropAgainstSource(mainSource, new EntProp1(original.yieldName, false));
+            if (propResolution != null) {
+                final List<AbstractPropInfo<?>> path = enhancePath(propResolution.getPath());
+                return transformForOperand(new EntProp2(mainSource, path), original.isDesc);
+            }
+        }
+        
+        throw new EqlException("Can't find yield [" + original.yieldName + "]!");
+    }
+
+    private static List<OrderBy2> transformForOperand(final ISingleOperand2<?> operand, final boolean isDesc) {
+        return operand instanceof EntProp2 ?
+                extract((EntProp2) operand).stream().map(keySubprop -> new OrderBy2(keySubprop, isDesc)).collect(toList()) :
+                asList(new OrderBy2(operand, isDesc));
+    }
+    
+    private static List<GroupBy2> enhance(final GroupBy2 original) {
+        return original.operand instanceof EntProp2 ?
+                extract((EntProp2) original.operand).stream().map(keySubprop -> new GroupBy2(keySubprop)).collect(toList()) :
+                asList(original);
+    }
+    
     @Override
     public int hashCode() {
         final int prime = 31;

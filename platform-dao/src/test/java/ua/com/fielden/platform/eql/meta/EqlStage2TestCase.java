@@ -86,6 +86,11 @@ public class EqlStage2TestCase extends EqlTestCase {
         return qb().generateEntQueryAsResultQuery(qry, order, new EntityRetrievalModel<T>(EntityQueryUtils.fetch(qry.getResultType()), DOMAIN_METADATA_ANALYSER)).transform(resolutionContext);
     }
 
+    protected static ResultQuery2 qry(final AggregatedResultQueryModel qry, final OrderingModel order) {
+        final PropsResolutionContext resolutionContext = new PropsResolutionContext(DOMAIN_METADATA.lmd);
+        return qb().generateEntQueryAsResultQuery(qry, order, null).transform(resolutionContext);
+    }
+
     protected static ResultQuery2 qry(final AggregatedResultQueryModel qry) {
         final PropsResolutionContext resolutionContext = new PropsResolutionContext(DOMAIN_METADATA.lmd);
         return qb().generateEntQueryAsResultQuery(qry, null, null).transform(resolutionContext);
@@ -124,6 +129,10 @@ public class EqlStage2TestCase extends EqlTestCase {
 
     protected static OrderBy2 orderDesc(final EntProp2 prop) {
         return new OrderBy2(prop, true);
+    }
+
+    protected static OrderBy2 orderDesc(final String yieldName) {
+        return new OrderBy2(yieldName, true);
     }
 
     protected static OrderBy2 orderAsc(final EntProp2 prop) {

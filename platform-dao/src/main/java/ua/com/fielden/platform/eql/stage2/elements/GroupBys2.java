@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.elements;
 
+import static java.util.Collections.unmodifiableList;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -35,6 +37,11 @@ public class GroupBys2 {
         }
         return result;
     }
+    
+    public List<GroupBy2> getGroups() {
+        return unmodifiableList(groups);
+    }
+    
 
     @Override
     public int hashCode() {
