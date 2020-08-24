@@ -12,9 +12,9 @@ import java.util.Objects;
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.meta.ComponentTypePropInfo;
-import ua.com.fielden.platform.eql.meta.ResolutionContext;
 import ua.com.fielden.platform.eql.stage1.elements.PropResolution;
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
+import ua.com.fielden.platform.eql.stage1.elements.PropResolutionProgress;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
 import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySource3;
@@ -40,14 +40,12 @@ public class EntProp1 implements ISingleOperand1<EntProp2> {
             final List<IQrySource2<? extends IQrySource3>> item = it.next();
             final PropResolution resolution = resolveProp(item, this);
             if (resolution != null) {
-                final List<AbstractPropInfo<?>> path = resolution.getPath();
-                final boolean isId = (name.equals(ID) || name.endsWith("." + ID)) && isEntityType(path.get(path.size() - 1).javaType());
-                return new EntProp2(resolution.getSource(), enhancePath(path), isId);
+                final boolean isId = (name.equals(ID) || name.endsWith("." + ID)) && isEntityType(resolution.lastPart().javaType());
+                return new EntProp2(resolution.getSource(), enhancePath(resolution.getPath()), isId);
             }
         }
 
         throw new EqlStage1ProcessingException(format("Can't resolve property [%s].", name));
-        
     }
     
     public static final List<AbstractPropInfo<?>> enhancePath(final List<AbstractPropInfo<?>> originalPath) {
@@ -62,10 +60,10 @@ public class EntProp1 implements ISingleOperand1<EntProp2> {
     }
     
     public static PropResolution resolvePropAgainstSource(final IQrySource2<? extends IQrySource3> source, final EntProp1 entProp) {
-        final ResolutionContext asIsResolution = source.entityInfo().resolve(new ResolutionContext(entProp.name));
+        final PropResolutionProgress asIsResolution = source.entityInfo().resolve(new PropResolutionProgress(entProp.name));
         if (source.alias() != null && (entProp.name.startsWith(source.alias() + ".") || entProp.name.equals(source.alias()))) {
             final String aliaslessPropName = entProp.name.equals(source.alias()) ? ID : entProp.name.substring(source.alias().length() + 1);
-            final ResolutionContext aliaslessResolution = source.entityInfo().resolve(new ResolutionContext(aliaslessPropName));
+            final PropResolutionProgress aliaslessResolution = source.entityInfo().resolve(new PropResolutionProgress(aliaslessPropName));
             if (aliaslessResolution.isSuccessful()) {
                 if (!asIsResolution.isSuccessful()) {
                     return new PropResolution(source, aliaslessResolution.getResolved());

@@ -4,6 +4,7 @@ import java.util.Objects;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.eql.stage1.elements.PropResolutionProgress;
 
 /**
  * A structure that captures a query source yield-able entity-typed-property resolution related info within a query source of type <code>PARENT</code>.
@@ -28,7 +29,7 @@ public class EntityTypePropInfo<T extends AbstractEntity<?>> extends AbstractPro
     }
     
     @Override
-    public ResolutionContext resolve(final ResolutionContext context) {
+    public PropResolutionProgress resolve(final PropResolutionProgress context) {
         return propEntityInfo.resolve(context);
     }
 

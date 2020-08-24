@@ -11,7 +11,7 @@ import java.util.List;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.meta.EntityInfo;
 import ua.com.fielden.platform.eql.meta.EntityTypePropInfo;
-import ua.com.fielden.platform.eql.meta.ResolutionContext;
+import ua.com.fielden.platform.eql.stage1.elements.PropResolutionProgress;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 
 public class KeyPropertyExtractor {
@@ -24,7 +24,7 @@ public class KeyPropertyExtractor {
             final List<String> keyTreeLeaves = keyPaths(ei.javaType());
             final List<EntProp2> result = new ArrayList<>();
             for (final String keyTreeLeaf : keyTreeLeaves) {
-                final ResolutionContext resolution = ei.resolve(new ResolutionContext(keyTreeLeaf));
+                final PropResolutionProgress resolution = ei.resolve(new PropResolutionProgress(keyTreeLeaf));
                 final List<AbstractPropInfo<?>> enhancedPath = new ArrayList<>(original.getPath().subList(0, pathSize - 1));
                 enhancedPath.addAll(resolution.getResolved());
                 result.add(new EntProp2(original.source, enhancedPath));

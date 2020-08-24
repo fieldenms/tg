@@ -3,6 +3,7 @@ package ua.com.fielden.platform.eql.meta;
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
+import ua.com.fielden.platform.eql.stage1.elements.PropResolutionProgress;
 
 /**
  * A structure that captures a query source yield-able entity-typed-property resolution related info within a query source of type <code>PARENT</code>.
@@ -23,7 +24,7 @@ public class UnionTypePropInfo<T extends AbstractUnionEntity> extends AbstractPr
     }
 
     @Override
-    public ResolutionContext resolve(final ResolutionContext context) {
+    public PropResolutionProgress resolve(final PropResolutionProgress context) {
         return propEntityInfo.resolve(context);
     }
 

@@ -8,6 +8,7 @@ import java.util.TreeMap;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.metadata.EntityCategory;
+import ua.com.fielden.platform.eql.stage1.elements.PropResolutionProgress;
 
 public class EntityInfo<T extends AbstractEntity<?>> implements IResolvable<T> {
     private final Class<T> javaType;
@@ -20,7 +21,7 @@ public class EntityInfo<T extends AbstractEntity<?>> implements IResolvable<T> {
     }
 
     @Override
-    public ResolutionContext resolve(final ResolutionContext context) {
+    public PropResolutionProgress resolve(final PropResolutionProgress context) {
         if (context.isSuccessful()) {
             return context;
         } else {

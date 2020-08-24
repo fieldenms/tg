@@ -3,6 +3,7 @@ package ua.com.fielden.platform.eql.meta;
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.eql.stage1.elements.PropResolutionProgress;
 
 public class PrimTypePropInfo<T> extends AbstractPropInfo<T> {
     private final Class<T> propType;
@@ -17,7 +18,7 @@ public class PrimTypePropInfo<T> extends AbstractPropInfo<T> {
     }
 
     @Override
-    public ResolutionContext resolve(final ResolutionContext context) {
+    public PropResolutionProgress resolve(final PropResolutionProgress context) {
         return context;
     }
     

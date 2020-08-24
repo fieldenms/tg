@@ -4,6 +4,9 @@ import static java.util.Collections.unmodifiableSortedMap;
 
 import java.util.HashSet;
 import java.util.Map.Entry;
+
+import ua.com.fielden.platform.eql.stage1.elements.PropResolutionProgress;
+
 import java.util.Objects;
 import java.util.Set;
 import java.util.SortedMap;
@@ -19,7 +22,7 @@ public class ComponentTypePropInfo<T> extends AbstractPropInfo<T> {
     }
 
     @Override
-    public ResolutionContext resolve(final ResolutionContext context) {
+    public PropResolutionProgress resolve(final PropResolutionProgress context) {
         if (context.isSuccessful()) {
             return context;
         } else {

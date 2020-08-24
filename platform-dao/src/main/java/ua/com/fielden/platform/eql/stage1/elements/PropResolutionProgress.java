@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.eql.meta;
+package ua.com.fielden.platform.eql.stage1.elements;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
@@ -8,23 +8,25 @@ import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ResolutionContext {
+import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
+
+public class PropResolutionProgress {
     private final List<AbstractPropInfo<?>> resolved = new ArrayList<>();
     private final List<String> pending = new ArrayList<>();
 
-    public ResolutionContext(final String pendingAsOneDotNotatedProp) {
+    public PropResolutionProgress(final String pendingAsOneDotNotatedProp) {
         this.pending.addAll(asList(pendingAsOneDotNotatedProp.split("\\.")));
     }
 
-    private ResolutionContext(final List<String> pending, final List<AbstractPropInfo<?>> resolved) {
+    private PropResolutionProgress(final List<String> pending, final List<AbstractPropInfo<?>> resolved) {
         this.pending.addAll(pending);
         this.resolved.addAll(resolved);
     }
 
-    public ResolutionContext registerResolutionAndClone(final AbstractPropInfo<?> propResolutionStep) {
+    public PropResolutionProgress registerResolutionAndClone(final AbstractPropInfo<?> propResolutionStep) {
         final List<AbstractPropInfo<?>> updatedResolved = new ArrayList<>(resolved); 
         updatedResolved.add(propResolutionStep);
-        return new ResolutionContext(pending.subList(1, pending.size()), updatedResolved);
+        return new PropResolutionProgress(pending.subList(1, pending.size()), updatedResolved);
     }
     
     public boolean isSuccessful() {

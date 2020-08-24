@@ -24,6 +24,10 @@ public class PropResolution {
     public List<AbstractPropInfo<?>> getPath() {
         return unmodifiableList(path);
     }
+    
+    public AbstractPropInfo<?> lastPart() {
+        return path.get(path.size() - 1);
+    }
 
     @Override
     public int hashCode() {
