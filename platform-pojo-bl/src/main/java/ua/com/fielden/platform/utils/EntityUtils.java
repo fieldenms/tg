@@ -1314,10 +1314,11 @@ public class EntityUtils {
 
         for (final Field keyMember : getKeyMembers(entityType)) {
             final String pathToSubprop = parentContextPath.map(path -> path + PROPERTY_SPLITTER + keyMember.getName()).orElse(keyMember.getName());
-            if (!isPersistedEntityType(keyMember.getType())) {
+            final Class<?> propType = PropertyTypeDeterminator.determinePropertyType(entityType, keyMember.getName());
+            if (!isPersistedEntityType(propType)) {
                 result.add(pathToSubprop);
             } else {
-                result.addAll(keyPaths((Class<? extends AbstractEntity<?>>) keyMember.getType(), pathToSubprop));
+                result.addAll(keyPaths((Class<? extends AbstractEntity<?>>) propType, pathToSubprop));
             }
         }
 
