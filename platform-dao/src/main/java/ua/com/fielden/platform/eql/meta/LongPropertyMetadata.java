@@ -24,7 +24,6 @@ import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.metadata.PropertyCategory;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
-import ua.com.fielden.platform.eql.meta.model.PropColumn;
 
 public class LongPropertyMetadata implements Comparable<LongPropertyMetadata> {
     public final String name;

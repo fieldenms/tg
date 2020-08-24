@@ -77,7 +77,6 @@ import ua.com.fielden.platform.entity.query.metadata.EntityTypeInfo;
 import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.meta.LongPropertyMetadata.Builder;
-import ua.com.fielden.platform.eql.meta.model.PropColumn;
 import ua.com.fielden.platform.eql.stage3.elements.Table;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
