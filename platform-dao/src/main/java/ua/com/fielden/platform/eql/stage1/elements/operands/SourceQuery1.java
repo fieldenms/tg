@@ -32,7 +32,10 @@ import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 public class SourceQuery1 extends AbstractQuery1 implements ITransformableToS2<SourceQuery2> {
-
+    
+    /**
+     * All simple queries as source queries are accessible for correlation. Source queries derived from synthetic entities can't be correlated.
+     */
     public final boolean isCorrelated;
     
     public SourceQuery1(final EntQueryBlocks1 queryBlocks, final Class<? extends AbstractEntity<?>> resultType, final boolean isCorrelated) {
@@ -43,7 +46,6 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableToS2<S
     @Override
     public SourceQuery2 transform(final PropsResolutionContext context) {
         final PropsResolutionContext localResolutionContext = isCorrelated ? context.produceForCorrelatedSourceQuery() : context.produceForUncorrelatedSourceQuery();
-        // .produceForUncorrelatedSubquery() should be used only for cases of synthetic entities (where source query can only be uncorrelated) -- simple queries as source queries are accessible for correlation
         final T2<Sources2,PropsResolutionContext> sourcesTr = sources.transform(localResolutionContext);
         final PropsResolutionContext enhancedContext = sourcesTr._2; 
         final Sources2 sources2 = sourcesTr._1;

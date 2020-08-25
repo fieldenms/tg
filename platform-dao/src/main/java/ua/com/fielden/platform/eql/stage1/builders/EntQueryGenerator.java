@@ -81,7 +81,7 @@ public class EntQueryGenerator {
     }
     
     private <T extends AbstractEntity<?>> SourceQuery1 generateEntQueryAsSourceQuery(final QueryModel<T> qryModel, final Class<T> resultType, final boolean isCorrelated) {
-        return new SourceQuery1(parseTokensIntoComponents(qryModel, null), resultType, true);
+        return new SourceQuery1(parseTokensIntoComponents(qryModel, null), resultType, isCorrelated);
     }
 
     public SubQuery1 generateEntQueryAsSubquery(final QueryModel<?> qryModel) {

@@ -26,8 +26,7 @@ public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuer
 
     @Override
     public SubQuery2 transform(final PropsResolutionContext context) {
-        final PropsResolutionContext localResolutionContext = context.produceForCorrelatedSubquery();//isSubQuery() ? context.produceForCorrelatedSubquery() : context.produceForUncorrelatedSubquery();
-        // .produceForUncorrelatedSubquery() should be used only for cases of synthetic entities (where source query can only be uncorrelated) -- simple queries as source queries are accessible for correlation
+        final PropsResolutionContext localResolutionContext = context.produceForCorrelatedSubquery();
         final T2<Sources2,PropsResolutionContext> sourcesTr = sources.transform(localResolutionContext);
         final PropsResolutionContext enhancedContext = sourcesTr._2; 
         final Sources2 sources2 = sourcesTr._1;
