@@ -1,8 +1,11 @@
 package ua.com.fielden.platform.eql.stage3.elements.conditions;
 
+import static java.lang.String.format;
+
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.LikeOptions;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 
@@ -19,24 +22,22 @@ public class LikeTest3 implements ICondition3 {
 
     @Override
     public String sql(final DbVersion dbVersion) {
-        return DbVersion.H2.likeSql(options.negated, leftOperandSql(dbVersion), rightOperand.sql(dbVersion), options.caseInsensitive);
+        return dbVersion.likeSql(options.negated, leftOperandSql(dbVersion), rightOperand.sql(dbVersion), options.caseInsensitive);
     }
 
     private String leftOperandSql(final DbVersion dbVersion) {
-        return leftOperand.sql(dbVersion);
-        //TODO support withCast and DbVersions (as part of sql() parameters)
-        //return options.withCast ? leftOperandWithTypecastingSql() : leftOperand.sql(); 
+        return options.withCast ? leftOperandWithTypecastingSql(dbVersion) : leftOperand.sql(dbVersion); 
     }
     
-//    private String leftOperandWithTypecastingSql() {
-//        if (Integer.class == leftOperand.type()) {
-//            return format("CAST(%s AS VARCHAR(11))", leftOperand.sql());
-//        } else if (leftOperand.type() == null || String.class == leftOperand.type()) {
-//            return leftOperand.sql();
-//        } else {
-//            throw new EqlException(format("Left operand type [%s] is not supported for operand LIKE.", leftOperand.type()));
-//        }
-//    }
+    private String leftOperandWithTypecastingSql(final DbVersion dbVersion) {
+        if (Integer.class == leftOperand.type()) {
+            return format("CAST(%s AS VARCHAR(11))", leftOperand.sql(dbVersion));
+        } else if (leftOperand.type() == null || String.class == leftOperand.type()) {
+            return leftOperand.sql(dbVersion);
+        } else {
+            throw new EqlException(format("Left operand type [%s] is not supported for operand LIKE.", leftOperand.type()));
+        }
+    }
     
     @Override
     public int hashCode() {
