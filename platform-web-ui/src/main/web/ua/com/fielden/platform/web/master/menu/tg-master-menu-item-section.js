@@ -206,7 +206,7 @@ Polymer({
     _handleViewLoaded: function () {
         if (!this.offsetParent) {
             this.offloadDom();
-        } else if (self._element && typeof self._element.addOwnKeyBindings === 'function') {
+        } else if (this._element && typeof this._element.addOwnKeyBindings === 'function') {
             this._element.addOwnKeyBindings();
         }
     },
