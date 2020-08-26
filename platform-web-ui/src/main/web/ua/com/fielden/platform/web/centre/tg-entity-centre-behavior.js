@@ -678,7 +678,7 @@ const TgEntityCentreBehaviorImpl = {
          */
         self.run = (function (isAutoRunning, isSortingAction, forceRegeneration) {
             if (this._criteriaLoaded === false) {
-                throw "Cannot run centre (not initialised criteria).";
+                throw new Error(`Cannot run ${this.is} centre (not initialised criteria).`);
             }
 
             const self = this;
