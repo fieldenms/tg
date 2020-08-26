@@ -94,11 +94,7 @@ Polymer({
      * Cancels any unfinished validation that was requested earlier (if any).
      */
     abortValidationIfAny: function () {
-        var reflector = this._serialiser.$.reflector;
-        var numberOfAbortedRequests = reflector.discardAllRequests(this.$.ajaxSender);
-        if (numberOfAbortedRequests > 0) {
-            console.warn("abortValidationIfAny: number of aborted requests =", numberOfAbortedRequests);
-        }
+        this._serialiser.$.reflector.abortRequestsIfAny(this.$.ajaxSender, 'validation');
     },
 
     /**

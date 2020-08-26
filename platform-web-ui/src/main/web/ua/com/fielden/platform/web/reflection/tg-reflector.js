@@ -1972,6 +1972,19 @@ export const TgReflector = Polymer({
     },
 
     /**
+     * Cancels any unfinished request that was actioned earlier (if any).
+     * 
+     * @param ajaxSender -- iron-ajax instance containing requests
+     * @param operationDesc -- description of iron-ajax operation to make warning more specific
+     */
+    abortRequestsIfAny: function (ajaxSender, operationDesc) {
+        const numberOfAbortedRequests = this.discardAllRequests(ajaxSender);
+        if (numberOfAbortedRequests > 0) {
+            console.warn(`abortRequestsIfAny: number of aborted ${operationDesc} requests = ${numberOfAbortedRequests}`);
+        }
+    },
+
+    /**
      * Validates the presence of originallyProducedEntity based on number representation of entity id.
      */
     _validateOriginallyProducedEntity: function (originallyProducedEntity, idNumber) {
