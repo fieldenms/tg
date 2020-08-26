@@ -606,6 +606,11 @@ export const TgEntityBinderBehavior = {
                 slf._retrievalInitiated = true;
                 slf.disableView();
             }
+            //Abort all retrieval requests if they exist, because they may change the master's
+            //entityId property which in turn may fail next retrieval request. It may happen
+            //in compound master during quick menu item switching where one of the menu items 
+            //is embedded entity master.
+            this._reflector().abortRequestsIfAny(this._ajaxRetriever(), 'retrieval');
 
             return new Promise(function (resolve, reject) {
                 slf.debounce('invoke-retrieval', function () {

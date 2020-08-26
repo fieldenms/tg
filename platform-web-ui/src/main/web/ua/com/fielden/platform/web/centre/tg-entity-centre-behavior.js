@@ -458,9 +458,7 @@ const TgEntityCentreBehaviorImpl = {
                 console.warn('Running is chained to the last retrieval promise...');
                 lastRetrievalPromise.then(() => this._abortPreviousAndInitiateNewRun());
             } else {
-                this.retrieve().then(() => {
-                    this._abortPreviousAndInitiateNewRun();
-                });
+                this.retrieve().then(() => this._abortPreviousAndInitiateNewRun());
             }
         }
     },
