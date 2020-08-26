@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage1.elements.sources;
 
+import static java.util.stream.Collectors.toList;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -56,15 +58,8 @@ public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2Ba
    
     @Override
     public QrySource2BasedOnSubqueries transform(final PropsResolutionContext context) {
-        
-        final List<SourceQuery2> transformedQueries = new ArrayList<>();
-
-        for (final SourceQuery1 model : models) {
-            final SourceQuery2 modelTr = model.transform(context/*.produceNewOne() // as already invoked as part of EntQuery1.transform(..)*/);
-            transformedQueries.add(modelTr);
-        }
-           
-        return new QrySource2BasedOnSubqueries(transformedQueries, alias, context.getDomainInfo(), (context.sourceId == null ? Integer.toString(contextId) : context.sourceId + "_" + Integer.toString(contextId)));
+        final List<SourceQuery2> transformedQueries = models.stream().map(m -> m.transform(context)).collect(toList());
+        return new QrySource2BasedOnSubqueries(transformedQueries, alias, context.getDomainInfo(), getTransformedContextId(context));
     }
     
     private SourceQuery1 firstModel() {

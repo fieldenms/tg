@@ -608,7 +608,7 @@ public class LongMetadata {
         return Collections.unmodifiableMap(tables);
     }
     
-    public EntityInfo<?> getDomainInfo(final Class<? extends AbstractEntity<?>> type) {
+    public EntityInfo<?> getEntityInfo(final Class<? extends AbstractEntity<?>> type) {
         final EntityInfo<?> existing = domainInfo.get(type);
         if (existing != null) {
             return existing;

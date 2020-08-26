@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.stage1.elements.sources;
 
 import java.util.Objects;
 
+import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
 
 public abstract class AbstractQrySource1<S2 extends IQrySource2<?>> implements IQrySource1<S2> {
@@ -20,6 +21,10 @@ public abstract class AbstractQrySource1<S2 extends IQrySource2<?>> implements I
     @Override
     public String getAlias() {
         return alias;
+    }
+    
+    public String getTransformedContextId(final PropsResolutionContext context) {
+        return context.sourceId == null ? Integer.toString(contextId) : context.sourceId + "_" + Integer.toString(contextId);
     }
 
     @Override

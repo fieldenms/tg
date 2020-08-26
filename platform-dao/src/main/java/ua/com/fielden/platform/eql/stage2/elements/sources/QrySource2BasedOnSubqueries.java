@@ -134,13 +134,13 @@ public class QrySource2BasedOnSubqueries extends AbstractElement2 implements IQr
             if (isPersistedEntityType(sourceType())) {
                 if (getYields().getYields().size() == 1 && getYields().getYields().iterator().next().alias.equals(ID)) {
                     final EntityInfo<?> actualEi = new EntityInfo<>(sourceType(), QUERY_BASED);
-                    actualEi.addProp(domainInfo.getDomainInfo(sourceType()).getProps().get(ID));
+                    actualEi.addProp(domainInfo.getEntityInfo(sourceType()).getProps().get(ID));
                     return actualEi;    
                 } else {
-                    return domainInfo.getDomainInfo(sourceType());    
+                    return domainInfo.getEntityInfo(sourceType());    
                 }
             } else {
-                final EntityInfo<?> declaredEi = domainInfo.getDomainInfo(sourceType());
+                final EntityInfo<?> declaredEi = domainInfo.getEntityInfo(sourceType());
                 final EntityInfo<?> actualEi = new EntityInfo<>(sourceType(), QUERY_BASED);
                 for (final Entry<String, AbstractPropInfo<?>> declaredProp : declaredEi.getProps().entrySet()) {
                    
@@ -173,7 +173,7 @@ public class QrySource2BasedOnSubqueries extends AbstractElement2 implements IQr
             final EntityInfo<EntityAggregates> entAggEntityInfo = new EntityInfo<>(EntityAggregates.class, null);
             for (final Yield2 yield : getYields().getYields()) {
                 final AbstractPropInfo<?> aep = isEntityType(yield.javaType())
-                        ? new EntityTypePropInfo(yield.alias, domainInfo.getDomainInfo((Class<? extends AbstractEntity<?>>)yield.javaType()), LongType.INSTANCE, yield.hasRequiredHint)
+                        ? new EntityTypePropInfo(yield.alias, domainInfo.getEntityInfo((Class<? extends AbstractEntity<?>>)yield.javaType()), LongType.INSTANCE, yield.hasRequiredHint)
                         : new PrimTypePropInfo(yield.alias, yield.operand.hibType(), yield.javaType());
                 entAggEntityInfo.addProp(aep);
             }

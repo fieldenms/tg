@@ -57,11 +57,11 @@ public class EqlStage2TestCase extends EqlTestCase {
     protected static final Yields2 emptyYields2 = new Yields2(emptyList());
 
     protected static AbstractPropInfo<?> pi(final Class<?> type, final String propName) {
-        return DOMAIN_METADATA.lmd.getDomainInfo((Class<? extends AbstractEntity<?>>) type).getProps().get(propName);
+        return DOMAIN_METADATA.lmd.getEntityInfo((Class<? extends AbstractEntity<?>>) type).getProps().get(propName);
     }
 
     protected static AbstractPropInfo<?> pi(final Class<?> type, final String propName, final String subPropName) {
-        final AbstractPropInfo<?> propInfo = DOMAIN_METADATA.lmd.getDomainInfo((Class<? extends AbstractEntity<?>>) type).getProps().get(propName);
+        final AbstractPropInfo<?> propInfo = DOMAIN_METADATA.lmd.getEntityInfo((Class<? extends AbstractEntity<?>>) type).getProps().get(propName);
         if (propInfo instanceof ComponentTypePropInfo) {
             return (AbstractPropInfo<?>) ((ComponentTypePropInfo) propInfo).getProps().get(subPropName);
         } else if (propInfo instanceof UnionTypePropInfo) {
@@ -245,11 +245,11 @@ public class EqlStage2TestCase extends EqlTestCase {
     }
 
     protected static QrySource2BasedOnPersistentType source(final String contextId, final Class<? extends AbstractEntity<?>> sourceType, final String alias) {
-        return new QrySource2BasedOnPersistentType(sourceType, DOMAIN_METADATA.lmd.getDomainInfo(sourceType), alias, contextId);
+        return new QrySource2BasedOnPersistentType(sourceType, DOMAIN_METADATA.lmd.getEntityInfo(sourceType), alias, contextId);
     }
 
     protected static QrySource2BasedOnPersistentType source(final String contextId, final Class<? extends AbstractEntity<?>> sourceType) {
-        return new QrySource2BasedOnPersistentType(sourceType, DOMAIN_METADATA.lmd.getDomainInfo(sourceType), contextId);
+        return new QrySource2BasedOnPersistentType(sourceType, DOMAIN_METADATA.lmd.getEntityInfo(sourceType), contextId);
     }
     
     protected static QrySource2BasedOnSubqueries source(final String contextId, final SourceQuery2 ... queries) {

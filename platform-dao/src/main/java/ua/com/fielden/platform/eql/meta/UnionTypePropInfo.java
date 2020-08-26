@@ -61,7 +61,7 @@ public class UnionTypePropInfo<T extends AbstractUnionEntity> extends AbstractPr
             return false;
         }
 
-        final UnionTypePropInfo other = (UnionTypePropInfo) obj;
+        final UnionTypePropInfo<?> other = (UnionTypePropInfo<?>) obj;
 
         return Objects.equals(propEntityInfo, other.propEntityInfo) && Objects.equals(required, other.required);
     }

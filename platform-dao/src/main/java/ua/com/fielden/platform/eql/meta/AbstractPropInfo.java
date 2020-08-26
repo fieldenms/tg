@@ -15,15 +15,6 @@ public abstract class AbstractPropInfo<T> implements IResolvable<T> {
     public final ExpressionModel expression;
     public final Object hibType;
 
-    /**
-     * Principal constructor.
-     * 
-     * @param name - property yield alias or property name.
-     */
-    public AbstractPropInfo(final String name, final Object hibType) {
-        this(name, hibType, null);
-    }
-    
     public AbstractPropInfo(final String name, final Object hibType, final ExpressionModel expression) {
         this.name = name;
         this.expression = expression;
