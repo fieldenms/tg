@@ -99,7 +99,6 @@ class TgGlobalErrorHandler extends PolymerElement {
 
         //Add error handling errors
         window.addEventListener('error', this._handleError);
-        window.addEventListener('rejectionhandled', this._handleUnhandledPromiseError);
         window.addEventListener('unhandledrejection', this._handleUnhandledPromiseError);
     }
 
