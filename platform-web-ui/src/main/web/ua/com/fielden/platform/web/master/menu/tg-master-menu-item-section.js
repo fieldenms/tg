@@ -204,7 +204,7 @@ Polymer({
     },
 
     _handleViewLoaded: function () {
-        if (!this.offsetParent) {
+        if (!this.offsetParent) { // offloads children from menu item section only if it is not visible
             this.offloadDom();
         } else if (this._element && typeof this._element.addOwnKeyBindings === 'function') {
             this._element.addOwnKeyBindings();

@@ -254,6 +254,9 @@ Polymer({
      * Offloads the loaded element from light DOM of this element loader.
      */
     offloadDom: function () {
+        // Remove children (likely consisting of only 'loadedElement') only if 'loadedElement' is attached to this 'tg-element-loader' (i.e. parentElement is not empty).
+        // This is to avoid children removal if 'offloadDom' has already been executed earlier.
+        // Currently 'loadedElement' is always initialised in this moment.
         if (this.loadedElement.parentElement) {
             _removeAllLightDOMChildrenFrom(this);
         }
@@ -263,6 +266,9 @@ Polymer({
      * Inserts the loaded element into light DOM of this element loader.
      */
     loadDom: function () {
+        // Insert 'loadedElement' only if it is NOT attached to this 'tg-element-loader' (i.e. parentElement is empty).
+        // This is to avoid 'loadedElement' insertion if it was inserted earlier.
+        // Currently 'loadedElement' is always initialised in this moment.
         if (!this.loadedElement.parentElement) {
             return this.insert(this.loadedElement);
         }
