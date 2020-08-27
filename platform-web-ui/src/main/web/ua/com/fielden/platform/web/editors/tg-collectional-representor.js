@@ -3,7 +3,7 @@ import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
 import { TgEditor, createEditorTemplate} from '/resources/editors/tg-editor.js';
-import { generateShortCollection, allDefined } from '/resources/reflection/tg-polymer-utils.js';
+import { allDefined } from '/resources/reflection/tg-polymer-utils.js';
 
 const additionalTemplate = html`
     <style>
@@ -37,21 +37,10 @@ export class TgCollectionalRepresentor extends TgEditor {
      * Converts the value into string representation (which is used in edititing / comm values).
      */
     convertToString (value) {
-        if (value === null) {
-            return "";
-        }
-
-        if (value.constructor !== Array) {
+        if (value && !Array.isArray(value)) {
             throw 'Unsupported value has appeared inside collectional representor: ' + value;
         }
-
-        const fullEntity = this.reflector()._getValueFor(this.entity, "");
-        const originValue = fullEntity.get(this.propertyName);
-        if (originValue.length === 0 || !originValue[0].type().isCompositeEntity()) {
-            return value.map(v => this.reflector().convert(v)).join(", "); // assumes that value is array of entities
-        } else {
-            return this.reflector().convert(generateShortCollection(fullEntity, this.propertyName, originValue[0].type())).join(", ");
-        }
+        return super.convertToString(value);
     }
 
     /**
@@ -73,12 +62,12 @@ export class TgCollectionalRepresentor extends TgEditor {
             return "";
         }
         if (entity !== null) {
-            const fullEntity = this.reflector()._getValueFor(entity, "");
+            const fullEntity = this.reflector().tg_getFullEntity(entity);
             let valueToFormat = "";
             if (this.reflector().isError(fullEntity.prop(this.propertyName).validationResult())) {
                 valueToFormat = _editingValue;
             } else {
-                valueToFormat = this.reflector()._getValueFor(entity, this.propertyName);
+                valueToFormat = fullEntity.get(this.propertyName);
             }
             return super._getTooltip(valueToFormat);
         }
@@ -88,14 +77,7 @@ export class TgCollectionalRepresentor extends TgEditor {
     _formatTooltipText (valueToFormat) {
         if (valueToFormat !== null) {
             if (Array.isArray(valueToFormat)) {
-                if (valueToFormat.length === 0 || !valueToFormat[0].type().isCompositeEntity()) {
-                    return valueToFormat.length > 0 ? ("<b>" + valueToFormat.join(", ") + "</b>") : '';
-                } else {
-                    const collection = generateShortCollection(this.reflector()._getValueFor(this.entity, ""), this.propertyName, valueToFormat[0].type());
-                    const title = this.reflector().convert(collection).join(", ");
-                    const desc = collection.reduce((curr, next) => this.reflector().isEntity(next) && next.get("desc") ? curr + (curr ? ", " : "") + next.get("desc") : curr, "");
-                    return "<b>" + title + "</b>" + (desc ? "<br>" + desc : "");
-                }
+                return this.reflector().tg_toString(valueToFormat, this.entity.type(), this.propertyName, { collection: true, asTooltip: true });
             } else {
                 throw 'Unsupported value has appeared inside collectional representor: ' + valueToFormat;
             }

@@ -46,7 +46,7 @@ public class LastLevelEntityDaoStub implements ILastLevelEntity {
     }
 
     @Override
-    public LastLevelEntity findById(final Long id, final fetch<LastLevelEntity> fetchModel) {
+    public LastLevelEntity findById(final boolean filtered, final Long id, final fetch<LastLevelEntity> fetchModel) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -64,19 +64,7 @@ public class LastLevelEntityDaoStub implements ILastLevelEntity {
     }
 
     @Override
-    public LastLevelEntity findByKeyAndFetch(final fetch<LastLevelEntity> fetchModel, final Object... keyValues) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public IPage<LastLevelEntity> firstPage(final int pageCapacity) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public IPage<LastLevelEntity> getPage(final int pageNo, final int pageCapacity) {
+    public LastLevelEntity findByKeyAndFetch(final boolean filtered, final fetch<LastLevelEntity> fetchModel, final Object... keyValues) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -191,19 +179,19 @@ public class LastLevelEntityDaoStub implements ILastLevelEntity {
     }
 
     @Override
-    public Stream<LastLevelEntity> stream(QueryExecutionModel<LastLevelEntity, ?> qem, int fetchSize) {
+    public Stream<LastLevelEntity> stream(final QueryExecutionModel<LastLevelEntity, ?> qem, final int fetchSize) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public Stream<LastLevelEntity> stream(QueryExecutionModel<LastLevelEntity, ?> qem) {
+    public Stream<LastLevelEntity> stream(final QueryExecutionModel<LastLevelEntity, ?> qem) {
         // TODO Auto-generated method stub
         return null;
     }
 
 	@Override
-	public boolean exists(EntityResultQueryModel<LastLevelEntity> model, Map<String, Object> paramValues) {
+	public boolean exists(final EntityResultQueryModel<LastLevelEntity> model, final Map<String, Object> paramValues) {
 		// TODO Auto-generated method stub
 		return false;
 	}

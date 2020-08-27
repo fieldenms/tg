@@ -12,6 +12,7 @@ import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restorat
 import { createEntityActionThenCallback } from '/resources/master/actions/tg-entity-master-closing-utils.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 import { allDefined } from '/resources/reflection/tg-polymer-utils.js';
+import { enhanceStateRestoration } from '/resources/components/tg-global-error-handler.js';
 // depends on '/resources/filesaver/FileSaver.min.js' 
 
 const template = html`
@@ -288,9 +289,13 @@ Polymer({
         if (newValue && oldValue === undefined) {
             self.async(function () {
                 self.postAction = function (smth) {
-                    var result = newValue(smth);
-                    self._afterExecution();
-                    return result;
+                    try {
+                        const result = newValue(smth);
+                        self._afterExecution();
+                        return result;
+                    } catch (e) {
+                        throw enhanceStateRestoration(e, () => self._afterExecution());
+                    }
                 };
             });
         }
@@ -302,9 +307,13 @@ Polymer({
         if (newValue && oldValue === undefined) {
             self.async(function () {
                 self.postActionError = function (smth) {
-                    var result = newValue(smth);
-                    self._afterExecution();
-                    return result;
+                    try {
+                        var result = newValue(smth);
+                        self._afterExecution();
+                        return result;
+                    } catch (e) {
+                        throw enhanceStateRestoration(e, () => self._afterExecution());
+                    }
                 };
             });
         }

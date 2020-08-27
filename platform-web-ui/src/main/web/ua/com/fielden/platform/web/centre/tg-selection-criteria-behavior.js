@@ -86,7 +86,9 @@ const TgSelectionCriteriaBehaviorImpl = {
         },
 
         /**
-         * Currently immutable capacity of the page.
+         * Page capacity taken from PREVIOUSLY_RUN surrogate centre after run / refresh / navigate action (see tg-entity-centre-behavior._postRun).
+         * 
+         * This is used for single purpose: update information on EDIT/NAVIGATE action dialogs (see EntityNavigationPreAction).
          */
         pageCapacity: {
             type: Number
@@ -565,8 +567,8 @@ const TgSelectionCriteriaBehaviorImpl = {
             resolve(
                 self._runModifiedProperties(
                     self._createContextHolderForRunning(function () {
-                        return action === RunActions.run ? self._reset(_persistedModifiedPropertiesHolder) : null;
-                    },
+                            return action === RunActions.run ? self._reset(_persistedModifiedPropertiesHolder) : null;
+                        },
                         action,
                         isAutoRunning,
                         isSortingAction,
@@ -681,7 +683,7 @@ const TgSelectionCriteriaBehaviorImpl = {
     },
 
     /**
-     * Create context holder for running with custom '@@pageCapacity', "@@pageNumber" and other properties for running, page retrieval or
+     * Create context holder for running with custom "@@pageNumber" and other properties for running, page retrieval or
      *   concrete entities refresh processes.
      *
      * In this method selection criteria modifHolder should be sent every time -- it is required to actually 'run' the query.
@@ -701,7 +703,6 @@ const TgSelectionCriteriaBehaviorImpl = {
             self._reflector().setCustomProperty(contextHolder, "@@forceRegeneration", true);
         }
         self._reflector().setCustomProperty(contextHolder, "@@action", action);
-        self._reflector().setCustomProperty(contextHolder, "@@pageCapacity", self.pageCapacity);
         if (self.pageCount !== null) {
             self._reflector().setCustomProperty(contextHolder, "@@pageNumber", self.pageNumber);
         } else {

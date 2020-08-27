@@ -65,7 +65,9 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     private final boolean hideToolbar;
     private final IScrollConfig scrollConfig;
     private final int pageCapacity;
+    private final int maxPageCapacity;
     private final int visibleRowsCount;
+    private final int numberOfHeaderLines;
     private final String egiHeight;
     private final boolean fitToHeight;
     private final String rowHeight;
@@ -231,15 +233,15 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         public final boolean isFlexible;
 
          public static <T extends AbstractEntity<?>> ResultSetProp<T> propByName(final String propName, final int width, final boolean isFlexible, final Optional<AbstractWidget> widget, final String tooltipProp, final Supplier<Optional<EntityActionConfig>> propAction) {
-            return new ResultSetProp<T>(propName, empty(), empty(), empty(), width, isFlexible, widget, tooltipProp, null, propAction);
+            return new ResultSetProp<>(propName, empty(), empty(), empty(), width, isFlexible, widget, tooltipProp, null, propAction);
         }
 
         public static <T extends AbstractEntity<?>> ResultSetProp<T> propByDef(final PropDef<?> propDef, final int width, final boolean isFlexible, final String tooltipProp, final Supplier<Optional<EntityActionConfig>> propAction) {
-            return new ResultSetProp<T>(null, empty(), empty(), empty(), width, isFlexible, Optional.empty(), tooltipProp, propDef, propAction);
+            return new ResultSetProp<>(null, empty(), empty(), empty(), width, isFlexible, Optional.empty(), tooltipProp, propDef, propAction);
         }
 
         public static <T extends AbstractEntity<?>> ResultSetProp<T> dynamicProps(final String collectionalPropertyName, final Class<? extends IDynamicColumnBuilder<T>> dynamicPropDefinerClass, final BiConsumer<? extends AbstractEntity<?>, Optional<CentreContext<T, ?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
-            return new ResultSetProp<T>(collectionalPropertyName, of(dynamicPropDefinerClass), of(contextConfig), of(entityPreProcessor), 0, false, Optional.empty(), null, null, () -> Optional.empty());
+            return new ResultSetProp<>(collectionalPropertyName, of(dynamicPropDefinerClass), of(contextConfig), of(entityPreProcessor), 0, false, Optional.empty(), null, null, () -> Optional.empty());
         }
 
         private ResultSetProp(
@@ -361,7 +363,9 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final boolean hideToolbar,
             final IScrollConfig scrollConfig,
             final int pageCapacity,
+            final int maxPageCapacity,
             final int visibleRowsCount,
+            final int numberOfHeaderLines,
             final String egiHeight,
             final boolean fitToHeight,
             final String rowHeight,
@@ -429,7 +433,9 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         this.hideToolbar = hideToolbar;
         this.scrollConfig = scrollConfig;
         this.pageCapacity = pageCapacity;
+        this.maxPageCapacity = maxPageCapacity;
         this.visibleRowsCount = visibleRowsCount;
+        this.numberOfHeaderLines = numberOfHeaderLines;
         this.egiHeight = egiHeight;
         this.fitToHeight = fitToHeight;
         this.rowHeight = rowHeight;
@@ -857,8 +863,16 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         return pageCapacity;
     }
 
+    public int getMaxPageCapacity() {
+        return maxPageCapacity;
+    }
+
     public int getVisibleRowsCount() {
         return visibleRowsCount;
+    }
+
+    public int getNumberOfHeaderLines() {
+        return numberOfHeaderLines;
     }
 
     public String getEgiHeight() {

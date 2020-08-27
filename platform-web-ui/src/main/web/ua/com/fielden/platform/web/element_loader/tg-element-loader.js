@@ -137,6 +137,8 @@ Polymer({
         this.appendChild(element);
 
         this.loadedElement = element;
+
+        return this.loadedElement;
     },
 
     /** 
@@ -175,7 +177,7 @@ Polymer({
                     // TODO during 'import' method invocation the server error json can arrive instead of piece of DOM -- need to handle this somehow
                     console.warn("error happened", error);
                     // loading error
-                    throw new Error('Could not load element <tt>' + elementName + '</tt>.');
+                    throw new Error(`Could not load element <tt>${elementName}</tt> due to [<i>${error}</i>].`);
                 });
             } else {
                 return new Promise((resolve, reject) => {
@@ -192,6 +194,20 @@ Polymer({
             }
 
         }
+    },
+
+    /**
+     * Offloads the loaded element from light DOM of this element loader.
+     */
+    offloadDom: function () {
+        _removeAllLightDOMChildrenFrom(this);
+    },
+
+    /**
+     * Inserts the loaded element into light DOM of this element loader.
+     */
+    loadDom: function () {
+        return this.insert(this.loadedElement);
     },
 
     /** 

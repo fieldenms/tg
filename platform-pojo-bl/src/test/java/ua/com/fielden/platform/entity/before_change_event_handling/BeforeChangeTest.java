@@ -1,11 +1,13 @@
 package ua.com.fielden.platform.entity.before_change_event_handling;
 
+import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.entity.meta.AbstractMetaPropertyFactory.ERR_INVALID_PROPERTY_NAME_FOR_PROP_PARAM;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -50,7 +52,7 @@ public class BeforeChangeTest {
     }
 
     @Test
-    public void test_parameterisation_of_BCE_handlers() {
+    public void all_BCE_handler_params_are_assigned_as_per_definition() {
         final Entity entity = factory.newByKey(Entity.class, "key");
 
         final Map<IBeforeChangeEventHandler<String>, Result> handlers = entity.<String>getProperty("property1").getValidators().get(ValidationAnnotation.BEFORE_CHANGE);
@@ -60,6 +62,7 @@ public class BeforeChangeTest {
         assertEquals("Incorrect parameter value.", 1, handler.getIntParam1());
         assertEquals("Incorrect parameter value.", 12, handler.getIntParam2());
         assertEquals("Incorrect parameter value.", 0.65, handler.getDblParam(), 0);
+        assertEquals("Incorrect parameter value.", "property2", handler.getPropNameParam());
         final IDates dates = injector.getInstance(IDates.class);
         assertEquals("Incorrect parameter value.", StringConverter.toDate("2011-12-01 00:00:00", dates), handler.getDateParam());
         assertEquals("Incorrect parameter value.", StringConverter.toDateTime("2011-12-01 00:00:00", dates), handler.getDateTimeParam());
@@ -69,13 +72,23 @@ public class BeforeChangeTest {
     }
 
     @Test
+    public void instantiation_of_entity_with_BCE_that_has_invalid_propParam_fails() {
+        try {
+            factory.newByKey(EntityWithInvalidBceDefinition.class, "key");
+            fail("Instantiation should have failed due to inalid property reference.");
+        } catch (final Exception ex) {
+            final String stackTrace = ExceptionUtils.getStackTrace(ex);
+            assertTrue(stackTrace.contains(format(ERR_INVALID_PROPERTY_NAME_FOR_PROP_PARAM, "property2", EntityWithInvalidBceDefinition.class.getName())));
+        }
+    }
+
+    @Test
     public void instantiation_of_entity_with_invalid_enum_params_for_one_of_its_BCE_handlers_should_fail() {
         try {
             factory.newByKey(EntityWithInvalidEnumParam.class, "key");
             fail();
         } catch (final Exception ex) {
-            assertEquals(ExceptionUtils.getRootCause(ex).getMessage(), "Value \"INVALID\" is not of type \"ua.com.fielden.platform.entity.before_change_event_handling.EnumForParams\".");
-
+            assertEquals(ExceptionUtils.getRootCause(ex).getMessage(), "Value [INVALID] is not of type [ua.com.fielden.platform.entity.before_change_event_handling.EnumForParams].");
         }
     }
 

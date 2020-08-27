@@ -13,6 +13,7 @@ import '/resources/views/tg-app-view.js';
 import '/resources/master/tg-entity-master.js';
 import '/resources/actions/tg-ui-action.js';
 import '/resources/components/tg-message-panel.js';
+import '/resources/components/tg-global-error-handler.js';
 
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
@@ -23,7 +24,7 @@ import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizabl
 import { TgEntityMasterBehavior } from '/resources/master/tg-entity-master-behavior.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js'
 import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';
-import { tearDownEvent, deepestActiveElement, generateUUID, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, deepestActiveElement, generateUUID, isMobileApp} from '/resources/reflection/tg-polymer-utils.js';
 
 const template = html`
     <style>
@@ -32,6 +33,7 @@ const template = html`
         }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
+    <tg-global-error-handler id="errorHandler" toaster="[[toaster]]"></tg-global-error-handler>
     <app-location id="location" no-decode dwell-time="-1" route="{{_route}}" url-space-regex="^/#/" use-hash-as-path></app-location>
     <app-route route="{{_route}}" pattern="/:moduleName" data="{{_routeData}}" tail="{{_subroute}}"></app-route>
     <tg-message-panel></tg-message-panel>
@@ -65,10 +67,23 @@ const template = html`
             component-uri='/master_ui/ua.com.fielden.platform.menu.MenuSaveAction'
             element-name='tg-MenuSaveAction-master'
             show-dialog='[[_showDialog]]'
+            toaster='[[toaster]]'
             create-context-holder='[[_createContextHolder]]'
             attrs='[[_attrs]]'
             require-selection-criteria='false'
             require-selected-entities='NONE'
+            require-master-entity='false'>
+        </tg-ui-action>
+        <tg-ui-action
+            id="openMasterAction"
+            ui-role='ICON'
+            show-dialog='[[_showDialog]]'
+            toaster='[[toaster]]'
+            create-context-holder='[[_createContextHolder]]'
+            dynamic-action
+            attrs='[[_openMasterAttrs]]'
+            require-selection-criteria='false'
+            require-selected-entities='ONE'
             require-master-entity='false'>
         </tg-ui-action>
     </tg-entity-master>`;
@@ -83,7 +98,8 @@ function findModule (moduleName, menuConfig) {
         }
     }
     return "menu";
-};
+}
+
 function addAllElements (elementsToAdd, addToArray, removeFromArray) {
     addToArray = addToArray || [];
     if (elementsToAdd) {
@@ -98,7 +114,8 @@ function addAllElements (elementsToAdd, addToArray, removeFromArray) {
         });
     }
     return addToArray;
-};
+}
+
 Polymer({
 
     _template: template,
@@ -131,6 +148,7 @@ Polymer({
         },
         appTitle: String,
         entityType: String,
+
         _manager: {
             type: Object,
             value: IronOverlayManager
@@ -164,7 +182,7 @@ Polymer({
          * Please, not that history also always contains 'zero' entry which represents 'New Tab'.
          */
         currentHistoryState: {
-            type: Number
+            type: Object
         }
     },
 
@@ -184,7 +202,7 @@ Polymer({
         "menu-search-list-closed": "_restoreLastFocusedElement",
         "tg-module-menu-closed": "_restoreLastFocusedElement"
     },
-    
+
     _searchMenu: function (event) {
         const selectedElement = this.shadowRoot.querySelector("[name='" + this.$.pages.selected + "']");
         if (selectedElement && selectedElement.searchMenu) {
@@ -202,6 +220,25 @@ Polymer({
             tearDownEvent(event);
         }
     },
+
+    _openMasterAction: function () {
+        if (this.$.openMasterAction.isActionInProgress || this.disableNextHistoryChange) {
+            return;
+        }
+        const entityInfo = this._selectedSubmodule.substring(1).split('/');
+        if (entityInfo.length !== 2) {
+            this._openToastForError("Uri Error:", "The URI for master is incorrect. It should contain entity type and id seperated with '/', but it has: " + this._selectedSubmodule + ".", true);
+        } else if (!this._reflector().findTypeByName(entityInfo[0])) {
+            this._openToastForError("Master entity type error:", "The entity type: " + entityInfo[0] + " is not registered, please make sure that entity type to open is correct.", true);
+        } else if (isNaN(Number(entityInfo[1]))) {
+            this._openToastForError("Master entity ID error:", "The entity ID should be an integer number, but was: " + entityInfo[1] + ".", true);
+        } else {
+            const entity = this._reflector().newEntity(entityInfo[0]);
+            entity["id"] = parseInt(entityInfo[1]);
+            this.$.openMasterAction.currentEntity = () => entity;
+            this.$.openMasterAction._run();
+        }
+    },
     
     _restoreLastFocusedElement: function (event) {
         this.restoreActiveElement();
@@ -212,8 +249,12 @@ Polymer({
         if (typeof this.currentHistoryState === "undefined") {
             this._loadApplicationInfrastructureIntoHistory();
         } else {
+            if (!window.history.state) {
+                //This logic might be invoked in case when someone changes hash by typing it in to address bar.
+                this._replaceStateWithNumber();
+            }
             const currentOverlay = this._findFirstClosableDialog();
-            const historySteps = this.currentHistoryState - window.history.state.currIndex; //Determine history steps (i.e whether user pressed back or forward or multiple back or forward or changed history in some other way. One should take into account that if history steps are greater than 0 then user went backward. If the history steps are less than 0 then user went forward. If history steps are equal to 0 then user chnaged history by clicking menu item it search menu or module menu etc.)
+            const historySteps = this.currentHistoryState.currIndex - window.history.state.currIndex; //Determine history steps (i.e whether user pressed back or forward or multiple back or forward or changed history in some other way. One should take into account that if history steps are greater than 0 then user went backward. If the history steps are less than 0 then user went forward. If history steps are equal to 0 then user chnaged history by clicking menu item it search menu or module menu etc.)
             if (historySteps !== 0 && currentOverlay) { // if user went backward or forward and there is overlay open and 'root' page (for e.g. https://tgdev.com:8091) is not opening
                 // disableNextHistoryChange flag is needed to avoid history movements cycling
                 if (!this.disableNextHistoryChange) {
@@ -237,7 +278,7 @@ Polymer({
                 this._changePage();
                 this.disableNextHistoryChange = false;
             }
-            this.currentHistoryState = window.history.state && window.history.state.currIndex;
+            this.currentHistoryState = window.history.state;
         }
     },
     
@@ -248,8 +289,8 @@ Polymer({
             const urlToOpen = new URL(this._getUrl(), window.location.protocol + '//' + window.location.host).href;
             window.history.replaceState({currIndex: 0}, '', urlForRoot);
             window.history.pushState({currIndex: 1}, '', urlForMenu);
-            window.history.pushState({currIndex: 2}, '', urlToOpen);
-            this.currentHistoryState = 2;
+            this.currentHistoryState = {currIndex: 2};
+            window.history.pushState(this.currentHistoryState, '', urlToOpen);
             this._routeChanged();
         }
     },
@@ -279,7 +320,7 @@ Polymer({
             }
         }
         for (let i = overlays.length - 1; i >= 0; i--) {
-            if (!overlays[i].skipHistoryAction) {
+            if (!overlays[i].skipHistoryAction && overlays[i].opened) {
                 return false;
             }
         }
@@ -300,7 +341,7 @@ Polymer({
     _findFirstClosableDialog: function () {
         const overlays = this._manager._overlays;
         for (let i = overlays.length - 1; i >= 0; i--) {
-            if (!overlays[i].skipHistoryAction) {
+            if (!overlays[i].skipHistoryAction && overlays[i].opened) {
                 return overlays[i];
             }
         }
@@ -334,35 +375,45 @@ Polymer({
         }
     },
 
+    /**
+     * Selects the specified view. If the view is opened in different module then play transition animation between modules.
+     * 
+     * @param {String} selected 
+     */
     _setSelected: function (selected) {
-        var currentlySelected, currentlySelectedElement, elementToSelect;
         if (this.menuConfig) {
-            currentlySelected = this.$.pages.selected;
-            currentlySelectedElement = currentlySelected && this.shadowRoot.querySelector("[name='" + currentlySelected + "']");
-            if (currentlySelected === selected) {
-                if (this._selectedSubmodule === this._subroute.path) {
+            const moduleToSelect = findModule(selected, this.menuConfig);
+            const currentlySelected = this.$.pages.selected;
+            const currentlySelectedElement = currentlySelected && this.shadowRoot.querySelector("[name='" + currentlySelected + "']");
+            //If module to select is the same as currently selected then just open selected menu item (e.i open entity centre or master)
+            if (currentlySelected === moduleToSelect) {
+                if (selected === 'master') {
+                    this._selectedSubmodule = this._subroute.path;
+                    this. _openMasterAction();
+                } else if (this._selectedSubmodule === this._subroute.path) {
                     if (currentlySelectedElement && currentlySelectedElement.selectSubroute) {
                         currentlySelectedElement.selectSubroute(this._subroute.path.substring(1).split("?")[0]);
                     }
                 } else {
-                    this._selectedSubmodule = this._subroute.path
+                    this._selectedSubmodule = this._subroute.path;
                 }
                 return;
             }
-            selected = findModule(selected, this.menuConfig)
-            elementToSelect = selected && this.shadowRoot.querySelector("[name='" + selected + "']");
+            //Otherwise configure exit animation on currently selected module and entry animation on module to select
+            const elementToSelect = moduleToSelect && this.shadowRoot.querySelector("[name='" + moduleToSelect + "']");
             if (currentlySelectedElement) {
-                currentlySelectedElement.configureExitAnimation(selected);
+                currentlySelectedElement.configureExitAnimation(moduleToSelect);
             }
             if (elementToSelect) {
                 elementToSelect.configureEntryAnimation(currentlySelected);
-                this.$.pages.selected = selected;
+                this.$.pages.selected = moduleToSelect;
                 if (elementToSelect.getSelectedPageTitle()) {
                     document.title = elementToSelect.getSelectedPageTitle();
                 }
                 return;
             }
         }
+        //Play the transition animation. The view will be selected on animation finish event handler
         this.selectAfterRender = selected;
     },
     
@@ -370,13 +421,22 @@ Polymer({
         e.returnValue = "Do you really want to close the application?";
         return e.returnValue;
     },
-    
-    /*FIXME target is always the neon animated pages here should some specific target*/
+
+    /**
+     * Animation finish event handler. This handler opens master or centre if module transition occured because of user action.
+     * 
+     * @param {Event} e 
+     * @param {Object} detail 
+     * @param {Object} source 
+     */
     _animationFinished: function (e, detail, source) {
         var target = e.target || e.srcElement;
         if (target === this.$.pages){
             this._selectedModule = this._routeData.moduleName;
-            if (this._selectedSubmodule === this._subroute.path) {
+            if (this._routeData.moduleName === 'master') {
+                this._selectedSubmodule = this._subroute.path;
+                this. _openMasterAction();
+            } else if (this._selectedSubmodule === this._subroute.path) {
                 if (detail.toPage.selectSubroute) {
                     detail.toPage.selectSubroute(this._subroute.path.substring(1).split("?")[0]);
                 }
@@ -438,8 +498,11 @@ Polymer({
         //setting the uuid for this master.
         this.uuid = this.is + '/' + generateUUID();
         this._attrs = {entityType: "ua.com.fielden.platform.menu.MenuSaveAction", currentState: "EDIT", centreUuid: this.uuid};
+        this._openMasterAttrs = {currentState: "EDIT", centreUuid: this.uuid};
         //Binding to 'this' functions those are used outside the scope of this component.
         this._checkWhetherCanLeave = this._checkWhetherCanLeave.bind(this);
+        
+        //Configuring menu visibility save functionality.
         this._saveMenuVisibilityChanges = function (visibleItems, invisibleItems) {
             if (this._saveIdentifier) {
                 this.cancelAsync(this._saveIdentifier);
@@ -475,12 +538,16 @@ Polymer({
             }
         }.bind(this);
         
+        //Add iron-resize event listener
         this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
+        
+        //Add URI (location) change event handler to set history state. 
         window.addEventListener('location-changed', this._replaceStateWithNumber.bind(this));
     },
     
     attached: function () {
         const self = this;
+        //@use-empty-console.log
         this.async(function () {
             self.topLevelActions = [
                 //actionsObject
@@ -519,9 +586,10 @@ Polymer({
         // the URI for history state rewrite
         const fullNewUrl = new URL(this._getUrl(), window.location.protocol + '//' + window.location.host).href;
         // currentHistoryState should be updated first. If it is not yet defined then make it 0 otherwise increment it;
-        this.currentHistoryState = typeof this.currentHistoryState !== "undefined"? this.currentHistoryState + 1 : 0;
+        const newCurrentHistoryIndex = typeof this.currentHistoryState !== "undefined"? this.currentHistoryState.currIndex + 1 : 0;
+        this.currentHistoryState = {currIndex: newCurrentHistoryIndex}
         // rewrite history state by providing concrete number of last history state
-        window.history.replaceState({currIndex: this.currentHistoryState}, '', fullNewUrl);
+        window.history.replaceState(this.currentHistoryState, '', fullNewUrl);
     },
     
     _getUrl: function() {

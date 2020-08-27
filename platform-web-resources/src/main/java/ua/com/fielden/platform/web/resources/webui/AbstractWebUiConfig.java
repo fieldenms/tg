@@ -30,6 +30,7 @@ import ua.com.fielden.platform.entity.EntityNavigationAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.menu.Menu;
 import ua.com.fielden.platform.menu.MenuSaveAction;
+import ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchy;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.ResourceLoader;
@@ -45,6 +46,7 @@ import ua.com.fielden.platform.web.ioc.exceptions.MissingWebResourceException;
 import ua.com.fielden.platform.web.menu.IMainMenuBuilder;
 import ua.com.fielden.platform.web.menu.impl.MainMenuBuilder;
 import ua.com.fielden.platform.web.minijs.JsCode;
+import ua.com.fielden.platform.web.ref_hierarchy.ReferenceHierarchyWebUiConfig;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 /**
@@ -96,7 +98,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         allResourcePaths.addAll(Arrays.asList(externalResourcePaths));
         this.resourcePaths = new ArrayList<>(Collections.unmodifiableSet(allResourcePaths));
         Collections.reverse(this.resourcePaths);
-        
+
         final ObjectMapper objectMapper = new ObjectMapper();
         try {
             checksums = objectMapper.readValue(getStream(generateFileName(resourcePaths, "checksums.json")), LinkedHashMap.class);
@@ -112,12 +114,13 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     public AbstractWebUiConfig(final String title, final Workflows workflow, final String[] externalResourcePaths) {
             this(title, workflow, externalResourcePaths, false);
     }
-    
+
     @Override
     public void initConfiguration() {
         final EntityMaster<EntityNewAction> genericEntityNewActionMaster = StandardMastersWebUiConfig.createEntityNewMaster(injector());
         final EntityMaster<EntityEditAction> genericEntityEditActionMaster = StandardMastersWebUiConfig.createEntityEditMaster(injector());
         final EntityMaster<EntityNavigationAction> genericEntityNavigationActionMaster = StandardMastersWebUiConfig.createEntityNavigationMaster(injector());
+        final EntityMaster<ReferenceHierarchy> genericReferenceHierarchyMaster = ReferenceHierarchyWebUiConfig.createReferenceHierarchyMaster(injector());
         final EntityMaster<EntityExportAction> genericEntityExportActionMaster = StandardMastersWebUiConfig.createExportMaster(injector());
         final EntityMaster<AttachmentPreviewEntityAction> attachmentPreviewMaster = StandardMastersWebUiConfig.createAttachmentPreviewMaster(injector());
         final EntityMaster<EntityDeleteAction> genericEntityDeleteActionMaster = EntityMaster.noUiFunctionalMaster(EntityDeleteAction.class, EntityDeleteActionProducer.class, injector());
@@ -131,6 +134,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         .addMaster(genericEntityNewActionMaster)
         .addMaster(genericEntityEditActionMaster)
         .addMaster(genericEntityNavigationActionMaster)
+        .addMaster(genericReferenceHierarchyMaster)
         .addMaster(attachmentPreviewMaster)
         .addMaster(genericEntityDeleteActionMaster)
         .addMaster(genericEntityExportActionMaster)
@@ -172,9 +176,14 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     @Override
     public final String genMainWebUIComponent() {
         final Pair<DomElement, JsCode> generatedMenu = desktopMainMenuConfig.generateMenuActions();
-        return ResourceLoader.getText("ua/com/fielden/platform/web/app/tg-app-template.js").
+        final String mainWebUiComponent = ResourceLoader.getText("ua/com/fielden/platform/web/app/tg-app-template.js").
                 replace("<!--menu action dom-->", generatedMenu.getKey().toString()).
                 replace("//actionsObject", generatedMenu.getValue().toString());
+        if (Workflows.deployment == workflow || Workflows.vulcanizing == workflow) {
+            return mainWebUiComponent.replace("//@use-empty-console.log", "console.log = () => {};\n");
+        } else {
+            return mainWebUiComponent;
+        }
     }
 
     @Override
@@ -189,7 +198,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     }
 
     private static boolean isDevelopmentWorkflow(final Workflows workflow) {
-        return Workflows.development.equals(workflow) || Workflows.vulcanizing.equals(workflow);
+        return Workflows.development == workflow || Workflows.vulcanizing == workflow;
     }
 
     /**
@@ -248,15 +257,15 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     public Menu getMenuEntity(final DeviceProfile deviceProfile) {
         return DeviceProfile.DESKTOP.equals(deviceProfile) ? desktopMainMenuConfig.getMenu() : mobileMainMenuConfig.getMenu();
     }
-    
+
     @Override
     public Optional<String> checksum(final String resourceURI) {
         return ofNullable(checksums.get(resourceURI));
     }
-    
+
     @Override
     public boolean independentTimeZone() {
         return independentTimeZone;
     }
-    
+
 }

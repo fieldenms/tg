@@ -134,13 +134,6 @@ export class TgMultilineTextEditor extends TgEditor {
         suffix.style.alignSelf = "flex-start";
         this.decoratedInput().textarea.addEventListener("change", this._onChange);
     }
-    
-    /**
-     * Converts the value into string representation (which is used in edititing / comm values).
-     */
-    convertToString (value) {
-        return value === null ? "" : "" + value;
-    }
 
     /**
      * Converts the value from string representation (which is used in edititing / comm values) into concrete type of this editor component (String).

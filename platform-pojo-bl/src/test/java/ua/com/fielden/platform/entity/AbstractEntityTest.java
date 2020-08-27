@@ -32,6 +32,7 @@ import ua.com.fielden.platform.associations.one2many.incorrect.MasterEntity3;
 import ua.com.fielden.platform.associations.one2many.incorrect.MasterEntity4;
 import ua.com.fielden.platform.associations.one2many.incorrect.MasterEntity6;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
+import ua.com.fielden.platform.entity.exceptions.EntityException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
@@ -1213,6 +1214,52 @@ public class AbstractEntityTest {
         final Throwable ex = left.value.getCause().getCause();
         assertTrue(ex instanceof EntityDefinitionException);
         assertEquals(format(INVALID_USE_OF_NUMERIC_PARAMS_MSG, "stringProp", EntityWithInvalidStringPropWithScale.class.getName()), ex.getMessage());
+    }
+    
+    @Test
+    public void default_implementation_for_isEditable_returns_failure_for_non_instrumented_entities() {
+        final Entity plainEntityViaFactory = factory.newPlainEntity(Entity.class, null);
+        final Result res1 = plainEntityViaFactory.isEditable();
+        assertFalse(res1.isSuccessful());
+        assertEquals(AbstractEntity.ERR_IS_EDITABLE_UNINSTRUMENTED, res1.getMessage());
+
+        final Entity newEntityViaNew = new Entity();
+        final Result res2 = newEntityViaNew.isEditable();
+        assertFalse(res2.isSuccessful());
+        assertEquals(AbstractEntity.ERR_IS_EDITABLE_UNINSTRUMENTED, res2.getMessage());
+    }
+
+    @Test
+    public void default_implementation_for_isEditable_returns_success_for_instrumented_entities() {
+        final Entity entity = factory.newEntity(Entity.class);
+        final Result res = entity.isEditable();
+        assertTrue(res.isSuccessful());
+        assertEquals(entity, res.getInstance());
+    }
+
+    @Test
+    public void default_implementation_for_isDirty_throws_exception_for_non_instrumented_entities() {
+        final Entity plainEntityViaFactory = factory.newPlainEntity(Entity.class, null);
+        try {
+            plainEntityViaFactory.isDirty();
+            fail();
+        } catch (final EntityException ex) {
+            assertEquals(format(AbstractEntity.ERR_ENSURE_INSTRUMENTED, Entity.class.getName()), ex.getMessage());
+        }
+        
+        final Entity newEntityViaNew = new Entity();
+        try {
+            newEntityViaNew.isDirty();
+            fail();
+        } catch (final EntityException ex) {
+            assertEquals(format(AbstractEntity.ERR_ENSURE_INSTRUMENTED, Entity.class.getName()), ex.getMessage());
+        }
+    }
+
+    @Test
+    public void default_implementation_for_isDirty_does_not_thorow_exceptions_for_instrumented_entities() {
+        final Entity entity = factory.newEntity(Entity.class);
+        assertTrue(entity.isDirty());
     }
 
 }

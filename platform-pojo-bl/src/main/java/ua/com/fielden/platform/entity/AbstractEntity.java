@@ -17,6 +17,8 @@ import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionExceptio
 import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_VALUES_FOR_PRECITION_AND_SCALE_MSG;
 import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithCritOnly;
 import static ua.com.fielden.platform.error.Result.asRuntime;
+import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.reflection.EntityMetadata.entityExistsAnnotation;
 import static ua.com.fielden.platform.reflection.EntityMetadata.isEntityExistsValidationApplicable;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isNumeric;
@@ -77,7 +79,6 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.MetaPropertyFull;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.proxy.StrictProxyException;
-import ua.com.fielden.platform.entity.validation.EntityExistsValidator;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.ICustomValidator;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
@@ -256,6 +257,9 @@ import ua.com.fielden.platform.utils.EntityUtils;
  * @author TG Team
  */
 public abstract class AbstractEntity<K extends Comparable> implements Comparable<AbstractEntity<K>> {
+
+    public static final String ERR_IS_EDITABLE_UNINSTRUMENTED = "Uninstrumented instance is not suitable for editing.";
+    public static final String ERR_ENSURE_INSTRUMENTED = "Meta-properties for this instance of entity [%s] do not exist as it was not instrumented.";
 
     protected final Logger logger;
 
@@ -1035,7 +1039,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      */
     public final void assertInstrumented() {
         if (!isInstrumented()) {
-            throw new EntityException(format("Meta-properties for this instance of entity [%s] do not exist as it was not instrumented.", getType().getName()));
+            throw new EntityException(format(ERR_ENSURE_INSTRUMENTED, getType().getName()));
         }
     }
 
@@ -1063,10 +1067,8 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     /**
      * {@link AbstractEntity} has a default way of validating, which has a support for descendants to override it. However, sometimes it is required to validate an entity ad-hoc
      * from some specific perspective.
-     *
      * <p>
-     * This method performs entity validation based on the provided custom validator. It is important to note that this validation process locks the entity being validated
-     * preventing concurrent modification while it is being processed. This is exactly the same invariant behaviour as per the default validation process.
+     * This method performs entity validation based on the provided custom validator.
      *
      * @param validator
      * @return
@@ -1170,6 +1172,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      * @return
      */
     public final boolean isDirty() {
+        assertInstrumented();
         return !isPersisted() ||
                 nonProxiedProperties().anyMatch(MetaProperty::isDirty);
     }
@@ -1211,16 +1214,20 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     }
 
     /**
-     * Indicates whether this entity instance can be changed. By default returns a successful {@link Result} indicating editability of the entity.
+     * Indicates whether this entity instance can be changed.
+     * By default, if an entity instance is instrumented, returns a successful {@link Result} indicating editability of the entity.
+     * Otherwise, returns failure due to the fact that uninstrumented entities should not be modified.
      * <p>
      * This method should be overridden if some custom logic needs to be provided.
+     * The default result (i.e. super call) should be honored by overridden methods.
      * <p>
      * For example, some entity instance should not be changed when its certain property has some specific value.
+     * But if the default result is a failure then it should be return as the result of the overridden method.
      *
      * @return
      */
     public Result isEditable() {
-        return Result.successful(null);
+        return isInstrumented() ? successful(this) : failure(ERR_IS_EDITABLE_UNINSTRUMENTED);
     }
 
     protected void setVersion(final Long ver) {

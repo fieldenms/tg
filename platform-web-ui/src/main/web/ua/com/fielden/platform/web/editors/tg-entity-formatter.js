@@ -3,7 +3,7 @@ import {TgReflector} from '/app/tg-reflector.js';
 const states = {
     's0': (entity, template, idx, reflector, titles) => {
         if (!template) {
-            return createCompositeTitleWithoutTemplate(entity, reflector, titles);
+            return createCompositeTitleWithoutTemplate(entity, titles, reflector);
         } else if (template && template.length === 1 && template[0] === 'z') {
             return composeDefaultValueObject(entity, reflector, titles);
         } else if (template && template[idx] === '#') {
@@ -21,7 +21,8 @@ const states = {
             titles[titles.length - 1].title = entityType.prop(titles[titles.length - 1].keyName).title();
             return 's3'
         } else if (template[idx] === 'v') {
-            titles[titles.length - 1].value = reflector.convert(entity.get(titles[titles.length - 1].keyName));
+            const name = titles[titles.length - 1].keyName;
+            titles[titles.length - 1].value = reflector.tg_toString(entity.get(name), entity.type(), name);
             if (template.length - 1 === idx) {
                 return;
             }
@@ -70,7 +71,8 @@ const states = {
 
 function parseValueAndReturnState(entity, template, idx, reflector, titles, state) {
     if (template[idx] === 'v') {
-        titles[titles.length - 1].value = reflector.convert(entity.get(titles[titles.length - 1].keyName));
+        const name = titles[titles.length - 1].keyName;
+        titles[titles.length - 1].value = reflector.tg_toString(entity.get(name), entity.type(), name);
         if (template.length - 1 === idx) {
             return;
         }
@@ -105,21 +107,28 @@ function parseNumberAndReturnState (entity, template, idx, reflector, titles, st
 }
 
 export function composeEntityValue (entity, template) {
-    const reflector = new TgReflector();
     if (entity.type().isCompositeEntity()) {
-        return createCompositeTitle(entity, template, reflector);
+        return createCompositeTitle(entity, template, new TgReflector());
     }
-    return createSimpleTitle(entity, reflector);
+    return createSimpleTitle(entity, true);
 }
 
 export function composeDefaultEntityValue(entity) {
-    const reflector = new TgReflector();
     if (entity.type().isCompositeEntity()) {
         const titles = [];
-        createCompositeTitleWithoutTemplate(entity, reflector, titles);
+        createCompositeTitleWithoutTemplate(entity, titles, new TgReflector());
         return titles;
     }
-    return createSimpleTitle(entity, reflector);
+    return createSimpleTitle(entity, true);
+}
+
+export function composeDefaultUnconvertedEntityValue(entity) {
+    if (entity.type().isCompositeEntity()) {
+        const titles = [];
+        createCompositeTitleWithoutTemplate(entity, titles);
+        return titles;
+    }
+    return createSimpleTitle(entity, false);
 }
 
 function createCompositeTitle (entity, template, reflector) {
@@ -139,7 +148,7 @@ function composeDefaultValueObject(entity, reflector, titles) {
     entityType.compositeKeyNames().forEach(keyName => {
         if (entity.get(keyName)) {
             titles.push({
-                value: reflector.convert(entity.get(keyName)),
+                value: reflector.tg_toString(entity.get(keyName), entity.type(), keyName),
                 separator: compositeKeySeparator
             });
         }
@@ -149,13 +158,15 @@ function composeDefaultValueObject(entity, reflector, titles) {
     }
 }
 
-function createCompositeTitleWithoutTemplate (entity, reflector, titles) {
+function createCompositeTitleWithoutTemplate (entity, titles, reflector) {
     const entityType = entity.type();
     entityType.compositeKeyNames().forEach(keyName => {
         if (entity.get(keyName)) {
             titles.push({
                 title: entityType.prop(keyName).title(),
-                value: reflector.convert(entity.get(keyName))
+                value: reflector ? reflector.tg_toString(entity.get(keyName), entity.type(), keyName) : entity.get(keyName),
+                propertyName: keyName,
+                type: entity.type()
             });
         }
     });
@@ -164,6 +175,10 @@ function createCompositeTitleWithoutTemplate (entity, reflector, titles) {
     }
 }
 
-function createSimpleTitle (entity, reflector) {
-    return [{value: reflector.convert(entity)}];
+function createSimpleTitle (entity, convert) {
+    return [{
+        value: convert ? entity.toString() : entity.get("key"),
+        propertyName: "key",
+        type: entity.type()
+    }]; // entity never empty
 }

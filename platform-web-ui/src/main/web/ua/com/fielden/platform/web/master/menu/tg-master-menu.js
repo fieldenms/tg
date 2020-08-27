@@ -208,24 +208,6 @@ Polymer({
         },
 
         /**
-         * Postal subscription to 'detail.saved' events of embedded masters from master-with-master menu items.
-         * It gets populated in attached callback only once, even though the same master instance gets used several time.
-         */
-        _centreRefreshRedirector: {
-            type: Object,
-            value: null
-        },
-
-        /**
-         * Postal subscription to 'refresh.post.success' events of embedded masters from master-with-master menu items.
-         * It gets populated in attached callback only once, even though the same master instance gets used several time.
-         */
-        _dialogClosingRedirector: {
-            type: Object,
-            value: null
-        },
-
-        /**
          * An externally bound function to perfrom compound master refresh upon changes instigated from embedded masters.
          */
         refreshCompoundMaster: {
@@ -341,15 +323,13 @@ Polymer({
             const eventChannel = self.uuid;
             const eventTopics = ['save.post.success'];
             // subscrive if needed
-            if (self._subscriptions.length === 0) {
-                for (let index = 0; index < eventTopics.length; index++) {
-                    self._subscriptions.push(
-                        postal.subscribe({
-                            channel: eventChannel,
-                            topic: eventTopics[index],
-                            callback: self._refreshCompoundMaster.bind(self)
-                        }));
-                }
+            for (let index = 0; index < eventTopics.length; index++) {
+                self._subscriptions.push(
+                    postal.subscribe({
+                        channel: eventChannel,
+                        topic: eventTopics[index],
+                        callback: self._refreshCompoundMaster.bind(self)
+                    }));
             }
 
             // Every compound master gets opened from some centre as part of its functional action, usually 'result-set' action.
@@ -368,38 +348,34 @@ Polymer({
             // These events arrive only from those menu items, which have embedded masters inside (embedded centres or simple functional menu item do not generate such events).
             // The channel contains uuid of parent OpenCompoundMaster master (for e.g. 'centre_tg-openvehiclemasteraction-master/b3e1343d-dd62-491e-89f9-f46d6fdf609f')
             // After that the event is redirected to corresponding centre with tg-master-menu's centreUuid (for e.g. 'centre_Fleet/Vehicles')
-            if (self._centreRefreshRedirector === null) {
-                const embeddedMasterPostSaveChannel = 'centre_' + self.uuid;
-                const compoundMasterCentreRefreshChannel = 'centre_' + self.centreUuid;
-                const centreRefreshTopic = 'detail.saved';
-                self._centreRefreshRedirector = postal.subscribe({
-                    channel: embeddedMasterPostSaveChannel,
-                    topic: centreRefreshTopic,
-                    callback: function (data, envelope) {
-                        postal.publish({
-                            channel: compoundMasterCentreRefreshChannel,
-                            topic: centreRefreshTopic,
-                            data: data
-                        });
-                    }
-                });
-            }
-            if (self._dialogClosingRedirector === null) {
-                const embeddedMasterCancelChannel = self.uuid;
-                const compoundMasterCancelChannel = self.centreUuid;
-                const cancelTopic = 'refresh.post.success';
-                self._dialogClosingRedirector = postal.subscribe({
-                    channel: embeddedMasterCancelChannel,
-                    topic: cancelTopic,
-                    callback: function (data, envelope) {
-                        postal.publish({
-                            channel: compoundMasterCancelChannel,
-                            topic: cancelTopic,
-                            data: data
-                        });
-                    }
-                });
-            }
+            const embeddedMasterPostSaveChannel = 'centre_' + self.uuid;
+            const compoundMasterCentreRefreshChannel = 'centre_' + self.centreUuid;
+            const centreRefreshTopic = 'detail.saved';
+            self._subscriptions.push(postal.subscribe({
+                channel: embeddedMasterPostSaveChannel,
+                topic: centreRefreshTopic,
+                callback: function (data, envelope) {
+                    postal.publish({
+                        channel: compoundMasterCentreRefreshChannel,
+                        topic: centreRefreshTopic,
+                        data: data
+                    });
+                }
+            }));
+            const embeddedMasterCancelChannel = self.uuid;
+            const compoundMasterCancelChannel = self.centreUuid;
+            const cancelTopic = 'refresh.post.success';
+            self._subscriptions.push(postal.subscribe({
+                channel: embeddedMasterCancelChannel,
+                topic: cancelTopic,
+                callback: function (data, envelope) {
+                    postal.publish({
+                        channel: compoundMasterCancelChannel,
+                        topic: cancelTopic,
+                        data: data
+                    });
+                }
+            }));
         }.bind(this), 0);
         //Needed to set the dynamic title
         this.fire('tg-dynamic-title-changed', this.sectionTitle);
@@ -416,6 +392,12 @@ Polymer({
         afterNextRender(this, () => {
             this.$.drawerPanel._narrowChanged();
         });
+    },
+
+    detached: function () {
+        while (this._subscriptions.length !== 0) {
+            this._subscriptions.pop().unsubscribe();
+        }
     },
 
     _entityChanged: function (newBindingEntity, oldOne) {
@@ -593,8 +575,7 @@ Polymer({
      * A function for show-dialog attribute of tg-ui-action, which is used in case of master with menu to load and display a corresponding menu item view.
      */
     _showMenuItemView: function (action) {
-        const section = this.querySelector('tg-master-menu-item-section[data-route=' + action.getAttribute('data-route') + ']');
-        section.activate(action);
+        this._section(action.getAttribute('data-route')).activate(action);
     },
 
     /**
@@ -602,8 +583,7 @@ Polymer({
      */
     focusView: function () {
         if (this.sectionRoute !== undefined) {
-            const section = this.querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
-            section.focusView();
+            this.currentSection().focusView();
         }
     },
 
@@ -631,8 +611,7 @@ Polymer({
 
     _focusNextSectionView: function (e) {
         if (this.sectionRoute !== undefined && (!this.$.drawerPanel.narrow || !this.$.drawer.opened)) {
-            const section = this.querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
-            section.focusNextView(e);
+            this.currentSection().focusNextView(e);
         } else {
             this.fire("tg-last-item-focused", {
                 forward: true,
@@ -643,8 +622,7 @@ Polymer({
 
     _focusPreviousSectionView: function (e) {
         if (this.sectionRoute !== undefined && (!this.$.drawerPanel.narrow || !this.$.drawer.opened)) {
-            const section = this.querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
-            section.focusPreviousView(e);
+            this.currentSection().focusPreviousView(e);
         } else if (this.isMenuVisible()) {
             this._focusMenu();
             tearDownEvent(e);
@@ -667,7 +645,7 @@ Polymer({
     _routeChanged: function (newRoute, oldRoute) {
         if (this.route !== this.sectionRoute) {
             if (this.sectionRoute !== undefined) {
-                const currentSection = this.querySelector('tg-master-menu-item-section[data-route=' + this.sectionRoute + ']');
+                const currentSection = this.currentSection();
                 if (!currentSection) {
                     throw 'Compound master\'s menu item section [' + this.sectionRoute + '] does not exist.';
                 }
@@ -687,7 +665,21 @@ Polymer({
             }
         }
     },
-
+    
+    /**
+     * Returns menu item section for the specified 'sectionRoute'.
+     */
+    _section: function (sectionRoute) {
+        return this.querySelector('tg-master-menu-item-section[data-route=' + sectionRoute + ']');
+    },
+    
+    /**
+     * Returns currently activated menu item section.
+     */
+    currentSection: function () {
+        return this._section(this.sectionRoute);
+    },
+    
     /**
      * Returns 'true' if the specified 'section' represents a master with master, that contains non-persisted entity instance; 'false' otherwise.
      * In case of 'true' the user will be warned to save or cancel and will be prevented from moving to another menu item on compound master.
@@ -720,8 +712,7 @@ Polymer({
 
     /** Used by the master, which incorporates this menu to check if it can be closed. */
     canLeave: function () {
-        const section = this.querySelector('tg-master-menu-item-section[data-route=' + this.route + ']');
-        return section.canLeave();
+        return this._section(this.route).canLeave();
     },
 
     _sectionRouteChanged: function (newRoute, oldRoute) {
@@ -729,12 +720,18 @@ Polymer({
             this.$.drawer.close(); // close drawer in tablet|mobile mode when section route changes (menu item has been actioned by user)
         }
 
-        const oldSection = this.querySelector('tg-master-menu-item-section[data-route=' + oldRoute + ']');
+        const oldSection = this._section(oldRoute);
         const action = this.querySelector('tg-ui-action[data-route=' + newRoute + ']');
 
-        if (oldSection && oldSection._element && typeof oldSection._element.removeOwnKeyBindings === 'function') {
-            oldSection._element.removeOwnKeyBindings();
+        if (oldSection && oldSection._element) {
+            if (newRoute !== oldRoute) {
+                oldSection.offloadDom();
+            }
+            if (typeof oldSection._element.removeOwnKeyBindings === 'function') {
+                oldSection._element.removeOwnKeyBindings();
+            }
         }
+
         action._run();
     }
 });

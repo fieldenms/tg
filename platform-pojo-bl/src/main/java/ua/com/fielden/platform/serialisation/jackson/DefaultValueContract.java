@@ -34,6 +34,8 @@ import ua.com.fielden.snappy.MnemonicEnum;
  *
  */
 public class DefaultValueContract {
+    private static final String UTC = "UTC";
+
     private DefaultValueContract() {
     }
 
@@ -118,7 +120,18 @@ public class DefaultValueContract {
      */
     public static String getTimeZone(final Class<?> entityType, final String propertyName) {
         final PersistentType persistentType = AnnotationReflector.getPropertyAnnotation(PersistentType.class, entityType, propertyName);
-        return persistentType != null && persistentType.userType().equals(IUtcDateTimeType.class) ? "UTC" : null;
+        return persistentType != null && persistentType.userType().equals(IUtcDateTimeType.class) ? UTC : null;
+    }
+
+    /**
+     * Indicates whether the property has UTC indicator on it.
+     * 
+     * @param entityType
+     * @param propertyName
+     * @return
+     */
+    public static boolean isUtc(final Class<?> entityType, final String propertyName) {
+        return UTC.equals(getTimeZone(entityType, propertyName));
     }
 
     /**

@@ -72,16 +72,18 @@ const template = html`
         <template>
             <div class="layout horizontal center tree-node no-wrap" over$="[[entity.over]]" selected$="[[_isSelected(selectedEntity, entity)]]" on-mouseenter="_mouseItemEnter" on-mouseleave="_mouseItemLeave" style$="[[_calcItemStyle(entity)]]">
                     <iron-icon class="expand-button" icon="av:play-arrow" style="flex-grow:0;flex-shrink:0;" invisible$="[[!entity.entity.hasChildren]]" collapsed$="[[!entity.opened]]" on-tap="_toggle"></iron-icon>
-                    <span class="tree-item" highlighted$="[[entity.highlight]]" inner-h-t-m-l="[[contentBuilder(entity, entity.opened)]]"></span>
+                    <span class="tree-item" highlighted$="[[entity.highlight]]" inner-h-t-m-l="[[contentBuilder(entity, entity.opened)]]" on-tap="treeItemAction"></span>
                     <span class="tree-item-actions" on-tap="actionRunner" mobile$="[[mobile]]" inner-h-t-m-l="[[actionBuilder(entity)]]"></span>
                 </div>
         </template>
     </iron-list>`;
 
-const calculateNumberOfOpenedItems = function (entity) {
+const calculateNumberOfOpenedItems = function (entity, from, count) {
     let length = 0;
     if (entity.entity.hasChildren && entity.opened) {
-        entity.children.forEach(child => {
+        const children = (typeof from !== 'undefined' && typeof count !== 'undefined') ? 
+            entity.children.slice(from, from + count) : entity.children
+        children.forEach(child => {
             if (child.visible) {
                 length += calculateNumberOfOpenedItems(child) + 1;
                 length += child.additionalInfoNodes.length;
@@ -101,13 +103,19 @@ const getParentsPath = function (entity) {
     return path.reverse();
 };
 
-const getChildrenToAdd = function (entity, shouldFireLoad, expandAll) {
+const getChildrenToAdd = function (entity, shouldFireLoad, expandAll, from, count) {
     const childrenToAdd = [];
     if (entity.opened && entity.entity.hasChildren) {
+        let subChildrenToAdd;
         if (entity.children.length === 1 && entity.children[0].loaderIndicator && shouldFireLoad) {
             this.fire("tg-load-subtree", {parentPath: getParentsPath(entity), loadAll: expandAll});
+            subChildrenToAdd = entity.children;
+        } else if (typeof from !== 'undefined' && typeof count !== 'undefined') {
+            subChildrenToAdd = entity.children.slice(from , from + count);
+        } else {
+            subChildrenToAdd = entity.children
         }
-        childrenToAdd.push(...composeChildren.bind(this)(entity.children, shouldFireLoad, expandAll));
+        childrenToAdd.push(...composeChildren.bind(this)(subChildrenToAdd, shouldFireLoad, expandAll));
     }
     return childrenToAdd;
 };
@@ -224,6 +232,7 @@ Polymer({
         
         contentBuilder: Function,
         actionBuilder: Function,
+        treeItemAction: Function,
         actionRunner: Function,
         additionalInfoCb: Function,
         
@@ -250,6 +259,7 @@ Polymer({
     observers: ["_modelChanged(model.*)"],
 
     ready: function () {
+        this.treeItemAction = function(e){};
         //this.scopeSubtree(this.$.treeList, true);
     },
 
@@ -418,19 +428,39 @@ Polymer({
             }
             this.fire("tg-tree-root-model-changed", this);
         } else if (change.path && change.path.endsWith("children")) {
-            const path = change.path.substring(0, change.path.lastIndexOf(".")).replace("model", "_treeModel").replace(/#/g, "");
-            const parentItem = this.get(path);
-            const modelIdx = this._entities.indexOf(parentItem);
-            if (parentItem) {
-                const numOfItemsToDelete = calculateNumberOfOpenedItems(parentItem);
-                parentItem.children = generateChildrenModel(change.value, parentItem, this.additionalInfoCb);
-                this._lastFilterText && this._filterSubTree(this._lastFilterText, parentItem.children, false);
+            this._childrenModelChanged(change);
+        } else if (change.path && change.path.endsWith("splices")) {
+            this._childrenSplices(change);
+        }
+    },
+
+    _childrenModelChanged: function(change) {
+        const path = change.path.substring(0, change.path.lastIndexOf(".")).replace("model", "_treeModel").replace(/#/g, "");
+        const parentItem = this.get(path);
+        const modelIdx = this._entities.indexOf(parentItem);
+        if (parentItem) {
+            const numOfItemsToDelete = calculateNumberOfOpenedItems(parentItem);
+            parentItem.children = generateChildrenModel(change.value, parentItem, this.additionalInfoCb);
+            this._lastFilterText && this._filterSubTree(this._lastFilterText, parentItem.children, false);
+            this.fire("tg-tree-model-changed", parentItem);
+            this.splice("_entities", modelIdx + 1 + parentItem.additionalInfoNodes.length, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(parentItem, true, false));
+            this.$.treeList.notifyResize();
+        }
+    },
+
+    _childrenSplices: function (change) {
+        const path = change.path.substring(0, change.path.lastIndexOf(".children.splices")).replace("model", "_treeModel").replace(/#/g, "");
+        const parentItem = this.get(path);
+        if (parentItem) {
+            change.value.indexSplices.forEach(splice => {
+                const indexForSplice = this._entities.indexOf(parentItem.children[splice.index]);
+                const numOfItemsToDelete = calculateNumberOfOpenedItems(parentItem, splice.index, splice.removed.length);
+                parentItem.children.splice(splice.index, splice.removed.length, ...generateChildrenModel(splice.object.slice(splice.index, splice.index + splice.addedCount), parentItem, this.additionalInfoCb));
+                this._lastFilterText && this._filterSubTree(this._lastFilterText, parentItem.children.slice(splice.index, splice.index + splice.addedCount), false);
                 this.fire("tg-tree-model-changed", parentItem);
-                if (typeof modelIdx !== 'undefined') {
-                    this.splice("_entities", modelIdx + 1 + parentItem.additionalInfoNodes.length, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(parentItem, true, false));
-                    this.$.treeList.notifyResize();
-                }
-            }
+                this.splice("_entities", indexForSplice, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(parentItem, true, false, splice.index, splice.addedCount));
+                this.$.treeList.notifyResize();
+            });
         }
     },
 

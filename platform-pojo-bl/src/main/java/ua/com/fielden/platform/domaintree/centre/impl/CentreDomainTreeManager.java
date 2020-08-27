@@ -6,7 +6,6 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -659,6 +658,10 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
         private final EnhancementPropertiesMap<Integer> propertiesWidths;
         private final EnhancementPropertiesMap<Integer> propertiesGrowFactors;
         private final EnhancementRootsMap<List<Pair<String, Ordering>>> rootsListsOfOrderings;
+        private int pageCapacity;
+        private int maxPageCapacity;
+        private int visibleRowsCount;
+        private int numberOfHeaderLines;
 
         /**
          * Used for serialisation and for normal initialisation. IMPORTANT : To use this tick it should be passed into manager constructor, which will initialise "dtr" and "tr"
@@ -775,13 +778,52 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
         }
 
         @Override
+        public int getPageCapacity() {
+            return pageCapacity;
+        }
+
+        @Override
+        public IAddToResultTickManager setPageCapacity(final int pageCapacity) {
+            this.pageCapacity = pageCapacity;
+            return this;
+        }
+
+        @Override
+        public int getMaxPageCapacity() {
+            return maxPageCapacity;
+        }
+
+        @Override
+        public IAddToResultTickManager setMaxPageCapacity(final int maxPageCapacity) {
+            this.maxPageCapacity = maxPageCapacity;
+            return this;
+        }
+
+        @Override
+        public int getVisibleRowsCount() {
+            return visibleRowsCount;
+        }
+
+        @Override
+        public IAddToResultTickManager setVisibleRowsCount(final int visibleRowsCount) {
+            this.visibleRowsCount = visibleRowsCount;
+            return this;
+        }
+
+        @Override
+        public int getNumberOfHeaderLines() {
+            return numberOfHeaderLines;
+        }
+
+        @Override
+        public IAddToResultTickManager setNumberOfHeaderLines(final int numberOfHeaderLines) {
+            this.numberOfHeaderLines = numberOfHeaderLines;
+            return this;
+        }
+
+        @Override
         public int hashCode() {
-            final int prime = 31;
-            int result = super.hashCode();
-            result = prime * result + ((propertiesGrowFactors == null) ? 0 : propertiesGrowFactors.hashCode());
-            result = prime * result + ((propertiesWidths == null) ? 0 : propertiesWidths.hashCode());
-            result = prime * result + ((rootsListsOfOrderings == null) ? 0 : rootsListsOfOrderings.hashCode());
-            return result;
+            return 31 * super.hashCode() + Objects.hash(propertiesGrowFactors, propertiesWidths, rootsListsOfOrderings, pageCapacity, maxPageCapacity, visibleRowsCount, numberOfHeaderLines);
         }
 
         @Override
@@ -791,7 +833,11 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
                     final AddToResultTickManager other = (AddToResultTickManager) obj;
                     return Objects.equals(propertiesGrowFactors, other.propertiesGrowFactors) &&
                             Objects.equals(propertiesWidths, other.propertiesWidths) &&
-                            Objects.equals(rootsListsOfOrderings, other.rootsListsOfOrderings);
+                            Objects.equals(rootsListsOfOrderings, other.rootsListsOfOrderings) &&
+                            pageCapacity == other.pageCapacity &&
+                            maxPageCapacity == other.maxPageCapacity &&
+                            numberOfHeaderLines == other.numberOfHeaderLines &&
+                            visibleRowsCount == other.visibleRowsCount;
                 }
                 return false;
             }
