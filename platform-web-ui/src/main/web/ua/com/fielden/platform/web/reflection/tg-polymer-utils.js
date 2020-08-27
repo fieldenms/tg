@@ -13,22 +13,13 @@ export function generateUUID () {
 
 /**
  * Removes all Light DOM children from Polymer 'element'.
- *
- * The need for such utility method arose from the fact that Polymer (currently 1.4 version) returns
- * from Polymer.dom(element).childNodes, Polymer.dom(element).firstChild, Polymer.dom(element).firstElementChild methods
- * not only Light DOM children, but also Local DOM children, including the elements in the template and whitespace
- * nodes in the template.
- *
- * Please, note that Polymer.dom().flush() call is needed to be done manually after this method has been used.
- * The intention was made for the cases, where some additional DOM manipulation is needed, and in such cases
- * flush() call could be efficiently done after all DOM manipulation once.
  */
 export function _removeAllLightDOMChildrenFrom (element) {
-    const childNodes = element.childNodes;
     while (element.firstChild) {
-        element.removeChild(element.firstChild);
+        element.removeChild(element.lastChild);
     }
 };
+
 /**
  * Returns the x and y coordinates relatively to specified container
  */
