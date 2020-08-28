@@ -602,25 +602,29 @@ Polymer({
     },
     
     _firstEntry: function () {
-        if (this._lastAction.supportsNavigation && this.canClose() && this._hasPrev) {
+        if (this._lastAction.supportsNavigation && this.canClose() 
+                && this._hasPrev && this._isNavigatonButtonEnable(this._hasPrev, this.isNavigationActionInProgress)) {
             this._lastAction.firstEntry();
         }
     },
     
     _previousEntry: function () {
-        if (this._lastAction.supportsNavigation && this.canClose() && this._hasPrev) {
+        if (this._lastAction.supportsNavigation && this.canClose() 
+                && this._hasPrev && this._isNavigatonButtonEnable(this._hasPrev, this.isNavigationActionInProgress)) {
             this._lastAction.previousEntry();
         }
     },
     
     _nextEntry: function () {
-        if (this._lastAction.supportsNavigation && this.canClose() && this._hasNext) {
+        if (this._lastAction.supportsNavigation && this.canClose() 
+                && this._hasNext && this._isNavigatonButtonEnable(this._hasNext, this.isNavigationActionInProgress)) {
             this._lastAction.nextEntry();
         }
     },
     
     _lastEntry: function () {
-        if (this._lastAction.supportsNavigation && this.canClose() && this._hasNext) {
+        if (this._lastAction.supportsNavigation && this.canClose() 
+                && this._hasNext && this._isNavigatonButtonEnable(this._hasNext, this.isNavigationActionInProgress)) {
             this._lastAction.lastEntry();
         }
     },
