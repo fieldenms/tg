@@ -469,16 +469,11 @@ export const TgEntityBinderBehavior = {
 
     /**
      * Initialisation block called as a constructor of element. It is called before any property value is set and before dom initialisation.
-     * All property initialisation are here to make shure that other methods and observers those rely on this component's properties
+     * All property functions are initialised here to make sure that other methods and observers those rely on this component's property functions
      * would not fail if they were invoked before ready method.
      */
     created: function () {
-        var self = this;
-
-        self._bindingEntityModified = false;
-        self._bindingEntityNotPersistentOrNotPersistedOrModified = false;
-        self._editedPropsExist = false;
-        self._resetState();
+        const self = this;
 
         self._createModifiedPropertiesHolder = (function () {
             var mph = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
@@ -714,6 +709,15 @@ export const TgEntityBinderBehavior = {
             // 'tg-action' will augment this function with its own '_afterExecution' logic (spinner stopping etc.).
             console.warn("SERVER ERROR: ", errorResult);
         }).bind(this);
+    },
+
+    ready: function () {
+        const self = this;
+
+        self._bindingEntityModified = false;
+        self._bindingEntityNotPersistentOrNotPersistedOrModified = false;
+        self._editedPropsExist = false;
+        self._resetState();
 
         //Toaster object Can be used in other components on binder to show toasts.
         self.toaster = {
