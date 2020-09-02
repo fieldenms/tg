@@ -460,7 +460,7 @@ const template = html`
                         <div class="action-cell cell" hidden$="[[!_primaryActionFixedAndVisible(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
                             <!--Primary action stub header goes here-->
                         </div>
-                        <template is="dom-repeat" items="[[fixedColumns]]">
+                        <template id="fixedHeadersTemplate" is="dom-repeat" items="[[fixedColumns]]">
                             <div class="table-cell cell" fixed style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, item.shouldAddDynamicWidth, 'true')]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                                 <div class="table-header-column-content">
                                     <div class="truncate table-header-column-title" multiple-line$="[[_multipleHeaderLines]]" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
@@ -483,7 +483,7 @@ const template = html`
                         <div class="action-cell cell" hidden$="[[!_primaryActionNotFixedAndVisible(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
                             <!--Primary action stub header goes here-->
                         </div>
-                        <template is="dom-repeat" items="[[columns]]">
+                        <template id="scrollableHeadersTemplate" is="dom-repeat" items="[[columns]]">
                             <div class="table-cell cell" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, item.shouldAddDynamicWidth, 'false')]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                                 <div class="table-header-column-content">
                                     <div class="truncate table-header-column-title" multiple-line$="[[_multipleHeaderLines]]" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
@@ -1255,10 +1255,17 @@ Polymer({
      */
     adjustColumnsSorting: function (sortingConfig) {
         if (this.offsetParent !== null) {
-            const fixedHeaders = this.$.top_left_egi.querySelectorAll(".table-header-column-title");
-            const scrollingHeaders = this.$.top_egi.querySelectorAll(".table-header-column-title");
-            this._setSortingFor(sortingConfig, this.fixedColumns, fixedHeaders,"fixedColumns", "0"/*The index of fixed columns in summary row*/);
-            this._setSortingFor(sortingConfig, this.columns, scrollingHeaders, "columns", "1"/*The index of scrollable columns in summary row*/);
+            //Setting sorting information for column may require to add additional width to include sorting widget. In that case
+            //this additional width will increase column width to make column title wide enough to be able to read it. In order 
+            //to determine whether additional width should be added or not one should use real column elements scroll width and
+            //offset width. This requires access to template's elements which might not have been initialised by this time, therefore
+            //async is needed. See render() method invocations for this.fixedColumns, this.columns.
+            this.async(() => {
+                const fixedHeaders = this.$.top_left_egi.querySelectorAll(".table-header-column-title");
+                const scrollingHeaders = this.$.top_egi.querySelectorAll(".table-header-column-title");
+                this._setSortingFor(sortingConfig, this.fixedColumns, fixedHeaders,"fixedColumns", "0"/*The index of fixed columns in summary row*/);
+                this._setSortingFor(sortingConfig, this.columns, scrollingHeaders, "columns", "1"/*The index of scrollable columns in summary row*/);
+            });
         } else {
             this._postponedSortingConfig = sortingConfig;
         }
@@ -1366,6 +1373,9 @@ Polymer({
     _updateColumns: function (resultantColumns) {
         this.fixedColumns = resultantColumns.splice(0, this.numOfFixedCols);
         this.columns = resultantColumns;
+        // Need to initiate DOM rendering as soon as possible due to the need to process resultant DOM in method _setSortingFor.
+        this.$.fixedHeadersTemplate.render();
+        this.$.scrollableHeadersTemplate.render();
         const columnWithGrowFactor = this.columns.find((item) => item.growFactor > 0);
         if (!columnWithGrowFactor && this.columns.length > 0) {
             this.set("columns." + (this.columns.length - 1) + ".growFactor", 1);
