@@ -84,7 +84,7 @@ export const TgEntityBinderBehavior = {
         },
 
         /**
-         * Custom callback that will be invoked after successfull validation.
+         * Custom callback that will be invoked after successful validation.
          *
          * arguments: validatedEntity, bindingEntity, customObject
          */
@@ -468,9 +468,9 @@ export const TgEntityBinderBehavior = {
     },
 
     /**
-     * Initialisation block called as a constructor of element. It is called before any property value is set and before dom initialisation.
-     * All property functions are initialised here to make sure that other methods and observers those rely on this component's property functions
-     * would not fail if they were invoked before ready method.
+     * Initialisation block called as a constructor of element. It is invoked before any property value is set and before the DOM initialisation.
+     * All property functions are initialised here to make sure that other methods and observers that rely on this component's property-functions
+     * would not fail if they were invoked before the ready method.
      */
     created: function () {
         const self = this;
@@ -511,11 +511,11 @@ export const TgEntityBinderBehavior = {
                     //this._openToastForError('Warning.', toastMsgForError(this._reflector(), deserialisedResult), false);
                 } else {
                     // continue with normal handling of the result's instance
-                    var deserialisedInstance = deserialisedResult.instance;
+                    const deserialisedInstance = deserialisedResult.instance;
                     deserialisedResult.instance = null;
                     // Need to open toast message in case where the top-level result is unsuccessful -- this message will be shown BEFORE
-                    //   other messages about validation errors of 'deserialisedInstance' or '... completed successfully'.
-                    // Current logic of tg-toast will discard all other messages after this message, until this message dissapear.
+                    // other messages about validation errors of 'deserialisedInstance' or '... completed successfully'.
+                    // The current logic of tg-toast will discard all other messages after this message, until this message disappears.
                     if (this._reflector().isError(deserialisedResult)) {
                         console.log('deserialisedResult: ', deserialisedResult);
                         this._openToastForError(deserialisedResult.message, toastMsgForError(this._reflector(), deserialisedResult), !this._reflector().isContinuationError(deserialisedResult) || this.showContinuationsAsErrors);
@@ -538,7 +538,7 @@ export const TgEntityBinderBehavior = {
                     }
                 }
             } else { // other codes
-                var error = 'Request could not be dispatched.';
+                const error = 'Request could not be dispatched.';
                 console.warn(error);
                 this._openToastForError(error, 'Most likely due to networking issues the request could not be dispatched to server. Please try again later.', true);
                 // this is equivalent to server side error
@@ -601,10 +601,10 @@ export const TgEntityBinderBehavior = {
                 slf._retrievalInitiated = true;
                 slf.disableView();
             }
-            //Abort all retrieval requests if they exist, because they may change the master's
-            //entityId property which in turn may fail next retrieval request. It may happen
-            //in compound master during quick menu item switching where one of the menu items 
-            //is embedded entity master.
+            // Abort all retrieval requests if they exist, because they may change the master's
+            // property entityId, which in turn may cause the failure of a subsequent retrieval request.
+            // Such situations may occur in compound masters during rapid switching between menu items, where one of the menu items 
+            // is an embedded entity master.
             this._reflector().abortRequestsIfAny(this._ajaxRetriever(), 'retrieval');
 
             return new Promise(function (resolve, reject) {
