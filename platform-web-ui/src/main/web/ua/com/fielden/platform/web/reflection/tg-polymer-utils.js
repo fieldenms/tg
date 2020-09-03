@@ -24,7 +24,6 @@ export function generateUUID () {
  * flush() call could be efficiently done after all DOM manipulation once.
  */
 export function _removeAllLightDOMChildrenFrom (element) {
-    const childNodes = element.childNodes;
     while (element.firstChild) {
         element.removeChild(element.firstChild);
     }
