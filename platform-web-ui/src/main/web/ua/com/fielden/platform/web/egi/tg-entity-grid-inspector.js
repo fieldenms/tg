@@ -1255,11 +1255,10 @@ Polymer({
      */
     adjustColumnsSorting: function (sortingConfig) {
         if (this.offsetParent !== null) {
-            //Setting sorting information for column may require to add additional width to include sorting widget. In that case
-            //this additional width will increase column width to make column title wide enough to be able to read it. In order 
-            //to determine whether additional width should be added or not one should use real column elements scroll width and
-            //offset width. This requires access to template's elements which might not have been initialised by this time, therefore
-            //async is needed. See render() method invocations for this.fixedColumns, this.columns.
+            // Adding the sorting indicator to columns may require making columns wider. 
+            // In order to determine whether the column width should be increased, it is necessary to use the scroll width and offset width of the actual column element.
+            // Reading the values of these attributes requires access to the template's elements, which may have not been initialised at this stage.
+            // Therefore, async call is needed. See render() method invocations for this.fixedColumns and this.columns.
             this.async(() => {
                 const fixedHeaders = this.$.top_left_egi.querySelectorAll(".table-header-column-title");
                 const scrollingHeaders = this.$.top_egi.querySelectorAll(".table-header-column-title");
