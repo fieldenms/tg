@@ -61,7 +61,7 @@ const template = html`
             padding: var(--tg-ui-action-icon-button-padding, 8px);
         }
     </style>
-    <iron-ajax id="masterRetriever" headers="[[_headers]]" url="[[_masterUri]]" method="GET" handle-as="json" on-error="_processMasterError">
+    <iron-ajax id="masterRetriever" headers="[[_headers]]" url="[[_masterUri]]" method="GET" handle-as="json" reject-with-request on-error="_processMasterError">
     </iron-ajax>
     <paper-icon-button id="iActionButton" hidden$="[[!isIconButton]]" icon="[[icon]]" on-tap="_run" disabled$="[[_computeDisabled(isActionInProgress, disabled)]]" tooltip-text$="[[longDesc]]"></paper-icon-button>
     <paper-button id="bActionButton" hidden$="[[isIconButton]]" raised roll="button" on-tap="_run" style="width:100%" disabled$="[[_computeDisabled(isActionInProgress, disabled)]]" tooltip-text$="[[longDesc]]">

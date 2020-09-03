@@ -25,6 +25,7 @@ import '/resources/polymer/@polymer/neon-animation/animations/fade-in-animation.
 import '/resources/polymer/@polymer/neon-animation/animations/fade-out-animation.js';
 import '/resources/centre/tg-entity-centre-styles.js';
 import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
+import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
 
 const customStyle = html`
     <custom-style>
@@ -492,11 +493,12 @@ Polymer({
                     console.error(error);
                     self.$.toaster.text = 'There was an error displaying view ' + customAction.elementName;
                     self.$.toaster.hasMore = true;
-                    self.$.toaster.msgText = 'There was an error displaying the view.<br><br> \
-                                                      <b>Error cause:</b><br>' + error.message;
+                    self.$.toaster.msgText = `There was an error displaying the view.<br><br>` +
+                                              `<b>Error cause:</b><br>${error.message}`;
                     self.$.toaster.showProgress = false;
                     self.$.toaster.isCritical = true;
                     self.$.toaster.show();
+                    throw new UnreportableError(error);
                 });
         }
     },

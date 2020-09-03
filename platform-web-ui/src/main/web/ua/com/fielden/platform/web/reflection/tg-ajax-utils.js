@@ -1,4 +1,5 @@
 import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
+import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
 
 export function processResponseError (e, reflector, serialiser, customHandler, toaster) {
     tearDownEvent(e);
@@ -13,8 +14,10 @@ export function processResponseError (e, reflector, serialiser, customHandler, t
             // continue with custom error handling of the error result
             customHandler && customHandler(deserialisedResult);
         } else {
-            customHandler && customHandler('Responses with status code 500 suppose to carry an error cause!');
-            throw new Error('Responses with status code 500 suppose to carry an error cause!');
+            const error = new UnreportableError('Responses with status code 500 suppose to carry an error cause!');
+            customHandler && customHandler(error.message);
+            toaster && toaster.openToastForError('Unexpected server error', error.message, true);
+            throw error;
         }
     } else if (xhr.status === 403) { // forbidden!
         // TODO should prompt for login in place...
@@ -26,10 +29,19 @@ export function processResponseError (e, reflector, serialiser, customHandler, t
     } else if (xhr.status >= 400) { // other client or server error codes
         toaster && toaster.openToastForError('Service Error (' + xhr.status + ').', 'Server responded with error code ' + xhr.status, true);
         customHandler && customHandler('Service Error (' + xhr.status + ').');
-    } else { // for other codes just log the code
+    } else {
+        // this situation may occur if the server was accessible, but the return status code does not match any of the expected ones, or
+        // the server should not be reached, for example, due to a network failure, or
+        // the request was aborted -- aborted requests should not report any errors to users
         console.warn('Server responded with error code ', xhr.status);
         if (!e.detail.request.aborted) {
-            throw new Error("Unexpected server error with status [" + xhr.status + "] occurred. Please contact support.");
+            const [msgHeader, msgBody] = xhr.status === 0 // if status is 0 then it is most likely a network failure
+                                         ? ['Could not process the request.', 'Please make sure your device is connected to the network.']
+                                         : ['Unexpected error occurred.', `Error code [${xhr.status}]. Please contact support.`];
+            const error = new UnreportableError(`${msgHeader} ${msgBody}`);
+            customHandler && customHandler(error.message);
+            toaster && toaster.openToastForError(`${msgHeader}`, error.message, true);
+            throw error;
         }
     }
 }

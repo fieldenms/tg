@@ -56,7 +56,7 @@ const additionalTemplate = html`
             --tg-editor-default-input-layer-display: flex;
         }
     </style>
-    <iron-ajax id="ajaxSearcher" headers="[[_headers]]" loading="{{searching}}" url="[[_url]]" method="POST" handle-as="json" on-response="_processSearcherResponse" on-error="_processSearcherError"></iron-ajax>
+    <iron-ajax id="ajaxSearcher" headers="[[_headers]]" loading="{{searching}}" url="[[_url]]" method="POST" handle-as="json" on-response="_processSearcherResponse" reject-with-request on-error="_processSearcherError"></iron-ajax>
     <tg-serialiser id="serialiser"></tg-serialiser>`;
 const customInputTemplate = html`
     <iron-input bind-value="{{_editingValue}}" class="custom-input-wrapper">

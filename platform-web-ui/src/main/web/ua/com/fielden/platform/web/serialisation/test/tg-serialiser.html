@@ -13,8 +13,8 @@
 </head>
 
 <body>
-    <iron-ajax id="entities_retriever" url="/test/serialisation" handle-as="json"></iron-ajax>
-    <iron-ajax id="entities_sender" url="/test/serialisation" method="POST" handle-as="json"></iron-ajax>
+    <iron-ajax id="entities_retriever" url="/test/serialisation" handle-as="json" reject-with-request></iron-ajax>
+    <iron-ajax id="entities_sender" url="/test/serialisation" method="POST" handle-as="json" reject-with-request></iron-ajax>
 
 	<tg-serialiser id="serialiser"></tg-serialiser>
 
