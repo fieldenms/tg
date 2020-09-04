@@ -14,9 +14,9 @@ export function processResponseError (e, reflector, serialiser, customHandler, t
             // continue with custom error handling of the error result
             customHandler && customHandler(deserialisedResult);
         } else {
-            const error = new UnreportableError('Responses with status code 500 suppose to carry an error cause!');
+            const error = new UnreportableError('A response with error code 500 was received, but no error cause was provided.');
             customHandler && customHandler(error.message);
-            toaster && toaster.openToastForError('Unexpected server error', error.message, true);
+            toaster && toaster.openToastForError('Server responded with error.', error.message, true);
             throw error;
         }
     } else if (xhr.status === 403) { // forbidden!
