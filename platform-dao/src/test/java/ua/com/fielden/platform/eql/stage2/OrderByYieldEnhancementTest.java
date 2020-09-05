@@ -13,7 +13,7 @@ import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ResultQuery2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.QrySource2BasedOnPersistentType;
 
-public class OrderByToS2TransformationTest2 extends EqlStage2TestCase {
+public class OrderByYieldEnhancementTest extends EqlStage2TestCase {
 
     @Test
     public void test001() {

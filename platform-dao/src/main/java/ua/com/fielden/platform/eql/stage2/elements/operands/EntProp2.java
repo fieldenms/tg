@@ -21,7 +21,6 @@ import ua.com.fielden.platform.types.tuples.T2;
 public class EntProp2 implements ISingleOperand2<Expression3> {
     public final IQrySource2<? extends IQrySource3> source;
     private final List<AbstractPropInfo<?>> path;
-    public final boolean isId;
     public final String name;
     public final Class<?> type;
     public final Object hibType;
@@ -30,12 +29,11 @@ public class EntProp2 implements ISingleOperand2<Expression3> {
         this(source, path, false);
     }
 
-    public EntProp2(final IQrySource2<? extends IQrySource3> source, final List<AbstractPropInfo<?>> path, final boolean isId) {
+    public EntProp2(final IQrySource2<? extends IQrySource3> source, final List<AbstractPropInfo<?>> path, final boolean shouldBeTreatedAsId) {
         this.source = source;
         this.path = path;
-        this.isId = isId;
         this.name = path.stream().map(k -> k.name).collect(Collectors.joining("."));
-        this.type = isId ? Long.class : path.stream().reduce((first, second) -> second).orElse(null).javaType();
+        this.type = shouldBeTreatedAsId ? Long.class : path.stream().reduce((first, second) -> second).orElse(null).javaType();
         this.hibType = path.stream().reduce((first, second) -> second).orElse(null).hibType;
     }
 
@@ -92,7 +90,6 @@ public class EntProp2 implements ISingleOperand2<Expression3> {
         int result = 1;
         result = prime * result + source.contextId().hashCode();
         result = prime * result + path.hashCode();
-        result = prime * result + (isId ? 1231 : 1237);
         return result;
     }
 
@@ -108,6 +105,6 @@ public class EntProp2 implements ISingleOperand2<Expression3> {
 
         final EntProp2 other = (EntProp2) obj;
 
-        return Objects.equals(path, other.path) && Objects.equals(source.contextId(), other.source.contextId()) && (isId == other.isId);
+        return Objects.equals(path, other.path) && Objects.equals(source.contextId(), other.source.contextId());
     }
 }

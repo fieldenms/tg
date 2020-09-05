@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.meta;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.NE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.IJ;
@@ -9,7 +10,9 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.LJ;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
@@ -72,9 +75,13 @@ public class EqlStage2TestCase extends EqlTestCase {
     }
 
     protected static <T extends AbstractEntity<?>> ResultQuery2 qryCountAll(final ICompoundCondition0<T> unfinishedQry) {
+        return qryCountAll(unfinishedQry, emptyMap());
+    }
+    
+    protected static <T extends AbstractEntity<?>> ResultQuery2 qryCountAll(final ICompoundCondition0<T> unfinishedQry, final Map<String, Object> paramValues) {
         final AggregatedResultQueryModel countQry = unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate();
         final PropsResolutionContext resolutionContext = new PropsResolutionContext(DOMAIN_METADATA.lmd);
-        return qb().generateEntQueryAsResultQuery(countQry, null, null).transform(resolutionContext);
+        return qb(paramValues).generateEntQueryAsResultQuery(countQry, null, null).transform(resolutionContext);
     }
     
     protected static <T extends AbstractEntity<?>> ResultQuery2 qry(final EntityResultQueryModel<T> qry) {
@@ -112,21 +119,6 @@ public class EqlStage2TestCase extends EqlTestCase {
         return new Yields2(asList(yields));
     }
 
-    protected static <T extends AbstractEntity<?>> Yields2 autoYields(final IQrySource2<? extends IQrySource3> main, final fetch<T> fetch) {
-        final List<Yield2> yields = new ArrayList<>();
-        final EntityRetrievalModel<T> fm = new EntityRetrievalModel<T>(fetch, DOMAIN_METADATA_ANALYSER);
-        for (final String prop : fm.getPrimProps()) {
-            if (!prop.contains(".")) {
-                yields.add(yield(prop(main, pi(fetch.getEntityType(), prop)), prop));    
-            }
-        }
-        for (final String prop : fm.getRetrievalModels().keySet()) {
-            yields.add(yield(prop(main, pi(fetch.getEntityType(), prop)), prop));
-        }
-        
-        return new Yields2(yields);
-    }
-
     protected static OrderBy2 orderDesc(final EntProp2 prop) {
         return new OrderBy2(prop, true);
     }
@@ -155,6 +147,10 @@ public class EqlStage2TestCase extends EqlTestCase {
         return new EntProp2(source, asList(propInfos));
     }
 
+    protected static EntProp2 propWithIsId(final IQrySource2<? extends IQrySource3> source, final AbstractPropInfo<?> ... propInfos) {
+        return new EntProp2(source, asList(propInfos), true);
+    }
+    
     protected static Conditions2 cond(final ICondition2<? extends ICondition3> condition) {
         return new Conditions2(false, asList(asList(condition)));
     }
@@ -228,8 +224,16 @@ public class EqlStage2TestCase extends EqlTestCase {
         return cond(new NullTest2(operand, false));
     }
 
+    protected static NullTest2 isNull_(final ISingleOperand2<? extends ISingleOperand3> operand) {
+        return new NullTest2(operand, false);
+    }
+    
     protected static Conditions2 isNotNull(final ISingleOperand2<? extends ISingleOperand3> operand) {
         return cond(new NullTest2(operand, true));
+    }
+
+    protected static NullTest2 isNotNull_(final ISingleOperand2<? extends ISingleOperand3> operand) {
+        return new NullTest2(operand, true);
     }
 
     protected static ComparisonTest2 eq(final EntProp2 op1, final EntProp2 op2) {

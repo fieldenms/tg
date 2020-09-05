@@ -7,12 +7,10 @@ import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
 
 import org.junit.Ignore;
 import org.junit.Test;
 
-import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.eql.meta.EqlStage3TestCase;
@@ -29,8 +27,6 @@ import ua.com.fielden.platform.eql.stage3.elements.sources.QrySource3BasedOnSubq
 import ua.com.fielden.platform.eql.stage3.elements.sources.QrySource3BasedOnTable;
 import ua.com.fielden.platform.sample.domain.TeVehicle;
 import ua.com.fielden.platform.sample.domain.TeVehicleModel;
-import ua.com.fielden.platform.sample.domain.TgWagonSlot;
-import ua.com.fielden.platform.sample.domain.TgWorkshop;
 
 public class QmToStage3TransformationTest extends EqlStage3TestCase {
     
@@ -971,59 +967,6 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
                 isNotNull(expr(stringProp(KEY, ou2eou1))))));
         final ResultQuery3 expQry = qryCountAll(sources, conditions);
 
-        assertEquals(expQry, actQry);
-    }
-    
-    @Test
-    public void condition_is_correctly_ignored_01() {
-        final ResultQuery3 actQry = qryCountAll(select(MODEL).where().prop(KEY).eq().iVal(null));
-        final String model1 = "1";
-
-        final QrySource3BasedOnTable model = source(MODEL, model1);
-
-        final IQrySources3 sources = sources(model);
-        final ResultQuery3 expQry = qryCountAll(sources);
-        
-        assertEquals(expQry, actQry);
-    }
-    
-    @Test
-    public void condition_is_correctly_ignored_02() {
-        final HashMap<String,Object> paramValues = new HashMap<String, Object>();
-        paramValues.put(KEY, null);
-        
-        final ResultQuery3 actQry = qryCountAll(select(MODEL).where().prop(KEY).eq().iParam("keyValue"), paramValues);
-        final String model1 = "1";
-
-        final QrySource3BasedOnTable model = source(MODEL, model1);
-
-        final IQrySources3 sources = sources(model);
-        final ResultQuery3 expQry = qryCountAll(sources);
-        
-        assertEquals(expQry, actQry);
-    }
-    
-    @Test
-    public void is_null_condition_is_correctly_transformed_for_union_property() {
-        final ResultQuery3 actQry = qryCountAll(select(BOGIE).where().prop("location").isNull());
-        
-        final QrySource3BasedOnTable bogie = source(BOGIE, "1");
-        
-        final Conditions3 conditions = or(and(or(and(isNullSingle(expr(entityProp("location.wagonSlot", bogie, TgWagonSlot.class))), isNullSingle(expr(entityProp("location.workshop", bogie, TgWorkshop.class)))))));
-        final ResultQuery3 expQry = qryCountAll(sources(bogie), conditions);
-        
-        assertEquals(expQry, actQry);
-    }
-    
-    @Test
-    public void is_not_null_condition_is_correctly_transformed_for_union_property() {
-        final ResultQuery3 actQry = qryCountAll(select(BOGIE).where().prop("location").isNotNull());
-        
-        final QrySource3BasedOnTable bogie = source(BOGIE, "1");
-        
-        final Conditions3 conditions = or(and(or(and(isNotNullSingle(expr(entityProp("location.wagonSlot", bogie, TgWagonSlot.class)))), and(isNotNullSingle(expr(entityProp("location.workshop", bogie, TgWorkshop.class)))))));
-        final ResultQuery3 expQry = qryCountAll(sources(bogie), conditions);
-        
         assertEquals(expQry, actQry);
     }
  }

@@ -14,6 +14,7 @@ import ua.com.fielden.platform.eql.stage2.elements.Yields2;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntValue2;
+import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.SubQuery2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.Sources2;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -42,11 +43,9 @@ public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuer
 
     private Yields2 enhanceYields(final Yields2 yields, final Sources2 sources2) {
         if (yields.getYields().isEmpty()) {
-            if (sources2.main.entityInfo().getProps().containsKey(ID)) {
-                return new Yields2(listOf(new Yield2(new EntProp2(sources2.main, listOf(sources2.main.entityInfo().getProps().get(ID))), "", false)));
-            } else {
-                return new Yields2(listOf(new Yield2(new EntValue2(0), "", false)));
-            }
+            final ISingleOperand2<?> yieldedOperand = sources2.main.entityInfo().getProps().containsKey(ID) ?
+                    new EntProp2(sources2.main, listOf(sources2.main.entityInfo().getProps().get(ID))) : new EntValue2(0);
+                return new Yields2(listOf(new Yield2(yieldedOperand, "", false)));
         }
         return yields;
     }

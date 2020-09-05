@@ -21,8 +21,10 @@ import ua.com.fielden.platform.dao.IEntityAggregatesOperations;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.sample.domain.ITeAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.ITeVehicle;
@@ -471,12 +473,21 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     }
 
     @Test
+    @Ignore //TODO EQL3+
     public void eql3_query_executes_correctly41() {
         final EntityResultQueryModel<TeVehicle> qry = select(TeWorkOrder.class).yield().prop("vehicle").modelAsEntity(TeVehicle.class);
         
         run(select(qry).where().prop("lastFuelUsageQty").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
+        run(select(qry).where().prop("key").isNotNull().yield().countAll().as("KOUNT").modelAsAggregate());
     }
-
+    
+    @Test
+    public void eql3_query_executes_correctly41_2() {
+        final EntityResultQueryModel<TeVehicle> qry = select(TeWorkOrder.class).yield().prop("vehicle").modelAsEntity(TeVehicle.class);
+        
+        run(select(TeVehicle.class).where().prop("replacedBy").in().model(qry).yield().countAll().as("KOUNT").modelAsAggregate());
+    }
+    
     @Test
     public void eql3_query_executes_correctly42() {
         run(select(TeWorkOrder.class).where().prop("vehicle.modelMakeKey6").eq().prop("makeKey"));
@@ -488,6 +499,7 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     }
     
     @Test
+    @Ignore //TODO EQL3+
     public void eql3_query_executes_correctly44() {
         final AggregatedResultQueryModel qry = select(TeVehicle.class).yield().prop("id").as("vehicle").modelAsAggregate();
         
@@ -506,14 +518,20 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
 
     @Test
     public void eql3_query_executes_correctly47() {
-        final AggregatedResultQueryModel qry1 = select().yield().val(1).as("position").yield().val(100).as("value").modelAsAggregate();
-        final AggregatedResultQueryModel qry2 = select().yield().val(2).as("position").yield().val(200).as("value").modelAsAggregate();
-        final AggregatedResultQueryModel qry3 = select().yield().val(3).as("position").yield().val(300).as("value").modelAsAggregate();
-        final AggregatedResultQueryModel qry4 = select().yield().val(4).as("position").yield().val(400).as("value").modelAsAggregate();
-        final AggregatedResultQueryModel qry5 = select().yield().val(5).as("position").yield().val(500).as("value").modelAsAggregate();
+        // 
+        final AggregatedResultQueryModel qry1 = select().yield().expr(intValue(1)).as("position").yield().expr(intValue(100)).as("value").modelAsAggregate();
+        final AggregatedResultQueryModel qry2 = select().yield().expr(intValue(2)).as("position").yield().expr(intValue(200)).as("value").modelAsAggregate();
+        final AggregatedResultQueryModel qry3 = select().yield().expr(intValue(3)).as("position").yield().expr(intValue(300)).as("value").modelAsAggregate();
+        final AggregatedResultQueryModel qry4 = select().yield().expr(intValue(4)).as("position").yield().expr(intValue(400)).as("value").modelAsAggregate();
+        final AggregatedResultQueryModel qry5 = select().yield().expr(intValue(5)).as("position").yield().expr(intValue(500)).as("value").modelAsAggregate();
         
         final List<EntityAggregates> result = run(select(qry1, qry2, qry3, qry4, qry5).where().prop("position").gt().val(2).yield().sumOf().prop("value").as("QTY").modelAsAggregate());
         assertEquals("1200", result.get(0).get("QTY").toString());
+    }
+    
+    //wrapping into CASEWHEN to make H2 happy with value type
+    private static ExpressionModel intValue(final int value) {
+        return EntityQueryUtils.expr().caseWhen().val(0).isNotNull().then().val(value).endAsInt().model();
     }
     
     @Test

@@ -10,17 +10,14 @@ import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
 import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySource3;
 
 public class PropResolution {
-    private final IQrySource2<? extends IQrySource3> source;
+    public final IQrySource2<? extends IQrySource3> source;
     private final List<AbstractPropInfo<?>> path;
 
     public PropResolution(final IQrySource2<? extends IQrySource3> source, final List<AbstractPropInfo<?>> path) {
         this.source = source;
         this.path = path;
     }
-    public IQrySource2<? extends IQrySource3> getSource() {
-        return source;
-    }
-
+    
     public List<AbstractPropInfo<?>> getPath() {
         return unmodifiableList(path);
     }

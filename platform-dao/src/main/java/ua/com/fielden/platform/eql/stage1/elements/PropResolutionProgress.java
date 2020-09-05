@@ -29,15 +29,23 @@ public class PropResolutionProgress {
         return new PropResolutionProgress(pending.subList(1, pending.size()), updatedResolved);
     }
     
-    public boolean isSuccessful() {
-        return pending.isEmpty() || (pending.size() == 1 && pending.get(0).equals(ID) && !resolved.isEmpty() && isPersistedEntityType(resolved.get(resolved.size() - 1).javaType()));
-    }
-    
     public List<AbstractPropInfo<?>> getResolved() {
         return unmodifiableList(resolved);
     }
     
     public String getNextPending() {
         return pending.get(0);
+    }
+
+    public boolean isSuccessful() {
+        return pending.isEmpty() || (lastPendingIsId() && lastResolvedHasPersistentEntityType());
+    }
+
+    private boolean lastPendingIsId() {
+        return pending.size() == 1 && pending.get(0).equals(ID);
+    }
+    
+    private boolean lastResolvedHasPersistentEntityType() {
+        return !resolved.isEmpty() && isPersistedEntityType(resolved.get(resolved.size() - 1).javaType());
     }
 }

@@ -1,45 +1,23 @@
 package ua.com.fielden.platform.eql.stage2;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
-import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.LJ;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
-import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.eql.meta.EqlStage2TestCase;
 import ua.com.fielden.platform.eql.meta.PrimTypePropInfo;
-import ua.com.fielden.platform.eql.stage2.elements.EntQueryBlocks2;
-import ua.com.fielden.platform.eql.stage2.elements.GroupBy2;
-import ua.com.fielden.platform.eql.stage2.elements.GroupBys2;
-import ua.com.fielden.platform.eql.stage2.elements.OrderBys2;
 import ua.com.fielden.platform.eql.stage2.elements.Yields2;
-import ua.com.fielden.platform.eql.stage2.elements.conditions.ComparisonTest2;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.Conditions2;
-import ua.com.fielden.platform.eql.stage2.elements.conditions.ICondition2;
-import ua.com.fielden.platform.eql.stage2.elements.conditions.NullTest2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
-import ua.com.fielden.platform.eql.stage2.elements.operands.EntValue2;
-import ua.com.fielden.platform.eql.stage2.elements.operands.Expression2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ResultQuery2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.SourceQuery2;
-import ua.com.fielden.platform.eql.stage2.elements.operands.SubQuery2;
-import ua.com.fielden.platform.eql.stage2.elements.sources.CompoundSource2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.QrySource2BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage2.elements.sources.QrySource2BasedOnSubqueries;
 import ua.com.fielden.platform.eql.stage2.elements.sources.Sources2;
@@ -51,7 +29,6 @@ import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgEntityWithLoopedCalcProps;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
 import ua.com.fielden.platform.sample.domain.TgPersonName;
-import ua.com.fielden.platform.sample.domain.TgWorkshop;
 
 public class QmToStage2TransformationTest extends EqlStage2TestCase {
     
@@ -139,19 +116,6 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         assertEquals(expQry, actQry);
     }
 
-    @Test
-    public void test02() {
-        final ResultQuery2 actQry = qryCountAll(select(MODEL).where().prop("make.id").isNotNull());
-        
-        final QrySource2BasedOnPersistentType source = source("1", MODEL);
-        final Sources2 sources = sources(source);
-        final EntProp2 makeProp = prop(source, pi(MODEL, "make"));
-        final Conditions2 conditions = cond(isNotNull(makeProp));
-        final ResultQuery2 expQry = qryCountAll(sources, conditions);
-
-        assertEquals(expQry, actQry);
-    }
-    
     @Test
     public void test03() {
         final ResultQuery2 actQry = qryCountAll(select(MODEL).where().prop("make.key").isNotNull());
@@ -534,8 +498,10 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
     }
 
     @Test
+    @Ignore
+    //TODO EQL3+
     public void test_09() {
-        qryCountAll(select(select(TgAuthorRoyalty.class).where().prop("authorship.author.surname").isNotNull().yield().prop("authorship.author").modelAsEntity(TgAuthorship.class)).where().prop("author.surname").eq().val("Date").or().prop("author.name.key").eq().val("Chris"));
+        qryCountAll(select(select(TgAuthorRoyalty.class).where().prop("authorship.author.surname").isNotNull().yield().prop("authorship").modelAsEntity(TgAuthorship.class)).where().prop("author.surname").eq().val("Date").or().prop("author.name.key").eq().val("Chris"));
     }
 
     @Test
@@ -549,7 +515,6 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
     }
 
     @Test
-    @Ignore
     public void test_13() {
         qryCountAll(select(TgAverageFuelUsage.class).where().prop("key.key").eq().val("CAR2"));
     }
@@ -582,7 +547,6 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
     }
 
     @Test
-    @Ignore
     public void test_23() {
         qryCountAll(select(TgAuthorRoyalty.class).where().prop("payment.amount").isNotNull());
     }
@@ -590,212 +554,5 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
     @Test
     public void test_24() {
         qryCountAll(select(select(VEHICLE).yield().prop("key").as("key").yield().prop("desc").as("desc").yield().prop("model.make").as("model-make").modelAsAggregate()).where().prop("model-make").isNotNull());
-    }
-    
-    @Test
-    public void test_q21_s1s3() {
-        final AggregatedResultQueryModel qry = select(VEHICLE).as("veh").leftJoin(VEHICLE).as("rbv").
-                on().prop("veh.replacedBy").eq().prop("rbv.id").or().prop("veh.replacedBy").ne().prop("rbv.id").
-                yield().prop("veh.key").as("vehicle-key").
-                yield().prop("rbv.key").as("replacedByVehicle-key").
-                modelAsAggregate();
-//        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<EntQuery3> qry3 = entResultQry3(qry,  new PropsResolutionContext(metadata), tables);
-//        System.out.println(qry3.item.sql(DbVersion.H2));
-    }
-    
-
-    @Test
-    @Ignore
-    public void test_that_prop_name_is_without_alias_at_stage2() {
-        final ResultQuery2 actQry = qryCountAll(select(TgWorkshop.class).as("w").where().prop("w.key").isNotNull());
-
-        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(TgWorkshop.class, DOMAIN_METADATA.lmd.getEntityInfo(WORKSHOP), "w", "0");
-        
-        final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
-        final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
-        // TODO make utility method for easy creation of Conditions2 with only one condition
-        firstAndConditionsGroup.add(new NullTest2(new EntProp2(source, asList(pi(WORKSHOP, "key"))), true));
-        allConditions.add(firstAndConditionsGroup);
-
-        final Conditions2 conditions = new Conditions2(false, allConditions);
-        final EntQueryBlocks2 parts = new EntQueryBlocks2(new Sources2(source, emptyList()), conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
-        final ResultQuery2 exp = new ResultQuery2(parts, TgWorkshop.class);
-        assertEquals(exp, actQry);
-    }
-
-    @Test
-    @Ignore
-    public void test_q2() {
-        final ResultQuery2 actQry = qryCountAll(select(AUTHOR).where().prop("surname").isNotNull());
-
-        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(AUTHOR, DOMAIN_METADATA.lmd.getEntityInfo(AUTHOR), null, "0");
-        final Sources2 sources = new Sources2(source, emptyList());
-        final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
-        final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
-        firstAndConditionsGroup.add(new NullTest2(new EntProp2(source, asList(pi(AUTHOR, "surname"))), true));
-        allConditions.add(firstAndConditionsGroup);
-        final Conditions2 conditions = new Conditions2(false, allConditions);
-
-        final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
-        final ResultQuery2 exp = new ResultQuery2(parts, AUTHOR);
-        
-        assertEquals(exp, actQry);
-    }
-    
-    @Test
-    @Ignore
-    public void test_q3() {
-        final ResultQuery2 actQry = qryCountAll(select(AUTHOR).as("a").where().prop("a.surname").isNotNull());
-
-        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(AUTHOR, DOMAIN_METADATA.lmd.getEntityInfo(AUTHOR), "a", "0");
-        final Sources2 sources = new Sources2(source, Collections.<CompoundSource2> emptyList());
-        final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
-        final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
-        firstAndConditionsGroup.add(new NullTest2(new EntProp2(source, asList(pi(AUTHOR, "surname"))), true));
-        allConditions.add(firstAndConditionsGroup);
-        final Conditions2 conditions = new Conditions2(false, allConditions);
-
-        final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
-        final ResultQuery2 exp = new ResultQuery2(parts, AUTHOR);
-
-        assertEquals(exp, actQry); 
-    }
-
-    @Test
-    @Ignore
-    public void test_q4() {
-        final ResultQuery2 actQry = qryCountAll(select(AUTHOR).where().prop("surname").isNotNull().and().prop("name").eq().iVal(null));
-
-        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(AUTHOR, DOMAIN_METADATA.lmd.getEntityInfo(AUTHOR), null, "0");
-        final Sources2 sources = new Sources2(source, Collections.<CompoundSource2> emptyList());
-        final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
-        final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
-        firstAndConditionsGroup.add(new NullTest2(new EntProp2(source, asList(pi(AUTHOR, "surname"))), true));
-        allConditions.add(firstAndConditionsGroup);
-        final Conditions2 conditions = new Conditions2(false, allConditions);
-
-        final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
-        final ResultQuery2 exp = new ResultQuery2(parts, AUTHOR);
-
-        assertEquals(exp, actQry); 
-    }
-
-    @Test
-    @Ignore
-    public void test_q5() {
-        final ResultQuery2 actQry = qryCountAll(select(AUTHOR).where().prop("surname").isNotNull().and().prop("name").eq().iParam("param"));
-
-        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(AUTHOR, DOMAIN_METADATA.lmd.getEntityInfo(AUTHOR), null, "0");
-        final Sources2 sources = new Sources2(source, Collections.<CompoundSource2> emptyList());
-        final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
-        final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
-        firstAndConditionsGroup.add(new NullTest2(new EntProp2(source, asList(pi(AUTHOR, "surname"))), true));
-        allConditions.add(firstAndConditionsGroup);
-        final Conditions2 conditions = new Conditions2(false, allConditions);
-
-        final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
-        final ResultQuery2 exp = new ResultQuery2(parts, AUTHOR);
-
-        assertEquals(exp, actQry); 
-    }
-
-    @Test
-    @Ignore
-    public void test_q6() {
-        final ResultQuery2 actQry = qryCountAll(select(AUTHOR).where().prop("surname").eq().param("param"));
-        final Map<String, Object> params = new HashMap<>();
-        params.put("param", 1);
-
-        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(AUTHOR, DOMAIN_METADATA.lmd.getEntityInfo(AUTHOR), null, "0");
-        final Sources2 sources = new Sources2(source, Collections.<CompoundSource2> emptyList());
-        final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
-        final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
-        firstAndConditionsGroup.add(new ComparisonTest2(new EntProp2(source, asList(pi(AUTHOR, "surname"))), EQ, new EntValue2(1)));
-        allConditions.add(firstAndConditionsGroup);
-        final Conditions2 conditions = new Conditions2(false, allConditions);
-
-        final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
-        final ResultQuery2 exp = new ResultQuery2(parts, AUTHOR);
-
-        assertEquals(exp, actQry); 
-    }
-
-    @Test
-    @Ignore
-    public void test_q7() {
-        final ResultQuery2 actQry = qryCountAll(select(AUTHOR).leftJoin(TgPersonName.class).as("pn").on().prop("name").eq().prop("pn.id"). //
-        where().prop("surname").eq().val(1));
-
-        final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(AUTHOR, DOMAIN_METADATA.lmd.getEntityInfo(AUTHOR), null, "0");
-        final QrySource2BasedOnPersistentType source2 = new QrySource2BasedOnPersistentType(TgPersonName.class, DOMAIN_METADATA.lmd.getEntityInfo(TgPersonName.class), "pn", "0");
-
-        final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
-        final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
-        firstAndConditionsGroup.add(new ComparisonTest2(new EntProp2(source, asList(pi(AUTHOR, "name"))), //
-                EQ, // 
-                new EntProp2(source2, asList(DOMAIN_METADATA.lmd.getEntityInfo(TgPersonName.class).getProps().get("id")))));
-        allConditions.add(firstAndConditionsGroup);
-        final Conditions2 joinConditions = new Conditions2(false, allConditions);
-
-        final CompoundSource2 compound = new CompoundSource2(source2, JoinType.LJ, joinConditions);
-        final List<CompoundSource2> compounds = new ArrayList<>();
-        compounds.add(compound);
-        final Sources2 sources = new Sources2(source, compounds);
-        final List<List<? extends ICondition2<?>>> allConditions2 = new ArrayList<>();
-        final List<ICondition2<?>> firstAndConditionsGroup2 = new ArrayList<>();
-        firstAndConditionsGroup2.add(new ComparisonTest2(new EntProp2(source, asList(pi(AUTHOR, "surname"))), EQ, new EntValue2(1)));
-        allConditions2.add(firstAndConditionsGroup2);
-        final Conditions2 conditions = new Conditions2(false, allConditions2);
-
-        final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
-        final ResultQuery2 exp = new ResultQuery2(parts, AUTHOR);
-
-        assertEquals(exp, actQry); 
-    }
-
-    @Test
-    @Ignore
-    public void test_q8() {
-        final ResultQuery2 actQry = qryCountAll(select(AUTHOR).leftJoin(TgPersonName.class).as("pn").on().prop("name").eq().prop("pn.id"). //
-        where().prop("lastRoyalty").eq().val(1));
-
-        final QrySource2BasedOnPersistentType sourceAuthor = new QrySource2BasedOnPersistentType(AUTHOR, DOMAIN_METADATA.lmd.getEntityInfo(AUTHOR), null, "0");
-
-        final QrySource2BasedOnPersistentType sourceAuthorRoyalty = new QrySource2BasedOnPersistentType(TgAuthorRoyalty.class, DOMAIN_METADATA.lmd.getEntityInfo(TgAuthorRoyalty.class), null, "0");
-
-        final List<List<? extends ICondition2<?>>> lrAllConditions2 = new ArrayList<>();
-        final List<ICondition2<?>> lrFirstAndConditionsGroup2 = new ArrayList<>();
-        lrFirstAndConditionsGroup2.add(new ComparisonTest2(new EntProp2(sourceAuthorRoyalty, asList(null)), EQ,
-                new EntProp2(sourceAuthor, asList(null))));
-        lrAllConditions2.add(lrFirstAndConditionsGroup2);
-        final Conditions2 lrConditions = new Conditions2(false, lrAllConditions2);
-
-        final EntQueryBlocks2 lastRoyaltyParts = new EntQueryBlocks2(new Sources2(sourceAuthorRoyalty, emptyList()), lrConditions, emptyYields2, new GroupBys2(Collections.<GroupBy2> emptyList()), new OrderBys2(null));
-        final SubQuery2 lastRoyaltySubqry = new SubQuery2(lastRoyaltyParts, TgAuthorRoyalty.class);
-
-        final QrySource2BasedOnPersistentType sourcePersonName = new QrySource2BasedOnPersistentType(TgPersonName.class, DOMAIN_METADATA.lmd.getEntityInfo(TgPersonName.class), "pn", "0");
-
-        final List<List<? extends ICondition2<?>>> allConditions = new ArrayList<>();
-        final List<ICondition2<?>> firstAndConditionsGroup = new ArrayList<>();
-        firstAndConditionsGroup.add(new ComparisonTest2(new EntProp2(sourceAuthor, asList(null)), EQ, new EntProp2(sourcePersonName, asList(null))));
-        allConditions.add(firstAndConditionsGroup);
-        final Conditions2 joinConditions = new Conditions2(false, allConditions);
-
-        final CompoundSource2 compound = new CompoundSource2(sourcePersonName, LJ, joinConditions);
-        final List<CompoundSource2> compounds = new ArrayList<>();
-        compounds.add(compound);
-        final Sources2 sources = new Sources2(sourceAuthor, compounds);
-        final List<List<? extends ICondition2<?>>> allConditions2 = new ArrayList<>();
-        final List<ICondition2<?>> firstAndConditionsGroup2 = new ArrayList<>();
-
-        final Expression2 lrExpr = new Expression2(lastRoyaltySubqry, emptyList());
-        firstAndConditionsGroup2.add(new ComparisonTest2(new EntProp2(sourceAuthor, asList(null)), EQ, new EntValue2(1)));
-        allConditions2.add(firstAndConditionsGroup2);
-        final Conditions2 conditions = new Conditions2(false, allConditions2);
-
-        final EntQueryBlocks2 parts = new EntQueryBlocks2(sources, conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
-        final ResultQuery2 exp = new ResultQuery2(parts, AUTHOR);
-
-        assertEquals(exp, actQry); 
     }
 }

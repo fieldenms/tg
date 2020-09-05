@@ -40,8 +40,8 @@ public class EntProp1 implements ISingleOperand1<EntProp2> {
             final List<IQrySource2<? extends IQrySource3>> item = it.next();
             final PropResolution resolution = resolveProp(item, this);
             if (resolution != null) {
-                final boolean isId = (name.equals(ID) || name.endsWith("." + ID)) && isEntityType(resolution.lastPart().javaType());
-                return new EntProp2(resolution.getSource(), enhancePath(resolution.getPath()), isId);
+                final boolean shouldBeTreatedAsId = name.endsWith("." + ID) && isEntityType(resolution.lastPart().javaType());
+                return new EntProp2(resolution.source, enhancePath(resolution.getPath()), shouldBeTreatedAsId);
             }
         }
 
