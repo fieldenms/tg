@@ -1081,7 +1081,7 @@ public class DynamicQueryBuilder {
         }
         ISubsequentCompletedAndYielded<E> yieldedQuery = null;
         for (final Map.Entry<String, String> yieldProperty : yieldProperties.entrySet()) {
-            yieldedQuery = yieldedQuery == null ? yield(genClass, yieldProperty, baseQuery) : yield(genClass, yieldProperty, yieldedQuery);
+            yieldedQuery = yieldedQuery == null ? DynamicQueryBuilder.yield(genClass, yieldProperty, baseQuery) : DynamicQueryBuilder.yield(genClass, yieldProperty, yieldedQuery);
         }
         if (yieldedQuery == null) {
             throw new IllegalStateException("The query was compound incorrectly!");
@@ -1104,19 +1104,17 @@ public class DynamicQueryBuilder {
     /**
      * Groups the given query by specified property.
      *
-     * @param proeprtyName
-     * @param query
      * @return
      */
     //TODO Later the genClass property must be removed. This is an interim solution that allows to add .amount prefix to the money properties.
-    private static <E extends AbstractEntity<?>> ISubsequentCompletedAndYielded<E> yield(final Class<E> genClass, final Map.Entry<String, String> yield, final ICompleted<E> query) {
+    private static <E extends AbstractEntity<?>> ISubsequentCompletedAndYielded<E> yield(final Class<E> genClass, final Map.Entry<String, String> toYield, final ICompleted<E> query) {
         //TODO this code must be removed as a interim solution
-        String aliasValue = yield.getValue();
+        String aliasValue = toYield.getValue();
         if (!aliasValue.isEmpty() && Money.class.isAssignableFrom(PropertyTypeDeterminator.determinePropertyType(genClass, aliasValue))) {
             aliasValue += ".amount";
         }
         //remove code above
-        return query.yield().prop(yield.getKey().isEmpty() ? ALIAS : ALIAS + "." + yield.getKey()).as(aliasValue);
+        return query.yield().prop(toYield.getKey().isEmpty() ? ALIAS : ALIAS + "." + toYield.getKey()).as(aliasValue);
     }
 
     /**
