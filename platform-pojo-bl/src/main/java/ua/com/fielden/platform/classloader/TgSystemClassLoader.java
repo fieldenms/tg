@@ -29,7 +29,7 @@ public class TgSystemClassLoader extends URLClassLoader {
     }
 
     public TgSystemClassLoader(final ClassLoader parent) {
-        super(((URLClassLoader) parent).getURLs(), parent);
+        super(new URL[0], parent);
     }
 
     public TgSystemClassLoader(final URL[] urls) {
