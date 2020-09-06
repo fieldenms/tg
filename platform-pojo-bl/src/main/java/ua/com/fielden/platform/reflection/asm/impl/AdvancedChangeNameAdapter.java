@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
-import org.kohsuke.asm5.ClassVisitor;
-import org.kohsuke.asm5.commons.RemappingClassAdapter;
-import org.kohsuke.asm5.commons.SimpleRemapper;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.commons.ClassRemapper;
+import org.objectweb.asm.commons.SimpleRemapper;
 
 /**
  * A class adapter designed for modifying class name.
@@ -10,7 +10,7 @@ import org.kohsuke.asm5.commons.SimpleRemapper;
  * @author TG Team
  *
  */
-public class AdvancedChangeNameAdapter extends RemappingClassAdapter {
+public class AdvancedChangeNameAdapter extends ClassRemapper {
 
     private final String newTypeName;
 

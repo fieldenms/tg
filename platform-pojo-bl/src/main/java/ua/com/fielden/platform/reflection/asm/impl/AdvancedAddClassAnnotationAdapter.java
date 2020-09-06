@@ -10,13 +10,13 @@ import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.kohsuke.asm5.AnnotationVisitor;
-import org.kohsuke.asm5.ClassVisitor;
-import org.kohsuke.asm5.MethodVisitor;
-import org.kohsuke.asm5.Opcodes;
-import org.kohsuke.asm5.Type;
-import org.kohsuke.asm5.commons.RemappingMethodAdapter;
-import org.kohsuke.asm5.commons.SimpleRemapper;
+import org.objectweb.asm.AnnotationVisitor;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
+import org.objectweb.asm.commons.MethodRemapper;
+import org.objectweb.asm.commons.SimpleRemapper;
 
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.utils.Pair;
@@ -41,7 +41,7 @@ public class AdvancedAddClassAnnotationAdapter extends ClassVisitor implements O
     private String enhancedName;
 
     public AdvancedAddClassAnnotationAdapter(final ClassVisitor cv, final Annotation... annotations) {
-        super(Opcodes.ASM5, cv);
+        super(Opcodes.ASM7, cv);
 
         for (final Annotation annot : annotations) {
             this.annotations.put(Type.getDescriptor(annot.annotationType()), annot);
@@ -68,7 +68,7 @@ public class AdvancedAddClassAnnotationAdapter extends ClassVisitor implements O
         final MethodVisitor mv = cv.visitMethod(access, name, fix(desc), fix(signature), exceptions);
         // check if the method is not abstract
         if (mv != null && (access & ACC_ABSTRACT) == 0) {
-            return new RemappingMethodAdapter(access, desc, mv, new SimpleRemapper(owner, enhancedName));
+            return new MethodRemapper(mv, new SimpleRemapper(owner, enhancedName));
         } else {
             return mv;
         }

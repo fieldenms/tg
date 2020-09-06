@@ -29,7 +29,7 @@
 		<dependency>
 			<groupId>com.google.inject</groupId>
   			<artifactId>guice</artifactId>
-  			<version>4.2.0</version>
+  			<version>4.2.3</version>
 		</dependency>
 
 		<dependency>
@@ -68,10 +68,16 @@
 
 		<!-- ASM is used for generating new entity types with ad-hoc calculated properties -->
 		<dependency>
-			<groupId>org.kohsuke</groupId>
-			<artifactId>asm5</artifactId>
-			<version>5.0.1</version>
+			<groupId>org.ow2.asm</groupId>
+            <artifactId>asm</artifactId>
+            <version>7.2</version>
 		</dependency>
+		<dependency>
+		    <groupId>org.ow2.asm</groupId>
+		    <artifactId>asm-commons</artifactId>
+		    <version>7.2</version>
+		</dependency>
+		
 		<!-- ByteBuddy is high level Java API that has a potential to replace the direct use of ASM in TG.
 		     But its current role to replace Javassist for creation of proxied entity instances. -->
 		<dependency>

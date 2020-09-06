@@ -2,11 +2,11 @@ package ua.com.fielden.platform.reflection.asm.impl;
 
 import static ua.com.fielden.platform.reflection.asm.impl.TypeMaker.GET_ORIG_TYPE_METHOD_NAME;
 
-import org.kohsuke.asm5.ClassVisitor;
-import org.kohsuke.asm5.Label;
-import org.kohsuke.asm5.MethodVisitor;
-import org.kohsuke.asm5.Opcodes;
-import org.kohsuke.asm5.Type;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.Label;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 
 /**
  * A class adapter designed for adding a public static method {@code GET_ORIG_TYPE_METHOD_NAME} that returns the original type, which was used to derive the generated one from.
@@ -18,7 +18,7 @@ public class AdvancedRecordOriginalTypeAdapter extends ClassVisitor implements O
     private final Class<?> origType;
     
     public AdvancedRecordOriginalTypeAdapter(final ClassVisitor cv, final Class<?> origType) {
-        super(Opcodes.ASM5, cv);
+        super(Opcodes.ASM7, cv);
         this.origType = origType;
     }
 

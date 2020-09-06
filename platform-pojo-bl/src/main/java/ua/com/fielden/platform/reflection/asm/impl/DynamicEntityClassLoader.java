@@ -6,7 +6,7 @@ import static ua.com.fielden.platform.utils.Pair.pair;
 import java.lang.reflect.Method;
 import java.util.Optional;
 
-import org.kohsuke.asm5.ClassReader;
+import org.objectweb.asm.ClassReader;
 
 import ua.com.fielden.platform.classloader.TgSystemClassLoader;
 import ua.com.fielden.platform.entity.AbstractEntity;

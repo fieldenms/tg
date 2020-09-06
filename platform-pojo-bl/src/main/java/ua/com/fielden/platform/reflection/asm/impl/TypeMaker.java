@@ -12,8 +12,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
-import org.kohsuke.asm5.ClassReader;
-import org.kohsuke.asm5.ClassWriter;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassWriter;
 
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.utils.Pair;
@@ -172,7 +172,7 @@ public class TypeMaker {
        }
        try {
            final ClassReader cr = new ClassReader(currentType);
-           final ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES); //Opcodes..ASM5
+           final ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
            final AdvancedChangeNameAdapter cv = new AdvancedChangeNameAdapter(cw, currentName.replace('.', '/'), newTypeName.replace('.', '/')); //
            cr.accept(cv, ClassReader.SKIP_FRAMES); //  EXPAND_FRAMES
            currentType = cw.toByteArray();

@@ -7,13 +7,13 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.kohsuke.asm5.AnnotationVisitor;
-import org.kohsuke.asm5.Attribute;
-import org.kohsuke.asm5.ClassVisitor;
-import org.kohsuke.asm5.FieldVisitor;
-import org.kohsuke.asm5.MethodVisitor;
-import org.kohsuke.asm5.Opcodes;
-import org.kohsuke.asm5.Type;
+import org.objectweb.asm.AnnotationVisitor;
+import org.objectweb.asm.Attribute;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.FieldVisitor;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 
 import ua.com.fielden.platform.entity.Mutator;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -40,7 +40,7 @@ public class AdvancedModifyPropertyAdapter extends ClassVisitor implements Opcod
     private String enhancedName;
 
     public AdvancedModifyPropertyAdapter(final ClassVisitor cv, final Map<String, NewProperty> propertiesToAdapt) {
-        super(Opcodes.ASM5, cv);
+        super(Opcodes.ASM7, cv);
         this.propertiesToAdapt = propertiesToAdapt;
     }
 
@@ -153,7 +153,7 @@ public class AdvancedModifyPropertyAdapter extends ClassVisitor implements Opcod
     private class MethodRenamer extends MethodVisitor {
 
         public MethodRenamer(final MethodVisitor mv) {
-            super(Opcodes.ASM5, mv);
+            super(Opcodes.ASM7, mv);
         }
 
         /**
@@ -233,7 +233,7 @@ public class AdvancedModifyPropertyAdapter extends ClassVisitor implements Opcod
         private final NewProperty np;
 
         public CollectionalFieldVisitor(final FieldVisitor fv, final NewProperty np) {
-            super(org.kohsuke.asm5.Opcodes.ASM5, fv);
+            super(org.objectweb.asm.Opcodes.ASM7, fv);
             this.fv = fv;
             this.np = np;
         }
