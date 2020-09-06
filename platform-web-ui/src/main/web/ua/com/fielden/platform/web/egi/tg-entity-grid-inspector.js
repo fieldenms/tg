@@ -1115,14 +1115,14 @@ Polymer({
     editEntity: function (entity) {
         if (this.editingEntity) {
             const oldEntIndex = this._findEntity(this.editingEntity, this.filteredEntities);
+            this.editingEntity = null;
             if (oldEntIndex >= 0) {
-                this.editingEntity = null;
                 this.set("egiModel." + oldEntIndex + ".over", false);
             }
         }
         const entIndex = this._findEntity(entity, this.filteredEntities);
+        this.editingEntity = entity;
         if (entIndex >= 0) {
-            this.editingEntity = entity;
             this.set("egiModel." + entIndex + ".over", true);
         }
     },
