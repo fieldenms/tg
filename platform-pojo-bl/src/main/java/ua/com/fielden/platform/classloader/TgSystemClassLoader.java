@@ -10,6 +10,7 @@ import java.util.Optional;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
+import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -43,6 +44,14 @@ public class TgSystemClassLoader extends URLClassLoader {
     public TgSystemClassLoader(final URL[] urls, final ClassLoader parent, final URLStreamHandlerFactory factory) {
         super(urls, parent, factory);
     }
+
+    /**
+     * Overridden to increase visibility for {@link ClassesRetriever} to access.
+     */
+	@Override
+	public void addURL(URL url) {
+		super.addURL(url);
+	}
 
     public Optional<Pair<Class<?>, byte[]>> classByName(final String name) {
         return cache.asMap().entrySet().stream().filter(entry -> entry.getKey().getName().equals(name)).findFirst().map(entry -> pair(entry.getKey(), entry.getValue()));

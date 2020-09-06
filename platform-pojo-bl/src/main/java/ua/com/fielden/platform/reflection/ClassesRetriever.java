@@ -7,10 +7,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.SortedSet;
@@ -18,6 +15,7 @@ import java.util.TreeSet;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 
+import ua.com.fielden.platform.classloader.TgSystemClassLoader;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -291,18 +289,15 @@ public class ClassesRetriever {
     }
 
     /**
-     * Adds specified path to the class path. It works only if the system class loader is an instance of URLClassLoader.
+     * Adds specified path to the class path. It works only if the system class loader is an instance of TgSystemClassLoader.
      *
      * @param path
      * @throws Exception
      */
     private static void addPath(final String path) throws Exception {
         final File file = new File(path);
-        final URLClassLoader urlClassLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
-        final Class<URLClassLoader> urlClass = URLClassLoader.class;
-        final Method method = urlClass.getDeclaredMethod("addURL", new Class[] { URL.class });
-        method.setAccessible(true);
-        method.invoke(urlClassLoader, new Object[] { file.toURI().toURL() });
+        final TgSystemClassLoader urlClassLoader = (TgSystemClassLoader) ClassLoader.getSystemClassLoader();
+        urlClassLoader.addURL(file.toURI().toURL());
     }
 
 }
