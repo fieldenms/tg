@@ -8,7 +8,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -560,7 +559,7 @@ public final class Reflector {
     }
     
     /**
-     * A helper function to assign value to a static final field.
+     * A helper function to assign value to a private static field.
      *  
      * @param field
      * @param value
@@ -568,9 +567,10 @@ public final class Reflector {
     public static void assignStatic(final Field field, final Object value) {
         try {
             field.setAccessible(true);
-            final Field modifiersField = Field.class.getDeclaredField("modifiers");
-            modifiersField.setAccessible(true);
-            modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+            // The following manipulation what worked before JDK12 are no longer possible
+            //final Field modifiersField = Field.class.getDeclaredField("modifiers");
+            //modifiersField.setAccessible(true);
+            //modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
 
             field.set(null, value);
         } catch (final Exception ex) {

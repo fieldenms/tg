@@ -16,7 +16,6 @@ import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionExceptio
 import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_USE_OF_PARAM_LENGTH_MSG;
 import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_VALUES_FOR_PRECITION_AND_SCALE_MSG;
 import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithCritOnly;
-import static ua.com.fielden.platform.error.Result.asRuntime;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.reflection.EntityMetadata.entityExistsAnnotation;
@@ -293,9 +292,9 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     /**
      * A flag that provides a way to enforce more strict model verification, which is the default approach.
      */
-    public static final boolean STRICT_MODEL_VERIFICATION;
-    static { // static initialisation block is required instead of direct value assignment to enable reassignment of the value at runtime
-        STRICT_MODEL_VERIFICATION = true;
+    private static boolean STRICT_MODEL_VERIFICATION = true;
+    public static boolean isStrictModelVerification() {
+    	return STRICT_MODEL_VERIFICATION;
     }
 
     /**
@@ -304,22 +303,14 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      * It is strongly recommended not to use this mode during application development.
      */
     public static void useNonStrictModelVerification() {
-        try {
-            Reflector.assignStatic(AbstractEntity.class.getDeclaredField("STRICT_MODEL_VERIFICATION"), false);
-        } catch (final Exception ex) {
-            throw asRuntime(ex);
-        }
+    	STRICT_MODEL_VERIFICATION = false;
     }
 
     /**
      * Enforces the strict verification of the domain model, which is the default approach.
      */
     public static void useStrictModelVerification() {
-        try {
-            Reflector.assignStatic(AbstractEntity.class.getDeclaredField("STRICT_MODEL_VERIFICATION"), true);
-        } catch (final Exception ex) {
-            throw asRuntime(ex);
-        }
+    	STRICT_MODEL_VERIFICATION = true;
     }
 
     /**
