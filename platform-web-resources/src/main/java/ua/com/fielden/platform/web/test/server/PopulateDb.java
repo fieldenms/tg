@@ -18,11 +18,12 @@ import java.util.SortedSet;
 
 import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import fielden.test_app.close_leave.TgCloseLeaveExample;
 import ua.com.fielden.platform.algorithm.search.ISearchAlgorithm;
