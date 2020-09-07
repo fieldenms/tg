@@ -13,7 +13,6 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.basic.IValueMatcherWithFetch;
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
@@ -23,7 +22,6 @@ import ua.com.fielden.platform.sample.domain.TgWagonClass;
 import ua.com.fielden.platform.sample.domain.TgWagonClassCompatibility;
 import ua.com.fielden.platform.sample.domain.TgWoStatusRequiredField;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
-import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
 /**
@@ -61,7 +59,7 @@ public class DaoValueMatcherFactoryTest extends AbstractDaoTestCase {
         assertEquals("Incorrect wagon class.", "WA1", result.get(0).getKey());
         assertEquals("Incorrect compatibles for wagon class.", 0, result.get(0).getCompatibles().size());
 
-        result = matcher.findMatchesWithModel("W%");
+        result = matcher.findMatchesWithModel("W%", 1);
         assertEquals("Incorrect number of matching values.", 2, result.size());
         assertEquals("Incorrect wagon class.", "WA1", result.get(0).getKey());
         assertEquals("Incorrect compatibles for wagon class.", 1, result.get(0).getCompatibles().size());
@@ -109,8 +107,4 @@ public class DaoValueMatcherFactoryTest extends AbstractDaoTestCase {
         save(new_(TgWagon.class, "WAGON3", "desc3").setWagonClass(wa1).setSerialNo("SN_3"));
     }
 
-    @Override
-    protected List<Class<? extends AbstractEntity<?>>> domainEntityTypes() {
-        return PlatformTestDomainTypes.entityTypes;
-    }
 }

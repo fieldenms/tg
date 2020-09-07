@@ -79,7 +79,7 @@ public class EntValue implements ISingleOperand {
     }
 
     @Override
-    public Class type() {
+    public Class<?> type() {
         return value != null ? value.getClass() : null;
     }
 

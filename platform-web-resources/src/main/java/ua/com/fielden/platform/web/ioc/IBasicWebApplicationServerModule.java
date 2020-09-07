@@ -11,7 +11,7 @@ import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.menu.IMenuRetriever;
 import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.web.app.ISourceController;
+import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.app.SerialisationTypeEncoder;
 import ua.com.fielden.platform.web.app.ThreadLocalDeviceProvider;
@@ -53,25 +53,25 @@ public interface IBasicWebApplicationServerModule {
     default void bindWebAppResources(final IWebUiConfig webApp) {
         // bind IDeviceProvider to its implementation as singleton
         bindType(IDeviceProvider.class).to(ThreadLocalDeviceProvider.class).in(Scopes.SINGLETON);
-        
+
         /////////////////////////////// application specific ////////////////////////////
         // bind IWebApp instance with defined masters / centres and other DSL-defined configuration
         bindType(IWebUiConfig.class).toInstance(webApp);
         bindType(IMenuRetriever.class).toInstance(webApp);
 
-        // bind ISourceController to its implementation as singleton
-        bindType(ISourceController.class).to(SourceControllerImpl.class).in(Scopes.SINGLETON);
+        // bind IWebResourceLoader to its implementation as singleton
+        bindType(IWebResourceLoader.class).to(WebResourceLoader.class).in(Scopes.SINGLETON);
 
         // bind ISerialisationTypeEncoder to its implementation as singleton -- it is dependent on IServerGlobalDomainTreeManager and IUserProvider
         bindType(ISerialisationTypeEncoder.class).to(SerialisationTypeEncoder.class).in(Scopes.SINGLETON);
-        
+
         // bind ICriteriaEntityRestorer to its implementation as singleton -- it is dependent on IWebUiConfig, IServerGlobalDomainTreeManager, IUserProvider and other Web UI infrastructure
         bindType(ICriteriaEntityRestorer.class).to(CriteriaEntityRestorer.class).in(Scopes.SINGLETON);
         // bind companion object implementations that are dependent on ICriteriaEntityRestorer
         bindType(IEntityExportAction.class).to(EntityExportActionDao.class);
         bindType(ICentreConfigUpdater.class).to(CentreConfigUpdaterDao.class);
         bindType(ICentreColumnWidthConfigUpdater.class).to(CentreColumnWidthConfigUpdaterDao.class);
-        
+
         bindType(ICentreConfigLoadAction.class).to(CentreConfigLoadActionDao.class);
         bindType(ICentreConfigEditAction.class).to(CentreConfigEditActionDao.class);
         bindType(ICentreConfigSaveAction.class).to(CentreConfigSaveActionDao.class);

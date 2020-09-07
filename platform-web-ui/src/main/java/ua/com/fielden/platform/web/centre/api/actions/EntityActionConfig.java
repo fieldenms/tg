@@ -54,12 +54,12 @@ public final class EntityActionConfig {
             final InsertionPoints whereToInsertView,
             final UI_ROLE role) {
 
-        if (!noAction && functionalEntity == null) {
-            throw new IllegalArgumentException("A functional entity type should be provided.");
+        if (!noAction && context == null) {
+            throw new IllegalArgumentException("Any functional entity requires some execution context to be specified.");
         }
 
-        if (functionalEntity != null && context == null) {
-            throw new IllegalArgumentException("Any functional entity requires some execution context to be specified.");
+        if (functionalEntity == null && !context.withCurrentEtity) {
+            throw new IllegalArgumentException("Dynamic action can be created only with current entity in context.");
         }
 
         this.shouldRefreshParentCentreAfterSave = shouldRefreshParentCentreAfterSave;
@@ -100,6 +100,25 @@ public final class EntityActionConfig {
             final boolean noAction,
             final boolean shouldRefreshParentCentreAfterSave) {
         this(functionalEntity, context, icon, iconStyle, shortDesc, longDesc, shortcut, preAction, successPostAction, errorPostAction, prefDimForView, noAction, shouldRefreshParentCentreAfterSave, null, UI_ROLE.ICON);
+    }
+
+    public static EntityActionConfig withContext(final EntityActionConfig ac, final CentreContextConfig cc) {
+        return new EntityActionConfig(
+                        ac.functionalEntity.isPresent() ? ac.functionalEntity.get() : null,
+                        cc,
+                        ac.icon.isPresent() ? ac.icon.get() : null,
+                        ac.iconStyle.orElse(null),
+                        ac.shortDesc.isPresent() ? ac.shortDesc.get() : null,
+                        ac.longDesc.isPresent() ? ac.longDesc.get() : null,
+                        ac.shortcut.isPresent() ? ac.shortcut.get() : null,
+                        ac.preAction.isPresent() ? ac.preAction.get() : null,
+                        ac.successPostAction.isPresent() ? ac.successPostAction.get() : null,
+                        ac.errorPostAction.isPresent() ? ac.errorPostAction.get() : null,
+                        ac.prefDimForView.isPresent() ? ac.prefDimForView.get() : null,
+                        ac.noAction,
+                        ac.shouldRefreshParentCentreAfterSave,
+                        ac.whereToInsertView.isPresent() ? ac.whereToInsertView.get() : null,
+                        ac.role);
     }
 
 

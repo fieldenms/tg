@@ -1,8 +1,9 @@
 package ua.com.fielden.platform.web.view.master.api.actions.entity;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.web.view.master.api.actions.EnabledState;
+import ua.com.fielden.platform.web.view.master.api.actions.IEntityActionConfig;
+import ua.com.fielden.platform.web.view.master.api.helpers.IActionBarLayoutConfig0;
 
-public interface IEntityActionConfig3<T extends AbstractEntity<?>> extends IEntityActionConfig4<T> {
-    IEntityActionConfig4<T> enabledWhen(final EnabledState state);
+public interface IEntityActionConfig3<T extends AbstractEntity<?>> extends IEntityActionConfig<T>, IActionBarLayoutConfig0<T> {
+    IEntityActionConfig4<T> longDesc(final String longDesc);
 }

@@ -4,8 +4,6 @@ import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.routing.Filter;
 
-import com.esotericsoftware.kryo.Kryo;
-
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 
 /**
@@ -24,9 +22,9 @@ import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 public class CleanupFilter extends Filter {
 
     @Override
-    protected void afterHandle(Request request, Response response) {
-        Kryo.getContext().reset();
+    protected void afterHandle(final Request request, final Response response) {
         EntitySerialiser.getContext().reset();
+
         super.afterHandle(request, response);
     }
 }

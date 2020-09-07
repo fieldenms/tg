@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.resources.webui;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.nextTypeName;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getValidationResult;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
@@ -29,7 +30,6 @@ import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
@@ -44,6 +44,7 @@ import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
 import ua.com.fielden.platform.ui.menu.sample.MiEmptyEntity;
 import ua.com.fielden.platform.ui.menu.sample.MiEntityWithOtherEntity;
 import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
@@ -59,14 +60,14 @@ public class SerialisationTestResource extends AbstractWebResource {
     private final RestServerUtil restUtil;
     private final List<AbstractEntity<?>> entities = new ArrayList<>();
 
-    public SerialisationTestResource(final RestServerUtil restUtil, final IDeviceProvider deviceProvider, final Context context, final Request request, final Response response, final FactoryForTestingEntities testingEntitiesFactory, final List<AbstractEntity<?>> entities) {
-        super(context, request, response, deviceProvider);
+    public SerialisationTestResource(final RestServerUtil restUtil, final IDeviceProvider deviceProvider, final IDates dates, final Context context, final Request request, final Response response, final FactoryForTestingEntities testingEntitiesFactory, final List<AbstractEntity<?>> entities) {
+        super(context, request, response, deviceProvider, dates);
         this.restUtil = restUtil;
         this.entities.addAll(entities);
     }
     
-    public SerialisationTestResource(final RestServerUtil restUtil, final IDeviceProvider deviceProvider, final Context context, final Request request, final Response response, final FactoryForTestingEntities testingEntitiesFactory) {
-        this(restUtil, deviceProvider, context, request, response, testingEntitiesFactory, createEntities(restUtil, testingEntitiesFactory));
+    public SerialisationTestResource(final RestServerUtil restUtil, final IDeviceProvider deviceProvider, final IDates dates, final Context context, final Request request, final Response response, final FactoryForTestingEntities testingEntitiesFactory) {
+        this(restUtil, deviceProvider, dates, context, request, response, testingEntitiesFactory, createEntities(restUtil, testingEntitiesFactory));
     }
 
     /**
@@ -91,7 +92,7 @@ public class SerialisationTestResource extends AbstractWebResource {
     @Get
     public Representation sendSerialisedEntities() {
         return handleUndesiredExceptions(getResponse(), () -> {
-            return restUtil.listJSONRepresentation(this.entities);
+            return restUtil.listJsonRepresentation(this.entities);
         }, restUtil);
     }
 
@@ -457,8 +458,8 @@ public class SerialisationTestResource extends AbstractWebResource {
         final Class<AbstractEntity<?>> emptyEntityTypeEnhanced;
         try {
             emptyEntityTypeEnhanced = (Class<AbstractEntity<?>>) 
-                    cl.startModification(EmptyEntity.class.getName())
-                        .modifyTypeName(new DynamicTypeNamingService().nextTypeName(EmptyEntity.class.getName()))
+                    cl.startModification(EmptyEntity.class)
+                        .modifyTypeName(nextTypeName(EmptyEntity.class.getName()))
                         .addClassAnnotations(new MiTypeAnnotation().newInstance(MiEmptyEntity.class))
                     .endModification();
         } catch (final ClassNotFoundException e) {

@@ -13,6 +13,7 @@ import org.restlet.resource.Get;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
@@ -28,8 +29,8 @@ public class EgiExampleResource extends AbstractWebResource {
     private final RestServerUtil restUtil;
     private final List<AbstractEntity<?>> entities;
 
-    public EgiExampleResource(final EntityFactory entityFactory, final RestServerUtil restUtil, final IDeviceProvider deviceProvider, final Context context, final Request request, final Response response) {
-        super(context, request, response, deviceProvider);
+    public EgiExampleResource(final EntityFactory entityFactory, final RestServerUtil restUtil, final IDeviceProvider deviceProvider, final IDates dates, final Context context, final Request request, final Response response) {
+        super(context, request, response, deviceProvider, dates);
         this.restUtil = restUtil;
         this.entities = createEntities(entityFactory);
     }
@@ -40,7 +41,7 @@ public class EgiExampleResource extends AbstractWebResource {
     @Get
     @Override
     public Representation get() {
-        return restUtil.listJSONRepresentation(this.entities);
+        return restUtil.listJsonRepresentation(this.entities);
     }
 
     private static List<AbstractEntity<?>> createEntities(final EntityFactory entityFactory) {

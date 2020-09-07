@@ -5,7 +5,8 @@ import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
 
-import ua.com.fielden.platform.web.app.ISourceController;
+import ua.com.fielden.platform.utils.IDates;
+import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.CentreComponentResource;
@@ -19,19 +20,21 @@ import ua.com.fielden.platform.web.resources.webui.CentreComponentResource;
  *
  */
 public class CentreComponentResourceFactory extends Restlet {
-    private final ISourceController sourceController;
+    private final IWebResourceLoader webResourceLoader;
     private final RestServerUtil restUtil;
     private final IDeviceProvider deviceProvider;
+    private final IDates dates;
 
     /**
      * Creates the {@link CentreComponentResourceFactory} instance.
      *
      * @param centres
      */
-    public CentreComponentResourceFactory(final ISourceController sourceController, final RestServerUtil restUtil, final IDeviceProvider deviceProvider) {
-        this.sourceController = sourceController;
+    public CentreComponentResourceFactory(final IWebResourceLoader webResourceLoader, final RestServerUtil restUtil, final IDeviceProvider deviceProvider, final IDates dates) {
+        this.webResourceLoader = webResourceLoader;
         this.restUtil = restUtil;
         this.deviceProvider = deviceProvider;
+        this.dates = dates;
     }
 
     /**
@@ -43,9 +46,10 @@ public class CentreComponentResourceFactory extends Restlet {
 
         if (Method.GET.equals(request.getMethod())) {
             new CentreComponentResource(
-                    sourceController,
+                    webResourceLoader,
                     restUtil,
                     deviceProvider,
+                    dates,
                     getContext(),
                     request,
                     response //

@@ -5,10 +5,8 @@ import java.util.List;
 
 import ua.com.fielden.platform.menu.Module;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
-import ua.com.fielden.platform.web.interfaces.IExecutable;
-import ua.com.fielden.platform.web.minijs.JsCode;
 
-public class WebMenuModule implements IExecutable {
+public class WebMenuModule {
 
     public final String title;
 
@@ -67,25 +65,6 @@ public class WebMenuModule implements IExecutable {
 
     public List<EntityActionConfig> getActions() {
         return actions;
-    }
-
-    @Override
-    public JsCode code() {
-        final String code = "{ title: \"" + this.title + "\", " +
-                "description: \"" + this.description + "\", " +
-                "bgColor: \"" + this.bgColor + "\", " +
-                "captionBgColor: \"" + this.captionBgColor + "\", " +
-                "icon: \"" + this.icon + "\", " +
-                "detailIcon: \"" + this.detailIcon + "\"" +
-                (this.menu != null ? ", menu: " + menu.code() : "") +
-                (this.view != null ? ", view: " + view.code() : "") +
-                "}";
-        return new JsCode(code);
-    }
-
-    @Override
-    public String toString() {
-        return code().toString();
     }
 
     public Module getModule() {

@@ -8,6 +8,8 @@ import com.google.inject.Injector;
 
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.NewUserEmailNotifierBindingModule;
+import ua.com.fielden.platform.utils.DefaultDates;
+import ua.com.fielden.platform.utils.DefaultUniversalConstants;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.factories.webui.LoginCompleteResetResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.LoginInitiateResetResourceFactory;
@@ -37,7 +39,7 @@ public class TgTestApplicationConfiguration extends Component {
         try {
             // create application IoC module and injector
             final ApplicationDomain applicationDomainProvider = new ApplicationDomain();
-            final TgTestWebApplicationServerModule module = new TgTestWebApplicationServerModule(HibernateSetup.getHibernateTypes(), applicationDomainProvider, applicationDomainProvider.domainTypes(), SerialisationClassProvider.class, ExampleDataFilter.class, props);
+            final TgTestWebApplicationServerModule module = new TgTestWebApplicationServerModule(HibernateSetup.getHibernateTypes(), applicationDomainProvider, applicationDomainProvider.domainTypes(), SerialisationClassProvider.class, ExampleDataFilter.class, DefaultUniversalConstants.class, DefaultDates.class, props);
             injector = new ApplicationInjectorFactory().add(module).add(new NewUserEmailNotifierBindingModule()).getInjector();
 
             // create and configure REST server utility
@@ -50,12 +52,14 @@ public class TgTestApplicationConfiguration extends Component {
             final OldVersionResource oldVersionResource = new OldVersionResource(serverRestUtil);
             getDefaultHost().attach("/v0", oldVersionResource);
 
+            // application configuration
+            final IWebUiConfig webApp = injector.getInstance(IWebUiConfig.class);
             // attach system resources, which should be beyond the version scope
             // the interactive login page resource is considered one of the system resources, which does not require guarding
             getDefaultHost().attach(LoginResource.BINDING_PATH, new LoginResourceFactory(injector.getInstance(RestServerUtil.class), injector));
             getDefaultHost().attach(LoginInitiateResetResource.BINDING_PATH, new LoginInitiateResetResourceFactory(injector));
             getDefaultHost().attach(LoginCompleteResetResource.BINDING_PATH, new LoginCompleteResetResourceFactory(injector, "Robust solutions serve the sociaty well."));
-            getDefaultHost().attach(LogoutResource.BINDING_PATH, new LogoutResourceFactory(injector));
+            getDefaultHost().attach(LogoutResource.BINDING_PATH, new LogoutResourceFactory(webApp.getDomainName(), webApp.getPath(), injector));
 
             // FIXME The old resources need to be completely removed from the platform
 //            getDefaultHost().attach(
@@ -85,7 +89,6 @@ public class TgTestApplicationConfiguration extends Component {
 //                            BasicServerApplication.companionObjectTypes(applicationDomainProvider.domainTypes()))
 //                    );
 
-            final IWebUiConfig webApp = injector.getInstance(IWebUiConfig.class);
             getDefaultHost().attach( // TODO potentially versioning is desirable "/v1"
                     new WebUiResources(
                             getContext().createChildContext(), injector,

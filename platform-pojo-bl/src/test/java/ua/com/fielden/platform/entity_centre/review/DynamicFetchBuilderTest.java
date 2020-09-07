@@ -15,25 +15,22 @@ import com.google.inject.Injector;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
-import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancerCache;
-import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurposes;
 import ua.com.fielden.platform.domaintree.testing.EntityWithKeyTitleAndWithAEKeyType;
 import ua.com.fielden.platform.domaintree.testing.EntityWithNormalNature;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.api.impl.SerialiserForDomainTreesTestingPurposes;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 
 @SuppressWarnings({ "unchecked", "serial" })
 public class DynamicFetchBuilderTest {
 
-    private final static ISerialiser serialiser = createSerialiser(createFactory());
+    private final static EntityFactory factory = createFactory();
 
     private static EntityFactory createFactory() {
         final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
@@ -41,27 +38,23 @@ public class DynamicFetchBuilderTest {
         return injector.getInstance(EntityFactory.class);
     }
 
-    private static ISerialiser createSerialiser(final EntityFactory factory) {
-        return new SerialiserForDomainTreesTestingPurposes(factory, new ClassProviderForTestingPurposes(), DomainTreeEnhancerCache.CACHE);
-    }
-
     private static final Class<? extends AbstractEntity<?>> masterKlass, slaveKlass, evenSlaveKlass, stringKeyKlass, mutableKeyType;
 
     static {
-        final IDomainTreeEnhancer dte = new DomainTreeEnhancer(serialiser, new HashSet<Class<?>>() {
+        final IDomainTreeEnhancer dte = new DomainTreeEnhancer(factory, new HashSet<Class<?>>() {
             {
                 add(MasterEntity.class);
             }
         });
-        dte.addCalculatedProperty(MasterEntity.class, "", "3 + integerProp", "firstCalc", "firstCalc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-        dte.addCalculatedProperty(MasterEntity.class, "", "SUM(integerProp)", "sumInt", "Int Summary", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-        dte.addCalculatedProperty(MasterEntity.class, "", "AVG(integerProp)", "avgInt", "Int Average", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-        dte.addCalculatedProperty(MasterEntity.class, "entityProp.mutablyCheckedProp", "3 + integerProp", "secondCalc", "secondCalc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-        dte.addCalculatedProperty(MasterEntity.class, "entityProp.mutablyCheckedProp", "SUM(integerProp)", "mutIntSum", "Integer another summary", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-        dte.addCalculatedProperty(MasterEntity.class, "entityProp.entityProp.simpleEntityProp", "3 + integerProp", "thirdCalc", "thirdCalc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-        dte.addCalculatedProperty(MasterEntity.class, "entityProp.entityProp.simpleEntityProp", "SUM(integerProp)", "propIntSum", "Property int summary", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-        dte.addCalculatedProperty(MasterEntity.class, "entityProp.entityProp.simpleEntityProp", "AVG(integerProp)", "propIntAvg", "Property Int average", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-        dte.addCalculatedProperty(MasterEntity.class, "entityProp.entityProp.simpleEntityProp", "MIN(integerProp)", "propIntMin", "Property Int minimum", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+        dte.addCalculatedProperty(MasterEntity.class, "", "3 + integerProp", "firstCalc", "firstCalc", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        dte.addCalculatedProperty(MasterEntity.class, "", "SUM(integerProp)", "sumInt", "Int Summary", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        dte.addCalculatedProperty(MasterEntity.class, "", "AVG(integerProp)", "avgInt", "Int Average", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        dte.addCalculatedProperty(MasterEntity.class, "entityProp.mutablyCheckedProp", "3 + integerProp", "secondCalc", "secondCalc", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        dte.addCalculatedProperty(MasterEntity.class, "entityProp.mutablyCheckedProp", "SUM(integerProp)", "mutIntSum", "Integer another summary", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        dte.addCalculatedProperty(MasterEntity.class, "entityProp.entityProp.simpleEntityProp", "3 + integerProp", "thirdCalc", "thirdCalc", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        dte.addCalculatedProperty(MasterEntity.class, "entityProp.entityProp.simpleEntityProp", "SUM(integerProp)", "propIntSum", "Property int summary", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        dte.addCalculatedProperty(MasterEntity.class, "entityProp.entityProp.simpleEntityProp", "AVG(integerProp)", "propIntAvg", "Property Int average", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        dte.addCalculatedProperty(MasterEntity.class, "entityProp.entityProp.simpleEntityProp", "MIN(integerProp)", "propIntMin", "Property Int minimum", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         dte.apply();
 
         masterKlass = (Class<? extends AbstractEntity<?>>) dte.getManagedType(MasterEntity.class);
@@ -75,7 +68,7 @@ public class DynamicFetchBuilderTest {
 
     @Test
     public void test_that_fetch_first_level_properties_works() {
-        final Set<String> fetchProperties = new HashSet<String>(Arrays.asList(new String[] { "integerProp", //
+        final Set<String> fetchProperties = new HashSet<>(Arrays.asList(new String[] { "integerProp", //
         "doubleProp", //
         "bigDecimalProp", //
         "moneyProp", //
@@ -90,7 +83,7 @@ public class DynamicFetchBuilderTest {
 
     @Test
     public void test_that_entity_propertie_fetch_works() {
-        final Set<String> fetchProperties = new HashSet<String>(Arrays.asList(new String[] { "", //
+        final Set<String> fetchProperties = new HashSet<>(Arrays.asList(new String[] { "", //
         "stringProp", //
         "entityProp"//
         }));
@@ -102,7 +95,7 @@ public class DynamicFetchBuilderTest {
 
     @Test
     public void test_that_second_and_higher_level_fetch_works() {
-        final Set<String> fetchProperties = new HashSet<String>(Arrays.asList(new String[] { "", //
+        final Set<String> fetchProperties = new HashSet<>(Arrays.asList(new String[] { "", //
         "stringProp", //
         "entityProp.mutablyCheckedProp", //
         "entityProp.mutablyCheckedProp.integerProp",//
@@ -121,7 +114,7 @@ public class DynamicFetchBuilderTest {
 
     @Test
     public void test_that_calculated_properties_fetch_works() {
-        final Set<String> fetchProperties = new HashSet<String>(Arrays.asList(new String[] { "", //
+        final Set<String> fetchProperties = new HashSet<>(Arrays.asList(new String[] { "", //
         "stringProp", //
         "firstCalc", //
         "entityProp.mutablyCheckedProp", //
@@ -143,7 +136,7 @@ public class DynamicFetchBuilderTest {
 
     @Test
     public void test_that_total_properties_were_fetch_correctly() {
-        final Set<String> fetchProperties = new HashSet<String>(Arrays.asList(new String[] { "sumInt", //
+        final Set<String> fetchProperties = new HashSet<>(Arrays.asList(new String[] { "sumInt", //
         "avgInt", //
         "mutIntSum", //
         "propIntSum", //
@@ -157,7 +150,7 @@ public class DynamicFetchBuilderTest {
 
     @Test
     public void test_that_fetch_model_for_entity_with_AE_key_was_composed_correctlly() {
-        final Set<String> fetchProperties = new HashSet<String>(Arrays.asList(new String[] { "key", //
+        final Set<String> fetchProperties = new HashSet<>(Arrays.asList(new String[] { "key", //
         }));
         final fetch<? extends AbstractEntity<?>> complexEntityFetch = fetchOnly(EntityWithKeyTitleAndWithAEKeyType.class).with("key", fetchOnly(EntityWithNormalNature.class).with("key"));
         assertEquals("The fetch for entity with entity key doesn't work", complexEntityFetch, DynamicFetchBuilder.createFetchOnlyModel(EntityWithKeyTitleAndWithAEKeyType.class, fetchProperties));

@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.attachment;
 
-import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
@@ -23,7 +22,7 @@ public abstract class AbstractAttachment<AA extends AbstractAttachment<AA, A>, A
     @Title("Attachment")
     @MapTo
     @CompositeKeyMember(2)
-    @SkipEntityExistsValidation
+    @SkipEntityExistsValidation(skipNew = true)
     private Attachment attachment;
 
     @Observable

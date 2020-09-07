@@ -1,23 +1,32 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
 import java.util.Optional;
+import java.util.function.BiConsumer;
 
 import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
+import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.crit.ISelectionCritKindSelector;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1Toolbar;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aScroll;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1bPageCapacity;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cVisibleRows;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1dFitBehaviour;
+import ua.com.fielden.platform.web.centre.api.resultset.IDynamicColumnBuilder;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cToolbar;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1dScroll;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1fPageCapacity;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1gMaxPageCapacity;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1hHeaderWrap;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1iVisibleRowsCount;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1jFitBehaviour;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1kRowHeight;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2Properties;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2aDraggable;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1eDraggable;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder3Ordering;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder4aWidth;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilderAlsoDynamicProps;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilderWidgetSelector;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.centre.api.resultset.scrolling.IScrollConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
@@ -92,53 +101,53 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> implements ICentreTopL
     }
 
     @Override
-    public IResultSetBuilder1Toolbar<T> hideCheckboxes() {
+    public IResultSetBuilder1cToolbar<T> hideCheckboxes() {
         return new ResultSetBuilder<>(builder).hideCheckboxes();
     }
 
     @Override
-    public IResultSetBuilder1aScroll<T> setToolbar(final IToolbarConfig toolbar) {
+    public IResultSetBuilder1dScroll<T> setToolbar(final IToolbarConfig toolbar) {
         return new ResultSetBuilder<>(builder).setToolbar(toolbar);
     }
 
     @Override
-    public IResultSetBuilder1aScroll<T> hideToolbar() {
+    public IResultSetBuilder1dScroll<T> hideToolbar() {
         return new ResultSetBuilder<>(builder).hideToolbar();
     }
 
     @Override
-    public IResultSetBuilder2aDraggable<T> notScrollable() {
+    public IResultSetBuilder1eDraggable<T> notScrollable() {
         return new ResultSetBuilder<>(builder).notScrollable();
     }
 
     @Override
-    public IResultSetBuilder2aDraggable<T> withScrollingConfig(final IScrollConfig scrollConfig) {
+    public IResultSetBuilder1eDraggable<T> withScrollingConfig(final IScrollConfig scrollConfig) {
         return new ResultSetBuilder<>(builder).withScrollingConfig(scrollConfig);
     }
 
     @Override
-    public IResultSetBuilder1bPageCapacity<T> draggable() {
+    public IResultSetBuilder1fPageCapacity<T> draggable() {
         return new ResultSetBuilder<>(builder).draggable();
     }
 
     @Override
-    public IResultSetBuilder1cVisibleRows<T> setPageCapacity(final int pageCapacity) {
+    public IResultSetBuilder1gMaxPageCapacity<T> setPageCapacity(final int pageCapacity) {
         return new ResultSetBuilder<>(builder).setPageCapacity(pageCapacity);
     }
 
     @Override
-    public IResultSetBuilder1dFitBehaviour<T> setVisibleRowsCount(final int visibleRowsCount) {
+    public IResultSetBuilder1hHeaderWrap<T> setMaxPageCapacity(final int maxPageCapacity) {
+        return new ResultSetBuilder<>(builder).setMaxPageCapacity(maxPageCapacity);
+    }
+
+    @Override
+    public IResultSetBuilder1jFitBehaviour<T> setVisibleRowsCount(final int visibleRowsCount) {
         return new ResultSetBuilder<>(builder).setVisibleRowsCount(visibleRowsCount);
     }
 
     @Override
-    public IResultSetBuilder1dFitBehaviour<T> setHeight(final String height) {
+    public IResultSetBuilder1jFitBehaviour<T> setHeight(final String height) {
         return new ResultSetBuilder<>(builder).setHeight(height);
-    }
-
-    @Override
-    public IResultSetBuilder2Properties<T> fitToHeight() {
-        return new ResultSetBuilder<>(builder).fitToHeight();
     }
 
     @Override
@@ -149,5 +158,30 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> implements ICentreTopL
     @Override
     public IResultSetBuilder4aWidth<T> addProp(final PropDef<?> propDef) {
         return new ResultSetBuilder<>(builder).addProp(propDef);
+    }
+
+    @Override
+    public IResultSetBuilder1kRowHeight<T> fitToHeight() {
+        return new ResultSetBuilder<>(builder).fitToHeight();
+    }
+
+    @Override
+    public IResultSetBuilder2Properties<T> rowHeight(final String rowHeight) {
+        return new ResultSetBuilder<>(builder).rowHeight(rowHeight);
+    }
+
+    @Override
+    public <M extends AbstractEntity<?>> IResultSetBuilderAlsoDynamicProps<T> addProps(final String propName, final Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, final BiConsumer<M, Optional<CentreContext<T,?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
+        return new ResultSetBuilder<>(builder).addProps(propName, dynColBuilderType, entityPreProcessor, contextConfig);
+    }
+
+    @Override
+    public IResultSetBuilderWidgetSelector<T> addEditableProp(final String propName) {
+        return new ResultSetBuilder<>(builder).addEditableProp(propName);
+    }
+
+    @Override
+    public IResultSetBuilder1iVisibleRowsCount<T> wrapHeader(final int headerLineNumber) {
+        return new ResultSetBuilder<>(builder).wrapHeader(headerLineNumber);
     }
 }

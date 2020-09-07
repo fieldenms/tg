@@ -47,6 +47,8 @@ import ua.com.fielden.platform.entity.matcher.ValueMatcherFactory;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.keygen.IKeyNumber;
 import ua.com.fielden.platform.keygen.KeyNumberDao;
+import ua.com.fielden.platform.master.IMasterInfo;
+import ua.com.fielden.platform.master.MasterInfoDao;
 import ua.com.fielden.platform.menu.CustomViewDao;
 import ua.com.fielden.platform.menu.EntityCentreViewDao;
 import ua.com.fielden.platform.menu.EntityMasterViewDao;
@@ -65,6 +67,8 @@ import ua.com.fielden.platform.menu.ModuleDao;
 import ua.com.fielden.platform.menu.ModuleMenuItemDao;
 import ua.com.fielden.platform.menu.ViewDao;
 import ua.com.fielden.platform.menu.WebMenuItemInvisibilityDao;
+import ua.com.fielden.platform.ref_hierarchy.IReferenceHierarchy;
+import ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchyDao;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.ISecurityRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.IUserAndRoleAssociationBatchAction;
@@ -91,9 +95,7 @@ import ua.com.fielden.platform.security.user.UserDao;
 import ua.com.fielden.platform.security.user.UserSecretDao;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.api.ISerialiser0;
 import ua.com.fielden.platform.serialisation.api.impl.Serialiser;
-import ua.com.fielden.platform.serialisation.api.impl.Serialiser0;
 import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfigDao;
 import ua.com.fielden.platform.ui.config.IEntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
@@ -186,12 +188,12 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bindConstant().annotatedWith(Names.named("attachments.location")).to(props.getProperty("attachments.location"));
         bindConstant().annotatedWith(Names.named("email.smtp")).to(props.getProperty("email.smtp"));
         bindConstant().annotatedWith(Names.named("email.fromAddress")).to(props.getProperty("email.fromAddress"));
+        bindConstant().annotatedWith(Names.named("independent.time.zone")).to(Boolean.valueOf(props.getProperty("independent.time.zone")));
 
         bind(IApplicationSettings.class).to(ApplicationSettings.class).in(Scopes.SINGLETON);
         bind(IApplicationDomainProvider.class).toInstance(applicationDomainProvider);
         // serialisation related binding
         bind(ISerialisationClassProvider.class).to(serialisationClassProviderType).in(Scopes.SINGLETON); // FleetSerialisationClassProvider.class
-        bind(ISerialiser0.class).to(Serialiser0.class).in(Scopes.SINGLETON);
         bind(ISerialiser.class).to(Serialiser.class).in(Scopes.SINGLETON); //
 
         // bind DAO and any other implementations of the required application controllers
@@ -229,6 +231,11 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(IEntityEditAction.class).to(EntityEditActionDao.class);
         bind(IEntityNavigationAction.class).to(EntityNavigationActionDao.class);
         bind(IEntityDeleteAction.class).to(EntityDeleteActionDao.class);
+
+        //Reference Hierarchy
+        bind(IReferenceHierarchy.class).to(ReferenceHierarchyDao.class);
+        //Bind master info companion
+        bind(IMasterInfo.class).to(MasterInfoDao.class);
 
         // user security related bindings
         bind(IUser.class).to(UserDao.class);

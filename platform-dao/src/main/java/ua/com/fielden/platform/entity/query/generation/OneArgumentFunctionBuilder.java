@@ -20,7 +20,7 @@ abstract class OneArgumentFunctionBuilder extends AbstractTokensBuilder {
 
     @Override
     public Pair<TokenCategory, Object> getResult() {
-        return new Pair<TokenCategory, Object>(TokenCategory.FUNCTION_MODEL, getModel());
+        return new Pair<>(TokenCategory.FUNCTION_MODEL, getModel());
     }
 
 }

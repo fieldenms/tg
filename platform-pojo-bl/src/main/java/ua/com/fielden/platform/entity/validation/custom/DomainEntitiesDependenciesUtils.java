@@ -70,7 +70,7 @@ public class DomainEntitiesDependenciesUtils {
                     if (!map.containsKey(field.getType())) {
                         map.put(((Class<? extends AbstractEntity<?>>) field.getType()), new DomainEntityDependencies(((Class<? extends AbstractEntity<?>>) field.getType())));
                     }
-                    map.get(field.getType()).addDependency(new DomainEntityDependency(entType, field));
+                    map.get(field.getType()).addDependency(entType, field);
                 }
             }
 
@@ -79,7 +79,7 @@ public class DomainEntitiesDependenciesUtils {
                 if (!map.containsKey(keyType)) {
                     map.put(((Class<? extends AbstractEntity<?>>) keyType), new DomainEntityDependencies(((Class<? extends AbstractEntity<?>>) keyType)));
                 }
-                map.get(keyType).addDependency(new DomainEntityDependency(entType, getKeyMembers(entType).get(0)));
+                map.get(keyType).addDependency(entType, getKeyMembers(entType).get(0));
             }
         });
 

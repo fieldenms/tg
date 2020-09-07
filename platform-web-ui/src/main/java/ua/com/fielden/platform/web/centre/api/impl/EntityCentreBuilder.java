@@ -14,6 +14,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
+import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.utils.Pair;
@@ -32,6 +33,7 @@ import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.RangeCritD
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.RangeCritOtherValueMnemonic;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritDateValueMnemonic;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritOtherValueMnemonic;
+import ua.com.fielden.platform.web.centre.api.exceptions.CentreConfigException;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
@@ -58,16 +60,22 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     protected final List<EntityActionConfig> frontActions = new ArrayList<>();
     protected final List<InsertionPointConfig> insertionPointConfigs = new ArrayList<>();
 
+    private final Map<String, Class<? extends IValueMatcherWithContext<T, ?>>> valueMatcherForProps = new HashMap<>();
+
+    protected boolean egiHidden = false;
     protected boolean draggable = false;
     protected boolean hideCheckboxes = false;
     protected IToolbarConfig toolbarConfig = new CentreToolbar();
     protected boolean hideToolbar = false;
     protected IScrollConfig scrollConfig = ScrollConfig.configScroll().done();
     protected int pageCapacity = 30;
+    protected int maxPageCapacity = 300;
     //EGI height related properties
+    private int headerLineNumber = 3;
     protected int visibleRowsCount = 0;
     protected String egiHeight = "";
     protected boolean fitToHeight = false;
+    protected String rowHeight = "1.5rem";
 
     ////////////////////////////////////////////////
     //////////////// SELECTION CRITERIA ////////////
@@ -123,7 +131,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     ////////////// RESULT SET ///////////////
     /////////////////////////////////////////
 
-    protected final List<ResultSetProp> resultSetProperties = new ArrayList<>();
+    protected final List<ResultSetProp<T>> resultSetProperties = new ArrayList<>();
     protected final SortedMap<Integer, Pair<String, OrderDirection>> resultSetOrdering = new TreeMap<>();
     protected final ListMultimap<String, SummaryPropDef> summaryExpressions = ArrayListMultimap.create();
     protected EntityActionConfig resultSetPrimaryEntityAction;
@@ -149,7 +157,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     @Override
     public ICentreTopLevelActionsWithRunConfig<T> forEntity(final Class<T> type) {
         this.entityType = type;
-        return new GenericCentreConfigBuilder<T>(this);
+        return new GenericCentreConfigBuilder<>(this);
     }
 
     public EntityCentreConfig<T> build() {
@@ -164,15 +172,19 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
         resultSetOrdering.forEach((k, v) -> properResultSetOrdering.put(v.getKey(), v.getValue()));
 
         return new EntityCentreConfig<>(
+                egiHidden,
                 draggable,
                 hideCheckboxes,
                 toolbarConfig,
                 hideToolbar,
                 scrollConfig,
                 pageCapacity,
+                maxPageCapacity,
                 visibleRowsCount,
+                headerLineNumber,
                 egiHeight,
                 fitToHeight,
+                rowHeight,
                 topLevelActions,
                 frontActions,
                 insertionPointConfigs,
@@ -225,4 +237,13 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
         return entityType;
     }
 
+    public EntityCentreBuilder<T> setHeaderLineNumber(final int headerLineNumber) {
+        // let's validate the argument
+        if (headerLineNumber < 1 || 3 < headerLineNumber) {
+            throw new CentreConfigException("The number of lines in EGI headers should be between 1 and 3.");
+        }
+
+        this.headerLineNumber = headerLineNumber;
+        return this;
+    }
 }

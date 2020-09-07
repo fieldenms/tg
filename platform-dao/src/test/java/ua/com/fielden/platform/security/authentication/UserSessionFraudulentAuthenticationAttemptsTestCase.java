@@ -58,7 +58,7 @@ public class UserSessionFraudulentAuthenticationAttemptsTestCase extends Abstrac
         // now let's move the clock 7 minutes forward to emulate a time change and request a current session with fraudulent authenticator
         // that as far as the adversary is concerned should still be valid due to the performed time manipulation
         constants.setNow(dateTime("2015-04-23 13:07:00"));
-        final Optional<UserSession> session = coSession.currentSession(currUser, fraudulentAuthenticator);
+        final Optional<UserSession> session = coSession.currentSession(currUser, fraudulentAuthenticator, false);
         assertFalse(session.isPresent());
 
         // additionally, let's also check that all sessions for a compromised user have been removed, but not the sessions for other users
@@ -93,7 +93,7 @@ public class UserSessionFraudulentAuthenticationAttemptsTestCase extends Abstrac
         up.setUsername("USER1", getInstance(IUser.class));
         final User differentUser = getInstance(IUserProvider.class).getUser();
 
-        final Optional<UserSession> session = coSession.currentSession(differentUser, authenticator);
+        final Optional<UserSession> session = coSession.currentSession(differentUser, authenticator, false);
         assertFalse(session.isPresent());
 
         // additionally, let's also check that all sessions for a compromised user have been removed, but not the sessions for other users

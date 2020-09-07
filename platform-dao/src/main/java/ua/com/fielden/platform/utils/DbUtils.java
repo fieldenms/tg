@@ -23,9 +23,9 @@ import java.util.Optional;
 
 import org.apache.log4j.Logger;
 import org.hibernate.HibernateException;
-import org.hibernate.MappingException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.dialect.internal.StandardDialectResolver;
 import org.hibernate.engine.jdbc.dialect.spi.DatabaseMetaDataDialectResolutionInfoAdapter;
@@ -35,7 +35,11 @@ import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaExport.Action;
 import org.hibernate.tool.schema.TargetType;
 
+import com.google.common.collect.Iterators;
+
+import ua.com.fielden.platform.dao.exceptions.DbException;
 import ua.com.fielden.platform.ddl.MetadataProvider;
+import ua.com.fielden.platform.test.exceptions.DomainDriventTestException;
 
 /**
  * A collection of convenient DB related utilities such as to generate DDL and obtain the next value for sequence by name. 
@@ -196,6 +200,49 @@ public class DbUtils {
             }
         });
         tr.commit();
+    }
+
+    /**
+     * Executes SQL {@code statements} in batches of {@code batchSize} using the {@code conn} provided.
+     * All entries in list {@code statements} should be complete SQL statements (i.e. one statement should not be represented by several consecutive entries).
+     * <p>
+     * If {@code barchSize} is 0 or negative then no batching is used (i.e. all statements are executed one-by-one).
+     * <p>
+     * It is expected that a database transaction has already been started when calling this function.
+     * Committing the transaction is the responsibility of the caller.
+     * 
+     * @param statements
+     * @param conn
+     * @param batchSize
+     */
+    public static void batchExecSql(final List<String> statements, final Connection conn, final int batchSize) {
+        try (final Statement st = conn.createStatement()) {
+            Iterators.partition(statements.iterator(), batchSize > 0 ? batchSize : 1)
+            .forEachRemaining(batch -> {
+                try {
+                    for (final String stmt : batch) {
+                        st.addBatch(stmt);
+                    }
+                    st.executeBatch();
+                } catch (final Exception ex) {
+                    throw new DbException("Could not exec batched SQL statements.", ex);
+                }
+            });
+        } catch (final DbException ex) {
+            throw ex;
+        } catch (final SQLException ex) {
+            throw new DbException("Could not create statement.", ex);
+        }
+    }
+
+    /**
+     * A convenient wrapper around {@link #batchExecSql(List, Connection, int)} that executed all statements in a single batch.
+     *
+     * @param statements
+     * @param conn
+     */
+    public static void batchExecSql(final List<String> statements, final Connection conn) {
+        batchExecSql(statements, conn, statements.size());
     }
 
 }

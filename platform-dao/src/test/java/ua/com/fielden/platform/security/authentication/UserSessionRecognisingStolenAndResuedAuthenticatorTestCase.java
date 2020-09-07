@@ -56,7 +56,7 @@ public class UserSessionRecognisingStolenAndResuedAuthenticatorTestCase extends 
         constants.setNow(dateTime("2015-04-23 14:00:00"));
 
         // our adversary attempts to use the stolen authenticator, which leads to a session refresh, basically invalidating the stolen authenticator...
-        final Optional<UserSession> adversarySession = coSession.currentSession(currUser, stolenAuthenticator);
+        final Optional<UserSession> adversarySession = coSession.currentSession(currUser, stolenAuthenticator, false);
         assertTrue("Aversary should have successfully accessed the system", adversarySession.isPresent());
         // let's capture authenticator that will be used by the adversary during the next attempt to access the system
         final String adversaryAuthenticator = adversarySession.get().getAuthenticator().get().toString();
@@ -67,7 +67,7 @@ public class UserSessionRecognisingStolenAndResuedAuthenticatorTestCase extends 
         // s/he is up for a surprise -- the session is not recognised as valid, and requests explicit login!
         constants.setNow(dateTime("2015-04-23 14:05:00"));
 
-        final Optional<UserSession> userSession = coSession.currentSession(currUser, stolenAuthenticator);
+        final Optional<UserSession> userSession = coSession.currentSession(currUser, stolenAuthenticator, false);
         assertFalse("User should have been denied access.", userSession.isPresent());
 
         // at this stage all sessions for the compromised user shoud have been removed, but not the sessions for other users
@@ -79,7 +79,7 @@ public class UserSessionRecognisingStolenAndResuedAuthenticatorTestCase extends 
 
         // not only the compromised user is up for a surprise with the requirement to login again -- the adversary too!!!
         // but the adversary does not know this user password, which prevents all further access to the system for that adversary!!!
-        final Optional<UserSession> newAdversarySession = coSession.currentSession(currUser, adversaryAuthenticator);
+        final Optional<UserSession> newAdversarySession = coSession.currentSession(currUser, adversaryAuthenticator, false);
         assertFalse("Adversary should have been denied access post user's attempt to access it.", newAdversarySession.isPresent());
 
 

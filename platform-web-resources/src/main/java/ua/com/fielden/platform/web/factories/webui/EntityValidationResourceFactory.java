@@ -13,7 +13,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -29,7 +29,6 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
  *
  */
 public class EntityValidationResourceFactory extends Restlet {
-    private final ISerialiser serialiser;
     private final IDomainTreeEnhancerCache domainTreeEnhancerCache;
     private final IWebUiConfig webUiConfig;
     private final RestServerUtil restUtil;
@@ -38,6 +37,7 @@ public class EntityValidationResourceFactory extends Restlet {
     private final ICriteriaGenerator critGenerator;
     private final IUserProvider userProvider;
     private final IDeviceProvider deviceProvider;
+    private final IDates dates;
 
     /**
      * Instantiates a factory for entity validation resources.
@@ -47,7 +47,6 @@ public class EntityValidationResourceFactory extends Restlet {
      * @param injector
      */
     public EntityValidationResourceFactory(final IWebUiConfig webUiConfig, final Injector injector) {
-        this.serialiser = injector.getInstance(ISerialiser.class);
         this.domainTreeEnhancerCache = injector.getInstance(IDomainTreeEnhancerCache.class);
         this.webUiConfig = webUiConfig;
         this.restUtil = injector.getInstance(RestServerUtil.class);
@@ -56,6 +55,7 @@ public class EntityValidationResourceFactory extends Restlet {
         this.critGenerator = injector.getInstance(ICriteriaGenerator.class);
         this.userProvider = injector.getInstance(IUserProvider.class);
         this.deviceProvider = injector.getInstance(IDeviceProvider.class);
+        this.dates = injector.getInstance(IDates.class);
     }
 
     @Override
@@ -71,11 +71,11 @@ public class EntityValidationResourceFactory extends Restlet {
                     restUtil,
                     critGenerator,
                     coFinder,
-                    serialiser,
                     domainTreeEnhancerCache,
                     webUiConfig,
                     userProvider,
                     deviceProvider,
+                    dates,
                     getContext(),
                     request,
                     response //

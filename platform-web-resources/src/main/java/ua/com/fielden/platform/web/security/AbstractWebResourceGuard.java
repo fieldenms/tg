@@ -3,9 +3,7 @@ package ua.com.fielden.platform.web.security;
 import static java.lang.String.format;
 import static ua.com.fielden.platform.security.session.Authenticator.fromString;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -14,18 +12,18 @@ import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.data.ChallengeScheme;
-import org.restlet.data.Cookie;
 import org.restlet.data.CookieSetting;
 import org.restlet.security.ChallengeAuthenticator;
 
-import com.google.common.collect.Iterables;
 import com.google.inject.Injector;
 
+import ua.com.fielden.platform.security.exceptions.SecurityException;
 import ua.com.fielden.platform.security.session.Authenticator;
 import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.web.sse.SseUtils;
 
 /**
  * This is a guard that is based on the new TG authentication scheme, developed as part of the Web UI initiative. It it used to restrict access to sensitive web resources.
@@ -92,7 +90,10 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
 
             // let's validate the authenticator
             final IUserSession coUserSession = injector.getInstance(IUserSession.class);
-            final Optional<UserSession> session = coUserSession.currentSession(getUser(auth.username), auth.toString());
+            // for SSE requests session ID should not be regenerated
+            // this is due to the fact that for SSE requests no HTTP responses are sent, and so there is nothing to carry an updated cookie with a new authenticator back to the client
+            final boolean skipRegeneration = SseUtils.isEventSourceRequest(request);
+            final Optional<UserSession> session = coUserSession.currentSession(getUser(auth.username), auth.toString(), enforceUserSessionEvictionWhenDbSessionIsMissing(), skipRegeneration);
             if (!session.isPresent()) {
                 logger.warn(format("Authenticator validation failed for a request to a resource at URI %s (%s, %s, %s)", request.getResourceRef(), request.getClientInfo().getAddress(), request.getClientInfo().getAgentName(), request.getClientInfo().getAgentVersion()));
                 // TODO this is an interesting approach to prevent any further processing of the request, this event prevents receiving it completely
@@ -100,20 +101,19 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
                 // However, the client side would not be able to receive a response.
                 //request.abort();
                 forbid(response);
+                assignAuthenticatorCookieToExpire(response);
                 return false;
             }
 
-            // at this stage it is safe to record the fact of successful resource access for later analysis of resources being accessed and
-            // to count concurrent users ... it would be wise to use some key/value database for this instead of the underlying RDBMS
-            // TODO #236 implement logging of accessed by users resources... potentially a custom log4j appender could be created for this purpose
-
-
             // the provided authenticator was valid and a new cookie should be send back to the client
-            assignAuthenticatingCookie(constants.now(), session.get().getAuthenticator().get(), domainName, path, request, response);
+            assignAuthenticatingCookie(session.get().getUser(), constants.now(), session.get().getAuthenticator().get(), domainName, path, request, response);
 
         } catch (final Exception ex) {
             // in case of any internal exception forbid the request
             forbid(response);
+            
+            // TODO Do we really want to expire a potentially valid authenticator in this case? For example, where there was just an intermittent DB connectivity issue?
+            assignAuthenticatorCookieToExpire(response);
             logger.fatal(ex);
             return false;
         }
@@ -129,25 +129,11 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
      * @return
      */
     public static Optional<Authenticator> extractAuthenticator(final Request request) {
-        // first collect non-empty authenticating cookies
-        final List<Cookie> cookies = request.getCookies().stream()
+        // convert non-empty authenticating cookies to authenticators and get the most recent one by expiry date...
+        return request.getCookies().stream()
                 .filter(c -> AUTHENTICATOR_COOKIE_NAME.equals(c.getName()) && !StringUtils.isEmpty(c.getValue()))
-                .collect(Collectors.toList());
-
-        // if there are no authenticating cookies then return an empty result
-        if (cookies.isEmpty()) {
-            return Optional.empty();
-        }
-
-        // convert authenticating cookies to authenticators and sort them by expiry date oldest first...
-        final List<Authenticator> authenticators = cookies.stream()
                 .map(c -> fromString(c.getValue()))
-                .sorted((auth1, auth2) -> auth1.getExpiryTime().compareTo(auth2.getExpiryTime()))
-                .collect(Collectors.toList());
-
-        // ...and get the most recent authenticator...
-        final Authenticator auth = Iterables.getLast(authenticators);
-        return Optional.of(auth);
+                .max((auth1, auth2) -> Long.compare(auth1.version, auth2.version));
     }
 
     /**
@@ -156,7 +142,7 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
      * @param authenticator
      * @param response
      */
-    public static void assignAuthenticatingCookie(final DateTime now, final Authenticator authenticator, final String domainName, final String path, final Request request, final Response response) {
+    public static void assignAuthenticatingCookie(final User user, final DateTime now, final Authenticator authenticator, final String domainName, final String path, final Request request, final Response response) {
         // create a cookie that will carry an updated authenticator back to the client for further use
         // it is important to note that the time that will be used by further processing of this request is not known
         // and thus is not factored in for session authentication time frame
@@ -165,7 +151,8 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
         // on the other hand, it might server as an additional security level, limiting computationally intensive requests being send from untrusted devices
 
         // calculate maximum cookie age in seconds
-        final int maxAge = (int) (authenticator.expiryTime - now.getMillis()) / 1000;
+        final long millis = authenticator.getExpiryTime().orElseThrow(() -> new SecurityException("Authenticator is missing the expiration date.")).getMillis();
+        final int maxAge = (int) (millis - now.getMillis()) / 1000;
 
         if (maxAge <= 0) {
             throw new IllegalStateException("What the hack is goinig on! maxAge for cookier is not > zero.");
@@ -184,6 +171,12 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
         // finally associate the refreshed authenticator with the response
         response.getCookieSettings().clear();
         response.getCookieSettings().add(newCookie);
+        
+        // let's record the current username as the Restlet security User that forms part of the HTTP request information.
+        // This information can then be easily reused whenever the current username is required, but there is no access to the application user provider (e.g. in HTTP request filters).
+        final org.restlet.security.User restletUser = new org.restlet.security.User();
+        restletUser.setIdentifier(user.getId().toString());
+        request.getClientInfo().setUser(restletUser);
     }
 
     /**
@@ -192,4 +185,42 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
      * @return
      */
     protected abstract User getUser(final String username);
+
+    /**
+     * Assigns "expired" authentication cookie to inform the browser that this cookie is no longer valid.
+     * @param response
+     */
+    private void assignAuthenticatorCookieToExpire(final Response response) {
+        final CookieSetting cookie = mkAuthenticationCookieToExpire(domainName, path);
+        response.getCookieSettings().clear();
+        response.getCookieSettings().add(cookie);
+    }
+
+    /**
+     * A convenient factory method for creating expiring authentication cookies.
+     * @param domainName
+     * @param path
+     * @return
+     */
+    public static CookieSetting mkAuthenticationCookieToExpire(final String domainName, final String path) {
+        return new CookieSetting(
+                0 /*version*/,
+                AbstractWebResourceGuard.AUTHENTICATOR_COOKIE_NAME /*name*/,
+                "" /* empty value*/,
+                path,
+                domainName,
+                null /*comment*/,
+                0 /* number of seconds before cookie expires, 0 -- expires immediately */,
+                true /*secure*/, // if secure is set to true then this cookie would only be included into the request if it is done over HTTPS!
+                true /*accessRestricted*/);
+    }
+
+    /**
+     * Indicates to the authenticator validation logic whether all user sessions needs to be evicted in case if a valid authenticator was provided, but a corresponding DB record was missing.
+     * @return
+     */
+    protected boolean enforceUserSessionEvictionWhenDbSessionIsMissing() {
+        return false;
+    }
+
 }

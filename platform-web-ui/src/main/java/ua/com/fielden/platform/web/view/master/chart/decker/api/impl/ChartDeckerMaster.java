@@ -1,10 +1,15 @@
 package ua.com.fielden.platform.web.view.master.chart.decker.api.impl;
 
 import static java.util.Optional.ofNullable;
+import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.join;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getTimePortionToDisplay;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getTimeZone;
+import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
 import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.PRIMARY_RESULT_SET;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
+import static ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder.createImports;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -28,7 +33,6 @@ import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionEle
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
-import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.chart.decker.api.IChartDeckerConfig;
 
 public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T> {
@@ -45,9 +49,9 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
         final Pair<String, DomElement> actions = generateActions(deckerConfig, importPaths);
         decks.add(actions.getValue());
 
-        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/components/chart-decker/tg-chart-decker-template.html")
-                .replace("<!--@imports-->", SimpleMasterBuilder.createImports(importPaths))
-                .replace("@entity_type", deckerConfig.getEntityType().getSimpleName())
+        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/components/chart-decker/tg-chart-decker-template.js")
+                .replace(IMPORTS, createImports(importPaths))
+                .replace(ENTITY_TYPE, flattenedNameOf(deckerConfig.getEntityType()))
                 .replace("<!--@tg-entity-master-content-->", decks.toString())
                 .replace("//generatedPrimaryActions", actions.getKey())
                 .replace("//@ready-callback", readyCallback(deckerConfig))
@@ -129,6 +133,7 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
                     + "    barLabel: (d, i) => this._labelFormatter(d, i, self.barOptions[" + deckIndex + "].propertyNames, self.barOptions[" + deckIndex + "].propertyTypes, self.barOptions[" + deckIndex + "].mode),\n"
                     + "    tooltip: (d, i) => this._tooltip(d, "
                                 + generateValueAccessor(deck.getEntityType(), deck.getPropertyType(), deck.getGroupKeyProp()) + ", "
+                                + generateValueAccessor(deck.getEntityType(), String.class, deck.getGroupDescProperty()) + ", "
                                 + "self.barOptions[" + deckIndex + "].propertyNames[i], "
                                 + "self.barOptions[" + deckIndex + "].propertyTypes[i], "
                                 + "self.legendItems[" + deckIndex + "][i].title, " + deckIndex + ", i),\n"
@@ -162,7 +167,7 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
     }
 
     private String generateLegendItem(final ChartSeries<T> series) {
-        return "{title: '"  + series.getTitle() + "', colour: '" + series.getColour().getColourValue() + "'}";
+        return "{title: '"  + (isEmpty(series.getTitle()) ? "" : series.getTitle()) + "', colour: '" + series.getColour().getColourValue() + "'}";
     }
 
     private String generateValueAccessor(final Class<?> deckType, final Class<?> propertyType, final String aggregationProperty) {

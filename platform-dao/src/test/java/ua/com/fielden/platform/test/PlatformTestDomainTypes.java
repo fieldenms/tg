@@ -8,6 +8,7 @@ import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.EntityExportAction;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
+import ua.com.fielden.platform.persistence.composite.EntityWithSingleMemberDynamicCompositeKey;
 import ua.com.fielden.platform.persistence.types.EntityBasedOnAbstractPersistentEntity;
 import ua.com.fielden.platform.persistence.types.EntityBasedOnAbstractPersistentEntity2;
 import ua.com.fielden.platform.persistence.types.EntityWithAutoAssignableProperties;
@@ -24,6 +25,11 @@ import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgBogieClass;
 import ua.com.fielden.platform.sample.domain.TgCategory;
+import ua.com.fielden.platform.sample.domain.TgCategoryAttachment;
+import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisation;
+import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationNonPersistentChild;
+import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationNonPersistentCompositeChild;
+import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationPersistentChild;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationChild;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParent;
 import ua.com.fielden.platform.sample.domain.TgEntityWithComplexSummaries;
@@ -70,7 +76,7 @@ import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
  *
  */
 public class PlatformTestDomainTypes implements IApplicationDomainProvider {
-    public static final List<Class<? extends AbstractEntity<?>>> entityTypes = new ArrayList<Class<? extends AbstractEntity<?>>>();
+    public static final List<Class<? extends AbstractEntity<?>>> entityTypes = new ArrayList<>();
 
     static void add(final Class<? extends AbstractEntity<?>> domainType) {
         entityTypes.add(domainType);
@@ -125,6 +131,7 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(EntityWithSimpleTaxMoney.class);
         add(EntityWithSimpleMoney.class);
         add(EntityWithDynamicCompositeKey.class);
+        add(EntityWithSingleMemberDynamicCompositeKey.class);
         add(EntityWithAutoAssignableProperties.class);
         add(EntityBasedOnAbstractPersistentEntity.class);
         add(EntityBasedOnAbstractPersistentEntity2.class);
@@ -137,6 +144,11 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(TgEntityWithComplexSummaries.class);
         add(TgCollectionalSerialisationParent.class);
         add(TgCollectionalSerialisationChild.class);
+        add(TgCentreDiffSerialisation.class);
+        add(TgCentreDiffSerialisationPersistentChild.class);
+        add(TgCentreDiffSerialisationNonPersistentChild.class);
+        add(TgCentreDiffSerialisationNonPersistentCompositeChild.class);
+        add(TgCategoryAttachment.class);
     }
 
     @Override

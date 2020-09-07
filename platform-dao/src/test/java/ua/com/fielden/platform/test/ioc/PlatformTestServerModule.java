@@ -37,6 +37,11 @@ import ua.com.fielden.platform.sample.domain.ITgBogie;
 import ua.com.fielden.platform.sample.domain.ITgBogieClass;
 import ua.com.fielden.platform.sample.domain.ITgBogieLocation;
 import ua.com.fielden.platform.sample.domain.ITgCategory;
+import ua.com.fielden.platform.sample.domain.ITgCategoryAttachment;
+import ua.com.fielden.platform.sample.domain.ITgCentreDiffSerialisation;
+import ua.com.fielden.platform.sample.domain.ITgCentreDiffSerialisationNonPersistentChild;
+import ua.com.fielden.platform.sample.domain.ITgCentreDiffSerialisationNonPersistentCompositeChild;
+import ua.com.fielden.platform.sample.domain.ITgCentreDiffSerialisationPersistentChild;
 import ua.com.fielden.platform.sample.domain.ITgCollectionalSerialisationChild;
 import ua.com.fielden.platform.sample.domain.ITgCollectionalSerialisationParent;
 import ua.com.fielden.platform.sample.domain.ITgEntityWithComplexSummaries;
@@ -61,6 +66,7 @@ import ua.com.fielden.platform.sample.domain.ITgSystem;
 import ua.com.fielden.platform.sample.domain.ITgTimesheet;
 import ua.com.fielden.platform.sample.domain.ITgVehicle;
 import ua.com.fielden.platform.sample.domain.ITgVehicleFinDetails;
+import ua.com.fielden.platform.sample.domain.ITgVehicleFuelUsage;
 import ua.com.fielden.platform.sample.domain.ITgVehicleMake;
 import ua.com.fielden.platform.sample.domain.ITgVehicleModel;
 import ua.com.fielden.platform.sample.domain.ITgWagon;
@@ -77,7 +83,12 @@ import ua.com.fielden.platform.sample.domain.TgAverageFuelUsageDao;
 import ua.com.fielden.platform.sample.domain.TgBogieClassDao;
 import ua.com.fielden.platform.sample.domain.TgBogieDao;
 import ua.com.fielden.platform.sample.domain.TgBogieLocationDao;
+import ua.com.fielden.platform.sample.domain.TgCategoryAttachmentDao;
 import ua.com.fielden.platform.sample.domain.TgCategoryDao;
+import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationDao;
+import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationNonPersistentChildDao;
+import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationNonPersistentCompositeChildDao;
+import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationPersistentChildDao;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationChildDao;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParentDao;
 import ua.com.fielden.platform.sample.domain.TgEntityWithComplexSummariesDao;
@@ -102,6 +113,7 @@ import ua.com.fielden.platform.sample.domain.TgSystemDao;
 import ua.com.fielden.platform.sample.domain.TgTimesheetDao;
 import ua.com.fielden.platform.sample.domain.TgVehicleDao;
 import ua.com.fielden.platform.sample.domain.TgVehicleFinDetailsDao;
+import ua.com.fielden.platform.sample.domain.TgVehicleFuelUsageDao;
 import ua.com.fielden.platform.sample.domain.TgVehicleMakeDao;
 import ua.com.fielden.platform.sample.domain.TgVehicleModelDao;
 import ua.com.fielden.platform.sample.domain.TgWagonClassCompatibilityDao;
@@ -125,6 +137,7 @@ import ua.com.fielden.platform.test.entities.CompositeEntityKeyDao;
 import ua.com.fielden.platform.test.entities.IComplexKeyEntity;
 import ua.com.fielden.platform.test.entities.ICompositeEntity;
 import ua.com.fielden.platform.test.entities.ICompositeEntityKey;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
 /**
@@ -161,6 +174,7 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bindConstant().annotatedWith(UntrustedDeviceSessionDuration.class).to(5); // 5 minutes
 
         bind(Ticker.class).to(TickerForSessionCache.class).in(Scopes.SINGLETON);
+        bind(IDates.class).to(DatesForTesting.class).in(Scopes.SINGLETON);
         bind(IUniversalConstants.class).to(UniversalConstantsForTesting.class).in(Scopes.SINGLETON);
         bind(new TypeLiteral<Cache<String, UserSession>>(){}).annotatedWith(SessionCache.class).toProvider(TestSessionCacheBuilder.class).in(Scopes.SINGLETON);
 
@@ -191,6 +205,7 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bind(ITgSystem.class).to(TgSystemDao.class);
         bind(ITgSubSystem.class).to(TgSubSystemDao.class);
         bind(ITgCategory.class).to(TgCategoryDao.class);
+        bind(ITgCategoryAttachment.class).to(TgCategoryAttachmentDao.class);
         bind(ITgVehicle.class).to(TgVehicleDao.class);
         bind(ITgVehicleFinDetails.class).to(TgVehicleFinDetailsDao.class);
         bind(ITgPersonName.class).to(TgPersonNameDao.class);
@@ -214,6 +229,7 @@ public class PlatformTestServerModule extends BasicWebServerModule {
 
         bind(ITgMakeCount.class).to(TgMakeCountDao.class);
         bind(ITgAverageFuelUsage.class).to(TgAverageFuelUsageDao.class);
+        bind(ITgVehicleFuelUsage.class).to(TgVehicleFuelUsageDao.class);
         bind(ITgEntityWithComplexSummaries.class).to(TgEntityWithComplexSummariesDao.class);
         
         bind(ITgAuthorship.class).to(TgAuthorshipDao.class);
@@ -231,6 +247,10 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         
         bind(ITgCollectionalSerialisationParent.class).to(TgCollectionalSerialisationParentDao.class);
         bind(ITgCollectionalSerialisationChild.class).to(TgCollectionalSerialisationChildDao.class);
+        bind(ITgCentreDiffSerialisation.class).to(TgCentreDiffSerialisationDao.class);
+        bind(ITgCentreDiffSerialisationPersistentChild.class).to(TgCentreDiffSerialisationPersistentChildDao.class);
+        bind(ITgCentreDiffSerialisationNonPersistentChild.class).to(TgCentreDiffSerialisationNonPersistentChildDao.class);
+        bind(ITgCentreDiffSerialisationNonPersistentCompositeChild.class).to(TgCentreDiffSerialisationNonPersistentCompositeChildDao.class);
     }
 
     public static class TestSessionCacheBuilder implements Provider<Cache<String, UserSession>> {

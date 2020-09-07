@@ -13,8 +13,8 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.analyses.IAbstractAnalysisDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity_centre.review.DynamicFetchBuilder;
@@ -22,6 +22,7 @@ import ua.com.fielden.platform.entity_centre.review.DynamicOrderingBuilder;
 import ua.com.fielden.platform.entity_centre.review.DynamicParamBuilder;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
 
 public abstract class GroupAnalysisQueryGenerator<T extends AbstractEntity<?>> implements IReportQueryGenerator<T> {
@@ -29,11 +30,13 @@ public abstract class GroupAnalysisQueryGenerator<T extends AbstractEntity<?>> i
     private final Class<T> root;
     private final ICentreDomainTreeManagerAndEnhancer cdtme;
     private final IAbstractAnalysisDomainTreeManager adtm;
+    private final IDates dates;
 
-    public GroupAnalysisQueryGenerator(final Class<T> root, final ICentreDomainTreeManagerAndEnhancer cdtme, final IAbstractAnalysisDomainTreeManager adtm) {
+    public GroupAnalysisQueryGenerator(final Class<T> root, final ICentreDomainTreeManagerAndEnhancer cdtme, final IAbstractAnalysisDomainTreeManager adtm, final IDates dates) {
         this.root = root;
         this.cdtme = cdtme;
         this.adtm = adtm;
+        this.dates = dates;
     }
 
     protected IAbstractAnalysisDomainTreeManager adtm() {
@@ -57,7 +60,7 @@ public abstract class GroupAnalysisQueryGenerator<T extends AbstractEntity<?>> i
         yieldMap.putAll(createAnalysisPropertyMap(aggregationProperties));
 
         //Create base sub-query and query models.
-        final EntityResultQueryModel<T> subQueryModel = DynamicQueryBuilder.createQuery(managedType, ReportQueryGenerationUtils.createQueryProperties(getRoot(), getCdtme())).model();
+        final EntityResultQueryModel<T> subQueryModel = DynamicQueryBuilder.createQuery(managedType, ReportQueryGenerationUtils.createQueryProperties(getRoot(), getCdtme()), dates).model();
         //TODO the DynamicQueryBuilder.createAggregationQuery method must not receive genClass this is interim solution in order to distinguish money properties and add .mount prefix.
         final EntityResultQueryModel<T> queryModel = DynamicQueryBuilder.createAggregationQuery(subQueryModel, distributionProperties, genClass, yieldMap).modelAsEntity(genClass);
 
@@ -72,10 +75,10 @@ public abstract class GroupAnalysisQueryGenerator<T extends AbstractEntity<?>> i
         }
 
         //Creating the parameters map.
-        final Map<String, Pair<Object, Object>> paramMap = EntityQueryCriteriaUtils.createParamValuesMap(getRoot(), managedType, getCdtme().getFirstTick());
+        final Map<String, Pair<Object, Object>> paramMap = EntityQueryCriteriaUtils.createParamValuesMap(getRoot(), managedType, getCdtme().getFirstTick(), dates);
 
         final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = from(queryModel).with(DynamicOrderingBuilder.createOrderingModel(genClass, analysisOrderingProperties))//
-        .with(DynamicFetchBuilder.createFetchOnlyModel(genClass, new HashSet<String>(yieldMap.values())))//
+        .with(DynamicFetchBuilder.createFetchOnlyModel(genClass, new HashSet<>(yieldMap.values())))//
         .with(DynamicParamBuilder.buildParametersMap(managedType, paramMap)).model();
 
         return createQueryComposer(resultQuery);

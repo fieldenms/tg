@@ -31,9 +31,8 @@ import ua.com.fielden.platform.dao.HibernateMappingsGenerator;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
-import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancerCache;
-import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurposes;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
@@ -48,11 +47,10 @@ import ua.com.fielden.platform.persistence.types.DateTimeType;
 import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.sample.domain.TgBogie;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.api.impl.SerialiserForDomainTreesTestingPurposes;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
 import ua.com.fielden.snappy.DateRangeSelectorEnum;
 import ua.com.fielden.snappy.DateUtilities;
@@ -66,16 +64,17 @@ import ua.com.fielden.snappy.MnemonicEnum;
  */
 @SuppressWarnings({ "serial", "unchecked" })
 public class DynamicQueryBuilderSqlTest {
-    private final static ISerialiser serialiser = createSerialiser(createFactory());
-
-    private static EntityFactory createFactory() {
+    private final static Injector injector = createInjector();
+    private final static EntityFactory entityFactory = createFactory();
+    private final static IDates dates = injector.getInstance(IDates.class);
+    
+    private static Injector createInjector() {
         final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
-        final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
-        return injector.getInstance(EntityFactory.class);
+        return new ApplicationInjectorFactory().add(module).getInjector();
     }
 
-    private static ISerialiser createSerialiser(final EntityFactory factory) {
-        return new SerialiserForDomainTreesTestingPurposes(factory, new ClassProviderForTestingPurposes(), DomainTreeEnhancerCache.CACHE);
+    private static EntityFactory createFactory() {
+        return injector.getInstance(EntityFactory.class);
     }
 
     private final String alias;
@@ -86,31 +85,31 @@ public class DynamicQueryBuilderSqlTest {
     {
         alias = "alias_for_main_criteria_type";
         // enhance domain with ALL / ANY calc properties
-        final IDomainTreeEnhancer dte = new DomainTreeEnhancer(serialiser, new HashSet<Class<?>>() {
+        final IDomainTreeEnhancer dte = new DomainTreeEnhancer(entityFactory, new HashSet<Class<?>>() {
             {
                 add(MasterEntity.class);
             }
         });
-        dte.addCalculatedProperty(MasterEntity.class, "collection", "masterEntityProp", "Any of masterEntityProp", "Desc", CalculatedPropertyAttribute.ANY, "masterEntityProp");
-        dte.addCalculatedProperty(MasterEntity.class, "collection", "bigDecimalProp", "Any of bigDecimalProp", "Desc", CalculatedPropertyAttribute.ANY, "bigDecimalProp");
-        dte.addCalculatedProperty(MasterEntity.class, "collection", "dateProp", "Any of dateProp", "Desc", CalculatedPropertyAttribute.ANY, "dateProp");
-        dte.addCalculatedProperty(MasterEntity.class, "collection", "integerProp", "Any of integerProp", "Desc", CalculatedPropertyAttribute.ANY, "integerProp");
-        dte.addCalculatedProperty(MasterEntity.class, "collection", "moneyProp", "Any of moneyProp", "Desc", CalculatedPropertyAttribute.ANY, "moneyProp");
-        dte.addCalculatedProperty(MasterEntity.class, "collection", "masterEntityProp", "All of masterEntityProp", "Desc", CalculatedPropertyAttribute.ALL, "masterEntityProp");
-        dte.addCalculatedProperty(MasterEntity.class, "collection", "bigDecimalProp", "All of bigDecimalProp", "Desc", CalculatedPropertyAttribute.ALL, "bigDecimalProp");
-        dte.addCalculatedProperty(MasterEntity.class, "collection", "dateProp", "All of dateProp", "Desc", CalculatedPropertyAttribute.ALL, "dateProp");
-        dte.addCalculatedProperty(MasterEntity.class, "entityProp.collection", "slaveEntityProp", "All of slaveEntityProp", "Desc", CalculatedPropertyAttribute.ALL, "slaveEntityProp");
-        dte.addCalculatedProperty(MasterEntity.class, "entityProp.collection", "bigDecimalProp", "All of bigDecimalProp", "Desc", CalculatedPropertyAttribute.ALL, "bigDecimalProp");
-        dte.addCalculatedProperty(MasterEntity.class, "entityProp.collection", "dateProp", "All of dateProp", "Desc", CalculatedPropertyAttribute.ALL, "dateProp");
-        dte.addCalculatedProperty(MasterEntity.class, "entityProp.collection", "integerProp", "Any of integerProp", "Desc", CalculatedPropertyAttribute.ANY, "integerProp");
-        dte.addCalculatedProperty(MasterEntity.class, "entityProp.collection", "moneyProp", "Any of moneyProp", "Desc", CalculatedPropertyAttribute.ANY, "moneyProp");
+        dte.addCalculatedProperty(MasterEntity.class, "collection", "masterEntityProp", "Any of masterEntityProp", "Desc", CalculatedPropertyAttribute.ANY, "masterEntityProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        dte.addCalculatedProperty(MasterEntity.class, "collection", "bigDecimalProp", "Any of bigDecimalProp", "Desc", CalculatedPropertyAttribute.ANY, "bigDecimalProp", 19, 4);
+        dte.addCalculatedProperty(MasterEntity.class, "collection", "dateProp", "Any of dateProp", "Desc", CalculatedPropertyAttribute.ANY, "dateProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        dte.addCalculatedProperty(MasterEntity.class, "collection", "integerProp", "Any of integerProp", "Desc", CalculatedPropertyAttribute.ANY, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        dte.addCalculatedProperty(MasterEntity.class, "collection", "moneyProp", "Any of moneyProp", "Desc", CalculatedPropertyAttribute.ANY, "moneyProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        dte.addCalculatedProperty(MasterEntity.class, "collection", "masterEntityProp", "All of masterEntityProp", "Desc", CalculatedPropertyAttribute.ALL, "masterEntityProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        dte.addCalculatedProperty(MasterEntity.class, "collection", "bigDecimalProp", "All of bigDecimalProp", "Desc", CalculatedPropertyAttribute.ALL, "bigDecimalProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        dte.addCalculatedProperty(MasterEntity.class, "collection", "dateProp", "All of dateProp", "Desc", CalculatedPropertyAttribute.ALL, "dateProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        dte.addCalculatedProperty(MasterEntity.class, "entityProp.collection", "slaveEntityProp", "All of slaveEntityProp", "Desc", CalculatedPropertyAttribute.ALL, "slaveEntityProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        dte.addCalculatedProperty(MasterEntity.class, "entityProp.collection", "bigDecimalProp", "All of bigDecimalProp", "Desc", CalculatedPropertyAttribute.ALL, "bigDecimalProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        dte.addCalculatedProperty(MasterEntity.class, "entityProp.collection", "dateProp", "All of dateProp", "Desc", CalculatedPropertyAttribute.ALL, "dateProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        dte.addCalculatedProperty(MasterEntity.class, "entityProp.collection", "integerProp", "Any of integerProp", "Desc", CalculatedPropertyAttribute.ANY, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        dte.addCalculatedProperty(MasterEntity.class, "entityProp.collection", "moneyProp", "Any of moneyProp", "Desc", CalculatedPropertyAttribute.ANY, "moneyProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         dte.apply();
 
         masterKlass = (Class<? extends AbstractEntity<?>>) dte.getManagedType(MasterEntity.class);
         slaveCollectionType = (Class<? extends AbstractEntity<?>>) PropertyTypeDeterminator.determinePropertyType(masterKlass, "collection");
         evenSlaverCollectionType = (Class<? extends AbstractEntity<?>>) PropertyTypeDeterminator.determinePropertyType(masterKlass, "entityProp.collection");
 
-        iJoin = select(masterKlass).as(alias);
+        iJoin = select(select(masterKlass).model()).as(alias);
         queryProperties = new LinkedHashMap<>();
 
         final Configuration hibConf = new Configuration();
@@ -119,7 +118,7 @@ public class DynamicQueryBuilderSqlTest {
         final Map<Class, Class> hibTypeMap = new HashMap<>();
         hibTypeMap.put(Date.class, DateTimeType.class);
         hibTypeMap.put(Money.class, SimpleMoneyType.class);
-        final List<Class<? extends AbstractEntity<?>>> domainTypes = new ArrayList<Class<? extends AbstractEntity<?>>>();
+        final List<Class<? extends AbstractEntity<?>>> domainTypes = new ArrayList<>();
         domainTypes.add(MasterEntity.class);
         domainTypes.add(SlaveEntity.class);
         domainTypes.add(EvenSlaverEntity.class);
@@ -202,6 +201,7 @@ public class DynamicQueryBuilderSqlTest {
             qp.setAndBefore(null);
             qp.setOrNull(null);
             qp.setNot(null);
+            qp.setOrGroup(null);
         }
     }
 
@@ -209,7 +209,7 @@ public class DynamicQueryBuilderSqlTest {
     public void test_empty_query_composition_for_empty_query_properties() {
         final ICompleted<? extends AbstractEntity<?>> expected = //
         /**/iJoin; //
-        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
 
         assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
         //assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -223,7 +223,7 @@ public class DynamicQueryBuilderSqlTest {
 
         final ICompleted<? extends AbstractEntity<?>> expected = //
         /**/iJoin; //
-        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
 
         assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
         //assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -238,12 +238,24 @@ public class DynamicQueryBuilderSqlTest {
 
         final ICompleted<? extends AbstractEntity<?>> expected = //
         /**/iJoin; //
-        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
 
         assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
         //assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
     }
-
+    
+    @Test
+    public void empty_queryProperties_generate_empty_query_even_with_non_empty_orGroups() {
+        queryProperties.get("dateProp").setOrGroup(1);
+        queryProperties.get("entityProp").setOrGroup(1);
+        queryProperties.get("booleanProp").setOrGroup(2);
+        
+        final ICompleted<? extends AbstractEntity<?>> expected = //
+        /**/iJoin; //
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
+        assertEquals(expected.model(), actual.model());
+    }
+    
     ////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////// 1. Atomic level /////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////
@@ -312,8 +324,8 @@ public class DynamicQueryBuilderSqlTest {
         property.setDateMnemonic(MnemonicEnum.QRT2);
 
         final Date currentDate = new Date();
-        final Date from = DateUtilities.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.BEGINNING, property.getDatePrefix(), property.getDateMnemonic()), //
-        /*         */to = DateUtilities.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.ENDING, property.getDatePrefix(), property.getDateMnemonic());
+        final Date from = DateUtilities.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.BEGINNING, property.getDatePrefix(), property.getDateMnemonic(), dates), //
+        /*         */to = DateUtilities.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.ENDING, property.getDatePrefix(), property.getDateMnemonic(), dates);
 
         final String cbn = property.getConditionBuildingName();
 
@@ -323,7 +335,7 @@ public class DynamicQueryBuilderSqlTest {
         /*    */.condition(cond().prop(cbn).ge().iVal(from).and().prop(cbn).lt().iVal(to).model()) //
         /*  */.model()) //
         /**/.model()); //
-        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
 
         assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
         //assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -343,7 +355,7 @@ public class DynamicQueryBuilderSqlTest {
         property.setAndBefore(true);
 
         final Date currentDate = new Date();
-        final Date to = DateUtilities.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.ENDING, property.getDatePrefix(), property.getDateMnemonic());
+        final Date to = DateUtilities.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.ENDING, property.getDatePrefix(), property.getDateMnemonic(), dates);
 
         final String cbn = property.getConditionBuildingName();
 
@@ -353,7 +365,7 @@ public class DynamicQueryBuilderSqlTest {
         /*    */.condition(cond().prop(cbn).ge().iVal(null).and().prop(cbn).lt().iVal(to).model()) //
         /*  */.model()) //
         /**/.model()); //
-        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
 
         assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
         //assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -373,7 +385,7 @@ public class DynamicQueryBuilderSqlTest {
         property.setAndBefore(false);
 
         final Date currentDate = new Date();
-        final Date from = DateUtilities.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.BEGINNING, property.getDatePrefix(), property.getDateMnemonic()); //
+        final Date from = DateUtilities.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.BEGINNING, property.getDatePrefix(), property.getDateMnemonic(), dates); //
 
         final String cbn = property.getConditionBuildingName();
 
@@ -383,7 +395,7 @@ public class DynamicQueryBuilderSqlTest {
         /*    */.condition(cond().prop(cbn).ge().iVal(from).and().prop(cbn).lt().iVal(null).model()) //
         /*  */.model()) //
         /**/.model()); //
-        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
 
         assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
         //assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -403,7 +415,7 @@ public class DynamicQueryBuilderSqlTest {
         /*    */.condition(cond().prop(cbn).ge().iVal(3).and().prop(cbn).le().iVal(7).model()) //
         /*  */.model()) //
         /**/.model()); //
-        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
 
         assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
         //assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -424,7 +436,7 @@ public class DynamicQueryBuilderSqlTest {
         /*    */.condition(cond().prop(cbn).gt().iVal(3).and().prop(cbn).le().iVal(7).model()) //
         /*  */.model()) //
         /**/.model()); //
-        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
 
         assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
         //assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -445,7 +457,7 @@ public class DynamicQueryBuilderSqlTest {
         /*    */.condition(cond().prop(cbn).ge().iVal(3).and().prop(cbn).lt().iVal(7).model()) //
         /*  */.model()) //
         /**/.model()); //
-        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
 
         assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
         //assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -467,7 +479,7 @@ public class DynamicQueryBuilderSqlTest {
         /*    */.condition(cond().prop(cbn).gt().iVal(3).and().prop(cbn).lt().iVal(7).model()) //
         /*  */.model()) //
         /**/.model()); //
-        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
 
         assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
         //assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -498,7 +510,7 @@ public class DynamicQueryBuilderSqlTest {
         /*    */.condition(cond().prop(cbn).eq().val(false).model()) //
         /*  */.model()) //
         /**/.model()); //
-        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
 
         assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
         //assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -517,7 +529,7 @@ public class DynamicQueryBuilderSqlTest {
         /*    */.condition(cond().prop(cbn).eq().val(true).model()) //
         /*  */.model()) //
         /**/.model()); //
-        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
 
         assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
         //assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -540,7 +552,7 @@ public class DynamicQueryBuilderSqlTest {
         /*    */.condition(cond().prop(cbn).iLike().anyOfValues(new Object[] { "%Some string value%" }).model()) //
         /*  */.model()) //
         /**/.model()); //
-        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()));
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
 
         assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
     }
@@ -561,7 +573,7 @@ public class DynamicQueryBuilderSqlTest {
         /*    */.condition(cond().prop(cbn).iLike().anyOfValues(critValue.replace("*", "%").split(",")).model()) //
         /*  */.model()) //
         /**/.model()); //
-        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()));
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
 
         assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
     }
@@ -581,7 +593,7 @@ public class DynamicQueryBuilderSqlTest {
         /*    */.condition(cond().prop(cbn).iLike().anyOfValues(new String[] {"%Some string value%", "%Some string value", "Some string %value", "%Some string% value"}).model()) //
         /*  */.model()) //
         /**/.model()); //
-        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()));
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
 
         assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
     }
@@ -603,7 +615,7 @@ public class DynamicQueryBuilderSqlTest {
         /*    */.condition(cond().prop(cbn).iLike().anyOfValues((Object[]) DynamicQueryBuilder.prepCritValuesForEntityTypedProp((List<String>) property.getValue())).model()) //
         /*  */.model()) //
         /**/.model()); //
-        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
 
         assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
     }
@@ -627,7 +639,7 @@ public class DynamicQueryBuilderSqlTest {
         /*  */.condition(cond().prop(cbnNoKey).in().model(select(SlaveEntity.class).where().prop("key").in().values("some val 1", "some val 2").model()).model()) //
         /*  */.model()) //
         /**/.model()); //
-        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
 
         assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
     }
@@ -662,7 +674,7 @@ public class DynamicQueryBuilderSqlTest {
         final ICompleted<? extends AbstractEntity<?>> expected = //
         /**/iJoin.where().condition(whereCondition);
         
-        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
 
         assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
     }
@@ -686,7 +698,7 @@ public class DynamicQueryBuilderSqlTest {
         /*  */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn)).isNull() //
         /*  */.model()) //
         /**/.model()); //
-        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
 
         assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
         //assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -706,7 +718,7 @@ public class DynamicQueryBuilderSqlTest {
         /*  */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn)).isNotNull() //
         /*  */.model()) //
         /**/.model()); //
-        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
 
         assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
         //assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -729,7 +741,7 @@ public class DynamicQueryBuilderSqlTest {
         /*    */.condition(cond().prop(cbn).ge().iVal(3).and().prop(cbn).le().iVal(7).model()) //
         /*  */.model()) //
         /**/.model()); //
-        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
 
         assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
         //assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -751,7 +763,7 @@ public class DynamicQueryBuilderSqlTest {
         /*    */.negatedCondition(cond().prop(cbn).ge().iVal(3).and().prop(cbn).le().iVal(7).model()) //
         /*  */.model()) //
         /**/.model()); //
-        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
 
         assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
         //assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -773,7 +785,7 @@ public class DynamicQueryBuilderSqlTest {
         /*    */.condition(cond().prop(cbn).ge().iVal(3).and().prop(cbn).le().iVal(7).model()) //
         /*  */.model()) //
         /**/.model()); //
-        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
 
         assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
         //assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -796,7 +808,7 @@ public class DynamicQueryBuilderSqlTest {
         /*    */.negatedCondition(cond().prop(cbn).ge().iVal(3).and().prop(cbn).le().iVal(7).model()) //
         /*  */.model()) //
         /**/.model()); //
-        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
 
         assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
         //assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -827,12 +839,87 @@ public class DynamicQueryBuilderSqlTest {
         /*  */.model()).and() //
         /*  */.condition(cond().prop(getPropertyNameWithoutKeyPart(cbn3)).isNotNull().model()) // dateProp
         /**/.model()); //
-        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
 
         assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
         //assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
     }
-
+    
+    @Test
+    public void query_is_composed_from_a_sequence_of_nonOrGrouped_conditions_followed_by_orGroup_conditions_with_increasing_group_number_and_wrapped_by_separate_EQL_condition_construct() {
+        // Properties sequence is the following:
+        //
+        // integerProp
+        // doubleProp
+        // bigDecimalProp
+        // moneyProp
+        // dateProp
+        // booleanProp
+        // stringProp
+        // entityProp
+        // ...
+        // entityProp.booleanProp
+        // ...
+        
+        // with OR groups
+        queryProperties.get("bigDecimalProp").setValue(3);
+        queryProperties.get("bigDecimalProp").setValue2(7);
+        queryProperties.get("bigDecimalProp").setOrGroup(1);
+        
+        queryProperties.get("integerProp").setOrNull(true);
+        queryProperties.get("integerProp").setOrGroup(9);
+        
+        queryProperties.get("dateProp").setOrNull(true);
+        queryProperties.get("dateProp").setNot(true);
+        queryProperties.get("dateProp").setOrGroup(1);
+        
+        // with invalid OR groups
+        queryProperties.get("moneyProp").setOrNull(true);
+        queryProperties.get("moneyProp").setOrGroup(0);
+        
+        queryProperties.get("entityProp.booleanProp").setOrNull(true);
+        queryProperties.get("entityProp.booleanProp").setOrGroup(10);
+        
+        // without OR groups
+        queryProperties.get("stringProp").setOrNull(true);
+        
+        queryProperties.get("entityProp").setOrNull(true);
+        
+        final String moneyProp = queryProperties.get("moneyProp").getConditionBuildingName();
+        final String stringProp = queryProperties.get("stringProp").getConditionBuildingName();
+        final String entityProp = queryProperties.get("entityProp").getConditionBuildingName();
+        final String entityProp_booleanProp = queryProperties.get("entityProp.booleanProp").getConditionBuildingName();
+        final String bigDecimalProp = queryProperties.get("bigDecimalProp").getConditionBuildingName();
+        final String dateProp = queryProperties.get("dateProp").getConditionBuildingName();
+        final String integerProp = queryProperties.get("integerProp").getConditionBuildingName();
+        
+        final ICompleted<? extends AbstractEntity<?>> expected =
+        /**/iJoin.where().condition(cond()
+        /*  */.condition(cond().prop(getPropertyNameWithoutKeyPart(moneyProp)).isNull().model())
+        /*  */.and()
+        /*  */.condition(cond().prop(getPropertyNameWithoutKeyPart(stringProp)).isNull().model())
+        /*  */.and()
+        /*  */.condition(cond().prop(getPropertyNameWithoutKeyPart(entityProp)).isNull().model())
+        /*  */.and()
+        /*  */.condition(cond().prop(getPropertyNameWithoutKeyPart(entityProp_booleanProp)).isNull().model())
+        /*  */.and()
+        /*  */.condition(cond() // Group 1
+        /*    */.condition(cond().prop(getPropertyNameWithoutKeyPart(bigDecimalProp)).isNotNull().and()
+        /*      */.condition(cond().prop(bigDecimalProp).ge().iVal(3).and().prop(bigDecimalProp).le().iVal(7).model())
+        /*    */.model())
+        /*    */.or()
+        /*    */.condition(cond().prop(getPropertyNameWithoutKeyPart(dateProp)).isNotNull().model())
+        /*  */.model())
+        /*  */.and()
+        /*  */.condition(cond() // Group 9
+        /*    */.condition(cond().prop(getPropertyNameWithoutKeyPart(integerProp)).isNull().model())
+        /*  */.model())
+        /**/.model());
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
+        
+        assertEquals(expected.model(), actual.model());
+    }
+    
     ////////////////////////////////// 3.2. Collectional ///////////////////////////////////
     @Test
     public void test_conditions_query_composition_with_a_couple_of_collectional_conditions_that_are_irrelevant_without_ALL_or_ANY_condition() {
@@ -844,7 +931,7 @@ public class DynamicQueryBuilderSqlTest {
 
         final ICompleted<? extends AbstractEntity<?>> expected = //
         /**/iJoin; //
-        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
 
         assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
         //assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -877,7 +964,7 @@ public class DynamicQueryBuilderSqlTest {
         /*    */.model()) // ANY block ends
         /*  */.model()) // collection ends
         /**/.model()); //
-        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
 
         assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
         //assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -916,7 +1003,7 @@ public class DynamicQueryBuilderSqlTest {
         /*    */.model()) // ANY block ends
         /*  */.model()) // collection ends
         /**/.model()); //
-        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
 
         assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
         //assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -968,7 +1055,7 @@ public class DynamicQueryBuilderSqlTest {
         /*    */.model()) // ALL block ends
         /*  */.model()) // collection ends
         /**/.model()); //
-        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
 
         assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
         //assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -1029,7 +1116,7 @@ public class DynamicQueryBuilderSqlTest {
         /*    */.model()) // ALL block ends
         /*  */.model()) // collection ends
         /**/.model()); //
-        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
 
         assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
         //assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -1111,7 +1198,7 @@ public class DynamicQueryBuilderSqlTest {
                 /*    */.model()) // ALL block ends
                 /*  */.model()) // collection ends
         /**/.model()); //
-        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
 
         assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
         //assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -1276,7 +1363,7 @@ public class DynamicQueryBuilderSqlTest {
                         /*    */.model()) // ALL block ends
                         /*  */.model()) // collection ends
                 /**/.model()); //
-        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<QueryProperty>(queryProperties.values()));
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(masterKlass, new ArrayList<>(queryProperties.values()), dates);
 
         assertEquals("Incorrect query model has been built.", expected.model(), actual.model());
         //assertEquals("Incorrect query parameter values has been built.", expected.model().getFinalModelResult(mappingExtractor).getParamValues(), actual.model().getFinalModelResult(mappingExtractor).getParamValues());
@@ -1331,7 +1418,7 @@ public class DynamicQueryBuilderSqlTest {
         property.setValue2(7);
 
         final ICompleted<? extends AbstractEntity<?>> expected = //
-        /**/select(TgBogie.class).as(alias).where().condition(cond() //
+        /**/select(select(TgBogie.class).model()).as(alias).where().condition(cond() //
         /*  */.condition(cond().prop(alias).isNotNull().and() //
         /*    */.condition(cond().prop(alias + ".key").iLike().anyOfValues(new Object[] { "some val 1%", "some val 2%" }).model())//
         /*  */.model()).and()//
@@ -1364,7 +1451,7 @@ public class DynamicQueryBuilderSqlTest {
         /*	*/.model())//
         /*    */.model())//
         /**/.model()); //
-        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(TgBogie.class, new ArrayList<QueryProperty>(unionProps.values()));
+        final ICompleted<? extends AbstractEntity<?>> actual = createQuery(TgBogie.class, new ArrayList<>(unionProps.values()), dates);
         assertEquals("Incorrect query model for union entities has been built.", expected.model(), actual.model());
     }
 }

@@ -26,6 +26,7 @@ import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntityForIncludedPropertiesLogic;
 import ua.com.fielden.platform.domaintree.testing.MasterEntityWithUnionForIncludedPropertiesLogic;
 import ua.com.fielden.platform.domaintree.testing.SlaveEntity;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel.GroupingPeriods;
 
 /**
@@ -49,17 +50,17 @@ public class LifecycleDomainTreeRepresentationTest extends AbstractAnalysisDomai
     }
 
     public static Object createDtm_for_LifecycleDomainTreeRepresentationTest() {
-        return new LifecycleDomainTreeRepresentation(serialiser(), createRootTypes_for_LifecycleDomainTreeRepresentationTest());
+        return new LifecycleDomainTreeRepresentation(factory(), createRootTypes_for_LifecycleDomainTreeRepresentationTest());
     }
 
     public static Object createIrrelevantDtm_for_LifecycleDomainTreeRepresentationTest() {
-        final CentreDomainTreeManagerAndEnhancer cdtmae = new CentreDomainTreeManagerAndEnhancer(serialiser(), createRootTypes_for_LifecycleDomainTreeRepresentationTest());
+        final CentreDomainTreeManagerAndEnhancer cdtmae = new CentreDomainTreeManagerAndEnhancer(factory(), createRootTypes_for_LifecycleDomainTreeRepresentationTest());
         cdtmae.provideLifecycleAnalysesDatePeriodProperties(createRootTypes_for_LifecycleDomainTreeRepresentationTest());
         return cdtmae;
     }
 
     protected static Set<Class<?>> createRootTypes_for_LifecycleDomainTreeRepresentationTest() {
-        final Set<Class<?>> rootTypes = new HashSet<Class<?>>(createRootTypes_for_AbstractAnalysisDomainTreeRepresentationTest());
+        final Set<Class<?>> rootTypes = new HashSet<>(createRootTypes_for_AbstractAnalysisDomainTreeRepresentationTest());
         return rootTypes;
     }
 
@@ -131,7 +132,7 @@ public class LifecycleDomainTreeRepresentationTest extends AbstractAnalysisDomai
     @Test
     public void test_that_Category_properties_are_NOT_disabled_for_second_tick() {
         final LifecycleDomainTreeRepresentation repr = (LifecycleDomainTreeRepresentation) dtm();
-        repr.parentCentreDomainTreeManager().getEnhancer().addCalculatedProperty(MasterEntity.class, "", LifecycleDomainTreeRepresentation.CATEGORY_PROPERTY_MARKER, "Category 1", "Category 1 desc", CalculatedPropertyAttribute.NO_ATTR, "SELF");
+        repr.parentCentreDomainTreeManager().getEnhancer().addCalculatedProperty(MasterEntity.class, "", LifecycleDomainTreeRepresentation.CATEGORY_PROPERTY_MARKER, "Category 1", "Category 1 desc", CalculatedPropertyAttribute.NO_ATTR, "SELF", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         repr.parentCentreDomainTreeManager().getEnhancer().apply();
 
         assertFalse("Category property should be enabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "category1"));

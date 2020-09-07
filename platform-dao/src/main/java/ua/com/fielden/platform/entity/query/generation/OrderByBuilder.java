@@ -26,10 +26,10 @@ public class OrderByBuilder extends AbstractTokensBuilder {
     public Pair<TokenCategory, Object> getResult() {
         final QueryTokens orderDirection = (QueryTokens) secondValue();
         if (firstCat() == YIELD) {
-            return new Pair<TokenCategory, Object>(TokenCategory.QRY_YIELD, new OrderBy((String) firstValue(), QueryTokens.ASC.equals(orderDirection) ? false : true));
+            return new Pair<>(TokenCategory.QRY_YIELD, new OrderBy((String) firstValue(), QueryTokens.ASC.equals(orderDirection) ? false : true));
         } else {
             final ISingleOperand operand = getModelForSingleOperand(firstCat(), firstValue());
-            return new Pair<TokenCategory, Object>(TokenCategory.QRY_YIELD, new OrderBy(operand, QueryTokens.ASC.equals(orderDirection) ? false : true));
+            return new Pair<>(TokenCategory.QRY_YIELD, new OrderBy(operand, QueryTokens.ASC.equals(orderDirection) ? false : true));
         }
     }
 }

@@ -21,7 +21,7 @@ import ua.com.fielden.platform.entity.query.generation.elements.QueryCategory;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
-import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
 
 public class EntQueryGenerator {
@@ -29,24 +29,24 @@ public class EntQueryGenerator {
 
     private final DbVersion dbVersion;
     private final DomainMetadataAnalyser domainMetadataAnalyser;
-    private final IUniversalConstants universalConstants;
+    private final IDates dates;
     private final IFilter filter;
     private final String username;
 
-    public EntQueryGenerator(final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username, final IUniversalConstants universalConstants) {
+    public EntQueryGenerator(final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username, final IDates dates) {
         dbVersion = domainMetadataAnalyser.getDbVersion();
         this.domainMetadataAnalyser = domainMetadataAnalyser;
         this.filter = filter;
         this.username = username;
-        this.universalConstants = universalConstants;
+        this.dates = dates;
     }
 
     public <T extends AbstractEntity<?>, Q extends QueryModel<T>> EntQuery generateEntQueryAsResultQuery(final Q query, final OrderingModel orderModel, final Class<T> resultType, final IRetrievalModel<T> fetchModel, final Map<String, Object> paramValues) {
         final Map<String, Object> localParamValues = new HashMap<>();
         localParamValues.putAll(paramValues);
 
-        if (universalConstants.now() != null) {
-            localParamValues.put(NOW, universalConstants.now().toDate());
+        if (dates.now() != null) {
+            localParamValues.put(NOW, dates.now().toDate());
         }
 
         return generateEntQuery(query, orderModel, resultType, fetchModel, localParamValues, QueryCategory.RESULT_QUERY, filter, username);
@@ -171,5 +171,9 @@ public class EntQueryGenerator {
 
     public DomainMetadataAnalyser getDomainMetadataAnalyser() {
         return domainMetadataAnalyser;
+    }
+    
+    public IDates dates() {
+        return dates;
     }
 }

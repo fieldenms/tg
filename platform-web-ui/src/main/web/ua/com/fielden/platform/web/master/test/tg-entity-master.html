@@ -6,15 +6,10 @@
 	<title>entity-master basic tests</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 	
-	<script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
-	<script src="/resources/polymer/web-component-tester/browser.js"></script>
-	<script src="/resources/polymer/test-fixture/test-fixture-mocha.js"></script>
-	
-	<link rel="import" href="/resources/polymer/test-fixture/test-fixture.html">
-  
-    <link rel="import" href="/app/tg-reflector.html">
-    <link rel="import" href="/resources/reflection/tg-date-utils.html">
-    <link rel="import" href="/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties"> <!-- Test_TgPersistentEntityWithProperties -->
+	<script src="/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
+    <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
+    <script src="/resources/filesaver/FileSaver.min.js"></script>
+    <script src="/resources/polymer/wct-browser-legacy/browser.js"></script>
 </head>
 
 <body>
@@ -30,8 +25,13 @@
     	</template>
 	</test-fixture>
 
-	<script>
-        var _editProperties = function (master, datePropEditingValue, keyPropEditingValue) {
+	<script type="module">
+
+		import '/app/tg-reflector.js';
+		import { _millis } from '/resources/reflection/tg-date-utils.js';
+		import '/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties';
+
+        const _editProperties = function (master, datePropEditingValue, keyPropEditingValue) {
             master.$.editor_4_requiredValidatedProp._editingValue = '30';
             master.$.editor_4_requiredValidatedProp.commit();
             master.$.editor_4_key._editingValue = keyPropEditingValue ? keyPropEditingValue : 'key_to_pass_validation_before_save_' + (new Date()).getTime();
@@ -41,7 +41,7 @@
         };
 	
 		suite('retrieval', function() {
-		    var master, reflector;
+		    let master, reflector;
 		
 		    setup(function() {
 				master = fixture('MasterFixture');
@@ -122,11 +122,11 @@
 		    });
 		    
 		    test('works for new persisted entity', function(done) {
-		    	master.entityId = '7';
+		    	master.entityId = '5';
 		    	
 	            master.postRetrieved = function(entity, bindingEntity, customObject) {
 	                assert.strictEqual(entity.type().fullClassName(), 'ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties', 'The type of entity response is not correct.');
-	                assert.strictEqual(entity.get('id'), 7, 'The id of entity response is not correct.');
+	                assert.strictEqual(entity.get('id'), 5, 'The id of entity response is not correct.');
 	                assert.strictEqual(entity.version, 0, 'The version of entity response is not correct.');
 
 	                // properties:
@@ -162,7 +162,7 @@
 		});
 		
 		suite('validation', function() {
-		    var master, reflector;
+		    let master, reflector;
 		
 		    setup(function() {
 				master = fixture('MasterFixture');
@@ -170,7 +170,7 @@
 		    });
 		
 		    test('works for property', function(done) {
-		    	master.entityId = '7';
+		    	master.entityId = '5';
 		    	
 	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
 	                // value ok?
@@ -182,7 +182,7 @@
 
 	                // value validationresult?
 	                assert.ok(validatedEntity.prop('integerProp').validationResult(), 'Instance meta-prop should have non-empty (unsuccessful) validation result.');
-	                assert.strictEqual(validatedEntity.prop('integerProp').validationResult().message, 'Value \'10000\' is greater than the maximum limit of 9999.', 'Property has incorrect validation result message.');
+	                assert.strictEqual(validatedEntity.prop('integerProp').validationResult().message, 'Value should be less or equal to 9999.', 'Property has incorrect validation result message.');
 
 	                // binding value ok?
 	                assert.ok(bindingEntity.get('integerProp'), 'Binding property should be initialised.');
@@ -216,7 +216,7 @@
 		    });
 		    
 		    test('works for integer property', function (done) {
-		    	master.entityId = '7';
+		    	master.entityId = '5';
 		    	
 	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
 	                // value ok?
@@ -261,7 +261,7 @@
 		    });
 		    
 		    test('works for bigDecimal property', function (done) {
-		    	master.entityId = '11';
+		    	master.entityId = '9';
 		    	
 	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
 	                // value ok?
@@ -306,7 +306,7 @@
 		    });
 		    
 		    test('works for boolean property', function (done) {
-		    	master.entityId = '13';
+		    	master.entityId = '11';
 		    	
 	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
 	                // value ok?
@@ -349,7 +349,7 @@
 		    });
 		    
 		    test('works for date property', function (done) {
-		    	master.entityId = '14';
+		    	master.entityId = '12';
 		    	
 	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
 	                // value ok?
@@ -394,7 +394,7 @@
 		    });
 		    
 		    test('works for entity property', function (done) {
-		    	master.entityId = '8';
+		    	master.entityId = '6';
 		    	
 	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
 	                // value ok?
@@ -442,7 +442,7 @@
 		    });
 		    
 		    test('works for money property', function (done) {
-		    	master.entityId = '10';
+		    	master.entityId = '8';
 		    	// TODO at this stage whatever currency is used for setting into binding entity (to be saved), retrieval from database 
 		    	//      will return money instances with the currency, that is currently used in your OS.
 		    	// Please, adjust the currency to be the same as in your OS to make this test happy.
@@ -499,7 +499,7 @@
 		    });
 		    
 		    test('works for string property', function (done) {
-		    	master.entityId = '12';
+		    	master.entityId = '10';
 		    	
 	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
 	                // value ok?
@@ -544,8 +544,8 @@
 		    });
 		    
 		    test('works for uppercased property editor', function (done) {
-		    	master.entityId = '12';
-		        var edProperty = master.$.editor_4_stringProp;
+		    	master.entityId = '10';
+		        const edProperty = master.$.editor_4_stringProp;
 		    	
 	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
 	                // value ok?
@@ -622,7 +622,7 @@
 		    });
 		    
 		    test('works for any property into missing value', function (done) {
-		    	master.entityId = '14';
+		    	master.entityId = '12';
 		    	
 	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
 	                // value ok?
@@ -665,9 +665,9 @@
 		    });
 		    
 		    test('works for any property simultaneously', function (done) {
-		    	master.entityId = '12';
+		    	master.entityId = '10';
 		    	
-	            var postValidatedCount = 0;
+	            let postValidatedCount = 0;
 
 	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
 	                postValidatedCount = postValidatedCount + 1;
@@ -759,7 +759,7 @@
 		});
 		
 		suite('saving', function() {
-		    var master, reflector;
+		    let master, reflector;
 		
 		    setup(function() {
 				master = fixture('MasterFixture');
@@ -818,7 +818,7 @@
                 master.postValidated = function(validatedEntity, bindingEntity, customObject) {
                     // validation process is legal -- it is not discarded, but saving is chained on top of last validation promise
                     // see issue https://github.com/fieldenms/tg/issues/479
-                    const saveButton = master.$$('tg-action[role="save"]');
+                    const saveButton = master.shadowRoot.querySelector('tg-action[role="save"]');
                     saveButton._asyncRun();
                 };
                 
@@ -829,7 +829,7 @@
                     assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccured(), 'Entity\'s exceptionOccured should exist.');
                     assert.strictEqual(potentiallySavedOrNewEntity.exceptionOccured().message, '[1/2/3 6:19] is not acceptable.', 'Entity\'s exceptionOccured should exist.');
                     
-                    var arrivedValue = null;
+                    const arrivedValue = null;
                     
                     // value ok?
                     assert.notOk(potentiallySavedOrNewEntity.get('dateProp'), 'Property value should be initialised.');
@@ -849,7 +849,7 @@
                     assert.strictEqual(master.$.editor_4_dateProp._editingValue, '01/02/2003 06:19', 'Editing value should correspond to invalid value [01/02/2003 06:19].');
                     // binding value ok?
                     assert.ok(bindingEntity.get('dateProp'), 'Binding property should be initialised.');
-                    var invalidDateValue = _millis('01/02/2003 06:19:00.000');
+                    const invalidDateValue = _millis('01/02/2003 06:19:00.000');
                     assert.strictEqual(bindingEntity.get('dateProp'), invalidDateValue, 'Binding property should contain the invalid value that represents [1/2/3 6:19] date.');
                     
                     done();
@@ -866,7 +866,7 @@
                 master.postValidated = function(validatedEntity, bindingEntity, customObject) {
                     // validation process is legal -- it is not discarded, but saving is chained on top of last validation promise
                     // see issue https://github.com/fieldenms/tg/issues/479
-                    const saveButton = master.$$('tg-action[role="save"]');
+                    const saveButton = master.shadowRoot.querySelector('tg-action[role="save"]');
                     saveButton._asyncRun();
                 };
                 
@@ -877,7 +877,7 @@
                     assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccured(), 'Entity\'s exceptionOccured should exist.');
                     assert.strictEqual(potentiallySavedOrNewEntity.exceptionOccured().message, 'Tg Persistent Entity With Properties [DEMO00] already exists.', 'Entity\'s exceptionOccured should exist.');
                     
-                    var arrivedValue = _millis('01/02/2003 06:21:00.000');
+                    const arrivedValue = _millis('01/02/2003 06:21:00.000');
                     
                     // value ok?
                     assert.ok(potentiallySavedOrNewEntity.get('dateProp'), 'Property value should be initialised.');
@@ -913,7 +913,7 @@
                 master.postValidated = function(validatedEntity, bindingEntity, customObject) {
                     // validation process is legal -- it is not discarded, but saving is chained on top of last validation promise
                     // see issue https://github.com/fieldenms/tg/issues/479
-                    const saveButton = master.$$('tg-action[role="save"]');
+                    const saveButton = master.shadowRoot.querySelector('tg-action[role="save"]');
                     saveButton._asyncRun();
                 };
                 
@@ -924,7 +924,7 @@
                     assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccured(), 'Entity\'s exceptionOccured should exist.');
                     assert.strictEqual(potentiallySavedOrNewEntity.exceptionOccured().message, 'Creation failed: [1/2/3 6:20] date is not permitted.', 'Entity\'s exceptionOccured should exist.');
                     
-                    var arrivedValue = _millis('01/02/2003 06:20:00.000');
+                    const arrivedValue = _millis('01/02/2003 06:20:00.000');
                     
                     // value ok?
                     assert.ok(potentiallySavedOrNewEntity.get('dateProp'), 'Property value should be initialised.');
@@ -983,7 +983,7 @@
                 };
                 
                 master.postSaved = function (potentiallySavedOrNewEntity, bindingEntity) {
-                    assert.isNotNull(potentiallySavedOrNewEntity.get('id'), 'Entity id should be not null.');
+                    assert.isNull(potentiallySavedOrNewEntity.get('id'), 'Entity id should be null for new entity with failed save attempt.');
                     assert.strictEqual(potentiallySavedOrNewEntity.version, 0, 'Entity version should be the same.');
                     
                     assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccured(), 'Entity\'s exceptionOccured should exist.');
@@ -1059,7 +1059,7 @@
 		    });
 		    
 		    test('works for existing entity after validation', function (done) {
-	            var postSavedFirst = true;
+	            let postSavedFirst = true;
 
 	            master._postSaverLoadingFinished = function() {
 	                if (postSavedFirst === true) {
@@ -1149,11 +1149,11 @@
 		    });
 		    
             test('works for existing entity with exception thrown in companion save method', function (done) {
-                var firstValidation = true;
+                let firstValidation = true;
                 master.postValidated = function (validatedEntity, bindingEntity, customObject) {
                     // validation process is legal -- it is not discarded, but saving is chained on top of last validation promise
                     // see issue https://github.com/fieldenms/tg/issues/479
-                    const saveButton = master.$$('tg-action[role="save"]');
+                    const saveButton = master.shadowRoot.querySelector('tg-action[role="save"]');
                     if (firstValidation) {
                         saveButton._asyncRun();
                         firstValidation = false;
@@ -1179,7 +1179,7 @@
                     assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccured(), 'Entity\'s exceptionOccured should exist.');
                     assert.strictEqual(potentiallySavedOrNewEntity.exceptionOccured().message, 'Modification failed: [1/2/3 6:22] is not acceptable for persisted entity.', 'Entity\'s exceptionOccured should exist.');
                     
-                    var arrivedValue = _millis('01/02/2003 00:00:00.000');
+                    const arrivedValue = _millis('01/02/2003 00:00:00.000');
                     
                     // value ok?
                     assert.ok(potentiallySavedOrNewEntity.get('dateProp'), 'Property value should be initialised.');
@@ -1199,7 +1199,7 @@
                     assert.strictEqual(master.$.editor_4_dateProp._editingValue, '01/02/2003 06:22', 'Editing value should correspond to invalid value [01/02/2003 06:22].');
                     // binding value ok?
                     assert.ok(bindingEntity.get('dateProp'), 'Binding property should be initialised.');
-                    var invalidDateValue = _millis('01/02/2003 06:22:00.000');
+                    const invalidDateValue = _millis('01/02/2003 06:22:00.000');
                     assert.strictEqual(bindingEntity.get('dateProp'), invalidDateValue, 'Binding property should contain the invalid value that represents [1/2/3 6:22] date.');
                     
                     done();
@@ -1244,7 +1244,7 @@
                     assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccured(), 'Entity\'s exceptionOccured should exist.');
                     assert.strictEqual(potentiallySavedOrNewEntity.exceptionOccured().message, 'There are no changes to save.', 'Entity\'s exceptionOccured should exist.');
                     
-                    var arrivedValue = _millis('01/02/2003 00:00:00.000');
+                    const arrivedValue = _millis('01/02/2003 00:00:00.000');
                     
                     // value ok?
                     assert.ok(potentiallySavedOrNewEntity.get('dateProp'), 'Property value should be initialised.');
@@ -1260,7 +1260,7 @@
                     assert.strictEqual(master.$.editor_4_dateProp._editingValue, '01/02/2003 00:00', 'Editing value should correspond to valid value [01/02/2003 00:00].');
                     // binding value ok?
                     assert.ok(bindingEntity.get('dateProp'), 'Binding property should be initialised.');
-                    var validDateValue = _millis('01/02/2003 00:00:00.000');
+                    const validDateValue = _millis('01/02/2003 00:00:00.000');
                     assert.strictEqual(bindingEntity.get('dateProp'), validDateValue, 'Binding property should contain valid value that represents [1/2/3 00:00] date.');
                     
                     done();
@@ -1324,6 +1324,26 @@
                         }
                     };
                     master.processShortcut(event, ['tg-action']);
+                });
+            });
+            
+            test('setEditorValue4Property method works', function (done) {
+                master.postValidated = function (validatedEntity, bindingEntity, customObject) {
+                    done();
+                };
+                master.retrieve().then(function () {
+                    const funcEntity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties');
+                    funcEntity.stringProp = 'TEST';
+                    master.setEditorValue4Property('key', funcEntity, 'stringProp');
+                });
+            });
+            
+            test('setEditorValue4PropertyFromConcreteValue method works', function (done) {
+                master.postValidated = function (validatedEntity, bindingEntity, customObject) {
+                    done();
+                };
+                master.retrieve().then(function () {
+                    master.setEditorValue4PropertyFromConcreteValue('key', 'TEST');
                 });
             });
             

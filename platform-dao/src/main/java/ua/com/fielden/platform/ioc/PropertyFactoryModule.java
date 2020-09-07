@@ -17,7 +17,7 @@ import ua.com.fielden.platform.entity.factory.DefaultCompanionObjectFinderImpl;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
-import ua.com.fielden.platform.entity.property.DaoMetaPropertyFactory;
+import ua.com.fielden.platform.entity.property.DefaultMetaPropertyFactory;
 import ua.com.fielden.platform.entity.query.IEntityAggregates;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
@@ -51,7 +51,7 @@ public class PropertyFactoryModule extends TransactionalModule {
         // bind provider for default entity controller
         bind(ICompanionObjectFinder.class).to(DefaultCompanionObjectFinderImpl.class);
         // bind property factory
-        bind(IMetaPropertyFactory.class).to(DaoMetaPropertyFactory.class).in(Scopes.SINGLETON);
+        bind(IMetaPropertyFactory.class).to(DefaultMetaPropertyFactory.class).in(Scopes.SINGLETON);
         // bind entity aggregates DAO
         bind(IEntityAggregatesOperations.class).to(EntityAggregatesDao.class);
         bind(IEntityAggregates.class).to(CommonEntityAggregatesDao.class);

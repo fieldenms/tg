@@ -145,7 +145,7 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
     public Set<PropertyMetadata> getCompositeTypeSubprops() {
         final Set<PropertyMetadata> result = new HashSet<PropertyMetadata>();
         if (COMPONENT_HEADER == category || SYNTHETIC_COMPONENT_HEADER == category || getHibTypeAsCompositeUserType() != null) {
-            logger.debug("=== (COMPONENT_HEADER == category) = " + (COMPONENT_HEADER == category) + "=== (SYNTHETIC_COMPONENT_HEADER == category) = " + (SYNTHETIC_COMPONENT_HEADER == category) + " ---- (getHibTypeAsCompositeUserType() != null) = " + (getHibTypeAsCompositeUserType() != null));
+            // logger.debug("=== (COMPONENT_HEADER == category) = " + (COMPONENT_HEADER == category) + "=== (SYNTHETIC_COMPONENT_HEADER == category) = " + (SYNTHETIC_COMPONENT_HEADER == category) + " ---- (getHibTypeAsCompositeUserType() != null) = " + (getHibTypeAsCompositeUserType() != null));
             final List<String> subprops = Arrays.asList(((ICompositeUserTypeInstantiate) hibType).getPropertyNames());
             final List<Object> subpropsTypes = Arrays.asList(((ICompositeUserTypeInstantiate) hibType).getPropertyTypes());
             final PropertyCategory detailsPropCategory = COMPONENT_HEADER == category ?  COMPONENT_DETAILS : SYNTHETIC_COMPONENT_DETAILS;

@@ -318,7 +318,7 @@ public class UserTestCase extends AbstractDaoTestCase {
         
         assertFalse(coUser.assignPasswordResetUuid("NON-EXISTING-USER").isPresent());
     }
-    
+
     @Test
     public void password_reset_for_inactive_user_fails() {
         final UniversalConstantsForTesting consts = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
@@ -329,7 +329,6 @@ public class UserTestCase extends AbstractDaoTestCase {
         assertFalse(coUser.assignPasswordResetUuid(inactiveUser.getKey()).isPresent());
     }
 
-    
     @Test 
     public void unit_test_user_cannot_be_persisted() {
         final IUser coUser = co$(User.class);
@@ -523,10 +522,11 @@ public class UserTestCase extends AbstractDaoTestCase {
         coUser.lockoutUser("USER3");
         final User inactiveUser = coUser.findUser("USER3");
         assertFalse(inactiveUser.isActive());
+        assertFalse(coUserSecret.findByIdOptional(inactiveUser.getId()).isPresent());
         
         save(inactiveUser.setActive(true));
         
-        final Optional<UserSecret> maybeSecret = coUserSecret.findByIdOptional(inactiveUser.getId(), coUserSecret.getFetchProvider().fetchModel());
+        final Optional<UserSecret> maybeSecret = coUserSecret.findByIdOptional(inactiveUser.getId());
         assertTrue(maybeSecret.isPresent());
         assertNotNull(maybeSecret.get().getResetUuid());
     }
@@ -538,6 +538,33 @@ public class UserTestCase extends AbstractDaoTestCase {
         coUser.lockoutUser(username);
     }
 
+    @Test
+    public void deactivating_active_users_removes_their_secretes() {
+        final User user = coUser.findUser("USER3");
+        assertTrue(user.isActive());
+        assertTrue(coUserSecret.findByIdOptional(user.getId()).isPresent());
+        
+        save(user.setActive(false));
+        
+        assertFalse(coUserSecret.findByIdOptional(user.getId()).isPresent());
+    }
+
+    @Test
+    public void deactivating_user_with_active_dependencies_fails() {
+        final User user3 = coUser.findUser("USER3");
+        assertEquals(Integer.valueOf(0), user3.getRefCount());
+        
+        coUser.save(coUser.findUser("USER5").setBasedOnUser(user3).setActive(true));
+        final User user3_1 = coUser.findUser("USER3");
+        assertEquals(Integer.valueOf(1), user3_1.getRefCount());
+        try {
+           coUser.save(user3_1.setActive(false));
+           fail("Saving invalid user should have failed.");
+        } catch (final Exception ex) {
+            
+        }
+    }
+    
     @Override
     protected void populateDomain() {
         super.populateDomain();

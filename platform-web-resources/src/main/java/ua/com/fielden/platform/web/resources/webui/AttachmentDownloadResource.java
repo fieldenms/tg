@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static com.google.common.net.UrlEscapers.urlPathSegmentEscaper;
 import static java.lang.String.format;
 import static ua.com.fielden.platform.attachment.Attachment.pn_SHA1;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
@@ -65,9 +66,9 @@ public class AttachmentDownloadResource extends ServerResource {
                     final MediaType fileType = MediaType.valueOf(attachment.getMime());    
                     final Disposition disposition = new Disposition();
                     disposition.setType(Disposition.TYPE_ATTACHMENT);
-                    disposition.setFilename(attachment.getOrigFileName());
+                    disposition.setFilename(urlPathSegmentEscaper().escape(attachment.getOrigFileName()));
                     disposition.setModificationDate(attachment.getLastModified());
-    
+
                     final Representation repFile = new FileRepresentation(file, fileType);
                     repFile.setDisposition(disposition);
                     return repFile;

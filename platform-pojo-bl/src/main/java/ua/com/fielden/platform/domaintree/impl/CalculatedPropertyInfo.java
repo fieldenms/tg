@@ -11,6 +11,8 @@ public class CalculatedPropertyInfo {
     private final String originationProperty;
     private final String desc;
     private final String customPropertyName;
+    private final transient Integer precision;
+    private final transient Integer scale;
 
     public CalculatedPropertyInfo() {
         root = null;
@@ -21,9 +23,21 @@ public class CalculatedPropertyInfo {
         originationProperty = null;
         desc = null;
         customPropertyName = null;
+        precision = null;
+        scale = null;
     }
 
-    public CalculatedPropertyInfo(final Class<?> root, final String contextPath, final String customPropertyName, final String contextualExpression, final String title, final CalculatedPropertyAttribute attribute, final String originationProperty, final String desc) {
+    public CalculatedPropertyInfo(
+            final Class<?> root,
+            final String contextPath,
+            final String customPropertyName,
+            final String contextualExpression,
+            final String title,
+            final CalculatedPropertyAttribute attribute,
+            final String originationProperty,
+            final String desc,
+            final Integer precision,
+            final Integer scale) {
         this.root = root;
         this.contextPath = contextPath;
         this.customPropertyName = customPropertyName;
@@ -32,6 +46,8 @@ public class CalculatedPropertyInfo {
         this.attribute = attribute;
         this.originationProperty = originationProperty;
         this.desc = desc;
+        this.precision = precision;
+        this.scale = scale;
     }
 
     public Class<?> getRoot() {
@@ -64,6 +80,14 @@ public class CalculatedPropertyInfo {
 
     public String getDesc() {
         return desc;
+    }
+
+    public Integer getPrecision() {
+        return precision;
+    }
+
+    public Integer getScale() {
+        return scale;
     }
 
     @Override
@@ -147,40 +171,5 @@ public class CalculatedPropertyInfo {
         }
         return true;
     }
-
-    //    /**
-    //     * A specific Kryo serialiser for {@link CalculatedPropertyInfo}.
-    //     *
-    //     * @author TG Team
-    //     *
-    //     */
-    //    public static class CalculatedPropertyInfoSerialiser extends AbstractDomainTreeSerialiser<CalculatedPropertyInfo> {
-    //	public CalculatedPropertyInfoSerialiser(final TgKryo kryo) {
-    //	    super(kryo);
-    //	}
-    //
-    //	@Override
-    //	public CalculatedPropertyInfo read(final ByteBuffer buffer) {
-    //	    final Class<?> root = readValue(buffer, Class.class);
-    //	    final String contextPath = readValue(buffer, String.class);
-    //	    final String contextualExpression = readValue(buffer, String.class);
-    //	    final String title = readValue(buffer, String.class);
-    //	    final CalculatedPropertyAttribute attribute = readValue(buffer, CalculatedPropertyAttribute.class);
-    //	    final String originationProperty = readValue(buffer, String.class);
-    //	    final String desc = readValue(buffer, String.class);
-    //	    return new CalculatedPropertyInfo(root, contextPath, contextualExpression, title, attribute, originationProperty, desc);
-    //	}
-    //
-    //	@Override
-    //	public void write(final ByteBuffer buffer, final CalculatedPropertyInfo calculatedPropertyInfo) {
-    //	    writeValue(buffer, calculatedPropertyInfo.root);
-    //	    writeValue(buffer, calculatedPropertyInfo.contextPath);
-    //	    writeValue(buffer, calculatedPropertyInfo.contextualExpression);
-    //	    writeValue(buffer, calculatedPropertyInfo.title);
-    //	    writeValue(buffer, calculatedPropertyInfo.attribute);
-    //	    writeValue(buffer, calculatedPropertyInfo.originationProperty);
-    //	    writeValue(buffer, calculatedPropertyInfo.getDesc());
-    //	}
-    //    }
 
 }

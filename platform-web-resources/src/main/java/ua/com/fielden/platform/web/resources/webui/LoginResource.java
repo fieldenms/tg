@@ -109,7 +109,7 @@ public class LoginResource extends ServerResource {
                 final Optional<UserSession> session = coUserSession.currentSession(up.getUser(), auth.toString(), false);
                 if (session.isPresent()) {
                     // response needs to be provided with an authenticating cookie
-                    assignAuthenticatingCookie(constants.now(), session.get().getAuthenticator().get(), domainName, path, getRequest(), getResponse());
+                    assignAuthenticatingCookie(session.get().getUser(), constants.now(), session.get().getAuthenticator().get(), domainName, path, getRequest(), getResponse());
                     // response needs to provide redirection instructions
                     getResponse().redirectSeeOther("/");
                     return new EmptyRepresentation();
@@ -156,7 +156,7 @@ public class LoginResource extends ServerResource {
             }
         } catch (final Exception ex) {
             LOGGER.fatal(ex);
-            getResponse().setEntity(restUtil.errorJSONRepresentation(ex.getMessage()));
+            getResponse().setEntity(restUtil.errorJsonRepresentation(ex.getMessage()));
             getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
         } finally {
             LOGGER.debug(format("LOGIN ATTEMPT RESPONSE TIME: %s%n", TimeUnit.MILLISECONDS.convert(System.nanoTime() - nanoStart, TimeUnit.NANOSECONDS)));
@@ -198,10 +198,12 @@ public class LoginResource extends ServerResource {
                 LOGIN_ATTEMPTS.invalidate(credo.username); // logged in successful, invalidate user login attempts from cache
                 // create a new session for an authenticated user...
                 final User user = (User) authResult.getInstance();
+                // let's use this opportunity to clear expired sessions for the user
+                coUserSession.clearExpired(user);
                 final UserSession session = coUserSession.newSession(user, credo.trustedDevice);
          
                 // ...and provide the response with an authenticating cookie
-                assignAuthenticatingCookie(constants.now(), session.getAuthenticator().get(), domainName, path, getRequest(), getResponse());
+                assignAuthenticatingCookie(user, constants.now(), session.getAuthenticator().get(), domainName, path, getRequest(), getResponse());
                 getResponse().setEntity(new JsonRepresentation("{\"msg\": \"Credentials are valid.\"}"));
             }
         }

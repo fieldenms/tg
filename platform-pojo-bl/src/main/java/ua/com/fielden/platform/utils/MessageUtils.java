@@ -51,5 +51,8 @@ public class MessageUtils {
         return singleOrPlural(BigDecimal.valueOf(number), single, plural);
     }
 
+    public static String singleOrPlural(final Long number, final String single, final String plural) {
+        return singleOrPlural(BigDecimal.valueOf(number), single, plural);
+    }
 
 }

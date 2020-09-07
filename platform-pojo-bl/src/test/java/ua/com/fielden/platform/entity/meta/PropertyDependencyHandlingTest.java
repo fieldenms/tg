@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity.meta;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.meta.test_entities.EntityWithDependentProperties.INVALID;
@@ -11,6 +12,7 @@ import org.junit.Test;
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.meta.test_entities.EntityWithCircularDependentPropertiesAndDefiners;
 import ua.com.fielden.platform.entity.meta.test_entities.EntityWithDependentProperties;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
@@ -310,6 +312,50 @@ public class PropertyDependencyHandlingTest {
         assertEquals("Incorrect number of setter executions", 1, entity.threeCount);
         assertEquals("Incorrect number of setter executions", 0, entity.fourCount);
         assertEquals("Incorrect number of setter executions", 0, entity.fiveCount);
+    }
+
+    @Test
+    public void revalidation_can_handle_a_case_of_circular_dependencies_with_validation_restricting_assignment_of_some_props_before_others_and_requiredness_managed_via_definers() {
+        // Property One has property Two and Three as dependent.
+        // Property Two has property Three as dependent.
+        // Property Three has property Two as dependent.
+        //
+        // 1 -----> 3
+        //  \     //      <- 2 and 3 are mutually dependent  
+        //   \   //
+        //      2  
+        //
+        // Property Three cannot be assigned before property One.
+        // Property One is required by definition and its definer determines requiredness for properties Two and Three depending on the fact whether either of them is populated.
+        final EntityWithCircularDependentPropertiesAndDefiners entity = factory.newByKey(EntityWithCircularDependentPropertiesAndDefiners.class, "key");
+
+        entity.getProperty("two").setRequired(true);
+        entity.getProperty("three").setRequired(true);
+
+        // setting null into properties Two makes it invalid, which is required to trigger an error recover process when property One is assigned
+        // this is believed to be the culprit causing the problem, reported in issue #xxxx
+        entity.setTwo(null);
+        assertFalse(entity.getProperty("two").isValid());
+
+        // attempting to set value for property Tree
+        // which fails because One is not assigned
+        entity.setThree("three");
+        assertFalse(entity.getProperty("three").isValid());
+        assertTrue(entity.getProperty("two").isRequired());
+        assertTrue(entity.getProperty("three").isRequired());
+
+        // at this stage all 3 properties are invalid
+        // setting One should trigger a revalidation process resulting in:
+        // a) One is assigned
+        // b) Two is not assigned and not required
+        // c) Three is assigned and not required
+        entity.setOne("one");
+        assertEquals("one", entity.getOne());
+        assertNull(entity.getTwo());
+        assertEquals("three", entity.getThree());
+        assertTrue(entity.getProperty("three").isValid());
+        assertFalse(entity.getProperty("two").isRequired());
+        assertFalse(entity.getProperty("three").isRequired());
     }
 
 }

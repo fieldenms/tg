@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.app;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -10,7 +11,6 @@ import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
-import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.menu.IMainMenuBuilder;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
@@ -66,39 +66,25 @@ public interface IWebUiConfig extends IMenuRetriever {
     IMainMenuBuilder configMobileMainMenu();
 
     /**
-     * Generates the main html file of desktop web application.
+     * Generates the main html file of web application.
      *
      * @return
      */
-    String genDesktopAppIndex();
-
-    /**
-     * Generates the main html file of mobile web application.
-     *
-     * @return
-     */
-    String genMobileAppIndex();
-
-    /**
-     * Generates the main menu component for mobile application.
-     *
-     * @return
-     */
-    String genMobileMainWebUIComponent();
+    String genAppIndex();
 
     /**
      * Generates the main menu component for desktop application.
      *
      * @return
      */
-    String genDesktopMainWebUIComponent();
+    String genMainWebUIComponent();
 
     /**
-     * Generates the global configuration component depending on {@link DeviceProfile}.
+     * Generates the global configuration component.
      *
      * @return
      */
-    String genWebUiPreferences(final DeviceProfile deviceProfile);
+    String genWebUiPreferences();
 
     /**
      * Returns the map of entity masters for this web application.
@@ -143,4 +129,25 @@ public interface IWebUiConfig extends IMenuRetriever {
      * @return
      */
     Workflows workflow();
+    
+    /**
+     * Loads checksum for resource if available. Otherwise, returns empty {@link Optional}.
+     * <p>
+     * Checksums are available for static resources in deployment mode. 'startup-resources-vulcanized.js' file is primary in this category.
+     * Client-side Service Worker script intercepts requests to get checksum first to compare whether resource has changed.
+     * If that is true then full resource will be re-downloaded and re-cached on the client side.
+     * Otherwise the cached resource will be used straight away.
+     * 
+     * @param resourceURI
+     * @return
+     */
+    Optional<String> checksum(final String resourceURI);
+    
+    /**
+     * Returns true if server and client applications operate in the same time-zone, otherwise false.
+     * The only exception is handling of 'now': it calculates based on real user time-zone (and later converts to server time-zone).
+     * 
+     * @return
+     */
+    boolean independentTimeZone();
 }

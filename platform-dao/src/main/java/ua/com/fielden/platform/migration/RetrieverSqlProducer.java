@@ -7,6 +7,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
@@ -127,8 +128,14 @@ public class RetrieverSqlProducer {
     }
 
     private StringBuffer getOrderBySql(final IRetriever<? extends AbstractEntity<?>> retriever) {
-        // TODO implementation pending
-        return new StringBuffer();
+        final StringBuffer sb = new StringBuffer();
+
+        if (retriever.orderSql() != null) {
+            sb.append("\nORDER BY ");
+            sb.append(retriever.orderSql().stream().collect(Collectors.joining(", ")));
+        }
+
+        return sb;
     }
 
     private StringBuffer getFromSql(final IRetriever<? extends AbstractEntity<?>> retriever) {
@@ -143,12 +150,10 @@ public class RetrieverSqlProducer {
 
         if (retriever.groupSql() != null) {
             sb.append("\nGROUP BY ");
-            for (final Iterator<String> iterator = retriever.groupSql().iterator(); iterator.hasNext();) {
-                final String keyPropName = iterator.next();
-                sb.append(keyPropName + (iterator.hasNext() ? ", " : ""));
-            }
+            sb.append(retriever.groupSql().stream().collect(Collectors.joining(", ")));
         }
 
         return sb;
     }
 }
+

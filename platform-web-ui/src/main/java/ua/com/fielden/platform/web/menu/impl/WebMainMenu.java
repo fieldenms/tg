@@ -13,11 +13,10 @@ import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
-import ua.com.fielden.platform.web.interfaces.IExecutable;
 import ua.com.fielden.platform.web.menu.module.impl.WebMenuModule;
 import ua.com.fielden.platform.web.minijs.JsCode;
 
-public class WebMainMenu implements IExecutable {
+public class WebMainMenu {
 
     private final List<WebMenuModule> modules = new ArrayList<>();
 
@@ -25,12 +24,6 @@ public class WebMainMenu implements IExecutable {
         final WebMenuModule module = new WebMenuModule(title);
         modules.add(module);
         return module;
-    }
-
-    @Override
-    public JsCode code() {
-        final String menuModules = "[" + StringUtils.join(modules, ",") + "]";
-        return new JsCode(menuModules);
     }
 
     public List<Module> getModules() {
@@ -44,7 +37,7 @@ public class WebMainMenu implements IExecutable {
         for (final WebMenuModule webMenuModule : modules) {
             for (final EntityActionConfig config : webMenuModule.getActions()) {
                 final FunctionalActionElement actionElement = new FunctionalActionElement(config, numberOfActions++, FunctionalActionKind.TOP_LEVEL);
-                actionDomElements.add(actionElement.render().attr("action-module-group", webMenuModule.title));
+                actionDomElements.add(actionElement.render().attr("slot", webMenuModule.title));
                 propActions.add(actionElement.createActionObject());
             }
         }

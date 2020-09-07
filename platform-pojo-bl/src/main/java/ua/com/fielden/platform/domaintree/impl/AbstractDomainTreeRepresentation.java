@@ -1,11 +1,16 @@
 package ua.com.fielden.platform.domaintree.impl;
 
+import static java.lang.String.format;
+import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determineClass;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.transform;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
+import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
+import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -32,12 +37,12 @@ import ua.com.fielden.platform.entity.annotation.Invisible;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.development.EntityDescriptor;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -66,8 +71,8 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     /**
      * A <i>representation</i> constructor. Initialises also children references on itself.
      */
-    protected AbstractDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final AbstractTickRepresentation firstTick, final AbstractTickRepresentation secondTick) {
-        super(serialiser);
+    protected AbstractDomainTreeRepresentation(final EntityFactory entityFactory, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final AbstractTickRepresentation firstTick, final AbstractTickRepresentation secondTick) {
+        super(entityFactory);
         this.rootTypes = new EnhancementLinkedRootsSet();
         this.rootTypes.addAll(rootTypes);
         this.manuallyExcludedProperties = createSet();
@@ -182,7 +187,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
         final Class<? extends AbstractEntity> concreteUnionClass = (Class<? extends AbstractEntity>) unionProperties.get(0).getType();
         final List<String> commonNames = AbstractUnionEntity.commonProperties(unionClass);
         final List<Field> commonProperties = constructKeysAndProperties(concreteUnionClass, commonNames);
-        return new Pair<List<Field>, List<Field>>(commonProperties, unionProperties);
+        return new Pair<>(commonProperties, unionProperties);
     }
 
     /**
@@ -205,7 +210,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
         properties.removeAll(keys); // remove composite key members if any
 
         // now let's ensure that that key related properties and desc are first in the list of properties
-        final List<Field> fieldsAndKeys = new ArrayList<Field>();
+        final List<Field> fieldsAndKeys = new ArrayList<>();
         fieldsAndKeys.addAll(keys);
         fieldsAndKeys.add(Finder.getFieldByName(type, AbstractEntity.DESC));
         fieldsAndKeys.addAll(properties);
@@ -223,7 +228,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      */
     private static List<Field> constructKeysAndProperties(final Class<?> type, final List<String> names) {
         final List<Field> allProperties = constructKeysAndProperties(type);
-        final List<Field> properties = new ArrayList<Field>();
+        final List<Field> properties = new ArrayList<>();
         for (final Field f : allProperties) {
             if (names.contains(f.getName())) {
                 properties.add(f);
@@ -261,17 +266,47 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
         if (isEntityItself) {
             return false;
         }
-        final Pair<Class<?>, String> penultAndLast = PropertyTypeDeterminator.transform(root, property);
-        final Class<?> realType = PropertyTypeDeterminator.determineClass(penultAndLast.getKey(), penultAndLast.getValue(), true, false);
-        final Class<?> elementType = PropertyTypeDeterminator.determineClass(penultAndLast.getKey(), penultAndLast.getValue(), true, true);
+        final Pair<Class<?>, String> penultAndLast = transform(root, property);
+        final Class<?> realType = determineClass(penultAndLast.getKey(), penultAndLast.getValue(), true, false);
+        final Class<?> elementType = determineClass(penultAndLast.getKey(), penultAndLast.getValue(), true, true);
 
         // return !isEntityItself && realType != null && Collection.class.isAssignableFrom(realType); // or collections itself
         return Collection.class.isAssignableFrom(realType) &&
-                EntityUtils.isEntityType(elementType) &&
-                EntityUtils.isCompositeEntity((Class<AbstractEntity<?>>) elementType) &&
-                Finder.getKeyMembers(elementType).size() == 2 &&
-                Finder.getKeyMembers(elementType).stream().allMatch(field -> EntityUtils.isEntityType(field.getType())) &&
-                Finder.getKeyMembers(elementType).stream().anyMatch(field -> stripIfNeeded(getOriginalType(field.getType())).isAssignableFrom(stripIfNeeded(getOriginalType(penultAndLast.getKey()))));
+                isEntityType(elementType) &&
+                isCompositeEntity((Class<AbstractEntity<?>>) elementType) &&
+                getKeyMembers(elementType).size() == 2 &&
+                getKeyMembers(elementType).stream().allMatch(field -> isEntityType(field.getType())) &&
+                getKeyMembers(elementType).stream().anyMatch(field -> isShortCollectionKeyCompatible(field.getType(), penultAndLast.getKey()));
+    }
+
+    /**
+     * Returns <code>true</code> if the type of collectional prop element key (<code>keyType</code>) is equal or supertype of the entity type (<code>parentType</code>) holding collection.
+     * 
+     * @param keyType
+     * @param parentType
+     * @return
+     */
+    private static boolean isShortCollectionKeyCompatible(final Class<?> keyType, final Class<?> parentType) {
+        return stripIfNeeded(getOriginalType(keyType)).isAssignableFrom(stripIfNeeded(getOriginalType(parentType)));
+    }
+
+    /**
+     * Returns the name of significant key member of short collectional prop element; aka key member with type not compatible with parent type.
+     * <p>
+     * This must be used only inside <code>if (isShortCollection(root, property)) {...}</code> clause.
+     * 
+     * @param root
+     * @param property
+     * @return
+     */
+    public static String shortCollectionKey(final Class<?> root, final String property) {
+        final Pair<Class<?>, String> penultAndLast = transform(root, property);
+        final Class<?> elementType = determineClass(penultAndLast.getKey(), penultAndLast.getValue(), true, true);
+        return getKeyMembers(elementType).stream()
+            .filter(field -> !isShortCollectionKeyCompatible(field.getType(), penultAndLast.getKey()))
+            .findAny() // stream should return exactly one key field out of two entity-typed key fields after above filtering
+            .map(field -> field.getName())
+            .orElseThrow(() -> new IllegalStateException(format("Short collection (%s; %s) does not have significant key that is not compatible with parent type.", root.getSimpleName(), property)));
     }
 
     /**
@@ -751,7 +786,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
 
         if (!isEntityItself
                 && isCalculatedAndOfTypes(root, property, CalculatedPropertyCategory.AGGREGATED_EXPRESSION, CalculatedPropertyCategory.ATTRIBUTED_COLLECTIONAL_EXPRESSION)) {
-            final Set<Function> functions = new HashSet<Function>();
+            final Set<Function> functions = new HashSet<>();
             if (availableFunctions.contains(Function.SELF)) {
                 functions.add(Function.SELF);
             }
@@ -809,26 +844,6 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     private static boolean isCalculatedAndOriginatedFromNotIntegerType(final Class<?> root, final String property) {
         final Calculated calculatedAnnotation = AnnotationReflector.getPropertyAnnotation(Calculated.class, root, property);
         return calculatedAnnotation != null && !Integer.class.isAssignableFrom(PropertyTypeDeterminator.determinePropertyType(root, calculatedAnnotation.origination()));
-    }
-
-    /**
-     * A specific Kryo serialiser for {@link AbstractDomainTreeRepresentation}.
-     *
-     * @author TG Team
-     *
-     */
-    protected abstract static class AbstractDomainTreeRepresentationSerialiser<T extends AbstractDomainTreeRepresentation> extends AbstractDomainTreeSerialiser<T> {
-        public AbstractDomainTreeRepresentationSerialiser(final ISerialiser serialiser) {
-            super(serialiser);
-        }
-
-        @Override
-        public void write(final ByteBuffer buffer, final T representation) {
-            writeValue(buffer, representation.getRootTypes());
-            writeValue(buffer, representation.getManuallyExcludedProperties());
-            writeValue(buffer, representation.getFirstTick());
-            writeValue(buffer, representation.getSecondTick());
-        }
     }
 
     @Override

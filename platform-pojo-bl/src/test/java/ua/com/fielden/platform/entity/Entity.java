@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.entity;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -52,7 +51,7 @@ public class Entity extends AbstractEntity<String> {
     @Title(value = "First Property", desc = "used for testing")
     @Calculated
     private Integer firstProperty = null;
-    private static ExpressionModel firstProperty_ = expr().val(null).model();
+    protected static ExpressionModel firstProperty_ = expr().val(null).model();
 
     @IsProperty
     @Title("Observable Property")

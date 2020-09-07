@@ -1,8 +1,10 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
+import static java.util.Collections.unmodifiableList;
 import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.AND;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class Conditions extends AbstractCondition {
@@ -17,7 +19,7 @@ public class Conditions extends AbstractCondition {
     public Conditions(final ICondition firstCondition) {
         this.firstCondition = firstCondition;
     }
-
+    
     public String sql() {
         final List<List<ICondition>> orGroups = formConditionIntoLogicalGroups();
 
@@ -91,6 +93,14 @@ public class Conditions extends AbstractCondition {
             }
         }
         return result;
+    }
+    
+    public ICondition getFirstCondition() {
+        return firstCondition;
+    }
+
+    public List<CompoundCondition> getOtherConditions() {
+        return unmodifiableList(otherConditions);
     }
 
     @Override

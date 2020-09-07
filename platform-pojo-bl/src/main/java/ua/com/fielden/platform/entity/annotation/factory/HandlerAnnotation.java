@@ -10,6 +10,7 @@ import ua.com.fielden.platform.entity.annotation.mutator.EnumParam;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.annotation.mutator.IntParam;
 import ua.com.fielden.platform.entity.annotation.mutator.MoneyParam;
+import ua.com.fielden.platform.entity.annotation.mutator.PropParam;
 import ua.com.fielden.platform.entity.annotation.mutator.StrParam;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 
@@ -26,6 +27,7 @@ public class HandlerAnnotation {
     private ClassParam[] clazz = new ClassParam[] {};
     private IntParam[] integer = new IntParam[] {};
     private StrParam[] str = new StrParam[] {};
+    private PropParam[] prop = new PropParam[] {};
     private DblParam[] dbl = new DblParam[] {};
     private DateParam[] date = new DateParam[] {};
     private DateTimeParam[] date_time = new DateTimeParam[] {};
@@ -39,32 +41,37 @@ public class HandlerAnnotation {
     public HandlerAnnotation non_ordinary(final ClassParam[] values) {
         this.non_ordinary = values;
         return this;
-    };
+    }
 
     public HandlerAnnotation clazz(final ClassParam[] values) {
         this.clazz = values;
         return this;
-    };
+    }
 
     public HandlerAnnotation integer(final IntParam[] values) {
         this.integer = values;
         return this;
-    };
+    }
 
     public HandlerAnnotation str(final StrParam[] values) {
         this.str = values;
         return this;
-    };
+    }
+
+    public HandlerAnnotation prop(final PropParam[] values) {
+        this.prop = values;
+        return this;
+    }
 
     public HandlerAnnotation dbl(final DblParam[] values) {
         this.dbl = values;
         return this;
-    };
+    }
 
     public HandlerAnnotation date(final DateParam[] values) {
         this.date = values;
         return this;
-    };
+    }
 
     public HandlerAnnotation date_time(final DateTimeParam[] values) {
         this.date_time = values;
@@ -79,7 +86,7 @@ public class HandlerAnnotation {
     public HandlerAnnotation enumeration(final EnumParam[] values) {
         this.enumeration = values;
         return this;
-    };
+    }
 
 
     public Handler newInstance() {
@@ -113,6 +120,11 @@ public class HandlerAnnotation {
             @Override
             public StrParam[] str() {
                 return str;
+            }
+
+            @Override
+            public PropParam[] prop() {
+                return prop;
             }
 
             @Override
@@ -173,6 +185,11 @@ public class HandlerAnnotation {
             @Override
             public StrParam[] str() {
                 return handler.str();
+            }
+
+            @Override
+            public PropParam[] prop() {
+                return handler.prop();
             }
 
             @Override

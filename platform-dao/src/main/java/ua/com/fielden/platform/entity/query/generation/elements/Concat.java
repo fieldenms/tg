@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
+import static java.util.stream.Collectors.joining;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -45,7 +47,7 @@ public class Concat extends AbstractFunction implements ISingleOperand {
     }
 
     @Override
-    public Class type() {
+    public Class<?> type() {
         return String.class;
     }
 
@@ -64,61 +66,20 @@ public class Concat extends AbstractFunction implements ISingleOperand {
         return false;
     }
 
-    public String sqlForH2() {
-        final StringBuffer sb = new StringBuffer();
-        sb.append("CONCAT (");
-
-        for (final Iterator<ISingleOperand> iterator = operands.iterator(); iterator.hasNext();) {
-            sb.append(getConvertToStringSql(iterator.next()));
-            if (iterator.hasNext()) {
-                sb.append(", ");
-            }
-        }
-
-        sb.append(")");
-
-        return sb.toString();
-    }
-
-    public String sqlForMsSql2005() {
-        final StringBuffer sb = new StringBuffer();
-        sb.append(" (");
-
-        for (final Iterator<ISingleOperand> iterator = operands.iterator(); iterator.hasNext();) {
-            sb.append(getConvertToStringSql(iterator.next()));
-            if (iterator.hasNext()) {
-                sb.append(" + ");
-            }
-        }
-
-        sb.append(")");
-
-        return sb.toString();
+    public String sqlForH2AndMssql() {
+        return "CONCAT (" + operands.stream().map(so -> getConvertToStringSql(so)).collect(joining(", ")) + ")";
     }
 
     public String sqlForPostgresql() {
-        final StringBuffer sb = new StringBuffer();
-        sb.append(" (");
-
-        for (final Iterator<ISingleOperand> iterator = operands.iterator(); iterator.hasNext();) {
-            sb.append(getConvertToStringSql(iterator.next()));
-            if (iterator.hasNext()) {
-                sb.append(" || ");
-            }
-        }
-
-        sb.append(")");
-
-        return sb.toString();
+        return " (" + operands.stream().map(so -> getConvertToStringSql(so)).collect(joining(" || ")) + ")";
     }
 
     @Override
     public String sql() {
         switch (getDbVersion()) {
         case H2:
-            return sqlForH2();
         case MSSQL:
-            return sqlForMsSql2005();
+            return sqlForH2AndMssql();
         case POSTGRESQL:
             return sqlForPostgresql();
         default:

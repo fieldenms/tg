@@ -72,10 +72,10 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.CO
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.COMPARISON_OPERATOR;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.COND_START;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.COND_TOKENS;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.CRIT_COND_OPERATOR;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.END_COND;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.END_EXPR;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.END_FUNCTION;
-import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.VALUES_AS_QRY_SOURCE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ENTITY_TYPE_AS_QRY_SOURCE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EQUERY_TOKENS;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EXISTS_OPERATOR;
@@ -83,7 +83,6 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EX
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.EXT_PROP;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.FUNCTION;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.FUNCTION_INTERVAL;
-import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ILIKE_OPERATOR;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.IN_OPERATOR;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.IPARAM;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.IVAL;
@@ -105,8 +104,12 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.SE
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.SET_OF_VALUES;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.SORT_ORDER;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.VAL;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.VALUES_AS_QRY_SOURCE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ZERO_ARG_FUNCTION;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -116,6 +119,7 @@ import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.enums.Functions;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
@@ -175,11 +179,7 @@ final class Tokens {
     }
 
     private <E extends Object> List<E> getListFromArray(final E... items) {
-        final List<E> result = new ArrayList<E>();
-        if (items != null) {
-            result.addAll(Arrays.asList(items));
-        }
-        return result;
+        return listOf(items);
     }
 
     public Tokens and() {
@@ -218,6 +218,14 @@ final class Tokens {
         return add(EXISTS_OPERATOR, negated, ALL_OF_EQUERY_TOKENS, getListFromArray(subQueries));
     }
 
+    public Tokens critCondition(final String propName, final String critPropName) {
+        return add(CRIT_COND_OPERATOR, pair(propName, critPropName));
+    }
+
+    public Tokens critCondition(final ICompoundCondition0<?> collectionQueryStart, final String propName, final String critPropName) {
+        return add(CRIT_COND_OPERATOR, pair(t2(collectionQueryStart, propName), critPropName));
+    }
+
     public Tokens isNull(final boolean negated) {
         return add(NULL_OPERATOR, negated);
     }
@@ -246,12 +254,8 @@ final class Tokens {
         return add(COMPARISON_OPERATOR, NE);
     }
 
-    public Tokens like(final boolean negated) {
-        return add(LIKE_OPERATOR, negated);
-    }
-
-    public Tokens iLike(final boolean negated) {
-        return add(ILIKE_OPERATOR, negated);
+    public Tokens like(final LikeOptions options) {
+        return add(LIKE_OPERATOR, options);
     }
 
     public Tokens in(final boolean negated) {

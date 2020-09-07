@@ -69,9 +69,7 @@ import ua.com.fielden.platform.security.user.UserDao;
 import ua.com.fielden.platform.security.user.UserSecretDao;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.api.ISerialiser0;
 import ua.com.fielden.platform.serialisation.api.impl.Serialiser;
-import ua.com.fielden.platform.serialisation.api.impl.Serialiser0;
 import ua.com.fielden.platform.test.UserProviderForTesting;
 import ua.com.fielden.platform.test.domain.entities.daos.BogieDao;
 import ua.com.fielden.platform.test.domain.entities.daos.IBogieDao;
@@ -92,6 +90,7 @@ import ua.com.fielden.platform.ui.config.controller.EntityCentreConfigDao;
 import ua.com.fielden.platform.ui.config.controller.EntityLocatorConfigDao;
 import ua.com.fielden.platform.ui.config.controller.EntityMasterConfigDao;
 import ua.com.fielden.platform.ui.config.controller.MainMenuItemDao;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
 /**
@@ -165,7 +164,6 @@ public class DaoTestHibernateModule extends CommonFactoryModule {
                 return new ArrayList<>();
             }
         });
-        bind(ISerialiser0.class).to(Serialiser0.class).in(Scopes.SINGLETON);
         bind(ISerialiser.class).to(Serialiser.class).in(Scopes.SINGLETON);
 
         bind(IUserSession.class).to(UserSessionDao.class);
@@ -174,6 +172,7 @@ public class DaoTestHibernateModule extends CommonFactoryModule {
         bindConstant().annotatedWith(UntrustedDeviceSessionDuration.class).to(5); // 5 minutes
 
         bind(Ticker.class).to(TickerForSessionCache.class).in(Scopes.SINGLETON);
+        bind(IDates.class).to(DatesForTesting.class).in(Scopes.SINGLETON);
         bind(IUniversalConstants.class).to(UniversalConstantsForTesting.class).in(Scopes.SINGLETON);
         bind(new TypeLiteral<Cache<String, UserSession>>(){}).annotatedWith(SessionCache.class).toProvider(TestSessionCacheBuilder.class).in(Scopes.SINGLETON);
 

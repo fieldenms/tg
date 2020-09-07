@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.web.centre.api;
 
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -8,6 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -23,6 +27,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.app.exceptions.WebUiBuilderException;
+import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
@@ -35,12 +40,14 @@ import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCrit
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritOtherValueMnemonic;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
+import ua.com.fielden.platform.web.centre.api.resultset.IDynamicColumnBuilder;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.centre.api.resultset.scrolling.IScrollConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 import ua.com.fielden.platform.web.layout.FlexLayout;
+import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
 
 /**
  *
@@ -51,15 +58,19 @@ import ua.com.fielden.platform.web.layout.FlexLayout;
  */
 public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
+    private final boolean egiHidden;
     private final boolean draggable;
     private final boolean hideCheckboxes;
     private final IToolbarConfig toolbarConfig;
     private final boolean hideToolbar;
     private final IScrollConfig scrollConfig;
     private final int pageCapacity;
+    private final int maxPageCapacity;
     private final int visibleRowsCount;
+    private final int numberOfHeaderLines;
     private final String egiHeight;
     private final boolean fitToHeight;
+    private final String rowHeight;
 
     /////////////////////////////////////////////
     ///////////// TOP LEVEL ACTIONS /////////////
@@ -193,7 +204,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
      * A list of result set property definitions, presented in the same order a specified using Entity Centre DSL. Natural (persistent or calculated) properties are intertwined
      * with custom properties.
      */
-    private final List<ResultSetProp> resultSetProperties = new ArrayList<>();
+    private final List<ResultSetProp<T>> resultSetProperties = new ArrayList<>();
     /**
      * The key in this structure represent resultset properties that are considered to be originating for the associated with them summaries. Each key may reference several
      * definitions of summary expressions, hence, the use of a multimap. More specifically, {@link ListMultimap} is used to preserve the order of summary expression as declared
@@ -209,26 +220,38 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
      * represented in the result set properties. However, the default actions would still get associated with all properties without a custom action. In order to skip even the
      * default action, a <code>no action</code> configuration needs to set as custom property action.
      */
-    public static class ResultSetProp {
+    public static class ResultSetProp<T extends AbstractEntity<?>> {
         public final Optional<String> propName;
         public final Optional<String> tooltipProp;
         public final Optional<PropDef<?>> propDef;
+        public final Optional<Class<? extends IDynamicColumnBuilder<T>>> dynamicColBuilderType;
+        public final Optional<CentreContextConfig> contextConfig;
+        public final Optional<BiConsumer> entityPreProcessor;
         public final Supplier<Optional<EntityActionConfig>> propAction;
+        public final Optional<AbstractWidget> widget;
         public final int width;
         public final boolean isFlexible;
 
-        public static ResultSetProp propByName(final String propName, final int width, final boolean isFlexible, final String tooltipProp, final Supplier<Optional<EntityActionConfig>> propAction) {
-            return new ResultSetProp(propName, width, isFlexible, tooltipProp, null, propAction);
+         public static <T extends AbstractEntity<?>> ResultSetProp<T> propByName(final String propName, final int width, final boolean isFlexible, final Optional<AbstractWidget> widget, final String tooltipProp, final Supplier<Optional<EntityActionConfig>> propAction) {
+            return new ResultSetProp<>(propName, empty(), empty(), empty(), width, isFlexible, widget, tooltipProp, null, propAction);
         }
 
-        public static ResultSetProp propByDef(final PropDef<?> propDef, final int width, final boolean isFlexible, final String tooltipProp, final Supplier<Optional<EntityActionConfig>> propAction) {
-            return new ResultSetProp(null, width, isFlexible, tooltipProp, propDef, propAction);
+        public static <T extends AbstractEntity<?>> ResultSetProp<T> propByDef(final PropDef<?> propDef, final int width, final boolean isFlexible, final String tooltipProp, final Supplier<Optional<EntityActionConfig>> propAction) {
+            return new ResultSetProp<>(null, empty(), empty(), empty(), width, isFlexible, Optional.empty(), tooltipProp, propDef, propAction);
+        }
+
+        public static <T extends AbstractEntity<?>> ResultSetProp<T> dynamicProps(final String collectionalPropertyName, final Class<? extends IDynamicColumnBuilder<T>> dynamicPropDefinerClass, final BiConsumer<? extends AbstractEntity<?>, Optional<CentreContext<T, ?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
+            return new ResultSetProp<>(collectionalPropertyName, of(dynamicPropDefinerClass), of(contextConfig), of(entityPreProcessor), 0, false, Optional.empty(), null, null, () -> Optional.empty());
         }
 
         private ResultSetProp(
                 final String propName,
+                final Optional<Class<? extends IDynamicColumnBuilder<T>>> dynColBuilderType,
+                final Optional<CentreContextConfig> contextConfig,
+                final Optional<BiConsumer> entityPreProcessor,
                 final int width,
                 final boolean isFlexible,
+                final Optional<AbstractWidget> widget,
                 final String tooltipProp,
                 final PropDef<?> propDef,
                 final Supplier<Optional<EntityActionConfig>> propAction) {
@@ -248,11 +271,14 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             this.propName = Optional.ofNullable(propName);
             this.width = width;
             this.isFlexible = isFlexible;
+            this.widget = widget;
             this.tooltipProp = Optional.ofNullable(tooltipProp);
             this.propDef = Optional.ofNullable(propDef);
             this.propAction = propAction;
+            this.dynamicColBuilderType = dynColBuilderType;
+            this.contextConfig = contextConfig;
+            this.entityPreProcessor = entityPreProcessor;
         }
-
     }
 
     /**
@@ -264,16 +290,22 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         public final String expression;
         public final String title;
         public final String desc;
+        public final int precision;
+        public final int scale;
 
         public SummaryPropDef(
                 final String alias,
                 final String expression,
                 final String title,
-                final String desc) {
+                final String desc,
+                final int precision,
+                final int scale) {
             this.alias = alias;
             this.expression = expression;
             this.title = title;
             this.desc = desc;
+            this.precision = precision;
+            this.scale = scale;
         }
     }
 
@@ -324,15 +356,19 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     ///////// CONSTRUCTOR /////////////
     ///////////////////////////////////
     public EntityCentreConfig(
+            final boolean egiHidden,
             final boolean draggable,
             final boolean hideCheckboxes,
             final IToolbarConfig toolbarConfig,
             final boolean hideToolbar,
             final IScrollConfig scrollConfig,
             final int pageCapacity,
+            final int maxPageCapacity,
             final int visibleRowsCount,
+            final int numberOfHeaderLines,
             final String egiHeight,
             final boolean fitToHeight,
+            final String rowHeight,
 
             final List<Pair<EntityActionConfig, Optional<String>>> topLevelActions,
             final List<EntityActionConfig> frontActions,
@@ -380,7 +416,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final FlexLayout resultsetExpansionCardLayout,
             final FlexLayout resultsetSummaryCardLayout,
 
-            final List<ResultSetProp> resultSetProperties,
+            final List<ResultSetProp<T>> resultSetProperties,
             final ListMultimap<String, SummaryPropDef> summaryExpressions,
             final LinkedHashMap<String, OrderDirection> resultSetOrdering,
             final EntityActionConfig resultSetPrimaryEntityAction,
@@ -390,15 +426,19 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>> queryEnhancerConfig,
             final Pair<Class<?>, Class<?>> generatorTypes,
             final IFetchProvider<T> fetchProvider) {
+        this.egiHidden = egiHidden;
         this.draggable = draggable;
         this.hideCheckboxes = hideCheckboxes;
         this.toolbarConfig = toolbarConfig;
         this.hideToolbar = hideToolbar;
         this.scrollConfig = scrollConfig;
         this.pageCapacity = pageCapacity;
+        this.maxPageCapacity = maxPageCapacity;
         this.visibleRowsCount = visibleRowsCount;
+        this.numberOfHeaderLines = numberOfHeaderLines;
         this.egiHeight = egiHeight;
         this.fitToHeight = fitToHeight;
+        this.rowHeight = rowHeight;
 
         this.topLevelActions.addAll(topLevelActions);
         this.frontActions.addAll(frontActions);
@@ -523,18 +563,15 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         return Optional.of(Collections.unmodifiableList(resultSetSecondaryEntityActions));
     }
 
-    public Optional<List<ResultSetProp>> getResultSetProperties() {
+    public Optional<List<ResultSetProp<T>>> getResultSetProperties() {
         if (resultSetProperties.isEmpty()) {
             return Optional.empty();
         }
         return Optional.of(Collections.unmodifiableList(resultSetProperties));
     }
 
-    public Optional<ListMultimap<String, SummaryPropDef>> getSummaryExpressions() {
-        if (summaryExpressions == null || summaryExpressions.isEmpty()) {
-            return Optional.empty();
-        }
-        return Optional.of(ImmutableListMultimap.copyOf(summaryExpressions));
+    public ListMultimap<String, SummaryPropDef> getSummaryExpressions() {
+        return ImmutableListMultimap.copyOf(summaryExpressions);
     }
 
     public Optional<Map<String, Pair<Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>>, Optional<CentreContextConfig>>>> getValueMatchersForSelectionCriteria() {
@@ -798,6 +835,10 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         return Optional.ofNullable(sseUri);
     }
 
+    public boolean isEgiHidden() {
+        return egiHidden;
+    }
+
     public boolean shouldHideCheckboxes() {
         return hideCheckboxes;
     }
@@ -822,8 +863,16 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         return pageCapacity;
     }
 
+    public int getMaxPageCapacity() {
+        return maxPageCapacity;
+    }
+
     public int getVisibleRowsCount() {
         return visibleRowsCount;
+    }
+
+    public int getNumberOfHeaderLines() {
+        return numberOfHeaderLines;
     }
 
     public String getEgiHeight() {
@@ -832,5 +881,9 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     public boolean isFitToHeight() {
         return fitToHeight;
+    }
+
+    public String getRowHeight() {
+        return rowHeight;
     }
 }

@@ -87,19 +87,19 @@ public abstract class AbstractSearchEntityByKeyWithContext<CONTEXT extends Abstr
 
     @Override
     public List<T> findMatches(final String searchString) {
-        return findMatches(searchString, defaultFetchModel);
+        return findMatches(searchString, defaultFetchModel, 1);
     }
 
     @Override
-    public List<T> findMatchesWithModel(final String searchString) {
-        return findMatches(searchString, getFetch());
+    public List<T> findMatchesWithModel(final String searchString, final int dataPage) {
+        return findMatches(searchString, getFetch(), dataPage);
     }
 
-    private List<T> findMatches(final String searchString, final fetch<T> fetch) {
+    private List<T> findMatches(final String searchString, final fetch<T> fetch, final int dataPage) {
         final ConditionModel searchCriteria = makeSearchCriteriaModel(getContext(), searchString);
         final OrderingModel ordering = composeOrderingModelForQuery(searchString);
         final Map<String, Object> queryParams = fillParamsBasedOnContext(getContext());
-        return companion.getFirstEntities(createCommonQueryBuilderForFindMatches(companion.getEntityType(), searchCriteria, ordering, queryParams).with(fetch).model(), getPageSize());
+        return companion.getFirstEntities(createCommonQueryBuilderForFindMatches(companion.getEntityType(), searchCriteria, ordering, queryParams).with(fetch).model(), getPageSize() * dataPage);
     }
 
     @Override

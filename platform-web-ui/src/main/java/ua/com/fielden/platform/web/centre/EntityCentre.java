@@ -3,11 +3,18 @@ package ua.com.fielden.platform.web.centre;
 import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.stream.Collectors.toSet;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isCritOnlySingle;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.validateRootType;
 import static ua.com.fielden.platform.domaintree.impl.CalculatedProperty.generateNameFrom;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.EntityUtils.fetchWithKeyAndDesc;
+import static ua.com.fielden.platform.utils.EntityUtils.fetchNone;
+import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
+import static ua.com.fielden.platform.utils.EntityUtils.isDate;
+import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isInteger;
+import static ua.com.fielden.platform.utils.EntityUtils.isRangeType;
+import static ua.com.fielden.platform.utils.EntityUtils.isString;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
@@ -19,13 +26,17 @@ import static ua.com.fielden.platform.web.centre.EgiConfigurations.DRAGGABLE;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.DRAG_ANCHOR_FIXED;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.FIT_TO_HEIGHT;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.HEADER_FIXED;
+import static ua.com.fielden.platform.web.centre.EgiConfigurations.HIDDEN;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.SECONDARY_ACTION_FIXED;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.SUMMARY_FIXED;
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.TOOLBAR_VISIBLE;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
+import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalPropertyName;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalType;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
+import static ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.AbstractEntityAutocompletionWidget.createDefaultAdditionalProps;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -65,6 +76,8 @@ import ua.com.fielden.platform.domaintree.impl.CalculatedPropertyInfo;
 import ua.com.fielden.platform.domaintree.impl.CustomProperty;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.EntityType;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
@@ -73,7 +86,6 @@ import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -119,13 +131,13 @@ import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointBui
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
+import ua.com.fielden.platform.web.centre.api.resultset.IDynamicColumnBuilder;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.PropertyColumnElement;
 import ua.com.fielden.platform.web.centre.exceptions.PropertyDefinitionException;
-import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.layout.FlexLayout;
@@ -144,7 +156,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
     private static final CentreContextConfig defaultCentreContextConfig = new CentreContextConfig(false, false, false, false, null);
 
-    private static final String IMPORTS = "<!--@imports-->";
+    public static final String IMPORTS = "<!--@imports-->";
     private static final String FULL_ENTITY_TYPE = "@full_entity_type";
     private static final String FULL_MI_TYPE = "@full_mi_type";
     private static final String MI_TYPE = "@mi_type";
@@ -153,6 +165,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private static final String EGI_LAYOUT_CONFIG = "//gridLayoutConfig";
     private static final String EGI_SHORTCUTS = "@customShortcuts";
     private static final String EGI_TOOLBAR_VISIBLE = "@toolbarVisible";
+    private static final String EGI_HIDDEN = "@hidden";
     private static final String EGI_DRAGGABLE = "@canDragFrom";
     private static final String EGI_DRAG_ANCHOR_FIXED = "@dragAnchorFixed";
     private static final String EGI_CHECKBOX_VISIBILITY = "@checkboxVisible";
@@ -162,15 +175,15 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private static final String EGI_SECONDARY_ACTION_FIXED = "@secondaryActionsFixed";
     private static final String EGI_HEADER_FIXED = "@headerFixed";
     private static final String EGI_SUMMARY_FIXED = "@summaryFixed";
-    private static final String EGI_VISIBLE_ROW_COUNT = "@visibleRowCount";
     private static final String EGI_HEIGHT = "@egiHeight";
     private static final String EGI_FIT_TO_HEIGHT = "@fitToHeight";
-    private static final String EGI_PAGE_CAPACITY = "@pageCapacity";
+    private static final String EGI_ROW_HEIGHT = "@egiRowHeight";
     private static final String EGI_ACTIONS = "//generatedActionObjects";
     private static final String EGI_PRIMARY_ACTION = "//generatedPrimaryAction";
     private static final String EGI_SECONDARY_ACTIONS = "//generatedSecondaryActions";
     private static final String EGI_PROPERTY_ACTIONS = "//generatedPropActions";
     private static final String EGI_DOM = "<!--@egi_columns-->";
+    private static final String EGI_EDITORS = "<!--@egi_editors-->";
     private static final String EGI_FUNCTIONAL_ACTION_DOM = "<!--@functional_actions-->";
     private static final String EGI_PRIMARY_ACTION_DOM = "<!--@primary_action-->";
     private static final String EGI_SECONDARY_ACTIONS_DOM = "<!--@secondary_actions-->";
@@ -203,19 +216,18 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private final Injector injector;
     private final Class<T> entityType;
     private final Class<? extends MiWithConfigurationSupport<?>> miType;
-    private final ICompanionObjectFinder coFinder;
+    private final ICompanionObjectFinder companionFinder;
     private final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated;
     private Optional<JsCode> customCode = Optional.empty();
     private Optional<JsCode> customCodeOnAttach = Optional.empty();
-    
+
     private final IUserProvider userProvider;
-    private final ISerialiser serialiser;
     private final IDomainTreeEnhancerCache domainTreeEnhancerCache;
     private final IWebUiConfig webUiConfig;
     private final IEntityCentreConfig eccCompanion;
     private final IMainMenuItem mmiCompanion;
     private final IUser userCompanion;
-    
+
     /**
      * Creates new {@link EntityCentre} instance for the menu item type and with specified name.
      *
@@ -229,26 +241,25 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     public EntityCentre(final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final EntityCentreConfig<T> dslDefaultConfig, final Injector injector, final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated) {
         this.name = name;
         this.dslDefaultConfig = dslDefaultConfig;
-        
+
         this.injector = injector;
-        
+
         validateMenuItemTypeRootType(miType);
         this.miType = miType;
         this.entityType = EntityResourceUtils.getEntityType(miType);
-        this.coFinder = this.injector.getInstance(ICompanionObjectFinder.class);
+        this.companionFinder = this.injector.getInstance(ICompanionObjectFinder.class);
         this.postCentreCreated = postCentreCreated;
-        
+
         userProvider = injector.getInstance(IUserProvider.class);
-        serialiser = injector.getInstance(ISerialiser.class);
         domainTreeEnhancerCache = injector.getInstance(IDomainTreeEnhancerCache.class);
         webUiConfig = injector.getInstance(IWebUiConfig.class);
-        eccCompanion = coFinder.find(ua.com.fielden.platform.ui.config.EntityCentreConfig.class);
-        mmiCompanion = coFinder.find(MainMenuItem.class);
-        userCompanion = coFinder.find(User.class);
+        eccCompanion = companionFinder.find(ua.com.fielden.platform.ui.config.EntityCentreConfig.class);
+        mmiCompanion = companionFinder.find(MainMenuItem.class);
+        userCompanion = companionFinder.find(User.class);
         // this is to trigger caching of DomainTreeEnhancers to avoid heavy computations later
         createDefaultCentre();
     }
-    
+
     /**
      * Validates root type corresponding to <code>menuItemType</code>.
      *
@@ -262,7 +273,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final Class<?> root = etAnnotation.value();
         validateRootType(root);
     }
-    
+
     /**
      * Generates default centre from DSL config and postCentreCreated callback (user unspecific).
      *
@@ -270,8 +281,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      * @param postCentreCreated
      * @return
      */
-    private ICentreDomainTreeManagerAndEnhancer createUserUnspecificDefaultCentre(final EntityCentreConfig<T> dslDefaultConfig, final ISerialiser serialiser, final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated) {
-        return createDefaultCentre0(dslDefaultConfig, serialiser, postCentreCreated, false);
+    private ICentreDomainTreeManagerAndEnhancer createUserUnspecificDefaultCentre(final EntityCentreConfig<T> dslDefaultConfig, final EntityFactory entityFactory, final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated) {
+        return createDefaultCentre0(dslDefaultConfig, entityFactory, postCentreCreated, false);
     }
 
     /**
@@ -281,92 +292,105 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      * @param postCentreCreated
      * @return
      */
-    private ICentreDomainTreeManagerAndEnhancer createDefaultCentre(final EntityCentreConfig<T> dslDefaultConfig, final ISerialiser serialiser, final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated) {
-        return createDefaultCentre0(dslDefaultConfig, serialiser, postCentreCreated, true);
+    private ICentreDomainTreeManagerAndEnhancer createDefaultCentre(final EntityCentreConfig<T> dslDefaultConfig, final EntityFactory entityFactory, final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated) {
+        return createDefaultCentre0(dslDefaultConfig, entityFactory, postCentreCreated, true);
     }
-    
+
     /**
      * Creates calculated / custom property containers from Centre DSL definition. This is to be used when constructing {@link CentreDomainTreeManagerAndEnhancer} instances.
-     * 
+     *
      * @param entityType
      * @param resultSetProps
      * @param summaryExpressions
      * @return
      */
-    private static T2<Map<Class<?>, Set<CalculatedPropertyInfo>>, Map<Class<?>, List<CustomProperty>>> createCalculatedAndCustomProperties(final Class<?> entityType, final Optional<List<ResultSetProp>> resultSetProps, final Optional<ListMultimap<String, SummaryPropDef>> summaryExpressions) {
-        final Map<Class<?>, Set<CalculatedPropertyInfo>> calculatedPropertiesInfo = new LinkedHashMap<>();
-        calculatedPropertiesInfo.put(entityType, new LinkedHashSet<>());
+    private static <T extends AbstractEntity<?>>T2<Map<Class<?>, Set<CalculatedPropertyInfo>>, Map<Class<?>, List<CustomProperty>>> createCalculatedAndCustomProperties(final Class<?> entityType, final Optional<List<ResultSetProp<T>>> resultSetProps, final ListMultimap<String, SummaryPropDef> summaryExpressions) {
         final Map<Class<?>, List<CustomProperty>> customProperties = new LinkedHashMap<>();
         customProperties.put(entityType, new ArrayList<CustomProperty>());
-        
         if (resultSetProps.isPresent()) {
-            for (final ResultSetProp property : resultSetProps.get()) {
+            for (final ResultSetProp<T> property : resultSetProps.get()) {
                 if (!property.propName.isPresent()) {
                     if (property.propDef.isPresent()) { // represents the 'custom' property
                         final PropDef<?> propDef = property.propDef.get();
                         final Class<?> managedType = entityType; // getManagedType(entityType); -- please note that mutual custom props validation is not be performed -- apply method invokes at the end after adding all custom / calculated properties
-                        customProperties.get(entityType).add(new CustomProperty(entityType, managedType, "" /* this is the contextPath */, generateNameFrom(propDef.title), propDef.title, propDef.desc, propDef.type));
+                        customProperties.get(entityType).add(new CustomProperty(entityType, managedType, "" /* this is the contextPath */, generateNameFrom(propDef.title), propDef.title, propDef.desc, propDef.type, IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE));
                     } else {
                         throw new IllegalStateException(format("The state of result-set property [%s] definition is not correct, need to exist either a 'propName' for the property or 'propDef'.", property));
                     }
                 }
             }
         }
-        if (summaryExpressions.isPresent()) {
-            for (final Entry<String, Collection<SummaryPropDef>> entry : summaryExpressions.get().asMap().entrySet()) {
-                final String originationProperty = treeName(entry.getKey());
-                for (final SummaryPropDef summaryProp : entry.getValue()) {
-                    calculatedPropertiesInfo.get(entityType).add(new CalculatedPropertyInfo(entityType, "", summaryProp.alias, summaryProp.expression, summaryProp.title, CalculatedPropertyAttribute.NO_ATTR, "".equals(originationProperty) ? "SELF" : originationProperty, summaryProp.desc));
-                }
+
+        final Map<Class<?>, Set<CalculatedPropertyInfo>> calculatedPropertiesInfo = new LinkedHashMap<>();
+        calculatedPropertiesInfo.put(entityType, new LinkedHashSet<>());
+        for (final Entry<String, Collection<SummaryPropDef>> entry : summaryExpressions.asMap().entrySet()) {
+            final String originationProperty = treeName(entry.getKey());
+            for (final SummaryPropDef summaryProp : entry.getValue()) {
+                calculatedPropertiesInfo.get(entityType).add(new CalculatedPropertyInfo(entityType, "", summaryProp.alias,
+                        summaryProp.expression,
+                        summaryProp.title,
+                        CalculatedPropertyAttribute.NO_ATTR,
+                        "".equals(originationProperty) ? "SELF" : originationProperty, summaryProp.desc,
+                        summaryProp.precision,
+                        summaryProp.scale));
             }
         }
-        
+
         return t2(calculatedPropertiesInfo, customProperties);
     }
-    
+
     /**
      * Creates default centre from Centre DSL configuration by adding calculated / custom props, applying selection crit defaults, EGI column widths / ordering etc.
-     * 
+     *
      * @param dslDefaultConfig
      * @param serialiser
      * @param postCentreCreated
      * @param userSpecific
      * @return
      */
-    private ICentreDomainTreeManagerAndEnhancer createDefaultCentre0(final EntityCentreConfig<T> dslDefaultConfig, final ISerialiser serialiser, final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated, final boolean userSpecific) {
-        final Optional<List<ResultSetProp>> resultSetProps = dslDefaultConfig.getResultSetProperties();
-        final Optional<ListMultimap<String, SummaryPropDef>> summaryExpressions = dslDefaultConfig.getSummaryExpressions();
-        
-        final ICentreDomainTreeManagerAndEnhancer cdtmae = createEmptyCentre(entityType, serialiser, domainTreeEnhancerCache, createCalculatedAndCustomProperties(entityType, resultSetProps, summaryExpressions), miType);
-        
+    public static <T extends AbstractEntity<?>> ICentreDomainTreeManagerAndEnhancer createDefaultCentreFrom(
+        final EntityCentreConfig<T> dslDefaultConfig,
+        final EntityFactory entityFactory,
+        final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated,
+        final boolean userSpecific,
+        final Class<T> entityType,
+        final IDomainTreeEnhancerCache domainTreeEnhancerCache,
+        final Class<? extends MiWithConfigurationSupport<?>> miType,
+        final Injector injector) {
+
+        final Optional<List<ResultSetProp<T>>> resultSetProps = dslDefaultConfig.getResultSetProperties();
+        final ListMultimap<String, SummaryPropDef> summaryExpressions = dslDefaultConfig.getSummaryExpressions();
+
+        final ICentreDomainTreeManagerAndEnhancer cdtmae = createEmptyCentre(entityType, entityFactory, domainTreeEnhancerCache, createCalculatedAndCustomProperties(entityType, resultSetProps, summaryExpressions), miType);
+
         final Optional<List<String>> selectionCriteria = dslDefaultConfig.getSelectionCriteria();
         if (selectionCriteria.isPresent()) {
             for (final String property : selectionCriteria.get()) {
                 cdtmae.getFirstTick().check(entityType, treeName(property), true);
 
                 if (userSpecific) {
-                    provideDefaultsFor(property, cdtmae, dslDefaultConfig);
+                    provideDefaultsFor(property, cdtmae, dslDefaultConfig, entityType, injector);
                 }
             }
         }
-        
+
         if (resultSetProps.isPresent()) {
             final Map<String, Integer> growFactors = calculateGrowFactors(resultSetProps.get());
-            for (final ResultSetProp property : resultSetProps.get()) {
+            for (final ResultSetProp<T> property : resultSetProps.get()) {
                 final String propertyName = getPropName(property);
-                cdtmae.getSecondTick().check(entityType, propertyName, true);
-                cdtmae.getSecondTick().use(entityType, propertyName, true);
-                cdtmae.getSecondTick().setWidth(entityType, propertyName, property.width);
-                if (growFactors.containsKey(propertyName)) {
-                    cdtmae.getSecondTick().setGrowFactor(entityType, propertyName, growFactors.get(propertyName));
+                if (!property.dynamicColBuilderType.isPresent()) {
+                    cdtmae.getSecondTick().check(entityType, propertyName, true);
+                    cdtmae.getSecondTick().use(entityType, propertyName, true);
+                    cdtmae.getSecondTick().setWidth(entityType, propertyName, property.width);
+                    if (growFactors.containsKey(propertyName)) {
+                        cdtmae.getSecondTick().setGrowFactor(entityType, propertyName, growFactors.get(propertyName));
+                    }
                 }
             }
         }
-        if (summaryExpressions.isPresent()) {
-            for (final Entry<String, Collection<SummaryPropDef>> entry : summaryExpressions.get().asMap().entrySet()) {
-                for (final SummaryPropDef summaryProp : entry.getValue()) {
-                    cdtmae.getSecondTick().check(entityType, summaryProp.alias, true);
-                }
+        for (final Entry<String, Collection<SummaryPropDef>> entry : summaryExpressions.asMap().entrySet()) {
+            for (final SummaryPropDef summaryProp : entry.getValue()) {
+                cdtmae.getSecondTick().check(entityType, summaryProp.alias, true);
             }
         }
 
@@ -388,8 +412,26 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 }
             }
         }
-
+        
+        cdtmae.getSecondTick().setPageCapacity(dslDefaultConfig.getPageCapacity());
+        cdtmae.getSecondTick().setMaxPageCapacity(dslDefaultConfig.getMaxPageCapacity());
+        cdtmae.getSecondTick().setVisibleRowsCount(dslDefaultConfig.getVisibleRowsCount());
+        cdtmae.getSecondTick().setNumberOfHeaderLines(dslDefaultConfig.getNumberOfHeaderLines());
+        
         return postCentreCreated == null ? cdtmae : postCentreCreated.apply(cdtmae);
+    }
+
+    /**
+     * Creates default centre from Centre DSL configuration by adding calculated / custom props, applying selection crit defaults, EGI column widths / ordering etc.
+     *
+     * @param dslDefaultConfig
+     * @param entityFactory
+     * @param postCentreCreated
+     * @param userSpecific
+     * @return
+     */
+    private ICentreDomainTreeManagerAndEnhancer createDefaultCentre0(final EntityCentreConfig<T> dslDefaultConfig, final EntityFactory entityFactory, final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated, final boolean userSpecific) {
+        return createDefaultCentreFrom(dslDefaultConfig, entityFactory, postCentreCreated, userSpecific, entityType, domainTreeEnhancerCache, miType, injector);
     }
 
     /**
@@ -399,7 +441,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      * @param property
      * @return
      */
-    private static String getPropName(final ResultSetProp property) {
+    private static <T extends AbstractEntity<?>> String getPropName(final ResultSetProp<T> property) {
         if (property.propName.isPresent()) {
             return treeName(property.propName.get());
         } else {
@@ -412,197 +454,187 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         }
     }
 
-    /**
-     * Returns the 'managed type' for the 'centre' manager.
-     *
-     * @param root
-     * @param centre
-     * @return
-     */
-    private Class<?> managedType(final ICentreDomainTreeManagerAndEnhancer centre) {
-        return centre.getEnhancer().getManagedType(entityType);
-    }
-
-    private void provideDefaultsFor(final String dslProperty, final ICentreDomainTreeManagerAndEnhancer cdtmae, final EntityCentreConfig<T> dslDefaultConfig) {
+    private static <T extends AbstractEntity<?>> void provideDefaultsFor(final String dslProperty, final ICentreDomainTreeManagerAndEnhancer cdtmae, final EntityCentreConfig<T> dslDefaultConfig, final Class<T> entityType, final Injector injector) {
         final String property = treeName(dslProperty);
+        final Class<?> managedType = cdtmae.getEnhancer().getManagedType(entityType);
 
         final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
-        final Class<?> propertyType = isEntityItself ? managedType(cdtmae) : PropertyTypeDeterminator.determinePropertyType(managedType(cdtmae), property);
+        final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, property);
 
-        if (AbstractDomainTree.isCritOnlySingle(managedType(cdtmae), property)) {
-            if (EntityUtils.isEntityType(propertyType)) {
-                provideDefaultsEntitySingle(() -> dslDefaultConfig.getDefaultSingleValuesForEntitySelectionCriteria(), () -> dslDefaultConfig.getDefaultSingleValueAssignersForEntitySelectionCriteria(), dslProperty, cdtmae);
-            } else if (EntityUtils.isString(propertyType)) {
-                provideDefaultsSingle(() -> dslDefaultConfig.getDefaultSingleValuesForStringSelectionCriteria(), () -> dslDefaultConfig.getDefaultSingleValueAssignersForStringSelectionCriteria(), dslProperty, cdtmae);
-            } else if (EntityUtils.isBoolean(propertyType)) {
-                provideDefaultsSingle(() -> dslDefaultConfig.getDefaultSingleValuesForBooleanSelectionCriteria(), () -> dslDefaultConfig.getDefaultSingleValueAssignersForBooleanSelectionCriteria(), dslProperty, cdtmae);
-            } else if (EntityUtils.isInteger(propertyType)) {
-                provideDefaultsSingle(() -> dslDefaultConfig.getDefaultSingleValuesForIntegerSelectionCriteria(), () -> dslDefaultConfig.getDefaultSingleValueAssignersForIntegerSelectionCriteria(), dslProperty, cdtmae);
-            } else if (EntityUtils.isRangeType(propertyType) && !EntityUtils.isDate(propertyType)) {
-                provideDefaultsSingle(() -> dslDefaultConfig.getDefaultSingleValuesForBigDecimalAndMoneySelectionCriteria(), () -> dslDefaultConfig.getDefaultSingleValueAssignersForBigDecimalAndMoneySelectionCriteria(), dslProperty, cdtmae);
-            } else if (EntityUtils.isDate(propertyType)) {
-                provideDefaultsDateSingle(() -> dslDefaultConfig.getDefaultSingleValuesForDateSelectionCriteria(), () -> dslDefaultConfig.getDefaultSingleValueAssignersForDateSelectionCriteria(), dslProperty, cdtmae);
+        if (isCritOnlySingle(managedType, property)) {
+            if (isEntityType(propertyType)) {
+                provideDefaultsEntitySingle(() -> dslDefaultConfig.getDefaultSingleValuesForEntitySelectionCriteria(), () -> dslDefaultConfig.getDefaultSingleValueAssignersForEntitySelectionCriteria(), dslProperty, cdtmae, entityType, injector);
+            } else if (isString(propertyType)) {
+                provideDefaultsSingle(() -> dslDefaultConfig.getDefaultSingleValuesForStringSelectionCriteria(), () -> dslDefaultConfig.getDefaultSingleValueAssignersForStringSelectionCriteria(), dslProperty, cdtmae, entityType, injector);
+            } else if (isBoolean(propertyType)) {
+                provideDefaultsSingle(() -> dslDefaultConfig.getDefaultSingleValuesForBooleanSelectionCriteria(), () -> dslDefaultConfig.getDefaultSingleValueAssignersForBooleanSelectionCriteria(), dslProperty, cdtmae, entityType, injector);
+            } else if (isInteger(propertyType)) {
+                provideDefaultsSingle(() -> dslDefaultConfig.getDefaultSingleValuesForIntegerSelectionCriteria(), () -> dslDefaultConfig.getDefaultSingleValueAssignersForIntegerSelectionCriteria(), dslProperty, cdtmae, entityType, injector);
+            } else if (isRangeType(propertyType) && !EntityUtils.isDate(propertyType)) {
+                provideDefaultsSingle(() -> dslDefaultConfig.getDefaultSingleValuesForBigDecimalAndMoneySelectionCriteria(), () -> dslDefaultConfig.getDefaultSingleValueAssignersForBigDecimalAndMoneySelectionCriteria(), dslProperty, cdtmae, entityType, injector);
+            } else if (isDate(propertyType)) {
+                provideDefaultsDateSingle(() -> dslDefaultConfig.getDefaultSingleValuesForDateSelectionCriteria(), () -> dslDefaultConfig.getDefaultSingleValueAssignersForDateSelectionCriteria(), dslProperty, cdtmae, entityType, injector);
             } else {
                 throw new UnsupportedOperationException(String.format("The single-crit type [%s] is currently unsupported.", propertyType));
             }
         } else {
-            if (EntityUtils.isEntityType(propertyType) || EntityUtils.isString(propertyType)) {
-                provideDefaultsEntityOrString(() -> dslDefaultConfig.getDefaultMultiValuesForEntityAndStringSelectionCriteria(), () -> dslDefaultConfig.getDefaultMultiValueAssignersForEntityAndStringSelectionCriteria(), dslProperty, cdtmae, EntityUtils.isString(propertyType));
-            } else if (EntityUtils.isBoolean(propertyType)) {
-                provideDefaultsBoolean(() -> dslDefaultConfig.getDefaultMultiValuesForBooleanSelectionCriteria(), () -> dslDefaultConfig.getDefaultMultiValueAssignersForBooleanSelectionCriteria(), dslProperty, cdtmae);
-            } else if (EntityUtils.isInteger(propertyType)) {
-                provideDefaultsRange(() -> dslDefaultConfig.getDefaultRangeValuesForIntegerSelectionCriteria(), () -> dslDefaultConfig.getDefaultRangeValueAssignersForIntegerSelectionCriteria(), dslProperty, cdtmae);
-            } else if (EntityUtils.isRangeType(propertyType) && !EntityUtils.isDate(propertyType)) {
-                provideDefaultsRange(() -> dslDefaultConfig.getDefaultRangeValuesForBigDecimalAndMoneySelectionCriteria(), () -> dslDefaultConfig.getDefaultRangeValueAssignersForBigDecimalAndMoneySelectionCriteria(), dslProperty, cdtmae);
-            } else if (EntityUtils.isDate(propertyType)) {
-                provideDefaultsDateRange(() -> dslDefaultConfig.getDefaultRangeValuesForDateSelectionCriteria(), () -> dslDefaultConfig.getDefaultRangeValueAssignersForDateSelectionCriteria(), dslProperty, cdtmae);
+            if (isEntityType(propertyType) || isString(propertyType)) {
+                provideDefaultsEntityOrString(() -> dslDefaultConfig.getDefaultMultiValuesForEntityAndStringSelectionCriteria(), () -> dslDefaultConfig.getDefaultMultiValueAssignersForEntityAndStringSelectionCriteria(), dslProperty, cdtmae, isString(propertyType), entityType, injector);
+            } else if (isBoolean(propertyType)) {
+                provideDefaultsBoolean(() -> dslDefaultConfig.getDefaultMultiValuesForBooleanSelectionCriteria(), () -> dslDefaultConfig.getDefaultMultiValueAssignersForBooleanSelectionCriteria(), dslProperty, cdtmae, entityType, injector);
+            } else if (isInteger(propertyType)) {
+                provideDefaultsRange(() -> dslDefaultConfig.getDefaultRangeValuesForIntegerSelectionCriteria(), () -> dslDefaultConfig.getDefaultRangeValueAssignersForIntegerSelectionCriteria(), dslProperty, cdtmae, entityType, injector);
+            } else if (isRangeType(propertyType) && !isDate(propertyType)) {
+                provideDefaultsRange(() -> dslDefaultConfig.getDefaultRangeValuesForBigDecimalAndMoneySelectionCriteria(), () -> dslDefaultConfig.getDefaultRangeValueAssignersForBigDecimalAndMoneySelectionCriteria(), dslProperty, cdtmae, entityType, injector);
+            } else if (isDate(propertyType)) {
+                provideDefaultsDateRange(() -> dslDefaultConfig.getDefaultRangeValuesForDateSelectionCriteria(), () -> dslDefaultConfig.getDefaultRangeValueAssignersForDateSelectionCriteria(), dslProperty, cdtmae, entityType, injector);
             } else {
                 throw new UnsupportedOperationException(String.format("The multi-crit type [%s] is currently unsupported.", propertyType));
             }
         }
     }
 
-    private void provideDefaultsEntityOrString(final Supplier<Optional<Map<String, MultiCritStringValueMnemonic>>> mnemonicSupplier, final Supplier<Optional<Map<String, Class<? extends IValueAssigner<MultiCritStringValueMnemonic, T>>>>> assignerSupplier, final String dslProperty, final ICentreDomainTreeManagerAndEnhancer cdtmae, final boolean isString) {
+    private static <T extends AbstractEntity<?>> void provideDefaultsEntityOrString(final Supplier<Optional<Map<String, MultiCritStringValueMnemonic>>> mnemonicSupplier, final Supplier<Optional<Map<String, Class<? extends IValueAssigner<MultiCritStringValueMnemonic, T>>>>> assignerSupplier, final String dslProperty, final ICentreDomainTreeManagerAndEnhancer cdtmae, final boolean isString, final Class<T> entityType, final Injector injector) {
         final String property = treeName(dslProperty);
         if (mnemonicSupplier.get().isPresent() && mnemonicSupplier.get().get().get(dslProperty) != null) {
-            provideMnemonicDefaultsEntityOrString(mnemonicSupplier.get().get().get(dslProperty), cdtmae, property, isString);
+            provideMnemonicDefaultsEntityOrString(mnemonicSupplier.get().get().get(dslProperty), cdtmae, property, isString, entityType);
         } else {
             if (assignerSupplier.get().isPresent() && assignerSupplier.get().get().get(dslProperty) != null) {
-                provideAssignerDefaultsEntityOrString(assignerSupplier.get().get().get(dslProperty), cdtmae, property, isString);
+                provideAssignerDefaultsEntityOrString(assignerSupplier.get().get().get(dslProperty), cdtmae, property, isString, entityType, injector);
             } else {
             }
         }
     }
 
-    private void provideDefaultsBoolean(final Supplier<Optional<Map<String, MultiCritBooleanValueMnemonic>>> mnemonicSupplier, final Supplier<Optional<Map<String, Class<? extends IValueAssigner<MultiCritBooleanValueMnemonic, T>>>>> assignerSupplier, final String dslProperty, final ICentreDomainTreeManagerAndEnhancer cdtmae) {
+    private static <T extends AbstractEntity<?>> void provideDefaultsBoolean(final Supplier<Optional<Map<String, MultiCritBooleanValueMnemonic>>> mnemonicSupplier, final Supplier<Optional<Map<String, Class<? extends IValueAssigner<MultiCritBooleanValueMnemonic, T>>>>> assignerSupplier, final String dslProperty, final ICentreDomainTreeManagerAndEnhancer cdtmae, final Class<T> entityType, final Injector injector) {
         final String property = treeName(dslProperty);
         if (mnemonicSupplier.get().isPresent() && mnemonicSupplier.get().get().get(dslProperty) != null) {
-            provideMnemonicDefaultsBoolean(mnemonicSupplier.get().get().get(dslProperty), cdtmae, property);
+            provideMnemonicDefaultsBoolean(mnemonicSupplier.get().get().get(dslProperty), cdtmae, property, entityType);
         } else {
             if (assignerSupplier.get().isPresent() && assignerSupplier.get().get().get(dslProperty) != null) {
-                provideAssignerDefaultsBoolean(assignerSupplier.get().get().get(dslProperty), cdtmae, property);
+                provideAssignerDefaultsBoolean(assignerSupplier.get().get().get(dslProperty), cdtmae, property, entityType, injector);
             } else {
             }
         }
     }
 
-    private void provideDefaultsEntitySingle(final Supplier<Optional<Map<String, SingleCritOtherValueMnemonic<? extends AbstractEntity<?>>>>> mnemonicSupplier, final Supplier<Optional<Map<String, Class<? extends IValueAssigner<? extends SingleCritOtherValueMnemonic<? extends AbstractEntity<?>>, T>>>>> assignerSupplier, final String dslProperty, final ICentreDomainTreeManagerAndEnhancer cdtmae) {
+    private static <T extends AbstractEntity<?>> void provideDefaultsEntitySingle(final Supplier<Optional<Map<String, SingleCritOtherValueMnemonic<? extends AbstractEntity<?>>>>> mnemonicSupplier, final Supplier<Optional<Map<String, Class<? extends IValueAssigner<? extends SingleCritOtherValueMnemonic<? extends AbstractEntity<?>>, T>>>>> assignerSupplier, final String dslProperty, final ICentreDomainTreeManagerAndEnhancer cdtmae, final Class<T> entityType, final Injector injector) {
         final String property = treeName(dslProperty);
         if (mnemonicSupplier.get().isPresent() && mnemonicSupplier.get().get().get(dslProperty) != null) {
-            provideMnemonicDefaultsSingle(mnemonicSupplier.get().get().get(dslProperty), cdtmae, property);
+            provideMnemonicDefaultsSingle(mnemonicSupplier.get().get().get(dslProperty), cdtmae, property, entityType);
         } else {
             if (assignerSupplier.get().isPresent() && assignerSupplier.get().get().get(dslProperty) != null) {
-                provideAssignerDefaultsEntitySingle(assignerSupplier.get().get().get(dslProperty), cdtmae, property);
+                provideAssignerDefaultsEntitySingle(assignerSupplier.get().get().get(dslProperty), cdtmae, property, entityType, injector);
             } else {
             }
         }
     }
 
-    private void provideDefaultsDateSingle(final Supplier<Optional<Map<String, SingleCritDateValueMnemonic>>> mnemonicSupplier, final Supplier<Optional<Map<String, Class<? extends IValueAssigner<SingleCritDateValueMnemonic, T>>>>> assignerSupplier, final String dslProperty, final ICentreDomainTreeManagerAndEnhancer cdtmae) {
+    private static <T extends AbstractEntity<?>> void provideDefaultsDateSingle(final Supplier<Optional<Map<String, SingleCritDateValueMnemonic>>> mnemonicSupplier, final Supplier<Optional<Map<String, Class<? extends IValueAssigner<SingleCritDateValueMnemonic, T>>>>> assignerSupplier, final String dslProperty, final ICentreDomainTreeManagerAndEnhancer cdtmae, final Class<T> entityType, final Injector injector) {
         final String property = treeName(dslProperty);
         if (mnemonicSupplier.get().isPresent() && mnemonicSupplier.get().get().get(dslProperty) != null) {
-            provideMnemonicDefaultsDateSingle(mnemonicSupplier.get().get().get(dslProperty), cdtmae, property);
+            provideMnemonicDefaultsDateSingle(mnemonicSupplier.get().get().get(dslProperty), cdtmae, property, entityType);
         } else {
             if (assignerSupplier.get().isPresent() && assignerSupplier.get().get().get(dslProperty) != null) {
-                provideAssignerDefaultsDateSingle(assignerSupplier.get().get().get(dslProperty), cdtmae, property);
+                provideAssignerDefaultsDateSingle(assignerSupplier.get().get().get(dslProperty), cdtmae, property, entityType, injector);
             } else {
             }
         }
     }
 
-    private void provideDefaultsDateRange(final Supplier<Optional<Map<String, RangeCritDateValueMnemonic>>> mnemonicSupplier, final Supplier<Optional<Map<String, Class<? extends IValueAssigner<RangeCritDateValueMnemonic, T>>>>> assignerSupplier, final String dslProperty, final ICentreDomainTreeManagerAndEnhancer cdtmae) {
+    private static <T extends AbstractEntity<?>> void provideDefaultsDateRange(final Supplier<Optional<Map<String, RangeCritDateValueMnemonic>>> mnemonicSupplier, final Supplier<Optional<Map<String, Class<? extends IValueAssigner<RangeCritDateValueMnemonic, T>>>>> assignerSupplier, final String dslProperty, final ICentreDomainTreeManagerAndEnhancer cdtmae, final Class<T> entityType, final Injector injector) {
         final String property = treeName(dslProperty);
         if (mnemonicSupplier.get().isPresent() && mnemonicSupplier.get().get().get(dslProperty) != null) {
-            provideMnemonicDefaultsDateRange(mnemonicSupplier.get().get().get(dslProperty), cdtmae, property);
+            provideMnemonicDefaultsDateRange(mnemonicSupplier.get().get().get(dslProperty), cdtmae, property, entityType);
         } else {
             if (assignerSupplier.get().isPresent() && assignerSupplier.get().get().get(dslProperty) != null) {
-                provideAssignerDefaultsDateRange(assignerSupplier.get().get().get(dslProperty), cdtmae, property);
+                provideAssignerDefaultsDateRange(assignerSupplier.get().get().get(dslProperty), cdtmae, property, entityType, injector);
             } else {
             }
         }
     }
 
-    private <M> void provideDefaultsSingle(final Supplier<Optional<Map<String, SingleCritOtherValueMnemonic<M>>>> mnemonicSupplier, final Supplier<Optional<Map<String, Class<? extends IValueAssigner<SingleCritOtherValueMnemonic<M>, T>>>>> assignerSupplier, final String dslProperty, final ICentreDomainTreeManagerAndEnhancer cdtmae) {
+    private static <M, T extends AbstractEntity<?>> void provideDefaultsSingle(final Supplier<Optional<Map<String, SingleCritOtherValueMnemonic<M>>>> mnemonicSupplier, final Supplier<Optional<Map<String, Class<? extends IValueAssigner<SingleCritOtherValueMnemonic<M>, T>>>>> assignerSupplier, final String dslProperty, final ICentreDomainTreeManagerAndEnhancer cdtmae, final Class<T> entityType, final Injector injector) {
         final String property = treeName(dslProperty);
         if (mnemonicSupplier.get().isPresent() && mnemonicSupplier.get().get().get(dslProperty) != null) {
-            provideMnemonicDefaultsSingle(mnemonicSupplier.get().get().get(dslProperty), cdtmae, property);
+            provideMnemonicDefaultsSingle(mnemonicSupplier.get().get().get(dslProperty), cdtmae, property, entityType);
         } else {
             if (assignerSupplier.get().isPresent() && assignerSupplier.get().get().get(dslProperty) != null) {
-                provideAssignerDefaultsSingle(assignerSupplier.get().get().get(dslProperty), cdtmae, property);
+                provideAssignerDefaultsSingle(assignerSupplier.get().get().get(dslProperty), cdtmae, property, entityType, injector);
             } else {
             }
         }
     }
 
-    private <M> void provideDefaultsRange(final Supplier<Optional<Map<String, RangeCritOtherValueMnemonic<M>>>> mnemonicSupplier, final Supplier<Optional<Map<String, Class<? extends IValueAssigner<RangeCritOtherValueMnemonic<M>, T>>>>> assignerSupplier, final String dslProperty, final ICentreDomainTreeManagerAndEnhancer cdtmae) {
+    private static <M, T extends AbstractEntity<?>> void provideDefaultsRange(final Supplier<Optional<Map<String, RangeCritOtherValueMnemonic<M>>>> mnemonicSupplier, final Supplier<Optional<Map<String, Class<? extends IValueAssigner<RangeCritOtherValueMnemonic<M>, T>>>>> assignerSupplier, final String dslProperty, final ICentreDomainTreeManagerAndEnhancer cdtmae, final Class<T> entityType, final Injector injector) {
         final String property = treeName(dslProperty);
         if (mnemonicSupplier.get().isPresent() && mnemonicSupplier.get().get().get(dslProperty) != null) {
-            provideMnemonicDefaultsRange(mnemonicSupplier.get().get().get(dslProperty), cdtmae, property);
+            provideMnemonicDefaultsRange(mnemonicSupplier.get().get().get(dslProperty), cdtmae, property, entityType);
         } else {
             if (assignerSupplier.get().isPresent() && assignerSupplier.get().get().get(dslProperty) != null) {
-                provideAssignerDefaultsRange(assignerSupplier.get().get().get(dslProperty), cdtmae, property);
+                provideAssignerDefaultsRange(assignerSupplier.get().get().get(dslProperty), cdtmae, property, entityType, injector);
             } else {
             }
         }
     }
 
-    private void provideAssignerDefaultsEntityOrString(final Class<? extends IValueAssigner<MultiCritStringValueMnemonic, T>> assignerType, final ICentreDomainTreeManagerAndEnhancer cdtmae, final String property, final boolean isString) {
+    private static <T extends AbstractEntity<?>> void provideAssignerDefaultsEntityOrString(final Class<? extends IValueAssigner<MultiCritStringValueMnemonic, T>> assignerType, final ICentreDomainTreeManagerAndEnhancer cdtmae, final String property, final boolean isString, final Class<T> entityType, final Injector injector) {
         /* TODO at this stage there is no implementation for centre context processing -- master entity for dependent centres is the only applicable context -- will be implemented later */
         final Optional<MultiCritStringValueMnemonic> value = injector.getInstance(assignerType).getValue(null, dslName(property));
         if (value.isPresent()) {
-            provideMnemonicDefaultsEntityOrString(value.get(), cdtmae, property, isString);
+            provideMnemonicDefaultsEntityOrString(value.get(), cdtmae, property, isString, entityType);
         }
     }
 
-    private void provideAssignerDefaultsBoolean(final Class<? extends IValueAssigner<MultiCritBooleanValueMnemonic, T>> assignerType, final ICentreDomainTreeManagerAndEnhancer cdtmae, final String property) {
+    private static <T extends AbstractEntity<?>> void provideAssignerDefaultsBoolean(final Class<? extends IValueAssigner<MultiCritBooleanValueMnemonic, T>> assignerType, final ICentreDomainTreeManagerAndEnhancer cdtmae, final String property, final Class<T> entityType, final Injector injector) {
         /* TODO at this stage there is no implementation for centre context processing -- master entity for dependent centres is the only applicable context -- will be implemented later */
         final Optional<MultiCritBooleanValueMnemonic> value = injector.getInstance(assignerType).getValue(null, dslName(property));
         if (value.isPresent()) {
-            provideMnemonicDefaultsBoolean(value.get(), cdtmae, property);
+            provideMnemonicDefaultsBoolean(value.get(), cdtmae, property, entityType);
         }
     }
 
-    private void provideAssignerDefaultsDateSingle(final Class<? extends IValueAssigner<SingleCritDateValueMnemonic, T>> assignerType, final ICentreDomainTreeManagerAndEnhancer cdtmae, final String property) {
+    private static <T extends AbstractEntity<?>> void provideAssignerDefaultsDateSingle(final Class<? extends IValueAssigner<SingleCritDateValueMnemonic, T>> assignerType, final ICentreDomainTreeManagerAndEnhancer cdtmae, final String property, final Class<T> entityType, final Injector injector) {
         /* TODO at this stage there is no implementation for centre context processing -- master entity for dependent centres is the only applicable context -- will be implemented later */
         final Optional<SingleCritDateValueMnemonic> value = injector.getInstance(assignerType).getValue(null, dslName(property));
         if (value.isPresent()) {
-            provideMnemonicDefaultsDateSingle(value.get(), cdtmae, property);
+            provideMnemonicDefaultsDateSingle(value.get(), cdtmae, property, entityType);
         }
     }
 
-    private void provideAssignerDefaultsDateRange(final Class<? extends IValueAssigner<RangeCritDateValueMnemonic, T>> assignerType, final ICentreDomainTreeManagerAndEnhancer cdtmae, final String property) {
+    private static <T extends AbstractEntity<?>> void provideAssignerDefaultsDateRange(final Class<? extends IValueAssigner<RangeCritDateValueMnemonic, T>> assignerType, final ICentreDomainTreeManagerAndEnhancer cdtmae, final String property, final Class<T> entityType, final Injector injector) {
         /* TODO at this stage there is no implementation for centre context processing -- master entity for dependent centres is the only applicable context -- will be implemented later */
         final Optional<RangeCritDateValueMnemonic> value = injector.getInstance(assignerType).getValue(null, dslName(property));
         if (value.isPresent()) {
-            provideMnemonicDefaultsDateRange(value.get(), cdtmae, property);
+            provideMnemonicDefaultsDateRange(value.get(), cdtmae, property, entityType);
         }
     }
 
-    private <M> void provideAssignerDefaultsSingle(final Class<? extends IValueAssigner<? extends SingleCritOtherValueMnemonic<M>, T>> assignerType, final ICentreDomainTreeManagerAndEnhancer cdtmae, final String property) {
+    private static <M, T extends AbstractEntity<?>> void provideAssignerDefaultsSingle(final Class<? extends IValueAssigner<? extends SingleCritOtherValueMnemonic<M>, T>> assignerType, final ICentreDomainTreeManagerAndEnhancer cdtmae, final String property, final Class<T> entityType, final Injector injector) {
         /* TODO at this stage there is no implementation for centre context processing -- master entity for dependent centres is the only applicable context -- will be implemented later */
         final Optional<? extends SingleCritOtherValueMnemonic<M>> value = injector.getInstance(assignerType).getValue(null, dslName(property));
         if (value.isPresent()) {
-            provideMnemonicDefaultsSingle(value.get(), cdtmae, property);
+            provideMnemonicDefaultsSingle(value.get(), cdtmae, property, entityType);
         }
     }
 
-    private void provideAssignerDefaultsEntitySingle(final Class<? extends IValueAssigner<? extends SingleCritOtherValueMnemonic<? extends AbstractEntity<?>>, T>> assignerType, final ICentreDomainTreeManagerAndEnhancer cdtmae, final String property) {
+    private static <T extends AbstractEntity<?>> void provideAssignerDefaultsEntitySingle(final Class<? extends IValueAssigner<? extends SingleCritOtherValueMnemonic<? extends AbstractEntity<?>>, T>> assignerType, final ICentreDomainTreeManagerAndEnhancer cdtmae, final String property, final Class<T> entityType, final Injector injector) {
         /* TODO at this stage there is no implementation for centre context processing -- master entity for dependent centres is the only applicable context -- will be implemented later */
-        final Optional<? extends SingleCritOtherValueMnemonic<? extends AbstractEntity<?>>> value = injector.getInstance(assignerType).getValue(null, dslName(property));
+        final Optional<SingleCritOtherValueMnemonic<? extends AbstractEntity<?>>> value = (Optional<SingleCritOtherValueMnemonic<? extends AbstractEntity<?>>>) injector.getInstance(assignerType).getValue(null, dslName(property));
         if (value.isPresent()) {
-            provideMnemonicDefaultsSingle(value.get(), cdtmae, property);
+            provideMnemonicDefaultsSingle(value.get(), cdtmae, property, entityType);
         }
     }
 
-    private <M> void provideAssignerDefaultsRange(final Class<? extends IValueAssigner<? extends RangeCritOtherValueMnemonic<M>, T>> assignerType, final ICentreDomainTreeManagerAndEnhancer cdtmae, final String property) {
+    private static <M, T extends AbstractEntity<?>> void provideAssignerDefaultsRange(final Class<? extends IValueAssigner<? extends RangeCritOtherValueMnemonic<M>, T>> assignerType, final ICentreDomainTreeManagerAndEnhancer cdtmae, final String property, final Class<T> entityType, final Injector injector) {
         /* TODO at this stage there is no implementation for centre context processing -- master entity for dependent centres is the only applicable context -- will be implemented later */
         final Optional<? extends RangeCritOtherValueMnemonic<M>> value = injector.getInstance(assignerType).getValue(null, dslName(property));
         if (value.isPresent()) {
-            provideMnemonicDefaultsRange(value.get(), cdtmae, property);
+            provideMnemonicDefaultsRange(value.get(), cdtmae, property, entityType);
         }
     }
 
-    private void provideMnemonicDefaultsEntityOrString(final MultiCritStringValueMnemonic mnemonic, final ICentreDomainTreeManagerAndEnhancer cdtmae, final String property, final boolean isString) {
+    private static <T extends AbstractEntity<?>> void provideMnemonicDefaultsEntityOrString(final MultiCritStringValueMnemonic mnemonic, final ICentreDomainTreeManagerAndEnhancer cdtmae, final String property, final boolean isString, final Class<T> entityType) {
         if (mnemonic.values.isPresent()) {
             cdtmae.getFirstTick().setValue(entityType, property, isString ? String.join(",", mnemonic.values.get()) : mnemonic.values.get());
         }
@@ -614,7 +646,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         }
     }
 
-    private void provideMnemonicDefaultsBoolean(final MultiCritBooleanValueMnemonic mnemonic, final ICentreDomainTreeManagerAndEnhancer cdtmae, final String property) {
+    private static <T extends AbstractEntity<?>> void provideMnemonicDefaultsBoolean(final MultiCritBooleanValueMnemonic mnemonic, final ICentreDomainTreeManagerAndEnhancer cdtmae, final String property, final Class<T> entityType) {
         if (mnemonic.isValue.isPresent()) {
             cdtmae.getFirstTick().setValue(entityType, property, mnemonic.isValue.get());
         }
@@ -629,7 +661,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         }
     }
 
-    private void provideMnemonicDefaultsDateSingle(final SingleCritDateValueMnemonic mnemonic, final ICentreDomainTreeManagerAndEnhancer cdtmae, final String property) {
+    private static <T extends AbstractEntity<?>> void provideMnemonicDefaultsDateSingle(final SingleCritDateValueMnemonic mnemonic, final ICentreDomainTreeManagerAndEnhancer cdtmae, final String property, final Class<T> entityType) {
         if (mnemonic.value.isPresent()) {
             cdtmae.getFirstTick().setValue(entityType, property, mnemonic.value.get());
         }
@@ -660,7 +692,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         }
     }
 
-    private void provideMnemonicDefaultsDateRange(final RangeCritDateValueMnemonic mnemonic, final ICentreDomainTreeManagerAndEnhancer cdtmae, final String property) {
+    private static <T extends AbstractEntity<?>> void provideMnemonicDefaultsDateRange(final RangeCritDateValueMnemonic mnemonic, final ICentreDomainTreeManagerAndEnhancer cdtmae, final String property, final Class<T> entityType) {
         if (mnemonic.fromValue.isPresent()) {
             cdtmae.getFirstTick().setValue(entityType, property, mnemonic.fromValue.get());
         }
@@ -694,7 +726,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         }
     }
 
-    private <M> void provideMnemonicDefaultsSingle(final SingleCritOtherValueMnemonic<M> mnemonic, final ICentreDomainTreeManagerAndEnhancer cdtmae, final String property) {
+    private static <M, T extends AbstractEntity<?>> void provideMnemonicDefaultsSingle(final SingleCritOtherValueMnemonic<M> mnemonic, final ICentreDomainTreeManagerAndEnhancer cdtmae, final String property, final Class<T> entityType) {
         if (mnemonic.value.isPresent()) {
             cdtmae.getFirstTick().setValue(entityType, property, mnemonic.value.get());
         }
@@ -706,7 +738,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         }
     }
 
-    private <M> void provideMnemonicDefaultsRange(final RangeCritOtherValueMnemonic<M> mnemonic, final ICentreDomainTreeManagerAndEnhancer cdtmae, final String property) {
+    private static <M, T extends AbstractEntity<?>> void provideMnemonicDefaultsRange(final RangeCritOtherValueMnemonic<M> mnemonic, final ICentreDomainTreeManagerAndEnhancer cdtmae, final String property, final Class<T> entityType) {
         if (mnemonic.fromValue.isPresent()) {
             cdtmae.getFirstTick().setValue(entityType, property, mnemonic.fromValue.get());
         }
@@ -806,22 +838,31 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         }
     }
 
-    @Override
-    public IRenderable buildFor(final DeviceProfile device) {
-        logger.debug("Initiating fresh centre...");
-        return createRenderableRepresentation(getAssociatedEntityCentreManager(device));
+    public Optional<IDynamicColumnBuilder<T>> getDynamicColumnBuilderFor(final ResultSetProp<T> resProp) {
+        return resProp.dynamicColBuilderType.map(clazz -> injector.getInstance(clazz));
     }
 
-    private final ICentreDomainTreeManagerAndEnhancer getAssociatedEntityCentreManager(final DeviceProfile device) {
+    public List<ResultSetProp<T>> getDynamicProperties () {
+        return dslDefaultConfig.getResultSetProperties()
+                .orElse(new ArrayList<>()).stream()
+                .filter(resProp -> resProp.dynamicColBuilderType.isPresent()).collect(Collectors.toList());
+    }
+
+    @Override
+    public IRenderable buildFor() {
+        return createRenderableRepresentation(getAssociatedEntityCentreManager());
+    }
+
+    private final ICentreDomainTreeManagerAndEnhancer getAssociatedEntityCentreManager() {
         final User user = getUser();
         if (user == null) {
-            return createUserUnspecificDefaultCentre(dslDefaultConfig, injector.getInstance(ISerialiser.class), postCentreCreated);
+            return createUserUnspecificDefaultCentre(dslDefaultConfig, injector.getInstance(EntityFactory.class), postCentreCreated);
         } else {
-            return updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, empty(), device, serialiser, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            return updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, empty(), DESKTOP, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
         }
     }
 
-    private String egiRepresentationFor(final Class<?> propertyType, final Optional<String> timeZone, final Optional<String> timePortionToDisplay) {
+    public static String egiRepresentationFor(final Class<?> propertyType, final Optional<String> timeZone, final Optional<String> timePortionToDisplay) {
         final Class<?> type = DynamicEntityClassLoader.getOriginalType(propertyType);
         String typeRes = EntityUtils.isEntityType(type) ? type.getName() : (EntityUtils.isBoolean(type) ? "Boolean" : type.getSimpleName());
         if (Date.class.isAssignableFrom(type)) {
@@ -837,13 +878,12 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      * @return
      */
     public ICentreDomainTreeManagerAndEnhancer createDefaultCentre() {
-        return createDefaultCentre(dslDefaultConfig, injector.getInstance(ISerialiser.class), postCentreCreated);
+        return createDefaultCentre(dslDefaultConfig, injector.getInstance(EntityFactory.class), postCentreCreated);
     }
 
     private IRenderable createRenderableRepresentation(final ICentreDomainTreeManagerAndEnhancer centre) {
 
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
-        importPaths.add("polymer/polymer/polymer");
         importPaths.add("master/tg-entity-master");
 
         logger.debug("Initiating layout...");
@@ -870,12 +910,13 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         logger.debug("Initiating property columns...");
 
         final List<PropertyColumnElement> propertyColumns = new ArrayList<>();
-        final Optional<List<ResultSetProp>> resultProps = dslDefaultConfig.getResultSetProperties();
-        final Optional<ListMultimap<String, SummaryPropDef>> summaryProps = dslDefaultConfig.getSummaryExpressions();
+        final Optional<List<ResultSetProp<T>>> resultProps = dslDefaultConfig.getResultSetProperties();
+        final List<DomElement> widgets = new ArrayList<>();
+        final ListMultimap<String, SummaryPropDef> summaryProps = dslDefaultConfig.getSummaryExpressions();
         final Class<?> managedType = centre.getEnhancer().getManagedType(root);
         if (resultProps.isPresent()) {
             int actionIndex = 0;
-            for (final ResultSetProp resultProp : resultProps.get()) {
+            for (final ResultSetProp<T> resultProp : resultProps.get()) {
                 final String tooltipProp = resultProp.tooltipProp.isPresent() ? resultProp.tooltipProp.get() : null;
                 final String resultPropName = getPropName(resultProp);
                 final boolean isEntityItself = "".equals(resultPropName); // empty property means "entity itself"
@@ -891,7 +932,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 }
 
                 final PropertyColumnElement el = new PropertyColumnElement(resultPropName,
-                        null,
+                        resultProp.widget,
+                        resultProp.dynamicColBuilderType.isPresent(),
+                        !resultProp.propDef.isPresent(),
                         resultProp.width,
                         centre.getSecondTick().getGrowFactor(root, resultPropName),
                         resultProp.isFlexible,
@@ -902,8 +945,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                                 Optional.ofNullable(EntityUtils.isDate(propertyType) ? DefaultValueContract.getTimePortionToDisplay(managedType, resultPropName) : null)),
                         CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultPropName),
                         action);
-                if (summaryProps.isPresent() && summaryProps.get().containsKey(dslName(resultPropName))) {
-                    final List<SummaryPropDef> summaries = summaryProps.get().get(dslName(resultPropName));
+                if (summaryProps.containsKey(dslName(resultPropName))) {
+                    final List<SummaryPropDef> summaries = summaryProps.get(dslName(resultPropName));
                     summaries.forEach(summary -> el.addSummary(summary.alias, PropertyTypeDeterminator.determinePropertyType(managedType, summary.alias), new Pair<>(summary.title, summary.desc)));
                 }
                 propertyColumns.add(el);
@@ -913,9 +956,11 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         logger.debug("Initiating prop actions...");
 
         final DomContainer egiColumns = new DomContainer();
+        final DomContainer egiEditors = new DomContainer();
         final StringBuilder propActionsObject = new StringBuilder();
         propertyColumns.forEach(column -> {
             importPaths.add(column.importPath());
+            column.widgetImportPath().ifPresent(path -> importPaths.add(path));
             if (column.hasSummary()) {
                 importPaths.add(column.getSummary(0).importPath());
             }
@@ -924,6 +969,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 propActionsObject.append(prefix + createActionObject(column.getAction().get()));
             }
             egiColumns.add(column.render());
+            column.renderWidget().ifPresent(widget -> egiEditors.add(widget));
         });
 
         logger.debug("Initiating top-level actions...");
@@ -932,12 +978,13 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final List<List<FunctionalActionElement>> actionGroups = new ArrayList<>();
         if (topLevelActions.isPresent()) {
 
-            final String currentGroup = null;
+            String currentGroup = null;
             for (int i = 0; i < topLevelActions.get().size(); i++) {
                 final Pair<EntityActionConfig, Optional<String>> topLevelAction = topLevelActions.get().get(i);
                 final String cg = getGroup(topLevelAction.getValue());
                 if (!EntityUtils.equalsEx(cg, currentGroup)) {
                     actionGroups.add(new ArrayList<>());
+                    currentGroup = cg;
                 }
                 addToLastGroup(actionGroups, topLevelAction.getKey(), i);
             }
@@ -948,9 +995,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
         final DomContainer functionalActionsDom = new DomContainer();
 
-        for (final List<FunctionalActionElement> group : actionGroups) {
-            final DomElement groupElement = new DomElement("div").clazz("entity-specific-action", "group");
-            for (final FunctionalActionElement el : group) {
+        for (int i = 0; i < actionGroups.size(); i++) {
+            final DomElement groupElement = new DomElement("div").attr("selectable-elements-container", null).attr("slot", "entity-specific-action").clazz("entity-specific-action", i == 0 ? "first-group" : "group");
+            for (final FunctionalActionElement el : actionGroups.get(i)) {
                 importPaths.add(el.importPath());
                 groupElement.add(el.render());
                 functionalActionsObjects.append(prefix + createActionObject(el));
@@ -968,7 +1015,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             final FunctionalActionElement el = new FunctionalActionElement(resultSetPrimaryEntityAction.get(), 0, FunctionalActionKind.PRIMARY_RESULT_SET);
 
             importPaths.add(el.importPath());
-            primaryActionDom.add(el.render().clazz("primary-action").attr("hidden", null));
+            primaryActionDom.add(el.render().attr("slot", "primary-action").clazz("primary-action").attr("hidden", null));
             primaryActionObject.append(prefix + createActionObject(el));
         }
         ////////////////////Primary result-set action [END] //////////////
@@ -1002,7 +1049,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final StringBuilder secondaryActionsObjects = new StringBuilder();
         for (final FunctionalActionElement el : secondaryActionElements) {
             importPaths.add(el.importPath());
-            secondaryActionsDom.add(el.render().clazz("secondary-action").attr("hidden", null));
+            secondaryActionsDom.add(el.render().attr("slot", "secondary-action").clazz("secondary-action"));
             secondaryActionsObjects.append(prefix + createActionObject(el));
         }
 
@@ -1071,15 +1118,16 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final Pair<String, String> gridLayoutConfig = generateGridLayoutConfig();
         final int prefixLength = prefix.length();
         logger.debug("Initiating template...");
-        final String text = ResourceLoader.getText("ua/com/fielden/platform/web/centre/tg-entity-centre-template.html");
+        final String text = ResourceLoader.getText("ua/com/fielden/platform/web/centre/tg-entity-centre-template.js");
         logger.debug("Replacing some parts...");
         final String entityCentreStr = text.
                 replace(IMPORTS, SimpleMasterBuilder.createImports(importPaths)).
                 replace(EGI_LAYOUT, gridLayoutConfig.getKey()).
                 replace(FULL_ENTITY_TYPE, entityType.getName()).
-                replace(MI_TYPE, miType.getSimpleName()).
+                replace(MI_TYPE, flattenedNameOf(miType)).
                 //egi related properties
                 replace(EGI_SHORTCUTS, shortcuts).
+                replace(EGI_HIDDEN, HIDDEN.eval(dslDefaultConfig.isEgiHidden())).
                 replace(EGI_DRAGGABLE, DRAGGABLE.eval(dslDefaultConfig.isDraggable())).
                 replace(EGI_TOOLBAR_VISIBLE, TOOLBAR_VISIBLE.eval(!dslDefaultConfig.shouldHideToolbar())).
                 replace(EGI_CHECKBOX_VISIBILITY, CHECKBOX_VISIBLE.eval(!dslDefaultConfig.shouldHideCheckboxes())).
@@ -1090,18 +1138,18 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace(EGI_SECONDARY_ACTION_FIXED, SECONDARY_ACTION_FIXED.eval(dslDefaultConfig.getScrollConfig().isSecondaryActionsFixed())).
                 replace(EGI_HEADER_FIXED, HEADER_FIXED.eval(dslDefaultConfig.getScrollConfig().isHeaderFixed())).
                 replace(EGI_SUMMARY_FIXED, SUMMARY_FIXED.eval(dslDefaultConfig.getScrollConfig().isSummaryFixed())).
-                replace(EGI_VISIBLE_ROW_COUNT, dslDefaultConfig.getVisibleRowsCount() + "").
                 replace(EGI_HEIGHT, dslDefaultConfig.getEgiHeight()).
+                replace(EGI_ROW_HEIGHT, dslDefaultConfig.getRowHeight()).
                 replace(EGI_FIT_TO_HEIGHT, FIT_TO_HEIGHT.eval(dslDefaultConfig.isFitToHeight())).
                 ///////////////////////
                 replace(TOOLBAR_DOM, dslDefaultConfig.getToolbarConfig().render().toString()).
                 replace(TOOLBAR_JS, dslDefaultConfig.getToolbarConfig().code(entityType).toString()).
                 replace(TOOLBAR_STYLES, dslDefaultConfig.getToolbarConfig().styles().toString()).
                 replace(FULL_MI_TYPE, miType.getName()).
-                replace(EGI_PAGE_CAPACITY, Integer.toString(dslDefaultConfig.getPageCapacity())).
                 replace(QUERY_ENHANCER_CONFIG, queryEnhancerContextConfigString()).
                 replace(CRITERIA_DOM, editorContainer.toString()).
                 replace(EGI_DOM, egiColumns.toString()).
+                replace(EGI_EDITORS, egiEditors.toString()).
                 replace(FRONT_ACTIONS_DOM, frontActionsDom.toString()).
                 replace(FRONT_ACTIONS, frontActionString.length() > prefixLength ? frontActionString.substring(prefixLength): frontActionString).
                 replace(EGI_ACTIONS, funcActionString.length() > prefixLength ? funcActionString.substring(prefixLength) : funcActionString).
@@ -1138,14 +1186,14 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     /**
      * Calculates the relative grow factor for all columns.
      */
-    private Map<String, Integer> calculateGrowFactors(final List<ResultSetProp> propertyColumns) {
-        //Searching for the minimal column width which are not flexible and their width is greater than 0.
+    private static <T extends AbstractEntity<?>> Map<String, Integer> calculateGrowFactors(final List<ResultSetProp<T>> propertyColumns) {
+        // Searching for the minimal column width which are not flexible and their width is greater than 0.
         final int minWidth = propertyColumns.stream()
                 .filter(column -> column.isFlexible && column.width > 0)
                 .reduce(Integer.MAX_VALUE,
                         (min, column) -> min > column.width ? column.width : min,
                         (min1, min2) -> min1 < min2 ? min1 : min2);
-        //Map each resultSetProp which is not flexible and has width greater than 0 to it's grow factor.
+        // Map each resultSetProp which is not flexible and has width greater than 0 to it's grow factor.
         return propertyColumns.stream()
                 .filter(column -> column.isFlexible && column.width > 0)
                 .collect(Collectors.toMap(
@@ -1328,39 +1376,54 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final Class<V> propType = dslDefaultConfig.getProvidedTypeForAutocompletedSelectionCriterion(originalPropertyName)
                 .map(propertyType -> (Class<V>) propertyType)
                 .orElseGet(() -> (Class<V>) ("".equals(originalPropertyName) ? getOriginalType(criteriaType) : determinePropertyType(getOriginalType(criteriaType), originalPropertyName)));
-        
-        final Pair<IValueMatcherWithCentreContext<V>, Optional<CentreContextConfig>> matcherAndConfig = 
+
+        final Pair<IValueMatcherWithCentreContext<V>, Optional<CentreContextConfig>> matcherAndConfig =
             dslDefaultConfig.getValueMatchersForSelectionCriteria() // take all matchers
             .map(matchers -> matchers.get(dslName(originalPropertyName))) // choose single matcher with concrete property name
             .map(customMatcherAndConfig -> pair((IValueMatcherWithCentreContext<V>) injector.getInstance(customMatcherAndConfig.getKey()), customMatcherAndConfig.getValue())) // instantiate the matcher: [matcherType; config] => [matcherInstance; config]
-            .orElseGet(() -> pair(new FallbackValueMatcherWithCentreContext<>(coFinder.find(propType)), empty())); // if no custom matcher was created then create default matcher
-        
+            .orElseGet(() -> pair(new FallbackValueMatcherWithCentreContext<>(companionFinder.find(propType)), empty())); // if no custom matcher was created then create default matcher
+
         // provide fetch model for created matcher
         matcherAndConfig.getKey().setFetch(createFetchModelForAutocompleter(originalPropertyName, propType));
         return matcherAndConfig;
     }
-    
+
     /**
      * Creates fetch model for entity-typed criteria autocompleted values. Fetches key and description complemented with additional properties specified in Centre DSL configuration.
-     * 
+     *
      * @param originalPropertyName
      * @param propType
      * @return
      */
     private <V extends AbstractEntity<?>> fetch<V> createFetchModelForAutocompleter(final String originalPropertyName, final Class<V> propType) {
-        return fetchWithKeyAndDesc(propType)
-            .with(
-                dslDefaultConfig.getAdditionalPropsForAutocompleter(originalPropertyName).stream()
-                .map(Pair::getKey)
-                .collect(toSet())
-            ).fetchModel();
+        final Set<String> nonDefaultAdditionalProperties = dslDefaultConfig.getAdditionalPropsForAutocompleter(originalPropertyName).stream().map(Pair::getKey).collect(toSet());
+        final Set<String> additionalProperties = nonDefaultAdditionalProperties.isEmpty() ? createDefaultAdditionalProps(propType).keySet() : nonDefaultAdditionalProperties;
+        return createFetchModelForAutocompleterFrom(propType, additionalProperties);
     }
-    
+
+    /**
+     * Creates lean fetch model for autocompleted values with deep keys for entity itself and deep keys for every <code>additionalProperties</code>.
+     * <p>
+     * Deep keys are needed for conversion of entity itself and its additional properties to string in client application.
+     *
+     * @param propType
+     * @param additionalProperties
+     * @return
+     */
+    public static <V extends AbstractEntity<?>> fetch<V> createFetchModelForAutocompleterFrom(final Class<V> propType, final Set<String> additionalProperties) {
+        final IFetchProvider<V> fetchProvider = fetchNone(propType).with(additionalProperties);
+        fetchProvider.addKeysTo("", false); // adding deep keys for entity itself (no 'desc' property is required, it should be explicitly added by withProps() API or otherwise it will be in default additional properties)
+        for (final String additionalProperty: additionalProperties) {
+            fetchProvider.addKeysTo(additionalProperty, true); // adding deep keys [and first-level 'desc' property, if exists] for additional [dot-notated] property
+        }
+        return fetchProvider.fetchModel();
+    }
+
     public Optional<Class<? extends ICustomPropsAssignmentHandler>> getCustomPropertiesAsignmentHandler() {
         return dslDefaultConfig.getResultSetCustomPropAssignmentHandlerType();
     }
 
-    public Optional<List<ResultSetProp>> getCustomPropertiesDefinitions() {
+    public Optional<List<ResultSetProp<T>>> getCustomPropertiesDefinitions() {
         return dslDefaultConfig.getResultSetProperties();
     }
 
@@ -1379,7 +1442,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      */
     public Optional<IFetchProvider<T>> getAdditionalFetchProviderForTooltipProperties() {
         final Set<String> tooltipProps = new LinkedHashSet<>();
-        final Optional<List<ResultSetProp>> resultSetProps = dslDefaultConfig.getResultSetProperties();
+        final Optional<List<ResultSetProp<T>>> resultSetProps = dslDefaultConfig.getResultSetProperties();
         resultSetProps.ifPresent(resultProps ->
             resultProps.stream().forEach(property -> {
                 if (property.tooltipProp.isPresent()) {

@@ -33,33 +33,28 @@ public class GroupedConditionsBuilder extends AbstractTokensBuilder {
         }
         final Iterator<Pair<TokenCategory, Object>> iterator = getTokens().iterator();
         final ICondition firstCondition = (ICondition) iterator.next().getValue();
-        final List<CompoundCondition> otherConditions = new ArrayList<CompoundCondition>();
+        final List<CompoundCondition> otherConditions = new ArrayList<>();
         for (; iterator.hasNext();) {
             final CompoundCondition subsequentCompoundCondition = (CompoundCondition) iterator.next().getValue();
             otherConditions.add(subsequentCompoundCondition);
         }
-        return new Pair<TokenCategory, Object>(TokenCategory.GROUPED_CONDITIONS, new GroupedConditions(negated, firstCondition, otherConditions));
+        return new Pair<>(TokenCategory.GROUPED_CONDITIONS, new GroupedConditions(negated, firstCondition, otherConditions));
     }
 
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + (negated ? 1231 : 1237);
-        return result;
+        return 31 * (negated ? 1231 : 1237);
     }
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (!(obj instanceof GroupedConditionsBuilder)) {
             return false;
-        if (!(obj instanceof GroupedConditionsBuilder))
-            return false;
-        final GroupedConditionsBuilder other = (GroupedConditionsBuilder) obj;
-        if (negated != other.negated)
-            return false;
-        return true;
+        }
+        final GroupedConditionsBuilder that = (GroupedConditionsBuilder) obj;
+        return this.negated == that.negated;
     }
 }

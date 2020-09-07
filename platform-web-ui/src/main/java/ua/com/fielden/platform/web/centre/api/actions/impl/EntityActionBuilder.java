@@ -2,6 +2,8 @@ package ua.com.fielden.platform.web.centre.api.actions.impl;
 
 import org.apache.commons.lang.StringUtils;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.web.PrefDim;
@@ -27,8 +29,6 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.compound.Compound;
-
-import com.google.inject.Injector;
 
 public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntityActionBuilder<T>, IEntityActionBuilder0<T>, IEntityActionBuilder0WithViews<T>, IEntityActionBuilder1<T>, IEntityActionBuilder2<T>, IEntityActionBuilder3<T>, IEntityActionBuilder4<T>, IEntityActionBuilder4IconStyle<T>, IEntityActionBuilder5<T>, IEntityActionBuilder6<T>, IEntityActionBuilder7<T> {
     private Injector injector;
@@ -68,6 +68,15 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
         actionBuilder.injector = injector;
         actionBuilder.builder = builder;
         return actionBuilder.addAction(functionalEntity);
+    }
+
+    /**
+     * Starting point to entity edit action configuration.
+     *
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> IEntityActionBuilder0<T> editAction() {
+        return new EntityActionBuilder<T>();
     }
 
     /**

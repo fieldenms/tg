@@ -30,6 +30,7 @@ import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntityForCentreDomainTree;
 import ua.com.fielden.platform.domaintree.testing.MasterEntityForIncludedPropertiesLogic;
 import ua.com.fielden.platform.domaintree.testing.MasterSyntheticEntity;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 
 /**
  * A test for {@link CentreDomainTreeManager}.
@@ -54,7 +55,7 @@ public class CentreDomainTreeManagerAndEnhancerTest extends AbstractDomainTreeMa
     }
 
     public static Object createDtm_for_CentreDomainTreeManagerAndEnhancerTest() {
-        return new CentreDomainTreeManagerAndEnhancer(serialiser(), createRootTypes_for_CentreDomainTreeManagerAndEnhancerTest());
+        return new CentreDomainTreeManagerAndEnhancer(factory(), createRootTypes_for_CentreDomainTreeManagerAndEnhancerTest());
     }
 
     public static Object createIrrelevantDtm_for_CentreDomainTreeManagerAndEnhancerTest() {
@@ -62,7 +63,7 @@ public class CentreDomainTreeManagerAndEnhancerTest extends AbstractDomainTreeMa
     }
 
     protected static Set<Class<?>> createRootTypes_for_CentreDomainTreeManagerAndEnhancerTest() {
-        final Set<Class<?>> rootTypes = new HashSet<Class<?>>(createRootTypes_for_AbstractDomainTreeManagerAndEnhancerTest());
+        final Set<Class<?>> rootTypes = new HashSet<>(createRootTypes_for_AbstractDomainTreeManagerAndEnhancerTest());
         rootTypes.add(MasterEntityForCentreDomainTree.class);
         rootTypes.add(EntityWithCompositeKey.class);
         rootTypes.add(EntityWithKeyTitleAndWithAEKeyType.class);
@@ -96,7 +97,7 @@ public class CentreDomainTreeManagerAndEnhancerTest extends AbstractDomainTreeMa
     @Test
     public void test_that_domain_changes_are_not_permitted_for_used_in_analyses_properties() throws Exception {
         // enhance centre domain with new calculated property
-        dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "", "MAX(1 * 2.5 * bigDecimalProp)", "Calc prop5", "Desc", CalculatedPropertyAttribute.NO_ATTR, "bigDecimalProp");
+        dtm().getEnhancer().addCalculatedProperty(MasterEntity.class, "", "MAX(1 * 2.5 * bigDecimalProp)", "Calc prop5", "Desc", CalculatedPropertyAttribute.NO_ATTR, "bigDecimalProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         dtm().getEnhancer().apply();
 
         dtm().initAnalysisManagerByDefault("Report", AnalysisType.SIMPLE);
@@ -143,10 +144,10 @@ public class CentreDomainTreeManagerAndEnhancerTest extends AbstractDomainTreeMa
         dtm().getFirstTick().check(MasterEntityForIncludedPropertiesLogic.class, "integerProp", true);
         assertEquals("The checked properties are incorrect.", Arrays.asList("integerProp", "0-placeholder-origin-0-1", "1-placeholder-origin-0-2"), dtm().getFirstTick().checkedProperties(MasterEntityForIncludedPropertiesLogic.class));
 
-        dtm().getEnhancer().addCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "entityProp", "1 * 2 * integerProp", "Prop1_mutably checked prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+        dtm().getEnhancer().addCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "entityProp", "1 * 2 * integerProp", "Prop1_mutably checked prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         dtm().getEnhancer().apply();
         assertEquals("Incorrect checked properties.", Arrays.asList("integerProp", "entityProp.prop1_mutablyCheckedProp", "1-placeholder-origin-0-2"), dtm().getFirstTick().checkedProperties(MasterEntityForIncludedPropertiesLogic.class));
-        dtm().getEnhancer().addCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "entityProp", "1 * 2 * integerProp", "Prop2_mutably checked prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+        dtm().getEnhancer().addCalculatedProperty(MasterEntityForIncludedPropertiesLogic.class, "entityProp", "1 * 2 * integerProp", "Prop2_mutably checked prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         dtm().getEnhancer().apply();
         assertEquals("Incorrect checked properties.", Arrays.asList("integerProp", "entityProp.prop1_mutablyCheckedProp", "entityProp.prop2_mutablyCheckedProp"), dtm().getFirstTick().checkedProperties(MasterEntityForIncludedPropertiesLogic.class));
         dtm().getFirstTick().swap(MasterEntityForIncludedPropertiesLogic.class, "entityProp.prop1_mutablyCheckedProp", "entityProp.prop2_mutablyCheckedProp");
@@ -227,6 +228,7 @@ public class CentreDomainTreeManagerAndEnhancerTest extends AbstractDomainTreeMa
         assertFalse("The instance should be 'unchanged' after removal.", dtm().isChangedAnalysisManager(name));
     }
 
+    @Ignore("Ignored due to analyses made partially non-workable. See CentreDomainTreeManagerAndEnhancer.copyAnalysis method for more details.")
     @Test
     public void test_initialisation_discarding_and_saving_Analyses() {
         test_initialisation_discarding_and_saving_of_Analyses(AnalysisType.PIVOT, "A brand new PIVOT analysis");
@@ -285,6 +287,7 @@ public class CentreDomainTreeManagerAndEnhancerTest extends AbstractDomainTreeMa
         assertEquals("Incorrect value 'j'.", 3, j);
     }
 
+    @Ignore("Ignored due to analyses made partially non-workable. See CentreDomainTreeManagerAndEnhancer.copyAnalysis method for more details.")
     @Test
     public void test_that_Analyses_freezing_works_fine() {
         final AnalysisType analysisType = AnalysisType.SIMPLE;

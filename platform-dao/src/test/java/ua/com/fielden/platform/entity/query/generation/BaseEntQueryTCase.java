@@ -70,10 +70,10 @@ import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.utils.IDates;
 
 public class BaseEntQueryTCase {
-    public static final Map<Class, Class> hibTypeDefaults = new HashMap<Class, Class>();
+    public static final Map<Class, Class> hibTypeDefaults = new HashMap<>();
 
     protected static final Class<TgWorkOrder> WORK_ORDER = TgWorkOrder.class;
     protected static final Class<TgVehicle> VEHICLE = TgVehicle.class;
@@ -119,9 +119,9 @@ public class BaseEntQueryTCase {
 
     protected static final DomainMetadataAnalyser DOMAIN_METADATA_ANALYSER = new DomainMetadataAnalyser(DOMAIN_METADATA);
 
-    private static final EntQueryGenerator qb = new EntQueryGenerator(DOMAIN_METADATA_ANALYSER, null, null, Guice.createInjector(new HibernateUserTypesModule(), new HelperIocModule()).getInstance(IUniversalConstants.class));
+    private static final EntQueryGenerator qb = new EntQueryGenerator(DOMAIN_METADATA_ANALYSER, null, null, Guice.createInjector(new HibernateUserTypesModule(), new HelperIocModule()).getInstance(IDates.class));
 
-    private static final EntQueryGenerator qbwf = new EntQueryGenerator(DOMAIN_METADATA_ANALYSER, new SimpleUserFilter(), null, Guice.createInjector(new HibernateUserTypesModule(), new HelperIocModule()).getInstance(IUniversalConstants.class));
+    private static final EntQueryGenerator qbwf = new EntQueryGenerator(DOMAIN_METADATA_ANALYSER, new SimpleUserFilter(), null, Guice.createInjector(new HibernateUserTypesModule(), new HelperIocModule()).getInstance(IDates.class));
 
     protected static EntQuery entSourceQry(final QueryModel qryModel) {
         return qb.generateEntQueryAsSourceQuery(qryModel, new HashMap<String, Object>(), qryModel.getResultType());
@@ -207,7 +207,7 @@ public class BaseEntQueryTCase {
     }
 
     protected List<List<PropResolutionInfo>> getSourcesReferencingProps(final EntQuery entQry) {
-        final List<List<PropResolutionInfo>> result = new ArrayList<List<PropResolutionInfo>>();
+        final List<List<PropResolutionInfo>> result = new ArrayList<>();
         for (final ISource source : entQry.getSources().getAllSources()) {
             if (!source.generated()) {
                 result.add(source.getReferencingProps());
@@ -238,7 +238,7 @@ public class BaseEntQueryTCase {
     }
 
     public static void assertModelsEqualsAccordingUserDataFiltering(final QueryModel shortcutModel, final QueryModel explicitModel) {
-        final EntQuery shortcutQry = entResultQryWithUserFilter(shortcutModel);
+        final EntQuery shortcutQry = entResultQryWithUserFilter(shortcutModel.setFilterable(true));
         final EntQuery explicitQry = entResultQry(explicitModel);
         assertTrue(("Query models are different!\nShortcut:\n" + shortcutQry.toString() + "\nExplicit:\n" + explicitQry.toString()), shortcutQry.equals(explicitQry));
     }

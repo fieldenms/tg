@@ -7,28 +7,25 @@ import java.util.Set;
 
 import org.junit.Test;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancerCache;
-import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurposes;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.api.impl.SerialiserForDomainTreesTestingPurposes;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.utils.Pair;
 
-import com.google.inject.Injector;
-
 public class EntityQueryUtilsTest {
 
     @SuppressWarnings("serial")
-    private final static ICentreDomainTreeManagerAndEnhancer cdtme = new CentreDomainTreeManagerAndEnhancer(createSerialiser(createFactory()), new HashSet<Class<?>>() {
+    private final static ICentreDomainTreeManagerAndEnhancer cdtme = new CentreDomainTreeManagerAndEnhancer(createFactory(), new HashSet<Class<?>>() {
         {
             add(MasterEntity.class);
         }
@@ -40,22 +37,18 @@ public class EntityQueryUtilsTest {
         return injector.getInstance(EntityFactory.class);
     }
 
-    private static ISerialiser createSerialiser(final EntityFactory factory) {
-        return new SerialiserForDomainTreesTestingPurposes(factory, new ClassProviderForTestingPurposes(), DomainTreeEnhancerCache.CACHE);
-    }
-
     static {
         final IDomainTreeEnhancer dte = cdtme.getEnhancer();
-        dte.addCalculatedProperty(MasterEntity.class, "", "3 + integerProp", "firstCalcWithoutOrigin", "firstCalcWithoutOrigin", CalculatedPropertyAttribute.NO_ATTR, null);
-        dte.addCalculatedProperty(MasterEntity.class, "", "3 + integerProp", "firstCalc", "firstCalc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-        dte.addCalculatedProperty(MasterEntity.class, "", "SUM(integerProp)", "sumInt", "Int Summary", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-        dte.addCalculatedProperty(MasterEntity.class, "", "AVG(integerProp)", "avgInt", "Int Average", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-        dte.addCalculatedProperty(MasterEntity.class, "entityProp.mutablyCheckedProp", "3 + integerProp", "secondCalc", "secondCalc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-        dte.addCalculatedProperty(MasterEntity.class, "entityProp.mutablyCheckedProp", "SUM(integerProp)", "mutIntSum", "Integer another summary", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-        dte.addCalculatedProperty(MasterEntity.class, "entityProp.entityProp.simpleEntityProp", "3 + integerProp", "thirdCalc", "thirdCalc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-        dte.addCalculatedProperty(MasterEntity.class, "entityProp.entityProp.simpleEntityProp", "SUM(integerProp)", "propIntSum", "Property int summary", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-        dte.addCalculatedProperty(MasterEntity.class, "entityProp.entityProp.simpleEntityProp", "AVG(integerProp)", "propIntAvg", "Property Int average", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-        dte.addCalculatedProperty(MasterEntity.class, "entityProp.entityProp.simpleEntityProp", "MIN(integerProp)", "propIntMin", "Property Int minimum", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
+        dte.addCalculatedProperty(MasterEntity.class, "", "3 + integerProp", "firstCalcWithoutOrigin", "firstCalcWithoutOrigin", CalculatedPropertyAttribute.NO_ATTR, null, IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        dte.addCalculatedProperty(MasterEntity.class, "", "3 + integerProp", "firstCalc", "firstCalc", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        dte.addCalculatedProperty(MasterEntity.class, "", "SUM(integerProp)", "sumInt", "Int Summary", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        dte.addCalculatedProperty(MasterEntity.class, "", "AVG(integerProp)", "avgInt", "Int Average", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        dte.addCalculatedProperty(MasterEntity.class, "entityProp.mutablyCheckedProp", "3 + integerProp", "secondCalc", "secondCalc", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        dte.addCalculatedProperty(MasterEntity.class, "entityProp.mutablyCheckedProp", "SUM(integerProp)", "mutIntSum", "Integer another summary", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        dte.addCalculatedProperty(MasterEntity.class, "entityProp.entityProp.simpleEntityProp", "3 + integerProp", "thirdCalc", "thirdCalc", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        dte.addCalculatedProperty(MasterEntity.class, "entityProp.entityProp.simpleEntityProp", "SUM(integerProp)", "propIntSum", "Property int summary", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        dte.addCalculatedProperty(MasterEntity.class, "entityProp.entityProp.simpleEntityProp", "AVG(integerProp)", "propIntAvg", "Property Int average", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        dte.addCalculatedProperty(MasterEntity.class, "entityProp.entityProp.simpleEntityProp", "MIN(integerProp)", "propIntMin", "Property Int minimum", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         dte.apply();
 
         cdtme.getSecondTick().check(MasterEntity.class, "", true);
@@ -92,7 +85,7 @@ public class EntityQueryUtilsTest {
 
     @Test
     public void test_that_separateFetchFromTotalsProperties_works() {
-        final Set<String> expectedFetchProperties = new HashSet<String>();
+        final Set<String> expectedFetchProperties = new HashSet<>();
         expectedFetchProperties.add("");
         expectedFetchProperties.add("stringProp");
         expectedFetchProperties.add("firstCalc");
@@ -103,13 +96,13 @@ public class EntityQueryUtilsTest {
         expectedFetchProperties.add("entityProp.entityProp.simpleEntityProp.integerProp");
         expectedFetchProperties.add("entityProp.entityProp.simpleEntityProp.thirdCalc");
         expectedFetchProperties.add("firstCalcWithoutOrigin");
-        final Set<String> expectedTotalProperties = new HashSet<String>();
+        final Set<String> expectedTotalProperties = new HashSet<>();
         expectedTotalProperties.add("mutIntSum");
         expectedTotalProperties.add("propIntSum");
         expectedTotalProperties.add("propIntAvg");
         expectedTotalProperties.add("propIntMin");
 
-        assertEquals("Separate properties doesn't work correctly", new Pair<Set<String>, Set<String>>(expectedFetchProperties, expectedTotalProperties), EntityQueryCriteriaUtils.separateFetchAndTotalProperties(MasterEntity.class, cdtme.getSecondTick(), cdtme.getEnhancer()));
+        assertEquals("Separate properties doesn't work correctly", new Pair<>(expectedFetchProperties, expectedTotalProperties), EntityQueryCriteriaUtils.separateFetchAndTotalProperties(MasterEntity.class, cdtme.getSecondTick(), cdtme.getEnhancer()));
     }
 
 }

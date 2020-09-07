@@ -89,7 +89,7 @@ public class CriteriaReflector {
      *            - the additional suffix if the generated property has a pair.
      * @return
      */
-    public static String generateCriteriaPropertyName(final Class<?> root, final String propertyName) {
+    public static String critName(final Class<?> root, final String propertyName) {
         return root.getSimpleName().substring(0, 1).toLowerCase() + root.getSimpleName().substring(1) + "_" + propertyName.replaceAll(Reflector.DOT_SPLITTER, "_");
     }
 

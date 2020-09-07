@@ -1,10 +1,18 @@
 package ua.com.fielden.platform.serialisation.jackson;
 
-import static java.lang.String.format;
+import static java.lang.reflect.Modifier.isAbstract;
+import static java.lang.reflect.Modifier.isInterface;
+import static java.util.Collections.unmodifiableList;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isShortCollection;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.shortCollectionKey;
 import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
+import static ua.com.fielden.platform.reflection.Finder.findRealProperties;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getTimeZone;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isCompositeKeySeparatorDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isCritOnlyDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isDisplayAsDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isDisplayDescDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isEntityDescDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isEntityTitleDefault;
@@ -14,17 +22,16 @@ import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isResultOnlyDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isScaleDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isSecreteDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isTrailingZerosDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isUpperCaseDefault;
+import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.esotericsoftware.kryo.Context;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -44,14 +51,10 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
-import ua.com.fielden.platform.security.user.UserSecret;
 import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
-import ua.com.fielden.platform.serialisation.exceptions.SerialisationException;
 import ua.com.fielden.platform.serialisation.jackson.deserialisers.EntityJsonDeserialiser;
-import ua.com.fielden.platform.serialisation.jackson.exceptions.EntitySerialisationException;
 import ua.com.fielden.platform.serialisation.jackson.serialisers.EntityJsonSerialiser;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -191,15 +194,23 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
                         entityTypeProp.set_scale(scale);
                     }
                     final boolean trailingZeros = isPropertyAnnotation.trailingZeros();
-                    if (DefaultValueContract.isTrailingZerosDefault(trailingZeros)) {
+                    if (isTrailingZerosDefault(trailingZeros)) {
                         entityTypeProp.set_trailingZeros(trailingZeros);
+                    }
+                    final String displayAs = isPropertyAnnotation.displayAs();
+                    if (!isDisplayAsDefault(displayAs)) {
+                        entityTypeProp.set_displayAs(displayAs);
                     }
                 }
                 final String timeZone = getTimeZone(type, name);
                 if (timeZone != null) {
                     entityTypeProp.set_timeZone(timeZone);
                 }
-
+                entityTypeProp.set_typeName(typeNameOf(prop));
+                
+                if (isShortCollection(type, name)) {
+                    entityTypeProp.set_shortCollectionKey(shortCollectionKey(type, name));
+                }
                 props.put(name, entityTypeProp);
             }
             entityTypeInfo.set_props(props);
@@ -207,6 +218,17 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         final EntityType registered = entityTypeInfoGetter.register(entityTypeInfo);
         registered.set_identifier(serialisationTypeEncoder.encode(type));
         return registered;
+    }
+    
+    /**
+     * Returns {@link String} representation of the type of the specified <code>prop</code> in case if it is supported by means of {@link #isFieldTypeSupported(Class)}.
+     * For entity-typed properties (non-collectional) it returns full class name prepended with ":", for other types it returns simple class name.
+     * 
+     * @param prop
+     * @return
+     */
+    private static String typeNameOf(final CachedProperty prop) {
+        return prop.getPropertyType() == null ? null : (prop.isEntityTyped() ? ":" + prop.getPropertyType().getName() : prop.getPropertyType().getSimpleName());
     }
 
     public EntityType getEntityTypeInfo() {
@@ -224,33 +246,50 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
 
     private static ThreadLocal<JacksonContext> contextThreadLocal = ThreadLocal.withInitial(JacksonContext::new);
 
+    /**
+     * Returns <code>true</code> if the specified <code>fieldType</code> is supported for {@link CachedProperty}, otherwise <code>false</code>.
+     * <p>
+     * Only non-abstract and non-interface types are supported. The only exception is boolean.class which is supported but has 'abstract' modifier.
+     * 
+     * @param fieldType
+     * @return
+     */
+    private static boolean isFieldTypeSupported(final Class<?> fieldType) {
+        final int modifiers = fieldType.getModifiers();
+        return boolean.class == fieldType || !isAbstract(modifiers) && !isInterface(modifiers);
+    }
+
+    /**
+     * Creates list of {@link CachedProperty} instances for the specified <code>type</code> based on its property definitions.
+     * 
+     * @param type
+     * @return
+     */
     public static <T extends AbstractEntity<?>> List<CachedProperty> createCachedProperties(final Class<T> type) {
-        final boolean hasCompositeKey = EntityUtils.isCompositeEntity(type);
+        final boolean hasCompositeKey = isCompositeEntity(type);
         final List<CachedProperty> properties = new ArrayList<>();
-        for (final Field propertyField : Finder.findRealProperties(type)) {
+        for (final Field propertyField : findRealProperties(type)) {
             propertyField.setAccessible(true);
             // need to handle property key in a special way -- composite key does not have to be serialised
             if (AbstractEntity.KEY.equals(propertyField.getName())) {
                 if (!hasCompositeKey) {
                     final CachedProperty prop = new CachedProperty(propertyField);
                     properties.add(prop);
-                    final Class<?> fieldType = AnnotationReflector.getKeyType(type);
-                    final int modifiers = fieldType.getModifiers();
-                    if (!Modifier.isAbstract(modifiers) && !Modifier.isInterface(modifiers)) {
+                    final Class<?> fieldType = getKeyType(type);
+                    if (isFieldTypeSupported(fieldType)) {
                         prop.setPropertyType(fieldType);
                     }
                 }
             } else {
                 final CachedProperty prop = new CachedProperty(propertyField);
                 properties.add(prop);
-                final Class<?> fieldType = PropertyTypeDeterminator.stripIfNeeded(propertyField.getType());
-                final int modifiers = fieldType.getModifiers();
-                if (!Modifier.isAbstract(modifiers) && !Modifier.isInterface(modifiers)) {
+                final Class<?> fieldType = stripIfNeeded(propertyField.getType());
+                if (isFieldTypeSupported(fieldType)) {
                     prop.setPropertyType(fieldType);
                 }
             }
         }
-        return Collections.unmodifiableList(properties);
+        return unmodifiableList(properties);
     }
 
     /**
@@ -288,8 +327,6 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
 
     /**
      * Returns the thread local context for serialization and deserialization.
-     *
-     * @see Context
      */
     public static JacksonContext getContext() {
         return contextThreadLocal.get();

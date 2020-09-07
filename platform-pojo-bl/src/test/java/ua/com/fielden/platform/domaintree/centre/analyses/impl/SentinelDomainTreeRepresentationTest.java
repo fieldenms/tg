@@ -14,6 +14,7 @@ import ua.com.fielden.platform.domaintree.centre.analyses.ISentinelDomainTreeRep
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.testing.EvenSlaverEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 
 /**
  * A test for {@link SentinelDomainTreeRepresentation}.
@@ -36,27 +37,27 @@ public class SentinelDomainTreeRepresentationTest extends AnalysisDomainTreeRepr
     }
 
     public static Object createDtm_for_SentinelDomainTreeRepresentationTest() {
-        return new SentinelDomainTreeRepresentation(serialiser(), createRootTypes_for_SentinelDomainTreeRepresentationTest());
+        return new SentinelDomainTreeRepresentation(factory(), createRootTypes_for_SentinelDomainTreeRepresentationTest());
     }
 
     public static Object createIrrelevantDtm_for_SentinelDomainTreeRepresentationTest() {
         final Set<Class<?>> rootTypes = createRootTypes_for_SentinelDomainTreeRepresentationTest();
-        final CentreDomainTreeManagerAndEnhancer mgr = new CentreDomainTreeManagerAndEnhancer(serialiser(), rootTypes);
+        final CentreDomainTreeManagerAndEnhancer mgr = new CentreDomainTreeManagerAndEnhancer(factory(), rootTypes);
         mgr.provideSentinelAnalysesAggregationProperty(rootTypes);
         // provide sentinel properties to test exclusion logic
-        mgr.getEnhancer().addCalculatedProperty(MasterEntity.class, "", "case When integerProp > 10 thEn \"GreEn\" wheN integerProp > 5 thEn \"yelloW\" else \"red\" end", "Sentinel 1", "Desc", CalculatedPropertyAttribute.NO_ATTR, null);
-        mgr.getEnhancer().addCalculatedProperty(MasterEntity.class, "", "case When MONTH(dateProp) > 10 thEn \"REd\" else \"green\" end", "Sentinel 2", "Desc", CalculatedPropertyAttribute.NO_ATTR, null);
+        mgr.getEnhancer().addCalculatedProperty(MasterEntity.class, "", "case When integerProp > 10 thEn \"GreEn\" wheN integerProp > 5 thEn \"yelloW\" else \"red\" end", "Sentinel 1", "Desc", CalculatedPropertyAttribute.NO_ATTR, null, IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        mgr.getEnhancer().addCalculatedProperty(MasterEntity.class, "", "case When MONTH(dateProp) > 10 thEn \"REd\" else \"green\" end", "Sentinel 2", "Desc", CalculatedPropertyAttribute.NO_ATTR, null, IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         // incorrectly formed sentinel -- no correct string values (neither "green" nor "red")
-        mgr.getEnhancer().addCalculatedProperty(MasterEntity.class, "", "case When MONTH(dateProp) > 10 thEn \"Unknown1\" else \"unknown2\" end", "Pseudo sentinel 1", "Desc", CalculatedPropertyAttribute.NO_ATTR, null);
+        mgr.getEnhancer().addCalculatedProperty(MasterEntity.class, "", "case When MONTH(dateProp) > 10 thEn \"Unknown1\" else \"unknown2\" end", "Pseudo sentinel 1", "Desc", CalculatedPropertyAttribute.NO_ATTR, null, IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         // incorrectly formed sentinel -- not string property at all
-        mgr.getEnhancer().addCalculatedProperty(MasterEntity.class, "", "case When MONTH(dateProp) > 10 thEn \"1\" else \"2\" end", "Pseudo sentinel 2", "Desc", CalculatedPropertyAttribute.NO_ATTR, null);
+        mgr.getEnhancer().addCalculatedProperty(MasterEntity.class, "", "case When MONTH(dateProp) > 10 thEn \"1\" else \"2\" end", "Pseudo sentinel 2", "Desc", CalculatedPropertyAttribute.NO_ATTR, null, IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         mgr.getEnhancer().apply();
 
         return mgr;
     }
 
     protected static Set<Class<?>> createRootTypes_for_SentinelDomainTreeRepresentationTest() {
-        final Set<Class<?>> rootTypes = new HashSet<Class<?>>(createRootTypes_for_AnalysisDomainTreeRepresentationTest());
+        final Set<Class<?>> rootTypes = new HashSet<>(createRootTypes_for_AnalysisDomainTreeRepresentationTest());
         rootTypes.remove(EvenSlaverEntity.class); // this entity has been excluded manually in parent tests
         return rootTypes;
     }

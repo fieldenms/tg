@@ -1,24 +1,22 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import java.io.ByteArrayInputStream;
+import static org.restlet.data.MediaType.TEXT_HTML;
+import static ua.com.fielden.platform.web.resources.webui.FileResource.createRepresentation;
+
 import java.lang.management.ManagementFactory;
 
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
-import org.restlet.data.Encoding;
-import org.restlet.data.MediaType;
-import org.restlet.engine.application.EncodeRepresentation;
-import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 
-import com.google.common.base.Charsets;
-
 import ua.com.fielden.platform.basic.config.Workflows;
+import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.web.app.ISourceController;
+import ua.com.fielden.platform.utils.IDates;
+import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 
@@ -33,7 +31,8 @@ import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 public class AppIndexResource extends AbstractWebResource {
     private final IWebUiConfig webUiConfig;
     private final IUserProvider userProvider;
-    private final ISourceController sourceController;
+    private final IWebResourceLoader webResourceLoader;
+    private final ICriteriaGenerator criteriaGenerator;
     
     /**
      * Creates {@link AppIndexResource} instance.
@@ -43,17 +42,20 @@ public class AppIndexResource extends AbstractWebResource {
      * @param response
      */
     public AppIndexResource(
-            final ISourceController sourceController,
+            final IWebResourceLoader webResourceLoader,
             final IWebUiConfig webUiConfig,
             final IUserProvider userProvider,
             final IDeviceProvider deviceProvider,
+            final IDates dates,
+            final ICriteriaGenerator criteriaGenerator,
             final Context context, 
             final Request request, 
             final Response response) {
-        super(context, request, response, deviceProvider);
+        super(context, request, response, deviceProvider, dates);
         this.webUiConfig = webUiConfig;
         this.userProvider = userProvider;
-        this.sourceController = sourceController;
+        this.webResourceLoader = webResourceLoader;
+        this.criteriaGenerator = criteriaGenerator;
     }
 
     @Get
@@ -65,10 +67,10 @@ public class AppIndexResource extends AbstractWebResource {
             //  changing Web UI configurations (all configurations should exist in scope of IWebUiConfig.initConfiguration() method).
             webUiConfig.clearConfiguration();
             webUiConfig.initConfiguration();
+            // clears inner state in criteria generator, e.g. cached generated types
+            criteriaGenerator.clear();
         }
-        
-        final String source = sourceController.loadSource("/app/tg-app-index.html", device());
-        return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8)), MediaType.TEXT_HTML));
+        return createRepresentation(webResourceLoader, TEXT_HTML, "/app/tg-app-index.html", getReference().getRemainingPart());
     }
 
     /**

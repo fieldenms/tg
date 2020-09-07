@@ -24,6 +24,7 @@ import ua.com.fielden.platform.domaintree.testing.AbstractAnalysisDomainTreeMana
 import ua.com.fielden.platform.domaintree.testing.EntityWithCompositeKey;
 import ua.com.fielden.platform.domaintree.testing.EntityWithKeyTitleAndWithAEKeyType;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -49,33 +50,33 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
     }
 
     public static Object createDtm_for_AbstractAnalysisDomainTreeManagerTest() {
-        return new AbstractAnalysisDomainTreeManager1(serialiser(), createRootTypes_for_AbstractAnalysisDomainTreeManagerTest());
+        return new AbstractAnalysisDomainTreeManager1(factory(), createRootTypes_for_AbstractAnalysisDomainTreeManagerTest());
     }
 
     public static Object createIrrelevantDtm_for_AbstractAnalysisDomainTreeManagerTest() {
-        final ICentreDomainTreeManagerAndEnhancer dtm = new CentreDomainTreeManagerAndEnhancer(serialiser(), createRootTypes_for_AbstractAnalysisDomainTreeManagerTest());
+        final ICentreDomainTreeManagerAndEnhancer dtm = new CentreDomainTreeManagerAndEnhancer(factory(), createRootTypes_for_AbstractAnalysisDomainTreeManagerTest());
         enhanceManagerWithBasicCalculatedProperties(dtm);
         return dtm;
     }
 
     protected static void enhanceManagerWithBasicCalculatedProperties(final ICentreDomainTreeManagerAndEnhancer dtm) {
-        dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "", "MAX(integerProp)", "Int agg expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp");
-        dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "", "MAX(bigDecimalProp)", "Big decimal agg expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "bigDecimalProp");
-        dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "", "MAX(moneyProp)", "Money agg expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "moneyProp");
-        dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "", "YEAR(dateProp)", "Date expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp");
+        dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "", "MAX(integerProp)", "Int agg expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "integerProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "", "MAX(bigDecimalProp)", "Big decimal agg expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "bigDecimalProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "", "MAX(moneyProp)", "Money agg expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "moneyProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "", "YEAR(dateProp)", "Date expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
 
-        dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "", "MAX(moneyProp)", "Unchecked agg expr prop 1", "Desc", CalculatedPropertyAttribute.NO_ATTR, "moneyProp");
-        dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp", "MAX(moneyProp)", "Unchecked agg expr prop 2", "Desc", CalculatedPropertyAttribute.NO_ATTR, "moneyProp");
-        dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.entityProp", "MAX(moneyProp)", "Unchecked agg expr prop 3", "Desc", CalculatedPropertyAttribute.NO_ATTR, "moneyProp");
+        dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "", "MAX(moneyProp)", "Unchecked agg expr prop 1", "Desc", CalculatedPropertyAttribute.NO_ATTR, "moneyProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp", "MAX(moneyProp)", "Unchecked agg expr prop 2", "Desc", CalculatedPropertyAttribute.NO_ATTR, "moneyProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.entityProp", "MAX(moneyProp)", "Unchecked agg expr prop 3", "Desc", CalculatedPropertyAttribute.NO_ATTR, "moneyProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
 
-        dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "", "YEAR(dateProp)", "Unchecked date expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp");
-        dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp", "YEAR(dateProp)", "Unchecked date expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp");
-        dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.entityProp", "YEAR(dateProp)", "Unchecked date expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp");
+        dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "", "YEAR(dateProp)", "Unchecked date expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp", "YEAR(dateProp)", "Unchecked date expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
+        dtm.getEnhancer().addCalculatedProperty(MasterEntity.class, "entityProp.entityProp", "YEAR(dateProp)", "Unchecked date expr prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp", IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE);
         dtm.getEnhancer().apply();
     }
 
     protected static Set<Class<?>> createRootTypes_for_AbstractAnalysisDomainTreeManagerTest() {
-        final Set<Class<?>> rootTypes = new HashSet<Class<?>>(createRootTypes_for_AbstractDomainTreeManagerTest());
+        final Set<Class<?>> rootTypes = new HashSet<>(createRootTypes_for_AbstractDomainTreeManagerTest());
         rootTypes.add(EntityWithCompositeKey.class);
         rootTypes.add(EntityWithKeyTitleAndWithAEKeyType.class);
         return rootTypes;
@@ -254,21 +255,21 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
 
         // Alter and check //
         dtm().getSecondTick().toggleOrdering(MasterEntity.class, "intAggExprProp");
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("intAggExprProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>("intAggExprProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
         dtm().getSecondTick().toggleOrdering(MasterEntity.class, "intAggExprProp");
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("intAggExprProp", Ordering.DESCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>("intAggExprProp", Ordering.DESCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
         dtm().getSecondTick().toggleOrdering(MasterEntity.class, "intAggExprProp");
         assertEquals("Value is incorrect.", Arrays.asList(), dtm().getSecondTick().orderedProperties(MasterEntity.class));
         dtm().getSecondTick().toggleOrdering(MasterEntity.class, "intAggExprProp");
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("intAggExprProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>("intAggExprProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
         dtm().getSecondTick().toggleOrdering(MasterEntity.class, "bigDecimalAggExprProp");
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("intAggExprProp", Ordering.ASCENDING), new Pair<String, Ordering>("bigDecimalAggExprProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>("intAggExprProp", Ordering.ASCENDING), new Pair<>("bigDecimalAggExprProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
         dtm().getSecondTick().toggleOrdering(MasterEntity.class, "bigDecimalAggExprProp");
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("intAggExprProp", Ordering.ASCENDING), new Pair<String, Ordering>("bigDecimalAggExprProp", Ordering.DESCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>("intAggExprProp", Ordering.ASCENDING), new Pair<>("bigDecimalAggExprProp", Ordering.DESCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
         dtm().getSecondTick().toggleOrdering(MasterEntity.class, "intAggExprProp");
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("intAggExprProp", Ordering.DESCENDING), new Pair<String, Ordering>("bigDecimalAggExprProp", Ordering.DESCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>("intAggExprProp", Ordering.DESCENDING), new Pair<>("bigDecimalAggExprProp", Ordering.DESCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
         dtm().getSecondTick().toggleOrdering(MasterEntity.class, "intAggExprProp");
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("bigDecimalAggExprProp", Ordering.DESCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>("bigDecimalAggExprProp", Ordering.DESCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
         dtm().getSecondTick().toggleOrdering(MasterEntity.class, "bigDecimalAggExprProp");
         assertEquals("Value is incorrect.", Arrays.asList(), dtm().getSecondTick().orderedProperties(MasterEntity.class));
     }
@@ -283,15 +284,15 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
         dtm().getSecondTick().toggleOrdering(MasterEntity.class, "bigDecimalAggExprProp");
         dtm().getSecondTick().toggleOrdering(MasterEntity.class, "bigDecimalAggExprProp");
         dtm().getSecondTick().toggleOrdering(MasterEntity.class, "moneyAggExprProp");
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("intAggExprProp", Ordering.ASCENDING), new Pair<String, Ordering>("bigDecimalAggExprProp", Ordering.DESCENDING), new Pair<String, Ordering>("moneyAggExprProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>("intAggExprProp", Ordering.ASCENDING), new Pair<>("bigDecimalAggExprProp", Ordering.DESCENDING), new Pair<>("moneyAggExprProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
 
         // un-use middle property
         dtm().getSecondTick().use(MasterEntity.class, "bigDecimalAggExprProp", false);
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("intAggExprProp", Ordering.ASCENDING), new Pair<String, Ordering>("moneyAggExprProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>("intAggExprProp", Ordering.ASCENDING), new Pair<>("moneyAggExprProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
 
         // un-use right property
         dtm().getSecondTick().use(MasterEntity.class, "moneyAggExprProp", false);
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("intAggExprProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>("intAggExprProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
 
         // un-use last property
         dtm().getSecondTick().use(MasterEntity.class, "intAggExprProp", false);
@@ -381,12 +382,12 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
         assertEquals("Incorrect value 'i'.", 0, i);
 
         dtm().getSecondTick().toggleOrdering(MasterEntity.class, "intAggExprProp");
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("intAggExprProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>("intAggExprProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
 
         assertEquals("Incorrect value 'i'.", 1, i);
 
         dtm().getSecondTick().toggleOrdering(MasterEntity.class, "intAggExprProp");
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("intAggExprProp", Ordering.DESCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>("intAggExprProp", Ordering.DESCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
 
         assertEquals("Incorrect value 'i'.", 2, i);
 
@@ -396,7 +397,7 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
         assertEquals("Incorrect value 'i'.", 3, i);
 
         dtm().getSecondTick().toggleOrdering(MasterEntity.class, "intAggExprProp");
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("intAggExprProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>("intAggExprProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
 
         assertEquals("Incorrect value 'i'.", 4, i);
     }
@@ -412,12 +413,12 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
         assertEquals("Incorrect value 'i'.", 0, i);
 
         dtm().getSecondTick().toggleOrdering(MasterEntity.class, "intAggExprProp");
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("intAggExprProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>("intAggExprProp", Ordering.ASCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
 
         assertEquals("Incorrect value 'i'.", 1, i);
 
         dtm().getSecondTick().toggleOrdering(MasterEntity.class, "intAggExprProp");
-        assertEquals("Value is incorrect.", Arrays.asList(new Pair<String, Ordering>("intAggExprProp", Ordering.DESCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
+        assertEquals("Value is incorrect.", Arrays.asList(new Pair<>("intAggExprProp", Ordering.DESCENDING)), dtm().getSecondTick().orderedProperties(MasterEntity.class));
 
         assertEquals("Incorrect value 'i'.", 1, i);
     }

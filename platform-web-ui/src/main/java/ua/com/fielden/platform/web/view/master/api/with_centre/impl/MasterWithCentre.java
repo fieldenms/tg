@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.web.view.master.api.with_centre.impl;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
 
 import java.util.Optional;
 
@@ -52,9 +55,9 @@ class MasterWithCentre<T extends AbstractEntity<?>> implements IMaster<T> {
 
         final String attributes = attrs.toString().replace(", }", " }");
 
-        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
-                .replace("<!--@imports-->", "<link rel='import' href='/app/tg-element-loader.html'>\n")
-                .replace("@entity_type", entityType.getSimpleName())
+        final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
+                .replace(IMPORTS, "import '/resources/element_loader/tg-element-loader.js';\n")
+                .replace(ENTITY_TYPE, flattenedNameOf(entityType))
                 .replace("<!--@tg-entity-master-content-->",
                         format(""
                         + "<tg-element-loader id='loader' context='[[_createContextHolderForEmbeddedViews]]' context-property='getMasterEntity' "
@@ -66,7 +69,7 @@ class MasterWithCentre<T extends AbstractEntity<?>> implements IMaster<T> {
                         "self.masterWithCentre = true;\n" +
                         "self.classList.remove('canLeave');\n" +
                         "self._focusEmbededView = function () {\n" +
-                        "    if (this.$.loader.loadedElement && this.$.loader.loadedElement.focusView) {\n" +
+                        "    if (this.wasLoaded() && this.$.loader.loadedElement.focusView) {\n" +
                         "        this.$.loader.loadedElement.focusView();\n" +
                         "    }\n" +
                         "}.bind(self);\n" +
@@ -80,12 +83,12 @@ class MasterWithCentre<T extends AbstractEntity<?>> implements IMaster<T> {
                         "    return false;\n" +
                         "}.bind(self);\n" +
                         "self._focusNextEmbededView = function (e) {\n" +
-                        "    if (this.$.loader.loadedElement && this.$.loader.loadedElement.focusNextView) {\n" +
+                        "    if (this.wasLoaded() && this.$.loader.loadedElement.focusNextView) {\n" +
                         "        this.$.loader.loadedElement.focusNextView(e);\n" +
                         "    }\n" +
                         "}.bind(self);\n" +
                         "self._focusPreviousEmbededView = function (e) {\n" +
-                        "    if (this.$.loader.loadedElement && this.$.loader.loadedElement.focusPreviousView) {\n" +
+                        "    if (this.wasLoaded() && this.$.loader.loadedElement.focusPreviousView) {\n" +
                         "        this.$.loader.loadedElement.focusPreviousView(e);\n" +
                         "    }\n" +
                         "}.bind(self);\n")

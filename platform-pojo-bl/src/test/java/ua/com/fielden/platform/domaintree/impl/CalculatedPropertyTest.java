@@ -31,6 +31,7 @@ import ua.com.fielden.platform.domaintree.exceptions.DomainTreeException;
 import ua.com.fielden.platform.domaintree.testing.EvenSlaverEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.domaintree.testing.SlaveEntity;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 
 /**
  * A test for {@link CalculatedProperty}.
@@ -53,7 +54,7 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
     }
 
     protected static Object createDtm_for_CalculatedPropertyTest() {
-        return new DomainTreeEnhancer(serialiser(), createRootTypes_for_CalculatedPropertyTest());
+        return new DomainTreeEnhancer(factory(), createRootTypes_for_CalculatedPropertyTest());
     }
 
     protected static Object createIrrelevantDtm_for_CalculatedPropertyTest() {
@@ -61,7 +62,7 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
     }
 
     protected static Set<Class<?>> createRootTypes_for_CalculatedPropertyTest() {
-        final Set<Class<?>> rootTypes = new HashSet<Class<?>>();
+        final Set<Class<?>> rootTypes = new HashSet<>();
         rootTypes.add(MasterEntity.class);
         return rootTypes;
     }
@@ -83,7 +84,7 @@ public class CalculatedPropertyTest extends AbstractDomainTreeTest {
     //////////////////////////////////////////// Utilities ////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     protected CalculatedProperty correctCalculatedPropertyCreation(final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty) {
-        final CalculatedProperty calc = CalculatedProperty.createCorrect(factory(), root, contextPath, contextualExpression, title, desc, attribute, originationProperty, dtm());
+        final CalculatedProperty calc = CalculatedProperty.createCorrect(factory(), root, contextPath, contextualExpression, title, desc, attribute, originationProperty, IsProperty.DEFAULT_PRECISION, IsProperty.DEFAULT_SCALE, dtm());
         checkTrivialParams(calc, root, contextPath, contextualExpression, title, desc, attribute, originationProperty, dtm());
         return calc;
     }

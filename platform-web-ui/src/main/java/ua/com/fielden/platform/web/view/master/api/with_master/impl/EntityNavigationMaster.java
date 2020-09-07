@@ -14,7 +14,7 @@ public class EntityNavigationMaster extends EntityManipulationMaster<EntityNavig
                 "             //Provide custom after load listener\n"
               + "             self._seqEditAfterLoadListener = function (e) {\n"
               + "                 this._assignPostSavedHandlersForEmbeddedMaster(e);\n"
-              + "                 const saveButton = e.detail.querySelector(\"tg-action[role='save']\");\n"
+              + "                 const saveButton = e.detail.shadowRoot.querySelector(\"tg-action[role='save']\");\n"
               + "                 saveButton.closeAfterExecution = false;\n"
               + "             }.bind(self);\n"
               + "             self._handleBindingEntityAppeared = function (e) {\n"
@@ -37,8 +37,13 @@ public class EntityNavigationMaster extends EntityManipulationMaster<EntityNavig
               + "                     this._prevCurrBindingEntity = e.detail.value;\n"
               + "                 }\n"
               + "             }.bind(self);\n"
+              + "             self._handleBindingEntityRetrievedError = function (e) {\n"
+              + "                 this.fire('tg-master-navigation-error');\n"
+              + "                 this._previousMaster = this.$.loader.loadedElement;\n"
+              + "             }.bind(self);\n"
               + "             self.addEventListener('binding-entity-appeared', self._handleBindingEntityAppeared);\n"
-              + "             self.addEventListener('_curr-binding-entity-changed', self._handleBindingEntityChanged);\n");
+              + "             self.addEventListener('_curr-binding-entity-changed', self._handleBindingEntityChanged);\n"
+              + "             self.$.loader.addEventListener('binding-entity-retrieved-error', self._handleBindingEntityRetrievedError);\n");
       this.renderable = () -> new InnerTextElement(masterTemplate);
     }
 

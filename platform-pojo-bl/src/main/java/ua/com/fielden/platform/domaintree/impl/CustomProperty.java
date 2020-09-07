@@ -19,6 +19,8 @@ public class CustomProperty implements IProperty {
     private final String title;
     private final String desc;
     private final Class<?> type;
+    private final Integer precision;
+    private final Integer scale;
 
     public CustomProperty() {
         this.root = null;
@@ -27,9 +29,20 @@ public class CustomProperty implements IProperty {
         this.title = null;
         this.desc = null;
         this.type = null;
+        this.precision = null;
+        this.scale = null;
     }
 
-    public CustomProperty(final Class<?> root, final Class<?> managedType, final String contextPath, final String name, final String title, final String desc, final Class<?> type) {
+    public CustomProperty(
+            final Class<?> root,
+            final Class<?> managedType,
+            final String contextPath,
+            final String name,
+            final String title,
+            final String desc,
+            final Class<?> type,
+            final Integer precision,
+            final Integer scale) {
         this.root = root;
 
         final Result namesValidated = validateNames(contextPath, name, managedType);
@@ -42,6 +55,8 @@ public class CustomProperty implements IProperty {
         this.title = title;
         this.desc = desc;
         this.type = type;
+        this.precision = precision;
+        this.scale = scale;
     }
 
     private Result validateNames(final String contextPath, final String name, final Class<?> managedType) {
@@ -100,6 +115,16 @@ public class CustomProperty implements IProperty {
     @Override
     public String path() {
         return getContextPath();
+    }
+
+    @Override
+    public Integer getPrecision() {
+        return precision;
+    }
+
+    @Override
+    public Integer getScale() {
+        return scale;
     }
 
     @Override
