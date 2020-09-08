@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toList;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_LENGTH;
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_PRECISION;
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_SCALE;
@@ -41,7 +42,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import com.google.inject.Inject;
 
@@ -360,7 +361,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         }
 
 
-        logger = Logger.getLogger(this.getType());
+        logger = getLogger(this.getType());
 
         compositeKey = DynamicEntityKey.class.equals(keyType);
         if (compositeKey) {

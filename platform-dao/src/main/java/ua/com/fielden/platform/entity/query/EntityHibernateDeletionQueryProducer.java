@@ -1,9 +1,11 @@
 package ua.com.fielden.platform.entity.query;
 
+import static org.apache.logging.log4j.LogManager.getLogger;
+
 import java.util.Collection;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.hibernate.Query;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
@@ -11,7 +13,7 @@ import org.hibernate.Session;
 public class EntityHibernateDeletionQueryProducer {
     private final String sql;
     private final Map<String, Object> queryParams;
-    private final Logger logger = Logger.getLogger(this.getClass());
+    private final Logger logger = getLogger(this.getClass());
 
     public EntityHibernateDeletionQueryProducer(String sql, Map<String, Object> queryParams) {
         this.sql = sql;

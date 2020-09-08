@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.migration;
 
+import static org.apache.logging.log4j.LogManager.getLogger;
+
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -8,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.hibernate.Transaction;
 
 import com.google.inject.Injector;
@@ -18,7 +20,7 @@ import ua.com.fielden.platform.security.user.IUser;
 
 public class MigrateDb {
 
-    private static final Logger LOGGER = Logger.getLogger(MigrateDb.class);
+    private static final Logger LOGGER = getLogger(MigrateDb.class);
     /**
      * Checks whether servicing structures exists, and creates them in case of non-existence.
      *

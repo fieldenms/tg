@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.sse;
 
 import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -15,7 +16,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.servlet.AsyncContext;
 import javax.servlet.ServletOutputStream;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.web.application.RequestInfo;
 
@@ -35,7 +36,7 @@ public final class EventSourceEmitter implements IEmitter, Runnable {
     private static final byte[] DATA_FIELD = "data: ".getBytes(StandardCharsets.UTF_8);
     private static final byte[] COMMENT_FIELD = ": ".getBytes(StandardCharsets.UTF_8);
 
-    private final Logger logger = Logger.getLogger(getClass());
+    private final Logger logger = getLogger(getClass());
     private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private int heartBeatPeriod = 5;
 

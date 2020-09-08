@@ -8,6 +8,7 @@ import static java.util.stream.Stream.concat;
 import static java.util.stream.Stream.empty;
 import static java.util.stream.Stream.of;
 import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
@@ -49,7 +50,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
 
 import com.google.common.cache.Cache;
@@ -84,7 +85,7 @@ import ua.com.fielden.platform.types.try_wrapper.TryWrapper;
 import ua.com.fielden.platform.types.tuples.T2;
 
 public class EntityUtils {
-    private static final Logger logger = Logger.getLogger(EntityUtils.class);
+    private static final Logger logger = getLogger(EntityUtils.class);
 
     private static final Cache<Class<?>, Boolean> persistentTypes = CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.SECONDS).initialCapacity(512).build();
     private static final Cache<Class<?>, Boolean> syntheticTypes = CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.SECONDS).initialCapacity(512).build();

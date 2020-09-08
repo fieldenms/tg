@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.menu;
 
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
@@ -12,7 +13,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import com.google.inject.Inject;
 
@@ -26,7 +27,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
 
 public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
 
-    private final Logger logger = Logger.getLogger(this.getClass());
+    private final Logger logger = getLogger(this.getClass());
 
     private final IMenuRetriever menuRetirever;
     private final IUserProvider userProvider;

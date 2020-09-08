@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.centre;
 
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
@@ -13,7 +14,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
@@ -39,7 +40,7 @@ import ua.com.fielden.platform.web.app.IWebUiConfig;
  *
  */
 public class CentreUpdaterUtils extends CentreUpdater {
-    private final static Logger logger = Logger.getLogger(CentreUpdaterUtils.class);
+    private final static Logger logger = getLogger(CentreUpdaterUtils.class);
     
     /** Protected default constructor to prevent instantiation. */
     protected CentreUpdaterUtils() {

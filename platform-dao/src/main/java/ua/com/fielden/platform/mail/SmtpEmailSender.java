@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.mail;
 
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
@@ -27,7 +28,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.attachment.IAttachment;
@@ -116,7 +117,7 @@ public class SmtpEmailSender {
         public abstract String alterBody(final String body, final Stream<T2<Optional<File>, String>> optionalT2Stream1);
     }
 
-    private final Logger logger = Logger.getLogger(SmtpEmailSender.class);
+    private final Logger logger = getLogger(SmtpEmailSender.class);
     private final String host;
 
     public SmtpEmailSender(final String host) {

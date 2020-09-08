@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
@@ -37,7 +38,7 @@ import java.util.Optional;
 import java.util.Properties;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import com.google.inject.Inject;
 
@@ -1303,7 +1304,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
     }
 
     private static class DetailsCentreQueryEnhancer implements IQueryEnhancer<TgPersistentEntityWithProperties> {
-        private static final Logger logger = Logger.getLogger(DetailsCentreQueryEnhancer.class);
+        private static final Logger logger = getLogger(DetailsCentreQueryEnhancer.class);
 
         @Override
         public ICompleted<TgPersistentEntityWithProperties> enhanceQuery(final IWhere0<TgPersistentEntityWithProperties> where, final Optional<CentreContext<TgPersistentEntityWithProperties, ?>> context) {

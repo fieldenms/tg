@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.test.server;
 
 import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -16,8 +17,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.SortedSet;
 
-import org.apache.log4j.Logger;
-import org.apache.log4j.xml.DOMConfigurator;
+import org.apache.logging.log4j.Logger;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.joda.time.DateTime;
@@ -84,7 +84,7 @@ import ua.com.fielden.platform.web.test.config.ApplicationDomain;
  *
  */
 public class PopulateDb extends DomainDrivenDataPopulation {
-    private static final Logger LOGGER = Logger.getLogger(PopulateDb.class);
+    private static final Logger LOGGER = getLogger(PopulateDb.class);
     
     private final ApplicationDomain applicationDomainProvider = new ApplicationDomain();
 
@@ -100,7 +100,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
             props.load(in);
         }
 
-        DOMConfigurator.configure(props.getProperty("log4j"));
+        //DOMConfigurator.configure(props.getProperty("log4j"));
 
         LOGGER.info("Obtaining Hibernate dialect...");
         final Class<?> dialectType = Class.forName(props.getProperty("hibernate.dialect"));

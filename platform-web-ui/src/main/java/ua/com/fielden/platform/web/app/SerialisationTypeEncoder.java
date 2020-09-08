@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.app;
 import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.reflection.ClassesRetriever.findClass;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.isGenerated;
@@ -14,7 +15,7 @@ import java.lang.annotation.Annotation;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import com.google.inject.Inject;
 
@@ -44,7 +45,7 @@ import ua.com.fielden.platform.ui.menu.SaveAsNameAnnotation;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 
 public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
-    private final Logger logger = Logger.getLogger(getClass());
+    private final Logger logger = getLogger(getClass());
     private TgJackson tgJackson;
     private EntityTypeInfoGetter entityTypeInfoGetter;
     private final IDeviceProvider deviceProvider;

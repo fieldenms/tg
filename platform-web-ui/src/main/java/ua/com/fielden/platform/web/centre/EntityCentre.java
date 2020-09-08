@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.centre;
 import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.stream.Collectors.toSet;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isCritOnlySingle;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.validateRootType;
 import static ua.com.fielden.platform.domaintree.impl.CalculatedProperty.generateNameFrom;
@@ -53,7 +54,7 @@ import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.ListMultimap;
 import com.google.inject.Injector;
@@ -210,7 +211,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private static final String ATTACHED_CUSTOM_CODE = "//@centre-has-been-attached-custom-code";
 
 
-    private final Logger logger = Logger.getLogger(getClass());
+    private final Logger logger = getLogger(getClass());
     private final String name;
     private final EntityCentreConfig<T> dslDefaultConfig;
     private final Injector injector;

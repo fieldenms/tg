@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.migration;
 
 import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.dao.HibernateMappingsGenerator.ID_SEQUENCE_NAME;
 import static ua.com.fielden.platform.utils.DbUtils.nextIdValue;
 
@@ -22,7 +23,7 @@ import java.util.SortedMap;
 import java.util.TimeZone;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.hibernate.Transaction;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
@@ -41,7 +42,7 @@ import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
 public class DataMigrator {
     private static final String LONG_BREAK = "\n\n\n";
 
-    private static final Logger LOGGER = Logger.getLogger(DataMigrator.class);
+    private static final Logger LOGGER = getLogger(DataMigrator.class);
 
     private final HibernateUtil hiberUtil;
     private final List<IRetriever<? extends AbstractEntity<?>>> retrievers = new ArrayList<>();

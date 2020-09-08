@@ -2,6 +2,7 @@ package ua.com.fielden.platform.utils;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.joda.time.DateTimeZone.forID;
 import static org.joda.time.DateTimeZone.getDefault;
 import static org.joda.time.format.DateTimeFormat.forPattern;
@@ -9,7 +10,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.dateWithoutTimeFormat;
 
 import java.util.Date;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -27,7 +28,7 @@ import com.google.inject.name.Named;
 @Singleton
 public class DefaultDates implements IDates {
     private static final String SERVER_TIME_ZONE_APPLIED = "Server time-zone will be used.";
-    private final Logger logger = Logger.getLogger(getClass());
+    private final Logger logger = getLogger(getClass());
     private final boolean independentTimeZone;
     private final ThreadLocal<DateTimeZone> requestTimeZone = new ThreadLocal<>();
     

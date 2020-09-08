@@ -7,6 +7,7 @@ import static java.util.Optional.of;
 import static java.util.regex.Pattern.quote;
 import static java.util.stream.Collectors.toCollection;
 import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.ASCENDING;
 import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.DESCENDING;
 import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.valueOf;
@@ -77,7 +78,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
@@ -116,7 +117,7 @@ import ua.com.fielden.snappy.MnemonicEnum;
  *
  */
 public class CentreUpdater {
-    private static final Logger logger = Logger.getLogger(CentreUpdater.class);
+    private static final Logger logger = getLogger(CentreUpdater.class);
     private static final String DIFFERENCES_SUFFIX = "__________DIFFERENCES";
     
     public static final String FRESH_CENTRE_NAME = "__________FRESH";

@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.sample.domain;
 
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 
 import java.math.BigDecimal;
@@ -14,7 +15,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.joda.time.Period;
@@ -50,7 +51,7 @@ import ua.com.fielden.platform.utils.Pair;
 @EntityType(TgStop.class)
 public class TgStopDao extends CommonEntityDao<TgStop> implements ITgStop {
     private final ITgMessage messageCompanion;
-    private static final Logger logger = Logger.getLogger(TgStopDao.class);
+    private static final Logger logger = getLogger(TgStopDao.class);
     private static final int SOFT_MESSAGE_COUNT_THRESHOLD = 5;
 
     @Inject

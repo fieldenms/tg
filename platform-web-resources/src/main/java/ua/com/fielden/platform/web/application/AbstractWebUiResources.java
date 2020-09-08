@@ -1,7 +1,8 @@
 package ua.com.fielden.platform.web.application;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.restlet.Application;
 import org.restlet.Context;
 import org.restlet.Restlet;
@@ -26,7 +27,6 @@ import ua.com.fielden.platform.web.factories.webui.EgiExampleResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EntityAutocompletionResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EntityResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EntityValidationResourceFactory;
-import ua.com.fielden.platform.web.factories.webui.WebClientErrorLoggerResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.FileResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.MainWebUiComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.MasterComponentResourceFactory;
@@ -35,6 +35,7 @@ import ua.com.fielden.platform.web.factories.webui.MasterTestsComponentResourceF
 import ua.com.fielden.platform.web.factories.webui.SerialisationTestResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.ServiceWorkerResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.TgReflectorComponentResourceFactory;
+import ua.com.fielden.platform.web.factories.webui.WebClientErrorLoggerResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.WebUiPreferencesResourceFactory;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -52,7 +53,7 @@ import ua.com.fielden.platform.web.security.DefaultWebResourceGuard;
 public abstract class AbstractWebUiResources extends Application {
     protected final Injector injector;
 
-    protected final Logger logger = Logger.getLogger(getClass());
+    protected final Logger logger = LogManager.getLogger(getClass());
     private final IWebUiConfig webApp;
     private final IWebResourceLoader webResourceLoader;
     protected final IUserProvider userProvider;

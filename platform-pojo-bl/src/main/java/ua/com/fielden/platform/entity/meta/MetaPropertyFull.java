@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity.meta;
 
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isRequiredByDefinition;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
@@ -23,7 +24,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModification;
@@ -129,7 +130,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     // the boolean value captures the value of attribute persistentOnly
     private final Optional<Boolean> persistentOnlySettingForFinalAnnotation;
 
-    private static final Logger logger = Logger.getLogger(MetaPropertyFull.class);
+    private static final Logger logger = getLogger(MetaPropertyFull.class);
 
     /** Enforced mutation happens as part of the error recovery to indicate processing of dependent properties. */
     private boolean enforceMutator = false;

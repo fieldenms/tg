@@ -1,8 +1,10 @@
 package ua.com.fielden.platform.web.sse;
 
+import static org.apache.logging.log4j.LogManager.getLogger;
+
 import java.io.IOException;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import rx.Observable;
 import rx.Observer;
@@ -41,7 +43,7 @@ public abstract class AbstractEventSource<T, OK extends IObservableKind<T>> impl
      */
     private Observable<T> stream;
 
-    private final Logger logger = Logger.getLogger(this.getClass());
+    private final Logger logger = getLogger(this.getClass());
 
     protected AbstractEventSource(final OK observableKind) {
         this.stream = observableKind.asObservable();

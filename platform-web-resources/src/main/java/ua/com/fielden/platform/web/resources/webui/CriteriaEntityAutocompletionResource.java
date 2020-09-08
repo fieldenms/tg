@@ -14,7 +14,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -67,7 +68,7 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
     private final IUserProvider userProvider;
     private final EntityFactory entityFactory;
 
-    private final Logger logger = Logger.getLogger(getClass());
+    private final Logger logger = LogManager.getLogger(getClass());
 
     public CriteriaEntityAutocompletionResource(
             final IWebUiConfig webUiConfig,

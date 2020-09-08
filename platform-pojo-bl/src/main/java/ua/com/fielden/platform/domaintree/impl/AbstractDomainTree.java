@@ -1,12 +1,13 @@
 package ua.com.fielden.platform.domaintree.impl;
 
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
 import static ua.com.fielden.platform.utils.EntityUtils.isRangeType;
 
 import java.util.Set;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.ITickManager;
 import ua.com.fielden.platform.domaintree.IUsageManager;
@@ -18,7 +19,6 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -30,7 +30,7 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public abstract class AbstractDomainTree {
     private final EntityFactory entityFactory;
-    private static final Logger logger = Logger.getLogger(AbstractDomainTree.class);
+    private static final Logger logger = getLogger(AbstractDomainTree.class);
     private static final String COMMON_SUFFIX = ".common-properties", DUMMY_SUFFIX = ".dummy-property";
     protected static final String PLACEHOLDER = "-placeholder-origin-";
 

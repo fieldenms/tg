@@ -13,7 +13,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Injector;
@@ -59,7 +60,7 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
  *
  */
 public abstract class AbstractWebUiConfig implements IWebUiConfig {
-    private final Logger logger = Logger.getLogger(getClass());
+    private final Logger logger = LogManager.getLogger(getClass());
     private final String title;
     private WebUiBuilder webUiBuilder;
     private Injector injector;

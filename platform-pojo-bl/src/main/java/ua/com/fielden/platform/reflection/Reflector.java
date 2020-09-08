@@ -2,6 +2,7 @@ package ua.com.fielden.platform.reflection;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.lang.annotation.Annotation;
@@ -16,7 +17,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -64,7 +65,7 @@ public final class Reflector {
      */
     public static final String UP_LEVEL = "←";
 
-    private static final Logger LOGGER = Logger.getLogger(Reflector.class);
+    private static final Logger LOGGER = getLogger(Reflector.class);
     
     /**
      * Let's hide default constructor, which is not needed for a static class.

@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.query.metadata;
 
 import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -8,7 +9,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
@@ -19,7 +20,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 public class DomainMetadataAnalyser {
-    private final Logger logger = Logger.getLogger(DomainMetadataAnalyser.class);
+    private final Logger logger = getLogger(DomainMetadataAnalyser.class);
     private final Map<Class<? extends AbstractEntity<?>>, AbstractEntityMetadata> entityMetadataMap = new HashMap<>();
     private final DomainMetadata domainMetadata;
 

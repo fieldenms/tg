@@ -2,6 +2,7 @@ package ua.com.fielden.platform.ioc.session;
 
 import static java.lang.String.format;
 import static java.util.UUID.randomUUID;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.dao.annotations.SessionRequired.ERR_NESTED_SCOPE_INVOCATION_IS_DISALLOWED;
 
 import java.util.stream.Stream;
@@ -9,7 +10,7 @@ import java.util.stream.Stream;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -43,7 +44,7 @@ import ua.com.fielden.platform.ioc.session.exceptions.TransactionRollbackDueToTh
 public class SessionInterceptor implements MethodInterceptor {
     private final SessionFactory sessionFactory;
 
-    private static final Logger LOGGER = Logger.getLogger(SessionInterceptor.class);
+    private static final Logger LOGGER = getLogger(SessionInterceptor.class);
     
     private ThreadLocal<String> transactionGuid = new ThreadLocal<>();
 

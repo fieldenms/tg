@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.query;
 
 import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
@@ -28,7 +29,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 import java.util.Collection;
 import java.util.Map.Entry;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
@@ -41,7 +42,7 @@ import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
 import ua.com.fielden.platform.types.tuples.T2;
 
 public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractRetrievalModel<T> {
-    private final Logger logger = Logger.getLogger(this.getClass());
+    private final Logger logger = getLogger(this.getClass());
     private final Collection<PropertyMetadata> propsMetadata;
     private final EntityTypeInfo<T> entityTypeInfo;
 

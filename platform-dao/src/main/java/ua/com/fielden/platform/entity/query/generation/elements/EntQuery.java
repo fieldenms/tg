@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity.query.generation.elements;
 
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.AND;
@@ -33,7 +34,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
@@ -56,7 +57,7 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class EntQuery implements ISingleOperand {
 
-    private static final Logger LOGGER = Logger.getLogger(EntQuery.class);
+    private static final Logger LOGGER = getLogger(EntQuery.class);
     private static final String DOT = ".";
 
     private final boolean resultTypeIsPersistedType;

@@ -1,8 +1,11 @@
 package ua.com.fielden.platform.menu;
 
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+
+import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
@@ -11,8 +14,6 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.security.user.IUserProvider;
-
-import com.google.inject.Inject;
 
 
 /**
@@ -24,7 +25,7 @@ import com.google.inject.Inject;
 @EntityType(MenuSaveAction.class)
 public class MenuSaveActionDao extends CommonEntityDao<MenuSaveAction> implements IMenuSaveAction {
 
-    private final Logger logger = Logger.getLogger(this.getClass());
+    private final Logger logger = getLogger(this.getClass());
 
     private final IUserProvider userProvider;
 

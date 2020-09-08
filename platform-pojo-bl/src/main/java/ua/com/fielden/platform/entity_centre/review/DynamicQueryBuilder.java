@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity_centre.review;
 
 import static java.lang.Boolean.TRUE;
 import static java.util.stream.Collectors.groupingBy;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
@@ -27,7 +28,7 @@ import java.util.Optional;
 import java.util.TreeMap;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -66,7 +67,7 @@ import ua.com.fielden.snappy.MnemonicEnum;
  *
  */
 public class DynamicQueryBuilder {
-    private static final Logger logger = Logger.getLogger(DynamicQueryBuilder.class);
+    private static final Logger logger = getLogger(DynamicQueryBuilder.class);
 
     private DynamicQueryBuilder() {}
 

@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.reflection;
 
 import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
@@ -11,7 +12,7 @@ import java.lang.reflect.Field;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -33,7 +34,7 @@ import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
  *
  */
 public class EntityMetadata {
-    private static final Logger LOGGER = Logger.getLogger(EntityMetadata.class);
+    private static final Logger LOGGER = getLogger(EntityMetadata.class);
     private static final Cache<Class<? extends AbstractEntity<?>>, Cache<String, Boolean>> CACHE_IS_ENTITY_EXISTS_APPLICABLE = CacheBuilder.newBuilder().initialCapacity(1000).concurrencyLevel(50).build();
     private static final Cache<Class<? extends AbstractEntity<?>>, Class<? extends Comparable>> CACHE_KEY_TYPE = CacheBuilder.newBuilder().initialCapacity(1000).concurrencyLevel(50).build();
     private static final Cache<Class<? extends AbstractEntity<?>>, Cache<String, Class<?>>> CACHE_PROP_TYPE = CacheBuilder.newBuilder().initialCapacity(1000).concurrencyLevel(50).build();

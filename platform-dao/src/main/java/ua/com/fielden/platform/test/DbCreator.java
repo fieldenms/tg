@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.test;
 
 import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.utils.DbUtils.batchExecSql;
 
 import java.io.File;
@@ -17,7 +18,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.hibernate.dialect.Dialect;
 
 import com.google.common.io.Files;
@@ -39,7 +40,7 @@ public abstract class DbCreator {
     public static final String baseDir = "./src/test/resources/db";
     public static final String ddlScriptFileName = format("%s/create-db-ddl.script", DbCreator.baseDir);
 
-    protected final Logger logger = Logger.getLogger(getClass());
+    protected final Logger logger = getLogger(getClass());
 
     private final Class<? extends AbstractDomainDrivenTestCase> testCaseType;
     public final Connection conn;

@@ -5,6 +5,7 @@ import static java.util.Arrays.asList;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toCollection;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.isGenerated;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.APPENDIX;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.nextTypeName;
@@ -27,7 +28,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.domaintree.ICalculatedProperty;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
@@ -69,7 +70,7 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public final class DomainTreeEnhancer extends AbstractDomainTree implements IDomainTreeEnhancer {
-    private static final Logger logger = Logger.getLogger(DomainTreeEnhancer.class);
+    private static final Logger logger = getLogger(DomainTreeEnhancer.class);
 
     /**
      * Holds byte arrays & <b>enhanced</b> types mapped to their original root types. Contains pairs of [original -> real & arrays] or [original -> original & emptyArrays] (in case

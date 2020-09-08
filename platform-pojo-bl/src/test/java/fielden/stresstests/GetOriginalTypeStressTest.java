@@ -1,6 +1,7 @@
 package fielden.stresstests;
 
 import static java.util.stream.Collectors.toList;
+import static org.apache.logging.log4j.LogManager.getLogger;
 
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -10,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.Entity;
@@ -35,7 +36,7 @@ import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
  */
 public class GetOriginalTypeStressTest {
 
-    private static final Logger LOGGER = Logger.getLogger(GetOriginalTypeStressTest.class);
+    private static final Logger LOGGER = getLogger(GetOriginalTypeStressTest.class);
 
     private GetOriginalTypeStressTest() {}
     

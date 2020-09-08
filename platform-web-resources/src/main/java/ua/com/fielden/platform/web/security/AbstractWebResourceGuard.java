@@ -6,7 +6,8 @@ import static ua.com.fielden.platform.security.session.Authenticator.fromString;
 import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
 import org.restlet.Context;
 import org.restlet.Request;
@@ -35,7 +36,7 @@ import ua.com.fielden.platform.web.sse.SseUtils;
  *
  */
 public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
-    private final Logger logger = Logger.getLogger(getClass());
+    private final Logger logger = LogManager.getLogger(getClass());
     public static final String AUTHENTICATOR_COOKIE_NAME = "authenticator";
     protected final Injector injector;
     private final IUniversalConstants constants;

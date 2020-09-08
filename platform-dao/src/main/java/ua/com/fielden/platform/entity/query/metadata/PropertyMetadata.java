@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity.query.metadata;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
 import static ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType.AGGREGATED_EXPRESSION;
 import static ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType.COMPOSITE_TYPE_HEADER;
@@ -26,7 +27,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.hibernate.type.LongType;
 import org.hibernate.type.Type;
 
@@ -50,7 +51,7 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
     private final ExpressionModel expressionModel;
     private final boolean aggregatedExpression; // contains aggregation function on the root level (i.e. Totals in entity centre tree)
 
-    transient private final Logger logger = Logger.getLogger(this.getClass());
+    transient private final Logger logger = getLogger(this.getClass());
     
     private PropertyMetadata(final Builder builder) {
         category = builder.category;

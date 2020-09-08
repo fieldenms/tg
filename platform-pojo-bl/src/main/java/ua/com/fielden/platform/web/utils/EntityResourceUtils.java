@@ -5,6 +5,7 @@ import static java.util.Locale.getDefault;
 import static java.util.regex.Pattern.quote;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.uncapitalize;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
@@ -35,7 +36,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.companion.IEntityReader;
@@ -88,7 +89,7 @@ public class EntityResourceUtils {
      * Used to indicate the start of 'not found mock' serialisation sequence.
      */
     private static final String NOT_FOUND_MOCK_PREFIX = "__________NOT_FOUND__________";
-    private static final Logger logger = Logger.getLogger(EntityResourceUtils.class);
+    private static final Logger logger = getLogger(EntityResourceUtils.class);
     /**
      * Standard {@link PropertyDescriptor}'s convertor to string. Includes handling for 'not found mock' instances.
      */

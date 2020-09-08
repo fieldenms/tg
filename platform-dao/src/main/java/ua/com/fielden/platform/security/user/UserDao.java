@@ -5,6 +5,7 @@ import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
@@ -26,7 +27,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import com.google.inject.Inject;
 import com.nulabinc.zxcvbn.Strength;
@@ -68,7 +69,7 @@ import ua.com.fielden.platform.ui.config.EntityMasterConfig;
 @EntityType(User.class)
 public class UserDao extends CommonEntityDao<User> implements IUser {
 
-    private static final Logger logger = Logger.getLogger(UserDao.class);
+    private static final Logger logger = getLogger(UserDao.class);
 
     private final INewUserNotifier newUserNotifier;
     private final SessionIdentifierGenerator crypto;

@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity;
 
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -9,7 +10,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.junit.Test;
 
 import ua.com.fielden.platform.dao.IUserAndRoleAssociation;
@@ -60,7 +61,7 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  *
  */
 public class CollectionModificationValidationTest extends AbstractDaoTestCase {
-    private final Logger logger = Logger.getLogger(getClass());
+    private final Logger logger = getLogger(getClass());
     private final String newUsername = "NEW_USER";
     
     private UserRolesUpdater createUpdaterWithoutMasterEntity() {

@@ -14,7 +14,6 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.xml.DOMConfigurator;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Configuration;
@@ -122,7 +121,7 @@ public class PlatformDbDrivenTestCaseConfiguration implements IDbDrivenTestCaseC
      */
     public PlatformDbDrivenTestCaseConfiguration() {
         // instantiate all the factories and Hibernate utility
-        DOMConfigurator.configure("src/test/resources/log4j.xml");
+        //DOMConfigurator.configure("src/test/resources/log4j.xml");
 
         final ProxyInterceptor interceptor = new ProxyInterceptor();
         try {

@@ -36,7 +36,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
@@ -94,7 +95,7 @@ import ua.com.fielden.snappy.MnemonicEnum;
  *
  */
 public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtils<T> {
-    private static final Logger logger = Logger.getLogger(CentreResourceUtils.class);
+    private static final Logger logger = LogManager.getLogger(CentreResourceUtils.class);
 
     /** Private default constructor to prevent instantiation. */
     private CentreResourceUtils() {

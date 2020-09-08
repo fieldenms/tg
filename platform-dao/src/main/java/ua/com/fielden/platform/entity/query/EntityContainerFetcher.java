@@ -1,8 +1,7 @@
 package ua.com.fielden.platform.entity.query;
 
 import static java.lang.String.format;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.util.List;
@@ -11,13 +10,12 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.Stream;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
-import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.generation.EntQueryGenerator;
 import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
@@ -32,7 +30,7 @@ import ua.com.fielden.platform.streaming.SequentialGroupingStream;
 
 public class EntityContainerFetcher {
     private final QueryExecutionContext executionContext;    
-    private final Logger logger = Logger.getLogger(this.getClass());
+    private final Logger logger = getLogger(this.getClass());
 
     public EntityContainerFetcher(final QueryExecutionContext executionContext) {
         this.executionContext = executionContext;

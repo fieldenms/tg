@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.domaintree.impl;
 
 import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determineClass;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
@@ -21,7 +22,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.domaintree.Function;
 import ua.com.fielden.platform.domaintree.FunctionUtils;
@@ -55,7 +56,7 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTree implements IDomainTreeRepresentationWithMutability {
-    private final Logger logger = Logger.getLogger(this.getClass());
+    private final Logger logger = getLogger(this.getClass());
     
     /**
      * 0 -- to load only first level properties, Integer.MAX_VALUE -- to load all properties (obviously without cross-references ones);

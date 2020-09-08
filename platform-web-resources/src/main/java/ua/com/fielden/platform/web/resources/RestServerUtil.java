@@ -19,7 +19,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.restlet.Message;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -56,7 +57,7 @@ public class RestServerUtil {
     private static final String HEADERS_KEY = "org.restlet.http.headers";
 
     private final ISerialiser serialiser;
-    private final Logger logger = Logger.getLogger(RestServerUtil.class);
+    private final Logger logger = LogManager.getLogger(RestServerUtil.class);
 
     @Inject
     public RestServerUtil(final ISerialiser serialiser) {

@@ -6,6 +6,7 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.empty;
 import static java.util.stream.Stream.of;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.from;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.getCriteriaTitleAndDesc;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.is;
@@ -34,7 +35,7 @@ import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.stream.Stream;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import com.google.inject.Inject;
 
@@ -79,7 +80,7 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public class CriteriaGenerator implements ICriteriaGenerator {
 
-    private static final Logger LOGGER = Logger.getLogger(CriteriaGenerator.class);
+    private static final Logger LOGGER = getLogger(CriteriaGenerator.class);
 
     private final EntityFactory entityFactory;
 

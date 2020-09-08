@@ -45,7 +45,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -103,7 +104,7 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  *
  */
 public class CriteriaResource extends AbstractWebResource {
-    private final static Logger logger = Logger.getLogger(CriteriaResource.class);
+    private final static Logger logger = LogManager.getLogger(CriteriaResource.class);
 
     private final static String staleCriteriaMessage = "Selection criteria have been changed, but not applied. "
                                                      + "Previously applied values are in effect. "

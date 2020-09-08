@@ -8,7 +8,8 @@ import javax.servlet.AsyncContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -30,7 +31,7 @@ import ua.com.fielden.platform.web.utils.ServletUtils;
  */
 public class EventSourcingResource extends AbstractWebResource {
 
-    private final Logger logger = Logger.getLogger(this.getClass());
+    private final Logger logger = LogManager.getLogger(this.getClass());
     private final AtomicBoolean shouldKeepGoing = new AtomicBoolean(true);
     private final IEventSource eventSource;
 

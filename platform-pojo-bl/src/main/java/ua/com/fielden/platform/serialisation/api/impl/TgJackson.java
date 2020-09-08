@@ -2,6 +2,7 @@ package ua.com.fielden.platform.serialisation.api.impl;
 
 import static com.fasterxml.jackson.databind.type.SimpleType.constructUnsafe;
 import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -13,7 +14,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.ResolvedType;
@@ -70,7 +71,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
  */
 public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
     private static final long serialVersionUID = 8131371701442950310L;
-    private static final Logger logger = Logger.getLogger(TgJackson.class);
+    private static final Logger logger = getLogger(TgJackson.class);
 
     public static final String ERR_RESTRICTED_TYPE_SERIALISATION = "Type [%s] is not permitted for serialisation.";
     public static final String ERR_RESTRICTED_TYPE_DESERIALISATION = "Type [%s] is not permitted for deserialisation.";

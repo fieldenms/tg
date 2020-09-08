@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.domaintree.impl;
 
+import static org.apache.logging.log4j.LogManager.getLogger;
+
 import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -9,7 +11,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.domaintree.Function;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty;
@@ -72,7 +74,7 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
      *
      */
     public static class DomainTreeEnhancerWithPropertiesPopulation implements IDomainTreeEnhancer {
-        private static final Logger logger = Logger.getLogger(DomainTreeEnhancerWithPropertiesPopulation.class);
+        private static final Logger logger = getLogger(DomainTreeEnhancerWithPropertiesPopulation.class);
         private final IDomainTreeEnhancer baseEnhancer;
         private final IDomainTreeRepresentationWithMutability dtr;
 

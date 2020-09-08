@@ -5,6 +5,7 @@ import static java.util.Collections.unmodifiableCollection;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
@@ -57,7 +58,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.BooleanType;
 import org.hibernate.type.TrueFalseType;
@@ -89,7 +90,7 @@ import ua.com.fielden.platform.eql.dbschema.TableDdl;
 import ua.com.fielden.platform.utils.StreamUtils;
 
 public class DomainMetadata {
-    private static final Logger LOGGER = Logger.getLogger(DomainMetadata.class);
+    private static final Logger LOGGER = getLogger(DomainMetadata.class);
 
     private static final TypeResolver typeResolver = new TypeConfiguration().getTypeResolver();
     private static final Type H_LONG = typeResolver.basic("long");

@@ -1,11 +1,12 @@
 package ua.com.fielden.platform.web.test.server;
 
+import static org.apache.logging.log4j.LogManager.getLogger;
+
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.Properties;
 
-import org.apache.log4j.Logger;
-import org.apache.log4j.xml.DOMConfigurator;
+import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
@@ -24,7 +25,7 @@ import ua.com.fielden.platform.utils.ResourceLoader;
  *
  */
 public class StartSecureJetty {
-    private static final Logger logger = Logger.getLogger(StartSecureJetty.class);
+    private static final Logger logger = getLogger(StartSecureJetty.class);
 
     public static void main(final String[] args) throws Exception {
         final String fileName = "src/main/resources/application.properties";
@@ -34,7 +35,7 @@ public class StartSecureJetty {
             props.load(st);
         }
 
-        DOMConfigurator.configure(props.getProperty("log4j"));
+        //DOMConfigurator.configure(props.getProperty("log4j"));
 
         logger.info("Starting...");
 
