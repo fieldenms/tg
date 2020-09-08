@@ -81,7 +81,6 @@
 		<module>platform-annotation-processor</module>
 		<module>platform-db-evolution</module>
 		<module>platform-dao</module>
-		<module>platform-gps-server</module>
 		<module>platform-web-resources</module>
 		<module>platform-pojo-bl</module>
 		<module>platform-web-ui</module>
