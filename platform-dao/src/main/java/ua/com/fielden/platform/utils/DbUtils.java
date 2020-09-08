@@ -106,30 +106,6 @@ public class DbUtils {
     }
 
     /**
-     * Utilises Hibernate for DDL generation. 
-     * <p>
-     * This implementation depends on proper registration of {@link MetadataProvider} as the implementation for <code>org.hibernate.boot.spi.SessionFactoryBuilderFactory</code>.
-     * Please refer {@link MetadataProvider}'s Javadoc for more details.
-     * 
-     * @return
-     * @throws IOException
-     */
-    public static List<String> generateSchemaByHibernate() throws IOException {
-        final List<String> ddl;
-        try (final ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-            // redirect sysout to a stream to capture the output as a string...
-            System.setOut(new PrintStream(baos, /* autoFlush = */ true, /* encoding = */ "UTF8"));
-            new SchemaExport().setDelimiter(";").setHaltOnError(true).execute(EnumSet.of(TargetType.STDOUT), Action.CREATE, MetadataProvider.getMetadata());
-            final String generatedDdl = baos.toString("UTF8");
-            ddl = Arrays.asList(generatedDdl.split("\n"));
-        } finally {
-            // revert sysout back to STD
-            System.setOut(new PrintStream(new FileOutputStream(FileDescriptor.out)));
-        }
-        return ddl;
-    }
-
-    /**
      * Microsoft SQL Server specific utility, which prepends the drop statements for dropping all tables and to create the sequence for ID generation.
      *   
      * @param ddl
