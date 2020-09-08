@@ -93,7 +93,6 @@ public abstract class DbDrivenTestCase extends TestCase {
                 try {
                     for (final String sql : ddls) {
                         try {
-                            System.out.println(sql.substring(0, sql.length() < 50 ? sql.length() : 50));
                             session.createSQLQuery(sql).executeUpdate();
                         } catch (final Exception e) {
                             e.printStackTrace();
