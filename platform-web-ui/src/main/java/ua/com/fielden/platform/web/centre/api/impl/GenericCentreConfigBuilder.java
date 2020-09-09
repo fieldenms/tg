@@ -15,11 +15,8 @@ import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelA
 
 public class GenericCentreConfigBuilder<T extends AbstractEntity<?>> extends ResultSetBuilder<T> implements ICentreTopLevelActionsWithRunConfig<T>{
 
-    private final EntityCentreBuilder<T> builder;
-
     public GenericCentreConfigBuilder(final EntityCentreBuilder<T> builder) {
         super(builder);
-        this.builder = builder;
     }
 
     @Override

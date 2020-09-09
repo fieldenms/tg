@@ -22,6 +22,7 @@ import ua.com.fielden.platform.web.centre.api.impl.helpers.CustomPropsAssignment
 import ua.com.fielden.platform.web.centre.api.impl.helpers.FunctionalEntity;
 import ua.com.fielden.platform.web.centre.api.impl.helpers.ResultSetRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
+import ua.com.fielden.platform.web.centre.exceptions.EntityCentreConfigurationException;
 
 /**
  * A test case for Entity Centre DSL produced result sets.
@@ -64,12 +65,12 @@ public class EntityCentreBuilderResultSetTest {
         assertEquals("desc", config.getResultSetProperties().get().get(3).propName.get());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = EntityCentreConfigurationException.class)
     public void adding_non_exitsting_properties_to_result_set_should_be_prevented() {
         centreFor(TgWorkOrder.class).addProp("non.existing.prop").build();
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = EntityCentreConfigurationException.class)
     public void adding_null_as_property_to_result_set_should_be_prevented() {
         centreFor(TgWorkOrder.class).addProp((String) null).build();
     }
@@ -213,7 +214,7 @@ public class EntityCentreBuilderResultSetTest {
         assertTrue(config.getResultSetCustomPropAssignmentHandlerType().isPresent());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = EntityCentreConfigurationException.class)
     public void should_not_permit_setting_custom_value_assignment_handler_for_result_set_where_all_custom_props_hav_default_vaues() {
         centreFor(TgWorkOrder.class)
                 .addProp(mkProp("OF", "Defect OFF road", "OF"))
@@ -223,7 +224,7 @@ public class EntityCentreBuilderResultSetTest {
                 .build();
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = EntityCentreConfigurationException.class)
     public void should_not_permit_setting_null_custom_value_assignment_handler() {
         centreFor(TgWorkOrder.class)
                 .addProp(mkProp("OF", "Defect OFF road", "OF"))
