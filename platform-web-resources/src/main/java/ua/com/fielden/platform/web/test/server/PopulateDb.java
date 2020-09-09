@@ -100,8 +100,6 @@ public class PopulateDb extends DomainDrivenDataPopulation {
             props.load(in);
         }
 
-        //DOMConfigurator.configure(props.getProperty("log4j"));
-
         LOGGER.info("Obtaining Hibernate dialect...");
         final Class<?> dialectType = Class.forName(props.getProperty("hibernate.dialect"));
         final Dialect dialect = (Dialect) dialectType.newInstance();

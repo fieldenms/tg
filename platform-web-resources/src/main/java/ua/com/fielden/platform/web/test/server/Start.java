@@ -27,8 +27,6 @@ public class Start {
             props.load(st);
         }
 
-        //DOMConfigurator.configure(props.getProperty("log4j"));
-
         LOGGER.info("Starting...");
         final Component component = new TgTestApplicationConfiguration(props);
         component.getServers().add(Protocol.HTTP, Integer.parseInt(props.getProperty("port")));

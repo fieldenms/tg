@@ -30,7 +30,6 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
     public PlatformDomainDrivenTestCaseConfiguration(final Properties hbc) {
         // instantiate all the factories and Hibernate utility
         try {
-            //DOMConfigurator.configure("src/test/resources/log4j.xml");
             final Properties props = new Properties(hbc);
             // application properties
             props.setProperty("app.name", "TG Test");

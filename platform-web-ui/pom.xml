@@ -36,7 +36,7 @@
 			<resource>
 				<directory>src/main/resources</directory>
 				<excludes>
-					<exclude>**/log4j.xml</exclude>
+					<exclude>**/log4j2-test.xml</exclude>
 				</excludes>
 			</resource>
 			<resource>

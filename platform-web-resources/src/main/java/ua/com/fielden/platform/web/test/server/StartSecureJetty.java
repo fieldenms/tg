@@ -35,8 +35,6 @@ public class StartSecureJetty {
             props.load(st);
         }
 
-        //DOMConfigurator.configure(props.getProperty("log4j"));
-
         logger.info("Starting...");
 
         final Server server = new Server();
