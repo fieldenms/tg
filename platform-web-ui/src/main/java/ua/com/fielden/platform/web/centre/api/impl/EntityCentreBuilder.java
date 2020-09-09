@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
+import static java.lang.String.format;
+import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp.derivePropName;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -9,6 +12,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.stream.Stream;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
@@ -17,6 +21,7 @@ import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
@@ -42,6 +47,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.scrolling.impl.ScrollCon
 import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.toolbar.impl.CentreToolbar;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithRunConfig;
+import ua.com.fielden.platform.web.centre.exceptions.EntityCentreConfigurationException;
 import ua.com.fielden.platform.web.layout.FlexLayout;
 
 /**
@@ -131,7 +137,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     ////////////// RESULT SET ///////////////
     /////////////////////////////////////////
 
-    protected final List<ResultSetProp<T>> resultSetProperties = new ArrayList<>();
+    private final List<ResultSetProp<T>> resultSetProperties = new ArrayList<>();
     protected final SortedMap<Integer, Pair<String, OrderDirection>> resultSetOrdering = new TreeMap<>();
     protected final ListMultimap<String, SummaryPropDef> summaryExpressions = ArrayListMultimap.create();
     protected EntityActionConfig resultSetPrimaryEntityAction;
@@ -245,5 +251,26 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
 
         this.headerLineNumber = headerLineNumber;
         return this;
+    }
+
+    /**
+     * Add result set property definition if it is not a duplicated. Otherwise throws {@link EntityCentreConfigurationException}.
+     * @param rsp
+     */
+    protected void addToResultSet(final ResultSetProp<T> rsp) {
+        final String rspName = derivePropName(rsp);
+        if (resultSetProperties.stream().map(p -> derivePropName(p))
+                .anyMatch(name -> EntityUtils.equalsEx(name, rspName))) {
+            throw new EntityCentreConfigurationException(format("Property [%s] has been already added to the result set for entity [%s].", derivePropName(rsp), getEntityType().getSimpleName()));            
+        }
+        this.resultSetProperties.add(rsp);
+    }
+
+    /**
+     * Convenient way to access result set properties. 
+     * @return
+     */
+    protected Stream<ResultSetProp<T>> resultSetProperties() {
+        return resultSetProperties.stream();
     }
 }
