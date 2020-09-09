@@ -38,6 +38,12 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-compiler-plugin</artifactId>
+					<version>3.8.1</version>
+					<configuration>
+						<release>11</release>
+						<encoding>UTF-8</encoding>
+						<optimize>true</optimize>
+					</configuration>					
 					<executions>
 						<execution>
 							<id>default-compile</id>
@@ -52,14 +58,6 @@
 							</configuration>
 						</execution>
 					</executions>
-				</plugin>
-				<plugin>
-					<artifactId>maven-assembly-plugin</artifactId>
-					<configuration>
-						<descriptorRefs>
-							<descriptorRef>jar-with-dependencies</descriptorRef>
-						</descriptorRefs>
-					</configuration>
 				</plugin>
 			</plugins>
 		</pluginManagement>
