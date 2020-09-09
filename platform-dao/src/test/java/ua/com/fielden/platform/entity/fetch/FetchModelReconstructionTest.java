@@ -149,8 +149,4 @@ public class FetchModelReconstructionTest extends AbstractDaoTestCase {
 
     }
 
-    @Override
-    protected List<Class<? extends AbstractEntity<?>>> domainEntityTypes() {
-        return PlatformTestDomainTypes.entityTypes;
-    }
 }

@@ -121,7 +121,6 @@ public class PlatformDbDrivenTestCaseConfiguration implements IDbDrivenTestCaseC
      */
     public PlatformDbDrivenTestCaseConfiguration() {
         // instantiate all the factories and Hibernate utility
-        //DOMConfigurator.configure("src/test/resources/log4j.xml");
 
         final ProxyInterceptor interceptor = new ProxyInterceptor();
         try {

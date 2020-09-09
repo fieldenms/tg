@@ -106,7 +106,6 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
             createUpdaterWithoutMasterEntity();
             fail("Collection modification should fail.");
         } catch (final Exception ex) {
-            logger.error(ex.getMessage(), ex);
             assertTrue(ex instanceof Result);
             assertTrue(ex instanceof Result && ((Result) ex).getMessage().equals("The master entity for collection modification is not provided in the context."));
         }
