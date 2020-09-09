@@ -6,12 +6,19 @@ import static java.util.Optional.ofNullable;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.dao.HibernateMappingsGenerator.ID_SEQUENCE_NAME;
 
+import java.io.ByteArrayOutputStream;
+import java.io.FileDescriptor;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,10 +31,14 @@ import org.hibernate.engine.jdbc.dialect.internal.StandardDialectResolver;
 import org.hibernate.engine.jdbc.dialect.spi.DatabaseMetaDataDialectResolutionInfoAdapter;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
+import org.hibernate.tool.hbm2ddl.SchemaExport;
+import org.hibernate.tool.hbm2ddl.SchemaExport.Action;
+import org.hibernate.tool.schema.TargetType;
 
 import com.google.common.collect.Iterators;
 
 import ua.com.fielden.platform.dao.exceptions.DbException;
+import ua.com.fielden.platform.ddl.MetadataProvider;
 
 /**
  * A collection of convenient DB related utilities such as to generate DDL and obtain the next value for sequence by name. 
@@ -91,6 +102,30 @@ public class DbUtils {
             }
         };
         session.doWork(recreateSequence);
+    }
+
+    /**
+     * Utilises Hibernate for DDL generation.
+     * <p>
+     * This implementation depends on proper registration of {@link MetadataProvider} as the implementation for <code>org.hibernate.boot.spi.SessionFactoryBuilderFactory</code>.
+     * Please refer {@link MetadataProvider}'s Javadoc for more details.
+     *
+     * @return
+     * @throws IOException
+     */
+    public static List<String> generateSchemaByHibernate() throws IOException {
+        final List<String> ddl;
+        try (final ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            // redirect sysout to a stream to capture the output as a string...
+            System.setOut(new PrintStream(baos, /* autoFlush = */ true, /* encoding = */ "UTF8"));
+            new SchemaExport().setDelimiter(";").setHaltOnError(true).execute(EnumSet.of(TargetType.STDOUT), Action.CREATE, MetadataProvider.getMetadata());
+            final String generatedDdl = baos.toString("UTF8");
+            ddl = Arrays.asList(generatedDdl.split("\n"));
+        } finally {
+            // revert sysout back to STD
+            System.setOut(new PrintStream(new FileOutputStream(FileDescriptor.out)));
+        }
+        return ddl;
     }
 
     /**
