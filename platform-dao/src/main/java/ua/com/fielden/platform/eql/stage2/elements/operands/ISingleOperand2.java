@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.eql.stage2.elements.operands;
 
+import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
+
+import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.eql.stage2.elements.IIgnorableAtS2;
 import ua.com.fielden.platform.eql.stage2.elements.ITransformableToS3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
@@ -13,4 +16,8 @@ public interface ISingleOperand2<S3 extends ISingleOperand3> extends IIgnorableA
      */
     Class<?> type();
     Object hibType();
+    
+    default boolean isHeader() {
+        return isUnionEntityType(type()) || hibType() instanceof ICompositeUserTypeInstantiate;
+    }
 }

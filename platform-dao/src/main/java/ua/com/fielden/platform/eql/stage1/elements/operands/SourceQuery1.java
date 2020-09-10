@@ -63,7 +63,7 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableToS2<S
             final List<Yield2> enhancedYields = new ArrayList<>(yields.getYields());
             for (final Entry<String, AbstractPropInfo<?>> el : mainSource.entityInfo().getProps().entrySet()) {
                 if (!el.getValue().hasExpression()) {
-                    enhancedYields.add(new Yield2(new EntProp2(mainSource, listOf(el.getValue())), el.getKey(), false, (el.getValue() instanceof UnionTypePropInfo  || el.getValue() instanceof ComponentTypePropInfo)));
+                    enhancedYields.add(new Yield2(new EntProp2(mainSource, listOf(el.getValue())), el.getKey(), false));
                 }
                 if (el.getValue() instanceof UnionTypePropInfo) {
                     for (final Entry<String, AbstractPropInfo<?>> sub : ((UnionTypePropInfo<?>) el.getValue()).propEntityInfo.getProps().entrySet()) {
