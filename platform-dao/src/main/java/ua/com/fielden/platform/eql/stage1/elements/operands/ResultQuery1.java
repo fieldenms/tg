@@ -15,8 +15,6 @@ import com.google.common.base.Objects;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.IRetrievalModel;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
-import ua.com.fielden.platform.eql.meta.ComponentTypePropInfo;
-import ua.com.fielden.platform.eql.meta.UnionTypePropInfo;
 import ua.com.fielden.platform.eql.stage1.elements.EntQueryBlocks1;
 import ua.com.fielden.platform.eql.stage1.elements.ITransformableToS2;
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
@@ -32,7 +30,6 @@ import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.Sources2;
 import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySource3;
 import ua.com.fielden.platform.types.tuples.T2;
-import ua.com.fielden.platform.utils.EntityUtils;
 
 public class ResultQuery1 extends AbstractQuery1 implements ITransformableToS2<ResultQuery2> {
     
@@ -52,32 +49,18 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToS2<R
         final Yields2 yields2 = yields.transform(enhancedContext);
         final GroupBys2 groups2 = enhance(groups.transform(enhancedContext));
         final OrderBys2 orderings2 = enhance(orderings.transform(enhancedContext), yields2, sources2.main);
-        final Yields2 enhancedYields2 = enhanceYields(yields2, sources2.main);
+        final Yields2 enhancedYields2 = expand(enhanceYields(yields2, sources2.main));
         final EntQueryBlocks2 entQueryBlocks = new EntQueryBlocks2(sources2, conditions2, enhancedYields2, groups2, orderings2);
 
         return new ResultQuery2(entQueryBlocks, resultType);
     }
 
     private Yields2 enhanceYields(final Yields2 yields, final IQrySource2<? extends IQrySource3> mainSource) {
-        // TODO include all props that are available (including calc-props) and also present in fetch model.
-
         if (yields.getYields().isEmpty() || yieldAll) {
             final List<Yield2> enhancedYields = new ArrayList<>(yields.getYields());
             for (final Entry<String, AbstractPropInfo<?>> el : mainSource.entityInfo().getProps().entrySet()) {
                 if (fetchModel.containsProp(el.getValue().name)) {
                     enhancedYields.add(new Yield2(new EntProp2(mainSource, listOf(el.getValue())), el.getKey(), false)); 
-                    
-                    if (el.getValue() instanceof UnionTypePropInfo) {
-                        for (final Entry<String, AbstractPropInfo<?>> sub : ((UnionTypePropInfo<?>) el.getValue()).propEntityInfo.getProps().entrySet()) {
-                            if (EntityUtils.isEntityType(sub.getValue().javaType()) && !sub.getValue().hasExpression()) {
-                                enhancedYields.add(new Yield2(new EntProp2(mainSource, listOf(el.getValue(), sub.getValue())), el.getKey() + "." + sub.getKey(), false));             
-                            }
-                        }
-                    } else if (el.getValue() instanceof ComponentTypePropInfo) {
-                        for (final Entry<String, AbstractPropInfo<?>> sub : ((ComponentTypePropInfo<?>) el.getValue()).getProps().entrySet()) {
-                            enhancedYields.add(new Yield2(new EntProp2(mainSource, listOf(el.getValue(), sub.getValue())), el.getKey() + "." + sub.getKey(), false));             
-                        }
-                    }
                 }
             }
             return new Yields2(enhancedYields);

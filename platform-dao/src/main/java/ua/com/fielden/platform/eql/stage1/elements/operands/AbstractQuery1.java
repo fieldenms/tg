@@ -5,14 +5,19 @@ import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.eql.stage1.elements.operands.EntProp1.enhancePath;
 import static ua.com.fielden.platform.eql.stage2.elements.KeyPropertyExtractor.extract;
 import static ua.com.fielden.platform.eql.stage2.elements.KeyPropertyExtractor.needsExtraction;
+import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
+import ua.com.fielden.platform.eql.meta.ComponentTypePropInfo;
+import ua.com.fielden.platform.eql.meta.UnionTypePropInfo;
 import ua.com.fielden.platform.eql.stage1.elements.EntQueryBlocks1;
 import ua.com.fielden.platform.eql.stage1.elements.GroupBys1;
 import ua.com.fielden.platform.eql.stage1.elements.OrderBys1;
@@ -54,7 +59,7 @@ public abstract class AbstractQuery1 {
     protected static GroupBys2 enhance(final GroupBys2 groupBys) {
         final List<GroupBy2> enhanced = new ArrayList<>();
         
-        for (GroupBy2 original : groupBys.getGroups()) {
+        for (final GroupBy2 original : groupBys.getGroups()) {
             enhanced.addAll(enhance(original));
         }
 
@@ -64,7 +69,7 @@ public abstract class AbstractQuery1 {
     protected static OrderBys2 enhance(final OrderBys2 orderBys, final Yields2 yields, final IQrySource2<? extends IQrySource3> mainSource) {
         final List<OrderBy2> enhanced = new ArrayList<>();
         
-        for (OrderBy2 original : orderBys.getModels()) {
+        for (final OrderBy2 original : orderBys.getModels()) {
             enhanced.addAll(original.operand != null ? transformForOperand(original.operand, original.isDesc) :
                 transformForYield(original, yields, mainSource));
         }
@@ -72,11 +77,56 @@ public abstract class AbstractQuery1 {
         return new OrderBys2(enhanced);
     }
     
+    protected static Yields2 expand(final Yields2 original) {
+        return new Yields2(expand(original.getYields()));
+    }
+
+    private static List<Yield2> expand(final Collection<Yield2> original) {
+        final List<Yield2> expanded = new ArrayList<>();
+        
+        for (final Yield2 originalYield : original) {
+            expanded.addAll(expand(originalYield));
+        }
+
+        return expanded;
+    }
+
+    private static List<Yield2> expand(final Yield2 original) {
+        final List<Yield2> expanded = new ArrayList<>();
+        expanded.add(original);
+        
+        if (original.operand.isHeader() && original.operand instanceof EntProp2){
+            final EntProp2 originalYieldProp = (EntProp2) original.operand;
+
+            if (originalYieldProp.lastPart() instanceof UnionTypePropInfo) {
+                for (final Entry<String, AbstractPropInfo<?>> sub : ((UnionTypePropInfo<?>) originalYieldProp.lastPart()).propEntityInfo.getProps().entrySet()) {
+                    if (isEntityType(sub.getValue().javaType()) && !sub.getValue().hasExpression()) {
+                        expanded.addAll(expand(originalYieldProp, sub.getValue()));             
+                    }
+                }
+            } else if (originalYieldProp.lastPart() instanceof ComponentTypePropInfo) {
+                for (final Entry<String, AbstractPropInfo<?>> sub : ((ComponentTypePropInfo<?>) originalYieldProp.lastPart()).getProps().entrySet()) {
+                    expanded.addAll(expand(originalYieldProp, sub.getValue()));             
+                }
+            }
+        }
+
+        return expanded;
+    }
+    
+    private static List<Yield2> expand(final EntProp2 originalYieldProp, final AbstractPropInfo<?> subProp) {
+        final List<AbstractPropInfo<?>> expandedPath = new ArrayList<>(originalYieldProp.getPath());
+        expandedPath.add(subProp);
+        return expand(new Yield2(new EntProp2(originalYieldProp.source, expandedPath), originalYieldProp.name + "." + subProp.name, false));             
+    }
+    
+    
+    
     private static List<OrderBy2> transformForYield(final OrderBy2 original, final Yields2 yields, final IQrySource2<? extends IQrySource3> mainSource) {
         if (yields.getYieldsMap().containsKey(original.yieldName)) {
             final Yield2 yield = yields.getYieldsMap().get(original.yieldName);
             if (yield.operand instanceof EntProp2 && needsExtraction(((EntProp2) yield.operand).lastPart())) {
-                return transformForOperand((EntProp2) yield.operand, original.isDesc);
+                return transformForOperand(yield.operand, original.isDesc);
             } else {
                 return asList(original);
             }
