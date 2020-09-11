@@ -39,6 +39,11 @@ public class ComponentTypePropInfo<T> extends AbstractPropInfo<T> {
     public SortedMap<String, AbstractPropInfo<?>> getProps() {
         return unmodifiableSortedMap(props);
     }
+    
+    @Override
+    public boolean hasExpression() {
+        return props.values().stream().anyMatch(p -> p.hasExpression());
+    }
 
     @Override
     public Class<T> javaType() {

@@ -124,7 +124,7 @@ public class PathsToTreeTransformator {
         
         Expression2 expr2 = null;
         final List<Child> dependencies = new ArrayList<>();
-        if (propInfo.hasExpression()) {
+        if (propInfo.hasExpression() && !(propInfo instanceof ComponentTypePropInfo || propInfo instanceof UnionTypePropInfo)) {
             final IQrySource2<?>  cs = contextSource != null ?  contextSource : lastPersistentSource;
             expr2 = expressionToS2(cs, propInfo, domainInfo, context.stream().collect(joining("_")), gen);
             final Map<String, List<Child>> dependenciesResult = transform(expr2.collectProps(), domainInfo, gen);
