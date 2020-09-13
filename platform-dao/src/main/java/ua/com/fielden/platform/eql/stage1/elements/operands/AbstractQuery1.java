@@ -101,12 +101,12 @@ public abstract class AbstractQuery1 {
             if (originalYieldProp.lastPart() instanceof UnionTypePropInfo) {
                 for (final Entry<String, AbstractPropInfo<?>> sub : ((UnionTypePropInfo<?>) originalYieldProp.lastPart()).propEntityInfo.getProps().entrySet()) {
                     if (isEntityType(sub.getValue().javaType()) && !sub.getValue().hasExpression()) {
-                        expanded.addAll(expand(originalYieldProp, sub.getValue()));             
+                        expanded.addAll(expand(originalYieldProp, sub.getValue(), original.alias));             
                     }
                 }
             } else if (originalYieldProp.lastPart() instanceof ComponentTypePropInfo) {
                 for (final Entry<String, AbstractPropInfo<?>> sub : ((ComponentTypePropInfo<?>) originalYieldProp.lastPart()).getProps().entrySet()) {
-                    expanded.addAll(expand(originalYieldProp, sub.getValue()));             
+                    expanded.addAll(expand(originalYieldProp, sub.getValue(), original.alias));             
                 }
             }
         }
@@ -114,10 +114,10 @@ public abstract class AbstractQuery1 {
         return expanded;
     }
     
-    private static List<Yield2> expand(final EntProp2 originalYieldProp, final AbstractPropInfo<?> subProp) {
+    private static List<Yield2> expand(final EntProp2 originalYieldProp, final AbstractPropInfo<?> subProp, final String yieldAlias) {
         final List<AbstractPropInfo<?>> expandedPath = new ArrayList<>(originalYieldProp.getPath());
         expandedPath.add(subProp);
-        return expand(new Yield2(new EntProp2(originalYieldProp.source, expandedPath), originalYieldProp.name + "." + subProp.name, false));             
+        return expand(new Yield2(new EntProp2(originalYieldProp.source, expandedPath), yieldAlias + "." + subProp.name, false));             
     }
     
     
