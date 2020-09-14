@@ -22,6 +22,11 @@ public class EntityTypePropInfo<T extends AbstractEntity<?>> extends AbstractPro
         this(name, propEntityInfo, hibType, required, null);
     }
 
+    @Override
+    public EntityTypePropInfo<T> cloneRenamed(final String newName) {
+        return new EntityTypePropInfo<T>(newName, propEntityInfo, hibType, required, expression);
+    }
+    
     public EntityTypePropInfo(final String name, final EntityInfo<T> propEntityInfo, final Object hibType, final boolean required, final ExpressionModel expression) {
         super(name, hibType, expression);
         this.propEntityInfo = propEntityInfo;

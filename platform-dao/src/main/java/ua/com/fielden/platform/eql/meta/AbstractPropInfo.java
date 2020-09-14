@@ -21,6 +21,8 @@ public abstract class AbstractPropInfo<T> implements IResolvable<T> {
         this.hibType = hibType;
     }
     
+    public abstract AbstractPropInfo<T> cloneRenamed(final String newName);
+    
     public boolean hasExpression() {
         return expression != null;
     }

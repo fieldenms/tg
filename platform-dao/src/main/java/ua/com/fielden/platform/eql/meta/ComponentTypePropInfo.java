@@ -4,13 +4,12 @@ import static java.util.Collections.unmodifiableSortedMap;
 
 import java.util.HashSet;
 import java.util.Map.Entry;
-
-import ua.com.fielden.platform.eql.stage1.elements.PropResolutionProgress;
-
 import java.util.Objects;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+
+import ua.com.fielden.platform.eql.stage1.elements.PropResolutionProgress;
 
 public class ComponentTypePropInfo<T> extends AbstractPropInfo<T> {
     private final Class<T> javaType;
@@ -19,6 +18,11 @@ public class ComponentTypePropInfo<T> extends AbstractPropInfo<T> {
     public ComponentTypePropInfo(final String name, final Class<T> javaType, final Object hibType) {
         super(name, hibType, null);
         this.javaType = javaType;
+    }
+    
+    @Override
+    public AbstractPropInfo<T> cloneRenamed(final String newName) {
+        return new ComponentTypePropInfo<T>(newName, javaType, hibType);
     }
 
     @Override
@@ -57,9 +61,9 @@ public class ComponentTypePropInfo<T> extends AbstractPropInfo<T> {
 
     public Set<String> generateLeafItemsPaths() {
         final Set<String> result = new HashSet<>();
-        for (Entry<String, AbstractPropInfo<?>> prop : props.entrySet()) {
+        for (final Entry<String, AbstractPropInfo<?>> prop : props.entrySet()) {
             if (prop.getValue() instanceof ComponentTypePropInfo) {
-                for (String path : ((ComponentTypePropInfo<?>) prop.getValue()).generateLeafItemsPaths()) {
+                for (final String path : ((ComponentTypePropInfo<?>) prop.getValue()).generateLeafItemsPaths()) {
                     result.add(name + "." + path);
                 }
             } else {

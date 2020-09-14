@@ -272,6 +272,10 @@ public class EqlStage2TestCase extends EqlTestCase {
         return new SourceQuery2(qb2(sources, conditions, yields), EntityAggregates.class);
     }
 
+    protected static SourceQuery2 srcqry(final Sources2 sources, final Yields2 yields) {
+        return new SourceQuery2(qb2(sources, emptyConditions2, yields), EntityAggregates.class);
+    }
+
     protected static ResultQuery2 qry(final Sources2 sources, final Yields2 yields , final Class<? extends AbstractEntity<?>> resultType) {
         return new ResultQuery2(qb2(sources, emptyConditions2, yields), resultType);
     }

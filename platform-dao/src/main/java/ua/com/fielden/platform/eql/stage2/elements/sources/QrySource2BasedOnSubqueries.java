@@ -129,8 +129,23 @@ public class QrySource2BasedOnSubqueries extends AbstractElement2 implements IQr
     }
     
     private EntityInfo<?> produceEntityInfoFrom(final LongMetadata domainInfo) {
-        if (!EntityAggregates.class.equals(sourceType())) {
-            //return domainInfo.get(sourceType());
+        if (EntityAggregates.class.equals(sourceType())) {
+            final EntityInfo<EntityAggregates> entAggEntityInfo = new EntityInfo<>(EntityAggregates.class, null);
+            for (final Yield2 yield : getYields().getYields()) {
+                if (yield.operand instanceof EntProp2) {
+                    final EntProp2 yieldedOperand = (EntProp2) yield.operand;
+                    if (!yield.alias.contains(".")) {
+                        entAggEntityInfo.addProp(yieldedOperand.lastPart().cloneRenamed(yield.alias));
+                    }                    
+                } else {
+                    final AbstractPropInfo<?> aep = isEntityType(yield.javaType())
+                            ? new EntityTypePropInfo(yield.alias, domainInfo.getEntityInfo((Class<? extends AbstractEntity<?>>)yield.javaType()), LongType.INSTANCE, yield.hasRequiredHint)
+                            : new PrimTypePropInfo(yield.alias, yield.operand.hibType(), yield.javaType());
+                    entAggEntityInfo.addProp(aep);
+                }
+            }
+            return entAggEntityInfo;
+        } else {
             if (isPersistedEntityType(sourceType())) {
                 if (getYields().getYields().size() == 1 && getYields().getYields().iterator().next().alias.equals(ID)) {
                     final EntityInfo<?> actualEi = new EntityInfo<>(sourceType(), QUERY_BASED);
@@ -160,24 +175,15 @@ public class QrySource2BasedOnSubqueries extends AbstractElement2 implements IQr
                         } else {
                     //        System.out.println("skipping " + declaredProp.getKey() + " in " + sourceType().getSimpleName());
                         }
-
                     }
                 }
+                
                 for (final Yield2 yield : getYields().getYields()) {
                     //if(declaredEi.getProps().containsKey(yield.alias))
                 }
                 
                 return actualEi;
             }
-        } else {
-            final EntityInfo<EntityAggregates> entAggEntityInfo = new EntityInfo<>(EntityAggregates.class, null);
-            for (final Yield2 yield : getYields().getYields()) {
-                final AbstractPropInfo<?> aep = isEntityType(yield.javaType())
-                        ? new EntityTypePropInfo(yield.alias, domainInfo.getEntityInfo((Class<? extends AbstractEntity<?>>)yield.javaType()), LongType.INSTANCE, yield.hasRequiredHint)
-                        : new PrimTypePropInfo(yield.alias, yield.operand.hibType(), yield.javaType());
-                entAggEntityInfo.addProp(aep);
-            }
-            return entAggEntityInfo;
         }
     }
 
