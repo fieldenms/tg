@@ -2,10 +2,12 @@ package ua.com.fielden.platform.classloader;
 
 import static ua.com.fielden.platform.utils.Pair.pair;
 
+import java.io.File;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLStreamHandlerFactory;
 import java.util.Optional;
+import java.util.jar.JarFile;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -43,6 +45,26 @@ public class TgSystemClassLoader extends URLClassLoader {
 
     public TgSystemClassLoader(final URL[] urls, final ClassLoader parent, final URLStreamHandlerFactory factory) {
         super(urls, parent, factory);
+    }
+
+    /**
+     * Needed to support debugging where agents are added dynamically.
+     * @see <a href="https://docs.oracle.com/javase/9/docs/api/java/lang/instrument/Instrumentation.html#appendToSystemClassLoaderSearch-java.util.jar.JarFile-">Instrumentation</a>
+     * @param jarfile
+     * @throws Exception
+     */
+    void appendToSystemClassLoaderSearch(final JarFile jarfile) throws Exception {
+        appendToClassPathForInstrumentation(jarfile.getName());
+    }
+
+    /**
+     * Needed to support debugging where agents are added dynamically.
+     * @see <a href="https://docs.oracle.com/javase/9/docs/api/java/lang/instrument/Instrumentation.html#appendToSystemClassLoaderSearch-java.util.jar.JarFile-">Instrumentation</a>
+     * @param jarfile
+     * @throws Exception
+     */
+    void appendToClassPathForInstrumentation(final String path) throws Exception {
+        addURL(new File(path).toURI().toURL());
     }
 
     /**
