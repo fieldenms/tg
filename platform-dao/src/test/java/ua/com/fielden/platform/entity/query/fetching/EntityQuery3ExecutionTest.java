@@ -28,6 +28,7 @@ import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
+import ua.com.fielden.platform.eql.stage2.elements.operands.ResultQuery2;
 import ua.com.fielden.platform.sample.domain.ITeAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.ITeVehicle;
 import ua.com.fielden.platform.sample.domain.ITeVehicleFuelUsage;
@@ -918,6 +919,15 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
         final EntityAggregates location = aggregateDao.getEntity(from(qry).with(fetchAggregates().with("l", fetch(TgBogieLocation.class).with("workshop"))).model());
         assertTrue(location.get("l").getClass().getName().startsWith(TgBogieLocation.class.getName()));
         assertEquals("WSHOP1", ((TgWorkshop) location.get("l.workshop")).getKey());
+    }
+    
+    @Test
+    public void union_property_type_is_preserved_when_yielded_from_query_based_qry_source() {
+        final AggregatedResultQueryModel srcQry = select(TgBogie.class).where().prop("key").eq().val("BOGIE1").yield().prop("location").as("l").modelAsAggregate();
+        final AggregatedResultQueryModel qry = select(srcQry).yield().prop("l").as("loc").modelAsAggregate();
+        final EntityAggregates location = aggregateDao.getEntity(from(qry).with(fetchAggregates().with("loc", fetch(TgBogieLocation.class).with("workshop"))).model());
+        assertTrue(location.get("loc").getClass().getName().startsWith(TgBogieLocation.class.getName()));
+        assertEquals("WSHOP1", ((TgWorkshop) location.get("loc.workshop")).getKey());
     }
     
     @Override
