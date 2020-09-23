@@ -3,7 +3,6 @@ package ua.com.fielden.platform.eql.stage1.elements.sources;
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.elements.sources.QrySource2BasedOnPersistentType;
 
@@ -12,11 +11,7 @@ public class QrySource1BasedOnPersistentType extends AbstractQrySource1<QrySourc
 
     public QrySource1BasedOnPersistentType(final Class<? extends AbstractEntity<?>> sourceType, final String alias, final int contextId) {
         super(alias, contextId);
-        if (sourceType == null) {
-            throw new EqlStage1ProcessingException("Source type is required.");
-        }
-
-        this.sourceType = sourceType;
+        this.sourceType = Objects.requireNonNull(sourceType);
     }
 
     @Override

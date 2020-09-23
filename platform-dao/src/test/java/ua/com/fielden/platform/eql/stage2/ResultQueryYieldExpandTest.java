@@ -2,10 +2,13 @@ package ua.com.fielden.platform.eql.stage2;
 
 import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.QUERY_BASED;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
+import ua.com.fielden.platform.eql.meta.EntityInfo;
 import ua.com.fielden.platform.eql.meta.EqlStage2TestCase;
 import ua.com.fielden.platform.eql.stage2.elements.Yields2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ResultQuery2;
@@ -41,7 +44,10 @@ public class ResultQueryYieldExpandTest extends EqlStage2TestCase {
         
         final SourceQuery2 srcQry2 = srcqry(sources(bogie), yields);
         
-        final QrySource2BasedOnSubqueries resultQrySource = source("2", srcQry2);
+        final EntityInfo<EntityAggregates> entityInfo = new EntityInfo<>(EntityAggregates.class, QUERY_BASED);
+        entityInfo.addProp(pi(BOGIE, "location").cloneRenamed("l"));
+        
+        final QrySource2BasedOnSubqueries resultQrySource = source(entityInfo, "2", srcQry2);
 
         final Yields2 resultQryYields = yields(
                 yield(prop(resultQrySource, pi(BOGIE, "location").cloneRenamed("l")), "loc"),
@@ -49,5 +55,6 @@ public class ResultQueryYieldExpandTest extends EqlStage2TestCase {
                 yield(prop(resultQrySource, pi(BOGIE, "location").cloneRenamed("l"), pi(BOGIE, "location", "workshop")), "loc.workshop")
                 );
         assertEquals(resultQryYields, actResultQry.yields);
+        assertEquals(sources(resultQrySource), actResultQry.sources);
     }
 }

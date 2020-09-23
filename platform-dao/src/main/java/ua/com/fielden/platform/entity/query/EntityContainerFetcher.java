@@ -167,7 +167,7 @@ public class EntityContainerFetcher {
                 result.add(new ResultQueryYieldDetails(yield.alias, yieldType, yieldHibType, null, isUnionEntityType(yieldType) ? UNION_ENTITY_HEADER : COMPOSITE_TYPE_HEADER));
             } else {
                 if (yield.column == null) {
-                    throw new EqlException("There is no column for yield with alias [" + yield.alias + "] of type [" + yield.type + "].");    
+                    throw new EqlException(String.format("There is no column for yield with alias [%s] of type [%s].", yield.alias, yield.type));    
                 }
                 result.add(new ResultQueryYieldDetails(yield.alias, yieldType, yieldHibType, yield.column, USUAL_PROP));    
             }

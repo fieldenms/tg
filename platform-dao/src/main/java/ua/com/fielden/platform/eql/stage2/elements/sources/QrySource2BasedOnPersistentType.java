@@ -8,25 +8,21 @@ import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.EntityInfo;
-import ua.com.fielden.platform.eql.stage2.elements.AbstractElement2;
+import ua.com.fielden.platform.eql.stage2.elements.AbstractQrySource2;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage3.elements.sources.QrySource3BasedOnTable;
 
-public class QrySource2BasedOnPersistentType extends AbstractElement2 implements IQrySource2<QrySource3BasedOnTable> {
+public class QrySource2BasedOnPersistentType extends AbstractQrySource2 implements IQrySource2<QrySource3BasedOnTable> {
     private final Class<? extends AbstractEntity<?>> sourceType;
-    private final EntityInfo entityInfo;
-    private final String alias;
 
-    public QrySource2BasedOnPersistentType(final Class<? extends AbstractEntity<?>> sourceType, final EntityInfo entityInfo, final String alias, final String contextId) {
-        super(contextId);
+    public QrySource2BasedOnPersistentType(final Class<? extends AbstractEntity<?>> sourceType, final EntityInfo<?> entityInfo, final String alias, final String contextId) {
+        super(contextId, alias, entityInfo);
         this.sourceType = sourceType;
-        this.entityInfo = entityInfo;
-        this.alias = alias;
     }
 
-    public QrySource2BasedOnPersistentType(final Class<? extends AbstractEntity<?>> sourceType, final EntityInfo entityInfo, final String contextId) {
+    public QrySource2BasedOnPersistentType(final Class<? extends AbstractEntity<?>> sourceType, final EntityInfo<?> entityInfo, final String contextId) {
         this(sourceType, entityInfo, null, contextId);               
     }
 
@@ -48,21 +44,6 @@ public class QrySource2BasedOnPersistentType extends AbstractElement2 implements
     }
 
     @Override
-    public EntityInfo<?> entityInfo() {
-        return entityInfo;
-    }
-
-    @Override
-    public String alias() {
-        return alias;
-    }
-
-    @Override
-    public String contextId() {
-        return contextId;
-    }
-    
-    @Override
     public String toString() {
         return format("type = [%s], ID = [%s], alias = [%s]", sourceType.getSimpleName(), contextId, (alias != null ? alias : ""));
     }
@@ -72,7 +53,6 @@ public class QrySource2BasedOnPersistentType extends AbstractElement2 implements
         final int prime = 31;
         int result = super.hashCode();
         result = prime * result + sourceType.hashCode();
-        result = prime * result + ((alias == null) ? 0 : alias.hashCode());
         return result;
     }
 
@@ -92,6 +72,6 @@ public class QrySource2BasedOnPersistentType extends AbstractElement2 implements
         
         final QrySource2BasedOnPersistentType other = (QrySource2BasedOnPersistentType) obj;
         
-        return Objects.equals(sourceType, other.sourceType) && Objects.equals(alias, other.alias);
+        return Objects.equals(sourceType, other.sourceType);
     }
 }

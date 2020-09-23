@@ -256,8 +256,8 @@ public class EqlStage2TestCase extends EqlTestCase {
         return new QrySource2BasedOnPersistentType(sourceType, DOMAIN_METADATA.lmd.getEntityInfo(sourceType), contextId);
     }
     
-    protected static QrySource2BasedOnSubqueries source(final String contextId, final SourceQuery2 ... queries) {
-        return new QrySource2BasedOnSubqueries(Arrays.asList(queries), null, DOMAIN_METADATA.lmd, contextId);
+    protected static QrySource2BasedOnSubqueries source(final EntityInfo<?> entityInfo, final String contextId, final SourceQuery2 ... queries) {
+        return new QrySource2BasedOnSubqueries(Arrays.asList(queries), null, contextId, entityInfo);
     }
 
     protected static ResultQuery2 qryCountAll(final Sources2 sources, final Conditions2 conditions) {

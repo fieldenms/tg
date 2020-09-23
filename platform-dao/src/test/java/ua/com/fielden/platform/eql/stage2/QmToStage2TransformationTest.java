@@ -4,13 +4,17 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
+import java.math.BigDecimal;
+
 import org.junit.Ignore;
 import org.junit.Test;
 
+import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
+import ua.com.fielden.platform.eql.meta.EntityInfo;
 import ua.com.fielden.platform.eql.meta.EqlStage2TestCase;
 import ua.com.fielden.platform.eql.meta.PrimTypePropInfo;
 import ua.com.fielden.platform.eql.stage2.elements.Yields2;
@@ -51,7 +55,10 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
 
         final SourceQuery2 vehSourceSubQry = srcqry(vehSources, vehConditions, vehYields);
         
-        final QrySource2BasedOnSubqueries qtyQrySource = source("2", vehSourceSubQry);
+        final EntityInfo<EntityAggregates> entityInfo = new EntityInfo<>(EntityAggregates.class, null);
+        entityInfo.addProp(new PrimTypePropInfo<>("qty", BIG_DECIMAL, BigDecimal.class));
+        
+        final QrySource2BasedOnSubqueries qtyQrySource = source(entityInfo, "2", vehSourceSubQry);
         final Sources2 qtyQrySources = sources(qtyQrySource);
         final Yields2 qtyQryYields = yields(yield(prop(qtyQrySource, new PrimTypePropInfo<Integer>("qty", H_INTEGER, INTEGER)), ""));
         
@@ -92,7 +99,10 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
 
         final SourceQuery2 vehSourceSubQry2 = srcqry(vehSources2, vehConditions2, vehYields2);
 
-        final QrySource2BasedOnSubqueries qtyQrySource = source("3", vehSourceSubQry1, vehSourceSubQry2);
+        final EntityInfo<EntityAggregates> entityInfo = new EntityInfo<>(EntityAggregates.class, null);
+        entityInfo.addProp(new PrimTypePropInfo<>("qty", BIG_DECIMAL, BigDecimal.class));
+        
+        final QrySource2BasedOnSubqueries qtyQrySource = source(entityInfo, "3", vehSourceSubQry1, vehSourceSubQry2);
         final Sources2 qtyQrySources = sources(qtyQrySource);
         final Yields2 qtyQryYields = yields(yield(prop(qtyQrySource, new PrimTypePropInfo<Integer>("qty", H_INTEGER, INTEGER)), ""));
         

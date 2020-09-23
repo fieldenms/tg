@@ -22,7 +22,9 @@ public class ComponentTypePropInfo<T> extends AbstractPropInfo<T> {
     
     @Override
     public AbstractPropInfo<T> cloneRenamed(final String newName) {
-        return new ComponentTypePropInfo<T>(newName, javaType, hibType);
+        final ComponentTypePropInfo<T> result = new ComponentTypePropInfo<T>(newName, javaType, hibType);
+        result.props.putAll(props);
+        return result;
     }
 
     @Override

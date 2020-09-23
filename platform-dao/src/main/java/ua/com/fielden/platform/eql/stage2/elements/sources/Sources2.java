@@ -120,7 +120,7 @@ public class Sources2  {
         final int prime = 31;
         int result = 1;
         result = prime * result + compounds.hashCode();
-        result = prime * result + main.contextId().hashCode();
+        result = prime * result + main/*.contextId()*/.hashCode();
         return result;
     }
 
@@ -136,6 +136,6 @@ public class Sources2  {
 
         final Sources2 other = (Sources2) obj;
 
-        return Objects.equals(main.contextId(), other.main.contextId()) && Objects.equals(compounds, other.compounds);
+        return Objects.equals(main/*.contextId()*/, other.main/*.contextId()*/) && Objects.equals(compounds, other.compounds);
     }
 }

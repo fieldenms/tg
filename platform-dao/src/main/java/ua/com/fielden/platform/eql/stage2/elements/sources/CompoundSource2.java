@@ -22,7 +22,7 @@ public class CompoundSource2 {
         int result = 1;
         result = prime * result + joinConditions.hashCode();
         result = prime * result + joinType.hashCode();
-        result = prime * result + source.contextId().hashCode();
+        result = prime * result + source/*.contextId()*/.hashCode();
         return result;
     }
 
@@ -39,7 +39,7 @@ public class CompoundSource2 {
         
         final CompoundSource2 other = (CompoundSource2) obj;
         
-        return Objects.equals(source.contextId(), other.source.contextId()) &&
+        return Objects.equals(source/*.contextId()*/, other.source/*.contextId()*/) &&
                 Objects.equals(joinType, other.joinType) &&
                 Objects.equals(joinConditions, other.joinConditions);
     }
