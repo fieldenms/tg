@@ -3,6 +3,7 @@ package ua.com.fielden.platform.eql.stage2;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.QUERY_BASED;
 
 import java.math.BigDecimal;
 
@@ -55,7 +56,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
 
         final SourceQuery2 vehSourceSubQry = srcqry(vehSources, vehConditions, vehYields);
         
-        final EntityInfo<EntityAggregates> entityInfo = new EntityInfo<>(EntityAggregates.class, null);
+        final EntityInfo<EntityAggregates> entityInfo = new EntityInfo<>(EntityAggregates.class, QUERY_BASED);
         entityInfo.addProp(new PrimTypePropInfo<>("qty", BIG_DECIMAL, BigDecimal.class));
         
         final QrySource2BasedOnSubqueries qtyQrySource = source(entityInfo, "2", vehSourceSubQry);
@@ -99,7 +100,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
 
         final SourceQuery2 vehSourceSubQry2 = srcqry(vehSources2, vehConditions2, vehYields2);
 
-        final EntityInfo<EntityAggregates> entityInfo = new EntityInfo<>(EntityAggregates.class, null);
+        final EntityInfo<EntityAggregates> entityInfo = new EntityInfo<>(EntityAggregates.class, QUERY_BASED);
         entityInfo.addProp(new PrimTypePropInfo<>("qty", BIG_DECIMAL, BigDecimal.class));
         
         final QrySource2BasedOnSubqueries qtyQrySource = source(entityInfo, "3", vehSourceSubQry1, vehSourceSubQry2);

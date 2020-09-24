@@ -16,10 +16,6 @@ public class EntValue1 implements ISingleOperand1<EntValue2> {
     public EntValue1(final Object value, final boolean ignoreNull) {
         this.value = value;
         this.ignoreNull = ignoreNull;
-        if (!ignoreNull && value == null) {
-            // TODO Uncomment when yieldNull() operator is implemented and all occurences of yield().val(null) are corrected.
-            //	    throw new IllegalStateException("Value can't be null"); //
-        }
     }
 
     @Override
@@ -31,6 +27,7 @@ public class EntValue1 implements ISingleOperand1<EntValue2> {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
+        result = prime * result + (ignoreNull ? 1231 : 1237);
         result = prime * result + ((value == null) ? 0 : value.hashCode());
         return result;
     }
