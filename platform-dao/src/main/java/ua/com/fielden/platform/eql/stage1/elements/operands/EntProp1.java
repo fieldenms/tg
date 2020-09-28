@@ -13,8 +13,8 @@ import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingExcept
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.meta.ComponentTypePropInfo;
 import ua.com.fielden.platform.eql.stage1.elements.PropResolution;
-import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage1.elements.PropResolutionProgress;
+import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
 import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySource3;
@@ -50,9 +50,9 @@ public class EntProp1 implements ISingleOperand1<EntProp2> {
     
     public static final List<AbstractPropInfo<?>> enhancePath(final List<AbstractPropInfo<?>> originalPath) {
         final AbstractPropInfo<?> lastResolutionItem = originalPath.get(originalPath.size() - 1);
-        if (lastResolutionItem instanceof ComponentTypePropInfo && ((ComponentTypePropInfo) lastResolutionItem).getProps().size() == 1) {
+        if (lastResolutionItem instanceof ComponentTypePropInfo && ((ComponentTypePropInfo<?>) lastResolutionItem).getProps().size() == 1) {
             final List<AbstractPropInfo<?>> enhancedPath = new ArrayList<>(originalPath);
-            final AbstractPropInfo<?> autoResolvedItem = (AbstractPropInfo<?>) ((ComponentTypePropInfo) lastResolutionItem).getProps().values().iterator().next();
+            final AbstractPropInfo<?> autoResolvedItem = ((ComponentTypePropInfo<?>) lastResolutionItem).getProps().values().iterator().next();
             enhancedPath.add(autoResolvedItem);
             return enhancedPath;
         }

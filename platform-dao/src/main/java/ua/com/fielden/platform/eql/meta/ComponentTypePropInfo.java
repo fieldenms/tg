@@ -94,11 +94,11 @@ public class ComponentTypePropInfo<T> extends AbstractPropInfo<T> {
             return false;
         }
 
-        if (!(obj instanceof UnionTypePropInfo)) {
+        if (!(obj instanceof ComponentTypePropInfo)) {
             return false;
         }
 
-        final ComponentTypePropInfo other = (ComponentTypePropInfo) obj;
+        final ComponentTypePropInfo<?> other = (ComponentTypePropInfo<?>) obj;
 
         return Objects.equals(props, other.props) && Objects.equals(javaType, other.javaType);
     }
