@@ -253,7 +253,7 @@
                                     const entity = resultEntities[0];
                                     
                                     const editAction = centre.$.egi.$.primary_action_selector.assignedNodes()[0];
-                                    editAction.currentEntity = entity;
+                                    editAction.currentEntity = () => entity;
                                     const value = editAction._run();
                                     
                                     editAction.postActionSuccess = function (potentiallySavedOrNewEntity) {

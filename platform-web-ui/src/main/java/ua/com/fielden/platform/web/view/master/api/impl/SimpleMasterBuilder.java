@@ -20,7 +20,6 @@ import ua.com.fielden.platform.dom.DomContainer;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.UI_ROLE;
@@ -300,19 +299,19 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     private String genReadyCallback() {
         return "self.wasLoaded = function () {\n"
                 + "    return !!this._viewLoaded;\n"
-                + "}.bind(self);\n";
-    }
-
-    private String genAttachedCallback() {
-        return "self.registerCentreRefreshRedirector();\n"
+                + "}.bind(self);\n"
                 + "//Init event listener that indicates whether content was loaded\n"
                 + "if (!self._hasEmbededView()) {\n"
-                + "    self._entityMasterContentLoaded = function (e) {\n"
+                + "    const _entityMasterContentLoaded = function (e) {\n"
                 + "        this._viewLoaded = true;\n"
                 + "        this.fire('tg-view-loaded', this);\n"
                 + "    }.bind(self);\n"
-                + "    self.addEventListener('tg-entity-master-content-loaded', self._entityMasterContentLoaded);\n"
-                + "}";
+                + "    self.addEventListener('tg-entity-master-content-loaded', _entityMasterContentLoaded);\n"
+                + "}\n";
+    }
+
+    private String genAttachedCallback() {
+        return "self.registerCentreRefreshRedirector();\n";
     }
 
     /**
@@ -355,7 +354,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         public Optional<Class<? extends IValueMatcherWithContext<T, ?>>> matcherTypeFor(final String propName) {
             return Optional.ofNullable(valueMatcherForProps.get(propName));
         }
-        
+
         @Override
         public Set<String> additionalAutocompleterPropertiesFor(final String propertyName) {
             for (final WidgetSelector<T> widgetSelector: widgets) {

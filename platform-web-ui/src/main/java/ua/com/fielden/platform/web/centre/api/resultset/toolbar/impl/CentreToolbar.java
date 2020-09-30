@@ -119,7 +119,7 @@ public class CentreToolbar implements IToolbarConfig {
                 .attr("slot", "standart-action")
                 .attr("shortcut", "f5")
                 .attr("icon", "refresh")
-                .attr("on-tap", "currentPage")
+                .attr("on-tap", "currentPageTap")
                 .attr("disabled$", "[[canNotCurrent(pageNumber, pageCount, isRunning)]]")
                 .attr("tooltip-text", "Refresh, F5");
     }

@@ -1,5 +1,6 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
-import { random } from '/resources/reflection/tg-numeric-utils.js'
+import { random } from '/resources/reflection/tg-numeric-utils.js';
+import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
 
 export const TgSseBehavior = {
 

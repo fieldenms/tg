@@ -436,21 +436,29 @@ const TgEntityCentreBehaviorImpl = {
         'tg-egi-column-change': '_saveColumnWidth'
     },
 
+    _abortPreviousAndInitiateNewRun: function () {
+        // cancel previous running before starting new one; the results of previous running are irrelevant
+        this._reflector.abortRequestsIfAny(this.$.selection_criteria._ajaxRunner(), 'running');
+
+        this._setQueryParams();
+        if (this.autoRun || this.queryPart) {
+            this.run(!this.queryPart); // identify autoRunning situation only in case where centre has autoRun as true but does not represent 'link' centre (has no URI criteria values)
+            delete this.queryPart;
+        }
+    },
+
     _getMasterEntityAssigned: function (newValue, oldValue) {
-        const self = this;
-        if (oldValue === undefined) {
-            self.retrieve().then(function () {
-                self._setQueryParams();
-                if (self.autoRun || self.queryPart) {
-                    self.run(!self.queryPart); // identify autoRunning situation only in case where centre has autoRun as true but does not represent 'link' centre (has no URI criteria values)
-                    delete self.queryPart;
-                }
-            });
+        if (this._reflector.isEntity(this.$.selection_criteria._currBindingEntity)) {
+            this._abortPreviousAndInitiateNewRun();
         } else {
-            self._setQueryParams();
-            if (self.autoRun || self.queryPart) {
-                self.run(!self.queryPart); // identify autoRunning situation only in case where centre has autoRun as true but does not represent 'link' centre (has no URI criteria values)
-                delete self.queryPart;
+            // cancel previous retrieval requests except the last one -- if it exists then run process will be chained on top of that last retrieval process,
+            // otherwise -- run process will simply start immediately
+            const lastRetrievalPromise = this._reflector.abortRequestsExceptLastOne(this.$.selection_criteria._ajaxRetriever(), 'retrieval');
+            if (lastRetrievalPromise !== null) {
+                console.warn('Running is chained to the last retrieval promise...');
+                lastRetrievalPromise.then(() => this._abortPreviousAndInitiateNewRun());
+            } else {
+                this.retrieve().then(() => this._abortPreviousAndInitiateNewRun());
             }
         }
     },
@@ -668,7 +676,7 @@ const TgEntityCentreBehaviorImpl = {
          */
         self.run = (function (isAutoRunning, isSortingAction, forceRegeneration) {
             if (this._criteriaLoaded === false) {
-                throw "Cannot run centre (not initialised criteria).";
+                throw new Error(`Cannot run ${this.is} centre (not initialised criteria).`);
             }
 
             const self = this;
@@ -988,14 +996,19 @@ const TgEntityCentreBehaviorImpl = {
     currentPage: function () {
         const self = this;
         if (!this.$.egi.isEditing()) {
-            self.persistActiveElement();
             return this.$.selection_criteria.currentPage()
                 .then(function () {
                     self.runInsertionPointActions();
-                    self.restoreActiveElement();
                 });
         }
         return this._saveOrCancelPromise();
+    },
+
+    currentPageTap: function () {
+        this.persistActiveElement();
+        this.currentPage()
+            .then(() => this.restoreActiveElement())
+            .catch(() => this.restoreActiveElement());
     },
 
     /**

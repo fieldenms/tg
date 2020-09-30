@@ -17,6 +17,7 @@ import { TgReflector } from '/app/tg-reflector.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 import {processResponseError, toastMsgForError} from '/resources/reflection/tg-ajax-utils.js';
+import { enhanceStateRestoration } from '/resources/components/tg-global-error-handler.js';
 
 const template = html`
     <style>
@@ -60,7 +61,7 @@ const template = html`
             padding: var(--tg-ui-action-icon-button-padding, 8px);
         }
     </style>
-    <iron-ajax id="masterRetriever" headers="[[_headers]]" url="[[_masterUri]]" method="GET" handle-as="json" on-error="_processMasterError">
+    <iron-ajax id="masterRetriever" headers="[[_headers]]" url="[[_masterUri]]" method="GET" handle-as="json" reject-with-request on-error="_processMasterError">
     </iron-ajax>
     <paper-icon-button id="iActionButton" hidden$="[[!isIconButton]]" icon="[[icon]]" on-tap="_run" disabled$="[[_computeDisabled(isActionInProgress, disabled)]]" tooltip-text$="[[longDesc]]"></paper-icon-button>
     <paper-button id="bActionButton" hidden$="[[isIconButton]]" raised roll="button" on-tap="_run" style="width:100%" disabled$="[[_computeDisabled(isActionInProgress, disabled)]]" tooltip-text$="[[longDesc]]">
@@ -291,10 +292,14 @@ Polymer({
         /**
          * The 'currentEntity' should contain the entity that was clicked (result-set actions)
          * or the entity on which primary/secondary action was chosen. 
-         * Otherwise, as in case of a Top Level action, the 'currentEntity' should be empty.
+         * Otherwise, as in case of a Top Level action, the 'currentEntity' should be empty or specified in another way 
+         * (in preAction for example).
         */
         currentEntity: {
-            type: Object
+            type: Function,
+            value: function () {
+                return () => null;
+            }
         },
 
         /** Indicates of the action is currently in progress.
@@ -464,14 +469,20 @@ Polymer({
 
             const postMasterInfoRetrieve = function () {
                 if (this.preAction) {
-                    const result = this.preAction(this)
+                    const result = this.preAction(this);
+                    
                     const promise = result instanceof Promise ? result : Promise.resolve(result);
     
                     promise.then(function (value) {
                         self.showDialog(self);
                     }, function (error) {
                         self.restoreActionState();
-                        console.log("The action was rejected with error: " + error);
+                        if (error instanceof Error) {
+                            console.error("The action was rejected with error: " + error);
+                            throw error;
+                        } else {
+                            console.log("The action was rejected with error: " + error);
+                        }
                     });
                 } else {
                     this.showDialog(this);
@@ -481,7 +492,7 @@ Polymer({
             self.persistActiveElement();
 
             
-            if (this.dynamicAction && this.currentEntity) {
+            if (this.dynamicAction && this.currentEntity()) {
                 const currentEntityType = this._calculateCurrentEntityType();
                 if (this._previousEntityType !== currentEntityType) {
                     if (!this.elementName) {//Element name for dynamic action is not specified at first run
@@ -554,6 +565,17 @@ Polymer({
             // One exception from that rule: embedded masters in master-with-master -- the flag is configured from MasterWithMasterBuilder API.
             master.shouldRefreshParentCentreAfterSave = self.shouldRefreshParentCentreAfterSave;
 
+            const restoreStateAfterSave = function () {
+                if (!self.skipAutomaticActionCompletion) {
+                    // action execution completes
+                    self.isActionInProgress = false;
+
+                    if (master.noUI === true) {
+                        self.restoreActionState();
+                    }
+                }
+            };
+
             master.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {
                 postal.publish({
                     channel: "centre_" + this.centreUuid,
@@ -566,24 +588,25 @@ Polymer({
                     }
                 });
 
-                if (potentiallySavedOrNewEntity.isValidWithoutException()) {
-                    if (self.postActionSuccess) {
-                        self.postActionSuccess(potentiallySavedOrNewEntity, self, master);
+                try {
+                    if (potentiallySavedOrNewEntity.isValidWithoutException()) {
+                        if (self.postActionSuccess) {
+                            self.postActionSuccess(potentiallySavedOrNewEntity, self, master);
+                        }
+                    } else {
+                        if (self.postActionError) {
+                            self.postActionError(potentiallySavedOrNewEntity, self, master);
+                        }
                     }
-                } else {
-                    if (self.postActionError) {
-                        self.postActionError(potentiallySavedOrNewEntity, self, master);
-                    }
+                } catch (e) {
+                    throw enhanceStateRestoration(e, () => {
+                        restoreStateAfterSave();
+                        master.restoreAfterSave();
+                    });
                 }
 
-                if (!self.skipAutomaticActionCompletion) {
-                    // action execution completes
-                    self.isActionInProgress = false;
-
-                    if (this.noUI === true) {
-                        self.restoreActionState();
-                    }
-                }
+                restoreStateAfterSave();
+                
             };
 
             master.postSavedError = function (errorResult) {
@@ -662,9 +685,9 @@ Polymer({
         const self = this;
         // creates the context and
         const context = self.createContextHolder(self.requireSelectionCriteria, self.requireSelectedEntities, self.requireMasterEntity, self.actionKind, self.numberOfAction);
-        // enhances it with the information of 'currentEntity' (primary / secondary actions) and
-        if (self.currentEntity) {
-            self._enhanceContextWithCurrentEntity(context, self.currentEntity, self.requireSelectedEntities);
+        // enhances it with the information of 'currentEntity()' (primary / secondary actions) and
+        if (self.currentEntity()) {
+            self._enhanceContextWithCurrentEntity(context, self.currentEntity(), self.requireSelectedEntities);
         }
         // enhances it with information of what 'property' was chosen (property result-set actions)
         if (self.chosenProperty !== null) {
@@ -723,17 +746,17 @@ Polymer({
     },
 
     _calculateCurrentEntityType: function () {
-        if (this.currentEntity && this.chosenProperty) {
+        if (this.currentEntity() && this.chosenProperty) {
             let currentProperty = this.chosenProperty;
-            let currentValue = this.currentEntity.get(currentProperty);
+            let currentValue = this.currentEntity().get(currentProperty);
             while (!this._reflector.isEntity(currentValue)) {
                 const lastDotIndex = currentProperty.lastIndexOf(".");
                 currentProperty = lastDotIndex >=0 ? currentProperty.substring(0, lastDotIndex) : "";
-                currentValue = currentProperty ? this.currentEntity.get(currentProperty) : this.currentEntity;
+                currentValue = currentProperty ? this.currentEntity().get(currentProperty) : this.currentEntity();
             }
             return currentValue.type().notEnhancedFullClassName(); 
-        } else if (this.currentEntity) {
-            return this.currentEntity.type().notEnhancedFullClassName();
+        } else if (this.currentEntity()) {
+            return this.currentEntity().type().notEnhancedFullClassName();
         }
     },
 

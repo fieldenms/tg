@@ -133,7 +133,6 @@ import ua.com.fielden.platform.web.PrefDim.Unit;
 import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig.CentreConfigActions;
 import ua.com.fielden.platform.web.action.StandardMastersWebUiConfig;
 import ua.com.fielden.platform.web.action.post.FileSaverPostAction;
-import ua.com.fielden.platform.web.action.pre.EntityNavigationPreAction;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.EntityCentre;
@@ -1730,7 +1729,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         IResultSetBuilder2Properties<TgPersistentEntityWithProperties> beforeAddProp = afterSummary.
                 withAction(editAction().withContext(context().withCurrentEntity().withSelectionCrit().build())
-                        .preAction(new EntityNavigationPreAction("Cool entity"))
+                        //.preAction(new EntityNavigationPreAction("Cool entity"))
                         .icon("editor:mode-edit")
                         .withStyle("color: green")
                         .shortDesc("Edit entity")
@@ -1808,7 +1807,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .also()
                 .addEditableProp("entityProp").asAutocompleter().withMatcher(ContextMatcher.class).minWidth(40)
                     .withAction(editAction().withContext(context().withCurrentEntity().withSelectionCrit().build())
-                        .preAction(new EntityNavigationPreAction("Cool entity"))
+                        //.preAction(new EntityNavigationPreAction("Cool entity"))
                         .icon("editor:mode-edit")
                         .withStyle("color: green")
                         .shortDesc("Edit entity")
@@ -1864,14 +1863,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //                .also()
                 //                .addProp(mkProp("Custom Prop 2", "Custom property 2 with concrete value", "OK2"))
 
-                .addPrimaryAction(editAction().withContext(context().withCurrentEntity().withSelectionCrit().build())
-                        .preAction(new EntityNavigationPreAction("Cool entity"))
-                        .icon("editor:mode-edit")
-                        .withStyle("color: green")
-                        .shortDesc("Edit entity")
-                        .longDesc("Opens master for editing this entity")
-                        .withNoParentCentreRefresh()
-                        .build())
+                .addPrimaryAction(EDIT_ACTION.mkAction(TgPersistentEntityWithProperties.class))
 //                .addPrimaryAction(action(EntityEditAction.class).withContext(context().withCurrentEntity().withSelectionCrit().build())
 //                        .icon("editor:mode-edit")
 //                        .withStyle("color: green")

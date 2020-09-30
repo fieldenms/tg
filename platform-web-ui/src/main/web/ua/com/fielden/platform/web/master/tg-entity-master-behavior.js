@@ -8,6 +8,7 @@ import { createEntityActionThenCallback } from '/resources/master/actions/tg-ent
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 import { TgRequiredPropertiesFocusTraversalBehavior } from '/resources/components/tg-required-properties-focus-traversal-behavior.js';
 import { queryElements } from '/resources/components/tg-element-selector-behavior.js';
+import { enhanceStateRestoration } from '/resources/components/tg-global-error-handler.js';
 
 export const selectEnabledEditor = function (editor) {
     const selectedElement = editor.shadowRoot.querySelector('.custom-input:not([hidden]):not([disabled])');
@@ -496,8 +497,7 @@ const TgEntityMasterBehaviorImpl = {
                     action.isActionInProgressChanged = (function (newValue, oldValue) {
                         oldIsActionInProgressChanged(newValue, oldValue);
                         if (newValue === false && !action.success) { // only enable parent master if action has failed (perhaps during retrieval or on save), otherwise leave enabling logic to the parent master itself (saving of parent master should govern that)
-                            _self.enableView();
-                            _self._savingInitiated = false;
+                            _self.restoreAfterSave();
                         }
                     }).bind(action);
                 }
@@ -505,16 +505,14 @@ const TgEntityMasterBehaviorImpl = {
             } else if (_exceptionOccured !== null) {
                 this._postSavedDefaultPostExceptionHandler();
             } else {
-                this.enableView();
-                this._savingInitiated = false;
+                this.restoreAfterSave();
             }
 
             return potentiallySavedOrNewEntity.isValidWithoutException();
         }).bind(self);
 
         self._postSavedDefaultPostExceptionHandler = (function () {
-            this.enableView();
-            this._savingInitiated = false;
+            this.restoreAfterSave();
 
             // in case where overridden _resetState function will not be invoked it is necessary to reset _continuations after unsuccessful save due to non-continuation exception
             this._continuations = {};
@@ -527,10 +525,13 @@ const TgEntityMasterBehaviorImpl = {
 
             // custom external action
             if (this.postSavedError) {
-                this.postSavedError.bind(this)(errorResult);
+                try {
+                    this.postSavedError.bind(this)(errorResult);
+                } catch (e) {
+                    throw enhanceStateRestoration(e, () => this.restoreAfterSave());
+                }
             }
-            this.enableView();
-            this._savingInitiated = false;
+            this.restoreAfterSave();
         }).bind(self);
 
         self.edit = (function () {
@@ -662,6 +663,14 @@ const TgEntityMasterBehaviorImpl = {
         while (this._subscriptions.length !== 0) {
             this._subscriptions.pop().unsubscribe();
         }
+    },
+
+    /**
+     * Enables master after save whether it was successful or not.
+     */
+    restoreAfterSave: function () {
+        this.enableView();
+        this._savingInitiated = false;
     },
 
     /**
