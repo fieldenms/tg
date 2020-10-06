@@ -780,7 +780,7 @@ const TgEntityMasterBehaviorImpl = {
         if (firstInput) {
             firstInput.focus();
         } else if (this.offsetParent !== null) {
-            this.focusNextView();
+            this.fire("tg-last-item-focused", { forward: true, event: null });
         }
     },
 
