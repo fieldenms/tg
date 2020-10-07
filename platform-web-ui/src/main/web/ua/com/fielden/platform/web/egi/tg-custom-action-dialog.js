@@ -473,11 +473,8 @@ Polymer({
         }
         //Add listener for custom event that was thrown when dialogs view is about to lost focus, then this focus should go to title-bar.
         this.addEventListener("tg-last-item-focused", this._viewFocusLostEventListener.bind(this));
-        //Retrieve title's bar element to focus.
-        this._componentsToFocus = Array.from(this.$.titleBar.querySelectorAll(FOCUSABLE_ELEMENTS_SELECTOR));
         //Add event listener that listens when dialog body chang it's opacity
         this.$.dialogLoader.addEventListener("transitionend", this._handleBodyTransitionEnd.bind(this));
-       
     },
 
     attached: function() {
@@ -495,7 +492,9 @@ Polymer({
     },
     
     _getCurrentFocusableElements: function() {
-        return this._componentsToFocus.filter(element => !element.disabled && element.offsetParent !== null);
+        //Retrieve title's bar element to focus.
+        const componentsToFocus = Array.from(this.$.titleBar.querySelectorAll(FOCUSABLE_ELEMENTS_SELECTOR));
+        return componentsToFocus.filter(element => !element.disabled && element.offsetParent !== null);
     },
 
     _onTabDown: function(e) {
