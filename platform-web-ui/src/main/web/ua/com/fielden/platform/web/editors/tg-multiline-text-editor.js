@@ -133,6 +133,17 @@ export class TgMultilineTextEditor extends TgEditor {
         const suffix = this.decorator().$$(".suffix");
         suffix.style.alignSelf = "flex-start";
         this.decoratedInput().textarea.addEventListener("change", this._onChange);
+        this.decoratedInput().textarea.style.cursor = "text";
+    }
+
+    _disabledChanged (newValue, oldValue) {
+        super._disabledChanged(newValue, oldValue);
+        if (newValue) {
+            this.$.input.textarea.setAttribute('disabled', newValue);
+        } else {
+            this.$.input.textarea.removeAttribute('disabled');
+        }
+        
     }
 
     /**

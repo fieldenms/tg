@@ -11,7 +11,7 @@ import { queryElements } from '/resources/components/tg-element-selector-behavio
 import { enhanceStateRestoration } from '/resources/components/tg-global-error-handler.js';
 
 export const selectEnabledEditor = function (editor) {
-    const selectedElement = editor.shadowRoot.querySelector('.custom-input:not([hidden]):not([disabled])');
+    const selectedElement = editor.shadowRoot.querySelector('.custom-input:not([hidden]):not([disabled]):not([readonly])');
     return (selectedElement && selectedElement.shadowRoot && selectedElement.shadowRoot.querySelector('textarea')) || selectedElement;
 }
 
