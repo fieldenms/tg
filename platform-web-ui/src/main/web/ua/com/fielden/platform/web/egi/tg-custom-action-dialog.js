@@ -175,7 +175,7 @@ const template = html`
                 <paper-icon-button hidden="[[_maximiseRestorerHidden(_maximised, mobile)]]" class="maximise-button title-bar-button" icon="icons:fullscreen-exit"  on-tap="_invertMaximiseState" tooltip-text="Restore, Alt&nbsp+&nbspm"></paper-icon-button>
 
                 <!-- close/next buttons -->
-                <paper-icon-button hidden="[[_closerHidden(_lastAction, mobile)]]" class="close-button title-bar-button" icon="icons:cancel"  on-tap="closeDialog" tooltip-text="Close, Alt&nbsp+&nbspx"></paper-icon-button>
+                <paper-icon-button id="closeButton" hidden="[[_closerHidden(_lastAction, mobile)]]" class="close-button title-bar-button" icon="icons:cancel"  on-tap="closeDialog" tooltip-text="Close, Alt&nbsp+&nbspx"></paper-icon-button>
                 <paper-icon-button id="skipNext" hidden="[[!_lastAction.continuous]]" disabled$="[[isNavigationActionInProgress]]" class="close-button title-bar-button" icon="av:skip-next" on-tap="_skipNext" tooltip-text="Skip to next without saving"></paper-icon-button>
             </div>
             <paper-spinner id="spinner" active="[[isNavigationActionInProgress]]" style="display: none;" alt="in progress"></paper-spinner>
@@ -473,6 +473,8 @@ Polymer({
         }
         //Add listener for custom event that was thrown when dialogs view is about to lost focus, then this focus should go to title-bar.
         this.addEventListener("tg-last-item-focused", this._viewFocusLostEventListener.bind(this));
+        //Add listener for custom event that was thrown when dialogs view has no focusable elements.
+        this.addEventListener("tg-no-item-focused", this._focusFirstBestElement.bind(this));
         //Add event listener that listens when dialog body chang it's opacity
         this.$.dialogLoader.addEventListener("transitionend", this._handleBodyTransitionEnd.bind(this));
     },
@@ -539,6 +541,20 @@ Polymer({
         }
         tearDownEvent(e);
 
+    },
+
+    _focusFirstBestElement: function (e) {
+        if  (this.$.closeButton.offsetParent) {
+            this.$.closeButton.focus();
+        } else if (this.$.skipNext.offsetParent) {
+            this.$.skipNext.focus();
+        } else {
+            const focusables = this._getCurrentFocusableElements();
+            if (focusables.length > 0) {
+                focusables[0].focus();
+            }
+        }
+        tearDownEvent(e);
     },
 
     _onCaptureClick: function(event) {
