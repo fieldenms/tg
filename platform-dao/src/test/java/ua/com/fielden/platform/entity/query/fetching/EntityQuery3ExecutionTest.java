@@ -897,25 +897,25 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     @Test
     public void eql3_query_executes_correctly102() {
         final AggregatedResultQueryModel qry = select(TeWorkOrder.class).groupBy().prop("vehicle.lastFuelUsage.key").yield().val(1).as("a").modelAsAggregate();
-        final List<EntityAggregates> res = aggregateDao.getAllEntities(from(qry).with(orderBy().prop("vehicle.lastFuelUsage.key").asc().model()).model());
+        final List<EntityAggregates> res = aggregateDao.getAllEntities(from(qry).with("EQL3", null).with(orderBy().prop("vehicle.lastFuelUsage.key").asc().model()).model());
     }     
     
     @Test
     public void eql3_query_executes_correctly103() {
         final AggregatedResultQueryModel qry = select(TeVehicleFuelUsage.class).groupBy().prop("key").yield().val(1).as("a").modelAsAggregate();
-        final List<EntityAggregates> res = aggregateDao.getAllEntities(from(qry).with(orderBy().prop("key").asc().model()).model());
+        final List<EntityAggregates> res = aggregateDao.getAllEntities(from(qry).with("EQL3", null).with(orderBy().prop("key").asc().model()).model());
     }  
 
     @Test
     public void eql3_query_executes_correctly104_() {
         final AggregatedResultQueryModel qry = select(TgVehicle.class).yield().prop("lastFuelUsageQty").as("a").modelAsAggregate();
-        aggregateDao.getAllEntities(from(qry).with(orderBy().yield("a").asc().model()).model());
+        aggregateDao.getAllEntities(from(qry).with("EQL3", null).with(orderBy().yield("a").asc().model()).model());
     }
     
     @Test
     public void union_property_type_is_preserved_when_yielded_in_entity_aggregates() {
         final AggregatedResultQueryModel qry = select(TgBogie.class).where().prop("key").eq().val("BOGIE1").yield().prop("location").as("l").modelAsAggregate();
-        final EntityAggregates location = aggregateDao.getEntity(from(qry).with(fetchAggregates().with("l", fetch(TgBogieLocation.class).with("workshop"))).model());
+        final EntityAggregates location = aggregateDao.getEntity(from(qry).with("EQL3", null).with(fetchAggregates().with("l", fetch(TgBogieLocation.class).with("workshop"))).model());
         assertTrue(location.get("l").getClass().getName().startsWith(TgBogieLocation.class.getName()));
         assertEquals("WSHOP1", ((TgWorkshop) location.get("l.workshop")).getKey());
     }
@@ -924,7 +924,7 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     public void union_property_type_is_preserved_when_yielded_from_query_based_qry_source() {
         final AggregatedResultQueryModel srcQry = select(TgBogie.class).where().prop("key").eq().val("BOGIE1").yield().prop("location").as("l").modelAsAggregate();
         final AggregatedResultQueryModel qry = select(srcQry).yield().prop("l").as("loc").modelAsAggregate();
-        final EntityAggregates location = aggregateDao.getEntity(from(qry).with(fetchAggregates().with("loc", fetch(TgBogieLocation.class).with("workshop").with("key"))).model());
+        final EntityAggregates location = aggregateDao.getEntity(from(qry).with("EQL3", null).with(fetchAggregates().with("loc", fetch(TgBogieLocation.class).with("workshop").with("key"))).model());
         assertTrue(location.get("loc").getClass().getName().startsWith(TgBogieLocation.class.getName()));
         assertEquals("WSHOP1", ((TgWorkshop) location.get("loc.workshop")).getKey());
         assertEquals("WSHOP1", location.get("l.key"));
@@ -935,7 +935,7 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     public void union_property_type_calc_prop_is_preserved_when_yielded_from_query_based_qry_source() {
         final AggregatedResultQueryModel srcQry = select(TgBogie.class).where().prop("key").eq().val("BOGIE1").yield().prop("location").as("l").modelAsAggregate();
         final AggregatedResultQueryModel qry = select(srcQry).yield().prop("l.key").as("lockey").modelAsAggregate();
-        final EntityAggregates location = aggregateDao.getEntity(from(qry).with(fetchAggregates().with("lockey")).model());
+        final EntityAggregates location = aggregateDao.getEntity(from(qry).with("EQL3", null).with(fetchAggregates().with("lockey")).model());
         assertEquals("WSHOP1", location.get("lockey"));
     }
     

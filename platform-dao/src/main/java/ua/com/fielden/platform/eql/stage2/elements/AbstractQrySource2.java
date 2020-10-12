@@ -10,7 +10,7 @@ public abstract class AbstractQrySource2 {
     public final EntityInfo<?> entityInfo;
     
     protected AbstractQrySource2(final String contextId, final String alias, final EntityInfo<?> entityInfo) {
-        this.contextId = contextId;
+        this.contextId = Objects.requireNonNull(contextId);
         this.alias = alias;
         this.entityInfo = Objects.requireNonNull(entityInfo);
     }
@@ -48,7 +48,7 @@ public abstract class AbstractQrySource2 {
         }
         
         final AbstractQrySource2 other = (AbstractQrySource2) obj;
-        //System.out.println("equals");
+
         return Objects.equals(contextId, other.contextId) && Objects.equals(alias, other.alias) && Objects.equals(entityInfo, other.entityInfo);
    }
 }

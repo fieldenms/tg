@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.SortedMap;
 
 import org.hibernate.type.LongType;
 
@@ -20,7 +21,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
-import ua.com.fielden.platform.eql.meta.ComponentTypePropInfo;
 import ua.com.fielden.platform.eql.meta.EntityInfo;
 import ua.com.fielden.platform.eql.meta.EntityTypePropInfo;
 import ua.com.fielden.platform.eql.meta.LongMetadata;
@@ -35,7 +35,6 @@ import ua.com.fielden.platform.eql.stage2.elements.sources.QrySource2BasedOnSubq
 
 public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2BasedOnSubqueries> {
     private final List<SourceQuery1> models = new ArrayList<>();
-    private final Map<String, List<Yield1>> yieldsMatrix;
 
     public QrySource1BasedOnSubqueries(final String alias, final List<SourceQuery1> models, final int contextId) {
         super(alias, contextId);
@@ -44,8 +43,7 @@ public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2Ba
         }
 
         this.models.addAll(models);
-        this.yieldsMatrix = populateYieldMatrixFromQueryModels(this.models);
-        validateYieldsMatrix();
+        validateYieldsMatrix(populateYieldMatrixFromQueryModels(this.models), this.models.size());
     }
     
     private static Map<String, List<Yield1>> populateYieldMatrixFromQueryModels(final List<SourceQuery1> models) {
@@ -64,10 +62,10 @@ public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2Ba
         }
         return yieldsMatrix;
     }
-    
-    private void validateYieldsMatrix() {
+
+    private static void validateYieldsMatrix(final Map<String, List<Yield1>> yieldsMatrix, final int modelsCount) {
         for (final Map.Entry<String, List<Yield1>> entry : yieldsMatrix.entrySet()) {
-            if (entry.getValue().size() != models.size()) {
+            if (entry.getValue().size() != modelsCount) {
                 throw new EqlStage1ProcessingException("Incorrect models used as query source - their result types are different!");
             }
         }
@@ -76,16 +74,12 @@ public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2Ba
     @Override
     public QrySource2BasedOnSubqueries transform(final PropsResolutionContext context) {
         final List<SourceQuery2> transformedQueries = models.stream().map(m -> m.transform(context)).collect(toList());
-        return new QrySource2BasedOnSubqueries(transformedQueries, alias, getTransformedContextId(context), produceEntityInfoFrom(context.getDomainInfo(), transformedQueries));
-    }
-    
-    private SourceQuery1 firstModel() {
-        return models.get(0);
+        return new QrySource2BasedOnSubqueries(transformedQueries, alias, getTransformedContextId(context), produceEntityInfo(context.getDomainInfo(), transformedQueries, sourceType()));
     }
     
     @Override
     public Class<? extends AbstractEntity<?>> sourceType() {
-        return firstModel().resultType;
+        return models.get(0).resultType;
     }
 
     @Override
@@ -115,43 +109,42 @@ public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2Ba
         return Objects.equals(models, other.models);
     }
     
-    private static Map<String, List<Yield2>> populateYieldMatrixFromQueryModels2(final List<SourceQuery2> models) {
-        final Map<String, List<Yield2>> yieldsMatrix = new HashMap<>();
-        for (final SourceQuery2 entQuery : models) {
-            for (final Yield2 yield : entQuery.yields.getYields()) {
-                final List<Yield2> foundYields = yieldsMatrix.get(yield.alias);
-                if (foundYields != null) {
-                    foundYields.add(yield);
+    private static EntityInfo<?> produceEntityInfoForDefinedEntityType(final LongMetadata domainInfo, final Map<String, YieldInfoNode> yieldInfoNodes, final Class<? extends AbstractEntity<?>> sourceType) {
+        final EntityInfo<? extends AbstractEntity<?>> entityInfo = new EntityInfo<>(sourceType, QUERY_BASED);
+        final SortedMap<String, AbstractPropInfo<?>> declaredProps = domainInfo.getEntityInfo(sourceType).getProps();
+        
+        if (yieldInfoNodes.size() == 1 && yieldInfoNodes.containsKey(ID)) {
+            entityInfo.addProp(declaredProps.get(ID));
+        } else {
+            for (final Entry<String, YieldInfoNode> yield : yieldInfoNodes.entrySet()) {
+                if (declaredProps.containsKey(yield.getKey())) {
+                    //TODO check children
+                    entityInfo.addProp(declaredProps.get(yield.getKey()));
                 } else {
-                    final List<Yield2> newList = new ArrayList<Yield2>();
-                    newList.add(yield);
-                    yieldsMatrix.put(yield.alias, newList);
+                    entityInfo.addProp(isEntityType(yield.getValue().javaType)
+                            ? new EntityTypePropInfo(yield.getKey(), domainInfo.getEntityInfo((Class<? extends AbstractEntity<?>>) yield.getValue().javaType), LongType.INSTANCE, false /*yield.hasRequiredHint*/)
+                                    : new PrimTypePropInfo(yield.getKey(), yield.getValue().hibType, yield.getValue().javaType));
+                }
+            }
+            
+            // including all calc-props, which haven't been yielded explicitly
+            for (final AbstractPropInfo<?> prop : declaredProps.values()) {
+                if (prop.hasExpression() && !entityInfo.getProps().containsKey(prop.name)) {
+                    entityInfo.addProp(prop);
                 }
             }
         }
 
-        for (final Map.Entry<String, List<Yield2>> entry : yieldsMatrix.entrySet()) {
-            if (entry.getValue().size() != models.size()) {
-                throw new IllegalStateException("Incorrect models used as query source - their result types are different!");
-            }
-        }
-        
-        return yieldsMatrix;
+        return entityInfo;
     }
-
-    private EntityInfo<?> produceEntityInfoFrom(final LongMetadata domainInfo, final List<SourceQuery2> models) {
-        final Map<String, List<Yield2>> yieldsMatrix = populateYieldMatrixFromQueryModels2(models);
+    
+    private static EntityInfo<?> produceEntityInfo(final LongMetadata domainInfo, final List<SourceQuery2> models, final Class<? extends AbstractEntity<?>> sourceType) {
         final Collection<Yield2> yields = models.get(0).yields.getYields();
+        final Map<String, YieldInfoNode> yieldInfoNodes = YieldInfoNodesGenerator.generate(yields);
         
-        if (isPersistedEntityType(sourceType())) {
-            if (yields.size() == 1 && yields.iterator().next().alias.equals(ID)) {
-                final EntityInfo<?> actualEi = new EntityInfo<>(sourceType(), QUERY_BASED);
-                actualEi.addProp(domainInfo.getEntityInfo(sourceType()).getProps().get(ID));
-                return actualEi;
-            } else {
-                return domainInfo.getEntityInfo(sourceType());
-            }
-        } else if (EntityAggregates.class.equals(sourceType())) {
+        if (!EntityAggregates.class.equals(sourceType)) {
+            return produceEntityInfoForDefinedEntityType(domainInfo, yieldInfoNodes, sourceType);            
+        } else {
             final EntityInfo<EntityAggregates> entityInfo = new EntityInfo<>(EntityAggregates.class, QUERY_BASED);
 
             for (final Yield2 yield : yields) {
@@ -167,35 +160,6 @@ public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2Ba
                 }
             }
             return entityInfo;
-        } else {
-            final EntityInfo<?> declaredEi = domainInfo.getEntityInfo(sourceType());
-            final EntityInfo<?> actualEi = new EntityInfo<>(sourceType(), QUERY_BASED);
-            for (final Entry<String, AbstractPropInfo<?>> declaredProp : declaredEi.getProps().entrySet()) {
-
-                if (declaredProp.getValue().hasExpression()) {
-                    actualEi.addProp(declaredProp.getValue());
-                } else if (declaredProp.getValue() instanceof ComponentTypePropInfo<?>) {
-                    final ComponentTypePropInfo<?> prop = (ComponentTypePropInfo<?>) declaredProp.getValue();
-                    for (final String leafPropPath : prop.generateLeafItemsPaths()) {
-                        if (yieldsMatrix.containsKey(leafPropPath)) {
-                            actualEi.addProp(declaredProp.getValue());
-                            break;
-                        }
-                    }
-                } else {
-                    if (yieldsMatrix.containsKey(declaredProp.getKey())) {
-                        actualEi.addProp(declaredProp.getValue());
-                    } else {
-                        //        System.out.println("skipping " + declaredProp.getKey() + " in " + sourceType().getSimpleName());
-                    }
-                }
-            }
-
-            for (final Yield2 yield : yields) {
-                //if(declaredEi.getProps().containsKey(yield.alias))
-            }
-
-            return actualEi;
         }
     }
 }

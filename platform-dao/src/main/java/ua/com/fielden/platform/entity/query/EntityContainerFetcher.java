@@ -127,7 +127,7 @@ public class EntityContainerFetcher {
 
     private <E extends AbstractEntity<?>> QueryModelResult<E> getModelResult(final QueryProcessingModel<E, ?> qem, final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username) {
         QueryModelResult<E> result;
-        if (executionContext.getDomainMetadata().eql2) {
+        if (executionContext.getDomainMetadata().eql2 && !qem.getParamValues().containsKey("EQL3")) {
             final EntQueryGenerator gen = new EntQueryGenerator(domainMetadataAnalyser, filter, username, executionContext.dates());
             final EntQuery entQuery = gen.generateEntQueryAsResultQuery(qem.queryModel, qem.orderModel, qem.queryModel.getResultType(), qem.fetchModel, qem.getParamValues());
             final String sql = entQuery.sql();

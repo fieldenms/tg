@@ -22,10 +22,6 @@ public class QrySource2BasedOnSubqueries extends AbstractQrySource2 implements I
 
     public QrySource2BasedOnSubqueries(final List<SourceQuery2> models, final String alias, final String contextId, final EntityInfo<?> entityInfo) {
         super(contextId, alias, entityInfo);
-        if (models == null || models.isEmpty()) {
-            throw new EqlStage1ProcessingException("Couldn't produce instance of QueryBasedSource due to zero models passed to constructor!");
-        }
-
         this.models.addAll(models);
     }
 
