@@ -4,6 +4,7 @@ import static java.util.Collections.unmodifiableList;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 
@@ -18,12 +19,12 @@ public class LongPropertyMetadata implements Comparable<LongPropertyMetadata> {
     public final ExpressionModel expressionModel;
     
     private LongPropertyMetadata(final Builder builder) {
-        name = builder.name;
-        javaType = builder.javaType;
+        name = Objects.requireNonNull(builder.name);
+        javaType = Objects.requireNonNull(builder.javaType);
         hibType = builder.hibType;
+        nullable = builder.nullable;
         column = builder.column;
         subitems = builder.subitems;
-        nullable = builder.nullable;
         expressionModel = builder.expressionModel;
     }
 
@@ -42,12 +43,13 @@ public class LongPropertyMetadata implements Comparable<LongPropertyMetadata> {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
+        result = prime * result + name.hashCode();
+        result = prime * result + javaType.hashCode();
+        result = prime * result + ((hibType == null) ? 0 : hibType.hashCode());
+        result = prime * result + (nullable ? 1231 : 1237);
         result = prime * result + ((column == null) ? 0 : column.hashCode());
         result = prime * result + ((expressionModel == null) ? 0 : expressionModel.hashCode());
-        result = prime * result + ((hibType == null) ? 0 : hibType.hashCode());
-        result = prime * result + ((javaType == null) ? 0 : javaType.hashCode());
-        result = prime * result + ((name == null) ? 0 : name.hashCode());
-        result = prime * result + (nullable ? 1231 : 1237);
+        result = prime * result + subitems.hashCode();
         return result;
     }
 
@@ -56,54 +58,29 @@ public class LongPropertyMetadata implements Comparable<LongPropertyMetadata> {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
-            return false;
-        }
+
         if (!(obj instanceof LongPropertyMetadata)) {
             return false;
         }
+
         final LongPropertyMetadata other = (LongPropertyMetadata) obj;
 
-        if (expressionModel == null) {
-            if (other.expressionModel != null) {
-                return false;
-            }
-        } else if (!expressionModel.equals(other.expressionModel)) {
-            return false;
-        }
-        if (hibType == null) {
-            if (other.hibType != null) {
-                return false;
-            }
-        } else if (!hibType.equals(other.hibType)) {
-            return false;
-        }
-        if (javaType == null) {
-            if (other.javaType != null) {
-                return false;
-            }
-        } else if (!javaType.equals(other.javaType)) {
-            return false;
-        }
-        if (name == null) {
-            if (other.name != null) {
-                return false;
-            }
-        } else if (!name.equals(other.name)) {
-            return false;
-        }
-        if (nullable != other.nullable) {
-            return false;
-        }
-        return true;
+        return Objects.equals(name, other.name) &&
+                Objects.equals(javaType, other.javaType) &&
+                Objects.equals(hibType, other.hibType) && 
+                (nullable == other.nullable) && 
+                Objects.equals(expressionModel, other.expressionModel) &&
+                Objects.equals(subitems, other.subitems) &&
+                Objects.equals(column, other.column);
     }
 
     public static class Builder {
         private final String name;
         private final Class<?> javaType;
+        private Object hibType;
         private final boolean nullable;
 
-        private Object hibType;
+        
         private PropColumn column;
         private final List<LongPropertyMetadata> subitems = new ArrayList<>();
         private ExpressionModel expressionModel;
@@ -112,15 +89,11 @@ public class LongPropertyMetadata implements Comparable<LongPropertyMetadata> {
             return new LongPropertyMetadata(this);
         }
 
-        public Builder(final String name, final Class<?> javaType, final boolean nullable) {
+        public Builder(final String name, final Class<?> javaType, final Object hibType, final boolean nullable) {
             this.name = name;
             this.javaType = javaType;
             this.nullable = nullable;
-        }
-
-        public Builder hibType(final Object val) {
-            hibType = val;
-            return this;
+            this.hibType = hibType;
         }
 
         public Builder expression(final ExpressionModel val) {

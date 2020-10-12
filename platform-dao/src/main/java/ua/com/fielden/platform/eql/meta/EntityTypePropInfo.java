@@ -71,7 +71,7 @@ public class EntityTypePropInfo<T extends AbstractEntity<?>> extends AbstractPro
             return false;
         }
 
-        final EntityTypePropInfo other = (EntityTypePropInfo) obj;
+        final EntityTypePropInfo<?> other = (EntityTypePropInfo<?>) obj;
 
         return Objects.equals(propEntityInfo, other.propEntityInfo) && Objects.equals(required, other.required);
     }

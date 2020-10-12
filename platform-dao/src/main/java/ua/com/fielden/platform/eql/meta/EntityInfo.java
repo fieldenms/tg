@@ -73,7 +73,7 @@ public class EntityInfo<T extends AbstractEntity<?>> implements IResolvable<T> {
             return false;
         }
 
-        final EntityInfo other = (EntityInfo) obj;
+        final EntityInfo<?> other = (EntityInfo<?>) obj;
 
         return Objects.equals(javaType, other.javaType) && Objects.equals(category, other.category) && Objects.equals(props.keySet(), other.props.keySet());
     }

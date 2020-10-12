@@ -4,7 +4,6 @@ import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.QUERY_BASED;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 
 import java.util.ArrayList;
 import java.util.Collection;
