@@ -8,7 +8,7 @@ import { TgReflector } from '/app/tg-reflector.js';
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 
 const template = html`
-    <iron-ajax id="ajaxSender" headers="[[_headers]]" url="[[_url]]" method="POST" handle-as="json" on-response="_processValidatorResponse" on-error="_processValidatorError"></iron-ajax>
+    <iron-ajax id="ajaxSender" headers="[[_headers]]" url="[[_url]]" method="POST" handle-as="json" on-response="_processValidatorResponse" reject-with-request on-error="_processValidatorError"></iron-ajax>
 `;
 
 Polymer({
@@ -93,10 +93,7 @@ Polymer({
      * Cancels any unfinished validation that was requested earlier (if any).
      */
     abortValidationIfAny: function () {
-        const numberOfAbortedRequests = this._reflector.discardAllRequests(this.$.ajaxSender);
-        if (numberOfAbortedRequests > 0) {
-            console.warn("abortValidationIfAny: number of aborted requests =", numberOfAbortedRequests);
-        }
+        this._reflector.abortRequestsIfAny(this.$.ajaxSender, 'validation');
     },
 
 
@@ -104,21 +101,7 @@ Polymer({
      * Cancels any unfinished validation that was requested earlier (if any) except the last one and returns corresponding promise.
      */
     abortValidationExceptLastOne: function () {
-        const numberOfAbortedRequests = this._reflector.discardAllRequests(this.$.ajaxSender, true);
-        if (numberOfAbortedRequests > 0) {
-            console.warn("abortValidationExceptLastOne: number of aborted requests =", numberOfAbortedRequests);
-        }
-        if (this.$.ajaxSender.activeRequests.length > 0) {
-            if (this.$.ajaxSender.activeRequests.length > 1) {
-                throw 'At this stage only one validation request should exist.';
-            }
-            return this.$.ajaxSender.activeRequests[0].completes;
-        } else {
-            if (numberOfAbortedRequests > 0) {
-                throw 'There were aborted requests, however the last one was needed to be NOT ABORTED, but it was.';
-            }
-            return null;
-        }
+        return this._reflector.abortRequestsExceptLastOne(this.$.ajaxSender, 'validation');
     },
 
     /**

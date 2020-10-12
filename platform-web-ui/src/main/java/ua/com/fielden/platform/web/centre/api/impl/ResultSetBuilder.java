@@ -57,10 +57,11 @@ import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHa
 import ua.com.fielden.platform.web.centre.api.resultset.IDynamicColumnBuilder;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetAutocompleterConfig;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1bCheckbox;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aHideEgi;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1bCheckbox;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cToolbar;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1dScroll;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1eDraggable;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1fPageCapacity;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1gMaxPageCapacity;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1hHeaderWrap;
@@ -68,7 +69,6 @@ import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1iVisib
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1jFitBehaviour;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1kRowHeight;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2Properties;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1eDraggable;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder3Ordering;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder4OrderingDirection;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder4aWidth;
@@ -111,7 +111,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
 
     private static final String ERR_EDITABLE_SUB_PROP_DISALLOWED = "Dot-notated property [%s] cannot be added as editable. Only first-level properties are supported.";
 
-    private final EntityCentreBuilder<T> builder;
+    protected final EntityCentreBuilder<T> builder;
     private final ResultSetSecondaryActionsBuilder secondaryActionBuilder = new ResultSetSecondaryActionsBuilder();
 
     private final Map<String, Class<? extends IValueMatcherWithContext<T, ?>>> valueMatcherForProps = new HashMap<>();
@@ -132,11 +132,11 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     @Override
     public IResultSetBuilder3Ordering<T> addProp(final String propName) {
         if (StringUtils.isEmpty(propName)) {
-            throw new IllegalArgumentException("Property name should not be null.");
+            throw new EntityCentreConfigurationException("Property name should not be null.");
         }
 
         if (!"this".equals(propName) && !EntityUtils.isProperty(this.builder.getEntityType(), propName)) {
-            throw new IllegalArgumentException(format("Provided value [%s] is not a valid property expression for entity [%s]", propName, builder.getEntityType().getSimpleName()));
+            throw new EntityCentreConfigurationException(format("Provided value [%s] is not a valid property expression for entity [%s]", propName, builder.getEntityType().getSimpleName()));
         }
 
         this.propName = Optional.of(propName);
@@ -192,7 +192,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     @Override
     public <M extends AbstractEntity<?>> IResultSetBuilderAlsoDynamicProps<T> addProps(final String propName, final Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, final BiConsumer<M, Optional<CentreContext<T, ?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
         final ResultSetProp<T> prop = dynamicProps(propName, dynColBuilderType, entityPreProcessor, contextConfig);
-        this.builder.resultSetProperties.add(prop);
+        this.builder.addToResultSet(prop);
         return this;
     }
 
@@ -349,7 +349,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     @Override
     public IResultSetBuilder9RenderingCustomiser<T> setCustomPropsValueAssignmentHandler(final Class<? extends ICustomPropsAssignmentHandler> handler) {
         if (handler == null) {
-            throw new IllegalArgumentException("Assignment handler for custom properties should not be null.");
+            throw new EntityCentreConfigurationException("Assignment handler for custom properties should not be null.");
         }
 
         // complete property registration if there is an oustanding one
@@ -358,12 +358,12 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         // check if there are any custom properties
         // and indicate to the developer that assignment of an assigner handler
         // is not appropriate in case of no custom properties
-        if (builder.resultSetProperties.stream().filter(v -> v.propDef.isPresent()).count() == 0) {
-            throw new IllegalArgumentException("Assignment handler for custom properties is meaningless as there are the result set configuration contains no definitions for custom properties.");
+        if (builder.resultSetProperties().noneMatch(v -> v.propDef.isPresent())) {
+            throw new EntityCentreConfigurationException("Assignment handler for custom properties is meaningless as there are the result set configuration contains no definitions for custom properties.");
         }
         // then if there are custom properties, but all of them have default values already specified, there is no reason to have custom assignment logic
-        if (builder.resultSetProperties.stream().filter(v -> v.propDef.isPresent() && !v.propDef.get().value.isPresent()).count() == 0) {
-            throw new IllegalArgumentException("Assignment handler for custom properties is meaningless as all custom properties have been provided with default values.");
+        if (builder.resultSetProperties().noneMatch(v -> v.propDef.isPresent() && !v.propDef.get().value.isPresent())) {
+            throw new EntityCentreConfigurationException("Assignment handler for custom properties is meaningless as all custom properties have been provided with default values.");
         }
 
         this.builder.resultSetCustomPropAssignmentHandlerType = handler;
@@ -421,10 +421,10 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         // construct and add property to the builder
         if (propName.isPresent()) {
             final ResultSetProp<T> prop = ResultSetProp.propByName(propName.get(), width, isFlexible, widget, (tooltipProp.isPresent() ? tooltipProp.get() : null), entityActionConfig);
-            this.builder.resultSetProperties.add(prop);
+            this.builder.addToResultSet(prop);
         } else if (propDef.isPresent()) {
             final ResultSetProp<T> prop = ResultSetProp.propByDef(propDef.get(), width, isFlexible, (tooltipProp.isPresent() ? tooltipProp.get() : null), entityActionConfig);
-            this.builder.resultSetProperties.add(prop);
+            this.builder.addToResultSet(prop);
         }
 
         // clear things up for the next property to be added if any

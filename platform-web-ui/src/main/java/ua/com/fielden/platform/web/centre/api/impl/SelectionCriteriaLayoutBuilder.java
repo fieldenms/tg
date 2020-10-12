@@ -20,11 +20,8 @@ import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
  */
 class SelectionCriteriaLayoutBuilder<T extends AbstractEntity<?>> extends ResultSetBuilder<T> implements ILayoutConfigWithResultsetSupport<T> {
 
-    private final EntityCentreBuilder<T> builder;
-
     public SelectionCriteriaLayoutBuilder(final EntityCentreBuilder<T> builder) {
         super(builder);
-        this.builder = builder;
     }
 
     @Override

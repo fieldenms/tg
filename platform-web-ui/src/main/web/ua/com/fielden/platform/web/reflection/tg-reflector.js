@@ -1969,6 +1969,43 @@ export const TgReflector = Polymer({
     },
 
     /**
+     * Cancels any unfinished request that was actioned earlier (if any) except the last one and returns corresponding promise.
+     * 
+     * @param ajaxSender -- iron-ajax instance containing requests
+     * @param operationDesc -- description of iron-ajax operation to make warnings / errors more specific
+     */
+    abortRequestsExceptLastOne: function (ajaxSender, operationDesc) {
+        const numberOfAbortedRequests = this.discardAllRequests(ajaxSender, true);
+        if (numberOfAbortedRequests > 0) {
+            console.warn(`abortRequestsExceptLastOne: number of aborted ${operationDesc} requests = ${numberOfAbortedRequests}`);
+        }
+        if (ajaxSender.activeRequests.length > 0) {
+            if (ajaxSender.activeRequests.length > 1) {
+                throw new Error(`At this stage only one ${operationDesc} request should exist.`);
+            }
+            return ajaxSender.activeRequests[0].completes;
+        } else {
+            if (numberOfAbortedRequests > 0) {
+                throw new Error(`There were aborted ${operationDesc} requests, however the last one was needed to be NOT ABORTED, but it was.`);
+            }
+            return null;
+        }
+    },
+
+    /**
+     * Cancels any unfinished request that was actioned earlier (if any).
+     * 
+     * @param ajaxSender -- iron-ajax instance containing requests
+     * @param operationDesc -- description of iron-ajax operation to make warning more specific
+     */
+    abortRequestsIfAny: function (ajaxSender, operationDesc) {
+        const numberOfAbortedRequests = this.discardAllRequests(ajaxSender);
+        if (numberOfAbortedRequests > 0) {
+            console.warn(`abortRequestsIfAny: number of aborted ${operationDesc} requests = ${numberOfAbortedRequests}`);
+        }
+    },
+
+    /**
      * Validates the presence of previouslyAppliedEntity based on number representation of entity id.
      */
     _validatePreviouslyAppliedEntity: function (previouslyAppliedEntity, idNumber) {
