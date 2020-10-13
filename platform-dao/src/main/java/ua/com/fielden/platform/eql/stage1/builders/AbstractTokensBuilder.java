@@ -253,10 +253,6 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         }
     }
 
-    protected void setChild(final AbstractTokensBuilder child) {
-        this.child = child;
-    }
-
     public TokenCategory firstCat() {
         return tokens.isEmpty() ? null : tokens.get(0).getKey();
     }

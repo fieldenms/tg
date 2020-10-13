@@ -38,7 +38,7 @@ public class Sources1  {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((compounds == null) ? 0 : compounds.hashCode());
+        result = prime * result + compounds.hashCode();
         result = prime * result + main.hashCode();
         return result;
     }
