@@ -34,9 +34,9 @@ public class CompoundSource1 {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((joinConditions == null) ? 0 : joinConditions.hashCode());
-        result = prime * result + ((joinType == null) ? 0 : joinType.hashCode());
-        result = prime * result + ((source == null) ? 0 : source.hashCode());
+        result = prime * result + joinConditions.hashCode();
+        result = prime * result + joinType.hashCode();
+        result = prime * result + source.hashCode();
         return result;
     }
 
