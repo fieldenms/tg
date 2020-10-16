@@ -54,8 +54,8 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
         // Otherwise continue data exporting.
         final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit = criteriaEntityRestorer.restoreCriteriaEntity(entity.getCentreContextHolder());
 
-        entity.setFileName(String.format("export-of-%s.xls", selectionCrit.getEntityClass().getSimpleName()));
-        entity.setMime("application/vnd.ms-excel");
+        entity.setFileName(String.format("export-of-%s.xlsx", selectionCrit.getEntityClass().getSimpleName()));
+        entity.setMime("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         final Map<String, Object> adhocParams = new LinkedHashMap<>();
         final Stream<AbstractEntity<?>> entities;
         if (entity.isExportAll()) {
