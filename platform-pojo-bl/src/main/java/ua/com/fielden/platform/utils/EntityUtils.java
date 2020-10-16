@@ -121,6 +121,8 @@ public class EntityUtils {
             return value instanceof Number ? new Money(value.toString()).toString() : value.toString();
         } else if (valueType == BigDecimalWithTwoPlaces.class) {
             return value instanceof Number ? String.format("%,10.2f", value) : value.toString();
+        } else if (value instanceof Collection) {
+            return "[" + ((Collection<?>) value).stream().map(v -> v + "").collect(Collectors.joining(", ")) + "]";
         } else {
             return value.toString();
         }
