@@ -49,6 +49,7 @@ public class WorkbookExporter {
 
     private static final int MAX_COLUMN_WIDTH = 255 * 256;
     private static final String DEFAULT_SHEET_TITLE = "Exported data";
+    private static final int SXSSF_WINDOW_SIZE = 1000;
 
     private WorkbookExporter() {}
 
@@ -86,29 +87,45 @@ public class WorkbookExporter {
         return export(sheetsData);
     }
 
+    /**
+     * Converts {@code workbook} to a byte array of a zipped output. Disposes {@code workbook} to remove temporary files SXSSF creates to hold the data.
+     *
+     * @param workbook
+     * @return
+     * @throws IOException
+     */
     public static byte[] convertToGZipByteArray(final SXSSFWorkbook workbook) throws IOException {
-        final ByteArrayOutputStream oStream = new ByteArrayOutputStream();
-        final GZipOutputStreamEx zOut = new GZipOutputStreamEx(oStream, Deflater.BEST_COMPRESSION);
-        workbook.write(zOut);
-        zOut.flush();
-        zOut.close();
-        oStream.flush();
-        oStream.close();
-        workbook.dispose();
-        return oStream.toByteArray();
+        try (final ByteArrayOutputStream oStream = new ByteArrayOutputStream();
+             final GZipOutputStreamEx zOut = new GZipOutputStreamEx(oStream, Deflater.BEST_COMPRESSION)
+        ) {
+            workbook.write(zOut);
+            zOut.flush();
+            oStream.flush();
+            return oStream.toByteArray();
+        } finally {
+            workbook.dispose();
+        }
     }
 
+    /**
+     * Converts {@code workbook} to a byte array. Disposes {@code workbook} to remove temporary files SXSSF creates to hold the data.
+     *
+     * @param workbook
+     * @return
+     * @throws IOException
+     */
     public static byte[] convertToByteArray(final SXSSFWorkbook workbook) throws IOException {
-        final ByteArrayOutputStream oStream = new ByteArrayOutputStream();
-        workbook.write(oStream);
-        oStream.flush();
-        oStream.close();
-        workbook.dispose();
-        return oStream.toByteArray();
+        try (final ByteArrayOutputStream oStream = new ByteArrayOutputStream()) {
+            workbook.write(oStream);
+            oStream.flush();
+            return oStream.toByteArray();
+        } finally {
+            workbook.dispose();
+        }
     }
 
     public static SXSSFWorkbook export(final List<DataForWorkbookSheet<? extends AbstractEntity<?>>> sheetsData) {
-        final SXSSFWorkbook wb = new SXSSFWorkbook(1000);
+        final SXSSFWorkbook wb = new SXSSFWorkbook(SXSSF_WINDOW_SIZE);
         for (final DataForWorkbookSheet<? extends AbstractEntity<?>> sheetData : sheetsData) {
             addSheetWithData(wb, sheetData);
         }
