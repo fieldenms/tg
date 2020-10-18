@@ -11,11 +11,13 @@ import static ua.com.fielden.platform.security.session.Authenticator.fromString;
 import static ua.com.fielden.platform.security.session.Authenticator.mkToken;
 
 import java.security.SignatureException;
+import java.sql.PreparedStatement;
 import java.util.Date;
 import java.util.Map.Entry;
 import java.util.Optional;
 
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
@@ -329,14 +331,36 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
         // otherwise, let's generate a new session
         try {
             // there is a tiny chance that there could be a clash of seriesId for the same user...
-            // in this case, we should give it another try...
-            // TODO implement a retry
+            // in this case, we may need to implement a re-try...
+            // but let's first see if that is a problem by logging warning to this effect.
             final UserSession newSession = newSessionToReplaceOld(user, session.isTrusted(), of(authenticator));
+            forceUpdateExpiryTimeForSession(session.getId(), user, constants.now().plusMinutes(untrustedDurationMins));
             return of(newSession);
-        } catch (final Exception e) {
-            logger.warn(format("Saving of a new session for user %s did not succeed. Using previously verified session instead...", user.getKey()), e);
+        } catch (final Exception ex) {
+            logger.warn(format("Saving of a new session for user [%s] did not succeed. Using previously verified session instead...", user), ex);
             return of(session);
         }
+    }
+    
+    /**
+     * Forcibly updates the expiry time for a session that is now repaced with new one.
+     * Forcibly means without regards for any concurrent modification, ignoring versioning.
+     *
+     * @param oldSessionId
+     * @param user
+     * @param newExpiryTime
+     */
+    @SessionRequired(allowNestedScope = false)
+    protected void forceUpdateExpiryTimeForSession(final Long oldSessionId, final User user, final DateTime newExpiryTime) {
+        getSession().doWork(conn -> {
+            try(final PreparedStatement ps = conn.prepareStatement("UPDATE USERSESSION_ SET EXPIRYTIME_ = ? WHERE _ID = ?")) {
+                ps.setTimestamp(1, new java.sql.Timestamp(newExpiryTime.getMillis()));
+                ps.setLong(2, oldSessionId);
+                ps.executeUpdate();
+            } catch (final Exception ex) {
+                logger.warn(format("Could not update expiry time for old session for user [%s].", user), ex);
+            }
+        });
     }
 
     @SessionRequired(allowNestedScope = false)
@@ -360,6 +384,14 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
         return newSessionToReplaceOld(user, isDeviceTrusted, empty());
     }
 
+    /**
+     * Creates a new session, puts it into cache, and replaces a session associated with {@code oldAuthenticator} if it was provided.
+     *
+     * @param user
+     * @param isDeviceTrusted
+     * @param oldAuthenticator
+     * @return
+     */
     @SessionRequired
     protected UserSession newSessionToReplaceOld(final User user, final boolean isDeviceTrusted, final Optional<String> oldAuthenticator) {
         // let's first construct the next series id

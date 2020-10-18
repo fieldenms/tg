@@ -174,7 +174,6 @@ public class UserSessionCacheEvictionStrategyTestCase extends AbstractDaoTestCas
      * However, if the same original authenticator is presented again after the eviction time passes then it should be recognised as invalid (most likely stolen)!
      */
     @Test
-    @Ignore("Needs to be updated in light of the additive approach.")
     public void should_not_permit_reauthentication_of_regenerated_and_evicted_authenticator_correctly_recognising_authenticator_theft() throws SignatureException {
         // establish a new sessions for user TEST, which effectively emulates the explicit login
         final User currUser = getInstance(IUserProvider.class).getUser();
@@ -205,8 +204,6 @@ public class UserSessionCacheEvictionStrategyTestCase extends AbstractDaoTestCas
         // making a request with the original authenticator should lead to blocking of user sessions due to suspected stolen authenticator
         final Optional<UserSession> ss = coSession.currentSession(currUser, authenticator, false);
         assertFalse(ss.isPresent());
-        final EntityResultQueryModel<UserSession> currUserSessions = select(UserSession.class).where().prop("user").eq().val(currUser).model();
-        assertEquals(0, coSession.count(currUserSessions));
     }
 
     @Override
