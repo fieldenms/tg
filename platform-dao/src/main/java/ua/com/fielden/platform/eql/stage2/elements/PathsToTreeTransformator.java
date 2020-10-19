@@ -3,7 +3,6 @@ package ua.com.fielden.platform.eql.stage2.elements;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.joining;
-import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.types.tuples.T3.t3;
 
@@ -20,6 +19,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
+import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.meta.ComponentTypePropInfo;
 import ua.com.fielden.platform.eql.meta.EntityTypePropInfo;
@@ -146,16 +146,20 @@ public class PathsToTreeTransformator {
         final Map<String, List<Child>> other = new HashMap<>();
         final List<Child> unionResult = new ArrayList<>();
         
-        
+
+        final List<String> newContext = new ArrayList<>(context);
+        newContext.add(propInfo.name);
+        final String childContext = newContext.stream().collect(joining("_"));
+
         Expression2 expr2 = null;
         final List<Child> dependencies = new ArrayList<>();
         if (propInfo.hasExpression() && !(propInfo instanceof ComponentTypePropInfo || propInfo instanceof UnionTypePropInfo)) {
-            final IQrySource2<?>  cs = contextSource != null ?  contextSource : lastPersistentSource;
-            expr2 = expressionToS2(cs, propInfo, tta.domainInfo, context.stream().collect(joining("_")), tta.gen);
+            final IQrySource2<?>  sourceForCalcPropResolution = contextSource != null ?  contextSource : lastPersistentSource;
+            expr2 = expressionToS2(sourceForCalcPropResolution, propInfo.expression, childContext, tta.domainInfo, tta.gen);
             final Map<String, List<Child>> dependenciesResult = transform(expr2.collectProps(), tta.domainInfo, tta.gen);
 
             for (final Entry<String, List<Child>> drEntry : dependenciesResult.entrySet()) {
-                if (!drEntry.getKey().equals(cs.contextId())) {
+                if (!drEntry.getKey().equals(sourceForCalcPropResolution.contextId())) {
                     other.put(drEntry.getKey(), drEntry.getValue());
                 } else {
                     if (contextSource == null) {
@@ -170,10 +174,7 @@ public class PathsToTreeTransformator {
         
         final boolean required = propInfo instanceof EntityTypePropInfo ? ((EntityTypePropInfo) propInfo).required : false;
 
-        final List<String> newContext = new ArrayList<>(context);
-        newContext.add(propInfo.name);
-        final String childContext = newContext.stream().collect(joining("_"));
-        final String sourceContextId = isEmpty(childContext) ? tta.explicitSource.contextId() : tta.explicitSource.contextId() + "_" + childContext;
+        final String sourceContextId = tta.explicitSource.contextId() + "_" + childContext;
         final QrySource2BasedOnPersistentType source = propInfo instanceof EntityTypePropInfo ? 
                 new QrySource2BasedOnPersistentType(((EntityTypePropInfo) propInfo).javaType(), ((EntityTypePropInfo) propInfo).propEntityInfo, sourceContextId) 
                  : null;
@@ -217,9 +218,15 @@ public class PathsToTreeTransformator {
         return t2(path, nextProps);
     }
     
-    private static Expression2 expressionToS2(final IQrySource2<?> contextSource, final AbstractPropInfo<?> propInfo, final LongMetadata domainInfo, final String context, final EntQueryGenerator gen) {
-        final PropsResolutionContext prc = new PropsResolutionContext(domainInfo, asList(asList(contextSource)), contextSource.contextId() + "_" + (isEmpty(context) ? "" : context + "_") + propInfo.name); 
-        final Expression1 exp = (Expression1) (new StandAloneExpressionBuilder(gen, propInfo.expression)).getResult().getValue();
+    private static Expression2 expressionToS2(
+            final IQrySource2<?> contextSource, 
+            final ExpressionModel expressionModel, 
+            final String context,
+            final LongMetadata domainInfo, 
+            final EntQueryGenerator gen) {
+        final String sourceId = contextSource.contextId() + "_" + context;
+        final PropsResolutionContext prc = new PropsResolutionContext(domainInfo, asList(asList(contextSource)), sourceId); 
+        final Expression1 exp = (Expression1) (new StandAloneExpressionBuilder(gen, expressionModel)).getResult().getValue();
         return exp.transform(prc);
     }
     
