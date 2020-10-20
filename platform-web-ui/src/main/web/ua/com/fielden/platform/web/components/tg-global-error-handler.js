@@ -16,6 +16,17 @@ export class UnreportableError extends Error {
     }
 }
 
+export class ExpectedError extends Error {
+    constructor(...params) {
+        super(params);
+
+        if (Error.captureStackTrace) {
+            Error.captureStackTrace(this, ExpectedError);
+        }
+        this.name = this.constructor.name;
+    }
+}
+
 /**
  * Augments a non-empty state restoration logic for caught errors with 'restoreStateFunction', that is applicable for the current context.
  * @param {Object} error -- an error to be processed
@@ -122,7 +133,7 @@ class TgGlobalErrorHandler extends PolymerElement {
     _handleUnhandledPromiseError (e) {
         const error = e.reason.error || e.reason;
         const errorMsg = error.message + "\n" + error.stack;
-        if (!e.reason.request || "IRON-REQUEST" !== e.reason.request.tagName) {
+        if (!(e.reason instanceof ExpectedError) && !(e.reason.request && "IRON-REQUEST" === e.reason.request.tagName)) {
             this._acceptError(e.composedPath()[0], error, errorMsg);
         }
     }
