@@ -201,9 +201,9 @@ Polymer({
                 }
                 // actual msgDialog opening
                 domBind.$.msgDialog.open();
+                self.$.toast.close(); // must close paper-toast after msgDialog is opened; this is because other fast toast messages can interfere -- paper-toast should still be opened to prevent other messages early opening (see '... && previousToast.opened && ...' condition in 'show' method)
             }, 100);
 
-            self.$.toast.close();
         }, 100);
 
         tearDownEvent(event);
