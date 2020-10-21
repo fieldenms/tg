@@ -958,6 +958,7 @@ export const TgEntityBinderBehavior = {
         }
         // New entity should be promoted to the local cache:
         self._currEntity = entity;
+        self.fire('tg-entity-received', self._currEntity);
         // before the next assignment -- the editors should be already prepared for "refresh cycle" (for Retrieve and Save actions)
         var oldCurrBindingEntity = self._currBindingEntity;
         self._previousModifiedPropertiesHolder = previousModifiedPropertiesHolder;

@@ -64,6 +64,20 @@ public class EntityType extends AbstractEntity<String> {
     @Title(value = "Is Union?", desc = "Indicates whether the associated entity type represents an union entity.")
     private boolean _union;
     
+    @IsProperty
+    @Title(value = "Compound Opener Type", desc = "Represents main persistent type for this compound master opener (if it is of such kind, empty otherwise).")
+    private String _compoundOpenerType; // this would not be serialised if empty
+    
+    @Observable
+    public EntityType set_compoundOpenerType(final String value) {
+        this._compoundOpenerType = value;
+        return this;
+    }
+
+    public String get_compoundOpenerType() {
+        return _compoundOpenerType;
+    }
+    
     @Observable
     public EntityType set_union(final boolean _union) {
         this._union = _union;

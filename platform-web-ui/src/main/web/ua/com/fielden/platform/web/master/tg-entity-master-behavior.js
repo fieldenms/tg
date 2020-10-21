@@ -659,6 +659,10 @@ const TgEntityMasterBehaviorImpl = {
         }.bind(self));
     }, // end of ready callback
 
+    attached: function () {
+        this.fire('tg-entity-master-attached', this);
+    },
+
     detached: function () {
         while (this._subscriptions.length !== 0) {
             this._subscriptions.pop().unsubscribe();
