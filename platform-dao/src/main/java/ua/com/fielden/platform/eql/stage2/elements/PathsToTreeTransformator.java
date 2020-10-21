@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.stage2.elements;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.joining;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.types.tuples.T3.t3;
@@ -40,23 +41,29 @@ import ua.com.fielden.platform.types.tuples.T3;
 
 public class PathsToTreeTransformator {
     
-    static int id = 0;
+    private final LongMetadata domainInfo;
+    private final EntQueryGenerator gen;
+    private int id = 0;
     
-    static int next() {
+    public PathsToTreeTransformator(final LongMetadata domainInfo, final EntQueryGenerator gen) {
+        this.domainInfo = domainInfo;
+        this.gen = gen;
+    }
+    
+    private int next() {
         id = id + 1;
         return id;
     }
 
-    public static Map<String, List<ChildGroup>> groupChildren(final Set<EntProp2> props, final LongMetadata domainInfo, final EntQueryGenerator gen) {
+    public Map<String, List<ChildGroup>> groupChildren(final Set<EntProp2> props) {
         final Map<String, List<ChildGroup>> result = new HashMap<>();
-        for (final Entry<String, List<Child>> el : transform(props, domainInfo, gen).entrySet()) {
-//            assert (!el.getValue().isEmpty());
+        for (final Entry<String, List<Child>> el : transform(props).entrySet()) {
             result.put(el.getKey(), convertToGroup(new TreeSet<Child>(el.getValue()), emptyList()));
         }
         return result;
     }
     
-    protected static final Map<String, List<Child>> transform(final Set<EntProp2> props, final LongMetadata domainInfo, final EntQueryGenerator gen) {
+    protected final Map<String, List<Child>> transform(final Set<EntProp2> props) {
         final Map<String, List<Child>> sourceChildren = new HashMap<>();
 
         for (final T2<IQrySource2<?>, Map<String, List<AbstractPropInfo<?>>>> sourceProps : groupBySource(props).values()) {
@@ -64,8 +71,8 @@ public class PathsToTreeTransformator {
                     sourceProps._1, 
                     sourceProps._1, 
                     sourceProps._2, 
-                    emptyList(),
-                    new TreeTransformationAttributes(domainInfo, sourceProps._1, gen));
+                    sourceProps._1,
+                    emptyList());
             assert(genRes._3.size() == 0);
             sourceChildren.put(sourceProps._1.contextId(), genRes._1);
             sourceChildren.putAll(genRes._2);
@@ -106,12 +113,12 @@ public class PathsToTreeTransformator {
         return result;
     }
 
-    private static T3<List<Child>, Map<String, List<Child>>, List<Child>> generateQrySourceChildren(
+    private T3<List<Child>, Map<String, List<Child>>, List<Child>> generateQrySourceChildren(
             final IQrySource2<?> contextSource, 
             final IQrySource2<?> lastPersistentSource, 
             final Map<String, List<AbstractPropInfo<?>>> props, //long name + path
-            final List<String> context, 
-            final TreeTransformationAttributes tta
+            final IQrySource2<?> explicitSource,
+            final List<String> context            
             ) {
         final List<Child> result = new ArrayList<>();
         final Map<String, List<Child>> other = new HashMap<>();
@@ -121,63 +128,52 @@ public class PathsToTreeTransformator {
             final T3<List<Child>, Map<String, List<Child>>, List<Child>> genRes = generateChild(
                     contextSource, 
                     lastPersistentSource, 
+                    explicitSource, 
                     propEntry._1, 
                     propEntry._2, 
-                    context, 
-                    tta);
+                    context);
             
             result.addAll(genRes._1);
             other.putAll(genRes._2);
             unionResult.addAll(genRes._3);
         }
-
         return t3(result, other, unionResult);
     }
     
-    private static T3<List<Child>, Map<String, List<Child>>, List<Child>> generateChild(
+    private T3<List<Child>, Map<String, List<Child>>, List<Child>> generateChild(
             final IQrySource2<?> contextSource, 
             final IQrySource2<?> lastPersistentSource, 
+            final IQrySource2<?> explicitSource,
             final AbstractPropInfo<?> propInfo, //first API from path
             final Map<String, List<AbstractPropInfo<?>>> subprops, // long names and their pathes that all start from 'propInfo' 
-            final List<String> context, 
-            final TreeTransformationAttributes tta) {
+            final List<String> context
+            ) {
         
         final List<Child> result = new ArrayList<>();
         final Map<String, List<Child>> other = new HashMap<>();
         final List<Child> unionResult = new ArrayList<>();
         
-
         final List<String> newContext = new ArrayList<>(context);
         newContext.add(propInfo.name);
         final String childContext = newContext.stream().collect(joining("_"));
 
-        Expression2 expr2 = null;
         final List<Child> dependencies = new ArrayList<>();
-        if (propInfo.hasExpression() && !(propInfo instanceof ComponentTypePropInfo || propInfo instanceof UnionTypePropInfo)) {
-            final IQrySource2<?>  sourceForCalcPropResolution = contextSource != null ?  contextSource : lastPersistentSource;
-            expr2 = expressionToS2(sourceForCalcPropResolution, propInfo.expression, childContext, tta.domainInfo, tta.gen);
-            final Map<String, List<Child>> dependenciesResult = transform(expr2.collectProps(), tta.domainInfo, tta.gen);
-
-            for (final Entry<String, List<Child>> drEntry : dependenciesResult.entrySet()) {
-                if (!drEntry.getKey().equals(sourceForCalcPropResolution.contextId())) {
-                    other.put(drEntry.getKey(), drEntry.getValue());
-                } else {
-                    if (contextSource == null) {
-                        unionResult.addAll(drEntry.getValue());
-                    } else {
-                        dependencies.addAll(drEntry.getValue());
-                        result.addAll(drEntry.getValue());
-                    }
-                }
+        final IQrySource2<?> sourceForCalcPropResolution = contextSource != null ?  contextSource : lastPersistentSource;
+        final CalcPropResult calcPropResult = processCalcProp(propInfo, sourceForCalcPropResolution, childContext);
+        other.putAll(calcPropResult.internalSources);
+        if (calcPropResult.expression != null) {
+            if (contextSource != null) {
+                dependencies.addAll(calcPropResult.externalSourceChildren);
+                result.addAll(calcPropResult.externalSourceChildren);
+            } else {
+                unionResult.addAll(calcPropResult.externalSourceChildren);
             }
         }
         
-        final boolean required = propInfo instanceof EntityTypePropInfo ? ((EntityTypePropInfo) propInfo).required : false;
+        final boolean required = propInfo instanceof EntityTypePropInfo ? ((EntityTypePropInfo<?>) propInfo).required : false;
 
-        final String sourceContextId = tta.explicitSource.contextId() + "_" + childContext;
-        final QrySource2BasedOnPersistentType source = propInfo instanceof EntityTypePropInfo ? 
-                new QrySource2BasedOnPersistentType(((EntityTypePropInfo) propInfo).javaType(), ((EntityTypePropInfo) propInfo).propEntityInfo, sourceContextId) 
-                 : null;
+        final String sourceContextId = explicitSource.contextId() + "_" + childContext;
+        final QrySource2BasedOnPersistentType source = generateQrySourceForPropInfo(propInfo, sourceContextId);
         final T2<String, Map<String, List<AbstractPropInfo<?>>>> next = getPathAndNextProps(subprops);
         final List<Child> children = new ArrayList<>();
         if (!next._2.isEmpty()) {
@@ -185,24 +181,41 @@ public class PathsToTreeTransformator {
             final T3<List<Child>, Map<String, List<Child>>, List<Child>> genRes = generateQrySourceChildren(
                     source, 
                     updateLps, 
-                    next._2, 
-                    newContext,
-                    tta);
+                    next._2,
+                    explicitSource,
+                    newContext);
             children.addAll(genRes._1);
             other.putAll(genRes._2);
             if (source == null && !genRes._3.isEmpty()) {
                 if (contextSource != null) {
-                    dependencies.addAll(genRes._3);
-                    result.addAll(genRes._3);
+                        dependencies.addAll(genRes._3);
+                        result.addAll(genRes._3);    
                 } else {
                     unionResult.addAll(genRes._3); // will be used once nested union props are supported at Metadata and HibMapping levels.
                 }
             }
             
         }
-        result.add(new Child(propInfo, children, next._1, required, source, expr2, tta.explicitSource, dependencies, next()));
+        result.add(new Child(propInfo, children, next._1, required, source, calcPropResult.expression, explicitSource, dependencies, next()));
         return t3(result, other, unionResult); 
     }    
+    
+    private CalcPropResult processCalcProp(final AbstractPropInfo<?> propInfo, final IQrySource2<?>  sourceForCalcPropResolution, final String childContext) {
+        if (propInfo.hasExpression() && !(propInfo instanceof ComponentTypePropInfo || propInfo instanceof UnionTypePropInfo)) {
+            final Expression2 expr2 = expressionToS2(sourceForCalcPropResolution, propInfo.expression, childContext);
+            final Map<String, List<Child>> dependenciesResult = transform(expr2.collectProps());
+            final List<Child> externalSourceChildren = dependenciesResult.remove(sourceForCalcPropResolution.contextId());
+            return new CalcPropResult(expr2, dependenciesResult, externalSourceChildren == null ? emptyList() : externalSourceChildren);
+        }
+        
+        return new CalcPropResult(null, emptyMap(), emptyList());
+    }
+    
+    private static QrySource2BasedOnPersistentType generateQrySourceForPropInfo (final AbstractPropInfo<?> propInfo, final String sourceContextId) {
+        return propInfo instanceof EntityTypePropInfo ? 
+                new QrySource2BasedOnPersistentType(((EntityTypePropInfo<?>) propInfo).javaType(), ((EntityTypePropInfo<?>) propInfo).propEntityInfo, sourceContextId) 
+                 : null;
+    }
     
     private static T2<String, Map<String, List<AbstractPropInfo<?>>>> getPathAndNextProps(final Map<String, List<AbstractPropInfo<?>>> subprops) {
         final Map<String, List<AbstractPropInfo<?>>> nextProps = new HashMap<>();
@@ -218,12 +231,10 @@ public class PathsToTreeTransformator {
         return t2(path, nextProps);
     }
     
-    private static Expression2 expressionToS2(
+    private Expression2 expressionToS2(
             final IQrySource2<?> contextSource, 
             final ExpressionModel expressionModel, 
-            final String context,
-            final LongMetadata domainInfo, 
-            final EntQueryGenerator gen) {
+            final String context) {
         final String sourceId = contextSource.contextId() + "_" + context;
         final PropsResolutionContext prc = new PropsResolutionContext(domainInfo, asList(asList(contextSource)), sourceId); 
         final Expression1 exp = (Expression1) (new StandAloneExpressionBuilder(gen, expressionModel)).getResult().getValue();
@@ -294,16 +305,16 @@ public class PathsToTreeTransformator {
         
         return result;
     }
-
-    private static class TreeTransformationAttributes {
-        final LongMetadata domainInfo; 
-        final IQrySource2<?> explicitSource; 
-        final EntQueryGenerator gen;
+    
+    private static class CalcPropResult {
+        final Expression2 expression; 
+        final Map<String, List<Child>> internalSources;
+        final List<Child> externalSourceChildren;
         
-        public TreeTransformationAttributes(final LongMetadata domainInfo, final IQrySource2<?> explicitSource, final EntQueryGenerator gen) {
-            this.domainInfo = domainInfo;
-            this.explicitSource = explicitSource;
-            this.gen = gen;
+        public CalcPropResult(final Expression2 expression, final Map<String, List<Child>> internalSources, final List<Child> externalSourceChildren) {
+            this.expression = expression;
+            this.internalSources = internalSources;
+            this.externalSourceChildren = externalSourceChildren;
         }
     }
 }

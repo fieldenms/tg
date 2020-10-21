@@ -1,13 +1,12 @@
 package ua.com.fielden.platform.entity.query;
 
-import static ua.com.fielden.platform.eql.stage2.elements.PathsToTreeTransformator.groupChildren;
-
 import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator;
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
+import ua.com.fielden.platform.eql.stage2.elements.PathsToTreeTransformator;
 import ua.com.fielden.platform.eql.stage2.elements.TablesAndSourceChildren;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
@@ -20,7 +19,8 @@ public class EqlQueryTransformer {
         final EntQueryGenerator gen = new EntQueryGenerator(dbVersion, filter, username, executionContext.dates(), qem.getParamValues());
         final PropsResolutionContext resolutionContext = new PropsResolutionContext(executionContext.getDomainMetadata().lmd);
         final ResultQuery2 tr = gen.generateEntQueryAsResultQuery(qem.queryModel, qem.orderModel, qem.fetchModel).transform(resolutionContext);
-        final Map<String, List<ChildGroup>> grouped = groupChildren(tr.collectProps(), executionContext.getDomainMetadata().lmd, gen);
+        final PathsToTreeTransformator p2tt = new PathsToTreeTransformator(executionContext.getDomainMetadata().lmd, gen);
+        final Map<String, List<ChildGroup>> grouped = p2tt.groupChildren(tr.collectProps());
         return tr.transform(new TransformationContext(new TablesAndSourceChildren(executionContext.getDomainMetadata().lmd.getTables(), grouped)));
     }
 }
