@@ -22,6 +22,7 @@ import {IronFitBehavior} from '/resources/polymer/@polymer/iron-fit-behavior/iro
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
+import { TgReflector } from '/app/tg-reflector.js';
 import {TgFocusRestorationBehavior} from '/resources/actions/tg-focus-restoration-behavior.js'
 import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';
 import {TgBackButtonBehavior} from '/resources/views/tg-back-button-behavior.js'
@@ -166,6 +167,9 @@ const template = html`
                 <paper-icon-button id="lastEntity" class="title-bar-button navigation-button" icon="hardware:keyboard-tab" on-tap="_lastEntry" disabled$="[[!_isNavigatonButtonEnable(_hasNext, isNavigationActionInProgress)]]" tooltip-text$="[[_getLastEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
             </div>
             <div class="layout horizontal center">
+                <!-- share button -->
+                <paper-icon-button hidden="[[!mainType]]" class="minimise-button title-bar-button" icon="icons:arrow-upward" on-tap="_share" tooltip-text$="Share"></paper-icon-button>
+
                 <!-- collapse/expand button -->
                 <paper-icon-button hidden="[[mobile]]" class="minimise-button title-bar-button" icon="[[_minimisedIcon(_minimised)]]" on-tap="_invertMinimiseState" tooltip-text$="[[_minimisedTooltip(_minimised)]]" disabled="[[_maximised]]"></paper-icon-button>
 
@@ -224,7 +228,9 @@ Polymer({
         'tg-action-navigation-changed': '_handleActionNavigationChange',
         'tg-action-navigation-invoked': '_handleActionNavigationInvoked',
         'data-loaded-and-focused': '_handleDataLoaded',
-        'tg-error-happened': '_handleError'
+        'tg-error-happened': '_handleError',
+        'tg-entity-master-attached': '_entityMasterAttached',
+        'tg-entity-received': '_entityReceived'
     },
 
     hostAttributes: {
@@ -437,6 +443,8 @@ Polymer({
     },
 
     created: function () {
+        this._reflector = new TgReflector();
+        
         this.noAutoFocus = true;
         this.noCancelOnOutsideClick = true;
         this.noCancelOnEscKey = true;
@@ -489,6 +497,8 @@ Polymer({
         this.removeEventListener(clickEvent, this._onCaptureClick, true);
         this.removeEventListener('focus', this._onCaptureFocus, true);
         this.removeEventListener('keydown', this._onCaptureKeyDown);
+        this.mainType = undefined;
+        this.mainId = undefined;
     },
     
     _getCurrentFocusableElements: function() {
@@ -1446,5 +1456,37 @@ Polymer({
     
     _maximisedTooltip: function (_maximised) {
         return _maximised ? "Restore, Alt&nbsp+&nbspm" : "Maximise, Alt&nbsp+&nbspm";
+    },
+    
+    _entityMasterAttached: function (event) {
+        const entityMaster = event.detail;
+        console.error('_entityMasterAttached [', entityMaster.entityType, ']', entityMaster);
+        if (entityMaster.entityType && !this.mainType) {
+            const entityType = this._reflector.getType(entityMaster.entityType);
+            if (entityType.compoundOpenerType() || entityType.isPersistent()) {
+                this.mainType = entityType;
+                console.error('_entityMasterAttached mainType := ', this.mainType._simpleClassName());
+            }
+        }
+        tearDownEvent(event);
+    },
+    
+    _entityReceived: function (event) {
+        const entity = event.detail;
+        console.error('_entityReceived [', entity.type()._simpleClassName(), ']', entity);
+        if (entity.type()._simpleClassName() === 'EntityNavigationAction') {
+            this.mainType = this._reflector.getType(entity.get('entityType'));
+            console.error('_entityReceived mainType := ', this.mainType._simpleClassName());
+        } else if (entity.type() === this.mainType) {
+            this.mainId = entity.type().compoundOpenerType() ? entity.get('key').get('id') : entity.get('id');
+            console.error('_entityReceived mainId := ', this.mainId);
+        }
+        tearDownEvent(event);
+    },
+    
+    _share: function () {
+        const type = this.mainType.compoundOpenerType() ? this._reflector.getType(this.mainType.compoundOpenerType()) : this.mainType;
+        console.error(`/#/master/${type.fullClassName()}/${this.mainId}`);
     }
+    
 });

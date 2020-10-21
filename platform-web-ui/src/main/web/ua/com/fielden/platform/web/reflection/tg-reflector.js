@@ -797,6 +797,13 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
         return typeof this['_union'] === 'undefined' ? false : this['_union'];
     }
 
+    /**
+     * Returns full class name for main persistent type for this compound master opener (if it is of such kind, empty otherwise).
+     */
+    EntityType.prototype.compoundOpenerType = function () {
+        return typeof this['_compoundOpenerType'] === 'undefined' ? null : this['_compoundOpenerType'];
+    }
+
     /** 
      * Returns the property names for the key members in case of composite entity, 'undefined' otherwise.
      */

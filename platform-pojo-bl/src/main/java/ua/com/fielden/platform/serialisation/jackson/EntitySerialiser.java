@@ -35,6 +35,7 @@ import java.util.Map;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityToOpenCompoundMaster;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.IContinuationData;
@@ -134,6 +135,9 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         }
         if (AbstractUnionEntity.class.isAssignableFrom(type)) {
             entityTypeInfo.set_union(true);
+        }
+        if (AbstractFunctionalEntityToOpenCompoundMaster.class.isAssignableFrom(type)) {
+            entityTypeInfo.set_compoundOpenerType(getKeyType(type).getName());
         }
         final Pair<String, String> entityTitleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(type);
         if (!isEntityTitleDefault(type, entityTitleAndDesc.getKey())) {
