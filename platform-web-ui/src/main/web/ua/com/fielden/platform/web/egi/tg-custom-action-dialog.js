@@ -168,7 +168,7 @@ const template = html`
             </div>
             <div class="layout horizontal center">
                 <!-- share button -->
-                <paper-icon-button hidden="[[!mainType]]" class="minimise-button title-bar-button" icon="icons:arrow-upward" on-tap="_share" tooltip-text$="Share"></paper-icon-button>
+                <paper-icon-button hidden="[[!_mainEntityType]]" class="minimise-button title-bar-button" icon="icons:arrow-upward" on-tap="_share" tooltip-text$="Share"></paper-icon-button>
 
                 <!-- collapse/expand button -->
                 <paper-icon-button hidden="[[mobile]]" class="minimise-button title-bar-button" icon="[[_minimisedIcon(_minimised)]]" on-tap="_invertMinimiseState" tooltip-text$="[[_minimisedTooltip(_minimised)]]" disabled="[[_maximised]]"></paper-icon-button>
@@ -427,6 +427,27 @@ Polymer({
         mobile: {
             type: Boolean,
             value: isMobileApp()
+        },
+        
+        /**
+         * The type of entity being edited in this dialog.
+         * 
+         * For compound masters it represents the type of loaded compound master opener entity.
+         * For simple persistent masters (including those embedded by EntityNavigationAction / EntityEditAction) it represents the type of actual persistent entity.
+         * Otherwise (i.e. for functional masters) it is empty (null).
+         */
+        _mainEntityType: {
+            type: Object,
+            value: null // should not be 'undefined' because hidden="[[!_mainEntityType]]" binding will not work
+        },
+        
+        /**
+         * Represents the ID of the currently bound persisted entity (of _mainEntityType) or 'null' if the entity is not yet persisted or not yet loaded.
+         * Should only be used if '_mainEntityType' is present.
+         */
+        _mainEntityId: {
+            type: Number,
+            value: null
         }
     },
 
@@ -486,19 +507,19 @@ Polymer({
     },
 
     attached: function() {
-        var clickEvent = ('ontouchstart' in window) ? 'touchstart' : 'mousedown';
+        const clickEvent = ('ontouchstart' in window) ? 'touchstart' : 'mousedown';
         this.addEventListener(clickEvent, this._onCaptureClick, true);
         this.addEventListener('focus', this._onCaptureFocus, true);
         this.addEventListener('keydown', this._onCaptureKeyDown);
     },
 
     detached: function() {
-        var clickEvent = ('ontouchstart' in window) ? 'touchstart' : 'mousedown';
+        const clickEvent = ('ontouchstart' in window) ? 'touchstart' : 'mousedown';
         this.removeEventListener(clickEvent, this._onCaptureClick, true);
         this.removeEventListener('focus', this._onCaptureFocus, true);
         this.removeEventListener('keydown', this._onCaptureKeyDown);
-        this.mainType = undefined;
-        this.mainId = undefined;
+        this._mainEntityType = null;
+        this._mainEntityId = null;
     },
     
     _getCurrentFocusableElements: function() {
@@ -1461,11 +1482,11 @@ Polymer({
     _entityMasterAttached: function (event) {
         const entityMaster = event.detail;
         console.error('_entityMasterAttached [', entityMaster.entityType, ']', entityMaster);
-        if (entityMaster.entityType && !this.mainType) {
+        if (entityMaster.entityType && this._mainEntityType === null) {
             const entityType = this._reflector.getType(entityMaster.entityType);
             if (entityType.compoundOpenerType() || entityType.isPersistent()) {
-                this.mainType = entityType;
-                console.error('_entityMasterAttached mainType := ', this.mainType._simpleClassName());
+                this._mainEntityType = entityType;
+                console.error('_entityMasterAttached _mainEntityType := ', this._mainEntityType._simpleClassName());
             }
         }
         tearDownEvent(event);
@@ -1475,18 +1496,18 @@ Polymer({
         const entity = event.detail;
         console.error('_entityReceived [', entity.type()._simpleClassName(), ']', entity);
         if (entity.type()._simpleClassName() === 'EntityNavigationAction') {
-            this.mainType = this._reflector.getType(entity.get('entityType'));
-            console.error('_entityReceived mainType := ', this.mainType._simpleClassName());
-        } else if (entity.type() === this.mainType) {
-            this.mainId = entity.type().compoundOpenerType() ? entity.get('key').get('id') : entity.get('id');
-            console.error('_entityReceived mainId := ', this.mainId);
+            this._mainEntityType = this._reflector.getType(entity.get('entityType'));
+            console.error('_entityReceived _mainEntityType := ', this._mainEntityType._simpleClassName());
+        } else if (entity.type() === this._mainEntityType) {
+            this._mainEntityId = entity.type().compoundOpenerType() ? entity.get('key').get('id') : entity.get('id');
+            console.error('_entityReceived _mainEntityId := ', this._mainEntityId);
         }
         tearDownEvent(event);
     },
     
     _share: function () {
-        const type = this.mainType.compoundOpenerType() ? this._reflector.getType(this.mainType.compoundOpenerType()) : this.mainType;
-        console.error(`/#/master/${type.fullClassName()}/${this.mainId}`);
+        const type = this._mainEntityType.compoundOpenerType() ? this._reflector.getType(this._mainEntityType.compoundOpenerType()) : this._mainEntityType;
+        console.error(`/#/master/${type.fullClassName()}/${this._mainEntityId}`);
     }
     
 });
