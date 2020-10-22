@@ -167,6 +167,7 @@ Polymer({
 
     _showMessageDlg: function (event) {
         const self = this;
+        const _msgText = self._msgText; // provide strong guarantees on _msgText immutability here -- this will be used later for msgDialog message text (after two async calls)
         // need to open dialog asynchronously for it to open on mobile devices
         this.async(function () {
             // build and display the dialog
@@ -194,16 +195,16 @@ Polymer({
 
             this.async(function () {
                 // please note that domBind.$.msgPar is rendered after body.appendChild(domBind), but has been put here (into async(100)) to provide stronger guarantees along with msgDialog.open()
-                if (containsRestictedTags(self._msgText) === true) {
-                    domBind.$.msgPar.textContent = self._msgText;
+                if (containsRestictedTags(_msgText) === true) {
+                    domBind.$.msgPar.textContent = _msgText;
                 } else {
-                    domBind.$.msgPar.innerHTML = self._msgText;
+                    domBind.$.msgPar.innerHTML = _msgText;
                 }
                 // actual msgDialog opening
                 domBind.$.msgDialog.open();
+                self.$.toast.close(); // must close paper-toast after msgDialog is opened; this is because other fast toast messages can interfere -- paper-toast should still be opened to prevent other messages early opening (see '... && previousToast.opened && ...' condition in 'show' method)
             }, 100);
 
-            self.$.toast.close();
         }, 100);
 
         tearDownEvent(event);

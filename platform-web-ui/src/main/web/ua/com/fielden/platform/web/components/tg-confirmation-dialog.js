@@ -7,6 +7,7 @@ import '/resources/polymer/@polymer/polymer/lib/elements/dom-bind.js';
 import '/resources/polymer/@polymer/polymer/lib/elements/dom-repeat.js';
 
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
+import { ExpectedError } from '/resources/components/tg-global-error-handler.js';
 
 const confirmationDialogStyle = html`
     <custom-style>
@@ -91,11 +92,11 @@ Polymer({
             }
 
             dialogModel.dialogCanceled = function (e) {
-                reject("ESC");
+                reject(new ExpectedError("ESC"));
                 restoreActiveElement();
             };
             dialogModel.closeDialog = function () {
-                reject("ESC");
+                reject(new ExpectedError("ESC"));
                 restoreActiveElement();
             };
 
@@ -104,7 +105,7 @@ Polymer({
                 if (button.confirm) {
                     resolve(button.name);
                 } else {
-                    reject(button.name);
+                    reject(new ExpectedError(button.name));
                 }
                 restoreActiveElement();
             };

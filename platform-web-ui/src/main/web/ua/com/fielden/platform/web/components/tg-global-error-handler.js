@@ -5,12 +5,29 @@ import { containsRestictedTags } from '/resources/reflection/tg-polymer-utils.js
 
 import '/resources/polymer/@polymer/iron-ajax/iron-ajax.js';
 
+/**
+ * Throw or reject with this type of error if you don't want to report this error to the user but want to report it to the server.
+ */
 export class UnreportableError extends Error {
     constructor(...params) {
         super(params);
 
         if (Error.captureStackTrace) {
             Error.captureStackTrace(this, UnreportableError);
+        }
+        this.name = this.constructor.name;
+    }
+}
+
+/**
+ * Throw or reject with this type of error if you don't want to report this error neither to the user nor to the server.
+ */
+export class ExpectedError extends Error {
+    constructor(...params) {
+        super(params);
+
+        if (Error.captureStackTrace) {
+            Error.captureStackTrace(this, ExpectedError);
         }
         this.name = this.constructor.name;
     }
@@ -149,16 +166,18 @@ class TgGlobalErrorHandler extends PolymerElement {
             if (error.restoreState) {
                 error.restoreState();
             }
-            if ( !(error instanceof UnreportableError)) {
-                this.toaster.openToastForError("Unexpected error occurred.", replaceNewline(errorMsg), true);
-            }
-            if (this._errorQueue.length >= this.maxErrorQueueLength) {
-                this.alternativeErrorHandler(errorMsg);
-            } else {
-                this._errorQueue.push(errorMsg);
-            }
-            if (!this.$.errorSender.loading) {
-                this.errorHandler(this._errorQueue[0]);
+            if (!(error instanceof ExpectedError)) {
+                if ( !(error instanceof UnreportableError)) {
+                    this.toaster.openToastForError("Unexpected error occurred.", replaceNewline(errorMsg), true);
+                }
+                if (this._errorQueue.length >= this.maxErrorQueueLength) {
+                    this.alternativeErrorHandler(errorMsg);
+                } else {
+                    this._errorQueue.push(errorMsg);
+                }
+                if (!this.$.errorSender.loading) {
+                    this.errorHandler(this._errorQueue[0]);
+                }
             }
         }
     }
