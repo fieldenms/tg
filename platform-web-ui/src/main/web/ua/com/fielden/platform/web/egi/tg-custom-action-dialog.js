@@ -230,6 +230,7 @@ Polymer({
         'data-loaded-and-focused': '_handleDataLoaded',
         'tg-error-happened': '_handleError',
         'tg-entity-master-attached': '_entityMasterAttached',
+        'tg-entity-master-detached': '_entityMasterDetached',
         'tg-entity-received': '_entityReceived'
     },
 
@@ -518,8 +519,6 @@ Polymer({
         this.removeEventListener(clickEvent, this._onCaptureClick, true);
         this.removeEventListener('focus', this._onCaptureFocus, true);
         this.removeEventListener('keydown', this._onCaptureKeyDown);
-        this._mainEntityType = null;
-        this._mainEntityId = null;
     },
     
     _getCurrentFocusableElements: function() {
@@ -1487,6 +1486,20 @@ Polymer({
             if (entityType.compoundOpenerType() || entityType.isPersistent()) {
                 this._mainEntityType = entityType;
                 console.error('_entityMasterAttached _mainEntityType := ', this._mainEntityType._simpleClassName());
+            }
+        }
+        tearDownEvent(event);
+    },
+    
+    _entityMasterDetached: function (event) {
+        const entityMaster = event.detail;
+        console.error('_entityMasterDetached [', entityMaster.entityType, ']', entityMaster);
+        if (entityMaster.entityType && this._mainEntityType !== null) {
+            const entityType = this._reflector.getType(entityMaster.entityType);
+            if (entityType === this._mainEntityType) {
+                this._mainEntityType = null;
+                this._mainEntityId = null;
+                console.error('_entityMasterDetached _mainEntityType := ', null, '_mainEntityId := ', null);
             }
         }
         tearDownEvent(event);

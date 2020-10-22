@@ -667,6 +667,7 @@ const TgEntityMasterBehaviorImpl = {
         while (this._subscriptions.length !== 0) {
             this._subscriptions.pop().unsubscribe();
         }
+        this.fire('tg-entity-master-detached', this);
     },
 
     /**
