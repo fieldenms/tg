@@ -37,7 +37,7 @@ import org.joda.time.format.PeriodFormatterBuilder;
 public final class SessionIdentifierGenerator {
     private static final String HMAC_SHA256_ALGORITHM = "HmacSHA256";
     private static final Logger LOGGER = getLogger(SessionIdentifierGenerator.class);
-    private SecureRandom random = new SecureRandom();
+    private final ThreadLocal<SecureRandom> random = ThreadLocal.withInitial(() -> new SecureRandom());
 
     /**
      * Generates cryptographically random series identifier.
@@ -45,7 +45,7 @@ public final class SessionIdentifierGenerator {
      * @return
      */
     public String nextSessionId() {
-        return new BigInteger(128, random).toString(32);
+        return new BigInteger(128, random.get()).toString(32);
     }
 
     /**
@@ -54,7 +54,7 @@ public final class SessionIdentifierGenerator {
      * @return
      */
     public String nextPin() {
-        return new BigInteger(32, random).toString(32);
+        return new BigInteger(32, random.get()).toString(32);
     }
     
     /**
@@ -63,7 +63,7 @@ public final class SessionIdentifierGenerator {
      * @return
      */
     public String genSalt() {
-        return new BigInteger(128, random).toString(32);
+        return new BigInteger(128, random.get()).toString(32);
     }
 
     /**

@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static java.lang.Math.min;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteriaWithModelHandler.CRITERIA_ENTITY_ID;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isBooleanCriterion;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
@@ -342,7 +344,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         }
         criteriaEntity.setDynamicProperties(dynamicProperties);
 
-        final int fetchSize = adhocParams.get("fetchSize") != null ? (Integer) adhocParams.get("fetchSize") : 100;
+        final int fetchSize = min(ofNullable((Integer) adhocParams.get("fetchSize")).orElse(100), 100);
         final Long[] ids = adhocParams.get("ids") != null ? (Long[]) adhocParams.get("ids") : new Long[]{};
         return criteriaEntity.streamEntities(fetchSize, ids);
     }

@@ -63,6 +63,7 @@ public class HibernateConfigurationFactory {
     private static final String HIKARI_MIN_SIZE = "hibernate.hikari.minimumIdle";
     private static final String HIKARI_MAX_SIZE = "hibernate.hikari.maximumPoolSize";
     private static final String HIKARI_IDLE_TIMEOUT = "hibernate.hikari.idleTimeout";
+    private static final String HIKARI_MAX_LIFETIME = "hibernate.hikari.maxLifetime";
 
     private static final String HBM2DDL_AUTO = "hibernate.hbm2ddl.auto";
     private static final String CONNECTION_URL = "hibernate.connection.url";
@@ -100,7 +101,7 @@ public class HibernateConfigurationFactory {
         } catch (final MappingException | UnsupportedEncodingException e) {
             throw new HibernateException("Could not add mappings.", e);
         }
-        
+
     }
 
     public static DbVersion determineDbVersion(final Properties props) {
@@ -145,6 +146,7 @@ public class HibernateConfigurationFactory {
         setSafely(cfg, HIKARI_MIN_SIZE);
         setSafely(cfg, HIKARI_MAX_SIZE);
         setSafely(cfg, HIKARI_IDLE_TIMEOUT);
+        setSafely(cfg, HIKARI_MAX_LIFETIME);
 
         setSafely(cfg, HBM2DDL_AUTO);
 

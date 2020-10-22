@@ -166,16 +166,14 @@ const template = html`
                 <paper-icon-button id="lastEntity" class="title-bar-button navigation-button" icon="hardware:keyboard-tab" on-tap="_lastEntry" disabled$="[[!_isNavigatonButtonEnable(_hasNext, isNavigationActionInProgress)]]" tooltip-text$="[[_getLastEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
             </div>
             <div class="layout horizontal center">
-                <!-- collapse/expand buttons -->
-                <paper-icon-button hidden="[[!_minimised]]" class="minimise-button title-bar-button" icon="tg-icons:expandMin" on-tap="_invertMinimiseState" tooltip-text="Restore, Alt&nbsp+&nbspc"></paper-icon-button>
-                <paper-icon-button hidden="[[_collapserHidden(_minimised, mobile)]]" class="title-bar-button minimise-button" icon="tg-icons:collapseMin"   on-tap="_invertMinimiseState" tooltip-text="Collapse, Alt&nbsp+&nbspc" disabled=[[_dialogInteractionsDisabled(_minimised,_maximised)]]></paper-icon-button>
+                <!-- collapse/expand button -->
+                <paper-icon-button hidden="[[mobile]]" class="minimise-button title-bar-button" icon="[[_minimisedIcon(_minimised)]]" on-tap="_invertMinimiseState" tooltip-text$="[[_minimisedTooltip(_minimised)]]" disabled="[[_maximised]]"></paper-icon-button>
 
                 <!-- maximize/restore buttons -->
-                <paper-icon-button hidden="[[_maximised]]" class="maximise-button title-bar-button" icon="icons:fullscreen"       on-tap="_invertMaximiseState" tooltip-text="Maximise, Alt&nbsp+&nbspm" disabled=[[_dialogInteractionsDisabled(_minimised,_maximised)]]></paper-icon-button>
-                <paper-icon-button hidden="[[_maximiseRestorerHidden(_maximised, mobile)]]" class="maximise-button title-bar-button" icon="icons:fullscreen-exit"  on-tap="_invertMaximiseState" tooltip-text="Restore, Alt&nbsp+&nbspm"></paper-icon-button>
+                <paper-icon-button hidden="[[mobile]]" class="maximise-button title-bar-button" icon="[[_maximisedIcon(_maximised)]]" on-tap="_invertMaximiseState" tooltip-text$="[[_maximisedTooltip(_maximised)]]" disabled=[[_minimised]]></paper-icon-button>
 
                 <!-- close/next buttons -->
-                <paper-icon-button hidden="[[_closerHidden(_lastAction, mobile)]]" class="close-button title-bar-button" icon="icons:cancel"  on-tap="closeDialog" tooltip-text="Close, Alt&nbsp+&nbspx"></paper-icon-button>
+                <paper-icon-button id="closeButton" hidden="[[_closerHidden(_lastAction, mobile)]]" class="close-button title-bar-button" icon="icons:cancel"  on-tap="closeDialog" tooltip-text="Close, Alt&nbsp+&nbspx"></paper-icon-button>
                 <paper-icon-button id="skipNext" hidden="[[!_lastAction.continuous]]" disabled$="[[isNavigationActionInProgress]]" class="close-button title-bar-button" icon="av:skip-next" on-tap="_skipNext" tooltip-text="Skip to next without saving"></paper-icon-button>
             </div>
             <paper-spinner id="spinner" active="[[isNavigationActionInProgress]]" style="display: none;" alt="in progress"></paper-spinner>
@@ -473,11 +471,10 @@ Polymer({
         }
         //Add listener for custom event that was thrown when dialogs view is about to lost focus, then this focus should go to title-bar.
         this.addEventListener("tg-last-item-focused", this._viewFocusLostEventListener.bind(this));
-        //Retrieve title's bar element to focus.
-        this._componentsToFocus = Array.from(this.$.titleBar.querySelectorAll(FOCUSABLE_ELEMENTS_SELECTOR));
+        //Add listener for custom event that was thrown when dialogs view has no focusable elements.
+        this.addEventListener("tg-no-item-focused", this._focusFirstBestElement.bind(this));
         //Add event listener that listens when dialog body chang it's opacity
         this.$.dialogLoader.addEventListener("transitionend", this._handleBodyTransitionEnd.bind(this));
-       
     },
 
     attached: function() {
@@ -495,7 +492,9 @@ Polymer({
     },
     
     _getCurrentFocusableElements: function() {
-        return this._componentsToFocus.filter(element => !element.disabled && element.offsetParent !== null);
+        //Retrieve title's bar element to focus.
+        const componentsToFocus = Array.from(this.$.titleBar.querySelectorAll(FOCUSABLE_ELEMENTS_SELECTOR));
+        return componentsToFocus.filter(element => !element.disabled && element.offsetParent !== null);
     },
 
     _onTabDown: function(e) {
@@ -540,6 +539,20 @@ Polymer({
         }
         tearDownEvent(e);
 
+    },
+
+    _focusFirstBestElement: function (e) {
+        if  (this.$.closeButton.offsetParent) {
+            this.$.closeButton.focus();
+        } else if (this.$.skipNext.offsetParent) {
+            this.$.skipNext.focus();
+        } else {
+            const focusables = this._getCurrentFocusableElements();
+            if (focusables.length > 0) {
+                focusables[0].focus();
+            }
+        }
+        tearDownEvent(e);
     },
 
     _onCaptureClick: function(event) {
@@ -1413,23 +1426,25 @@ Polymer({
     },
 
     /**
-     * Returns 'true' if Restorer button of maximisation function is hidden, 'false' otherwise.
-     */
-    _maximiseRestorerHidden: function(_maximised, mobile) {
-        return !_maximised || mobile;
-    },
-
-    /**
      * Returns 'true' if Closer button is hidden, 'false' otherwise.
      */
     _closerHidden: function(_lastAction, mobile) {
         return (_lastAction && _lastAction.continuous) || mobile;
     },
 
-    /**
-     * Returns 'true' if Collapser button of minimisation function is hidden, 'false' otherwise.
-     */
-    _collapserHidden: function(_minimised, mobile) {
-        return _minimised || mobile;
+    _minimisedIcon: function (_minimised) {
+        return _minimised ? "tg-icons:expandMin" : "tg-icons:collapseMin";
+    },
+
+    _minimisedTooltip: function (_minimised) {
+        return _minimised ? "Restore, Alt&nbsp+&nbspc" : "Collapse, Alt&nbsp+&nbspc";
+    },
+
+    _maximisedIcon: function (_maximised) {
+        return _maximised ? "icons:fullscreen-exit" : "icons:fullscreen";
+    },
+    
+    _maximisedTooltip: function (_maximised) {
+        return _maximised ? "Restore, Alt&nbsp+&nbspm" : "Maximise, Alt&nbsp+&nbspm";
     }
 });

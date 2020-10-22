@@ -11,7 +11,7 @@ import { queryElements } from '/resources/components/tg-element-selector-behavio
 import { enhanceStateRestoration } from '/resources/components/tg-global-error-handler.js';
 
 export const selectEnabledEditor = function (editor) {
-    const selectedElement = editor.shadowRoot.querySelector('.custom-input:not([hidden]):not([disabled])');
+    const selectedElement = editor.shadowRoot.querySelector('.custom-input:not([hidden]):not([disabled]):not([readonly])');
     return (selectedElement && selectedElement.shadowRoot && selectedElement.shadowRoot.querySelector('textarea')) || selectedElement;
 }
 
@@ -740,7 +740,7 @@ const TgEntityMasterBehaviorImpl = {
         } else {
             const focusedElements = this._getCurrentFocusableElements();
             if (focusedElements.length > 0) {
-                if (!isInHierarchy(this, this.shadowRoot.activeElement)) {
+                if (this.shadowRoot.activeElement === null) {
                     const firstIndex = forward ? 0 : focusedElements.length - 1;
                     focusedElements[firstIndex].focus();
                     tearDownEvent(e);
@@ -776,11 +776,20 @@ const TgEntityMasterBehaviorImpl = {
                 }
             }
         }
-        // if the input has been identified then focus it, otherwise do nothing
+        // if the input has been identified then focus it.
         if (firstInput) {
             firstInput.focus();
         } else if (this.offsetParent !== null) {
-            this.focusNextView();
+            //Otherwise find first focusable element and focus it. If there are no focusable element then fire event that asks
+            //it's ancestors to focus their first best element.
+            const focusedElements = this._getCurrentFocusableElements();
+            if (focusedElements.length > 0) {
+                if (this.shadowRoot.activeElement === null) {
+                    focusedElements[0].focus();
+                }
+            } else {
+                this.fire("tg-no-item-focused");
+            }
         }
     },
 
