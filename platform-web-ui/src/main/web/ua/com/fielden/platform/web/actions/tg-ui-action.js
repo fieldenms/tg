@@ -18,7 +18,6 @@ import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 import {processResponseError, toastMsgForError} from '/resources/reflection/tg-ajax-utils.js';
 import { enhanceStateRestoration } from '/resources/components/tg-global-error-handler.js';
-import { ExpectedError } from '/resources/components/tg-global-error-handler.js';
 
 const template = html`
     <style>
@@ -478,9 +477,7 @@ Polymer({
                         self.showDialog(self);
                     }, function (error) {
                         self.restoreActionState();
-                        if (error instanceof ExpectedError) {
-                            console.log("It is expected error therefore no need to report about it: " + error);
-                        } else if (error instanceof Error) {
+                        if (error instanceof Error) {
                             console.error("The action was rejected with error: " + error);
                             throw error;
                         } else {
