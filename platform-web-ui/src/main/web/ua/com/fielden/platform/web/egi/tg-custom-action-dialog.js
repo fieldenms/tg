@@ -1508,10 +1508,7 @@ Polymer({
     _entityReceived: function (event) {
         const entity = event.detail;
         console.error('_entityReceived [', entity.type()._simpleClassName(), ']', entity);
-        if (entity.type()._simpleClassName() === 'EntityNavigationAction') {
-            this._mainEntityType = this._reflector.getType(entity.get('entityType'));
-            console.error('_entityReceived _mainEntityType := ', this._mainEntityType._simpleClassName());
-        } else if (entity.type() === this._mainEntityType) {
+        if (entity.type() === this._mainEntityType) {
             this._mainEntityId = entity.type().compoundOpenerType() ? entity.get('key').get('id') : entity.get('id');
             console.error('_entityReceived _mainEntityId := ', this._mainEntityId);
         }
