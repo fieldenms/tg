@@ -113,7 +113,7 @@ const template = html`
         .navigation-button{
             margin: 0 8px;
         }
-        .minimise-button,.maximise-button {
+        .default-button {
             width: 19px;
             height: 19px;
             padding: 0px;
@@ -168,13 +168,13 @@ const template = html`
             </div>
             <div class="layout horizontal center">
                 <!-- share button -->
-                <paper-icon-button hidden="[[!_mainEntityType]]" class="minimise-button title-bar-button" icon="icons:arrow-upward" on-tap="_share" tooltip-text$="Share"></paper-icon-button>
+                <paper-icon-button hidden="[[!_mainEntityType]]" class="default-button title-bar-button" icon="icons:arrow-upward" on-tap="_getLink" tooltip-text="Get a link"></paper-icon-button>
 
                 <!-- collapse/expand button -->
-                <paper-icon-button hidden="[[mobile]]" class="minimise-button title-bar-button" icon="[[_minimisedIcon(_minimised)]]" on-tap="_invertMinimiseState" tooltip-text$="[[_minimisedTooltip(_minimised)]]" disabled="[[_maximised]]"></paper-icon-button>
+                <paper-icon-button hidden="[[mobile]]" class="default-button title-bar-button" icon="[[_minimisedIcon(_minimised)]]" on-tap="_invertMinimiseState" tooltip-text$="[[_minimisedTooltip(_minimised)]]" disabled="[[_maximised]]"></paper-icon-button>
 
                 <!-- maximize/restore buttons -->
-                <paper-icon-button hidden="[[mobile]]" class="maximise-button title-bar-button" icon="[[_maximisedIcon(_maximised)]]" on-tap="_invertMaximiseState" tooltip-text$="[[_maximisedTooltip(_maximised)]]" disabled=[[_minimised]]></paper-icon-button>
+                <paper-icon-button hidden="[[mobile]]" class="default-button title-bar-button" icon="[[_maximisedIcon(_maximised)]]" on-tap="_invertMaximiseState" tooltip-text$="[[_maximisedTooltip(_maximised)]]" disabled=[[_minimised]]></paper-icon-button>
 
                 <!-- close/next buttons -->
                 <paper-icon-button id="closeButton" hidden="[[_closerHidden(_lastAction, mobile)]]" class="close-button title-bar-button" icon="icons:cancel"  on-tap="closeDialog" tooltip-text="Close, Alt&nbsp+&nbspx"></paper-icon-button>
@@ -1515,9 +1515,24 @@ Polymer({
         tearDownEvent(event);
     },
     
-    _share: function () {
+    _getLink: function () {
         const type = this._mainEntityType.compoundOpenerType() ? this._reflector.getType(this._mainEntityType.compoundOpenerType()) : this._mainEntityType;
         console.error(`/#/master/${type.fullClassName()}/${this._mainEntityId}`);
+        if (this._mainEntityId !== null) {
+            const url = new URL(window.location.href);
+            url.hash = `/master/${type.fullClassName()}/${this._mainEntityId}`;
+            const link = url.href;
+            this.$.toaster.text = 'Copied to clipboard.';
+            this.$.toaster.hasMore = true;
+            this.$.toaster.msgText = link;
+        } else {
+            this.$.toaster.text = 'Please save and try again.';
+            this.$.toaster.hasMore = false;
+            this.$.toaster.msgText = '';
+        }
+        this.$.toaster.showProgress = false;
+        this.$.toaster.isCritical = false;
+        this.$.toaster.show();
     }
     
 });
