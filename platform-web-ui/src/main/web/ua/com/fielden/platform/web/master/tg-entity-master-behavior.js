@@ -660,14 +660,16 @@ const TgEntityMasterBehaviorImpl = {
     }, // end of ready callback
 
     attached: function () {
-        this.fire('tg-entity-master-attached', this);
+        this._cachedParentNode = this.parentNode;
+        this.fire('tg-entity-master-attached', this, { node: this._cachedParentNode }); // as in 'detached', start bubbling on parent node
     },
 
     detached: function () {
         while (this._subscriptions.length !== 0) {
             this._subscriptions.pop().unsubscribe();
         }
-        this.fire('tg-entity-master-detached', this);
+        this.fire('tg-entity-master-detached', this, { node: this._cachedParentNode }); // start event bubbling on previous parent node from which this entity master has already been detached
+        delete this._cachedParentNode; // remove reference on previous _cachedParentNode to facilitate possible releasing of parentNode from memory
     },
 
     /**
