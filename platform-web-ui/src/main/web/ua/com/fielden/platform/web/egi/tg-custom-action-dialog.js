@@ -1525,6 +1525,11 @@ Polymer({
             this.$.toaster.text = 'Copied to clipboard.';
             this.$.toaster.hasMore = true;
             this.$.toaster.msgText = link;
+            navigator.clipboard.writeText(link).then((result) => {
+                console.error('Copied.', result);
+            }, (error) => {
+                console.error('Failed to copy.', error);
+            });
         } else {
             this.$.toaster.text = 'Please save and try again.';
             this.$.toaster.hasMore = false;
