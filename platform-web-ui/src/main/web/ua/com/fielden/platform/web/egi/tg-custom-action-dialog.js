@@ -167,7 +167,7 @@ const template = html`
                 <paper-icon-button id="lastEntity" class="title-bar-button navigation-button" icon="hardware:keyboard-tab" on-tap="_lastEntry" disabled$="[[!_isNavigatonButtonEnable(_hasNext, isNavigationActionInProgress)]]" tooltip-text$="[[_getLastEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
             </div>
             <div class="layout horizontal center">
-                <!-- share button -->
+                <!-- Get A Link button -->
                 <paper-icon-button hidden="[[!_mainEntityType]]" class="default-button title-bar-button" icon="tg-icons:share" on-tap="_getLink" tooltip-text="Get a link"></paper-icon-button>
 
                 <!-- collapse/expand button -->
@@ -434,7 +434,7 @@ Polymer({
          * The type of entity being edited in this dialog.
          * 
          * For compound masters it represents the type of loaded compound master opener entity.
-         * For simple persistent masters (including those embedded by EntityNavigationAction / EntityEditAction) it represents the type of actual persistent entity.
+         * For simple persistent masters (including those embedded by EntityNavigationAction / EntityEditAction / EntityNewAction) it represents the type of actual persistent entity.
          * Otherwise (i.e. for functional masters) it is empty (null).
          */
         _mainEntityType: {
@@ -443,7 +443,7 @@ Polymer({
         },
         
         /**
-         * Represents the ID of the currently bound persisted entity (of _mainEntityType) or 'null' if the entity is not yet persisted or not yet loaded.
+         * Represents the ID of the currently bound persisted entity (of type derived from _mainEntityType) or 'null' if the entity is not yet persisted or not yet loaded.
          * Should only be used if '_mainEntityType' is present.
          */
         _mainEntityId: {
@@ -1478,39 +1478,48 @@ Polymer({
         return _maximised ? "Restore, Alt&nbsp+&nbspm" : "Maximise, Alt&nbsp+&nbspm";
     },
     
+    /**
+     * Function that handles attaching of masters inside this dialog. This includes masters embedded into other ones.
+     * 
+     * Assigns _mainEntityType only if the master type is appropriate (see _mainEntityType for more details) and if _mainEntityType is not yet assigned.
+     */
     _entityMasterAttached: function (event) {
         const entityMaster = event.detail;
-        console.error('_entityMasterAttached [', entityMaster.entityType, ']', entityMaster);
         if (entityMaster.entityType && this._mainEntityType === null) {
             const entityType = this._reflector.getType(entityMaster.entityType);
-            if (entityType.compoundOpenerType() || entityType.isPersistent()) {
+            if (entityType && (entityType.compoundOpenerType() || entityType.isPersistent())) {
                 this._mainEntityType = entityType;
-                console.error('_entityMasterAttached _mainEntityType := ', this._mainEntityType._simpleClassName());
             }
         }
         tearDownEvent(event);
     },
     
+    /**
+     * Function that handles detaching of masters inside this dialog. This includes masters embedded into other ones.
+     * 
+     * Removes _mainEntityType only if the master type is equal to _mainEntityType.
+     */
     _entityMasterDetached: function (event) {
         const entityMaster = event.detail;
-        console.error('_entityMasterDetached [', entityMaster.entityType, ']', entityMaster);
         if (entityMaster.entityType && this._mainEntityType !== null) {
             const entityType = this._reflector.getType(entityMaster.entityType);
-            if (entityType === this._mainEntityType) {
+            if (entityType && entityType === this._mainEntityType) {
                 this._mainEntityType = null;
                 this._mainEntityId = null;
-                console.error('_entityMasterDetached _mainEntityType := ', null, '_mainEntityId := ', null);
             }
         }
         tearDownEvent(event);
     },
     
+    /**
+     * Function that handles receiving of entities for masters with the type equal to _mainEntityType.
+     * 
+     * This updates the _mainEntityId deriving from received entity.
+     */
     _entityReceived: function (event) {
         const entity = event.detail;
-        console.error('_entityReceived [', entity.type()._simpleClassName(), ']', entity);
         if (entity.type() === this._mainEntityType) {
             this._mainEntityId = entity.type().compoundOpenerType() ? entity.get('key').get('id') : entity.get('id');
-            console.error('_entityReceived _mainEntityId := ', this._mainEntityId);
         }
         tearDownEvent(event);
     },
