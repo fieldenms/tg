@@ -98,6 +98,7 @@ const template = html`
         }
         .title-bar-button {
             color: var(--paper-grey-100);
+            display: flex; /* this is to override default 'inline-block' that causes badly behaviour of shifting paper-icon-button.iron-icon from paper-icon-button.paper-ripple */
         }
         .title-bar-button[disabled] {
             color: var(--paper-grey-300);
@@ -117,7 +118,6 @@ const template = html`
             width: 19px;
             height: 19px;
             padding: 0px;
-            margin-bottom: 2px;
         }
         #navigationBar {
             color: white;
@@ -168,7 +168,7 @@ const template = html`
             </div>
             <div class="layout horizontal center">
                 <!-- share button -->
-                <paper-icon-button hidden="[[!_mainEntityType]]" class="default-button title-bar-button" icon="icons:arrow-upward" on-tap="_getLink" tooltip-text="Get a link"></paper-icon-button>
+                <paper-icon-button hidden="[[!_mainEntityType]]" class="default-button title-bar-button" icon="tg-icons:share" on-tap="_getLink" tooltip-text="Get a link"></paper-icon-button>
 
                 <!-- collapse/expand button -->
                 <paper-icon-button hidden="[[mobile]]" class="default-button title-bar-button" icon="[[_minimisedIcon(_minimised)]]" on-tap="_invertMinimiseState" tooltip-text$="[[_minimisedTooltip(_minimised)]]" disabled="[[_maximised]]"></paper-icon-button>
