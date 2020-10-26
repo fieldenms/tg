@@ -1515,29 +1515,38 @@ Polymer({
         tearDownEvent(event);
     },
     
+    /**
+     * Generates a link to entity master for persisted entity opened in this dialog; copies it to the clipboard; shows informational dialog with ability to review link (MORE button).
+     * or
+     * Shows informational dialog for not-yet-persisted entity opened in this dialog -- 'Please save and try again.'.
+     * 
+     * This functionality is only available for persistent entities.
+     */
     _getLink: function () {
         const type = this._mainEntityType.compoundOpenerType() ? this._reflector.getType(this._mainEntityType.compoundOpenerType()) : this._mainEntityType;
-        console.error(`/#/master/${type.fullClassName()}/${this._mainEntityId}`);
+        const showNonCritical = toaster => {
+            toaster.showProgress = false;
+            toaster.isCritical = false;
+            toaster.show();
+        };
         if (this._mainEntityId !== null) {
             const url = new URL(window.location.href);
             url.hash = `/master/${type.fullClassName()}/${this._mainEntityId}`;
             const link = url.href;
-            this.$.toaster.text = 'Copied to clipboard.';
-            this.$.toaster.hasMore = true;
-            this.$.toaster.msgText = link;
-            navigator.clipboard.writeText(link).then((result) => {
-                console.error('Copied.', result);
-            }, (error) => {
-                console.error('Failed to copy.', error);
+            // Writing into clipboard is always permitted for currently open tab (https://developer.mozilla.org/en-US/docs/Web/API/Clipboard/writeText) -- that's why promise error should never occur;
+            // if for some reason the promise will be rejected then 'Unexpected error occured.' will be shown to the user and global handler will report that to the server.
+            navigator.clipboard.writeText(link).then(() => {
+                this.$.toaster.text = 'Copied to clipboard.';
+                this.$.toaster.hasMore = true;
+                this.$.toaster.msgText = link;
+                showNonCritical(this.$.toaster);
             });
         } else {
             this.$.toaster.text = 'Please save and try again.';
             this.$.toaster.hasMore = false;
             this.$.toaster.msgText = '';
+            showNonCritical(this.$.toaster);
         }
-        this.$.toaster.showProgress = false;
-        this.$.toaster.isCritical = false;
-        this.$.toaster.show();
     }
     
 });
