@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
+import static org.apache.commons.lang3.RegExUtils.replaceAll;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.nextTypeName;
 
 import java.lang.annotation.Annotation;
@@ -10,6 +11,7 @@ import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.RegExUtils;
 import org.kohsuke.asm5.AnnotationVisitor;
 import org.kohsuke.asm5.ClassVisitor;
 import org.kohsuke.asm5.MethodVisitor;
@@ -39,6 +41,8 @@ public class AdvancedAddClassAnnotationAdapter extends ClassVisitor implements O
      */
     private String owner;
     private String enhancedName;
+    private Pattern patternQuotedOwner;
+    private String quotedEnhancedName;
 
     public AdvancedAddClassAnnotationAdapter(final ClassVisitor cv, final Annotation... annotations) {
         super(Opcodes.ASM5, cv);
@@ -56,7 +60,9 @@ public class AdvancedAddClassAnnotationAdapter extends ClassVisitor implements O
     @Override
     public void visit(final int version, final int access, final String name, final String signature, final String superName, final String[] interfaces) {
         owner = name;
+        patternQuotedOwner = Pattern.compile(Pattern.quote(owner + ";"));
         enhancedName = nextTypeName(name);
+        quotedEnhancedName = Matcher.quoteReplacement(enhancedName + ";");
         super.visit(version, access, enhancedName, signature, superName, interfaces);
     }
 
@@ -158,13 +164,11 @@ public class AdvancedAddClassAnnotationAdapter extends ClassVisitor implements O
      * Changes all the occurrences of <code>owner<code> with <code>enhancedName</code>.
      */
     private String fix(String signature) {
-
         if (signature != null) {
             if (signature.indexOf(owner + ";") != -1) {
-                signature = signature.replaceAll(Pattern.quote(owner + ";"), Matcher.quoteReplacement(enhancedName + ";"));
+                signature = replaceAll(signature, patternQuotedOwner, quotedEnhancedName);
             }
         }
-
         return signature;
     }
 
