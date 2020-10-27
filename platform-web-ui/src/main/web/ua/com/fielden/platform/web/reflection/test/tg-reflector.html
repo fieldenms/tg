@@ -1729,13 +1729,33 @@
                 done();
             });
             
+            test('isPersistent method works', function (done) {
+                assert.strictEqual(reflector.getType('ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties').isPersistent(), true);
+                assert.strictEqual(reflector.getType('ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContext').isPersistent(), false);
+                done();
+            });
+            
             test('shouldDisplayDescription method works', function (done) {
-                var entity1 = reflector.newEntity(typeName1);
-                var entity2 = reflector.newEntity(typeName2);
-                
-                assert.strictEqual(entity1.type().shouldDisplayDescription(), true, "shouldDisplayDescription for entity type TgPersistentEntityWithProperties should be true.");
-                assert.strictEqual(entity2.type().shouldDisplayDescription(), false, "shouldDisplayDescription for entity type TgPersistentCompositeEntity should be false.");
-                
+                assert.strictEqual(reflector.getType('ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties').shouldDisplayDescription(), true);
+                assert.strictEqual(reflector.getType('ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity').shouldDisplayDescription(), false);
+                done();
+            });
+            
+            test('isContinuation method works', function (done) {
+                assert.strictEqual(reflector.getType('ua.com.fielden.platform.entity.functional.master.AcknowledgeWarnings').isContinuation(), true);
+                assert.strictEqual(reflector.getType('ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContext').isContinuation(), false);
+                done();
+            });
+            
+            test('isUnionEntity method works', function (done) {
+                assert.strictEqual(reflector.getType('ua.com.fielden.platform.sample.domain.UnionEntity').isUnionEntity(), true);
+                assert.strictEqual(reflector.getType('ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContext').isUnionEntity(), false);
+                done();
+            });
+            
+            test('compoundOpenerType method works', function (done) {
+                assert.strictEqual(reflector.getType('ua.com.fielden.platform.sample.domain.compound.ui_actions.OpenTgCompoundEntityMasterAction').compoundOpenerType(), 'ua.com.fielden.platform.sample.domain.compound.TgCompoundEntity');
+                assert.strictEqual(reflector.getType('ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties').compoundOpenerType(), null);
                 done();
             });
             

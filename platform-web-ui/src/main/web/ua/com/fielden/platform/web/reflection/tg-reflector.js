@@ -823,7 +823,7 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
      *
      */
     EntityType.prototype.isPersistent = function () {
-        return this['_persistent'] === true;
+        return typeof this['_persistent'] === 'undefined' ? false : this['_persistent'];
     }
 
     /**

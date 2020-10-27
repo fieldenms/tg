@@ -25,6 +25,7 @@ import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isTrailingZerosDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isUpperCaseDefault;
 import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -108,7 +109,9 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         entityTypeInfo.setKey(type.getName());
 
         // let's inform the client of the type's persistence nature
-        entityTypeInfo.set_persistent(EntityUtils.isPersistedEntityType(type));
+        if (isPersistedEntityType(type)) {
+            entityTypeInfo.set_persistent(true);
+        }
 
         if (IContinuationData.class.isAssignableFrom(type)) {
             entityTypeInfo.set_continuation(true);
