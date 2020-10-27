@@ -449,6 +449,17 @@ Polymer({
         _mainEntityId: {
             type: Number,
             value: null
+        },
+        
+        /**
+         * The type of currently activated compound menu item entity being edited in this dialog.
+         * 
+         * This is only relevant to compound masters.
+         * Otherwise (i.e. for simple masters and functional masters) it is empty (null).
+         */
+        _compoundMenuItemType: {
+            type: Object,
+            value: null
         }
     },
 
@@ -1485,10 +1496,12 @@ Polymer({
      */
     _entityMasterAttached: function (event) {
         const entityMaster = event.detail;
-        if (entityMaster.entityType && this._mainEntityType === null) {
-            const entityType = this._reflector.getType(entityMaster.entityType);
-            if (entityType && (entityType.compoundOpenerType() || entityType.isPersistent())) {
+        const entityType = entityMaster.entityType ? this._reflector.getType(entityMaster.entityType) : null;
+        if (entityType) {
+            if (this._mainEntityType === null && (entityType.compoundOpenerType() || entityType.isPersistent())) {
                 this._mainEntityType = entityType;
+            } else if (this._compoundMenuItemType === null && entityType.isCompoundMenuItem()) {
+                this._compoundMenuItemType = entityType;
             }
         }
         tearDownEvent(event);
@@ -1501,12 +1514,14 @@ Polymer({
      */
     _entityMasterDetached: function (event) {
         const entityMaster = event.detail;
-        if (entityMaster.entityType && this._mainEntityType !== null) {
-            const entityType = this._reflector.getType(entityMaster.entityType);
-            if (entityType && entityType === this._mainEntityType) {
+        const entityType = entityMaster.entityType ? this._reflector.getType(entityMaster.entityType) : null;
+        if (entityType) {
+            if (this._mainEntityType !== null && entityType === this._mainEntityType) {
                 this._mainEntityType = null;
                 this._mainEntityId = null;
-            }
+            } else if (this._compoundMenuItemType !== null && entityType === this._compoundMenuItemType) {
+                this._compoundMenuItemType = null;
+            } 
         }
         tearDownEvent(event);
     },

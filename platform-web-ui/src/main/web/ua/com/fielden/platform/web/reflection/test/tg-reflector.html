@@ -1759,6 +1759,12 @@
                 done();
             });
             
+            test('isCompoundMenuItem method works', function (done) {
+                assert.strictEqual(reflector.getType('ua.com.fielden.platform.sample.domain.compound.master.menu.actions.TgCompoundEntityMaster_OpenMain_MenuItem').isCompoundMenuItem(), true);
+                assert.strictEqual(reflector.getType('ua.com.fielden.platform.sample.domain.compound.ui_actions.OpenTgCompoundEntityMasterAction').isCompoundMenuItem(), false);
+                done();
+            });
+            
             test('empty union entity gives empty values for id, key and desc properties', function (done) {
                 const union = reflector.newEntity('ua.com.fielden.platform.sample.domain.UnionEntity');
                 union.key = 'bad key'; // should not really exist, but is provided for stronger checks

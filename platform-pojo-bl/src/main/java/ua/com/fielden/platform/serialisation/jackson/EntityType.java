@@ -71,6 +71,20 @@ public class EntityType extends AbstractEntity<String> {
     @Title(value = "Compound Opener Type", desc = "Represents main persistent type for this compound master opener (if it is of such kind, empty otherwise).")
     private String _compoundOpenerType;
     
+    @IsProperty
+    @Title(value = "Is Compound Menu Item?", desc = "Indicates whether the associated entity type represents menu item entity in compound master.")
+    private Boolean _compoundMenuItem;
+    
+    @Observable
+    public EntityType set_compoundMenuItem(final Boolean _compoundMenuItem) {
+        this._compoundMenuItem = _compoundMenuItem;
+        return this;
+    }
+    
+    public Boolean is_compoundMenuItem() {
+        return _compoundMenuItem;
+    }
+    
     @Observable
     public EntityType set_compoundOpenerType(final String value) {
         this._compoundOpenerType = value;
@@ -82,12 +96,12 @@ public class EntityType extends AbstractEntity<String> {
     }
     
     @Observable
-    public EntityType set_union(final boolean _union) {
+    public EntityType set_union(final Boolean _union) {
         this._union = _union;
         return this;
     }
 
-    public boolean is_union() {
+    public Boolean is_union() {
         return _union;
     }
 
@@ -102,22 +116,22 @@ public class EntityType extends AbstractEntity<String> {
     }
     
     @Observable
-    public EntityType set_persistent(final boolean _persistent) {
+    public EntityType set_persistent(final Boolean _persistent) {
         this._persistent = _persistent;
         return this;
     }
 
-    public boolean is_persistent() {
+    public Boolean is_persistent() {
         return _persistent;
     }
     
     @Observable
-    public EntityType set_continuation(final boolean _continuation) {
+    public EntityType set_continuation(final Boolean _continuation) {
         this._continuation = _continuation;
         return this;
     }
 
-    public boolean is_continuation() {
+    public Boolean is_continuation() {
         return _continuation;
     }
 
