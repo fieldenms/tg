@@ -1,6 +1,7 @@
 package ua.com.fielden.strings;
 
 import static java.util.regex.Pattern.compile;
+import static org.openjdk.jmh.annotations.Threads.MAX;
 
 import java.util.regex.Pattern;
 
@@ -16,8 +17,8 @@ import org.openjdk.jmh.infra.Blackhole;
 @Fork(value = 1, jvmArgsAppend = "-Djmh.stack.lines=3")
 @Warmup(iterations = 5)
 @Measurement(iterations = 5)
-@Threads(4)
-public class StringReplaceVsRemoveBenchmark {
+@Threads(MAX)
+public class StringReplaceVsStringUtilsRemoveBenchmark {
 
     private static final String COMMON_SUFFIX = ".common-properties", DUMMY_SUFFIX = ".dummy-property";
     private static final String _COMMON_SUFFIX = "\\.common-properties", _DUMMY_SUFFIX = "\\.dummy-property";
