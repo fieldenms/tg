@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DescRequired;
@@ -81,32 +81,14 @@ public class TitlesDescsGetter {
         return pair(path, "<html><i><b>" + removeHtmlTag(list.getValue().get(list.getValue().size() - 1)) + "</b></i><br><i>[" + path + "]</i></html>");
     }
 
-    /**
-     * Remove all html tags from string.
-     *
-     * @param str
-     * @return
-     */
-    public static String removeHtml(final String str) {
-        return str.replaceAll("\\<.*?\\>", "");
-    }
-
     public static String addHtmlTag(final String str) {
         return "<html>" + str + "</html>";
     }
 
     public static String removeHtmlTag(final String str) {
-        return str.replaceAll("<html>", "").replaceAll("</html>", "");
+        return StringUtils.remove(StringUtils.remove(str, "<html>"), "</html>");
     }
-
-    public static String italic(final String s) {
-        return addHtmlTag("<i>" + s + "</i>");
-    }
-
-    public static String removeItalic(final String s) {
-        return removeHtmlTag(s.replaceAll("<i>", "").replaceAll("</i>", ""));
-    }
-
+    
     private static String pathOfTitles(final Class<?> parentKlass, final String propertyName) {
         final List<String> reversedTitledPath = TitlesDescsGetter.getPropertyTitlesAndDescriptionsPath(parentKlass, propertyName).getKey();
         Collections.reverse(reversedTitledPath);
