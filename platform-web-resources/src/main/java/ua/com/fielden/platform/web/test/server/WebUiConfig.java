@@ -1595,7 +1595,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                   "['center-justified', 'start', mr, mr, mr, mr, mr, mrLast]," +
                                   "['center-justified', 'start', mr, mr, mr, mr, mr, mrLast]" +
                                   "]")
-                                  .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
+                                  .replace("mrLast", centreMrLast).replace("mr", centreMr)
                   )
                   .setLayoutFor(Device.TABLET, Optional.empty(),
                           ("[['center-justified', 'start', mr, mrLast]," +
@@ -1616,7 +1616,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                   "['center-justified', 'start', mr, mrLast]," +
                                   "['center-justified', 'start', mr, mrLast]," +
                                   "['center-justified', 'start', mr, mrLast]]")
-                                  .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
+                                  .replace("mrLast", centreMrLast).replace("mr", centreMr)
                   )
                   .setLayoutFor(Device.MOBILE, Optional.empty(),
                           ("[['center-justified', mrLast]," +
@@ -1657,7 +1657,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                   "['center-justified', 'start', mrLast]," +
                                   "['center-justified', 'start', mrLast]," +
                                   "['center-justified', 'start', mrLast]]")
-                                  .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
+                                  .replace("mrLast", centreMrLast).replace("mr", centreMr)
                   );
         } else {
             layoutConfig = afterAddCritConf
@@ -1670,7 +1670,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 "['center-justified', 'start', mr, mr, mrLast]," +
                                 "['center-justified', 'start', mrLast]" +
                                 "]")
-                                .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
+                                .replace("mrLast", centreMrLast).replace("mr", centreMr)
                 )
                 .setLayoutFor(Device.TABLET, Optional.empty(),
                         ("[['center-justified', 'start', mr, mrLast]," +
@@ -1680,7 +1680,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 "['center-justified', 'start', mr, mrLast]," +
                                 "['center-justified', 'start', mr, mrLast]," +
                                 "['center-justified', 'start', mr, mrLast]]")
-                                .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
+                                .replace("mrLast", centreMrLast).replace("mr", centreMr)
                 )
                 .setLayoutFor(Device.MOBILE, Optional.empty(),
                         ("[['center-justified', mrLast]," +
@@ -1699,7 +1699,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 "['center-justified', 'start', mrLast]," +
                                 "['center-justified', 'start', mrLast]," +
                                 "['center-justified', 'start', mrLast]]")
-                                .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
+                                .replace("mrLast", centreMrLast).replace("mr", centreMr)
                 );
         }
                 //.hideCheckboxes()
