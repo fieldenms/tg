@@ -15,9 +15,12 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
 /**
- * Master entity object.
+ * The entity type to represent serialisable entity types for client-side handling.
+ * `tg-reflector` defines how this data are interpreted.
+ * <p>
+ * <code>null</code> values are not serialised. This can be used to reduce resultant JSON.
  *
- * @author Developers
+ * @author TG Team
  *
  */
 @KeyType(String.class)
@@ -50,7 +53,7 @@ public class EntityType extends AbstractEntity<String> {
 
     @IsProperty
     @Title(value = "Is Persistent?", desc = "Indicated whether the associated entity type represents a persistent entity.")
-    private boolean _persistent;
+    private Boolean _persistent;
     
     @IsProperty
     @Title(value = "Should Display Description?", desc = "Indicates whether editors for values of this type should display values descriptions")
@@ -58,15 +61,15 @@ public class EntityType extends AbstractEntity<String> {
     
     @IsProperty
     @Title(value = "Is Continuation?", desc = "Indicates whether the associated entity type represents a continuation entity.")
-    private boolean _continuation;
+    private Boolean _continuation;
     
     @IsProperty
     @Title(value = "Is Union?", desc = "Indicates whether the associated entity type represents an union entity.")
-    private boolean _union;
+    private Boolean _union;
     
     @IsProperty
     @Title(value = "Compound Opener Type", desc = "Represents main persistent type for this compound master opener (if it is of such kind, empty otherwise).")
-    private String _compoundOpenerType; // this would not be serialised if empty
+    private String _compoundOpenerType;
     
     @Observable
     public EntityType set_compoundOpenerType(final String value) {
