@@ -6,7 +6,7 @@ import static java.util.Collections.sort;
 import static java.util.Optional.empty;
 import static java.util.Optional.ofNullable;
 import static java.util.regex.Pattern.quote;
-import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.basic.config.Workflows.deployment;
 import static ua.com.fielden.platform.basic.config.Workflows.vulcanizing;
 import static ua.com.fielden.platform.serialisation.api.SerialiserEngines.JACKSON;
@@ -23,6 +23,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
 import com.google.inject.Inject;
@@ -83,9 +84,9 @@ public class WebResourceLoader implements IWebResourceLoader {
         } else if ("/app/tg-app-index.html".equalsIgnoreCase(resourceUri)) {
             return injectServiceWorkerScriptInto(webUiConfig.genAppIndex()).orElseThrow(() -> new MissingWebResourceException("Application index resource is missing."));
         } else if ("/app/logout.html".equalsIgnoreCase(resourceUri)) {
-            return getFileSource("/resources/logout.html", webUiConfig.resourcePaths()).map(src -> src.replaceAll("@title", "Logout")).orElseThrow(() -> new MissingWebResourceException("Logout resource is missing."));
+            return getFileSource("/resources/logout.html", webUiConfig.resourcePaths()).map(src -> StringUtils.replace(src, "@title", "Logout")).orElseThrow(() -> new MissingWebResourceException("Logout resource is missing."));
         } else if ("/app/login-initiate-reset.html".equalsIgnoreCase(resourceUri)) {
-            return getFileSource("/resources/login-initiate-reset.html", webUiConfig.resourcePaths()).map(src -> src.replaceAll("@title", "Login Reset Request")).orElseThrow(() -> new MissingWebResourceException("Login reset request resource is missing."));
+            return getFileSource("/resources/login-initiate-reset.html", webUiConfig.resourcePaths()).map(src -> StringUtils.replace(src, "@title", "Login Reset Request")).orElseThrow(() -> new MissingWebResourceException("Login reset request resource is missing."));
         } else if ("/app/tg-app-config.js".equalsIgnoreCase(resourceUri)) {
             return ofNullable(webUiConfig.genWebUiPreferences()).orElseThrow(() -> new MissingWebResourceException("Web UI preferences are missing."));
         } else if ("/app/tg-app.js".equalsIgnoreCase(resourceUri)) {
