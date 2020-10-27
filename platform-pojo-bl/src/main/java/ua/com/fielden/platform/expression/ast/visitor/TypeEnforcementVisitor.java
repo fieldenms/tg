@@ -800,7 +800,7 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
      * @throws TypeCompatibilityException
      */
     private void processDateLiteralToken(final AstNode node) {
-        final String pureDateStr = node.getToken().text.replace("'", "");
+        final String pureDateStr = StringUtils.remove(node.getToken().text, "'");
         final DateTime date;
         // let's now check if we can covert recognised sequence to date
         if (pureDateStr.split(" ").length == 2) { // has time portion
