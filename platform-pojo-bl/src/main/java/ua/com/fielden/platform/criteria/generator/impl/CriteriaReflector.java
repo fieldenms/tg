@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.criteria.generator.impl;
 
+import static org.apache.commons.lang3.RegExUtils.replaceAll;
+
 import java.lang.reflect.Field;
 import java.util.List;
 
@@ -90,7 +92,7 @@ public class CriteriaReflector {
      * @return
      */
     public static String critName(final Class<?> root, final String propertyName) {
-        return root.getSimpleName().substring(0, 1).toLowerCase() + root.getSimpleName().substring(1) + "_" + propertyName.replaceAll(Reflector.DOT_SPLITTER, "_");
+        return root.getSimpleName().substring(0, 1).toLowerCase() + root.getSimpleName().substring(1) + "_" + replaceAll(propertyName, Reflector.DOT_SPLITTER_PATTERN, "_");
     }
 
     /**

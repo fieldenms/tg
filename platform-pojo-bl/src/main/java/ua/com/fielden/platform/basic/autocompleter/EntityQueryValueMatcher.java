@@ -3,6 +3,7 @@
  */
 package ua.com.fielden.platform.basic.autocompleter;
 
+import static org.apache.commons.lang3.RegExUtils.replaceAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
@@ -14,12 +15,13 @@ import java.util.List;
 import ua.com.fielden.platform.basic.IValueMatcherWithFetch;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -52,7 +54,7 @@ public class EntityQueryValueMatcher<T extends AbstractEntity<?>> implements IVa
     public EntityQueryValueMatcher(final IEntityDao<T> dao, final String propertyName, final String orderBy) {
         this.dao = dao;
         this.defaultFetchModel = fetchKeyAndDescOnly(dao.getEntityType());
-        this.propertyParamName = "paramNameFor" + propertyName.replaceAll("\\.", "_");
+        this.propertyParamName = "paramNameFor" + replaceAll(propertyName, Reflector.DOT_SPLITTER_PATTERN, "_");
         this.propertyName = propertyName;
 
         // Entity's key may have a composite nature.
@@ -110,7 +112,7 @@ public class EntityQueryValueMatcher<T extends AbstractEntity<?>> implements IVa
     public EntityQueryValueMatcher(final IEntityDao<T> dao, final ICompoundCondition0<T> condition, final String propertyName) {
         this.dao = dao;
         this.defaultFetchModel = fetchKeyAndDescOnly(dao.getEntityType());
-        this.propertyParamName = "paramNameFor" + propertyName.replaceAll("\\.", "_");
+        this.propertyParamName = "paramNameFor" + replaceAll(propertyName, Reflector.DOT_SPLITTER_PATTERN, "_");
         this.propertyName = propertyName;
         this.queryModel = condition.and().prop(propertyName).iLike().param(propertyParamName).model();
         this.defaultOrdering = null;
