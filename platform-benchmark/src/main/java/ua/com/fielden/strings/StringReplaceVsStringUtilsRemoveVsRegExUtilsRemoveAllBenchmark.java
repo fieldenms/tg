@@ -18,7 +18,7 @@ import org.openjdk.jmh.infra.Blackhole;
 @Warmup(iterations = 5)
 @Measurement(iterations = 5)
 @Threads(MAX)
-public class StringReplaceVsStringUtilsRemoveBenchmark {
+public class StringReplaceVsStringUtilsRemoveVsRegExUtilsRemoveAllBenchmark {
 
     private static final String COMMON_SUFFIX = ".common-properties", DUMMY_SUFFIX = ".dummy-property";
     private static final String _COMMON_SUFFIX = "\\.common-properties", _DUMMY_SUFFIX = "\\.dummy-property";
@@ -152,7 +152,7 @@ public class StringReplaceVsStringUtilsRemoveBenchmark {
 
 
     ///////////////////////////////////////
-    ////////// RegExUtils.replaceAll //////
+    ////////// RegExUtils.removeAll //////
     ///////////////////////////////////////
 
     @Benchmark
