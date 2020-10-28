@@ -250,19 +250,23 @@ Polymer({
             return;
         }
         const entityInfo = this._selectedSubmodule.substring(1).split('/');
+        const typeOf = (name) => this._reflector().findTypeByName(name);
+        const mainTypeName = entityInfo[0];
+        const idStr = entityInfo[1];
+        const menuItemTypeName = entityInfo[2];
         if (entityInfo.length !== 2 && entityInfo.length !== 3) {
-            this._openToastForError("Uri Error:", "The URI for master is incorrect. It should contain entity type and id [and optional type of compound menu item] separated with '/', but it has: " + this._selectedSubmodule + ".", true);
-        } else if (!this._reflector().findTypeByName(entityInfo[0])) {
-            this._openToastForError("Master entity type error:", "The entity type: " + entityInfo[0] + " is not registered, please make sure that entity type to open is correct.", true);
-        } else if (entityInfo[2] && !this._reflector().findTypeByName(entityInfo[2])) {
-            this._openToastForError("Compound master menu item entity type error:", "The entity type: " + entityInfo[2] + " is not registered, please make sure that entity type to open is correct.", true);
-        } else if (isNaN(Number(entityInfo[1]))) {
-            this._openToastForError("Master entity ID error:", "The entity ID should be an integer number, but was: " + entityInfo[1] + ".", true);
+            this._openToastForError('URI error.', `The URI [${this._selectedSubmodule}] for master is incorrect. It should contain entity type and id [and optional type of compound menu item] separated with '/'.`, true);
+        } else if (!typeOf(mainTypeName) || menuItemTypeName && !typeOf(menuItemTypeName)) {
+            this._openToastForError('Entity type error.', `[${mainTypeName}]${menuItemTypeName ? ` or [${menuItemTypeName}]` : ''} entity type is not registered. Please make sure that entity type is correct.`, true);
+        } else if (isNaN(Number(idStr))) {
+            this._openToastForError('Master entity ID error.', `The entity ID [${idStr}] for master is not integer number.`, true);
         } else {
-            const entity = this._reflector().newEntity(entityInfo[0]);
-            entity["id"] = parseInt(entityInfo[1]);
-            if (entityInfo[2]) {
-                entity['desc'] = '--------compound-master-menu-item--------:' + this._reflector().findTypeByName(entityInfo[2]).fullClassName();
+            const entity = this._reflector().newEntity(mainTypeName);
+            entity['id'] = parseInt(idStr);
+            if (menuItemTypeName) {
+                this.$.openMasterAction.modifyFunctionalEntity = (bindingEntity) => bindingEntity.setAndRegisterPropertyTouch('menuToOpen', menuItemTypeName);
+            } else {
+                delete this.$.openMasterAction.modifyFunctionalEntity;
             }
             this.$.openMasterAction.currentEntity = () => entity;
             this.$.openMasterAction._run();

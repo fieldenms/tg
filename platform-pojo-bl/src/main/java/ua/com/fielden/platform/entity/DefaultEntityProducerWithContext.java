@@ -2,8 +2,6 @@ package ua.com.fielden.platform.entity;
 
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
-import static org.apache.commons.lang.StringUtils.isEmpty;
-import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.web.utils.EntityRestorationUtils.findByIdWithFiltering;
 
@@ -125,21 +123,6 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
                 producedEntity = provideDefaultValuesForStandardNew(entity, masterEntity(EntityNewAction.class));
             } else {
                 producedEntity = provideDefaultValues(entity);
-                if (producedEntity instanceof AbstractFunctionalEntityToOpenCompoundMaster) {
-                    final AbstractFunctionalEntityToOpenCompoundMaster compoundOpener = (AbstractFunctionalEntityToOpenCompoundMaster) producedEntity;
-                    if (compoundOpener.getMenuToOpen() == null
-                            && currentEntityNotEmpty()
-                            && !currentEntity().proxiedPropertyNames().contains(DESC)
-                            && !isEmpty(currentEntity().getDesc())
-                            && currentEntity().getDesc().startsWith("--------compound-master-menu-item--------:")) {
-                        try {
-                            compoundOpener.setMenuToOpen(ClassLoader.getSystemClassLoader().loadClass(currentEntity().getDesc().replace("--------compound-master-menu-item--------:", "")));
-                        } catch (final ClassNotFoundException e) {
-                            // TODO Auto-generated catch block
-                            e.printStackTrace();
-                        }
-                    }
-                }
             }
         }
         // Resetting of meta-state makes the entity not dirty for the properties, changed above. This is important not to treat them as changed when going to client application.

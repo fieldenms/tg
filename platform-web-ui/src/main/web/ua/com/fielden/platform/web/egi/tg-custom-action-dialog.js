@@ -1555,7 +1555,8 @@ Polymer({
         };
         if (this._mainEntityId !== null) {
             const url = new URL(window.location.href);
-            url.hash = `/master/${type.fullClassName()}/${this._mainEntityId}` + (this._compoundMenuItemType !== null ? `/${this._compoundMenuItemType.fullClassName()}` : '');
+            const compoundItemSuffix = this._compoundMenuItemType !== null ? `/${this._compoundMenuItemType.fullClassName()}` : ``;
+            url.hash = `/master/${type.fullClassName()}/${this._mainEntityId}${compoundItemSuffix}`;
             const link = url.href;
             // Writing into clipboard is always permitted for currently open tab (https://developer.mozilla.org/en-US/docs/Web/API/Clipboard/writeText) -- that's why promise error should never occur;
             // if for some reason the promise will be rejected then 'Unexpected error occured.' will be shown to the user and global handler will report that to the server.
