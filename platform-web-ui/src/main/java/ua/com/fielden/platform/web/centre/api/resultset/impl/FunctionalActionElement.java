@@ -92,7 +92,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
      *
      * @return
      */
-    private Map<String, Object> createAttributes() {
+    public Map<String, Object> createAttributes() {
         final LinkedHashMap<String, Object> attrs = new LinkedHashMap<>();
         if (isDebug()) {
             attrs.put("debug", "true");
@@ -239,42 +239,62 @@ public class FunctionalActionElement implements IRenderable, IImportable {
     public String createActionObject() {
         final StringBuilder attrs = new StringBuilder("{\n");
 
-        attrs.append("preAction: function (action) {\n");
-        attrs.append("    console.log('preAction: " + conf().shortDesc.orElse("noname") + "');\n");
+        attrs.append("preAction: ").append(createPreAction()).append(",\n");
+        attrs.append("postActionSuccess: ").append(createPostActionSuccess()).append(",\n");
+        attrs.append("attrs: ").append(createElementAttributes()).append(",\n");
+        attrs.append("postActionError: ").append(createPostActionError()).append("\n");
+
+        return attrs.append("}\n").toString();
+    }
+
+    public String createPreAction() {
+        final StringBuilder code = new StringBuilder();
+        code.append("function (action) {\n");
+        code.append("    console.log('preAction: " + conf().shortDesc.orElse("noname") + "');\n");
         if (conf().preAction.isPresent()) {
-            attrs.append(conf().preAction.get().build().toString());
+            code.append(conf().preAction.get().build().toString());
         } else {
-            attrs.append("    return Promise.resolve(true);\n");
+            code.append("    return Promise.resolve(true);\n");
         }
-        attrs.append("},\n");
+        code.append("}");
+        return code.toString();
+    }
 
-        attrs.append("postActionSuccess: function (functionalEntity, action, master) {\n");
-        attrs.append("    console.log('postActionSuccess: " + conf().shortDesc.orElse("noname") + "', functionalEntity);\n");
+    public String createPostActionSuccess() {
+        final StringBuilder code = new StringBuilder();
+        code.append("function (functionalEntity, action, master) {\n");
+        code.append("    console.log('postActionSuccess: " + conf().shortDesc.orElse("noname") + "', functionalEntity);\n");
         if (conf().successPostAction.isPresent()) {
-            attrs.append(conf().successPostAction.get().build().toString());
+            code.append(conf().successPostAction.get().build().toString());
         }
-        attrs.append("},\n");
+        code.append("}");
+        return code.toString();
+    }
 
-        attrs.append("attrs: {\n");
-        conf().functionalEntity.ifPresent(entityType -> {
-            attrs.append("    entityType:'" + entityType.getName() + "',\n");
+    public String createPostActionError() {
+        final StringBuilder code = new StringBuilder();
+        code.append("function (functionalEntity, action, master) {\n");
+        code.append("    console.log('postActionError: " + conf().shortDesc.orElse("noname") + "', functionalEntity);\n");
+        conf().errorPostAction.ifPresent(postAction -> {
+            code.append(postAction.build().toString());
         });
-        attrs.append("    currentState:'EDIT', centreUuid: self.uuid,\n");
+        code.append("}");
+        return code.toString();
+    }
+
+    public String createElementAttributes() {
+        final StringBuilder code = new StringBuilder();
+        code.append("{\n");
+        conf().functionalEntity.ifPresent(entityType -> {
+            code.append("    entityType:'" + entityType.getName() + "',\n");
+        });
+        code.append("    currentState:'EDIT', centreUuid: self.uuid,\n");
 
         conf().prefDimForView.ifPresent(prefDim -> {
-            attrs.append(format("    prefDim: {'width': function() {return %s}, 'height': function() {return %s}, 'widthUnit': '%s', 'heightUnit': '%s'},\n", prefDim.width, prefDim.height, prefDim.widthUnit.value, prefDim.heightUnit.value));
+            code.append(format("    prefDim: {'width': function() {return %s}, 'height': function() {return %s}, 'widthUnit': '%s', 'heightUnit': '%s'},\n", prefDim.width, prefDim.height, prefDim.widthUnit.value, prefDim.heightUnit.value));
         });
-
-        attrs.append("},\n");
-
-        attrs.append("postActionError: function (functionalEntity, action, master) {\n");
-        attrs.append("    console.log('postActionError: " + conf().shortDesc.orElse("noname") + "', functionalEntity);\n");
-        conf().errorPostAction.ifPresent(postAction -> {
-            attrs.append(postAction.build().toString());
-        });
-
-        attrs.append("}\n");
-        return attrs.append("}\n").toString();
+        code.append("}");
+        return code.toString();
     }
 
     public boolean isForMaster() {
