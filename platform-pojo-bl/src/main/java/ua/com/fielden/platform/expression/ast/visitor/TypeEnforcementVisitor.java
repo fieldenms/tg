@@ -709,7 +709,7 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
      * 
      * @param node
      */
-    private static final String BACKSLASH = "\"";
+    private static final String DBL_QUOTE = "\"";
     private Object evaluateOperation(final AstNode node) {
         final EgTokenCategory cat = EgTokenCategory.byIndex(node.getToken().category.getIndex());
         final AstNode leftOperand = node.getChildren().get(0);
@@ -724,7 +724,7 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
                     final Integer value = new Integer(leftOperand.getValue().toString()) + new Integer(rightOperand.getValue().toString());
                     return value;
                 } else if (String.class.isAssignableFrom(node.getType())) {
-                    final String value = BACKSLASH + StringUtils.remove(leftOperand.getValue().toString(), BACKSLASH) + StringUtils.remove(rightOperand.getValue().toString(), BACKSLASH) + BACKSLASH;
+                    final String value = DBL_QUOTE + StringUtils.remove(leftOperand.getValue().toString(), DBL_QUOTE) + StringUtils.remove(rightOperand.getValue().toString(), DBL_QUOTE) + DBL_QUOTE;
                     return value;
                 } else if (Day.class.isAssignableFrom(node.getType())) {
                     return ((Integer) leftOperand.getValue()) + ((Integer) rightOperand.getValue());
