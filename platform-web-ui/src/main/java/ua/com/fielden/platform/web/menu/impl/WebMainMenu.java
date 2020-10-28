@@ -2,14 +2,11 @@ package ua.com.fielden.platform.web.menu.impl;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang.StringUtils;
-
-import ua.com.fielden.platform.dom.DomContainer;
-import ua.com.fielden.platform.dom.DomElement;
+import ua.com.fielden.platform.menu.Action;
 import ua.com.fielden.platform.menu.Module;
-import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
@@ -30,18 +27,40 @@ public class WebMainMenu {
         return modules.stream().map(module -> module.getModule()).collect(Collectors.toList());
     }
 
-    public Pair<DomElement, JsCode> generateMenuActions() {
+    public List<Action> generateMenuActions() {
         int numberOfActions = 0;
-        final List<DomElement> actionDomElements = new ArrayList<>();
-        final List<String> propActions = new ArrayList<>();
+        final List<Action> actions = new ArrayList<>();
         for (final WebMenuModule webMenuModule : modules) {
             for (final EntityActionConfig config : webMenuModule.getActions()) {
                 final FunctionalActionElement actionElement = new FunctionalActionElement(config, numberOfActions++, FunctionalActionKind.TOP_LEVEL);
-                actionDomElements.add(actionElement.render().attr("slot", webMenuModule.title));
-                propActions.add(actionElement.createActionObject());
+                final Map<String, Object> attributes = actionElement.createAttributes();
+                final Action action = new Action();
+                action.setKey(attributes.get("element-name").toString());
+                action.setDesc(attributes.get("short-desc").toString());
+                action.setUiRole(uiRole)
+                action.setLongDesc(longDesc)
+                action.setShortcut(shortcut)
+                action.setIcon(icon)
+                action.setIconStyle(iconStyle)
+                action.setRefreshParentCentreAfterSave(refreshParentCentreAfterSave)
+                action.setComponentUri(componentUri)
+                action.setDynamicAction(dynamicAction)
+                action.setNumberOfAction(numberOfAction)
+                action.setActionKind(actionKind)
+                action.setElementAlias(elementAlias)
+                action.setChosenProperty(chosenProperty)
+                action.setSelectionCriteriaRequired(selectionCriteriaRequired)
+                action.setRequireSelectedEntities(requireSelectedEntities)
+                action.setMasterEntityRequired(masterEntityRequired)
+                action.setModuleName(webMenuModule.title);
+                action.setPreAction(actionElement.createPreAction());
+                action.setPostActionSuccess(actionElement.createPostActionSuccess());
+                action.setPostActionError(actionElement.createPostActionError());
+                action.setAttrs(actionElement.createElementAttributes());
+                actions.add(action);
             }
         }
-        return new Pair<>(new DomContainer().add(actionDomElements.toArray(new DomElement[0])), new JsCode(StringUtils.join(propActions, ",\n")));
+        return actions;
     }
 
     public EntityActionConfig getActionConfig(final int actionNumber, final FunctionalActionKind actionKind) {
