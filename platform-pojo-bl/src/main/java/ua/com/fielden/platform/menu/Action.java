@@ -69,7 +69,7 @@ public class Action extends AbstractEntity<String> {
 
     @IsProperty
     @Title("Require Selection Criteria?")
-    private boolean selectionCriteriaRequired;
+    private String requireSelectionCriteria;
 
     @IsProperty
     @Title("Require Selected Entities")
@@ -77,7 +77,7 @@ public class Action extends AbstractEntity<String> {
 
     @IsProperty
     @Title("Require Master Entity?")
-    private boolean masterEntityRequired;
+    private String requireMasterEntity;
 
     @IsProperty
     @Title("Pre-action")
@@ -150,13 +150,13 @@ public class Action extends AbstractEntity<String> {
     }
 
     @Observable
-    public Action setMasterEntityRequired(final boolean masterEntityRequired) {
-        this.masterEntityRequired = masterEntityRequired;
+    public Action setRequireMasterEntity(final String requireMasterEntity) {
+        this.requireMasterEntity = requireMasterEntity;
         return this;
     }
 
-    public boolean isMasterEntityRequired() {
-        return masterEntityRequired;
+    public String getRequireMasterEntity() {
+        return requireMasterEntity;
     }
 
     @Observable
@@ -170,13 +170,13 @@ public class Action extends AbstractEntity<String> {
     }
 
     @Observable
-    public Action setSelectionCriteriaRequired(final boolean selectionCriteriaRequired) {
-        this.selectionCriteriaRequired = selectionCriteriaRequired;
+    public Action setRequireSelectionCriteria(final String requireSelectionCriteria) {
+        this.requireSelectionCriteria = requireSelectionCriteria;
         return this;
     }
 
-    public boolean isSelectionCriteriaRequired() {
-        return selectionCriteriaRequired;
+    public String getRequireSelectionCriteria() {
+        return requireSelectionCriteria;
     }
 
     @Observable

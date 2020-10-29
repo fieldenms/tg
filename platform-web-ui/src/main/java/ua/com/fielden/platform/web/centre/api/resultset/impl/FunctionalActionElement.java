@@ -241,7 +241,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
 
         attrs.append("preAction: ").append(createPreAction()).append(",\n");
         attrs.append("postActionSuccess: ").append(createPostActionSuccess()).append(",\n");
-        attrs.append("attrs: ").append(createElementAttributes()).append(",\n");
+        attrs.append("attrs: ").append(createElementAttributes(false)).append(",\n");
         attrs.append("postActionError: ").append(createPostActionError()).append("\n");
 
         return attrs.append("}\n").toString();
@@ -282,18 +282,24 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         return code.toString();
     }
 
-    public String createElementAttributes() {
+    public String createElementAttributes(final boolean asString) {
         final StringBuilder code = new StringBuilder();
+        final String keyQ = asString ? "\"" : "";
+        final String valueQ = asString ? "\"" : "'";
         code.append("{\n");
         conf().functionalEntity.ifPresent(entityType -> {
-            code.append("    entityType:'" + entityType.getName() + "',\n");
+            code.append("    " + keyQ + "entityType" + keyQ + ": " + valueQ + entityType.getName() + valueQ + ",\n");
         });
-        code.append("    currentState:'EDIT', centreUuid: self.uuid,\n");
+        code.append("    " + keyQ + "currentState" + keyQ + ": " + valueQ + "EDIT" + valueQ + ",\n");
+        code.append("    " + keyQ + "centreUuid" + keyQ + ": " + keyQ + "self.uuid" + keyQ);
 
         conf().prefDimForView.ifPresent(prefDim -> {
-            code.append(format("    prefDim: {'width': function() {return %s}, 'height': function() {return %s}, 'widthUnit': '%s', 'heightUnit': '%s'},\n", prefDim.width, prefDim.height, prefDim.widthUnit.value, prefDim.heightUnit.value));
+            code.append(format(",\n    " + keyQ + "prefDim" + keyQ + ": " + "{" + keyQ + "width" + keyQ + ": " + keyQ + "function() {return %s}" + keyQ +", " +
+                            keyQ + "height" + keyQ + ": " + keyQ + "function() {return %s}" + keyQ + ", " +
+                            keyQ + "widthUnit" + keyQ + ": " + valueQ + "%s" + valueQ + ", " +
+                            keyQ + "heightUnit" + keyQ + ": " + valueQ + "%s" + valueQ +"}", prefDim.width, prefDim.height, prefDim.widthUnit.value, prefDim.heightUnit.value));
         });
-        code.append("}");
+        code.append("\n}");
         return code.toString();
     }
 

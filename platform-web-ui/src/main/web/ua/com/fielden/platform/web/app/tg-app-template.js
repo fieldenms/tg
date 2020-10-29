@@ -40,7 +40,31 @@ const template = html`
     <div class="relative flex">
         <neon-animated-pages id="pages" class="fit" attr-for-selected="name" on-neon-animation-finish="_animationFinished" animate-initial-selection>
             <tg-app-menu class="fit" name="menu" menu-config="[[menuConfig]]" app-title="[[appTitle]]">
-                <!--menu action dom-->
+                <template is="dom-repeat" items="[[menuConfig.actions]]" as="action">
+                    <tg-ui-action slot$="[[action.moduleName]]" 
+                        show-dialog="[[_showDialog]]"
+                        toaster="[[toaster]]"
+                        short-desc="[[action.desc]]" 
+                        long-desc="[[action.longDesc]]"
+                        icon="[[action.icon]]"
+                        component-uri="[[action.componentUri]]"
+                        element-name="[[action.key]]"
+                        action-kind="[[action.actionKind]]" 
+                        number-of-action="[[action.numberOfAction]]"
+                        dynamic-action="[[action.dynamicAction]]"
+                        attrs="[[action.attrs]]"
+                        create-context-holder="[[_createContextHolder]]" 
+                        require-selection-criteria="[[action.requireSelectionCriteria]]" 
+                        require-selected-entities="[[action.requireSelectedEntities]]" 
+                        require-master-entity="[[action.requireMasterEntity]]"
+                        pre-action="[[action.preAction]]"
+                        post-action-success="[[action.postActionSuccess]]" 
+                        post-action-error="[[action.postActionError]]" 
+                        should-refresh-parent-centre-after-save="[[action.refreshParentCentreAfterSave]]"
+                        ui-role="[[action.uiRole]]"
+                        icon-style="[[action.iconStyle]]">
+                    </tg-ui-action>
+                </template>
             </tg-app-menu>
             <template is="dom-repeat" items="[[menuConfig.menu]]" on-dom-change="_modulesRendered">
                 <tg-app-view class="fit hero-animatable" name$="[[item.key]]" menu="[[menuConfig.menu]]" menu-item="[[item]]" can-edit="[[menuConfig.canEdit]]" menu-save-callback="[[_saveMenuVisibilityChanges]]" selected-module="[[_selectedModule]]" submodule="{{_selectedSubmodule}}"></tg-app-view>
@@ -518,6 +542,19 @@ Polymer({
         this.entityType = "ua.com.fielden.platform.menu.Menu";
         //Init master related functions.
         this.postRetrieved = function (entity, bindingEntity, customObject) {
+            entity.actions.forEach(action => {
+                action.preAction = new Function("const self = this;  return " + action.preAction).bind(this)();
+                action.postActionSuccess = new Function("const self = this;  return " + action.postActionSuccess).bind(this)();
+                action.postActionError = new Function("const self = this;  return " + action.postActionError).bind(this)();
+                action.attrs = JSON.parse(action.attrs, (key, value) => {
+                    if (key === 'width' || key === "height") {
+                        return new Function("return " + value)();
+                    } else if (key === "centreUuid") {
+                        return this.uuid;
+                    }
+                    return value;
+                });
+            });
             this.menuConfig = entity;
             // make splash related elements invisible
             // selection happens by id, but for all for safety reasons; for example, for web tests these elements do not exist
@@ -549,9 +586,6 @@ Polymer({
         const self = this;
         //@use-empty-console.log
         this.async(function () {
-            self.topLevelActions = [
-                //actionsObject
-            ];
             if (!this._route.path) {
                 this._replaceStateWithNumber();
                 this.set("_route.path", "/menu");

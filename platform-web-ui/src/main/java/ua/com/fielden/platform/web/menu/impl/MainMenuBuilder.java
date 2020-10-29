@@ -1,8 +1,5 @@
 package ua.com.fielden.platform.web.menu.impl;
 
-import java.util.List;
-
-import ua.com.fielden.platform.menu.Action;
 import ua.com.fielden.platform.menu.Menu;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
@@ -45,10 +42,6 @@ public class MainMenuBuilder implements IMainMenuBuilderWithLayout {
         return layoutConfig;
     }
 
-    public List<Action> generateMenuActions() {
-        return mainMenu.generateMenuActions();
-    }
-
     public EntityActionConfig getActionConfig(final int actionNumber, final FunctionalActionKind actionKind) {
         return mainMenu.getActionConfig(actionNumber, actionKind);
     }
@@ -56,6 +49,7 @@ public class MainMenuBuilder implements IMainMenuBuilderWithLayout {
     public Menu getMenu() {
         return new Menu().
                 setMenu(mainMenu.getModules()).
+                setActions(mainMenu.generateMenuActions()).
                 setMinCellWidth(tileLayout.getMinCellWidth() + "px").
                 setMinCellHeight(tileLayout.getMinCellHeight() + "px").
                 setWhenDesktop(tileLayout.getLayout(Device.DESKTOP, null).get()).
