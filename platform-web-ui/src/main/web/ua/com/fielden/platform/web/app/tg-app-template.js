@@ -264,9 +264,10 @@ Polymer({
             const entity = this._reflector().newEntity(mainTypeName);
             entity['id'] = parseInt(idStr);
             if (menuItemTypeName) {
-                this.$.openMasterAction.modifyFunctionalEntity = (bindingEntity) => bindingEntity.setAndRegisterPropertyTouch('menuToOpen', menuItemTypeName);
-            } else {
-                delete this.$.openMasterAction.modifyFunctionalEntity;
+                this.$.openMasterAction.modifyFunctionalEntity = (bindingEntity) => {
+                    bindingEntity.setAndRegisterPropertyTouch('menuToOpen', menuItemTypeName);
+                    delete this.$.openMasterAction.modifyFunctionalEntity;
+                };
             }
             this.$.openMasterAction.currentEntity = () => entity;
             this.$.openMasterAction._run();
