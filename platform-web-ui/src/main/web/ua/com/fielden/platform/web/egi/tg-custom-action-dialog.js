@@ -1513,7 +1513,10 @@ Polymer({
         if (entityType) {
             if (this._mainEntityType === null && (entityType.compoundOpenerType() || entityType.isPersistent())) {
                 this._mainEntityType = entityType;
-            } else if (this._compoundMenuItemType === null && entityType.isCompoundMenuItem() && entityType._simpleClassName() !== this._masterMenu._originalDefaultRoute) { // use only non-default menu item; _masterMenu is present here because it attaches with parent compound opener master (even before it) and this master is always attached before the master of concrete menu item
+            } else if (this._compoundMenuItemType === null && entityType.isCompoundMenuItem() && entityType._simpleClassName() !== this._masterMenu._originalDefaultRoute) { // use only non-default menu item
+                // _masterMenu is present in above condition because of two possible cases:
+                // 1. _masterMenu attaches before parent compound opener master during first-time-creation+attachment of that master; and after that the master of concrete menu item creates and attaches through tg-element-loader in tg-master-menu-item-section after activation
+                // 2. for cached compound opener master it attaches in the following order: compound opener master => _masterMenu => previously opened menu item
                 this._compoundMenuItemType = entityType;
             }
         }
