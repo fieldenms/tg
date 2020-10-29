@@ -402,13 +402,17 @@ Polymer({
         afterNextRender(this, () => {
             this.$.drawerPanel._narrowChanged();
         });
+        this._cachedParentNode = this.parentNode;
+        this.fire('tg-master-menu-attached', this, { node: this._cachedParentNode }); // as in 'detached', start bubbling on parent node
     },
 
     detached: function () {
         while (this._subscriptions.length !== 0) {
             this._subscriptions.pop().unsubscribe();
         }
-        this.defaultRoute = this._originalDefaultRoute; // return original value after detaching; this is necessary where the same instance of 'tg-master-menu' is used (if the same instance of parent master is used) for different actions
+        this.defaultRoute = this._originalDefaultRoute; // return original value after detaching; this is necessary in case where the same instance of 'tg-master-menu' (and the same instance of parent master) is used for different actions
+        this.fire('tg-master-menu-detached', this, { node: this._cachedParentNode }); // start event bubbling on previous parent node from which this entity master has already been detached
+        delete this._cachedParentNode; // remove reference on previous _cachedParentNode to facilitate possible releasing of parentNode from memory
     },
 
     _entityChanged: function (newBindingEntity, oldOne) {
