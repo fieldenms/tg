@@ -37,26 +37,26 @@ public class WebMainMenu {
                 final Action action = new Action();
                 action.setKey(attributes.get("element-name").toString());
                 action.setDesc(attributes.get("short-desc").toString());
-                action.setUiRole(uiRole)
-                action.setLongDesc(longDesc)
-                action.setShortcut(shortcut)
-                action.setIcon(icon)
-                action.setIconStyle(iconStyle)
-                action.setRefreshParentCentreAfterSave(refreshParentCentreAfterSave)
-                action.setComponentUri(componentUri)
-                action.setDynamicAction(dynamicAction)
-                action.setNumberOfAction(numberOfAction)
-                action.setActionKind(actionKind)
-                action.setElementAlias(elementAlias)
-                action.setChosenProperty(chosenProperty)
-                action.setSelectionCriteriaRequired(selectionCriteriaRequired)
-                action.setRequireSelectedEntities(requireSelectedEntities)
-                action.setMasterEntityRequired(masterEntityRequired)
+                action.setUiRole(attributes.get("ui-role").toString());
+                action.setLongDesc(attributes.get("long-desc").toString());
+                action.setShortcut(attributes.getOrDefault("shortcut", "").toString());
+                action.setIcon(attributes.get("icon").toString());
+                action.setIconStyle(attributes.get("icon-style").toString());
+                action.setRefreshParentCentreAfterSave((Boolean)attributes.get("should-refresh-parent-centre-after-save"));
+                action.setComponentUri(attributes.get("component-uri").toString());
+                action.setDynamicAction((Boolean)attributes.getOrDefault("dynamic-action", false));
+                action.setNumberOfAction((Integer)attributes.get("number-of-action"));
+                action.setActionKind(attributes.get("action-kind").toString());
+                action.setElementAlias(attributes.getOrDefault("element-alias", "").toString());
+                action.setChosenProperty(attributes.getOrDefault("chosen-property", "").toString());
+                action.setRequireSelectionCriteria(attributes.get("require-selection-criteria").toString());
+                action.setRequireSelectedEntities(attributes.get("require-selected-entities").toString());
+                action.setRequireMasterEntity(attributes.get("require-master-entity").toString());
                 action.setModuleName(webMenuModule.title);
                 action.setPreAction(actionElement.createPreAction());
                 action.setPostActionSuccess(actionElement.createPostActionSuccess());
                 action.setPostActionError(actionElement.createPostActionError());
-                action.setAttrs(actionElement.createElementAttributes());
+                action.setAttrs(actionElement.createElementAttributes(true));
                 actions.add(action);
             }
         }
