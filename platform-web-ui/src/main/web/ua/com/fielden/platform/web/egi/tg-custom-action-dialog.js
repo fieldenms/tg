@@ -231,6 +231,8 @@ Polymer({
         'tg-error-happened': '_handleError',
         'tg-entity-master-attached': '_entityMasterAttached',
         'tg-entity-master-detached': '_entityMasterDetached',
+        'tg-master-menu-attached': '_masterMenuAttached',
+        'tg-master-menu-detached': '_masterMenuDetached',
         'tg-entity-received': '_entityReceived'
     },
 
@@ -452,12 +454,23 @@ Polymer({
         },
         
         /**
-         * The type of currently activated compound menu item entity being edited in this dialog.
+         * The type of non-default (non-Main in most cases) currently activated compound menu item entity being edited in this dialog.
          * 
          * This is only relevant to compound masters.
          * Otherwise (i.e. for simple masters and functional masters) it is empty (null).
          */
         _compoundMenuItemType: {
+            type: Object,
+            value: null
+        },
+        
+        /**
+         * The tg-master-menu instance attached in this dialog.
+         * 
+         * This is only relevant to compound masters.
+         * Otherwise (i.e. for simple masters and functional masters) it is empty (null).
+         */
+        _masterMenu: {
             type: Object,
             value: null
         }
@@ -1500,7 +1513,7 @@ Polymer({
         if (entityType) {
             if (this._mainEntityType === null && (entityType.compoundOpenerType() || entityType.isPersistent())) {
                 this._mainEntityType = entityType;
-            } else if (this._compoundMenuItemType === null && entityType.isCompoundMenuItem()) {
+            } else if (this._compoundMenuItemType === null && entityType.isCompoundMenuItem() && entityType._simpleClassName() !== this._masterMenu._originalDefaultRoute) { // use only non-default menu item; _masterMenu is present here because it attaches with parent compound opener master (even before it) and this master is always attached before the master of concrete menu item
                 this._compoundMenuItemType = entityType;
             }
         }
@@ -1523,6 +1536,22 @@ Polymer({
                 this._compoundMenuItemType = null;
             } 
         }
+        tearDownEvent(event);
+    },
+    
+    /**
+     * Function that handles attaching of tg-master-menu inside this dialog.
+     */
+    _masterMenuAttached: function (event) {
+        this._masterMenu = event.detail;
+        tearDownEvent(event);
+    },
+    
+    /**
+     * Function that handles detaching of tg-master-menu inside this dialog.
+     */
+    _masterMenuDetached: function (event) {
+        this._masterMenu = null;
         tearDownEvent(event);
     },
     
