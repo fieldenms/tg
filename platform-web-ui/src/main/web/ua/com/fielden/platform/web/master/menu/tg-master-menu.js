@@ -147,8 +147,17 @@ Polymer({
             type: Object
         },
 
-        /* A menu route that should be activated when the master gets shoe*/
+        /**
+         * A menu route that should be activated when the master gets shown. This can be changed (comparing to '_originalDefaultRoute') after compound opener retrieval (producer domain-specific logic) or on 'modifyFunctionalEntity' callback (see tg-app-template._openMasterAction).
+         */
         defaultRoute: {
+            type: String
+        },
+
+        /**
+         * Original immutable default menu route used in compound master definition. In most cases it is Main menu item entity type (simple name) e.g. 'PersonMaster_OpenMain_MenuItem'.
+         */
+        _originalDefaultRoute: {
             type: String
         },
 
@@ -256,6 +265,7 @@ Polymer({
     },
 
     ready: function () {
+        this._originalDefaultRoute = this.defaultRoute; // at this stage 'defaultRoute' is present; it generates in MasterWithMenu like this: [default-route='PersonMaster_OpenMain_MenuItem']
         const self = this;
         self._createContextHolderForMenu = (function () {
             const contextHolder = this._reflector.createContextHolder(
@@ -398,6 +408,7 @@ Polymer({
         while (this._subscriptions.length !== 0) {
             this._subscriptions.pop().unsubscribe();
         }
+        this.defaultRoute = this._originalDefaultRoute; // return original value after detaching; this is necessary where the same instance of 'tg-master-menu' is used (if the same instance of parent master is used) for different actions
     },
 
     _entityChanged: function (newBindingEntity, oldOne) {
