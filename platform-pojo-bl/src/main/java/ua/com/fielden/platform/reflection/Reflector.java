@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
@@ -59,6 +60,8 @@ public final class Reflector {
 
     /** A symbol that represents a separator between properties in property path expressions. */
     public static final String DOT_SPLITTER = "\\.";
+    /** A regex pattern for matching DOT_SPLITTER. */
+    public static final Pattern DOT_SPLITTER_PATTERN = Pattern.compile(DOT_SPLITTER);
     /**
      * A symbol used as the property name substitution in property path expressions representing the next level up in the context of nested properties. Should occur only at the
      * beginning of the expression. There can be several sequentially linked ← separated by dot splitter.

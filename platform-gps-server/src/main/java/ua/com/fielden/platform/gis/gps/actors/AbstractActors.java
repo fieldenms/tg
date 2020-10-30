@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.gis.gps.actors;
 
+import static org.apache.commons.lang3.RegExUtils.replaceAll;
+import static ua.com.fielden.platform.gis.gps.actors.Transliterator.transliterate;
+
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -8,6 +11,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 import org.jboss.netty.channel.Channel;
@@ -18,6 +22,15 @@ import org.jboss.netty.logging.Log4JLoggerFactory;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
+import com.google.inject.Injector;
+
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
+import akka.pattern.Patterns;
+import akka.util.Timeout;
 import scala.concurrent.Await;
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
@@ -33,15 +46,6 @@ import ua.com.fielden.platform.gis.gps.Option;
 import ua.com.fielden.platform.gis.gps.factory.DefaultGpsHandlerFactory;
 import ua.com.fielden.platform.gis.gps.server.ServerTeltonika;
 import ua.com.fielden.platform.utils.Pair;
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
-import akka.pattern.Patterns;
-import akka.util.Timeout;
-
-import com.google.inject.Injector;
 
 /**
  * A container for all actors that maintains messages.
@@ -194,8 +198,9 @@ public abstract class AbstractActors<MESSAGE extends AbstractAvlMessage, MACHINE
      * @param machine
      * @return
      */
+    private static final Pattern SPACE_OR_SLASH = Pattern.compile("\\s|/");
     private final String createName(final MACHINE machine) {
-        return "machine_" + Transliterator.transliterate(machine.getKey()).replaceAll(" ", "_").replaceAll("/", "_").toLowerCase();
+        return "machine_" + replaceAll(transliterate(machine.getKey()), SPACE_OR_SLASH, "_").toLowerCase();
     }
 
     /**
