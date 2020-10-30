@@ -1,7 +1,8 @@
 package ua.com.fielden.platform.menu;
 
+import static java.util.Collections.unmodifiableList;
+
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,19 +14,18 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
 /**
- * Represents application's menu.
+ * Represents device-profile-specific application's menu with with tiles and actions on them.
  *
- * @author Developers
+ * @author TG Team
  *
  */
 @KeyType(String.class)
 @CompanionObject(IMenu.class)
 public class Menu extends AbstractEntity<String> implements IMenuManager {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty(Module.class)
     @Title("Menu")
-    private List<Module> menu = new ArrayList<Module>();
+    private List<Module> menu = new ArrayList<>();
 
     @IsProperty
     @Title("Edit menu items")
@@ -57,7 +57,7 @@ public class Menu extends AbstractEntity<String> implements IMenuManager {
 
     @IsProperty(Action.class)
     @Title("Actions")
-    private List<Action> actions = new ArrayList<Action>();
+    private List<Action> actions = new ArrayList<>();
 
     @Observable
     public Menu setActions(final List<Action> actions) {
@@ -67,7 +67,7 @@ public class Menu extends AbstractEntity<String> implements IMenuManager {
     }
 
     public List<Action> getActions() {
-        return Collections.unmodifiableList(actions);
+        return unmodifiableList(actions);
     }
 
     @Observable
@@ -148,7 +148,7 @@ public class Menu extends AbstractEntity<String> implements IMenuManager {
     }
 
     public List<Module> getMenu() {
-        return Collections.unmodifiableList(menu);
+        return unmodifiableList(menu);
     }
 
     @Override
