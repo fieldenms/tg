@@ -78,7 +78,7 @@ public class Sources2  {
         IQrySources3 currMainSources = new SingleQrySource3(source);
         TransformationContext currentContext = context;
         for (final ChildGroup fc : children) {
-            for (final Entry<String, IQrySource2<?>> el : fc.paths.entrySet()) {
+            for (final Entry<String, String> el : fc.paths.entrySet()) {
                 currentContext = currentContext.cloneWithResolutions(t2(el.getKey(), el.getValue()), t2(source, fc.expr == null ? fc.mainName : fc.expr));
             }
 

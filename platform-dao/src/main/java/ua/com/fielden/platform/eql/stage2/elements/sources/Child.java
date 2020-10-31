@@ -6,35 +6,39 @@ import java.util.List;
 import java.util.Objects;
 
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
+import ua.com.fielden.platform.eql.meta.ComponentTypePropInfo;
+import ua.com.fielden.platform.eql.meta.UnionTypePropInfo;
 import ua.com.fielden.platform.eql.stage2.elements.operands.Expression2;
 
 public class Child implements Comparable<Child> {
     public final AbstractPropInfo<?> main;
+    
     public final QrySource2BasedOnPersistentType source;
     public final boolean required;
     private final List<Child> items;
     
     public final String fullPath; //not null if given child represents explicit prop that needs resolution 
-    public final IQrySource2<?> parentSource;
+    public final String explicitSourceId;
 
     public final Expression2 expr;
-    public final List<Child> dependencies;
+    public final List<Child> dependencies; //nodes, that should be processed (respective joins should be made) prior to processing current child (its expression) 
 
     final int id;
     
-    public Child(final AbstractPropInfo<?> main, final List<Child> items, final String fullPath, final boolean required, final QrySource2BasedOnPersistentType source, final Expression2 expr, final IQrySource2<?> parentSource, final List<Child> dependencies, final int id) {
+    public Child(final AbstractPropInfo<?> main, final List<Child> items, final String fullPath, final boolean required, final QrySource2BasedOnPersistentType source, final Expression2 expr, final String explicitSourceId, final List<Child> dependencies, final int id) {
         this.main = main;
         this.items = items;
         this.fullPath = fullPath;
         this.required = required;
         this.source = source;
-        this.parentSource = parentSource;
+        this.explicitSourceId = explicitSourceId;
         this.expr = expr;
         this.dependencies = dependencies;
         this.id = id;
- //       assert(items.isEmpty() || !items.isEmpty() && source !=null );
- //       assert(dependencies.isEmpty() || !dependencies.isEmpty() && expr != null);
-//        assert(parentSource != null);
+        assert(items.isEmpty() || !items.isEmpty() && (source !=null || main instanceof ComponentTypePropInfo || main instanceof UnionTypePropInfo));
+        assert(dependencies.isEmpty() ||
+               !(main instanceof ComponentTypePropInfo || main instanceof UnionTypePropInfo) && !dependencies.isEmpty() && expr != null
+               || (main instanceof ComponentTypePropInfo || main instanceof UnionTypePropInfo) && !dependencies.isEmpty() && expr == null);
 //        if (source == null && fullPath == null && !isUnionEntityType(main.javaType())) {
 //          //  throw new EqlException("Incorrect state.");
 //        }
@@ -52,7 +56,7 @@ public class Child implements Comparable<Child> {
         result = prime * result + main.hashCode();
         result = prime * result + ((fullPath == null) ? 0 : fullPath.hashCode());
         result = prime * result + ((source == null) ? 0 : source.hashCode());
-        result = prime * result + parentSource.contextId().hashCode();
+        result = prime * result + (explicitSourceId == null ? 0 :explicitSourceId.hashCode());
         //result = prime * result + dependencies.hashCode();
         return result;
     }
@@ -69,7 +73,7 @@ public class Child implements Comparable<Child> {
         sb.append(currentOffset + "**** CHILD ****");//[" + hashCode() + "]");
         sb.append("\n" + currentOffset + "-------------- main : " + main.name);
         sb.append("\n" + currentOffset + "------------ source : " + (source != null ? source : ""));
-        sb.append("\n" + currentOffset + "------ parentSource : " + parentSource);
+        sb.append("\n" + currentOffset + "---- explicitSource : " + explicitSourceId);
         sb.append("\n" + currentOffset + "---------- fullPath : " + (fullPath != null ? fullPath : ""));
         sb.append("\n" + currentOffset + "-------------- expr : " + (expr != null ? "Y" : ""));
         if (!items.isEmpty()) {
@@ -97,7 +101,7 @@ public class Child implements Comparable<Child> {
 
         final Child other = (Child) obj;
         
-        return Objects.equals(main, other.main) && Objects.equals(items, other.items) && Objects.equals(fullPath, other.fullPath) && Objects.equals(source, other.source) && Objects.equals(parentSource.contextId(), other.parentSource.contextId());// && Objects.equals(dependencies, other.dependencies);
+        return Objects.equals(main, other.main) && Objects.equals(items, other.items) && Objects.equals(fullPath, other.fullPath) && Objects.equals(source, other.source) && Objects.equals(explicitSourceId, other.explicitSourceId);// && Objects.equals(dependencies, other.dependencies);
     }
     
     private boolean dependsOn(final Child child) {

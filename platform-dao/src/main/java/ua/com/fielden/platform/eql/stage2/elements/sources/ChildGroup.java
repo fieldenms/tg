@@ -12,11 +12,11 @@ public class ChildGroup {
     final boolean required;
     final List<ChildGroup> items;
     
-    final Map<String, IQrySource2<?>> paths;
+    final Map<String, String> paths;
     
     final Expression2 expr;
     
-    public ChildGroup(final String mainName, final List<ChildGroup> items, final Map<String, IQrySource2<?>> paths, final boolean required, final QrySource2BasedOnPersistentType source, final Expression2 expr) {
+    public ChildGroup(final String mainName, final List<ChildGroup> items, final Map<String, String> paths, final boolean required, final QrySource2BasedOnPersistentType source, final Expression2 expr) {
         this.mainName = mainName;
         this.items = items;
         this.required = required;

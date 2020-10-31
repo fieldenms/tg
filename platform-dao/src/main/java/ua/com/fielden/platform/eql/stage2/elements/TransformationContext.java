@@ -57,16 +57,16 @@ public class TransformationContext {
         return new TransformationContext(tablesAndSourceChildren, resolutions, paramValues, sqlId + 1);
     }
     
-    public TransformationContext cloneWithResolutions(final T2<String, IQrySource2<?>> sr1, final T2<IQrySource3, Object> sr2) {
+    public TransformationContext cloneWithResolutions(final T2<String, String> sr1, final T2<IQrySource3, Object> sr2) {
         final TransformationContext result = new TransformationContext(tablesAndSourceChildren, resolutions, paramValues, sqlId); 
         
-        final Map<String, T2<IQrySource3, Object>> existing = result.resolutions.get(sr1._2.contextId());
+        final Map<String, T2<IQrySource3, Object>> existing = result.resolutions.get(sr1._2);
         if (existing != null) {
             existing.put(sr1._1, sr2);
         } else {
             final Map<String, T2<IQrySource3, Object>> created = new HashMap<>();
             created.put(sr1._1, sr2);
-            result.resolutions.put(sr1._2.contextId(), created);
+            result.resolutions.put(sr1._2, created);
         }
 
         return result;
