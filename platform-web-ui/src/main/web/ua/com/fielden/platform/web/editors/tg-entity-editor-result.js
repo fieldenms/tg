@@ -218,7 +218,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
             },
 
             /**
-             * tap event handler for list of founded items (this event handler may accept tapped item if the list is sisngle selection).
+             * Tap event handler for list of found items (this event handler may accept tapped item if the list is single selection).
              */
             selectionListTap: {
                 type: Function
