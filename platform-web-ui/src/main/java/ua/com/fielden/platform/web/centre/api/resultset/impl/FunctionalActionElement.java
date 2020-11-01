@@ -17,7 +17,7 @@ import ua.com.fielden.platform.web.view.master.api.actions.IAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 
 /**
- * The implementation for functional entity actions (dom element).
+ * The implementation for functional entity actions (DOM element).
  *
  * @author TG Team
  *

@@ -14,7 +14,7 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
 /**
- * Represents device-profile-specific application's menu with with tiles and actions on them.
+ * Represents device-profile-specific application menu with tiles and actions on them.
  *
  * @author TG Team
  *
