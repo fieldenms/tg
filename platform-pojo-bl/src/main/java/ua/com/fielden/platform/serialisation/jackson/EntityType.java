@@ -15,9 +15,12 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
 /**
- * Master entity object.
+ * The entity type to represent serialisable entity types for client-side handling.
+ * `tg-reflector` defines how this data are interpreted.
+ * <p>
+ * <code>null</code> values are not serialised. This can be used to reduce resultant JSON.
  *
- * @author Developers
+ * @author TG Team
  *
  */
 @KeyType(String.class)
@@ -50,7 +53,7 @@ public class EntityType extends AbstractEntity<String> {
 
     @IsProperty
     @Title(value = "Is Persistent?", desc = "Indicated whether the associated entity type represents a persistent entity.")
-    private boolean _persistent;
+    private Boolean _persistent;
     
     @IsProperty
     @Title(value = "Should Display Description?", desc = "Indicates whether editors for values of this type should display values descriptions")
@@ -58,19 +61,47 @@ public class EntityType extends AbstractEntity<String> {
     
     @IsProperty
     @Title(value = "Is Continuation?", desc = "Indicates whether the associated entity type represents a continuation entity.")
-    private boolean _continuation;
+    private Boolean _continuation;
     
     @IsProperty
     @Title(value = "Is Union?", desc = "Indicates whether the associated entity type represents an union entity.")
-    private boolean _union;
+    private Boolean _union;
+    
+    @IsProperty
+    @Title(value = "Compound Opener Type", desc = "Represents main persistent type for this compound master opener (if it is of such kind, empty otherwise).")
+    private String _compoundOpenerType;
+    
+    @IsProperty
+    @Title(value = "Is Compound Menu Item?", desc = "Indicates whether the associated entity type represents menu item entity in compound master.")
+    private Boolean _compoundMenuItem;
     
     @Observable
-    public EntityType set_union(final boolean _union) {
+    public EntityType set_compoundMenuItem(final Boolean _compoundMenuItem) {
+        this._compoundMenuItem = _compoundMenuItem;
+        return this;
+    }
+    
+    public Boolean is_compoundMenuItem() {
+        return _compoundMenuItem;
+    }
+    
+    @Observable
+    public EntityType set_compoundOpenerType(final String value) {
+        this._compoundOpenerType = value;
+        return this;
+    }
+
+    public String get_compoundOpenerType() {
+        return _compoundOpenerType;
+    }
+    
+    @Observable
+    public EntityType set_union(final Boolean _union) {
         this._union = _union;
         return this;
     }
 
-    public boolean is_union() {
+    public Boolean is_union() {
         return _union;
     }
 
@@ -85,22 +116,22 @@ public class EntityType extends AbstractEntity<String> {
     }
     
     @Observable
-    public EntityType set_persistent(final boolean _persistent) {
+    public EntityType set_persistent(final Boolean _persistent) {
         this._persistent = _persistent;
         return this;
     }
 
-    public boolean is_persistent() {
+    public Boolean is_persistent() {
         return _persistent;
     }
     
     @Observable
-    public EntityType set_continuation(final boolean _continuation) {
+    public EntityType set_continuation(final Boolean _continuation) {
         this._continuation = _continuation;
         return this;
     }
 
-    public boolean is_continuation() {
+    public Boolean is_continuation() {
         return _continuation;
     }
 
