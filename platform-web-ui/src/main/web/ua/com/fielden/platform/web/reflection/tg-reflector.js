@@ -804,6 +804,14 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
         return typeof this['_compoundOpenerType'] === 'undefined' ? null : this['_compoundOpenerType'];
     }
 
+    /**
+     * Returns 'true' if the entity type represents menu item entity in compound master.
+     *
+     */
+    EntityType.prototype.isCompoundMenuItem = function () {
+        return typeof this['_compoundMenuItem'] === 'undefined' ? false : this['_compoundMenuItem'];
+    }
+
     /** 
      * Returns the property names for the key members in case of composite entity, 'undefined' otherwise.
      */
@@ -823,7 +831,7 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
      *
      */
     EntityType.prototype.isPersistent = function () {
-        return this['_persistent'] === true;
+        return typeof this['_persistent'] === 'undefined' ? false : this['_persistent'];
     }
 
     /**

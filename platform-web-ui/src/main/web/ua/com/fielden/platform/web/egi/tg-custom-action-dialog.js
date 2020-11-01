@@ -231,6 +231,8 @@ Polymer({
         'tg-error-happened': '_handleError',
         'tg-entity-master-attached': '_entityMasterAttached',
         'tg-entity-master-detached': '_entityMasterDetached',
+        'tg-master-menu-attached': '_masterMenuAttached',
+        'tg-master-menu-detached': '_masterMenuDetached',
         'tg-entity-received': '_entityReceived'
     },
 
@@ -448,6 +450,28 @@ Polymer({
          */
         _mainEntityId: {
             type: Number,
+            value: null
+        },
+        
+        /**
+         * The type of non-default (non-Main in most cases) currently activated compound menu item entity being edited in this dialog.
+         * 
+         * This is only relevant to compound masters.
+         * Otherwise (i.e. for simple masters and functional masters) it is empty (null).
+         */
+        _compoundMenuItemType: {
+            type: Object,
+            value: null
+        },
+        
+        /**
+         * The tg-master-menu instance attached in this dialog.
+         * 
+         * This is only relevant to compound masters.
+         * Otherwise (i.e. for simple masters and functional masters) it is empty (null).
+         */
+        _masterMenu: {
+            type: Object,
             value: null
         }
     },
@@ -1485,10 +1509,15 @@ Polymer({
      */
     _entityMasterAttached: function (event) {
         const entityMaster = event.detail;
-        if (entityMaster.entityType && this._mainEntityType === null) {
-            const entityType = this._reflector.getType(entityMaster.entityType);
-            if (entityType && (entityType.compoundOpenerType() || entityType.isPersistent())) {
+        const entityType = entityMaster.entityType ? this._reflector.getType(entityMaster.entityType) : null;
+        if (entityType) {
+            if (this._mainEntityType === null && (entityType.compoundOpenerType() || entityType.isPersistent())) {
                 this._mainEntityType = entityType;
+            } else if (this._compoundMenuItemType === null && entityType.isCompoundMenuItem() && entityType._simpleClassName() !== this._masterMenu._originalDefaultRoute) { // use only non-default menu item
+                // _masterMenu is present in above condition because of two possible cases:
+                // 1. _masterMenu attaches before parent compound opener master during first-time-creation+attachment of that master; and after that the master of concrete menu item creates and attaches through tg-element-loader in tg-master-menu-item-section after activation
+                // 2. for cached compound opener master it attaches in the following order: compound opener master => _masterMenu => previously opened menu item
+                this._compoundMenuItemType = entityType;
             }
         }
         tearDownEvent(event);
@@ -1501,13 +1530,31 @@ Polymer({
      */
     _entityMasterDetached: function (event) {
         const entityMaster = event.detail;
-        if (entityMaster.entityType && this._mainEntityType !== null) {
-            const entityType = this._reflector.getType(entityMaster.entityType);
-            if (entityType && entityType === this._mainEntityType) {
+        const entityType = entityMaster.entityType ? this._reflector.getType(entityMaster.entityType) : null;
+        if (entityType) {
+            if (this._mainEntityType !== null && entityType === this._mainEntityType) {
                 this._mainEntityType = null;
                 this._mainEntityId = null;
-            }
+            } else if (this._compoundMenuItemType !== null && entityType === this._compoundMenuItemType) {
+                this._compoundMenuItemType = null;
+            } 
         }
+        tearDownEvent(event);
+    },
+    
+    /**
+     * Function that handles attaching of tg-master-menu inside this dialog.
+     */
+    _masterMenuAttached: function (event) {
+        this._masterMenu = event.detail;
+        tearDownEvent(event);
+    },
+    
+    /**
+     * Function that handles detaching of tg-master-menu inside this dialog.
+     */
+    _masterMenuDetached: function (event) {
+        this._masterMenu = null;
         tearDownEvent(event);
     },
     
@@ -1540,7 +1587,8 @@ Polymer({
         };
         if (this._mainEntityId !== null) {
             const url = new URL(window.location.href);
-            url.hash = `/master/${type.fullClassName()}/${this._mainEntityId}`;
+            const compoundItemSuffix = this._compoundMenuItemType !== null ? `/${this._compoundMenuItemType.fullClassName()}` : ``;
+            url.hash = `/master/${type.fullClassName()}/${this._mainEntityId}${compoundItemSuffix}`;
             const link = url.href;
             // Writing into clipboard is always permitted for currently open tab (https://developer.mozilla.org/en-US/docs/Web/API/Clipboard/writeText) -- that's why promise error should never occur;
             // if for some reason the promise will be rejected then 'Unexpected error occured.' will be shown to the user and global handler will report that to the server.
