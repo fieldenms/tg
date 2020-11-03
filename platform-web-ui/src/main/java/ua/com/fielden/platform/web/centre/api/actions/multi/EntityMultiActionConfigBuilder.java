@@ -36,8 +36,8 @@ public class EntityMultiActionConfigBuilder implements IEntityMultiActionConfigA
     }
 
     @Override
-    public EntityMultileActionConfig build() {
-        return new EntityMultileActionConfig(actionSelectorClass, actions);
+    public EntityMultiActionConfig build() {
+        return new EntityMultiActionConfig(actionSelectorClass, actions);
     }
 
     @Override

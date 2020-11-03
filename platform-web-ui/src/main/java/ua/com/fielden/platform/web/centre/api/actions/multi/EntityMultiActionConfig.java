@@ -12,12 +12,12 @@ import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
  * @author TG Team
  *
  */
-public class EntityMultileActionConfig {
+public class EntityMultiActionConfig {
 
     private final Class<? extends IEntityMultiActionSelector> actionSelectorClass;
     private final List<EntityActionConfig> actions = new ArrayList<>();
 
-    public EntityMultileActionConfig (final Class<? extends IEntityMultiActionSelector> actionSelectorClass, final List<EntityActionConfig> actions) {
+    public EntityMultiActionConfig (final Class<? extends IEntityMultiActionSelector> actionSelectorClass, final List<EntityActionConfig> actions) {
         this.actionSelectorClass = actionSelectorClass;
         this.actions.addAll(actions);
     }
