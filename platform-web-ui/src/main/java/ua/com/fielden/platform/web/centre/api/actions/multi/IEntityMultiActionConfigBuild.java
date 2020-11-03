@@ -13,5 +13,5 @@ public interface IEntityMultiActionConfigBuild extends IEntityMultiActionConfigA
      *
      * @return
      */
-    EntityMultileActionConfig build();
+    EntityMultiActionConfig build();
 }

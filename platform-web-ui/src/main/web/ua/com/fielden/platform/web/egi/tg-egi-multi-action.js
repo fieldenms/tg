@@ -21,6 +21,7 @@ const template = html`
             --tg-ui-action-spinner-margin-left: 0px;
         }
     </style>
+    <slot id="actions_selector" name="multi-action-item" hidden></slot>
     <template is="dom-repeat" items="[[actions]]" as="action" index-as="actionIndex">
         <tg-ui-action
             class="action"
@@ -61,7 +62,7 @@ export class TgEgiMultiAction extends PolymerElement {
             //Currently selected action to show.
             currentIndex: {
                 type: Number,
-                value: -1
+                value: 0
             },
             //List of actions to select from.
             actions: {
@@ -80,6 +81,7 @@ export class TgEgiMultiAction extends PolymerElement {
 
     ready () {
         super.ready();
+        this.actions = this.$.actions_selector.assignedNodes({flatten: true});
     }
 
     _isHidden (actionIndex, currentIndex) {

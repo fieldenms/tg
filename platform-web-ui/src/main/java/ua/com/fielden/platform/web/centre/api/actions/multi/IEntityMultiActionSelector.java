@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.web.centre.api.actions.multi;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 
 /**
  * A contract that defines what action should be chosen for specific entity.
@@ -12,10 +11,10 @@ import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 public interface IEntityMultiActionSelector {
 
     /**
-     * Returns the type of functional entity that should be associated with specified entity
+     * Returns the index of action from the list of available ones in multiple action configuration object, that should be associated with specified entity.
      *
      * @param entity
-     * @return
+     * @return index of action in the list of actions of multiple action configuration object.
      */
-    Class<? extends AbstractFunctionalEntityWithCentreContext<?>> getActionFor(final AbstractEntity<?> entity);
+    int getActionFor(final AbstractEntity<?> entity);
 }
