@@ -548,7 +548,7 @@ Polymer({
             pathParts = path.split('/');
             topMenu = this.shadowRoot.querySelector("tg-sublistbox[name='" + pathParts[0] + "']");
             previousTopMenu = this.$.menu.selected && this.shadowRoot.querySelector("tg-sublistbox[name='" + this.$.menu.selected + "']");
-            submenu = this.shadowRoot.querySelector("paper-sublist[name='" + pathParts[0] + "']");
+            submenu = this.shadowRoot.querySelector("paper-listbox[name='" + pathParts[0] + "']");
             if (this.$.menu.selected !== pathParts[0]) {
                 if (previousTopMenu) {
                     previousTopMenu.close();
