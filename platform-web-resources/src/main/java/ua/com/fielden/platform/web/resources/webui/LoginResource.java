@@ -12,6 +12,7 @@ import java.io.ByteArrayInputStream;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
@@ -128,7 +129,7 @@ public class LoginResource extends ServerResource {
 
     public Representation loginPage() {
         try {
-            final byte[] body = ResourceLoader.getText("ua/com/fielden/platform/web/login.html").replaceAll("@title", "Login").getBytes("UTF-8");
+            final byte[] body = StringUtils.replace(ResourceLoader.getText("ua/com/fielden/platform/web/login.html"), "@title", "Login").getBytes("UTF-8");
             return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(body), MediaType.TEXT_HTML));
         } catch (final Exception ex) {
             LOGGER.fatal(ex);

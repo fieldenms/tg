@@ -14,6 +14,7 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.menu.Action;
 import ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchy;
 import ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchyEntry;
 import ua.com.fielden.platform.ref_hierarchy.ReferenceLevelHierarchyEntry;
@@ -25,7 +26,8 @@ import ua.com.fielden.platform.utils.CollectionUtil;
 
 public class CommonEntityDaoCompanionInstantiationTest extends AbstractDaoTestCase {
 
-    private static final Set<Class<? extends AbstractEntity<?>>> types = CollectionUtil.setOf(ReferenceHierarchy.class, ReferenceHierarchyEntry.class, TypeLevelHierarchyEntry.class, ReferencedByLevelHierarchyEntry.class, ReferenceLevelHierarchyEntry.class);
+    private static final Set<Class<? extends AbstractEntity<?>>> types = CollectionUtil.setOf(ReferenceHierarchy.class, ReferenceHierarchyEntry.class, TypeLevelHierarchyEntry.class, ReferencedByLevelHierarchyEntry.class, ReferenceLevelHierarchyEntry.class,
+                                                                                              Action.class);
     private static final List<Class<? extends AbstractEntity<?>>> entityTypes = PlatformTestDomainTypes.entityTypes.stream().filter(type -> !types.contains(type)).collect(Collectors.toList());
     
     @Test
@@ -68,5 +70,4 @@ public class CommonEntityDaoCompanionInstantiationTest extends AbstractDaoTestCa
         });
     }
 
-    
 }

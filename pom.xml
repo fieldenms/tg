@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>fielden</groupId>
@@ -20,7 +20,7 @@
 	<developers>
 		<developer>
 			<id>01es</id>
-			<url />
+			<url/>
 			<name>Oles Hodych</name>
 			<organization>FMS.ua</organization>
 			<organizationUrl>
@@ -34,7 +34,7 @@
 		</developer>
 		<developer>
 			<id>nazar</id>
-			<url />
+			<url/>
 			<name>Nazar Chaykivskyy</name>
 			<organization>FMS.ua</organization>
 			<organizationUrl>
@@ -48,7 +48,7 @@
 		</developer>
 		<developer>
 			<id>jhou</id>
-			<url />
+			<url/>
 			<name>Yura Prokopiv</name>
 			<organization>FMS.ua</organization>
 			<organizationUrl>
@@ -62,7 +62,7 @@
 		</developer>
 		<developer>
 			<id>oleh</id>
-			<url />
+			<url/>
 			<name>Oleh Maykovych</name>
 			<organization>FMS.ua</organization>
 			<organizationUrl>
@@ -83,10 +83,11 @@
 		<module>platform-web-resources</module>
 		<module>platform-pojo-bl</module>
 		<module>platform-web-ui</module>
-	</modules>
+        <module>platform-benchmark</module>
+  </modules>
 
 	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 
 	<dependencies>

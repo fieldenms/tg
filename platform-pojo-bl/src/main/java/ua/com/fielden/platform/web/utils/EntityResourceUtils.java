@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.utils;
 
+import static java.lang.Class.forName;
 import static java.lang.String.format;
 import static java.util.Locale.getDefault;
 import static java.util.regex.Pattern.quote;
@@ -686,6 +687,12 @@ public class EntityResourceUtils {
             return linkValue == null ? null : new Hyperlink(linkValue);
         } else if (Long.class.isAssignableFrom(propertyType)) {
             return extractLongValueFrom(reflectedValue);
+        } else if (Class.class.isAssignableFrom(propertyType)) {
+            try {
+                return forName((String) reflectedValue); // full class names for already registered server-side Class'es are supported
+            } catch (final Exception ex) {
+                throw new EntityResourceUtilsException(format("Conversion to [%s@%s] from reflected value [%s] of type [%s] failed.", propertyName, type.getSimpleName(), reflectedValue, propertyType.getSimpleName()), ex);
+            }
         } else {
             throw new UnsupportedOperationException(format("Unsupported conversion to [%s@%s] from reflected value [%s] of type [%s].", propertyName, type.getSimpleName(), reflectedValue, propertyType.getSimpleName()));
         }

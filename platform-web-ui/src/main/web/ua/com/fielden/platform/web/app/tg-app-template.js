@@ -40,7 +40,31 @@ const template = html`
     <div class="relative flex">
         <neon-animated-pages id="pages" class="fit" attr-for-selected="name" on-neon-animation-finish="_animationFinished" animate-initial-selection>
             <tg-app-menu class="fit" name="menu" menu-config="[[menuConfig]]" app-title="[[appTitle]]">
-                <!--menu action dom-->
+                <template is="dom-repeat" items="[[menuConfig.actions]]" as="action">
+                    <tg-ui-action slot$="[[action.moduleName]]" 
+                        show-dialog="[[_showDialog]]"
+                        toaster="[[toaster]]"
+                        short-desc="[[action.desc]]" 
+                        long-desc="[[action.longDesc]]"
+                        icon="[[action.icon]]"
+                        component-uri="[[action.componentUri]]"
+                        element-name="[[action.key]]"
+                        action-kind="[[action.actionKind]]" 
+                        number-of-action="[[action.numberOfAction]]"
+                        dynamic-action="[[action.dynamicAction]]"
+                        attrs="[[action.attrs]]"
+                        create-context-holder="[[_createContextHolder]]" 
+                        require-selection-criteria="[[action.requireSelectionCriteria]]" 
+                        require-selected-entities="[[action.requireSelectedEntities]]" 
+                        require-master-entity="[[action.requireMasterEntity]]"
+                        pre-action="[[action.preAction]]"
+                        post-action-success="[[action.postActionSuccess]]" 
+                        post-action-error="[[action.postActionError]]" 
+                        should-refresh-parent-centre-after-save="[[action.refreshParentCentreAfterSave]]"
+                        ui-role="[[action.uiRole]]"
+                        icon-style="[[action.iconStyle]]">
+                    </tg-ui-action>
+                </template>
             </tg-app-menu>
             <template is="dom-repeat" items="[[menuConfig.menu]]" on-dom-change="_modulesRendered">
                 <tg-app-view class="fit hero-animatable" name$="[[item.key]]" menu="[[menuConfig.menu]]" menu-item="[[item]]" can-edit="[[menuConfig.canEdit]]" menu-save-callback="[[_saveMenuVisibilityChanges]]" selected-module="[[_selectedModule]]" submodule="{{_selectedSubmodule}}"></tg-app-view>
@@ -226,15 +250,25 @@ Polymer({
             return;
         }
         const entityInfo = this._selectedSubmodule.substring(1).split('/');
-        if (entityInfo.length !== 2) {
-            this._openToastForError("Uri Error:", "The URI for master is incorrect. It should contain entity type and id seperated with '/', but it has: " + this._selectedSubmodule + ".", true);
-        } else if (!this._reflector().findTypeByName(entityInfo[0])) {
-            this._openToastForError("Master entity type error:", "The entity type: " + entityInfo[0] + " is not registered, please make sure that entity type to open is correct.", true);
-        } else if (isNaN(Number(entityInfo[1]))) {
-            this._openToastForError("Master entity ID error:", "The entity ID should be an integer number, but was: " + entityInfo[1] + ".", true);
+        const typeOf = (name) => this._reflector().findTypeByName(name);
+        const mainTypeName = entityInfo[0];
+        const idStr = entityInfo[1];
+        const menuItemTypeName = entityInfo[2];
+        if (entityInfo.length !== 2 && entityInfo.length !== 3) {
+            this._openToastForError('URI error.', `The URI [${this._selectedSubmodule}] for master is incorrect. It should contain entity type and id [and optional type of compound menu item] separated with '/'.`, true);
+        } else if (!typeOf(mainTypeName) || menuItemTypeName && !typeOf(menuItemTypeName)) {
+            this._openToastForError('Entity type error.', `[${mainTypeName}]${menuItemTypeName ? ` or [${menuItemTypeName}]` : ''} entity type is not registered. Please make sure that entity type is correct.`, true);
+        } else if (isNaN(Number(idStr))) {
+            this._openToastForError('Master entity ID error.', `The entity ID [${idStr}] for master is not integer number.`, true);
         } else {
-            const entity = this._reflector().newEntity(entityInfo[0]);
-            entity["id"] = parseInt(entityInfo[1]);
+            const entity = this._reflector().newEntity(mainTypeName);
+            entity['id'] = parseInt(idStr);
+            if (menuItemTypeName) {
+                this.$.openMasterAction.modifyFunctionalEntity = (bindingEntity) => {
+                    bindingEntity.setAndRegisterPropertyTouch('menuToOpen', menuItemTypeName);
+                    delete this.$.openMasterAction.modifyFunctionalEntity;
+                };
+            }
             this.$.openMasterAction.currentEntity = () => entity;
             this.$.openMasterAction._run();
         }
@@ -518,6 +552,19 @@ Polymer({
         this.entityType = "ua.com.fielden.platform.menu.Menu";
         //Init master related functions.
         this.postRetrieved = function (entity, bindingEntity, customObject) {
+            entity.actions.forEach(action => {
+                action.preAction = new Function("const self = this;  return " + action.preAction).bind(this)();
+                action.postActionSuccess = new Function("const self = this;  return " + action.postActionSuccess).bind(this)();
+                action.postActionError = new Function("const self = this;  return " + action.postActionError).bind(this)();
+                action.attrs = JSON.parse(action.attrs, (key, value) => {
+                    if (key === 'width' || key === "height") {
+                        return new Function("return " + value)();
+                    } else if (key === "centreUuid") {
+                        return this.uuid;
+                    }
+                    return value;
+                });
+            });
             this.menuConfig = entity;
             // make splash related elements invisible
             // selection happens by id, but for all for safety reasons; for example, for web tests these elements do not exist
@@ -549,9 +596,6 @@ Polymer({
         const self = this;
         //@use-empty-console.log
         this.async(function () {
-            self.topLevelActions = [
-                //actionsObject
-            ];
             if (!this._route.path) {
                 this._replaceStateWithNumber();
                 this.set("_route.path", "/menu");
