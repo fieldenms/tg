@@ -19,6 +19,7 @@ import '/resources/polymer/@polymer/neon-animation/animations/slide-from-bottom-
 import '/resources/polymer/@polymer/neon-animation/animations/slide-up-animation.js';
 import '/resources/polymer/@polymer/neon-animation/animations/slide-down-animation.js';
 
+import { TgReflector } from '/app/tg-reflector.js';
 import '/resources/components/tg-menu-search-input.js';
 import '/resources/views/tg-menu-item-view.js';
 import '/resources/components/tg-sublistbox.js'
@@ -302,6 +303,10 @@ Polymer({
         'tg-save-as-desc-changed': '_updateSaveAsDesc'
     },
     
+    created: function () {
+        this._reflector = new TgReflector();
+    },
+    
     ready: function () {
         this._watermark = window.TG_APP.watermark;
         this._focusNextMenuItem = this._focusNextMenuItem.bind(this.$.menu);
@@ -524,17 +529,25 @@ Polymer({
         if (!allDefined(arguments)) {
             return;
         }
-        const submodulePart = submodule.substring(1).split("?")[0];
         if (menuItem.key === decodeURIComponent(this.selectedModule)) {
+            const parts = submodule.substring(1).split('?');
+            const submodulePart = parts[0];
             this._selectMenu(submodulePart);
-            this._selectPage(submodulePart);
+            this._selectPage(submodulePart, parts[1]);
         }
     },
 
-    _selectPage: function (pagePath) {
-        var menuPath = findNestedMenuItem(pagePath, this.menuItem);
+    _selectPage: function (pagePath, paramsStr) {
+        const menuPath = findNestedMenuItem(pagePath, this.menuItem);
         if (menuPath.menuItem && !this._isMenuPresent(menuPath.menuItem.menu)) {
+            const prevSelectedPage = this._selectedPage;
             this.set("_selectedPage", menuPath.path);
+            if (this._selectedPage === prevSelectedPage) { // when going to the same entity centre but with parameters applied (link-centre) or going back to regular config...
+                const currMenuItemView = this.shadowRoot.querySelector(`tg-menu-item-view[page-name="${this._selectedPage}"]`);
+                if (currMenuItemView) { // ... then find active tg-menu-item-view and ...
+                    currMenuItemView._retrieveCentreAgainWithParams(paramsStr);
+                }
+            }
         }
     },
 
@@ -669,8 +682,9 @@ Polymer({
      */
     _updateSaveAsName: function (event) {
         this._initSaveAsNamesAndDescsEntry();
-        this._saveAsNamesAndDescs()[this._selectedPage].saveAsName = event.detail;
-        this.saveAsName = event.detail;
+        const saveAsNameForDisplay = this._reflector.LINK_CONFIG_TITLE !== event.detail ? event.detail : '';
+        this._saveAsNamesAndDescs()[this._selectedPage].saveAsName = saveAsNameForDisplay;
+        this.saveAsName = saveAsNameForDisplay;
     },
     
     /**

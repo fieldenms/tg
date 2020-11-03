@@ -1171,9 +1171,7 @@ const TgEntityCentreBehaviorImpl = {
     },
 
     _fireSaveAsNameChanged: function (newSaveAsName, self) {
-        if (self._reflector.LINK_CONFIG_TITLE !== newSaveAsName) {
-            self.fire('tg-save-as-name-changed', newSaveAsName);
-        }
+        self.fire('tg-save-as-name-changed', newSaveAsName);
     },
 
     runInsertionPointActions: function () {

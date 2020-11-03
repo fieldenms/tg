@@ -6,6 +6,7 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js
 import "/resources/polymer/@polymer/paper-styles/shadow.js";
 
 import '/resources/element_loader/tg-element-loader.js';
+import { TgReflector } from '/app/tg-reflector.js';
 
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
@@ -94,6 +95,10 @@ Polymer({
         "tabindex": "0"
     },
 
+    created: function () {
+        this._reflector = new TgReflector();
+    },
+
     // ready: function () {
     //     This setting could be helpful in case where master / centre views will need to be supported.
     //     this._afterInitLoading = true;
@@ -120,24 +125,46 @@ Polymer({
         return menuItem.view.viewType === 'centre';
     },
 
+    _retrieveCentreAgainWithParams: function (queryPart) {
+        if (this.menuItem.view.viewType === 'centre') {
+            const elementLoader = this.shadowRoot.querySelector("#elementToLoad")
+            const centre = elementLoader.loadedElement;
+            centre._selectedView = 0;
+            centre.queryPart = queryPart;
+            centre.saveAsName = this._reflector.UNDEFINED_CONFIG_TITLE; // this value means that configuration will be loaded from scratch
+            this._loadCentre.bind(this)(centre, false).then(function() {
+                if (queryPart) {
+                    window.history.replaceState(window.history.state, '', window.location.href.split('?')[0] + '/LINK_CONFIG');
+                }
+            });
+        }
+    },
+
+    _loadCentre: function (centre, isFirstTime) {
+        const self = this;
+        const oldPostRetrieved = centre.postRetrieved;
+        centre.postRetrieved = function (entity, bindingEntity, customObject) {
+            if (oldPostRetrieved) {
+                oldPostRetrieved(entity, bindingEntity, customObject);
+            }
+            centre._setQueryParams();
+            if (centre.autoRun || centre.queryPart) {
+                centre.run(!centre.queryPart); // identify autoRunning situation only in case where centre has autoRun as true but does not represent 'link' centre (has no URI criteria values)
+                delete centre.queryPart;
+            }
+            if (isFirstTime) {
+                self.fire("menu-item-view-loaded", self.menuItem);
+            }
+            centre.postRetrieved = oldPostRetrieved;
+        };
+        return centre.retrieve().catch(error => {});
+    },
+
     _afterLoadListener: function (e, detail, view) {
-        var self = this;
+        const self = this;
         if (e.target === this.shadowRoot.querySelector("#elementToLoad")) {
             if (this.menuItem.view.viewType === 'centre') {
-                const oldPostRetrieved = detail.postRetrieved;
-                detail.postRetrieved = function (entity, bindingEntity, customObject) {
-                    if (oldPostRetrieved) {
-                        oldPostRetrieved(entity, bindingEntity, customObject);
-                    }
-                    detail._setQueryParams();
-                    if (detail.autoRun || detail.queryPart) {
-                        detail.run(!detail.queryPart); // identify autoRunning situation only in case where centre has autoRun as true but does not represent 'link' centre (has no URI criteria values)
-                        delete detail.queryPart;
-                    }
-                    self.fire("menu-item-view-loaded", self.menuItem);
-                    detail.postRetrieved = oldPostRetrieved;
-                };
-                detail.retrieve().catch(error => {});
+                self._loadCentre.bind(this)(detail, true);
             } else if (this.menuItem.view.viewType === 'master') {
                 detail.postRetrieved = function (entity, bindingEntity, customObject) {
                     self.fire("menu-item-view-loaded", self.menuItem);
