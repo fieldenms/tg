@@ -30,6 +30,7 @@ import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.SummaryPropDef;
 import ua.com.fielden.platform.web.centre.api.IEntityCentreBuilder;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
+import ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssigner;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.MultiCritBooleanValueMnemonic;
@@ -140,8 +141,8 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     private final List<ResultSetProp<T>> resultSetProperties = new ArrayList<>();
     protected final SortedMap<Integer, Pair<String, OrderDirection>> resultSetOrdering = new TreeMap<>();
     protected final ListMultimap<String, SummaryPropDef> summaryExpressions = ArrayListMultimap.create();
-    protected EntityActionConfig resultSetPrimaryEntityAction;
-    protected final List<EntityActionConfig> resultSetSecondaryEntityActions = new ArrayList<>();
+    protected EntityMultiActionConfig resultSetPrimaryEntityAction;
+    protected final List<EntityMultiActionConfig> resultSetSecondaryEntityActions = new ArrayList<>();
     protected Class<? extends IRenderingCustomiser<?>> resultSetRenderingCustomiserType = null;
     protected Class<? extends ICustomPropsAssignmentHandler> resultSetCustomPropAssignmentHandlerType = null;
 
@@ -261,13 +262,13 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
         final String rspName = derivePropName(rsp);
         if (resultSetProperties.stream().map(p -> derivePropName(p))
                 .anyMatch(name -> EntityUtils.equalsEx(name, rspName))) {
-            throw new EntityCentreConfigurationException(format("Property [%s] has been already added to the result set for entity [%s].", derivePropName(rsp), getEntityType().getSimpleName()));            
+            throw new EntityCentreConfigurationException(format("Property [%s] has been already added to the result set for entity [%s].", derivePropName(rsp), getEntityType().getSimpleName()));
         }
         this.resultSetProperties.add(rsp);
     }
 
     /**
-     * Convenient way to access result set properties. 
+     * Convenient way to access result set properties.
      * @return
      */
     protected Stream<ResultSetProp<T>> resultSetProperties() {

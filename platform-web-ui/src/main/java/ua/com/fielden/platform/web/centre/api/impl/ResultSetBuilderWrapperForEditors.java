@@ -8,6 +8,7 @@ import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
+import ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.extra_fetch.IExtraFetchProviderSetter;
 import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPointsFlexible;
@@ -88,6 +89,11 @@ public class ResultSetBuilderWrapperForEditors<T extends AbstractEntity<?>> impl
     }
 
     @Override
+    public IAlsoSecondaryAction<T> addPrimaryAction(final EntityMultiActionConfig actionConfig) {
+        return builder.addPrimaryAction(actionConfig);
+    }
+
+    @Override
     public IResultSetBuilder9RenderingCustomiser<T> setCustomPropsValueAssignmentHandler(final Class<? extends ICustomPropsAssignmentHandler> handler) {
         return builder.setCustomPropsValueAssignmentHandler(handler);
     }
@@ -136,5 +142,4 @@ public class ResultSetBuilderWrapperForEditors<T extends AbstractEntity<?>> impl
     public IAlsoProp<T> withAction(final EntityActionConfig actionConfig) {
         return builder.withAction(actionConfig);
     }
-
 }
