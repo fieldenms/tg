@@ -18,6 +18,7 @@ import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionP
 import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig.configInsertionPointWithPagination;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -45,6 +46,8 @@ import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.OrderDirection;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.SummaryPropDef;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
+import ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfig;
+import ua.com.fielden.platform.web.centre.api.actions.multi.SingleActionSelector;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.extra_fetch.IExtraFetchProviderSetter;
 import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPoints;
@@ -330,6 +333,15 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
             throw new IllegalArgumentException("Primary action configuration should not be null.");
         }
 
+        return addPrimaryAction(new EntityMultiActionConfig(SingleActionSelector.class, Arrays.asList(actionConfig)));
+    }
+
+    @Override
+    public IAlsoSecondaryAction<T> addPrimaryAction(final EntityMultiActionConfig actionConfig) {
+        if (actionConfig == null) {
+            throw new IllegalArgumentException("Primary action configuration should not be null.");
+        }
+
         completePropIfNeeded();
         this.builder.resultSetPrimaryEntityAction = actionConfig;
         return secondaryActionBuilder;
@@ -337,6 +349,15 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
 
     @Override
     public IAlsoSecondaryAction<T> addSecondaryAction(final EntityActionConfig actionConfig) {
+        if (actionConfig == null) {
+            throw new IllegalArgumentException("Secondary action configuration should not be null.");
+        }
+
+        return addSecondaryAction(new EntityMultiActionConfig(SingleActionSelector.class, Arrays.asList(actionConfig)));
+    }
+
+    @Override
+    public IAlsoSecondaryAction<T> addSecondaryAction(final EntityMultiActionConfig actionConfig) {
         if (actionConfig == null) {
             throw new IllegalArgumentException("Secondary action configuration should not be null.");
         }
