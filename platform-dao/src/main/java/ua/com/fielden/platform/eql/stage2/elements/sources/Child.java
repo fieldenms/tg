@@ -4,13 +4,15 @@ import static java.util.Collections.unmodifiableList;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.meta.ComponentTypePropInfo;
 import ua.com.fielden.platform.eql.meta.UnionTypePropInfo;
 import ua.com.fielden.platform.eql.stage2.elements.operands.Expression2;
 
-public class Child implements Comparable<Child> {
+public class Child {//implements Comparable<Child> {
     public final AbstractPropInfo<?> main;
     
     public final QrySource2BasedOnPersistentType source;
@@ -21,11 +23,16 @@ public class Child implements Comparable<Child> {
     public final String explicitSourceId;
 
     public final Expression2 expr;
-    public final List<Child> dependencies; //nodes, that should be processed (respective joins should be made) prior to processing current child (its expression) 
+    public final Set<String> dependencies; //names of nodes, that should be processed (respective joins should be made) prior to processing current child (its expression) 
 
-    final int id;
-    
-    public Child(final AbstractPropInfo<?> main, final List<Child> items, final String fullPath, final boolean required, final QrySource2BasedOnPersistentType source, final Expression2 expr, final String explicitSourceId, final List<Child> dependencies, final int id) {
+    public Child(final AbstractPropInfo<?> main, //
+            final List<Child> items, //
+            final String fullPath, //
+            final boolean required, //
+            final QrySource2BasedOnPersistentType source, //
+            final Expression2 expr, //
+            final String explicitSourceId, //
+            final List<Child> dependencies) {
         this.main = main;
         this.items = items;
         this.fullPath = fullPath;
@@ -33,8 +40,7 @@ public class Child implements Comparable<Child> {
         this.source = source;
         this.explicitSourceId = explicitSourceId;
         this.expr = expr;
-        this.dependencies = dependencies;
-        this.id = id;
+        this.dependencies = dependencies.stream().map(c -> c.main.name).collect(Collectors.toSet());
         assert(items.isEmpty() || !items.isEmpty() && (source !=null || main instanceof ComponentTypePropInfo || main instanceof UnionTypePropInfo));
         assert(dependencies.isEmpty() ||
                !(main instanceof ComponentTypePropInfo || main instanceof UnionTypePropInfo) && !dependencies.isEmpty() && expr != null
@@ -102,23 +108,5 @@ public class Child implements Comparable<Child> {
         final Child other = (Child) obj;
         
         return Objects.equals(main, other.main) && Objects.equals(items, other.items) && Objects.equals(fullPath, other.fullPath) && Objects.equals(source, other.source) && Objects.equals(explicitSourceId, other.explicitSourceId);// && Objects.equals(dependencies, other.dependencies);
-    }
-    
-    private boolean dependsOn(final Child child) {
-        return dependencies.contains(child) || dependencies.stream().anyMatch(c -> c.dependsOn(child));
-    }
-
-    
-    @Override
-    public int compareTo(final Child o) {
-        if (o.equals(this)) {
-            return 0;
-        }
-
-        return dependsOn(o) ? 1 : 
-            (o.dependsOn(this) ? -1 : 
-                main.name.equals(o.main.name) ? (id > o.id ? 1 : -1) :
-                    (expr != null && o.expr != null || expr == null && o.expr == null ? main.name.compareTo(o.main.name) :
-                        (expr != null ? 1 : -1)));
     }
 }
