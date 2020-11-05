@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.expression.lexer.date;
 
+import org.apache.commons.lang3.StringUtils;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
@@ -35,7 +36,7 @@ public class DateTokenAutomata extends BaseNonDeterministicAutomata {
     @Override
     public String recognisePartiallyFromStart(final String input, final Integer posInOriginalSequence) throws SequenceRecognitionFailed {
         final String recognised = super.recognisePartiallyFromStart(input, posInOriginalSequence);
-        final String pureDateStr = recognised.replace("'", "");
+        final String pureDateStr = StringUtils.remove(recognised, "'");
 
         // let's now check if we can covert recognised sequence to date
         if (pureDateStr.split(" ").length == 2) { // has time portion

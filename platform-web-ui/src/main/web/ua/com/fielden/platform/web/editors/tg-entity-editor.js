@@ -676,9 +676,12 @@ export class TgEntityEditor extends TgEditor {
         }
     }
 
+    /**
+     * 'on-tap' event listener for tg-scrollable-component on result dialog which only contains paper-item elements for selection.
+     */
     _entitySelected () {
-        // if this this is non-multi mode and the tap happened on a result item then it should be selected
-        if (!this.multi && this.result && this.result.shadowRoot.activeElement.classList.contains("tg-item")) {
+        // if this is non-multi mode then selected item should be accepted
+        if (!this.multi) {
             this._done();
         }
     }

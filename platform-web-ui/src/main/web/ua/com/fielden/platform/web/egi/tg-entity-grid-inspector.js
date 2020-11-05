@@ -1086,7 +1086,7 @@ Polymer({
     setRenderingHints: function (entity, property, renderingHints) {
         const entityIndex = this._findEntity(entity, this.filteredEntities);
         if (entityIndex >= 0) {
-            this.set("egiModel." + entityIndex + ".renderingHints." + property, renderingHints);
+            this.egiModel[entityIndex].renderingHints[property] = renderingHints;
             const egiEntity = this.egiModel[entityIndex];
             egiEntity._propertyRenderingHintsChangedHandlers && egiEntity._propertyRenderingHintsChangedHandlers[property] && egiEntity._propertyRenderingHintsChangedHandlers[property]();
         }

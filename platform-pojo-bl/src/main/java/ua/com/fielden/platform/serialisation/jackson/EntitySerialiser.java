@@ -25,6 +25,7 @@ import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isTrailingZerosDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isUpperCaseDefault;
 import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -35,6 +36,8 @@ import java.util.Map;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCompoundMenuItem;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityToOpenCompoundMaster;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.IContinuationData;
@@ -107,7 +110,9 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         entityTypeInfo.setKey(type.getName());
 
         // let's inform the client of the type's persistence nature
-        entityTypeInfo.set_persistent(EntityUtils.isPersistedEntityType(type));
+        if (isPersistedEntityType(type)) {
+            entityTypeInfo.set_persistent(true);
+        }
 
         if (IContinuationData.class.isAssignableFrom(type)) {
             entityTypeInfo.set_continuation(true);
@@ -134,6 +139,12 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         }
         if (AbstractUnionEntity.class.isAssignableFrom(type)) {
             entityTypeInfo.set_union(true);
+        }
+        if (AbstractFunctionalEntityToOpenCompoundMaster.class.isAssignableFrom(type)) {
+            entityTypeInfo.set_compoundOpenerType(getKeyType(type).getName());
+        }
+        if (AbstractFunctionalEntityForCompoundMenuItem.class.isAssignableFrom(type)) {
+            entityTypeInfo.set_compoundMenuItem(true);
         }
         final Pair<String, String> entityTitleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(type);
         if (!isEntityTitleDefault(type, entityTitleAndDesc.getKey())) {
