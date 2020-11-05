@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.web.factories.webui;
 
 import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.getEntityCentre;
-import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.saveAsName;
 
 import org.restlet.Request;
 import org.restlet.Response;
@@ -65,7 +64,6 @@ public class CriteriaResourceFactory extends Restlet {
             new CriteriaResource(
                     restUtil,
                     getEntityCentre(request, webUiConfig),
-                    saveAsName(request),
                     domainTreeEnhancerCache,
                     webUiConfig,
                     companionFinder,

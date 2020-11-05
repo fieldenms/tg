@@ -125,18 +125,21 @@ Polymer({
         return menuItem.view.viewType === 'centre';
     },
 
-    _retrieveCentreAgainWithParams: function (queryPart) {
+    _retrieveCentreAgainWithParams: function (queryPart, unknownSubpath) {
         if (this.menuItem.view.viewType === 'centre') {
             const elementLoader = this.shadowRoot.querySelector("#elementToLoad")
             const centre = elementLoader.loadedElement;
-            centre._selectedView = 0;
-            centre.queryPart = queryPart;
-            centre.saveAsName = this._reflector.UNDEFINED_CONFIG_TITLE; // this value means that configuration will be loaded from scratch
-            this._loadCentre.bind(this)(centre, false).then(function() {
-                if (queryPart) {
-                    window.history.replaceState(window.history.state, '', window.location.href.split('?')[0] + '/LINK_CONFIG');
+            if (centre) {
+                centre._selectedView = 0;
+                centre.queryPart = queryPart;
+                centre.configUuid = unknownSubpath;
+                centre.saveAsName = this._reflector.UNDEFINED_CONFIG_TITLE; // this value means that configuration will be loaded from scratch
+                this._loadCentre.bind(this)(centre, false);
+            } else {
+                if (elementLoader.attrs) {
+                    elementLoader.attrs.configUuid = unknownSubpath;
                 }
-            });
+            }
         }
     },
 

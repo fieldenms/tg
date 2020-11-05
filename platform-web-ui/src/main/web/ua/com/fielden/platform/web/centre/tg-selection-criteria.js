@@ -20,7 +20,7 @@ const template = html`
     
     <tg-criteria-validator id="validator" mi-type="[[miType]]" save-as-name="[[saveAsName]]" post-validated-default="[[_postValidatedDefault]]" post-validated-default-error="[[_postValidatedDefaultError]]" process-response="[[_processResponse]]" process-error="[[_processError]]"></tg-criteria-validator>
     
-    <iron-ajax id="ajaxRetriever" headers="[[_headers]]" url="[[_computeRetrieverUrl(_url, queryPart)]]" method="GET" handle-as="json" on-response="_processRetrieverResponse" reject-with-request on-error="_processRetrieverError"></iron-ajax>
+    <iron-ajax id="ajaxRetriever" headers="[[_headers]]" url="[[_computeRetrieverUrl(_url, queryPart, configUuid)]]" method="GET" handle-as="json" on-response="_processRetrieverResponse" reject-with-request on-error="_processRetrieverError"></iron-ajax>
     <iron-ajax id="ajaxRunner" headers="[[_headers]]" loading="{{_isLoading}}" url="[[_url]]" method="PUT" handle-as="json" on-response="_processRunnerResponse" reject-with-request on-error="_processRunnerError"></iron-ajax>
     
     <slot></slot>
@@ -51,6 +51,10 @@ Polymer({
         queryPart: {
             type: String,
             value: null
+        },
+
+        configUuid: {
+            type: String
         },
 
         /**
@@ -132,8 +136,9 @@ Polymer({
     /**
      * Computes URLs for 'ajaxRetriever'.
      */
-    _computeRetrieverUrl: function (_url, queryPart) {
-        return queryPart ? (_url + '?' + queryPart) : _url;
+    _computeRetrieverUrl: function (_url, queryPart, configUuid) {
+        const _urlWithUuid = _url + 'uuid' + configUuid;
+        return queryPart ? (_urlWithUuid + '?' + queryPart) : _urlWithUuid;
     },
 
     /**

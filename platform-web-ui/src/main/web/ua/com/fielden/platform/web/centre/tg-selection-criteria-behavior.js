@@ -61,6 +61,12 @@ const TgSelectionCriteriaBehaviorImpl = {
             notify: true
         },
 
+        configUuid: {
+            type: String,
+            value: '',
+            notify: true
+        },
+
         /**
          * Description of currently loaded 'saveAs' configuration.
          */
@@ -353,6 +359,14 @@ const TgSelectionCriteriaBehaviorImpl = {
         }
         if (typeof customObject.saveAsName !== 'undefined') {
             this.saveAsName = customObject.saveAsName;
+        }
+        if (typeof customObject.configUuid !== 'undefined') {
+            const newConfigUuid = customObject.configUuid;
+            const hrefNoParams = window.location.href.split('?')[0];
+            const hrefNoParamsWithSlash = hrefNoParams.endsWith('/') ? hrefNoParams : hrefNoParams + '/';
+            const hrefReplacedUuid = (this.configUuid === '' ? hrefNoParamsWithSlash : hrefNoParamsWithSlash.substring(0, hrefNoParamsWithSlash.lastIndexOf(this.configUuid))) + newConfigUuid;
+            window.history.replaceState(window.history.state, '', hrefReplacedUuid);
+            this.configUuid = newConfigUuid;
         }
         if (typeof customObject.wasRun !== 'undefined') {
             this._wasRun = customObject.wasRun;

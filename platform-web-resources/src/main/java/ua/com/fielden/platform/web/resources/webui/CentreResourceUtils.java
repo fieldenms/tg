@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import static java.lang.Math.min;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
@@ -24,8 +25,10 @@ import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityTyp
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalManagedType;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getVersion;
 
+import java.io.UnsupportedEncodingException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -150,6 +153,15 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final Map<String, Object> customObject = createCriteriaMetaValuesCustomObject(criteriaMetaValues, isCentreChanged);
         saveAsName.ifPresent(name -> {
             customObject.put("saveAsName", name.orElse(""));
+        });
+        saveAsName.ifPresent(name -> {
+            customObject.put("configUuid", name.map(san -> {
+                try {
+                    return URLEncoder.encode("USER_" + san, UTF_8.toString());
+                } catch (final UnsupportedEncodingException e) {
+                    throw new RuntimeException(e);
+                }
+            }).orElse(""));
         });
         saveAsDesc.ifPresent(desc -> {
             customObject.put("saveAsDesc", desc.orElse(""));

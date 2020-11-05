@@ -233,17 +233,20 @@ function findMenuItem (itemName, menuItem) {
     });
 };
 function findNestedMenuItem (itemPath, menuItem) {
-    var pathIndex;
-    var path = itemPath.split('/');
-    var currentItem = menuItem;
+    let pathIndex;
+    let path = itemPath.split('/');
+    let currentItem = menuItem;
+    let lastNonEmptyItem = menuItem;
 
     for (pathIndex = 0;
         (pathIndex < path.length) && !!currentItem; pathIndex++) {
+        lastNonEmptyItem = currentItem;
         currentItem = findMenuItem(path[pathIndex], currentItem);
     }
     return {
-        menuItem: currentItem,
-        path: path.slice(0, pathIndex).join('/')
+        menuItem: itemPath === '_' ? undefined : (currentItem || lastNonEmptyItem),
+        path: path.slice(0, currentItem ? pathIndex : pathIndex - 1).join('/'),
+        unknownSubpath: path.slice(currentItem ? pathIndex : pathIndex - 1).join('/')
     };
 };
 
@@ -540,13 +543,10 @@ Polymer({
     _selectPage: function (pagePath, paramsStr) {
         const menuPath = findNestedMenuItem(pagePath, this.menuItem);
         if (menuPath.menuItem && !this._isMenuPresent(menuPath.menuItem.menu)) {
-            const prevSelectedPage = this._selectedPage;
             this.set("_selectedPage", menuPath.path);
-            if (this._selectedPage === prevSelectedPage) { // when going to the same entity centre but with parameters applied (link-centre) or going back to regular config...
-                const currMenuItemView = this.shadowRoot.querySelector(`tg-menu-item-view[page-name="${this._selectedPage}"]`);
-                if (currMenuItemView) { // ... then find active tg-menu-item-view and ...
-                    currMenuItemView._retrieveCentreAgainWithParams(paramsStr);
-                }
+            const currMenuItemView = this.shadowRoot.querySelector(`tg-menu-item-view[page-name="${this._selectedPage}"]`);
+            if (currMenuItemView) { // ... then find active tg-menu-item-view and ...
+                currMenuItemView._retrieveCentreAgainWithParams(paramsStr, menuPath.unknownSubpath);
             }
         }
     },
@@ -567,7 +567,9 @@ Polymer({
                     previousTopMenu.close();
                 }
                 this.$.menu.select(pathParts[0]);
-                topMenu.open();
+                if (topMenu) {
+                    topMenu.open();
+                }
                 if (submenu) {
                     submenu.select(path);
                 }
@@ -655,8 +657,6 @@ Polymer({
             if (viewToLoad) {
                 if (!viewToLoad.wasLoaded()) {
                     viewToLoad.load(decodeURIComponent(this.submodule.substring(1)).split("?")[1]);
-                    const currentState = window.history.state;
-                    window.history.replaceState(currentState, "", window.location.href.split("?")[0]);
                 } else {
                     viewToLoad.focusLoadedView();
                 }

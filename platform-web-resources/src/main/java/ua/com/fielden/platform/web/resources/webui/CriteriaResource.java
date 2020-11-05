@@ -20,6 +20,8 @@ import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentreDesc;
 import static ua.com.fielden.platform.web.centre.CentreUtils.isFreshCentreChanged;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.UNDEFINED_CONFIG_TITLE;
+import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.saveAsName;
+import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.saveAsNameAndConfigUuid;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaEntityWithoutConflicts;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaMetaValues;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaMetaValuesCustomObject;
@@ -114,7 +116,6 @@ public class CriteriaResource extends AbstractWebResource {
 
     private final ICriteriaGenerator critGenerator;
     private final EntityCentre<AbstractEntity<?>> centre;
-    private final Optional<String> saveAsName;
 
     private final IWebUiConfig webUiConfig;
     private final IUserProvider userProvider;
@@ -124,7 +125,6 @@ public class CriteriaResource extends AbstractWebResource {
     public CriteriaResource(
             final RestServerUtil restUtil,
             final EntityCentre<AbstractEntity<?>> centre,
-            final Optional<String> saveAsName,
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
             final ICompanionObjectFinder companionFinder,
@@ -142,7 +142,6 @@ public class CriteriaResource extends AbstractWebResource {
         this.companionFinder = companionFinder;
 
         this.centre = centre;
-        this.saveAsName = saveAsName;
         this.critGenerator = critGenerator;
 
         this.domainTreeEnhancerCache = domainTreeEnhancerCache;
@@ -163,6 +162,10 @@ public class CriteriaResource extends AbstractWebResource {
             final IEntityCentreConfig eccCompanion = companionFinder.find(EntityCentreConfig.class);
             final IMainMenuItem mmiCompanion = companionFinder.find(MainMenuItem.class);
             final IUser userCompanion = companionFinder.find(User.class);
+            final T2<Optional<String>, Optional<String>> saveAsNameAndConfigUuid = saveAsNameAndConfigUuid(getRequest());
+            final Optional<String> saveAsName = saveAsNameAndConfigUuid._1;
+            final Optional<String> configUuid = saveAsNameAndConfigUuid._2;
+            System.out.println("configUuid === " + configUuid);
 
             final Optional<String> actualSaveAsName =
                 saveAsName.flatMap(
@@ -190,6 +193,7 @@ public class CriteriaResource extends AbstractWebResource {
     @Override
     public Representation post(final Representation envelope) {
         return handleUndesiredExceptions(getResponse(), () -> {
+            final Optional<String> saveAsName = saveAsName(getRequest());
             final IEntityCentreConfig eccCompanion = companionFinder.find(EntityCentreConfig.class);
             final IMainMenuItem mmiCompanion = companionFinder.find(MainMenuItem.class);
             final IUser userCompanion = companionFinder.find(User.class);
@@ -303,6 +307,7 @@ public class CriteriaResource extends AbstractWebResource {
     public Representation put(final Representation envelope) {
         return handleUndesiredExceptions(getResponse(), () -> {
             logger.debug("CRITERIA_RESOURCE: run started.");
+            final Optional<String> saveAsName = saveAsName(getRequest());
             final User user = userProvider.getUser();
             final IEntityCentreConfig eccCompanion = companionFinder.find(EntityCentreConfig.class);
             final IMainMenuItem mmiCompanion = companionFinder.find(MainMenuItem.class);

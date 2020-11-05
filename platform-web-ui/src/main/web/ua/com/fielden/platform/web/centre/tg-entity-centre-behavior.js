@@ -171,6 +171,11 @@ const TgEntityCentreBehaviorImpl = {
             observer: '_saveAsNameChanged'
         },
 
+        configUuid: {
+            type: String,
+            value: ''
+        },
+
         dynamicColumns: {
             type: Object
         },

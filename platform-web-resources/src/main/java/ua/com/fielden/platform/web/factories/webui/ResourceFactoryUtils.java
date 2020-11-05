@@ -2,12 +2,15 @@ package ua.com.fielden.platform.web.factories.webui;
 
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+
 import java.util.Optional;
 
 import org.restlet.Request;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.EntityCentre;
@@ -62,9 +65,25 @@ public class ResourceFactoryUtils {
      * @param request
      * @return
      */
-    static Optional<String> saveAsName(final Request request) {
+    public static Optional<String> saveAsName(final Request request) {
         final String saveAsName = ((String) request.getAttributes().get("saveAsName")).replaceFirst("default", "").replace("%20", " ");
         return "".equals(saveAsName) ? empty() : of(saveAsName);
+    }
+    
+    /**
+     * Determines 'saveAsName' from corresponding centre's request attribute.
+     *
+     * @param request
+     * @return
+     */
+    public static T2<Optional<String>, Optional<String>> saveAsNameAndConfigUuid(final Request request) {
+        final String str = (String) request.getAttributes().get("saveAsName");
+        final String[] splitted = str.substring(7) // remove "default" at the beginning
+            .split("uuid");
+        return t2(
+            "".equals(splitted[0]) ? empty() : of(splitted[0].replace("%20", " ")), // decode spaces
+            splitted.length == 1 || "".equals(splitted[1]) ? empty() : of(splitted[1])
+        );
     }
     
     /**
