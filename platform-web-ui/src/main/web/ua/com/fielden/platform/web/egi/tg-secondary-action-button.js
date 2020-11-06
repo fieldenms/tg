@@ -52,8 +52,7 @@ Polymer({
          * be as many indices as numbere of secondary actions.
          */ 
         currentIndices: {
-            type: Array,
-            value: () => [0]
+            type: Array
         },
 
         isSingle: {
@@ -61,6 +60,10 @@ Polymer({
         },
 
         dropdownTrigger: Function
+    },
+
+    ready: function() {
+        this.currentIndices = this.actions.map(action => 0);
     },
 
     _showDropdown: function (e, detail) {
