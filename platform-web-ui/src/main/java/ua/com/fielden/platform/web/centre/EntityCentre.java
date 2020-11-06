@@ -103,6 +103,8 @@ import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.SummaryPropDef;
 import ua.com.fielden.platform.web.centre.api.ICentre;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
+import ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfig;
+import ua.com.fielden.platform.web.centre.api.actions.multi.FunctionalMultiActionElement;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssigner;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.MultiCritBooleanValueMnemonic;
@@ -410,12 +412,12 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 }
             }
         }
-        
+
         cdtmae.getSecondTick().setPageCapacity(dslDefaultConfig.getPageCapacity());
         cdtmae.getSecondTick().setMaxPageCapacity(dslDefaultConfig.getMaxPageCapacity());
         cdtmae.getSecondTick().setVisibleRowsCount(dslDefaultConfig.getVisibleRowsCount());
         cdtmae.getSecondTick().setNumberOfHeaderLines(dslDefaultConfig.getNumberOfHeaderLines());
-        
+
         return postCentreCreated == null ? cdtmae : postCentreCreated.apply(cdtmae);
     }
 
@@ -984,16 +986,16 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
         logger.debug("Initiating primary actions...");
         //////////////////// Primary result-set action ////////////////////
-        final Optional<EntityActionConfig> resultSetPrimaryEntityAction = this.dslDefaultConfig.getResultSetPrimaryEntityAction();
+        final Optional<EntityMultiActionConfig> resultSetPrimaryEntityAction = this.dslDefaultConfig.getResultSetPrimaryEntityAction();
         final DomContainer primaryActionDom = new DomContainer();
         final StringBuilder primaryActionObject = new StringBuilder();
 
         if (resultSetPrimaryEntityAction.isPresent() && !resultSetPrimaryEntityAction.get().isNoAction()) {
-            final FunctionalActionElement el = new FunctionalActionElement(resultSetPrimaryEntityAction.get(), 0, FunctionalActionKind.PRIMARY_RESULT_SET);
+            final FunctionalMultiActionElement el = new FunctionalMultiActionElement(resultSetPrimaryEntityAction.get(), 0, FunctionalActionKind.PRIMARY_RESULT_SET);
 
             importPaths.add(el.importPath());
-            primaryActionDom.add(el.render().attr("slot", "primary-action").clazz("primary-action").attr("hidden", null));
-            primaryActionObject.append(prefix + createActionObject(el));
+            primaryActionDom.add(el.render().attr("slot", "primary-action").attr("hidden", null));
+            primaryActionObject.append(prefix + el.createActionObject(importPaths));
         }
         ////////////////////Primary result-set action [END] //////////////
 
@@ -1013,21 +1015,20 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
         logger.debug("Initiating secondary actions...");
 
-        final List<FunctionalActionElement> secondaryActionElements = new ArrayList<>();
-        final Optional<List<EntityActionConfig>> resultSetSecondaryEntityActions = this.dslDefaultConfig.getResultSetSecondaryEntityActions();
-        if (resultSetSecondaryEntityActions.isPresent()) {
-            for (int i = 0; i < resultSetSecondaryEntityActions.get().size(); i++) {
-                final FunctionalActionElement el = new FunctionalActionElement(resultSetSecondaryEntityActions.get().get(i), i, FunctionalActionKind.SECONDARY_RESULT_SET);
-                secondaryActionElements.add(el);
-            }
-        }
-
         final DomContainer secondaryActionsDom = new DomContainer();
         final StringBuilder secondaryActionsObjects = new StringBuilder();
-        for (final FunctionalActionElement el : secondaryActionElements) {
-            importPaths.add(el.importPath());
-            secondaryActionsDom.add(el.render().attr("slot", "secondary-action").clazz("secondary-action"));
-            secondaryActionsObjects.append(prefix + createActionObject(el));
+        final Optional<List<EntityMultiActionConfig>> resultSetSecondaryEntityActions = this.dslDefaultConfig.getResultSetSecondaryEntityActions();
+        if (resultSetSecondaryEntityActions.isPresent()) {
+            int numberOfAction = 0;
+            for (final EntityMultiActionConfig multiActionConfig: resultSetSecondaryEntityActions.get()) {
+                if (!multiActionConfig.isNoAction()) {
+                    final FunctionalMultiActionElement el = new FunctionalMultiActionElement(multiActionConfig, numberOfAction, FunctionalActionKind.SECONDARY_RESULT_SET);
+                    importPaths.add(el.importPath());
+                    secondaryActionsDom.add(el.render().attr("slot", "secondary-action"));
+                    secondaryActionsObjects.append(prefix + el.createActionObject(importPaths));
+                    numberOfAction += multiActionConfig.actions().size();
+                }
+            }
         }
 
         logger.debug("Initiating insertion point actions...");
