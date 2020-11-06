@@ -740,6 +740,14 @@ Polymer({
             type: Array,
             observer: "_renderingHintsChanged"
         },
+        primaryActionIndices: {
+            type: Array,
+            observer: "_primaryActionIndicesChanged"
+        },
+        secondaryActionIndices: {
+            type: Array,
+            observer: "_secondaryActionIndicesChanged"
+        },
         selectedAll: {
             type: Boolean,
             value: false
@@ -1341,11 +1349,16 @@ Polymer({
             const isSelected = this.selectedEntities.indexOf(newEntity) > -1;
             const oldIndex = this._findEntity(newEntity, oldValue);
             const newRendHints = oldIndex < 0 ? {} : (this.renderingHints && this.renderingHints[oldIndex]) || {};
+            const newPrimaryActionIndex = oldIndex < 0 ? 0 : (this.primaryActionIndices && this.primaryActionIndices[oldIndex]) || 0;
+            const defaultSecondaryActionIndices = this.secondaryActions.map(action => 0);
+            const newSecondaryActionIndices = oldIndex < 0 ? defaultSecondaryActionIndices : (this.primaryActionIndices && this.primaryActionIndices[oldIndex]) || defaultSecondaryActionIndices;
             const egiEntity = {
                 over: this._areEqual(this.editingEntity, newEntity),
                 selected: isSelected,
                 entity: newEntity,
                 renderingHints: newRendHints,
+                primaryActionIndex: newPrimaryActionIndex,
+                secondaryActionIndices: newSecondaryActionIndices,
                 entityModification: {}
             };
             tempEgiModel.push(egiEntity);
@@ -1953,6 +1966,22 @@ Polymer({
                 egiEntity._renderingHintsChangedHandler && egiEntity._renderingHintsChangedHandler();
             });
             this._updateTableSizeAsync();
+        }
+    },
+
+    _primaryActionIndicesChanged: function (newValue) {
+        if (this.egiModel) {
+            this.egiModel.forEach((egiEntity, index) => {
+                this.set("egiModel." + index + ".primaryActionIndex", newValue[index]);
+            });
+        }
+    },
+
+    _secondaryActionIndicesChanged: function (newValue) {
+        if (this.egiModel) {
+            this.egiModel.forEach((egiEntity, index) => {
+                this.set("egiModel." + index + ".secondaryActionIndices", newValue[index]);
+            });
         }
     },
 
