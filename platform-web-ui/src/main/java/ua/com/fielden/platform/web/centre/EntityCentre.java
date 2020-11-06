@@ -105,6 +105,7 @@ import ua.com.fielden.platform.web.centre.api.ICentre;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfig;
 import ua.com.fielden.platform.web.centre.api.actions.multi.FunctionalMultiActionElement;
+import ua.com.fielden.platform.web.centre.api.actions.multi.IEntityMultiActionSelector;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssigner;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.MultiCritBooleanValueMnemonic;
@@ -816,6 +817,19 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         } else {
             return Optional.empty();
         }
+    }
+
+    public Optional<IEntityMultiActionSelector> getPrimaryActionSelector() {
+        return this.dslDefaultConfig.getResultSetPrimaryEntityAction()
+                .map(multiActionConfig -> !multiActionConfig.isNoAction() ? injector.getInstance(multiActionConfig.actionSelectorClass()) : null);
+    }
+
+    @SuppressWarnings("unchecked")
+    public Optional<List<IEntityMultiActionSelector>> getSecondaryActionSelectors() {
+        return this.dslDefaultConfig.getResultSetSecondaryEntityActions()
+                .map(multiActionConfigs -> multiActionConfigs.stream().filter(config -> !config.isNoAction())
+                        .map(config -> injector.getInstance(config.actionSelectorClass()))
+                .collect(Collectors.toList())).map(selectors -> selectors.isEmpty() ? null : (List<IEntityMultiActionSelector>)selectors);
     }
 
     public Optional<IDynamicColumnBuilder<T>> getDynamicColumnBuilderFor(final ResultSetProp<T> resProp) {
