@@ -220,19 +220,23 @@ const TgSelectionCriteriaBehaviorImpl = {
                 const criteriaEntity = entityAndCustomObject[0];
                 self._provideExceptionOccured(criteriaEntity, exceptionOccured);
                 const customObject = self._reflector().customObject(entityAndCustomObject);
-                const resultEntities = customObject.resultEntities || [];
-                const pageCount = customObject.pageCount;
-                const pageNumber = customObject.pageNumber;
-                const metaValues = customObject.metaValues;
-                const centreChanged = customObject.isCentreChanged;
-                const renderingHints = customObject.renderingHints || [];
-                const dynamicColumns = customObject.dynamicColumns || {};
-                const summary = customObject.summary;
-                const staleCriteriaMessage = customObject.staleCriteriaMessage;
-                const columnWidths = customObject.columnWidths;
-                const resultConfig = customObject.resultConfig;
+                const result = {
+                    resultEntities: customObject.resultEntities || [],
+                    pageCount: customObject.pageCount,
+                    pageNumber: customObject.pageNumber,
+                    metaValues: customObject.metaValues,
+                    centreChanged: customObject,
+                    renderingHints: customObject.renderingHints || [],
+                    dynamicColumns: customObject.dynamicColumns || {},
+                    summary: customObject.summary,
+                    staleCriteriaMessage: customObject.staleCriteriaMessage,
+                    columnWidths: customObject.columnWidths,
+                    resultConfig: customObject.resultConfig,
+                    primaryActionIndices: customObject.primaryActionIndices,
+                    secondaryActionIndices: customObject.secondaryActionIndices
+                };
 
-                self._postRunDefault(criteriaEntity, resultEntities, pageNumber, pageCount, metaValues, centreChanged, renderingHints, dynamicColumns, summary, staleCriteriaMessage, columnWidths, resultConfig);
+                self._postRunDefault(criteriaEntity, result);
             });
         };
 
@@ -243,17 +247,17 @@ const TgSelectionCriteriaBehaviorImpl = {
         };
 
         // calbacks, that will potentially be augmented by tg-action child elements: 
-        self._postRunDefault = (function (criteriaEntity, resultEntities, pageNumber, pageCount, metaValues, centreChanged, renderingHints, dynamicColumns, summary, staleCriteriaMessage, columnWidths, resultConfig) {
-            this.fire('egi-entities-appeared', resultEntities);
+        self._postRunDefault = (function (criteriaEntity, result) {
+            this.fire('egi-entities-appeared', result.resultEntities);
 
-            if (typeof staleCriteriaMessage !== 'undefined') { // if staleCriteriaMessage is defined (i.e. it can be 'null' or 'Selection criteria have been changed, but ...' message) -- then populate it into config button tooltip / colour
-                this.staleCriteriaMessage = staleCriteriaMessage;
+            if (typeof result.staleCriteriaMessage !== 'undefined') { // if staleCriteriaMessage is defined (i.e. it can be 'null' or 'Selection criteria have been changed, but ...' message) -- then populate it into config button tooltip / colour
+                this.staleCriteriaMessage = result.staleCriteriaMessage;
             }
-            if (typeof pageCount !== 'undefined') {
-                this.pageCount = pageCount; // at this stage -- update pageCount not only on run(), but also on firstPage(), nextPage() etc.
+            if (typeof result.pageCount !== 'undefined') {
+                this.pageCount = result.pageCount; // at this stage -- update pageCount not only on run(), but also on firstPage(), nextPage() etc.
             }
-            if (typeof pageNumber !== 'undefined') {
-                this.pageNumber = pageNumber;
+            if (typeof result.pageNumber !== 'undefined') {
+                this.pageNumber = result.pageNumber;
             }
             this.pageNumberUpdated = this.pageNumber;
             this.pageCountUpdated = this.pageCount;
@@ -261,16 +265,16 @@ const TgSelectionCriteriaBehaviorImpl = {
                 const msg = "Running completed successfully.";
                 this._openToastWithoutEntity(msg, false, msg, false);
 
-                this.postRun(null, null, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, resultConfig);
+                this.postRun(null, null, result);
             } else {
-                this._setPropertyModel(metaValues);
-                this._centreChanged = centreChanged;
+                this._setPropertyModel(result.metaValues);
+                this._centreChanged = result.centreChanged;
 
                 const msg = this._toastMsg("Running", criteriaEntity);
                 this._openToast(criteriaEntity, msg, !criteriaEntity.isValid() || criteriaEntity.isValidWithWarning(), msg, false);
 
                 const newBindingEntity = this._postEntityReceived(criteriaEntity, false);
-                this.postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, resultConfig);
+                this.postRun(criteriaEntity, newBindingEntity, result);
             }
         }).bind(self);
 

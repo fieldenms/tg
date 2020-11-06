@@ -532,22 +532,22 @@ const TgEntityCentreBehaviorImpl = {
         }
         this.$.egi.showMarginAround = insertionPoints.length > 0;
 
-        self._postRun = (function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, resultConfig) {
+        self._postRun = (function (criteriaEntity, newBindingEntity, result) {
             if (criteriaEntity === null || criteriaEntity.isValidWithoutException()) {
-                if (typeof summary !== 'undefined') {
-                    this.retrievedTotals = summary;
+                if (typeof result.summary !== 'undefined') {
+                    this.retrievedTotals = result.summary;
                 }
-                this.retrievedEntities = resultEntities;
-                this.dynamicColumns = dynamicColumns;
-                this.selectionCriteriaEntity = criteriaEntity;
-                this.$.egi.renderingHints = renderingHints;
-                this.$.egi.adjustColumnWidths(columnWidths);
-                const pageCapacity = resultConfig.pageCapacity;
+                this.retrievedEntities = result.resultEntities;
+                this.dynamicColumns = result.dynamicColumns;
+                this.selectionCriteriaEntity = result.criteriaEntity;
+                this.$.egi.renderingHints = result.renderingHints;
+                this.$.egi.adjustColumnWidths(result.columnWidths);
+                const pageCapacity = result.resultConfig.pageCapacity;
                 this.$.selection_criteria.pageCapacity = pageCapacity;
-                this.$.egi.visibleRowsCount = resultConfig.visibleRowsCount;
-                this.$.egi.numberOfHeaderLines = resultConfig.numberOfHeaderLines;
-                this.$.egi.adjustColumnsVisibility(resultConfig.visibleColumnsWithOrder.map(column => column === "this" ? "" : column));
-                this.$.egi.adjustColumnsSorting(resultConfig.orderingConfig.map(propOrder => {
+                this.$.egi.visibleRowsCount = result.resultConfig.visibleRowsCount;
+                this.$.egi.numberOfHeaderLines = result.resultConfig.numberOfHeaderLines;
+                this.$.egi.adjustColumnsVisibility(result.resultConfig.visibleColumnsWithOrder.map(column => column === "this" ? "" : column));
+                this.$.egi.adjustColumnsSorting(result.resultConfig.orderingConfig.map(propOrder => {
                    if (propOrder.property === "this") {
                        propOrder.property = "";
                    }
@@ -565,7 +565,7 @@ const TgEntityCentreBehaviorImpl = {
                     this.$.selection_criteria._wasRun = 'yes';
                     console.debug('_wasRun has been changed to: ', this.$.selection_criteria._wasRun);
                 }
-                self.fire("tg-entity-centre-refreshed", { entities: resultEntities, pageCount: pageCount, pageNumber: this.$.selection_criteria.pageNumber, pageCapacity: pageCapacity });
+                self.fire("tg-entity-centre-refreshed", { entities: result.resultEntities, pageCount: result.pageCount, pageNumber: this.$.selection_criteria.pageNumber, pageCapacity: pageCapacity });
             }
         }).bind(self);
 
