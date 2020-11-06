@@ -85,6 +85,7 @@ import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
+import ua.com.fielden.platform.web.centre.api.actions.multi.IEntityMultiActionSelector;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
@@ -436,17 +437,11 @@ public class CriteriaResource extends AbstractWebResource {
             }
 
             // Running the rendering customiser for result set of entities.
-            final Optional<IRenderingCustomiser<?>> renderingCustomiser = centre.getRenderingCustomiser();
-            if (renderingCustomiser.isPresent()) {
-                final IRenderingCustomiser<?> renderer = renderingCustomiser.get();
-                final List<Object> renderingHints = new ArrayList<>();
-                for (final Object entity : pair.getValue()) {
-                    renderingHints.add(renderer.getCustomRenderingFor((AbstractEntity<?>)entity).get());
-                }
-                pair.getKey().put("renderingHints", renderingHints);
-            } else {
-                pair.getKey().put("renderingHints", new ArrayList<>());
-            }
+            pair.getKey().put("renderingHints", createRenderingHints(pair.getValue()));
+
+            //Apply primary and secondary action selectors
+            pair.getKey().put("primaryActionIndices", createPrimaryActionIndices(pair.getValue()));
+            pair.getKey().put("secondaryActionIndices", createSecondaryActionIndices(pair.getValue()));
 
             //Build dynamic properties object
             final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext = getDynamicResultProperties(
@@ -489,6 +484,33 @@ public class CriteriaResource extends AbstractWebResource {
             logger.debug("CRITERIA_RESOURCE: run finished.");
             return restUtil.rawListJsonRepresentation(list.toArray());
         }, restUtil);
+    }
+
+    private List<List<Integer>> createSecondaryActionIndices(final List<?> entities) {
+        final List<IEntityMultiActionSelector> selectors = centre.getSecondaryActionSelectors().orElse(new ArrayList<>());
+        return entities.stream().map(entity -> {
+            return selectors.stream().map(selector -> (Integer)selector.getActionFor((AbstractEntity<?>)entity)).collect(Collectors.toList());
+        }).collect(Collectors.toList());
+    }
+
+    private List<Integer> createPrimaryActionIndices(final List<?> entities) {
+        return centre.getPrimaryActionSelector().map(actionSelector -> {
+            return entities.stream().map(entity -> actionSelector.getActionFor((AbstractEntity<?>)entity)).collect(Collectors.toList());
+        }).orElse(new ArrayList<Integer>());
+    }
+
+    private List<Object> createRenderingHints(final List<?> entities) {
+        final Optional<IRenderingCustomiser<?>> renderingCustomiser = centre.getRenderingCustomiser();
+        if (renderingCustomiser.isPresent()) {
+            final IRenderingCustomiser<?> renderer = renderingCustomiser.get();
+            final List<Object> renderingHints = new ArrayList<>();
+            for (final Object entity : entities) {
+                renderingHints.add(renderer.getCustomRenderingFor((AbstractEntity<?>)entity).get());
+            }
+            return renderingHints;
+        } else {
+            return new ArrayList<>();
+        }
     }
 
     public static Stream<AbstractEntity<?>> enhanceResultEntitiesWithDynamicPropertyValues(final Stream<AbstractEntity<?>> stream, final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext) {
