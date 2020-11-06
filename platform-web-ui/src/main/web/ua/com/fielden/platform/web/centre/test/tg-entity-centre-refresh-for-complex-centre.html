@@ -46,8 +46,8 @@
                     
                     const old_postRun = centre._postRun;
                     
-                    centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, resultConfig) {
-                        old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, resultConfig);
+                    centre._postRun = function (criteriaEntity, newBindingEntity, result) {
+                        old_postRun(criteriaEntity, newBindingEntity, result);
                         
                         centre._postRun = old_postRun;
                         resolve('ok'); // resolve promise only if _postRun gracefully acomplishes
