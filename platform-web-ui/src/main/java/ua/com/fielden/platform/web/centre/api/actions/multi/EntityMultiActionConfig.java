@@ -39,4 +39,8 @@ public class EntityMultiActionConfig {
     public List<EntityActionConfig> actions() {
         return Collections.unmodifiableList(actions);
     }
+
+    public boolean isNoAction() {
+        return actions.stream().anyMatch(actionConfig -> !actionConfig.isNoAction());
+    }
 }

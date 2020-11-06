@@ -18,6 +18,7 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
+import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.impl.helpers.CustomPropsAssignmentHandler;
 import ua.com.fielden.platform.web.centre.api.impl.helpers.FunctionalEntity;
 import ua.com.fielden.platform.web.centre.api.impl.helpers.ResultSetRenderingCustomiser;
@@ -184,7 +185,7 @@ public class EntityCentreBuilderResultSetTest {
     public void null_primary_action_should_be_prevented() {
         centreFor(TgWorkOrder.class)
                 .addProp("key")
-                .addPrimaryAction(null)
+                .addPrimaryAction((EntityActionConfig)null)
                 .also()
                 .addSecondaryAction(action(FunctionalEntity.class).withContext(context().withCurrentEntity().build()).build())
                 .also()
@@ -198,7 +199,7 @@ public class EntityCentreBuilderResultSetTest {
                 .addProp("key")
                 .addPrimaryAction(action(FunctionalEntity.class).withContext(context().withCurrentEntity().build()).build())
                 .also()
-                .addSecondaryAction(null)
+                .addSecondaryAction((EntityActionConfig)null)
                 .build();
     }
 

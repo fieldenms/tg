@@ -19,9 +19,9 @@ import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActions;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
-import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
 
 /**
  * This contract is an entry point for an Entity Centre aPI -- an embedded domain specific language for constructing entity centres.
@@ -111,9 +111,9 @@ public interface IEntityCentreBuilder<T extends AbstractEntity<?>> {
                 .setCollapsedCardLayoutFor(Device.MOBILE, Optional.empty(), "some other valid string")
                 .addPrimaryAction(action(null).withContext(context().withCurrentEntity().withSelectionCrit().build()).icon("name").longDesc("tooltip text").build())
                 .also()
-                .addSecondaryAction(null)
+                .addSecondaryAction((EntityActionConfig)null)
                 .also()
-                .addSecondaryAction(null)
+                .addSecondaryAction((EntityActionConfig)null)
                 .setCustomPropsValueAssignmentHandler(null)
                 .setRenderingCustomiser(null)
                 .setQueryEnhancer(null, context().withMasterEntity().withSelectionCrit().build())
