@@ -133,7 +133,6 @@ Polymer({
                 centre._selectedView = 0;
                 centre.queryPart = queryPart;
                 centre.configUuid = unknownSubpath;
-                centre.saveAsName = this._reflector.UNDEFINED_CONFIG_TITLE; // this value means that configuration will be loaded from scratch
                 this._loadCentre.bind(this)(centre, false);
             } else {
                 if (elementLoader.attrs) {

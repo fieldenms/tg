@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import static java.lang.Math.min;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
@@ -25,10 +24,10 @@ import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityTyp
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalManagedType;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getVersion;
 
-import java.io.UnsupportedEncodingException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.net.URLEncoder;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -149,7 +148,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      *
      * @return
      */
-    static Map<String, Object> createCriteriaMetaValuesCustomObjectWithSaveAsInfo(final Map<String, Map<String, Object>> criteriaMetaValues, final boolean isCentreChanged, final Optional<Optional<String>> saveAsName, final Optional<Optional<String>> saveAsDesc, final Optional<Optional<String>> staleCriteriaMessage) {
+    static Map<String, Object> createCriteriaMetaValuesCustomObjectWithSaveAsInfo(final Map<String, Map<String, Object>> criteriaMetaValues, final boolean isCentreChanged, final Optional<Optional<String>> saveAsName, final Optional<Optional<String>> saveAsDesc, final Optional<Optional<String>> staleCriteriaMessage, final IUserProvider userProvider) {
         final Map<String, Object> customObject = createCriteriaMetaValuesCustomObject(criteriaMetaValues, isCentreChanged);
         saveAsName.ifPresent(name -> {
             customObject.put("saveAsName", name.orElse(""));
@@ -157,8 +156,11 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         saveAsName.ifPresent(name -> {
             customObject.put("configUuid", name.map(san -> {
                 try {
-                    return URLEncoder.encode("USER_" + san, UTF_8.toString());
-                } catch (final UnsupportedEncodingException e) {
+                    final String str = userProvider.getUser().getKey() + "-----" + san;
+                    final URI uri = new URI("http", null, "www.google.com", 80, "/" + str, null, null);
+                    //System.out.println("URI: [" + uri + "]");
+                    return uri.getRawPath().substring(1);
+                } catch (final URISyntaxException e) {
                     throw new RuntimeException(e);
                 }
             }).orElse(""));
@@ -539,7 +541,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 isFreshCentreChanged(freshCentre, updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, customObjectSaveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder)),
                 of(customObjectSaveAsName),
                 of(validationPrototype.centreTitleAndDesc(customObjectSaveAsName).map(titleDesc -> titleDesc._2)),
-                empty()
+                empty(),
+                userProvider
             );
             customObject.put(WAS_RUN_NAME, null); // make VIEW button disabled by default; this behaviour can be overridden by removing 'wasRun' customObject's entry
             customObject.put(APPLIED_CRITERIA_ENTITY_NAME, appliedCriteriaEntity);
