@@ -81,8 +81,8 @@ public class ResourceFactoryUtils {
         final String[] splitted = str.substring(7) // remove "default" at the beginning
             .split("uuid");
         return t2(
-            "".equals(splitted[0]) ? empty() : of(splitted[0].replace("%20", " ")), // decode spaces
-            splitted.length == 1 || "".equals(splitted[1]) ? empty() : of(splitted[1])
+            splitted.length == 0 || "".equals(splitted[0]) ? empty() : of(splitted[0].replace("%20", " ")), // decode spaces
+            splitted.length <= 1 || "".equals(splitted[1]) ? empty() : of(splitted[1])
         );
     }
     

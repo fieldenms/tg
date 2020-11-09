@@ -130,10 +130,12 @@ Polymer({
             const elementLoader = this.shadowRoot.querySelector("#elementToLoad")
             const centre = elementLoader.loadedElement;
             if (centre) {
-                centre._selectedView = 0;
-                centre.queryPart = queryPart;
-                centre.configUuid = unknownSubpath;
-                this._loadCentre.bind(this)(centre, false);
+                this.async(() => { // load new centre config only after current loading completed; this can be achieved by putting next loading in the end of queue; this is useful for link-configurations
+                    centre._selectedView = 0;
+                    centre.queryPart = queryPart;
+                    centre.configUuid = unknownSubpath;
+                    this._loadCentre.bind(this)(centre, false);
+                });
             } else {
                 if (elementLoader.attrs) {
                     elementLoader.attrs.configUuid = unknownSubpath;
