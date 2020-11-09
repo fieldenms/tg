@@ -214,11 +214,11 @@ const template = html`
                 <div class="menu-item-view" page-name="_"></div>
                 <template is="dom-repeat" items="[[menuItem.menu]]" as="firstLevelItem">
                     <template is="dom-if" if="[[!_isMenuPresent(firstLevelItem.menu)]]">
-                        <tg-menu-item-view class="menu-item-view" page-name$="[[_calcItemPath(firstLevelItem)]]" menu-item="[[firstLevelItem]]" submodule-id="[[_calcSubmoduleId(firstLevelItem)]]" module-id="[[menuItem.key]]" selected-module="[[selectedModule]]" submodule="[[submodule]]"></tg-menu-item-view>
+                        <tg-menu-item-view class="menu-item-view" page-name$="[[_calcItemPath(firstLevelItem)]]" menu-item="[[firstLevelItem]]" submodule-id="[[_calcSubmoduleId(firstLevelItem)]]" module-id="[[menuItem.key]]" selected-module="[[selectedModule]]"></tg-menu-item-view>
                     </template>
                     <template is="dom-if" if="[[_isMenuPresent(firstLevelItem.menu)]]">
                         <template is="dom-repeat" items="[[firstLevelItem.menu]]">
-                            <tg-menu-item-view class="menu-item-view" page-name$="[[_calcItemPath(firstLevelItem, item)]]" tooltip-text$="[[item.desc]]" menu-item="[[item]]" submodule-id="[[_calcSubmoduleId(firstLevelItem, item)]]" module-id="[[menuItem.key]]" selected-module="[[selectedModule]]" submodule="[[submodule]]"></tg-menu-item-view>
+                            <tg-menu-item-view class="menu-item-view" page-name$="[[_calcItemPath(firstLevelItem, item)]]" tooltip-text$="[[item.desc]]" menu-item="[[item]]" submodule-id="[[_calcSubmoduleId(firstLevelItem, item)]]" module-id="[[menuItem.key]]" selected-module="[[selectedModule]]"></tg-menu-item-view>
                         </template>
                     </template>
                 </template>
@@ -263,7 +263,7 @@ Polymer({
         menu: Array,
         menuItem: Object,
         selectedModule: String,
-        submodule: {
+        selectedSubmodule: {
             type: String,
             notify: true
         },
@@ -298,7 +298,7 @@ Polymer({
     ],
 
     observers: [
-        '_updatePage(menuItem, submodule)'
+        '_updatePage(menuItem, selectedSubmodule)'
     ],
     
     listeners: {
@@ -528,15 +528,15 @@ Polymer({
         return encodeURIComponent(groupItem.key) + (item ? "/" + encodeURIComponent(item.key) : '');
     },
 
-    _updatePage(menuItem, submodule) {
+    _updatePage(menuItem, selectedSubmodule) {
         if (!allDefined(arguments)) {
             return;
         }
         if (menuItem.key === decodeURIComponent(this.selectedModule)) {
-            const parts = submodule.substring(1).split('?');
-            const submodulePart = parts[0];
-            this._selectMenu(submodulePart);
-            this._selectPage(submodulePart, parts[1]);
+            const parts = selectedSubmodule.substring(1).split('?');
+            const selectedSubmodulePart = parts[0];
+            this._selectMenu(selectedSubmodulePart);
+            this._selectPage(selectedSubmodulePart, parts[1]);
         }
     },
 
@@ -630,7 +630,7 @@ Polymer({
      * The listener that listens the menu item activation on tap.
      */
     _itemActivated: function (e, detail) {
-        this.submodule = "/" + detail.selected
+        this.selectedSubmodule = '/' + detail.selected;
     },
 
     _selectedPageChanged: function (newValue, oldValue) {
@@ -656,7 +656,7 @@ Polymer({
             const viewToLoad = detail.toPage;
             if (viewToLoad) {
                 if (!viewToLoad.wasLoaded()) {
-                    viewToLoad.load(decodeURIComponent(this.submodule.substring(1)).split("?")[1]);
+                    viewToLoad.load(decodeURIComponent(this.selectedSubmodule.substring(1)).split("?")[1]);
                 } else {
                     viewToLoad.focusLoadedView();
                 }

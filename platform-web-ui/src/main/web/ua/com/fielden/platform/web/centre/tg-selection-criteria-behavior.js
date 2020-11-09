@@ -367,6 +367,7 @@ const TgSelectionCriteriaBehaviorImpl = {
             const hrefNoParamsNoSlashNoUuid = this.configUuid === '' ? hrefNoParamsNoSlash : hrefNoParamsNoSlash.substring(0, hrefNoParamsNoSlash.lastIndexOf(this.configUuid) - 1 /* slash also needs removal */);
             const hrefReplacedUuid = hrefNoParamsNoSlashNoUuid + (newConfigUuid === '' ? '' : '/' + newConfigUuid);
             window.history.replaceState(window.history.state, '', hrefReplacedUuid);
+            window.dispatchEvent(new CustomEvent('location-changed'));
             this.configUuid = newConfigUuid;
         }
         if (typeof customObject.wasRun !== 'undefined') {
