@@ -15,6 +15,7 @@ import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.okCan
 import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.yesNo;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.editAction;
+import static ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfigBuilder.multiAction;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.multi;
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.single;
@@ -1862,8 +1863,11 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //                .addProp(mkProp("Custom Prop", "Custom property with String type", String.class))
                 //                .also()
                 //                .addProp(mkProp("Custom Prop 2", "Custom property 2 with concrete value", "OK2"))
-
-                .addPrimaryAction(EDIT_ACTION.mkAction(TgPersistentEntityWithProperties.class))
+                .addPrimaryAction(multiAction(PrimaryActionSelector.class)
+                        .addAction(EDIT_ACTION.mkActionWithIcon(TgPersistentEntityWithProperties.class, "editor:mode-edit", Optional.of("color:green")))
+                        .addAction(EDIT_ACTION.mkActionWithIcon(TgPersistentEntityWithProperties.class, "editor:mode-edit", Optional.of("color:orange")))
+                        .addAction(EDIT_ACTION.mkActionWithIcon(TgPersistentEntityWithProperties.class, "editor:mode-edit", Optional.of("color:red"))).build())
+                //.addPrimaryAction(EDIT_ACTION.mkAction(TgPersistentEntityWithProperties.class))
 //                .addPrimaryAction(action(EntityEditAction.class).withContext(context().withCurrentEntity().withSelectionCrit().build())
 //                        .icon("editor:mode-edit")
 //                        .withStyle("color: green")
@@ -1887,7 +1891,28 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         EntityActionConfig.createMasterInDialogInvocationActionConfig()
                 ).also()*/
                 .addSecondaryAction(
+                        multiAction(PrimaryActionSelector.class).addAction(
                         action(TgDummyAction.class)
+                                .withContext(context().withSelectedEntities().build())
+                                .postActionSuccess(new PostActionSuccess(""
+                                        + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
+                                        ))
+                                .icon("accessibility")
+                                .withStyle("color: green")
+                                .shortDesc("Dummy")
+                                .longDesc("Dummy action, simply prints its result into console.")
+                                .build()
+                        ).addAction(action(TgDummyAction.class)
+                                .withContext(context().withSelectedEntities().build())
+                                .postActionSuccess(new PostActionSuccess(""
+                                        + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
+                                        ))
+                                .icon("accessibility")
+                                .withStyle("color: orange")
+                                .shortDesc("Dummy")
+                                .longDesc("Dummy action, simply prints its result into console.")
+                                .build()
+                        ).addAction(action(TgDummyAction.class)
                                 .withContext(context().withSelectedEntities().build())
                                 .postActionSuccess(new PostActionSuccess(""
                                         + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
@@ -1896,25 +1921,70 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 .withStyle("color: red")
                                 .shortDesc("Dummy")
                                 .longDesc("Dummy action, simply prints its result into console.")
-                                .build()
+                                .build())
+                        .build()
                 )
                 .also()
                 .addSecondaryAction(
-                        action(TgFunctionalEntityWithCentreContext.class).
-                                withContext(context().withSelectedEntities().build()).
-                                icon("assignment-turned-in").
-                                shortDesc("Function 3").
-                                longDesc("Functional context-dependent action 3 (TgFunctionalEntityWithCentreContext)").
-                                build()
+                        multiAction(PrimaryActionSelector.class)
+                        .addAction(
+                            action(TgFunctionalEntityWithCentreContext.class).
+                                    withContext(context().withSelectedEntities().build()).
+                                    icon("assignment-turned-in").
+                                    withStyle("color: orange").
+                                    shortDesc("Function 3").
+                                    longDesc("Functional context-dependent action 3 (TgFunctionalEntityWithCentreContext)").
+                                    build()
+                           )
+                        .addAction(
+                            action(TgFunctionalEntityWithCentreContext.class).
+                                    withContext(context().withSelectedEntities().build()).
+                                    icon("assignment-turned-in").
+                                    withStyle("color: red").
+                                    shortDesc("Function 3").
+                                    longDesc("Functional context-dependent action 3 (TgFunctionalEntityWithCentreContext)").
+                                    build()
+                           )
+                        .addAction(
+                            action(TgFunctionalEntityWithCentreContext.class).
+                                    withContext(context().withSelectedEntities().build()).
+                                    icon("assignment-turned-in").
+                                    withStyle("color: green").
+                                    shortDesc("Function 3").
+                                    longDesc("Functional context-dependent action 3 (TgFunctionalEntityWithCentreContext)").
+                                    build()
+                           ).build()
                 )
                 .also()
                 .addSecondaryAction(
-                        action(TgFunctionalEntityWithCentreContext.class).
-                                withContext(context().withSelectionCrit().withSelectedEntities().build()).
-                                icon("attachment").
-                                shortDesc("Function 4").
-                                longDesc("Functional context-dependent action 4 (TgFunctionalEntityWithCentreContext)").
-                                build()
+                        multiAction(PrimaryActionSelector.class)
+                        .addAction(
+                            action(TgFunctionalEntityWithCentreContext.class).
+                                    withContext(context().withSelectionCrit().withSelectedEntities().build()).
+                                    icon("attachment").
+                                    withStyle("color: red").
+                                    shortDesc("Function 4").
+                                    longDesc("Functional context-dependent action 4 (TgFunctionalEntityWithCentreContext)").
+                                    build()
+                           )
+                        .addAction(
+                            action(TgFunctionalEntityWithCentreContext.class).
+                                    withContext(context().withSelectionCrit().withSelectedEntities().build()).
+                                    icon("attachment").
+                                    withStyle("color: green").
+                                    shortDesc("Function 4").
+                                    longDesc("Functional context-dependent action 4 (TgFunctionalEntityWithCentreContext)").
+                                    build()
+                           )
+                        .addAction(
+                            action(TgFunctionalEntityWithCentreContext.class).
+                                    withContext(context().withSelectionCrit().withSelectedEntities().build()).
+                                    icon("attachment").
+                                    withStyle("color: orange").
+                                    shortDesc("Function 4").
+                                    longDesc("Functional context-dependent action 4 (TgFunctionalEntityWithCentreContext)").
+                                    build()
+                           ).build()
                 );
                 final IQueryEnhancerSetter<TgPersistentEntityWithProperties> beforeEnhancerConfiguration = (withCalculatedAndCustomProperties ? beforeRenderingCustomiserConfiguration.setCustomPropsValueAssignmentHandler(CustomPropsAssignmentHandler.class) : beforeRenderingCustomiserConfiguration)
                 .setRenderingCustomiser(TestRenderingCustomiser.class);

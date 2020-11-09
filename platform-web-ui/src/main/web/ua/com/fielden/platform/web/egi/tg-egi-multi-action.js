@@ -66,8 +66,7 @@ export class TgEgiMultiAction extends PolymerElement {
             },
             //List of actions to select from.
             actions: {
-                type: Array,
-                value: () => []
+                type: Array
             },
             //Function that returns current entity of egi that was choosen by this action.
             currentEntity: {
@@ -81,7 +80,7 @@ export class TgEgiMultiAction extends PolymerElement {
 
     ready () {
         super.ready();
-        this.actions = this.$.actions_selector.assignedNodes({flatten: true});
+        this.actions = this.actions || this.$.actions_selector.assignedNodes({flatten: true});
     }
 
     _isHidden (actionIndex, currentIndex) {

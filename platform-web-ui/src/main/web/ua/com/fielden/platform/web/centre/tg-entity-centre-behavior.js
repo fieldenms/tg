@@ -541,6 +541,8 @@ const TgEntityCentreBehaviorImpl = {
                 this.dynamicColumns = result.dynamicColumns;
                 this.selectionCriteriaEntity = result.criteriaEntity;
                 this.$.egi.renderingHints = result.renderingHints;
+                this.$.egi.primaryActionIndices = result.primaryActionIndices;
+                this.$.egi.secondaryActionIndices = result.secondaryActionIndices;
                 this.$.egi.adjustColumnWidths(result.columnWidths);
                 const pageCapacity = result.resultConfig.pageCapacity;
                 this.$.selection_criteria.pageCapacity = pageCapacity;

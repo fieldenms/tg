@@ -225,7 +225,7 @@ const TgSelectionCriteriaBehaviorImpl = {
                     pageCount: customObject.pageCount,
                     pageNumber: customObject.pageNumber,
                     metaValues: customObject.metaValues,
-                    centreChanged: customObject,
+                    centreChanged: customObject.isCentreChanged,
                     renderingHints: customObject.renderingHints || [],
                     dynamicColumns: customObject.dynamicColumns || {},
                     summary: customObject.summary,

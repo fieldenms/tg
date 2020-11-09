@@ -41,6 +41,6 @@ public class EntityMultiActionConfig {
     }
 
     public boolean isNoAction() {
-        return actions.stream().anyMatch(actionConfig -> !actionConfig.isNoAction());
+        return !actions.stream().anyMatch(actionConfig -> !actionConfig.isNoAction());
     }
 }
