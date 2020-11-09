@@ -103,9 +103,34 @@ Polymer({
     },
 
     ready: function () {
+        const self = this;
         this.classList.add('generatedCentre');
         // assign the download attachment function to EGI
         this.$.egi.downloadAttachment = this.$.selection_criteria.mkDownloadAttachmentFunction();
+        
+        // TODO smth. like this should be generated here:
+        this.frontActions = [
+            //generatedFrontActionObjects
+        ];
+        this.topLevelActions = [
+            //generatedActionObjects
+        ];
+        // TODO do we need to notify paths?
+        // TODO do we need to notify paths?
+        this.secondaryActions = [
+            //generatedSecondaryActions
+        ];
+
+        this.insertionPointActions = [
+            //generatedInsertionPointActions
+        ];
+        this.primaryAction = [
+            //generatedPrimaryAction
+        ];
+        this.propActions = [
+            //generatedPropActions
+        ];
+
         //toolbarGeneratedFunction
 
         //@centre-is-ready-custom-code
@@ -128,28 +153,7 @@ Polymer({
                 console.log("postRetrieved");
             }.bind(self);
 
-            // TODO smth. like this should be generated here:
-            self.frontActions = [
-                //generatedFrontActionObjects
-            ];
-            self.topLevelActions = [
-                //generatedActionObjects
-            ];
-            // TODO do we need to notify paths?
-            // TODO do we need to notify paths?
-            self.secondaryActions = [
-                //generatedSecondaryActions
-            ];
-
-            self.insertionPointActions = [
-                //generatedInsertionPointActions
-            ];
-            self.primaryAction = [
-                //generatedPrimaryAction
-            ];
-            self.propActions = [
-                //generatedPropActions
-            ];
+            
             //gridLayoutConfig
 
             //@centre-has-been-attached-custom-code

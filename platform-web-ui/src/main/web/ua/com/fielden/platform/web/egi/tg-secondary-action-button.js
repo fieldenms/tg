@@ -63,7 +63,7 @@ Polymer({
     },
 
     ready: function() {
-        this.currentIndices = this.actions.map(action => 0);
+        this.currentIndices = this.currentIndices || this.actions.map(action => 0);
     },
 
     _showDropdown: function (e, detail) {

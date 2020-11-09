@@ -40,7 +40,7 @@
             const _changeEntityAndRefreshParentCentre = function (propValue, entity, centre, propName) {
                 return new Promise(function (resolve, reject) {
                     // retrieve primary action
-                    const editAction = centre.$.egi.$.primary_action_selector.assignedNodes()[0];
+                    const editAction = centre.$.egi.$.primary_action_selector.assignedNodes()[0].actions[0];
                     // and provide it with appropriate context
                     editAction.currentEntity = () => entity;
                     

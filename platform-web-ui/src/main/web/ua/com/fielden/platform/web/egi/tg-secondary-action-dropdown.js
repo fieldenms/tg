@@ -108,7 +108,7 @@ Polymer({
     },
 
     _dropdownOpened: function () {
-        this.$.actions_selector.assignedNodes({flatten: true}).forEach( item => item._updateSpinnerIfNeeded());
+        this.$.actions_selector.assignedNodes({flatten: true}).forEach( item => item.actions.forEach(action => action._updateSpinnerIfNeeded()));
     },
 
     _dropdownClosed: function() {

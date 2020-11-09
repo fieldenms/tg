@@ -85,7 +85,7 @@
                     assert.strictEqual(result.resultEntities.length, 20, 'The count of resultant entities for the centre should be 20. Page capacity is 20 for this centre.');
                     const entity = result.resultEntities[0];
                     
-                    const editAction = centre.$.egi.$.primary_action_selector.assignedNodes()[0];
+                    const editAction = centre.$.egi.$.primary_action_selector.assignedNodes()[0].actions[0];
                     editAction.currentEntity = () => entity;
                     const value = editAction._run();
                     

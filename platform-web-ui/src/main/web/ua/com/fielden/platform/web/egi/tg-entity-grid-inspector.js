@@ -560,7 +560,7 @@ const template = html`
                     <template id="right_egi_domRepeat" is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
                         <div class="table-data-row" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" is-editing$="[[egiEntity.editing]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
                             <div class="action-cell" hidden$="[[!_isSecondaryActionPresent]]">
-                                <tg-secondary-action-button class="action" actions="[[_secondaryActions]]" current-index="[[egiEntity.secondaryActionIndices]]" current-entity="[[_currentEntity(egiEntity.entity)]]" is-single="[[_isSingleSecondaryAction]]" dropdown-trigger="[[_openDropDown]]"></tg-secondary-action-button>
+                                <tg-secondary-action-button class="action" actions="[[_secondaryActions]]" current-indices="[[egiEntity.secondaryActionIndices]]" current-entity="[[_currentEntity(egiEntity.entity)]]" is-single="[[_isSingleSecondaryAction]]" dropdown-trigger="[[_openDropDown]]"></tg-secondary-action-button>
                             </div>
                         </div>
                     </template>
@@ -1350,7 +1350,7 @@ Polymer({
             const oldIndex = this._findEntity(newEntity, oldValue);
             const newRendHints = oldIndex < 0 ? {} : (this.renderingHints && this.renderingHints[oldIndex]) || {};
             const newPrimaryActionIndex = oldIndex < 0 ? 0 : (this.primaryActionIndices && this.primaryActionIndices[oldIndex]) || 0;
-            const defaultSecondaryActionIndices = this.secondaryActions.map(action => 0);
+            const defaultSecondaryActionIndices = this._secondaryActions.map(action => 0);
             const newSecondaryActionIndices = oldIndex < 0 ? defaultSecondaryActionIndices : (this.primaryActionIndices && this.primaryActionIndices[oldIndex]) || defaultSecondaryActionIndices;
             const egiEntity = {
                 over: this._areEqual(this.editingEntity, newEntity),

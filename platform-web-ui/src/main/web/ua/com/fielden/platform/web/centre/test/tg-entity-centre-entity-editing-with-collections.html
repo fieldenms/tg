@@ -44,7 +44,7 @@
 						assert.strictEqual(result.resultEntities.length, 1, 'The count of resultant entities for the centre should be 1.');
 						const entity = result.resultEntities[0];
 						
-						const editAction = centre.$.egi.$.primary_action_selector.assignedNodes()[0];
+						const editAction = centre.$.egi.$.primary_action_selector.assignedNodes()[0].actions[0];
 						editAction.currentEntity = () => entity;
 						const value = editAction._run();
 						
