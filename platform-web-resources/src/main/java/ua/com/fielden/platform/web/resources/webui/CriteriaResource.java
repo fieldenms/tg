@@ -191,6 +191,9 @@ public class CriteriaResource extends AbstractWebResource {
                 System.out.println("URI: [" + uri + "]");
                 System.out.println("URI path: [" + uri.getPath().substring(1) + "]");
                 
+                // TODO need to check configUuid on configuration existence in either current user's set of configurations or in other user's set
+                // TODO if there is no config with such configUuid then error should be shown
+                
                 // configuration being loaded need to become preferred
                 actualSaveAsName = of(uri.getPath().substring(1));
                 if (!LINK_CONFIG_TITLE.equals(actualSaveAsName.get())) {
