@@ -4,6 +4,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.joining;
+import static ua.com.fielden.platform.eql.stage2.elements.ChildToChildGroupTransformator.convertToGroup;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.types.tuples.T3.t3;
 
@@ -244,99 +245,6 @@ public class PathsToTreeTransformator {
         final PropsResolutionContext prc = new PropsResolutionContext(domainInfo, asList(asList(contextSource)), sourceId);
         final Expression1 exp = (Expression1) (new StandAloneExpressionBuilder(gen, expressionModel)).getResult().getValue();
         return exp.transform(prc);
-    }
-    
-    private static List<ChildGroup> convertToGroup(final List<Child> children, final List<String> parentPrefix) {
-        final List<ChildGroup> result = new ArrayList<>();
-        final List<String> items = new ArrayList<>();
-        final Map<String, List<Child>> map = new HashMap<>();
-        final Map<String, SortedMap<String, QrySource2BasedOnPersistentType>> mapSources = new HashMap<>();
-        final Set<String> unions = new HashSet<>();
-        
-        // collecting data from children of the same name
-        for (final Child child : children) {
-            if (items.contains(child.main.name)) {
-                map.get(child.main.name).add(child);
-                if (child.source != null) {
-                    mapSources.get(child.main.name).put(child.source.contextId, child.source);
-                }
-            } else {
-                items.add(child.main.name);
-                final List<Child> itemChildren = new ArrayList<>();
-                final SortedMap<String, QrySource2BasedOnPersistentType> itemSources = new TreeMap<>();
-
-                itemChildren.add(child);
-                if (child.source != null) {
-                    itemSources.put(child.source.contextId, child.source);    
-                }
-                
-                map.put(child.main.name, itemChildren);
-                mapSources.put(child.main.name, itemSources);
-            }
-            
-            if (child.main instanceof UnionTypePropInfo || child.main instanceof ComponentTypePropInfo) {
-                unions.add(child.main.name);
-            }
-        }
-        
-        // ordering children for correct dependencies resolution
-        final Map<String, Set<String>> mapOfDependencies = new HashMap<>();
-        
-        for (final String item : items) {
-            mapOfDependencies.put(item, map.get(item).get(0).dependencies);
-        }
-
-        final List<String> orderedItems = new ArrayList<>();
-        
-        while (!mapOfDependencies.isEmpty()) {
-            String found = null;
-            for (Entry<String, Set<String>> el : mapOfDependencies.entrySet()) {
-                if (el.getValue().isEmpty()) {
-                    found = el.getKey();
-                    break;
-                }
-            }
-
-            orderedItems.add(found);
-            mapOfDependencies.remove(found);
-            
-            for (Entry<String, Set<String>> el : mapOfDependencies.entrySet()) {
-                el.getValue().remove(found);
-            }
-        }
-
-        // transforming into ChildGroup list
-        for (final String item : orderedItems) {
-            final Child first = map.get(item).iterator().next();
-            final List<Child> mergedItems = new ArrayList<>();
-            
-            final Map<String, String> groupPaths = new HashMap<>();
-            
-            for (final Child c : map.get(item)) {
-                mergedItems.addAll(c.getItems());
-                if (c.fullPath != null) {
-                    groupPaths.put(c.fullPath, c.explicitSourceId);    
-                }
-            }
-            
-            final List<String> newParentPrefix = new ArrayList<>(parentPrefix);
-            newParentPrefix.add(item);
-
-            final String itemName = parentPrefix.isEmpty() ? item : newParentPrefix.stream().collect(Collectors.joining("."));
-
-            if (unions.contains(item)) {
-                if (!mergedItems.isEmpty()) {
-                    result.addAll(convertToGroup(mergedItems, newParentPrefix));    
-                }
-                result.add(new ChildGroup(itemName, emptyList(), groupPaths, first.required, mapSources.get(item).isEmpty() ? first.source : mapSources.get(item).entrySet().iterator().next().getValue(), first.expr));
-
-            } else {
-                final List<ChildGroup> groupItems = mergedItems.isEmpty() ? emptyList() : convertToGroup(mergedItems, emptyList());
-                result.add(new ChildGroup(itemName, groupItems, groupPaths, first.required, mapSources.get(item).isEmpty() ? first.source : mapSources.get(item).entrySet().iterator().next().getValue(), first.expr));
-            }
-        }   
-        
-        return result;
     }
     
     private static class CalcPropResult {

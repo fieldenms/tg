@@ -23,7 +23,9 @@ public class QrySource3BasedOnSubqueries implements IQrySource3 {
         this.contextId = contextId;
         this.sqlId = sqlId;
         for (final Yield3 entry : models.get(0).yields.getYields()) {
-            columns.put(entry.alias, entry.column);
+            if (!entry.isHeader) {
+                columns.put(entry.alias, entry.column);    
+            }
         }
     }
 

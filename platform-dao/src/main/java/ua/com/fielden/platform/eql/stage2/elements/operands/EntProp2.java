@@ -39,7 +39,12 @@ public class EntProp2 implements ISingleOperand2<Expression3> {
 
     @Override
     public TransformationResult<Expression3> transform(final TransformationContext context) {
+        if (isHeader()) { //no need to resolve to column level
+            return new TransformationResult<Expression3>(new Expression3(new EntProp3(lastPart().name, null, type, hibType), emptyList()), context);
+        }
+        
         final T2<IQrySource3, Object> resolution = context.resolve(source, name);
+
         Expression3 transformedProp;  
         TransformationContext currentContext = context;
         if (resolution._2 instanceof String) {
