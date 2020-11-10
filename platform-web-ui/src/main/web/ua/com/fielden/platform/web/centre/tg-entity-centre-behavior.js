@@ -479,15 +479,8 @@ const TgEntityCentreBehaviorImpl = {
      */
     _computeSaverDisabled: function (saveAsName, _centreChanged, _editedPropsExist, _actionInProgress) {
         return _actionInProgress === true /* disabled when some action is in progress */ ||
-            (saveAsName !== '' && !this._isLinkConfig(saveAsName) /* always enabled for default and link configurations */ &&
+            (saveAsName !== '' && saveAsName !== this._reflector.LINK_CONFIG_TITLE /* always enabled for default and link configurations */ &&
             !this.canSave(_centreChanged, _editedPropsExist));
-    },
-
-    /**
-     * Returns 'true' in case where current saveAsName represent link configuration, 'false' otherwise.
-     */
-    _isLinkConfig: function (saveAsName) {
-        return saveAsName === this._reflector.LINK_CONFIG_TITLE;
     },
 
     /**
