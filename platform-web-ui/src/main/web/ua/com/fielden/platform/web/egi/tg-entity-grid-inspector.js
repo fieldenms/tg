@@ -1351,7 +1351,7 @@ Polymer({
             const newRendHints = oldIndex < 0 ? {} : (this.renderingHints && this.renderingHints[oldIndex]) || {};
             const newPrimaryActionIndex = oldIndex < 0 ? 0 : (this.primaryActionIndices && this.primaryActionIndices[oldIndex]) || 0;
             const defaultSecondaryActionIndices = this._secondaryActions.map(action => 0);
-            const newSecondaryActionIndices = oldIndex < 0 ? defaultSecondaryActionIndices : (this.primaryActionIndices && this.primaryActionIndices[oldIndex]) || defaultSecondaryActionIndices;
+            const newSecondaryActionIndices = oldIndex < 0 ? defaultSecondaryActionIndices : (this.secondaryActionIndices && this.secondaryActionIndices[oldIndex]) || defaultSecondaryActionIndices;
             const egiEntity = {
                 over: this._areEqual(this.editingEntity, newEntity),
                 selected: isSelected,

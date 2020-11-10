@@ -12,6 +12,12 @@ import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKin
 import ua.com.fielden.platform.web.interfaces.IImportable;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 
+/**
+ * {@link IRenderable} and {@link IImportable} element that represents multiple action element and it is renderable into tg-egi-multi-action component instance.
+ *
+ * @author TG Team
+ *
+ */
 public class FunctionalMultiActionElement implements IRenderable, IImportable {
 
     private final String widgetName;
@@ -19,6 +25,13 @@ public class FunctionalMultiActionElement implements IRenderable, IImportable {
 
     private final List<FunctionalActionElement> actionElements = new ArrayList<>();
 
+    /**
+     * Creates new muti action element based on config, action number and it's kind. This element is rendered into tg-egi-multi-action with set of simple tg-ui-action inside shadow dom.
+     *
+     * @param entityMultiActionConfig
+     * @param numberOfAction
+     * @param actionKind
+     */
     public FunctionalMultiActionElement(final EntityMultiActionConfig entityMultiActionConfig, final int numberOfAction, final FunctionalActionKind actionKind) {
         this.widgetPath = "egi/tg-egi-multi-action";
         this.widgetName = AbstractCriterionWidget.extractNameFrom(this.widgetPath);
@@ -41,7 +54,7 @@ public class FunctionalMultiActionElement implements IRenderable, IImportable {
     }
 
     /**
-     * Creates a string representation for the object which holds pre- and post-actions.
+     * Creates a string representation for the object which holds attributes, pre- and post-actions.
      *
      * @return
      */

@@ -2,6 +2,12 @@ package ua.com.fielden.platform.web.centre.api.actions.multi;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 
+/**
+ * Default action selector for single action. It always return 0.
+ *
+ * @author TG Team
+ *
+ */
 public class SingleActionSelector implements IEntityMultiActionSelector {
 
     @Override
