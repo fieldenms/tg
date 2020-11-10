@@ -10,14 +10,12 @@ import static ua.com.fielden.platform.types.tuples.T3.t3;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
@@ -170,8 +168,11 @@ public class PathsToTreeTransformator {
 
         final T2<String, Map<String, List<AbstractPropInfo<?>>>> next = getPathAndNextProps(firstPropInfoAndItsPathes.itsPropPathesByFullNames);
         
+        final String propName = firstPropInfoAndItsPathes.firstPropInfo.name;
+        final boolean propIsHeader = firstPropInfoAndItsPathes.firstPropInfo instanceof ComponentTypePropInfo || firstPropInfoAndItsPathes.firstPropInfo instanceof UnionTypePropInfo; 
+        
         if (next._2.isEmpty()) {
-            result.add(new Child(firstPropInfoAndItsPathes.firstPropInfo, emptyList(), next._1, false, null, calcPropResult.expression, next._1 == null ? null : explicitSource.contextId(), dependencies));    
+            result.add(new Child(propName, propIsHeader, emptyList(), next._1, false, null, calcPropResult.expression, next._1 == null ? null : explicitSource.contextId(), dependencies));    
         } else {
             final boolean required = firstPropInfoAndItsPathes.firstPropInfo instanceof EntityTypePropInfo ? ((EntityTypePropInfo<?>) firstPropInfoAndItsPathes.firstPropInfo).required : false;
 
@@ -197,7 +198,7 @@ public class PathsToTreeTransformator {
                 }
             }
 
-            result.add(new Child(firstPropInfoAndItsPathes.firstPropInfo, genRes._1, next._1, required, source, calcPropResult.expression, next._1 == null ? null : explicitSource.contextId(), dependencies));
+            result.add(new Child(propName, propIsHeader, genRes._1, next._1, required, source, calcPropResult.expression, next._1 == null ? null : explicitSource.contextId(), dependencies));
         }
         
         return t3(result, other, unionResult); 

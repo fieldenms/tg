@@ -39,7 +39,7 @@ public class EntProp2 implements ISingleOperand2<Expression3> {
 
     @Override
     public TransformationResult<Expression3> transform(final TransformationContext context) {
-        if (isHeader()) { //no need to resolve to column level
+        if (isHeader()) { //resolution to column level is not applicable here
             return new TransformationResult<Expression3>(new Expression3(new EntProp3(lastPart().name, null, type, hibType), emptyList()), context);
         }
         

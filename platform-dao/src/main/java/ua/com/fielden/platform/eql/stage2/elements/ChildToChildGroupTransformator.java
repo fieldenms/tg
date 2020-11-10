@@ -12,9 +12,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import ua.com.fielden.platform.entity.query.exceptions.EqlException;
-import ua.com.fielden.platform.eql.meta.ComponentTypePropInfo;
-import ua.com.fielden.platform.eql.meta.UnionTypePropInfo;
 import ua.com.fielden.platform.eql.stage2.elements.operands.Expression2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.Child;
 import ua.com.fielden.platform.eql.stage2.elements.sources.ChildGroup;
@@ -56,11 +53,11 @@ public class ChildToChildGroupTransformator {
         final Map<String, DataForChildGroup> dataMap = new HashMap<>();
         
         for (final Child child : children) {
-            DataForChildGroup existing = dataMap.get(child.main.name);
+            DataForChildGroup existing = dataMap.get(child.name);
             if (existing == null) {
-                final DataForChildGroup added = new DataForChildGroup(child.main.name, child.required, child.expr, //
+                final DataForChildGroup added = new DataForChildGroup(child.name, child.required, child.expr, //
                         child.dependencies, //
-                        child.main instanceof UnionTypePropInfo || child.main instanceof ComponentTypePropInfo);
+                        child.isHeader);
                 dataMap.put(added.mainName, added);
                 existing = added;
             }

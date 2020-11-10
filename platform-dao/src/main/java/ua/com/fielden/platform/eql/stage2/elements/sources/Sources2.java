@@ -79,7 +79,7 @@ public class Sources2  {
         TransformationContext currentContext = context;
         for (final ChildGroup fc : children) {
             for (final Entry<String, String> el : fc.paths.entrySet()) {
-                currentContext = currentContext.cloneWithResolutions(t2(el.getKey(), el.getValue()), t2(source, fc.expr == null ? fc.mainName : fc.expr));
+                currentContext = currentContext.cloneWithResolutions(t2(el.getKey(), el.getValue()), t2(source, fc.expr == null ? fc.name : fc.expr));
             }
 
             if (!fc.items.isEmpty()) {
@@ -101,7 +101,7 @@ public class Sources2  {
         final ISingleOperand3 lo;
         
         if (child.expr == null) {
-            lo = new EntProp3(child.mainName, rootSource, child.source.sourceType(), LongType.INSTANCE);
+            lo = new EntProp3(child.name, rootSource, child.source.sourceType(), LongType.INSTANCE);
         } else {
             final TransformationResult<Expression3> expTr = child.expr.transform(currentContext);
             lo = expTr.item;
@@ -120,7 +120,7 @@ public class Sources2  {
         final int prime = 31;
         int result = 1;
         result = prime * result + compounds.hashCode();
-        result = prime * result + main/*.contextId()*/.hashCode();
+        result = prime * result + main.hashCode();
         return result;
     }
 
@@ -136,6 +136,6 @@ public class Sources2  {
 
         final Sources2 other = (Sources2) obj;
 
-        return Objects.equals(main/*.contextId()*/, other.main/*.contextId()*/) && Objects.equals(compounds, other.compounds);
+        return Objects.equals(main, other.main) && Objects.equals(compounds, other.compounds);
     }
 }
