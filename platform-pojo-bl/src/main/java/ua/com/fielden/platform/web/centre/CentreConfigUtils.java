@@ -2,6 +2,8 @@ package ua.com.fielden.platform.web.centre;
 
 import static java.util.Optional.empty;
 import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
+
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -82,26 +84,29 @@ public class CentreConfigUtils {
     }
     
     /**
-     * Returns <code>true</code> in case where <code>saveAsName</code>d configuration represents default configuration or inherited from base user configuration,
+     * Returns <code>true</code> in case where <code>saveAsName</code>d configuration represents default / link configuration or inherited from base user configuration,
      * otherwise <code>false</code>.
      * 
      * @param saveAsName
      * @param selectionCrit
      * @return
      */
-    public static boolean isDefaultOrInherited(final Optional<String> saveAsName, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) {
-        return isDefault(saveAsName) || isInherited(saveAsName, () -> selectionCrit.loadableCentreConfigs().stream());
+    public static boolean isDefaultOrLinkOrInherited(final Optional<String> saveAsName, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) {
+        return isDefault(saveAsName) || LINK_CONFIG_TITLE.equals(saveAsName.get()) || isInherited(saveAsName, () -> selectionCrit.loadableCentreConfigs().stream());
     }
     
     /**
      * Returns <code>true</code> in case where <code>saveAsName</code>d configuration represents inherited from base user configuration, <code>false</code> otherwise.
+     * <p>
+     * Default and link configurations are not inherited.
      * 
      * @param saveAsName
      * @param streamLoadableConfigurations -- a function to stream loadable configurations for current user
      * @return
+     * @throws Result failure for non-default and non-link configurations, that have been deleted
      */
     public static boolean isInherited(final Optional<String> saveAsName, final Supplier<Stream<LoadableCentreConfig>> streamLoadableConfigurations) throws Result {
-        return saveAsName.isPresent() &&
+        return saveAsName.isPresent() && !LINK_CONFIG_TITLE.equals(saveAsName.get()) &&
             streamLoadableConfigurations.get()
             .filter(lcc -> lcc.getKey().equals(saveAsName.get()))
             .findAny().map(lcc -> lcc.isInherited()).orElseThrow(() -> failure("Configuration has been deleted."));

@@ -316,7 +316,7 @@ const TgEntityCentreBehaviorImpl = {
 
         _discarderDisabled: {
             type: Boolean,
-            computed: '_computeDiscarderDisabled(saveAsName, _centreChanged, _editedPropsExist, _actionInProgress)'
+            computed: '_computeDiscarderDisabled(_centreChanged, _editedPropsExist, _actionInProgress)'
         },
 
         _runnerDisabled: {
@@ -475,12 +475,12 @@ const TgEntityCentreBehaviorImpl = {
     },
 
     /**
-     * Computes SAVE button disablement: always enabled for default configurations, always disabled for link configurations and when action is in progress. Otherwise enabled when centre is changed from last saved version.
+     * Computes SAVE button disablement: always enabled for default and link configurations, disabled when action is in progress. Otherwise enabled when centre is changed from last saved version.
      */
     _computeSaverDisabled: function (saveAsName, _centreChanged, _editedPropsExist, _actionInProgress) {
         return _actionInProgress === true /* disabled when some action is in progress */ ||
-            (saveAsName !== '' /* always enabled for default configuration */ &&
-            (this._isLinkConfig(saveAsName) || !this.canSave(_centreChanged, _editedPropsExist)));
+            (saveAsName !== '' && !this._isLinkConfig(saveAsName) /* always enabled for default and link configurations */ &&
+            !this.canSave(_centreChanged, _editedPropsExist));
     },
 
     /**
@@ -491,10 +491,10 @@ const TgEntityCentreBehaviorImpl = {
     },
 
     /**
-     * Computes DISCARD button disablement: always disabled for link configurations and when action is in progress. Otherwise enabled when centre is changed from last saved version.
+     * Computes DISCARD button disablement: disabled when action is in progress. Otherwise enabled when centre is changed from last saved version.
      */
-    _computeDiscarderDisabled: function (saveAsName, _centreChanged, _editedPropsExist, _actionInProgress) {
-        return this._isLinkConfig(saveAsName) || _actionInProgress === true || !this.canDiscard(_centreChanged, _editedPropsExist);
+    _computeDiscarderDisabled: function (_centreChanged, _editedPropsExist, _actionInProgress) {
+        return _actionInProgress === true || !this.canDiscard(_centreChanged, _editedPropsExist);
     },
 
     _computeRunnerDisabled: function (_criteriaLoaded, _actionInProgress) {

@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.web.centre;
 
 import static ua.com.fielden.platform.error.Result.failure;
-import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrInherited;
+import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrLinkOrInherited;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.prepareDefaultCentre;
 
 import com.google.inject.Inject;
@@ -27,7 +27,7 @@ public class CentreConfigDeleteActionProducer extends DefaultEntityProducerWithC
     @Override
     protected CentreConfigDeleteAction provideDefaultValues(final CentreConfigDeleteAction entity) {
         if (contextNotEmpty()) {
-            if (isDefaultOrInherited(selectionCrit().saveAsName(), selectionCrit())) { // this will also throw early failure in case where current configuration was deleted
+            if (isDefaultOrLinkOrInherited(selectionCrit().saveAsName(), selectionCrit())) { // this will also throw early failure in case where current configuration was deleted
                 throw failure(ERR_CANNOT_BE_DELETED);
             }
             selectionCrit().deleteCentre();

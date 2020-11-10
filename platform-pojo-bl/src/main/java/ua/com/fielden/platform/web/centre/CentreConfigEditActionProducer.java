@@ -28,8 +28,8 @@ public class CentreConfigEditActionProducer extends AbstractCentreConfigCommitAc
     }
     
     @Override
-    protected Map<String, Object> performProduce(final CentreConfigEditAction entity, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity, final boolean isDefaultOrInherited) {
-        if (isDefaultOrInherited) {
+    protected Map<String, Object> performProduce(final CentreConfigEditAction entity, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity, final boolean isDefaultOrLinkOrInherited) {
+        if (isDefaultOrLinkOrInherited) {
             throw failure(ERR_CANNOT_BE_EDITED);
         } else {
             setTitleAndDesc(entity, selectionCrit.saveAsName().get(), selectionCrit);

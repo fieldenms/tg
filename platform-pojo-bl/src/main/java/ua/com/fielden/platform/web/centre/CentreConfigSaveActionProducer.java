@@ -3,6 +3,8 @@ package ua.com.fielden.platform.web.centre;
 import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.WAS_RUN_NAME;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.getCustomObject;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefault;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
+
 import java.util.Map;
 import java.util.Optional;
 
@@ -32,13 +34,13 @@ public class CentreConfigSaveActionProducer extends AbstractCentreConfigCommitAc
      * IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE.
      */
     @Override
-    protected Map<String, Object> performProduce(final CentreConfigSaveAction entity, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity, final boolean isDefaultOrInherited) {
-        if (isDefaultOrInherited) {
+    protected Map<String, Object> performProduce(final CentreConfigSaveAction entity, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity, final boolean isDefaultOrLinkOrInherited) {
+        if (isDefaultOrLinkOrInherited) {
             final Optional<String> saveAsName = selectionCrit.saveAsName();
-            if (!isDefault(saveAsName)) {
-                setTitleAndDesc(entity, saveAsName.get(), selectionCrit, COPY_ACTION_SUFFIX);
-            } else {
+            if (isDefault(saveAsName) || LINK_CONFIG_TITLE.equals(saveAsName.get())) {
                 makeTitleRequired(entity);
+            } else {
+                setTitleAndDesc(entity, saveAsName.get(), selectionCrit, COPY_ACTION_SUFFIX);
             }
             return getCustomObject(selectionCrit, appliedCriteriaEntity);
         } else { // owned configuration should be saved without opening 'Save As...' dialog
