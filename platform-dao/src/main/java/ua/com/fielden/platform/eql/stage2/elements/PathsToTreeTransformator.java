@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -88,7 +89,7 @@ public class PathsToTreeTransformator {
             final AbstractPropInfo<?> first = propEntry.getValue().get(0);
             FirstPropInfoAndItsPathes existing = result.get(first.name);
             if (existing == null) {
-                existing = new FirstPropInfoAndItsPathes(first, new HashMap<>());
+                existing = new FirstPropInfoAndItsPathes(first);
                 result.put(first.name, existing);
             }
 
@@ -171,8 +172,11 @@ public class PathsToTreeTransformator {
         final String propName = firstPropInfoAndItsPathes.firstPropInfo.name;
         final boolean propIsHeader = firstPropInfoAndItsPathes.firstPropInfo instanceof ComponentTypePropInfo || firstPropInfoAndItsPathes.firstPropInfo instanceof UnionTypePropInfo; 
         
+        final Set<String> dependenciesNames = dependencies.stream().map(c -> c.name).collect(Collectors.toSet());
+        final String explicitSourceContextId = next._1 == null ? null : explicitSource.contextId();
+        
         if (next._2.isEmpty()) {
-            result.add(new Child(propName, propIsHeader, emptyList(), next._1, false, null, calcPropResult.expression, next._1 == null ? null : explicitSource.contextId(), dependencies));    
+            result.add(new Child(propName, propIsHeader, emptyList(), next._1, false, null, calcPropResult.expression, explicitSourceContextId, dependenciesNames));    
         } else {
             final boolean required = firstPropInfoAndItsPathes.firstPropInfo instanceof EntityTypePropInfo ? ((EntityTypePropInfo<?>) firstPropInfoAndItsPathes.firstPropInfo).required : false;
 
@@ -198,7 +202,7 @@ public class PathsToTreeTransformator {
                 }
             }
 
-            result.add(new Child(propName, propIsHeader, genRes._1, next._1, required, source, calcPropResult.expression, next._1 == null ? null : explicitSource.contextId(), dependencies));
+            result.add(new Child(propName, propIsHeader, genRes._1, next._1, required, source, calcPropResult.expression, explicitSourceContextId, dependenciesNames));
         }
         
         return t3(result, other, unionResult); 
@@ -272,11 +276,10 @@ public class PathsToTreeTransformator {
 
     private static class FirstPropInfoAndItsPathes {
         private final AbstractPropInfo<?> firstPropInfo; //first API from path
-        private final Map<String, List<AbstractPropInfo<?>>> itsPropPathesByFullNames; // long names and their pathes that all start from 'propInfo'
+        private final Map<String, List<AbstractPropInfo<?>>> itsPropPathesByFullNames = new HashMap<>(); // long names and their pathes that all start from 'propInfo'
         
-        private FirstPropInfoAndItsPathes(final AbstractPropInfo<?> firstPropInfo, final Map<String, List<AbstractPropInfo<?>>> itsPropPathesByFullNames) {
+        private FirstPropInfoAndItsPathes(final AbstractPropInfo<?> firstPropInfo) {
             this.firstPropInfo = firstPropInfo;
-            this.itsPropPathesByFullNames = itsPropPathesByFullNames;
         }
     }
 }

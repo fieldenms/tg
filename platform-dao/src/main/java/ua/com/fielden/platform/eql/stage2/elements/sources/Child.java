@@ -31,7 +31,7 @@ public class Child {
             final QrySource2BasedOnPersistentType source, //
             final Expression2 expr, //
             final String explicitSourceId, //
-            final List<Child> dependencies) {
+            final Set<String> dependencies) {
         this.name = name;
         this.isHeader = isHeader;
         this.items = items;
@@ -40,7 +40,7 @@ public class Child {
         this.source = source;
         this.explicitSourceId = explicitSourceId;
         this.expr = expr;
-        this.dependencies = dependencies.stream().map(c -> c.name).collect(Collectors.toSet());
+        this.dependencies = dependencies;
 
         assert(items.isEmpty() || !items.isEmpty() && (source !=null || isHeader));
         assert(dependencies.isEmpty() ||
