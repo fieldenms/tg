@@ -99,12 +99,28 @@
 			<version>1.1.1</version>
 		</dependency>
 
-		<!-- Java Mail libraries -->
-		<dependency>
-			<groupId>javax.mail</groupId>
-			<artifactId>mail</artifactId>
-			<version>1.5.0-b01</version>
-		</dependency>
+        <!-- Java Mail libraries -->
+        <!-- https://mvnrepository.com/artifact/javax.mail/javax.mail-api -->
+        <!-- The above is the API, the below is the reference implementation. -->
+        <dependency>
+            <groupId>com.sun.mail</groupId>
+            <artifactId>javax.mail</artifactId>
+            <version>1.6.2</version>
+        </dependency>
+
+        <!-- Microsfot authentication library - required for exchanging tokens (?). -->
+        <dependency>
+            <groupId>com.microsoft.azure</groupId>
+            <artifactId>msal4j</artifactId>
+            <version>1.7.1</version>
+        </dependency>
+
+        <!-- Microsfot graph library - required for sending/receiving emails. -->
+        <dependency>
+            <groupId>com.microsoft.graph</groupId>
+            <artifactId>microsoft-graph</artifactId>
+            <version>2.3.2</version>
+        </dependency>
 
 		<dependency>
 			<groupId>org.apache.poi</groupId>
