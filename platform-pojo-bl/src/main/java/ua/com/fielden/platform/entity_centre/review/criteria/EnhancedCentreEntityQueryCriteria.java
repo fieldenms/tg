@@ -48,7 +48,6 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private Supplier<Optional<String>> saveAsNameSupplier;
     private Consumer<Optional<String>> preferredConfigMaker;
     private Function<Optional<String>, Optional<T2<String, String>>> centreTitleAndDescGetter;
-    private Supplier<ICentreDomainTreeManagerAndEnhancer> baseCentreSupplier;
     private Supplier<Boolean> centreChangedGetter;
     private Function<Optional<String>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>> criteriaValidationPrototypeCreator;
     private BiFunction<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>, Optional<String>, Map<String, Object>> centreCustomObjectGetter;
@@ -217,14 +216,6 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
 
     public Optional<T2<String, String>> centreTitleAndDesc(final Optional<String> saveAsName) {
         return centreTitleAndDescGetter.apply(saveAsName);
-    }
-
-    public void setBaseCentreSupplier(final Supplier<ICentreDomainTreeManagerAndEnhancer> baseCentreSupplier) {
-        this.baseCentreSupplier = baseCentreSupplier;
-    }
-
-    public ICentreDomainTreeManagerAndEnhancer baseCentre() {
-        return baseCentreSupplier.get();
     }
 
     public void setCentreCustomObjectGetter(final BiFunction<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>, Optional<String>, Map<String, Object>> centreCustomObjectGetter) {

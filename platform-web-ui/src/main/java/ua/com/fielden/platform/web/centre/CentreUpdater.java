@@ -735,7 +735,7 @@ public class CentreUpdater {
         } else {
             // Default centre is used as a 'base' for all centres; all diffs are created comparing to default centre.
             // Default centre is now needed for both cases: base or non-base user.
-            if (user.isBase() || of(WebApiUtils.LINK_CONFIG_TITLE).equals(saveAsName) || empty().equals(saveAsName)) { // for non-base user 'link' and 'default' configurations need to be derived from default user-specific configuration instead of base configuration
+            if (user.isBase() || of(LINK_CONFIG_TITLE).equals(saveAsName) || empty().equals(saveAsName)) { // for non-base user 'link' and 'default' configurations need to be derived from default user-specific configuration instead of base configuration
                 // diff centre does not exist in persistent storage yet -- initialise EMPTY diff
                 resultantDiff = saveNewEntityCentreManager(createEmptyDifferences(), miType, user, deviceSpecificDiffName, null, eccCompanion, mmiCompanion);
             } else { // non-base user
@@ -744,11 +744,11 @@ public class CentreUpdater {
                 try {
                     // diff centre does not exist in persistent storage yet -- create a diff by comparing basedOnCentre (configuration created by base user) and default centre
                     final User baseUser = beginBaseUserOperations(userProvider, user, userCompanion);
-                    final ICentreDomainTreeManagerAndEnhancer baseCentre = getBaseCentre(baseUser, userProvider, miType, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+                    final Optional<Map<String, Object>> baseCentreDiffOpt = retrieveDiff(miType, baseUser, deviceSpecific(saveAsSpecific(SAVED_CENTRE_NAME, saveAsName), device) + DIFFERENCES_SUFFIX, eccCompanion);
                     // find description of the centre configuration to be copied from
-                    upstreamDesc = updateCentreDesc(baseUser, miType, saveAsName, device, eccCompanion);
+                    upstreamDesc = baseCentreDiffOpt.isPresent() ? updateCentreDesc(baseUser, miType, saveAsName, device, eccCompanion) : null;
                     // creates differences centre from the differences between base user's 'default centre' (which can be user specific, see IValueAssigner for properties dependent on User) and 'baseCentre'
-                    differences = createDifferences(baseCentre, getDefaultCentre(miType, webUiConfig), getEntityType(miType));
+                    differences = baseCentreDiffOpt.orElseGet(CentreUpdater::createEmptyDifferences);
                 } finally {
                     endBaseUserOperations(user, userProvider);
                 }
@@ -778,32 +778,6 @@ public class CentreUpdater {
     }
     
     /**
-     * Retrieves current version of base centre for <code>baseUser</code>.
-     * <p>
-     * This method's call must be enclosed into {@link #beginBaseUserOperations(IUserProvider, User, IUser)} and {@link #endBaseUserOperations(User, IUserProvider)} calls.
-     * 
-     * @param baseUser
-     * @param miType
-     * @param saveAsName -- user-defined title of 'saveAs' centre configuration or empty {@link Optional} for unnamed centre
-     * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
-     * @return
-     */
-    private static ICentreDomainTreeManagerAndEnhancer getBaseCentre(
-            final User baseUser,
-            final IUserProvider userProvider,
-            final Class<? extends MiWithConfigurationSupport<?>> miType,
-            final Optional<String> saveAsName,
-            final DeviceProfile device,
-            final IDomainTreeEnhancerCache domainTreeEnhancerCache,
-            final IWebUiConfig webUiConfig,
-            final IEntityCentreConfig eccCompanion,
-            final IMainMenuItem mmiCompanion,
-            final IUser userCompanion,
-            final ICompanionObjectFinder companionFinder) {
-        return updateCentre(baseUser, userProvider, miType, SAVED_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
-    }
-    
-    /**
      * Completes base user work: {@link IUserProvider} receives back <code>user</code>.
      * 
      * @param user
@@ -813,44 +787,6 @@ public class CentreUpdater {
     private static void endBaseUserOperations(final User user, final IUserProvider userProvider) {
         // return 'user' into user provider
         userProvider.setUser(user);
-    }
-    
-    /**
-     * Returns the centre from which the specified centre is derived from. Parameters <code>saveAsName</code>, <code>device</code> and current user (<code>gdtm.getUserProvider().getUser()</code>) identify the centre for which
-     * base centre is looking for.
-     * <p>
-     * For non-base user the base centre is identified as SAVED_CENTRE_NAME version of the centre of the same <code>saveAsName</code> configured by <code>user</code>'s base user. 
-     * For base user the base centre is identified as <code>getDefaultCentre()</code>. 
-     *
-     * @param user
-     * @param miType
-     * @param saveAsName -- user-defined title of 'saveAs' centre configuration or empty {@link Optional} for unnamed centre
-     * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
-     * @return
-     */
-    public static ICentreDomainTreeManagerAndEnhancer baseCentre(
-            final User user,
-            final IUserProvider userProvider,
-            final Class<? extends MiWithConfigurationSupport<?>> miType,
-            final Optional<String> saveAsName,
-            final DeviceProfile device,
-            final IDomainTreeEnhancerCache domainTreeEnhancerCache,
-            final IWebUiConfig webUiConfig,
-            final IEntityCentreConfig eccCompanion,
-            final IMainMenuItem mmiCompanion,
-            final IUser userCompanion,
-            final ICompanionObjectFinder companionFinder) {
-        if (user.isBase()) {
-            return getDefaultCentre(miType, webUiConfig);
-        } else {
-            try {
-                final User baseUser = beginBaseUserOperations(userProvider, user, userCompanion);
-                return getBaseCentre(baseUser, userProvider, miType, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
-            } finally {
-                endBaseUserOperations(user, userProvider);
-            }
-            
-        }
     }
     
     /**
