@@ -54,7 +54,7 @@ public class CentreConfigLoadActionDao extends CommonEntityDao<CentreConfigLoadA
             });
         // configuration being loaded need to become preferred
         selectionCrit.makePreferredConfig(of(saveAsNameToLoad));
-        entity.setCustomObject(getCustomObject(selectionCrit, selectionCrit.createCriteriaValidationPrototype(of(saveAsNameToLoad)), of(saveAsNameToLoad)));
+        entity.setCustomObject(getCustomObject(selectionCrit, selectionCrit.createCriteriaValidationPrototype(of(saveAsNameToLoad)), of(saveAsNameToLoad), of(selectionCrit.centreConfigUuid(of(saveAsNameToLoad)))));
         return super.save(entity);
     }
     

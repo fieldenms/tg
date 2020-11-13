@@ -181,6 +181,7 @@ public class CriteriaResource extends AbstractWebResource {
                 actualSaveAsName = of(LINK_CONFIG_TITLE); // 'link' configuration should be loaded
                 // clear current 'link' surrogate centres -- this is to make them empty before applying new selection criteria parameters (client-side action after this request's response will be delivered)
                 removeCentres(user, miType, device(), actualSaveAsName, eccCompanion, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME);
+                sdfghfsdajhkg;
             } else if (configUuid.isPresent()) {
                 final String[] userNameAndSaveAsName = configUuid.get().split("-----");
                 if (!userNameAndSaveAsName[0].equals(userProvider.getUser().getKey())) {
@@ -264,9 +265,9 @@ public class CriteriaResource extends AbstractWebResource {
                         createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)),
                         isFreshCentreChanged(updatedFreshCentre, updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder)),
                         of(saveAsName),
+                        of(configUuid),
                         of(ofNullable(saveAsDesc)),
-                        empty(),
-                        userProvider
+                        empty()
                 )//
         );
     }
@@ -294,9 +295,9 @@ public class CriteriaResource extends AbstractWebResource {
                         createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)),
                         false,
                         empty(),
+                        empty(),
                         saveAsDesc,
-                        of(ofNullable(staleCriteriaMessage)),
-                        userProvider
+                        of(ofNullable(staleCriteriaMessage))
                 )//
         );
     }

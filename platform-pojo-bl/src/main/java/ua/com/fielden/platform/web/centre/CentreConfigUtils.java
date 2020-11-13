@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.centre;
 
 import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
 
@@ -42,8 +43,8 @@ public class CentreConfigUtils {
      * @param appliedCriteriaEntity
      * @return
      */
-    static Map<String, Object> getCustomObject(final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity) {
-        return getCustomObject(selectionCrit, appliedCriteriaEntity, selectionCrit.saveAsName());
+    static Map<String, Object> getCustomObject(final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity, final Optional<Optional<String>> configUuid) {
+        return getCustomObject(selectionCrit, appliedCriteriaEntity, selectionCrit.saveAsName(), configUuid);
     }
     
     /**
@@ -56,8 +57,8 @@ public class CentreConfigUtils {
      * @param saveAsNameToCompare
      * @return
      */
-    public static Map<String, Object> getCustomObject(final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity, final Optional<String> saveAsNameToCompare) {
-        return selectionCrit.centreCustomObject(appliedCriteriaEntity, saveAsNameToCompare);
+    public static Map<String, Object> getCustomObject(final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity, final Optional<String> saveAsNameToCompare, final Optional<Optional<String>> configUuid) {
+        return selectionCrit.centreCustomObject(appliedCriteriaEntity, saveAsNameToCompare, configUuid);
     }
     
     /**
@@ -69,7 +70,7 @@ public class CentreConfigUtils {
     public static Map<String, Object> prepareDefaultCentre(final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) {
         selectionCrit.clearDefaultCentre(); // clear it first
         selectionCrit.makePreferredConfig(empty()); // then make it preferred
-        return getCustomObject(selectionCrit, selectionCrit.createCriteriaValidationPrototype(empty()), empty()); // return corresponding custom object
+        return getCustomObject(selectionCrit, selectionCrit.createCriteriaValidationPrototype(empty()), empty(), of(empty()) /* update with empty uuid indicating default config */); // return corresponding custom object
     }
     
     /**

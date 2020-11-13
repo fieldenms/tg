@@ -95,6 +95,7 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
@@ -268,9 +269,10 @@ public class CentreUpdater {
             final IEntityCentreConfig eccCompanion,
             final IMainMenuItem mmiCompanion,
             final IUser userCompanion,
-            final ICompanionObjectFinder companionFinder) {
+            final ICompanionObjectFinder companionFinder,
+            final boolean enforceUpdating) {
         final String deviceSpecificName = deviceSpecific(saveAsSpecific(name, saveAsName), device);
-        final Map<String, Object> updatedDiff = updateDifferences(miType, user, userProvider, deviceSpecificName, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+        final Map<String, Object> updatedDiff = updateDifferences(miType, user, userProvider, deviceSpecificName, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder, enforceUpdating);
         return loadCentreFromDefaultAndDiff(user, miType, saveAsName, updatedDiff, webUiConfig, domainTreeEnhancerCache, companionFinder);
     }
     
@@ -287,6 +289,23 @@ public class CentreUpdater {
         final String deviceSpecificName = deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, saveAsName), device);
         final EntityCentreConfig eccWithDesc = findConfig(miType, user, deviceSpecificName + DIFFERENCES_SUFFIX, eccCompanion);
         return eccWithDesc == null ? null : eccWithDesc.getDesc();
+    }
+    
+    /**
+     * Updates (retrieves) current version of centre uuid.
+     *
+     * @param user
+     * @param miType
+     * @param saveAsName -- user-defined title of 'saveAs' centre configuration or empty {@link Optional} for unnamed centre
+     * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
+     * @return
+     */
+    public static Optional<String> updateCentreConfigUuid(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName, final DeviceProfile device, final IEntityCentreConfig eccCompanion) {
+        return saveAsName.map(name -> {
+            final String deviceSpecificName = deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, of(name)), device);
+            final EntityCentreConfig eccWithDesc = findConfig(miType, user, deviceSpecificName + DIFFERENCES_SUFFIX, eccCompanion);
+            return eccWithDesc == null ? null : eccWithDesc.getDesc();
+        });
     }
     
     /**
@@ -372,6 +391,7 @@ public class CentreUpdater {
      * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
      * @param centre -- the centre manager to commit
      * @param newDesc -- new description to be saved into persistent storage
+     * @param newConfigUuid -- new configUuid to be saved into persistent storage
      */
     public static ICentreDomainTreeManagerAndEnhancer commitCentre(
             final User user,
@@ -382,11 +402,12 @@ public class CentreUpdater {
             final DeviceProfile device,
             final ICentreDomainTreeManagerAndEnhancer centre,
             final String newDesc,
+            final String newConfigUuid,
             final IWebUiConfig webUiConfig,
             final IEntityCentreConfig eccCompanion,
             final IMainMenuItem mmiCompanion,
             final IUser userCompanion) {
-        return commitCentre(false, user, userProvider, miType, name, saveAsName, device, centre, newDesc, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+        return commitCentre(false, user, userProvider, miType, name, saveAsName, device, centre, newDesc, newConfigUuid, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
     }
     
     /**
@@ -433,6 +454,7 @@ public class CentreUpdater {
      * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
      * @param centre -- the centre manager to commit
      * @param newDesc -- new description to be saved into persistent storage
+     * @param newConfigUuid -- new configUuid to be saved into persistent storage
      */
     protected static ICentreDomainTreeManagerAndEnhancer commitCentre(
             final boolean withoutConflicts,
@@ -444,6 +466,7 @@ public class CentreUpdater {
             final DeviceProfile device,
             final ICentreDomainTreeManagerAndEnhancer centre,
             final String newDesc,
+            final String newConfigUuid,
             final IWebUiConfig webUiConfig,
             final IEntityCentreConfig eccCompanion,
             final IMainMenuItem mmiCompanion,
@@ -451,7 +474,7 @@ public class CentreUpdater {
         final String deviceSpecificName = deviceSpecific(saveAsSpecific(name, saveAsName), device);
         final ICentreDomainTreeManagerAndEnhancer defaultCentre = getDefaultCentre(miType, webUiConfig);
         // override old 'diff' with recently created one and save it
-        saveEntityCentreManager(withoutConflicts, createDifferences(centre, defaultCentre, getEntityType(miType)), miType, user, deviceSpecificName + DIFFERENCES_SUFFIX, newDesc, eccCompanion, mmiCompanion);
+        saveEntityCentreManager(withoutConflicts, createDifferences(centre, defaultCentre, getEntityType(miType)), miType, user, deviceSpecificName + DIFFERENCES_SUFFIX, newDesc, newConfigUuid, eccCompanion, mmiCompanion);
         return centre;
     }
     
@@ -692,6 +715,44 @@ public class CentreUpdater {
         return applyWebUIDefaultValues(createDefaultCentre(miType, webUiConfig), getEntityType(miType));
     }
     
+    private static T3<Map<String, Object>, String, String> upstreamConfigData(
+        final Class<? extends MiWithConfigurationSupport<?>> miType,
+        final User user,
+        final IUserProvider userProvider,
+        final String deviceSpecificName,
+        final Optional<String> saveAsName,
+        final DeviceProfile device,
+        final IDomainTreeEnhancerCache domainTreeEnhancerCache,
+        final IWebUiConfig webUiConfig,
+        final IEntityCentreConfig eccCompanion,
+        final IMainMenuItem mmiCompanion,
+        final IUser userCompanion,
+        final ICompanionObjectFinder companionFinder
+    ) {
+        // Default centre is used as a 'base' for all centres; all diffs are created comparing to default centre.
+        // Default centre is now needed for both cases: base or non-base user.
+        if (user.isBase() || of(LINK_CONFIG_TITLE).equals(saveAsName) || empty().equals(saveAsName)) { // for non-base user 'link' and 'default' configurations need to be derived from default user-specific configuration instead of base configuration
+            // diff centre does not exist in persistent storage yet -- initialise EMPTY diff
+            resultantDiff = saveNewEntityCentreManager(createEmptyDifferences(), miType, user, deviceSpecificDiffName, null, eccCompanion, mmiCompanion);
+        } else { // non-base user
+            final String upstreamDesc;
+            final Map<String, Object> differences;
+            try {
+                // diff centre does not exist in persistent storage yet -- create a diff by comparing basedOnCentre (configuration created by base user) and default centre
+                final User baseUser = beginBaseUserOperations(userProvider, user, userCompanion);
+                final Optional<Map<String, Object>> baseCentreDiffOpt = retrieveDiff(miType, baseUser, deviceSpecific(saveAsSpecific(SAVED_CENTRE_NAME, saveAsName), device) + DIFFERENCES_SUFFIX, eccCompanion);
+                // find description of the centre configuration to be copied from
+                upstreamDesc = baseCentreDiffOpt.isPresent() ? updateCentreDesc(baseUser, miType, saveAsName, device, eccCompanion) : null;
+                // creates differences centre from the differences between base user's 'default centre' (which can be user specific, see IValueAssigner for properties dependent on User) and 'baseCentre'
+                differences = baseCentreDiffOpt.orElseGet(CentreUpdater::createEmptyDifferences);
+            } finally {
+                endBaseUserOperations(user, userProvider);
+            }
+            // promotes diff to local cache and saves it into persistent storage
+            resultantDiff = saveNewEntityCentreManager(differences, miType, user, deviceSpecificDiffName, upstreamDesc, eccCompanion, mmiCompanion);
+        }
+    }
+    
     /**
      * Initialises 'differences centre' from the persistent storage, if it exists.
      * <p>
@@ -721,7 +782,8 @@ public class CentreUpdater {
             final IEntityCentreConfig eccCompanion,
             final IMainMenuItem mmiCompanion,
             final IUser userCompanion,
-            final ICompanionObjectFinder companionFinder) {
+            final ICompanionObjectFinder companionFinder,
+            final boolean enforceUpdating) {
         // the name consists of 'deviceSpecificName' and 'DIFFERENCES_SUFFIX'
         final String deviceSpecificDiffName = deviceSpecificName + DIFFERENCES_SUFFIX;
         
@@ -729,32 +791,11 @@ public class CentreUpdater {
         // WILL BE UPDATED IN EVERY CALL OF updateDifferencesCentre!
         
         // init (or update) diff centre from persistent storage if exists
-        final Optional<Map<String, Object>> retrievedDiff = retrieveDiff(miType, user, deviceSpecificDiffName, eccCompanion);
-        if (retrievedDiff.isPresent()) {
+        //final Optional<Map<String, Object>> retrievedDiff = retrieveDiff(miType, user, deviceSpecificDiffName, eccCompanion);
+        final Optional<EntityCentreConfig> retrievedConfig = CentreUpdaterUtils.retrieveConfig(miType, user, deviceSpecificDiffName, eccCompanion);
+        if (retrievedConfig.isPresent()) {
             resultantDiff = retrievedDiff.get();
         } else {
-            // Default centre is used as a 'base' for all centres; all diffs are created comparing to default centre.
-            // Default centre is now needed for both cases: base or non-base user.
-            if (user.isBase() || of(LINK_CONFIG_TITLE).equals(saveAsName) || empty().equals(saveAsName)) { // for non-base user 'link' and 'default' configurations need to be derived from default user-specific configuration instead of base configuration
-                // diff centre does not exist in persistent storage yet -- initialise EMPTY diff
-                resultantDiff = saveNewEntityCentreManager(createEmptyDifferences(), miType, user, deviceSpecificDiffName, null, eccCompanion, mmiCompanion);
-            } else { // non-base user
-                final String upstreamDesc;
-                final Map<String, Object> differences;
-                try {
-                    // diff centre does not exist in persistent storage yet -- create a diff by comparing basedOnCentre (configuration created by base user) and default centre
-                    final User baseUser = beginBaseUserOperations(userProvider, user, userCompanion);
-                    final Optional<Map<String, Object>> baseCentreDiffOpt = retrieveDiff(miType, baseUser, deviceSpecific(saveAsSpecific(SAVED_CENTRE_NAME, saveAsName), device) + DIFFERENCES_SUFFIX, eccCompanion);
-                    // find description of the centre configuration to be copied from
-                    upstreamDesc = baseCentreDiffOpt.isPresent() ? updateCentreDesc(baseUser, miType, saveAsName, device, eccCompanion) : null;
-                    // creates differences centre from the differences between base user's 'default centre' (which can be user specific, see IValueAssigner for properties dependent on User) and 'baseCentre'
-                    differences = baseCentreDiffOpt.orElseGet(CentreUpdater::createEmptyDifferences);
-                } finally {
-                    endBaseUserOperations(user, userProvider);
-                }
-                // promotes diff to local cache and saves it into persistent storage
-                resultantDiff = saveNewEntityCentreManager(differences, miType, user, deviceSpecificDiffName, upstreamDesc, eccCompanion, mmiCompanion);
-            }
         }
         return resultantDiff;
     }

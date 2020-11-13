@@ -4,6 +4,7 @@ import static java.lang.Math.min;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
+import static java.util.UUID.randomUUID;
 import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteriaWithModelHandler.CRITERIA_ENTITY_ID;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isBooleanCriterion;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
@@ -26,8 +27,6 @@ import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getVersion;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -138,32 +137,31 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
 
     /**
      * Creates the 'custom object' that contains 'critMetaValues', 'isCentreChanged' flag (see {@link #createCriteriaMetaValuesCustomObject(Map, boolean, int)},
-     * optional 'saveAsName' value and optional 'saveAsDesc' value.
+     * optional 'saveAsName' value, optional 'saveAsDesc' value and optional 'configUuid' value.
      *
      * @param criteriaMetaValues
      * @param isCentreChanged
      * @param saveAsName -- represents a configuration title to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
+     * @param configUuid -- represents uuid of configuration to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
      * @param saveAsDesc -- represents a configuration title's tooltip to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
      * @param staleCriteriaMessage
      *
      * @return
      */
-    static Map<String, Object> createCriteriaMetaValuesCustomObjectWithSaveAsInfo(final Map<String, Map<String, Object>> criteriaMetaValues, final boolean isCentreChanged, final Optional<Optional<String>> saveAsName, final Optional<Optional<String>> saveAsDesc, final Optional<Optional<String>> staleCriteriaMessage, final IUserProvider userProvider) {
+    static Map<String, Object> createCriteriaMetaValuesCustomObjectWithSaveAsInfo(
+        final Map<String, Map<String, Object>> criteriaMetaValues,
+        final boolean isCentreChanged,
+        final Optional<Optional<String>> saveAsName,
+        final Optional<Optional<String>> configUuid,
+        final Optional<Optional<String>> saveAsDesc,
+        final Optional<Optional<String>> staleCriteriaMessage
+    ) {
         final Map<String, Object> customObject = createCriteriaMetaValuesCustomObject(criteriaMetaValues, isCentreChanged);
         saveAsName.ifPresent(name -> {
             customObject.put("saveAsName", name.orElse(""));
         });
-        saveAsName.ifPresent(name -> {
-            customObject.put("configUuid", name.map(san -> {
-                try {
-                    final String str = userProvider.getUser().getKey() + "-----" + san;
-                    final URI uri = new URI("http", null, "www.google.com", 80, "/" + str, null, null);
-                    //System.out.println("URI: [" + uri + "]");
-                    return uri.getRawPath().substring(1);
-                } catch (final URISyntaxException e) {
-                    throw new RuntimeException(e);
-                }
-            }).orElse(""));
+        configUuid.ifPresent(uuid -> {
+            customObject.put("configUuid", uuid.orElse("")); // explicit coding into URI path format is not needed because of possible UUID characters: -abcdef0123456789
         });
         saveAsDesc.ifPresent(desc -> {
             customObject.put("saveAsDesc", desc.orElse(""));
@@ -533,16 +531,16 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             )
         );
         // creates custom object representing centre information for concrete criteriaEntity and saveAsName
-        validationPrototype.setCentreCustomObjectGetter((appliedCriteriaEntity, customObjectSaveAsName) -> {
+        validationPrototype.setCentreCustomObjectGetter(appliedCriteriaEntity -> customObjectSaveAsName -> configUuid -> {
             final ICentreDomainTreeManagerAndEnhancer freshCentre = appliedCriteriaEntity.getCentreDomainTreeMangerAndEnhancer();
             // In both cases (criteria entity valid or not) create customObject with criteriaEntity to be returned and bound into tg-entity-centre after save.
             final Map<String, Object> customObject = createCriteriaMetaValuesCustomObjectWithSaveAsInfo(
                 createCriteriaMetaValues(freshCentre, getEntityType(miType)),
                 isFreshCentreChanged(freshCentre, updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, customObjectSaveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder)),
                 of(customObjectSaveAsName),
+                configUuid,
                 of(validationPrototype.centreTitleAndDesc(customObjectSaveAsName).map(titleDesc -> titleDesc._2)),
-                empty(),
-                userProvider
+                empty()
             );
             customObject.put(WAS_RUN_NAME, null); // make VIEW button disabled by default; this behaviour can be overridden by removing 'wasRun' customObject's entry
             customObject.put(APPLIED_CRITERIA_ENTITY_NAME, appliedCriteriaEntity);
@@ -619,12 +617,16 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, empty(), device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
         });
         // applies new criteria from client application against FRESH centre and returns respective criteria entity
-        validationPrototype.setFreshCentreApplier((modifHolder) -> {
+        validationPrototype.setFreshCentreApplier(modifHolder -> {
             return createCriteriaEntityWithoutConflicts(modifHolder, companionFinder, critGenerator, miType, saveAsName, user, userProvider, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
         });
         // returns title / desc for named (inherited or owned) configuration and empty optional for unnamed (default) configuration
-        validationPrototype.setCentreTitleAndDescGetter((saveAsNameForTitleAndDesc) -> {
+        validationPrototype.setCentreTitleAndDescGetter(saveAsNameForTitleAndDesc -> {
             return saveAsNameForTitleAndDesc.map(name -> t2(name, updateCentreDesc(user, miType, of(name), device, eccCompanion)));
+        });
+        // returns configUuid for named (inherited, owned or link) configuration and empty optional for unnamed (default) configuration
+        validationPrototype.setCentreConfigUuidGetter(saveAsNameForConfigUuid -> {
+            return updateCentreConfigUuid(user, miType, saveAsNameForConfigUuid, device, eccCompanion);
         });
         // changes title / desc for current saveAsName'd configuration; returns custom object containing centre information
         validationPrototype.setCentreEditor((newName, newDesc) -> {
@@ -632,21 +634,24 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             // currently loaded configuration should remain preferred -- no action is required
             return validationPrototype.centreCustomObject(
                 createCriteriaEntity(validationPrototype.centreContextHolder().getModifHolder(), companionFinder, critGenerator, miType, of(newName), user, userProvider, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion),
-                of(newName)
+                of(newName),
+                empty() // no need to update already existing client-side configUuid
             );
         });
         // performs copying of current configuration with the specified title / desc; makes it preferred; returns custom object containing centre information
         validationPrototype.setCentreSaver((newName, newDesc) -> {
             final Optional<String> newSaveAsName = of(newName);
             final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+            final String newConfigUuid = randomUUID().toString();
             // save the 'fresh' centre with a new name -- buttons SAVE / DISCARD will be disabled
-            commitCentre(user, userProvider, miType, FRESH_CENTRE_NAME, newSaveAsName, device, freshCentre, newDesc, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-            commitCentre(user, userProvider, miType, SAVED_CENTRE_NAME, newSaveAsName, device, freshCentre, null, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            commitCentre(user, userProvider, miType, FRESH_CENTRE_NAME, newSaveAsName, device, freshCentre, newDesc, newConfigUuid, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            commitCentre(user, userProvider, miType, SAVED_CENTRE_NAME, newSaveAsName, device, freshCentre, null, newConfigUuid, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
             // when switching to new configuration we need to make it preferred
             validationPrototype.makePreferredConfig(newSaveAsName);
             return validationPrototype.centreCustomObject(
                 createCriteriaEntity(validationPrototype.centreContextHolder().getModifHolder(), companionFinder, critGenerator, miType, newSaveAsName, user, userProvider, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion),
-                newSaveAsName
+                newSaveAsName,
+                of(of(newConfigUuid))
             );
         });
         // returns ordered alphabetically list of 'loadable' configurations for current user

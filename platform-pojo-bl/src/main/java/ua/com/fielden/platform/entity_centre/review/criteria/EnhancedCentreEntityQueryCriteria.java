@@ -48,9 +48,10 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private Supplier<Optional<String>> saveAsNameSupplier;
     private Consumer<Optional<String>> preferredConfigMaker;
     private Function<Optional<String>, Optional<T2<String, String>>> centreTitleAndDescGetter;
+    private Function<Optional<String>, Optional<String>> centreConfigUuidGetter;
     private Supplier<Boolean> centreChangedGetter;
     private Function<Optional<String>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>> criteriaValidationPrototypeCreator;
-    private BiFunction<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>, Optional<String>, Map<String, Object>> centreCustomObjectGetter;
+    private Function<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>, Function<Optional<String>, Function<Optional<Optional<String>>, Map<String, Object>>>> centreCustomObjectGetter;
     /**
      * This function represents centre query runner for export action which is dependent on configuration of the passed <code>customObject</code>.
      * Running of this fully-fledged query depends on query context (see property centreContextHolder).
@@ -218,12 +219,20 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
         return centreTitleAndDescGetter.apply(saveAsName);
     }
 
-    public void setCentreCustomObjectGetter(final BiFunction<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>, Optional<String>, Map<String, Object>> centreCustomObjectGetter) {
+    public void setCentreConfigUuidGetter(final Function<Optional<String>, Optional<String>> centreConfigUuidGetter) {
+        this.centreConfigUuidGetter = centreConfigUuidGetter;
+    }
+
+    public Optional<String> centreConfigUuid(final Optional<String> saveAsName) {
+        return centreConfigUuidGetter.apply(saveAsName);
+    }
+
+    public void setCentreCustomObjectGetter(final Function<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>, Function<Optional<String>, Function<Optional<Optional<String>>, Map<String, Object>>>> centreCustomObjectGetter) {
         this.centreCustomObjectGetter = centreCustomObjectGetter;
     }
 
-    public Map<String, Object> centreCustomObject(final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> critEntity, final Optional<String> saveAsName) {
-        return centreCustomObjectGetter.apply(critEntity, saveAsName);
+    public Map<String, Object> centreCustomObject(final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> critEntity, final Optional<String> saveAsName, final Optional<Optional<String>> configUuid) {
+        return centreCustomObjectGetter.apply(critEntity).apply(saveAsName).apply(configUuid);
     }
 
     public void setCriteriaValidationPrototypeCreator(final Function<Optional<String>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>> criteriaValidationPrototypeCreator) {

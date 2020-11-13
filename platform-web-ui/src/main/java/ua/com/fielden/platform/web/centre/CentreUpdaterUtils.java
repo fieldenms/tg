@@ -96,8 +96,12 @@ public class CentreUpdaterUtils extends CentreUpdater {
             final User user,
             final String name,
             final IEntityCentreConfig eccCompanion) {
-        return ofNullable(eccCompanion.getEntity(from(modelFor(user, menuItemType.getName(), name)).model()))
+        return retrieveConfig(menuItemType, user, name, eccCompanion)
                 .map(ecc -> restoreDiffFrom(ecc, eccCompanion, format("for type [%s] with name [%s] for user [%s]", menuItemType.getSimpleName(), name, user)));
+    }
+    
+    public static Optional<EntityCentreConfig> retrieveConfig(final Class<?> menuItemType, final User user, final String name, final IEntityCentreConfig eccCompanion) {
+        return ofNullable(eccCompanion.getEntity(from(modelFor(user, menuItemType.getName(), name)).model()));
     }
     
     /**
@@ -140,9 +144,10 @@ public class CentreUpdaterUtils extends CentreUpdater {
             final User user,
             final String newName,
             final String newDesc,
+            final String newConfigUuid,
             final IEntityCentreConfig eccCompanion,
             final IMainMenuItem mmiCompanion) {
-        return saveNewEntityCentreManager(false, differences, menuItemType, user, newName, newDesc, eccCompanion, mmiCompanion);
+        return saveNewEntityCentreManager(false, differences, menuItemType, user, newName, newDesc, newConfigUuid, eccCompanion, mmiCompanion);
     }
     
     /**
@@ -157,6 +162,7 @@ public class CentreUpdaterUtils extends CentreUpdater {
             final User user,
             final String newName,
             final String newDesc,
+            final String newConfigUuid,
             final IEntityCentreConfig eccCompanion,
             final IMainMenuItem mmiCompanion) {
         final MainMenuItem menuItem = mmiCompanion.findByKeyOptional(menuItemType.getName()).orElseGet(() -> {
@@ -169,6 +175,9 @@ public class CentreUpdaterUtils extends CentreUpdater {
         ecc.setTitle(newName);
         ecc.setMenuItem(menuItem);
         ecc.setDesc(newDesc);
+        if (newConfigUuid != null) {
+            ecc.setConfigUuid(newConfigUuid);
+        }
         ecc.setConfigBody(CENTRE_DIFF_SERIALISER.serialise(differences));
         if (withoutConflicts) {
             eccCompanion.saveWithoutConflicts(ecc);
@@ -191,14 +200,18 @@ public class CentreUpdaterUtils extends CentreUpdater {
             final User user,
             final String name,
             final String newDesc,
+            final String newConfigUuid,
             final IEntityCentreConfig eccCompanion,
             final IMainMenuItem mmiCompanion) {
-        final EntityCentreConfig config = eccCompanion.getEntity(from(modelFor(user, menuItemType.getName(), name)).model());
+        final EntityCentreConfig config = eccCompanion.getEntity(from(modelFor(user, menuItemType.getName(), name)).model()); // TODO check whether default fetch model is sufficient for ConfigUuid
         if (config == null) {
-            saveNewEntityCentreManager(withoutConflicts, differences, menuItemType, user, name, newDesc, eccCompanion, mmiCompanion);
+            saveNewEntityCentreManager(withoutConflicts, differences, menuItemType, user, name, newDesc, newConfigUuid, eccCompanion, mmiCompanion);
         } else {
             if (newDesc != null) {
                 config.setDesc(newDesc);
+            }
+            if (newConfigUuid != null) {
+                config.setConfigUuid(newConfigUuid);
             }
             config.setConfigBody(CENTRE_DIFF_SERIALISER.serialise(differences));
             if (withoutConflicts) {
@@ -211,7 +224,7 @@ public class CentreUpdaterUtils extends CentreUpdater {
     }
     
     /**
-     * Finds {@link EntityCentreConfig} instance to be sufficient for changing 'preferred' property and 'title' / 'desc'.
+     * Finds {@link EntityCentreConfig} instance to be sufficient for changing 'preferred' / 'title' / 'desc' / 'configUuid' properties.
      * 
      * @param menuItemType
      * @param user
@@ -221,7 +234,7 @@ public class CentreUpdaterUtils extends CentreUpdater {
      */
     protected static EntityCentreConfig findConfig(final Class<?> menuItemType, final User user, final String name, final IEntityCentreConfig eccCompanion) {
         return eccCompanion.getEntity(
-            from(modelFor(user, menuItemType.getName(), name)).with(fetchWithKeyAndDesc(EntityCentreConfig.class, true).with("preferred").fetchModel()).model()
+            from(modelFor(user, menuItemType.getName(), name)).with(fetchWithKeyAndDesc(EntityCentreConfig.class, true).with("preferred").with("configUuid").fetchModel()).model()
         );
     }
     
