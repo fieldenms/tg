@@ -1,4 +1,4 @@
-BEGIN TRANSACTION transactio
+/*BEGIN TRANSACTION transactio*/
 
 /* DEKTOP: check */
 /*SELECT
@@ -36,8 +36,7 @@ WHERE _ID in (
             ID_CRAFT,
             SUBSTRING(TITLE, 17, 100)
         HAVING
-            COUNT(SUBSTRING(TITLE, 1, 15)) < 2
-            AND MAX(SUBSTRING(TITLE, 1, 15)) = '__________SAVED'
+            COUNT(SUBSTRING(TITLE, 1, 15)) < 2 /* removes SAVED single instances -- garbage for base users; removes FRESH single instances -- garbage for non-base users that pressed DISCARD */
         ) SUB
     WHERE
         ECC.TITLE = SUB.TITLE_TO_DELETE
@@ -45,7 +44,7 @@ WHERE _ID in (
         AND ECC.ID_MAIN_MENU = SUB.ID_MAIN_MENU
 )
 
-/* DEKTOP: check again after deletion */
+/* DEKTOP: check SAVED again after deletion */
 /*SELECT
     CONCAT(MAX(SUBSTRING(TITLE, 1, 15)), '[', SUBSTRING(TITLE, 17, 100)) AS TITLE_TO_DELETE,
     (SELECT KEY_ FROM USER_ U WHERE U._ID = ID_CRAFT) AS OWNER,
@@ -61,6 +60,33 @@ GROUP BY
 HAVING
     COUNT(SUBSTRING(TITLE, 1, 15)) < 2
     AND MAX(SUBSTRING(TITLE, 1, 15)) = '__________SAVED'*/
+
+/* DEKTOP: check FRESH again after deletion */
+/*SELECT
+    CONCAT(MAX(SUBSTRING(TITLE, 1, 15)), '[', SUBSTRING(TITLE, 17, 100)) AS TITLE_TO_DELETE,
+    (SELECT KEY_ FROM USER_ U WHERE U._ID = ID_CRAFT) AS OWNER,
+    (SELECT KEY_ FROM USER_ U1 WHERE U1._ID = (SELECT BASEDONUSER_ FROM USER_ U WHERE U._ID = ID_CRAFT) ) AS BASED_ON_USER,
+    (SELECT KEY_ FROM MAIN_MENU M WHERE M._ID = ID_MAIN_MENU) AS MI_TYPE,
+    MIN(PREFERRED_) AS PREFERRED 
+FROM ENTITY_CENTRE_CONFIG
+WHERE
+    TITLE LIKE '__________SAVED[[]%'
+    OR TITLE LIKE '__________FRESH[[]%'
+GROUP BY
+    ID_MAIN_MENU,
+    ID_CRAFT,
+    SUBSTRING(TITLE, 17, 100)
+HAVING
+    COUNT(SUBSTRING(TITLE, 1, 15)) < 2
+    AND MAX(SUBSTRING(TITLE, 1, 15)) = '__________FRESH'*/
+
+/*SELECT *
+FROM ENTITY_CENTRE_CONFIG
+WHERE
+    (TITLE = '__________SAVED[Daily Screen Priority TW 1,2,3]__________DIFFERENCES' OR TITLE = '__________FRESH[Daily Screen Priority TW 1,2,3]__________DIFFERENCES'
+    OR TITLE = '__________SAVED[RELEASES]__________DIFFERENCES' OR TITLE = '__________FRESH[RELEASES]__________DIFFERENCES'
+    OR TITLE = '__________SAVED[TC All priorities]__________DIFFERENCES' OR TITLE = '__________FRESH[TC All priorities]__________DIFFERENCES')
+    AND ID_CRAFT = (SELECT _ID FROM USER_ U WHERE U.KEY_ = 'TECH1_TI_BASE')*/
 
 /* MOBILE: check */
 /*SELECT
@@ -98,8 +124,7 @@ WHERE _ID in (
             ID_CRAFT,
             SUBSTRING(TITLE, 23, 100)
         HAVING
-            COUNT(SUBSTRING(TITLE, 1, 21)) < 2
-            AND MAX(SUBSTRING(TITLE, 1, 21)) = 'MOBILE__________SAVED'
+            COUNT(SUBSTRING(TITLE, 1, 21)) < 2 /* removes SAVED single instances -- garbage for base users; removes FRESH single instances -- garbage for non-base users that pressed DISCARD */
         ) SUB
     WHERE
         ECC.TITLE = SUB.TITLE_TO_DELETE
@@ -107,7 +132,7 @@ WHERE _ID in (
         AND ECC.ID_MAIN_MENU = SUB.ID_MAIN_MENU
 )
 
-/* MOBILE: check again after deletion */
+/* MOBILE: check SAVED again after deletion */
 /*SELECT
     CONCAT(MAX(SUBSTRING(TITLE, 1, 21)), '[', SUBSTRING(TITLE, 23, 100)) AS TITLE_TO_DELETE,
     (SELECT KEY_ FROM USER_ U WHERE U._ID = ID_CRAFT) AS OWNER,
@@ -124,9 +149,28 @@ HAVING
     COUNT(SUBSTRING(TITLE, 1, 21)) < 2
     AND MAX(SUBSTRING(TITLE, 1, 21)) = 'MOBILE__________SAVED'*/
 
+/* MOBILE: check FRESH again after deletion */
+/*SELECT
+    CONCAT(MAX(SUBSTRING(TITLE, 1, 21)), '[', SUBSTRING(TITLE, 23, 100)) AS TITLE_TO_DELETE,
+    (SELECT KEY_ FROM USER_ U WHERE U._ID = ID_CRAFT) AS OWNER,
+    (SELECT KEY_ FROM USER_ U1 WHERE U1._ID = (SELECT BASEDONUSER_ FROM USER_ U WHERE U._ID = ID_CRAFT) ) AS BASED_ON_USER,
+    (SELECT KEY_ FROM MAIN_MENU M WHERE M._ID = ID_MAIN_MENU) AS MI_TYPE,
+    MIN(PREFERRED_) AS PREFERRED 
+FROM ENTITY_CENTRE_CONFIG
+WHERE
+    TITLE LIKE 'MOBILE__________SAVED[[]%'
+    OR TITLE LIKE 'MOBILE__________FRESH[[]%'
+GROUP BY
+    ID_MAIN_MENU,
+    ID_CRAFT,
+    SUBSTRING(TITLE, 23, 100)
+HAVING
+    COUNT(SUBSTRING(TITLE, 1, 21)) < 2
+    AND MAX(SUBSTRING(TITLE, 1, 21)) = 'MOBILE__________FRESH'*/
+
 /* UUID column */
-/*ALTER TABLE ENTITY_CENTRE_CONFIG
-ADD CONFIGUUID_ VARCHAR(36)*/
+ALTER TABLE ENTITY_CENTRE_CONFIG
+ADD CONFIGUUID_ VARCHAR(36)
 
 /* Generate uuids in SAVED surrogate centres for both devices */
 UPDATE ENTITY_CENTRE_CONFIG
@@ -152,7 +196,7 @@ WHERE
     AND ID_MAIN_MENU = SUB.MAIN_MENU
 
 /* check uuids after generation */
-SELECT 
+/*SELECT 
     _ID,
     _VERSION,
     TITLE,
@@ -179,6 +223,6 @@ WHERE _ID in (
         AND ECC.ID_MAIN_MENU = SUB.ID_MAIN_MENU
 )
 ORDER BY
-    OWNER, MI_TYPE, TITLE
+    OWNER, MI_TYPE, TITLE*/
 
-ROLLBACK TRANSACTION transactio
+/*ROLLBACK TRANSACTION transactio*/

@@ -1,25 +1,31 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
+import static java.util.UUID.randomUUID;
 import static ua.com.fielden.platform.data.generator.IGenerator.FORCE_REGENERATION_KEY;
 import static ua.com.fielden.platform.data.generator.IGenerator.shouldForceRegeneration;
-import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.web.centre.CentreConfigUpdaterUtils.applyNewOrderVisibilityAndSorting;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.SAVED_CENTRE_NAME;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.centreConfigQueryFor;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.commitCentre;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.commitCentreWithoutConflicts;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.deviceSpecific;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.makePreferred;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.nameOf;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.obtainTitleFrom;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.removeCentres;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.retrievePreferredConfigName;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentreConfigUuid;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentreDesc;
+import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfig;
+import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfigOptByUuid;
 import static ua.com.fielden.platform.web.centre.CentreUtils.isFreshCentreChanged;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.UNDEFINED_CONFIG_TITLE;
@@ -40,7 +46,6 @@ import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesir
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentreContextHolder;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreModifiedPropertiesHolderFrom;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -172,6 +177,7 @@ public class CriteriaResource extends AbstractWebResource {
             System.out.println("configUuid === " + configUuid);
             
             final Optional<String> actualSaveAsName;
+            final Optional<String> resolvedConfigUuid;
             if (!getQuery().isEmpty()) {
                 // 'link' configuration loading is not limited only to first time loading;
                 // user can paste 'link' configuration URI into current app context;
@@ -179,40 +185,53 @@ public class CriteriaResource extends AbstractWebResource {
                 // however it is possible for user (or programmatically) to append params to save-as/link configuration that has uuid;
                 // in that case it still should act as applying those params against empty configuration on 'link' configuration infrastructure
                 actualSaveAsName = of(LINK_CONFIG_TITLE); // 'link' configuration should be loaded
-                // clear current 'link' surrogate centres -- this is to make them empty before applying new selection criteria parameters (client-side action after this request's response will be delivered)
-                removeCentres(user, miType, device(), actualSaveAsName, eccCompanion, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME);
-                sdfghfsdajhkg;
-            } else if (configUuid.isPresent()) {
-                final String[] userNameAndSaveAsName = configUuid.get().split("-----");
-                if (!userNameAndSaveAsName[0].equals(userProvider.getUser().getKey())) {
-                    throw failure(format("Unknown user [%s].", userNameAndSaveAsName[0]));
+                // ensure that both FRESH and SAVED link centres are present (creates automatically without configUuid if not)
+                updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+                updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, actualSaveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+                // create configUuids there if not yet present
+                final EntityCentreConfig freshConfig = findConfig(miType, user, nameOf.apply(FRESH_CENTRE_NAME).apply(actualSaveAsName).apply(device()), eccCompanion);
+                if (freshConfig.getConfigUuid() == null) {
+                    final String newConfigUuid = randomUUID().toString();
+                    // update both centres with newConfigUuid
+                    eccCompanion.quickSave(freshConfig.setConfigUuid(newConfigUuid));
+                    eccCompanion.quickSave(findConfig(miType, user, nameOf.apply(SAVED_CENTRE_NAME).apply(actualSaveAsName).apply(device()), eccCompanion).setConfigUuid(newConfigUuid));
+                    resolvedConfigUuid = of(newConfigUuid);
+                } else {
+                    resolvedConfigUuid = of(freshConfig.getConfigUuid());
                 }
-                final String encoded = userNameAndSaveAsName[1];
-                final URI uri = URI.create("http://www.google.com:80/" + encoded);
-                System.out.println("URI: [" + uri + "]");
-                System.out.println("URI path: [" + uri.getPath().substring(1) + "]");
-                
+                // clear current 'link' surrogate centres -- this is to make them empty before applying new selection criteria parameters (client-side action after this request's response will be delivered)
+                final ICentreDomainTreeManagerAndEnhancer emptyCentre = updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, actualSaveAsName /* empty link config -- SAVED surrogate centre */, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+                commitCentre(user, userProvider, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), emptyCentre, null /* newDesc */, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            } else if (configUuid.isPresent()) {
+//                if (!userNameAndSaveAsName[0].equals(userProvider.getUser().getKey())) {
+//                    throw failure(format("Unknown user [%s].", userNameAndSaveAsName[0]));
+//                }
                 // TODO need to check configUuid on configuration existence in either current user's set of configurations or in other user's set
                 // TODO if there is no config with such configUuid then error should be shown
                 
                 // configuration being loaded need to become preferred
-                actualSaveAsName = of(uri.getPath().substring(1));
+                final Optional<EntityCentreConfig> freshConfigOpt = findConfigOptByUuid(eccCompanion.withDbVersion(centreConfigQueryFor(user, miType, device())), configUuid.get(), eccCompanion);
+                actualSaveAsName = of(obtainTitleFrom(freshConfigOpt.get().getTitle(), deviceSpecific(FRESH_CENTRE_NAME, device())));
                 if (!LINK_CONFIG_TITLE.equals(actualSaveAsName.get())) {
                     makePreferred(userProvider.getUser(), miType, actualSaveAsName, device(), companionFinder);
                 }
+                resolvedConfigUuid = configUuid;
             } else {
                 if (!saveAsName.isPresent()) { // in case where 'saveAsName' has empty value then first time loading has been occurred earlier and default configuration needs to be loaded
                     actualSaveAsName = empty();
+                    resolvedConfigUuid = empty();
                 } else if (UNDEFINED_CONFIG_TITLE.equals(saveAsName.get())) { // client-driven first time loading of centre's selection criteria
                     actualSaveAsName = retrievePreferredConfigName(user, miType, device(), companionFinder); // preferred configuration should be loaded
+                    resolvedConfigUuid = updateCentreConfigUuid(user, miType, actualSaveAsName, device(), eccCompanion);
                 } else {
                     actualSaveAsName = empty(); // in case where first time loading has been occurred earlier and 'save-as' config was loaded we still prefer configuration specified by absence of uuid: default
                     makePreferred(userProvider.getUser(), miType, actualSaveAsName, device(), companionFinder);
+                    resolvedConfigUuid = empty();
                 }
             }
             final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre = updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
             final String customDesc = updateCentreDesc(user, miType, actualSaveAsName, device(), eccCompanion);
-            return createCriteriaRetrievalEnvelope(updatedFreshCentre, miType, actualSaveAsName, user, userProvider, restUtil, companionFinder, critGenerator, device(), customDesc, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            return createCriteriaRetrievalEnvelope(updatedFreshCentre, miType, actualSaveAsName, user, userProvider, restUtil, companionFinder, critGenerator, device(), customDesc, resolvedConfigUuid, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
         }, restUtil);
     }
 
@@ -254,6 +273,7 @@ public class CriteriaResource extends AbstractWebResource {
             final ICriteriaGenerator critGenerator,
             final DeviceProfile device,
             final String saveAsDesc,
+            final Optional<String> configUuid,
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
             final IEntityCentreConfig eccCompanion,
@@ -382,7 +402,7 @@ public class CriteriaResource extends AbstractWebResource {
                     emptyFreshCentre.getSecondTick().setPageCapacity(previousPageCapacity);
                     emptyFreshCentre.getSecondTick().setVisibleRowsCount(previousVisibleRowsCount);
                     emptyFreshCentre.getSecondTick().setNumberOfHeaderLines(previousNumberOfHeaderLines);
-                    // save the centre into the database
+                    // save the centre into the database (configUuid is not applicable here -- this is default configuration)
                     updatedFreshCentre = commitCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device(), emptyFreshCentre, null /* newDesc */, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
 
                     freshCentreAppliedCriteriaEntity = createCriteriaValidationPrototype(miType, saveAsName, updatedFreshCentre, companionFinder, critGenerator, -1L, user, userProvider, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);

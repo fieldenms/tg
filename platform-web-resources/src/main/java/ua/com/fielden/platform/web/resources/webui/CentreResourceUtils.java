@@ -20,6 +20,7 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.APPLIED_CRITERIA_ENTITY_NAME;
 import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.WAS_RUN_NAME;
+import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfigOpt;
 import static ua.com.fielden.platform.web.resources.webui.EntityResource.restoreMasterFunctionalEntity;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalManagedType;
@@ -644,8 +645,12 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
             final String newConfigUuid = randomUUID().toString();
             // save the 'fresh' centre with a new name -- buttons SAVE / DISCARD will be disabled
-            commitCentre(user, userProvider, miType, FRESH_CENTRE_NAME, newSaveAsName, device, freshCentre, newDesc, newConfigUuid, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-            commitCentre(user, userProvider, miType, SAVED_CENTRE_NAME, newSaveAsName, device, freshCentre, null, newConfigUuid, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            commitCentre(user, userProvider, miType, FRESH_CENTRE_NAME, newSaveAsName, device, freshCentre, newDesc, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            commitCentre(user, userProvider, miType, SAVED_CENTRE_NAME, newSaveAsName, device, freshCentre, null, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            // update both centres with newConfigUuid
+            findConfigOpt(miType, user, nameOf.apply(FRESH_CENTRE_NAME).apply(newSaveAsName).apply(device), eccCompanion).ifPresent(config -> eccCompanion.quickSave(config.setConfigUuid(newConfigUuid)));
+            findConfigOpt(miType, user, nameOf.apply(SAVED_CENTRE_NAME).apply(newSaveAsName).apply(device), eccCompanion).ifPresent(config -> eccCompanion.quickSave(config.setConfigUuid(newConfigUuid)));
+            
             // when switching to new configuration we need to make it preferred
             validationPrototype.makePreferredConfig(newSaveAsName);
             return validationPrototype.centreCustomObject(
