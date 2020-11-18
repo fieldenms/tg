@@ -1,7 +1,10 @@
 package ua.com.fielden.platform.web.factories.webui;
 
+import static java.lang.Boolean.FALSE;
+import static java.lang.Boolean.TRUE;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 import java.util.Optional;
@@ -71,18 +74,17 @@ public class ResourceFactoryUtils {
     }
     
     /**
-     * Determines 'saveAsName' from corresponding centre's request attribute.
+     * Extracts [wasLoadedPreviously; configUuid] pair from criteria retrieval request attribute.
      *
      * @param request
      * @return
      */
-    public static T2<Optional<String>, Optional<String>> saveAsNameAndConfigUuid(final Request request) {
+    public static T2<Boolean, Optional<String>> wasLoadedPreviouslyAndConfigUuid(final Request request) {
         final String str = (String) request.getAttributes().get("saveAsName");
-        final String[] splitted = str.substring(7) // remove "default" at the beginning
-            .split("uuid");
+        final String configUuidStr = str.substring(1); // remove 'wasLoadedPreviously' character at the beginning
         return t2(
-            splitted.length == 0 || "".equals(splitted[0]) ? empty() : of(splitted[0].replace("%20", " ")), // decode spaces
-            splitted.length <= 1 || "".equals(splitted[1]) ? empty() : of(splitted[1])
+            str.charAt(0) == '+' ? TRUE : FALSE,
+            isEmpty(configUuidStr) ? empty() : of(configUuidStr)
         );
     }
     

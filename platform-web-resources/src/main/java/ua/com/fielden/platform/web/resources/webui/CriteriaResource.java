@@ -28,9 +28,8 @@ import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfig;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfigOptByUuid;
 import static ua.com.fielden.platform.web.centre.CentreUtils.isFreshCentreChanged;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
-import static ua.com.fielden.platform.web.centre.WebApiUtils.UNDEFINED_CONFIG_TITLE;
 import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.saveAsName;
-import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.saveAsNameAndConfigUuid;
+import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.wasLoadedPreviouslyAndConfigUuid;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaEntityWithoutConflicts;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaMetaValues;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaMetaValuesCustomObject;
@@ -171,9 +170,9 @@ public class CriteriaResource extends AbstractWebResource {
             final IEntityCentreConfig eccCompanion = companionFinder.find(EntityCentreConfig.class);
             final IMainMenuItem mmiCompanion = companionFinder.find(MainMenuItem.class);
             final IUser userCompanion = companionFinder.find(User.class);
-            final T2<Optional<String>, Optional<String>> saveAsNameAndConfigUuid = saveAsNameAndConfigUuid(getRequest());
-            final Optional<String> saveAsName = saveAsNameAndConfigUuid._1;
-            final Optional<String> configUuid = saveAsNameAndConfigUuid._2;
+            final T2<Boolean, Optional<String>> wasLoadedPreviouslyAndConfigUuid = wasLoadedPreviouslyAndConfigUuid(getRequest());
+            final boolean wasLoadedPreviously = wasLoadedPreviouslyAndConfigUuid._1;
+            final Optional<String> configUuid = wasLoadedPreviouslyAndConfigUuid._2;
             System.out.println("configUuid === " + configUuid);
             
             final Optional<String> actualSaveAsName;
@@ -217,15 +216,12 @@ public class CriteriaResource extends AbstractWebResource {
                 }
                 resolvedConfigUuid = configUuid;
             } else {
-                if (!saveAsName.isPresent()) { // in case where 'saveAsName' has empty value then first time loading has been occurred earlier and default configuration needs to be loaded
-                    actualSaveAsName = empty();
-                    resolvedConfigUuid = empty();
-                } else if (UNDEFINED_CONFIG_TITLE.equals(saveAsName.get())) { // client-driven first time loading of centre's selection criteria
+                if (!wasLoadedPreviously) { // client-driven first time loading of centre's selection criteria
                     actualSaveAsName = retrievePreferredConfigName(user, miType, device(), companionFinder); // preferred configuration should be loaded
                     resolvedConfigUuid = updateCentreConfigUuid(user, miType, actualSaveAsName, device(), eccCompanion);
                 } else {
-                    actualSaveAsName = empty(); // in case where first time loading has been occurred earlier and 'save-as' config was loaded we still prefer configuration specified by absence of uuid: default
-                    makePreferred(userProvider.getUser(), miType, actualSaveAsName, device(), companionFinder);
+                    actualSaveAsName = empty(); // in case where first time loading has been occurred earlier we still prefer configuration specified by absence of uuid: default
+                    makePreferred(userProvider.getUser(), miType, actualSaveAsName, device(), companionFinder); // most likely transition from save-as configuration has been occurred and need to update preferred config; in other case we can go to other centre and back from already loaded default config and this call will make default config preferred again
                     resolvedConfigUuid = empty();
                 }
             }
