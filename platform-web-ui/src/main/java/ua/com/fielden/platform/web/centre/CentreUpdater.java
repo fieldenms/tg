@@ -270,7 +270,7 @@ public class CentreUpdater {
             final IUser userCompanion,
             final ICompanionObjectFinder companionFinder) {
         final String deviceSpecificName = deviceSpecific(saveAsSpecific(name, saveAsName), device);
-        final Map<String, Object> updatedDiff = updateDifferences(miType, user, userProvider, deviceSpecificName, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+        final Map<String, Object> updatedDiff = updateDifferences(miType, user, userProvider, deviceSpecificName, name, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
         return loadCentreFromDefaultAndDiff(user, miType, saveAsName, updatedDiff, webUiConfig, domainTreeEnhancerCache, companionFinder);
     }
     
@@ -722,6 +722,7 @@ public class CentreUpdater {
      *
      * @param miType
      * @param deviceSpecificName -- surrogate name of the centre (fresh, previouslyRun etc.); can be {@link CentreUpdater#deviceSpecific(String, DeviceProfile)}.
+     * @param name -- surrogate name of the centre (fresh, previouslyRun etc.);
      * @param saveAsName -- user-defined title of 'saveAs' centre configuration or empty {@link Optional} for unnamed centre
      * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
      *
@@ -732,6 +733,7 @@ public class CentreUpdater {
             final User user,
             final IUserProvider userProvider,
             final String deviceSpecificName,
+            final String name,
             final Optional<String> saveAsName,
             final DeviceProfile device,
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
@@ -774,7 +776,9 @@ public class CentreUpdater {
                 }
                 // promotes diff to local cache and saves it into persistent storage
                 resultantDiff = saveNewEntityCentreManager(differences, miType, user, deviceSpecificDiffName, upstreamDesc, eccCompanion, mmiCompanion);
-                upstreamConfigUuid.ifPresent(configUuid -> eccCompanion.quickSave(findConfig(miType, user, deviceSpecificDiffName, eccCompanion).setConfigUuid(configUuid)));
+                if (FRESH_CENTRE_NAME.equals(name)) { // inherited configs have uuid only in FRESH centre
+                    upstreamConfigUuid.ifPresent(configUuid -> eccCompanion.quickSave(findConfig(miType, user, deviceSpecificDiffName, eccCompanion).setConfigUuid(configUuid)));
+                }
             }
         }
         return resultantDiff;

@@ -224,33 +224,18 @@ WHERE _ID in (
 ORDER BY
     OWNER, MI_TYPE, TITLE*/
 
-/* Update configUuid of inherited configurations to be equal to configUuid of their base configurations */
+/* Update configUuid of FRESH inherited configurations to be equal to configUuid of their base configurations */
 UPDATE ENTITY_CENTRE_CONFIG
-SET ENTITY_CENTRE_CONFIG.CONFIGUUID_ = (SELECT CONFIGUUID_
+SET ENTITY_CENTRE_CONFIG.CONFIGUUID_ = CASE WHEN TITLE LIKE '%__________FRESH[[]%' THEN (SELECT CONFIGUUID_
         FROM ENTITY_CENTRE_CONFIG ECC
         WHERE
             ECC.TITLE = ENTITY_CENTRE_CONFIG.TITLE
             AND ECC.ID_MAIN_MENU = ENTITY_CENTRE_CONFIG.ID_MAIN_MENU
             AND ECC.ID_CRAFT = (SELECT BASEDONUSER_ FROM USER_ U WHERE U._ID = ENTITY_CENTRE_CONFIG.ID_CRAFT)
-    )
+    ) END
 WHERE
-    _ID in (
-        SELECT ECC._ID
-        FROM ENTITY_CENTRE_CONFIG ECC,
-            (SELECT
-                TITLE AS SAVED_TITLE,
-                REPLACE(TITLE, '__________SAVED[', '__________FRESH[') AS FRESH_TITLE,
-                ID_CRAFT,
-                ID_MAIN_MENU
-            FROM ENTITY_CENTRE_CONFIG
-            WHERE
-                TITLE LIKE '%__________SAVED[[]%'
-            ) SUB
-        WHERE
-            (ECC.TITLE = SUB.SAVED_TITLE OR ECC.TITLE = SUB.FRESH_TITLE)
-            AND ECC.ID_CRAFT = SUB.ID_CRAFT
-            AND ECC.ID_MAIN_MENU = SUB.ID_MAIN_MENU
-    )
+    (TITLE LIKE '%__________FRESH[[]%' OR TITLE LIKE '%__________SAVED[[]%')
+    AND TITLE NOT LIKE '%[[]_______________________link]__________DIFFERENCES'
     AND (SELECT BASE_ FROM USER_ U WHERE U._ID = ID_CRAFT) = 'N'
     AND EXISTS (
         SELECT *
