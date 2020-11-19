@@ -497,7 +497,7 @@ public class CentreUpdater {
         final ILoadableCentreConfig lccCompanion = companionFinder.find(LoadableCentreConfig.class);
         
         final String surrogateNamePrefix = deviceSpecific(FRESH_CENTRE_NAME, device);
-        final EntityResultQueryModel<EntityCentreConfig> queryForCurrentUser = eccCompanion.withDbVersion(centreConfigQueryFor(user, miType, device)).model();
+        final EntityResultQueryModel<EntityCentreConfig> queryForCurrentUser = eccCompanion.withDbVersion(centreConfigQueryFor(user, miType, device, FRESH_CENTRE_NAME)).model();
         final fetch<EntityCentreConfig> fetch = EntityUtils.fetchWithKeyAndDesc(EntityCentreConfig.class).fetchModel();
         if (user.isBase()) {
             try (final Stream<EntityCentreConfig> stream = eccCompanion.stream(from(queryForCurrentUser).with(fetch).model()) ) {
@@ -506,7 +506,7 @@ public class CentreUpdater {
                 });
             }
         } else {
-            final EntityResultQueryModel<EntityCentreConfig> queryForBaseUser = eccCompanion.withDbVersion(centreConfigQueryFor(user.getBasedOnUser(), miType, device)).model();
+            final EntityResultQueryModel<EntityCentreConfig> queryForBaseUser = eccCompanion.withDbVersion(centreConfigQueryFor(user.getBasedOnUser(), miType, device, FRESH_CENTRE_NAME)).model();
             try (final Stream<EntityCentreConfig> streamForCurrentUser = eccCompanion.stream(from(queryForCurrentUser).with(fetch).model());
                  final Stream<EntityCentreConfig> streamForBaseUser = eccCompanion.stream(from(queryForBaseUser).with(fetch).model())) {
                 streamForCurrentUser.forEach(ecc -> {
@@ -541,7 +541,7 @@ public class CentreUpdater {
      */
     private static Stream<EntityCentreConfig> streamPreferredConfigs(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final ICompanionObjectFinder companionFinder) {
         final IEntityCentreConfig eccCompanion = companionFinder.find(EntityCentreConfig.class);
-        final EntityResultQueryModel<EntityCentreConfig> queryForCurrentUser = eccCompanion.withDbVersion(centreConfigQueryFor(user, miType, device))
+        final EntityResultQueryModel<EntityCentreConfig> queryForCurrentUser = eccCompanion.withDbVersion(centreConfigQueryFor(user, miType, device, FRESH_CENTRE_NAME))
             .and().prop("preferred").eq().val(true).model();
         final fetch<EntityCentreConfig> fetch = fetchWithKeyAndDesc(EntityCentreConfig.class).with("preferred").fetchModel();
         return eccCompanion.stream(from(queryForCurrentUser).with(fetch).model());
@@ -624,6 +624,26 @@ public class CentreUpdater {
     }
     
     /**
+     * Creates a function that returns a query to find centre configurations persisted.
+     * <p>
+     * Looks only for named / link configurations, default configurations are avoided.
+     * 
+     * @param miType
+     * @param device -- the device for which centre configurations are looked for
+     * @param surrogateName -- surrogate name of the centre (fresh, previouslyRun etc.)
+     * @return
+     */
+    public static Function<DbVersion, ICompoundCondition0<EntityCentreConfig>> centreConfigQueryFor(final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final String surrogateName) {
+        return dbVersion -> {
+            final String escapedOpeningBracket = DbVersion.MSSQL == dbVersion ? "[[]" : "["; // need to provide escaping for opening bracket to find records with [, see https://stackoverflow.com/questions/439495/how-can-i-escape-square-brackets-in-a-like-clause
+            return select(EntityCentreConfig.class).where()
+                .prop("title").like().val(deviceSpecific(surrogateName, device) + escapedOpeningBracket + "%")
+                .and().prop("title").notLike().val(deviceSpecific(surrogateName, opposite(device)) + escapedOpeningBracket + "%")
+                .and().prop("menuItem.key").eq().val(miType.getName());
+        };
+    }
+    
+    /**
      * Creates a function that returns a query to find centre configurations persisted for <code>user</code>.
      * <p>
      * Looks only for named / link configurations, default configurations are avoided.
@@ -631,17 +651,12 @@ public class CentreUpdater {
      * @param user
      * @param miType
      * @param device -- the device for which centre configurations are looked for
+     * @param surrogateName -- surrogate name of the centre (fresh, previouslyRun etc.)
      * @return
      */
-    public static Function<DbVersion, ICompoundCondition0<EntityCentreConfig>> centreConfigQueryFor(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device) {
-        return (dbVersion) -> {
-            final String escapedOpeningBracket = DbVersion.MSSQL == dbVersion ? "[[]" : "["; // need to provide escaping for opening bracket to find records with [, see https://stackoverflow.com/questions/439495/how-can-i-escape-square-brackets-in-a-like-clause
-            return select(EntityCentreConfig.class).where().
-                begin().prop("owner").eq().val(user).end().and().
-                prop("title").like().val(deviceSpecific(FRESH_CENTRE_NAME, device) + escapedOpeningBracket + "%").and().
-                prop("title").notLike().val(deviceSpecific(FRESH_CENTRE_NAME, opposite(device)) + escapedOpeningBracket + "%").and().
-                prop("menuItem.key").eq().val(miType.getName());
-        };
+    public static Function<DbVersion, ICompoundCondition0<EntityCentreConfig>> centreConfigQueryFor(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final String surrogateName) {
+        return dbVersion -> centreConfigQueryFor(miType, device, surrogateName).apply(dbVersion)
+            .and().prop("owner").eq().val(user);
     }
     
     /**
@@ -706,7 +721,7 @@ public class CentreUpdater {
      * @param miType
      * @return
      */
-    private static ICentreDomainTreeManagerAndEnhancer getDefaultCentre(final Class<? extends MiWithConfigurationSupport<?>> miType, final IWebUiConfig webUiConfig) {
+    public static ICentreDomainTreeManagerAndEnhancer getDefaultCentre(final Class<? extends MiWithConfigurationSupport<?>> miType, final IWebUiConfig webUiConfig) {
         return applyWebUIDefaultValues(createDefaultCentre(miType, webUiConfig), getEntityType(miType));
     }
     
@@ -915,7 +930,7 @@ public class CentreUpdater {
      * 
      * @return
      */
-    static Map<String, Object> createDifferences(final ICentreDomainTreeManagerAndEnhancer centre, final ICentreDomainTreeManagerAndEnhancer defaultCentre, final Class<AbstractEntity<?>> root) {
+    public static Map<String, Object> createDifferences(final ICentreDomainTreeManagerAndEnhancer centre, final ICentreDomainTreeManagerAndEnhancer defaultCentre, final Class<AbstractEntity<?>> root) {
         final Supplier<Class<?>> managedTypeSupplier = () -> centre.getEnhancer().getManagedType(root);
         
         final Map<String, Object> diff = createEmptyDifferences();

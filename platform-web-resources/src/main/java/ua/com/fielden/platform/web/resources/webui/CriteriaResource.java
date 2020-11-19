@@ -1,11 +1,13 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
 import static java.util.UUID.randomUUID;
 import static ua.com.fielden.platform.data.generator.IGenerator.FORCE_REGENERATION_KEY;
 import static ua.com.fielden.platform.data.generator.IGenerator.shouldForceRegeneration;
+import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.web.centre.CentreConfigUpdaterUtils.applyNewOrderVisibilityAndSorting;
@@ -25,7 +27,10 @@ import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentreConfigUuid;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentreDesc;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfig;
+import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfigOpt;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfigOptByUuid;
+import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.restoreDiffFrom;
+import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.saveNewEntityCentreManager;
 import static ua.com.fielden.platform.web.centre.CentreUtils.isFreshCentreChanged;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
 import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.saveAsName;
@@ -208,9 +213,66 @@ public class CriteriaResource extends AbstractWebResource {
                 // TODO need to check configUuid on configuration existence in either current user's set of configurations or in other user's set
                 // TODO if there is no config with such configUuid then error should be shown
                 
+                // we look only through [link, own save-as, inherited from base, inherited from shared] set of configurations;
+                // default configurations are excluded in the lookup;
+                // only FRESH ones are looked for;
+                final Optional<EntityCentreConfig> freshConfigOpt = findConfigOptByUuid(eccCompanion.withDbVersion(centreConfigQueryFor(user, miType, device(), FRESH_CENTRE_NAME)), configUuid.get(), eccCompanion);
+                if (freshConfigOpt.isPresent()) {
+                    actualSaveAsName = of(obtainTitleFrom(freshConfigOpt.get().getTitle(), deviceSpecific(FRESH_CENTRE_NAME, device())));
+                    // TODO for the first stage we do not update from [base, shared], but it is perhaps required to achieve smooth flowing of configs from upstream (analogously when trying to load through Load action or when pressing Discard)
+                    // if it is required then just findConfigOptByUuid(eccCompanion.withDbVersion(centreConfigQueryFor(user, miType, device(), SAVED_CENTRE_NAME)), configUuid.get(), eccCompanion) and if not present then it is [inherited from base, or inherited from shared]
+                } else {
+                    // if there is no FRESH configuration then there are no [link, own save-as] configuration with the specified uuid;
+                    // however there can exist [base, shared] config for other user;
+                    // in that case we look only for owners and "owning" is indicated by presence of SAVED configuration with the specified uuid;
+                    final Optional<EntityCentreConfig> savedConfigOptForOtherUser = findConfigOptByUuid(eccCompanion.withDbVersion(centreConfigQueryFor(miType, device(), SAVED_CENTRE_NAME)), configUuid.get(), eccCompanion);
+                    if (savedConfigOptForOtherUser.isPresent()) {
+                        final EntityCentreConfig savedConfig = savedConfigOptForOtherUser.get();
+                        final User savedConfigCreator = savedConfig.getOwner();
+                        if (user.isBase()) {
+                            // current user is base user;
+                            // we have configuration owner not equal to current user;
+                            // base user is not based on any other;
+                            // so from two categories [base, shared] we can only consider [shared];
+                            // so, at this stage, we prohibit loading of [inherited from shared] configurations for base users -- not really practical scenario and possibly will never be required
+                            throw failure(format("Any configuration could not be shared with base users, e.g. with %s.", user));
+                        } else {
+                            final Optional<String> preliminarySaveAsName = of(obtainTitleFrom(savedConfig.getTitle(), deviceSpecific(SAVED_CENTRE_NAME, device())));
+                            // link-configs can not be shared anywhere neither from base (for current user) user nor from base/non-base user that gave its uuid as part of sharing process
+                            if (LINK_CONFIG_TITLE.equals(preliminarySaveAsName.get())) {
+                                throw failure(format("%s link configuration could not be shared.", savedConfigCreator));
+                            } else if (savedConfigCreator.isBase() && savedConfigCreator.equals(user.getBasedOnUser())) {
+                                // we have base => basedOn relationship between current user and the creator of savedConfig;
+                                // we now know the actualSaveAsName from which the configuration should be updated;
+                                // CentreUpdater.updateCentre and .updateDifferences method should take care of that process;
+                                // at least FRESH config should be prepared -- making it preferred requires existence
+                                actualSaveAsName = preliminarySaveAsName;
+                                updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+                            } else {
+                                // this is definitely the case where current user gets uuid as part of sharing process from other base/non-base user;
+                                // the title of the shared config can conflict with preliminarySaveAsName;
+                                final Optional<EntityCentreConfig> conflictingConfigOpt = findConfigOpt(miType, user, nameOf.apply(FRESH_CENTRE_NAME).apply(preliminarySaveAsName).apply(device()), eccCompanion);
+                                if (conflictingConfigOpt.isPresent()) {
+                                    final String conflictingSaveAsName = obtainTitleFrom(conflictingConfigOpt.get().getTitle(), deviceSpecific(FRESH_CENTRE_NAME, device()));
+                                    actualSaveAsName = of(conflictingSaveAsName + " (shared)"); // TODO another conflict possible?
+                                } else {
+                                    actualSaveAsName = preliminarySaveAsName;
+                                }
+                                final String freshSurrogateName = nameOf.apply(FRESH_CENTRE_NAME).apply(actualSaveAsName).apply(device());
+                                final String savedSurrogateName = nameOf.apply(SAVED_CENTRE_NAME).apply(actualSaveAsName).apply(device());
+                                final Map<String, Object> differences = restoreDiffFrom(savedConfig, eccCompanion, format("for type [%s] with name [%s] for user [%s]", miType.getSimpleName(), savedConfig.getTitle(), savedConfigCreator));
+                                saveNewEntityCentreManager(false, differences, miType, user, freshSurrogateName, savedConfig.getDesc(), eccCompanion, mmiCompanion);
+                                saveNewEntityCentreManager(false, differences, miType, user, savedSurrogateName, null,                  eccCompanion, mmiCompanion);
+                                // update (FRESH only) with configUuid
+                                findConfigOpt(miType, user, freshSurrogateName, eccCompanion).ifPresent(config -> eccCompanion.quickSave(config.setConfigUuid(configUuid.get())));
+                            }
+                        }
+                    } else {
+                        throw failure("Configuration does not exist.");
+                    }
+                }
+                
                 // configuration being loaded need to become preferred
-                final Optional<EntityCentreConfig> freshConfigOpt = findConfigOptByUuid(eccCompanion.withDbVersion(centreConfigQueryFor(user, miType, device())), configUuid.get(), eccCompanion);
-                actualSaveAsName = of(obtainTitleFrom(freshConfigOpt.get().getTitle(), deviceSpecific(FRESH_CENTRE_NAME, device())));
                 if (!LINK_CONFIG_TITLE.equals(actualSaveAsName.get())) {
                     makePreferred(userProvider.getUser(), miType, actualSaveAsName, device(), companionFinder);
                 }

@@ -109,7 +109,7 @@ public class CentreUpdaterUtils extends CentreUpdater {
      * @param loggingSuffix
      * @return
      */
-    private static Map<String, Object> restoreDiffFrom(
+    public static Map<String, Object> restoreDiffFrom(
             // params for actual deserialisation
             final EntityCentreConfig ecc,
             // params for: deserialisation failed -- create empty and save
@@ -150,7 +150,7 @@ public class CentreUpdaterUtils extends CentreUpdater {
      * 
      * @param withoutConflicts -- <code>true</code> to avoid self-conflict checks, <code>false</code> otherwise; <code>true</code> only to be used NOT IN another SessionRequired transaction scope
      */
-    private static Map<String, Object> saveNewEntityCentreManager(
+    public static Map<String, Object> saveNewEntityCentreManager(
             final boolean withoutConflicts,
             final Map<String, Object> differences,
             final Class<?> menuItemType,
