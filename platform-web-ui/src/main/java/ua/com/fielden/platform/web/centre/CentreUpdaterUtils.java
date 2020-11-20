@@ -232,7 +232,7 @@ public class CentreUpdaterUtils extends CentreUpdater {
     public static Optional<EntityCentreConfig> findConfigOptByUuid(final ICompoundCondition0<EntityCentreConfig> model, final String uuid, final IEntityCentreConfig eccCompanion) {
         return eccCompanion.getEntityOptional(from(model
             .and().prop("configUuid").eq().val(uuid).model()
-        ).with(fetchWithKeyAndDesc(EntityCentreConfig.class, true).with("preferred").with("configUuid").fetchModel()).model());
+        ).with(fetchWithKeyAndDesc(EntityCentreConfig.class, true).with("preferred").with("configUuid").with("owner.base").with("configBody").fetchModel()).model());
     }
     
     /**
