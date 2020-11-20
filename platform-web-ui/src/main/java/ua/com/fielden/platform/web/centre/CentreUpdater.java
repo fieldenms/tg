@@ -6,6 +6,7 @@ import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.regex.Pattern.quote;
 import static java.util.stream.Collectors.toCollection;
+import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.ASCENDING;
 import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.DESCENDING;
@@ -72,6 +73,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -100,7 +102,6 @@ import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.ui.menu.SaveAsNameAnnotation;
-import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
@@ -474,11 +475,12 @@ public class CentreUpdater {
     }
     
     /**
-     * Finds loadable configurations for current user (defined in <code>gdtm</code>) and specified <code>miType; device</code>.
+     * Finds loadable configurations for current user and specified <code>miType; device</code>.
      * {@link LoadableCentreConfig} instances are sorted by title.
      * Inherited configurations receive appropriate {@link LoadableCentreConfig#isInherited()} flag.
+     * Inherited from shared configurations receive appropriate {@link LoadableCentreConfig#getSharedBy()} user.
      * <p>
-     * Please note that inheritance is purely defined by 'saveAsName' -- if both configuration for user and its base user have the same 'saveAsName' then they are in inheritance relationship.
+     * Please note that inheritance from base is purely defined by 'saveAsName' -- if both configuration for user and its base user have the same 'saveAsName' then they are in inheritance relationship.
      * 
      * @param user
      * @param miType
@@ -498,12 +500,13 @@ public class CentreUpdater {
         
         final String surrogateNamePrefix = deviceSpecific(FRESH_CENTRE_NAME, device);
         final EntityResultQueryModel<EntityCentreConfig> queryForCurrentUser = eccCompanion.withDbVersion(centreConfigQueryFor(user, miType, device, FRESH_CENTRE_NAME)).model();
-        final fetch<EntityCentreConfig> fetch = EntityUtils.fetchWithKeyAndDesc(EntityCentreConfig.class).fetchModel();
+        final fetch<EntityCentreConfig> fetch = fetchWithKeyAndDesc(EntityCentreConfig.class).with("configUuid").fetchModel();
         if (user.isBase()) {
             try (final Stream<EntityCentreConfig> stream = eccCompanion.stream(from(queryForCurrentUser).with(fetch).model()) ) {
                 stream.forEach(ecc -> {
                     loadableConfigurations.add(createLoadableCentreConfig(ecc, false, surrogateNamePrefix, lccCompanion));
                 });
+                loadableConfigurations.remove(new LoadableCentreConfig().setKey(LINK_CONFIG_TITLE)); // exclude 'link' configuration from load dialog if it is present (aka centre 'link' with criteria parameters was loaded at least once)
             }
         } else {
             final EntityResultQueryModel<EntityCentreConfig> queryForBaseUser = eccCompanion.withDbVersion(centreConfigQueryFor(user.getBasedOnUser(), miType, device, FRESH_CENTRE_NAME)).model();
@@ -521,9 +524,30 @@ public class CentreUpdater {
                         loadableConfigurations.add(lcc);
                     }
                 });
+                loadableConfigurations.remove(new LoadableCentreConfig().setKey(LINK_CONFIG_TITLE)); // exclude 'link' configuration from load dialog if it is present (aka centre 'link' with criteria parameters was loaded at least once)
+                // collect uuids for not inherited from base configurations, aka own save-as configs or inherited from shared
+                final Set<String> notInheritedFromBaseUuids = loadableConfigurations.stream()
+                    .filter(lcc -> !lcc.isInherited())
+                    .map(lcc -> lcc.getConfig().getConfigUuid())
+                    .collect(toSet());
+                
+                // find config creators not being equal to current user...
+                eccCompanion.getAllEntities(
+                    from(eccCompanion.withDbVersion(centreConfigQueryFor(miType, device, SAVED_CENTRE_NAME))
+                        .and().prop("configUuid").in().values(notInheritedFromBaseUuids.toArray())
+                        .and().prop("owner").ne().val(user)
+                        .model()
+                    )
+                    .with(fetch(EntityCentreConfig.class).with("configUuid").with("owner", fetch(User.class).with("key")))
+                    .lightweight().model()
+                ).stream()
+                .forEach(ecc -> {
+                    final LoadableCentreConfig foundLcc = loadableConfigurations.stream().filter(lcc -> lcc.getConfig().getConfigUuid().equals(ecc.getConfigUuid())).findAny().get();
+                    foundLcc.setInherited(true); // ... and make corresponding configuration inherited (from shared) ...
+                    foundLcc.setSharedBy(ecc.getOwner()); // ... with appropriate sharedBy property
+                });
             }
         }
-        loadableConfigurations.remove(new LoadableCentreConfig().setKey(LINK_CONFIG_TITLE)); // exclude 'link' configuration from load dialog if it is present (aka centre 'link' with criteria parameters was loaded at least once)
         Collections.sort(loadableConfigurations);
         return loadableConfigurations;
     }
@@ -597,7 +621,7 @@ public class CentreUpdater {
      */
     private static LoadableCentreConfig createLoadableCentreConfig(final EntityCentreConfig ecc, final boolean inherited, final String surrogateNamePrefix, final ILoadableCentreConfig lccCompanion) {
         final LoadableCentreConfig lcc = lccCompanion.new_();
-        lcc.setInherited(inherited).setKey(obtainTitleFrom(ecc.getTitle(), surrogateNamePrefix)).setDesc(ecc.getDesc());
+        lcc.setInherited(inherited).setConfig(ecc).setKey(obtainTitleFrom(ecc.getTitle(), surrogateNamePrefix)).setDesc(ecc.getDesc());
         return lcc;
     }
     

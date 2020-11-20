@@ -85,7 +85,7 @@ public class CentreConfigUtils {
     }
     
     /**
-     * Returns <code>true</code> in case where <code>saveAsName</code>d configuration represents default / link configuration or inherited from base user configuration,
+     * Returns <code>true</code> in case where <code>saveAsName</code>d configuration represents default / link configuration or inherited from base user configuration or inherited from shared configuration,
      * otherwise <code>false</code>.
      * 
      * @param saveAsName
@@ -97,7 +97,7 @@ public class CentreConfigUtils {
     }
     
     /**
-     * Returns <code>true</code> in case where <code>saveAsName</code>d configuration represents inherited from base user configuration, <code>false</code> otherwise.
+     * Returns <code>true</code> in case where <code>saveAsName</code>d configuration represents inherited from base user configuration or inherited from shared configuration, <code>false</code> otherwise.
      * <p>
      * Default and link configurations are not inherited.
      * 
