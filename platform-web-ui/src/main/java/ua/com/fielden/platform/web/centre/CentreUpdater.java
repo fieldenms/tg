@@ -544,7 +544,7 @@ public class CentreUpdater {
                         .lightweight().model()
                     ).stream()
                     .forEach(ecc -> {
-                        final LoadableCentreConfig foundLcc = loadableConfigurations.stream().filter(lcc -> lcc.getConfig().getConfigUuid().equals(ecc.getConfigUuid())).findAny().get();
+                        final LoadableCentreConfig foundLcc = loadableConfigurations.stream().filter(lcc -> ecc.getConfigUuid().equals(lcc.getConfig().getConfigUuid())).findAny().get();
                         foundLcc.setInherited(true); // ... and make corresponding configuration inherited (from shared) ...
                         foundLcc.setSharedBy(ecc.getOwner()); // ... with appropriate sharedBy property
                         foundLcc.setSharedByMessage(sharingModel.sharedByMessage(foundLcc.getSharedBy())); // ... and domain-specific message indication about that

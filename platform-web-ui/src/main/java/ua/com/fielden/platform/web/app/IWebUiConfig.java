@@ -10,6 +10,7 @@ import ua.com.fielden.platform.menu.IMenuRetriever;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.centre.EntityCentre;
+import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
 import ua.com.fielden.platform.web.menu.IMainMenuBuilder;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
@@ -150,4 +151,12 @@ public interface IWebUiConfig extends IMenuRetriever {
      * @return
      */
     boolean independentTimeZone();
+    
+    /**
+     * A set of domain-specific actions for sharing centre configurations.
+     * 
+     * @return
+     */
+    List<EntityActionConfig> centreConfigShareActions();
+    
 }

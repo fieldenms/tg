@@ -832,6 +832,8 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
                 throw new IllegalArgumentException("No front action exists.");
             }
             return getFrontActions().get(actionNumber);
+        } else if (FunctionalActionKind.SHARE == actionKind) {
+            return null; // computation is not neccessary so identification of action config too
         }
         // TODO implement other types
         throw new UnsupportedOperationException(actionKind + " is not supported yet.");

@@ -1,7 +1,10 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static java.util.Arrays.asList;
 import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.utils.ResourceLoader.getStream;
+import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
+import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.resources.webui.FileResource.generateFileName;
 
 import java.util.ArrayList;
@@ -37,12 +40,15 @@ import ua.com.fielden.platform.web.action.StandardMastersWebUiConfig;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.app.config.WebUiBuilder;
+import ua.com.fielden.platform.web.centre.CentreConfigShareAction;
 import ua.com.fielden.platform.web.centre.EntityCentre;
+import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.ioc.exceptions.MissingWebResourceException;
 import ua.com.fielden.platform.web.menu.IMainMenuBuilder;
 import ua.com.fielden.platform.web.menu.impl.MainMenuBuilder;
+import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.ref_hierarchy.ReferenceHierarchyWebUiConfig;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
@@ -141,6 +147,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         .addMaster(centreConfigurationWebUiConfig.centreConfigUpdater)
         .addMaster(centreConfigurationWebUiConfig.centreColumnWidthConfigUpdater)
         // centre config actions
+        .addMaster(centreConfigurationWebUiConfig.centreConfigShareActionMaster)
         .addMaster(centreConfigurationWebUiConfig.centreConfigNewActionMaster)
         .addMaster(centreConfigurationWebUiConfig.centreConfigDuplicateActionMaster)
         .addMaster(centreConfigurationWebUiConfig.centreConfigLoadActionMaster)
@@ -260,6 +267,40 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     @Override
     public boolean independentTimeZone() {
         return independentTimeZone;
+    }
+
+    @Override
+    public List<EntityActionConfig> centreConfigShareActions() {
+        return asList(
+            action(CentreConfigShareAction.class)
+            .withContext(context().withSelectionCrit().build())
+            .preAction(() -> new JsCode("action.chosenProperty = self.configUuid; /*console.error('preAction for', action, self);*/\n"))
+            .postActionSuccess(() -> new JsCode(
+                    "const link = window.location.href;\n" +
+                    "const showNonCritical = toaster => {\n" + 
+                    "    toaster.showProgress = false;\n" + 
+                    "    toaster.isCritical = false;\n" + 
+                    "    toaster.show();\n" + 
+                    "};\n" +
+                    "if (functionalEntity.get('errorMsg')) {\n" +
+                    "    master._toastGreeting().text = functionalEntity.get('errorMsg');\n" + 
+                    "    master._toastGreeting().hasMore = false;\n" + 
+                    "    master._toastGreeting().msgText = '';\n" + 
+                    "    showNonCritical(master._toastGreeting());\n" +
+                    "} else {\n" + 
+                    "    navigator.clipboard.writeText(window.location.href).then(() => {\n" + 
+                    "        master._toastGreeting().text = 'Copied to clipboard.';\n" + 
+                    "        master._toastGreeting().hasMore = true;\n" + 
+                    "        master._toastGreeting().msgText = link;\n" + 
+                    "        showNonCritical(master._toastGreeting());\n" + 
+                    "    });\n" +
+                    "}"))
+            .icon("tg-icons:share")
+            .shortDesc("Share")
+            .longDesc("Share centre configuration")
+            .withNoParentCentreRefresh()
+            .build()
+        );
     }
 
 }

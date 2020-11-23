@@ -57,8 +57,10 @@ const entityCentreTemplate = html`
     </style>
     <tg-entity-centre id="dom" _selected-view="{{_selectedView}}" _url="[[_url]]" _bind-centre-info="[[_bindCentreInfo]]" _process-discarder-response="[[_processDiscarderResponse]]" _process-discarder-error="[[_processDiscarderError]]" _saver-disabled="[[_saverDisabled]]" _discarder-disabled="[[_discarderDisabled]]" _runner-disabled="[[_runnerDisabled]]" _viewer-disabled="[[_viewerDisabled]]" save="[[save]]" discard="[[discard]]" run="[[run]]" _activate-result-set-view="[[_activateResultSetView]]" stale-criteria-message="[[staleCriteriaMessage]]" _show-dialog="[[_showDialog]]" save-as-name="{{saveAsName}}" _create-context-holder="[[_createContextHolder]]" uuid="[[uuid]]">
         <tg-@mi_type-selection-criteria id="selection_criteria" slot="custom-selection-criteria" _was-run="{{_wasRun}}" _centre-changed="{{_centreChanged}}" _edited-props-exist="{{_editedPropsExist}}" _criteria-loaded="{{_criteriaLoaded}}" uuid="[[uuid]]" mi-type="[[miType]]" save-as-name="{{saveAsName}}" config-uuid="{{configUuid}}" query-part="[[queryPart]]" post-run="[[_postRun]]" get-selected-entities="[[_getSelectedEntities]]" get-master-entity="[[getMasterEntity]]" post-retrieved="[[postRetrieved]]" page-number="{{pageNumber}}" page-count="{{pageCount}}" page-number-updated="{{pageNumberUpdated}}" page-count-updated="{{pageCountUpdated}}" is-running="{{isRunning}}" stale-criteria-message="{{staleCriteriaMessage}}" @queryEnhancerContextConfig></tg-@mi_type-selection-criteria>
-
+        
         <!--@custom-front-actions-->
+        
+        <!--@custom-share-actions-->
         
         <tg-entity-grid-inspector id="egi" slot="custom-egi" class="entity-grid-inspector" centre-selection="[[centreSelection]]" column-properties-mapper="{{columnPropertiesMapper}}" custom-shortcuts="@customShortcuts" constant-height="@egiHeight" row-height="@egiRowHeight" @hidden @fitToHeight @canDragFrom @toolbarVisible @checkboxVisible @dragAnchorFixed @checkboxesFixed @checkboxesWithPrimaryActionsFixed num-of-fixed-cols="@numOfFixedCols" @secondaryActionsFixed @headerFixed @summaryFixed @gridLayout>
             <!-- EGI COLUMNS DOM (GENERATED) -->
@@ -131,6 +133,9 @@ Polymer({
             // TODO smth. like this should be generated here:
             self.frontActions = [
                 //generatedFrontActionObjects
+            ];
+            self.shareActions = [
+                //generatedShareActionObjects
             ];
             self.topLevelActions = [
                 //generatedActionObjects

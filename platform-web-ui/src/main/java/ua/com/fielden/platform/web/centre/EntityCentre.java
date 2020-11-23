@@ -185,9 +185,12 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private static final String EGI_FUNCTIONAL_ACTION_DOM = "<!--@functional_actions-->";
     private static final String EGI_PRIMARY_ACTION_DOM = "<!--@primary_action-->";
     private static final String EGI_SECONDARY_ACTIONS_DOM = "<!--@secondary_actions-->";
-    //Fron actions
+    //Front actions
     private static final String FRONT_ACTIONS_DOM = "<!--@custom-front-actions-->";
     private static final String FRONT_ACTIONS = "//generatedFrontActionObjects";
+    //Front actions
+    private static final String SHARE_ACTIONS_DOM = "<!--@custom-share-actions-->";
+    private static final String SHARE_ACTIONS = "//generatedShareActionObjects";
     //Toolbar related
     private static final String TOOLBAR_DOM = "<!--@toolbar-->";
     private static final String TOOLBAR_JS = "//toolbarGeneratedFunction";
@@ -1011,6 +1014,20 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         }
         ////////////////////front action (END)////////////////////
 
+        logger.debug("Initiating share actions...");
+        //////////////////// share actions ////////////////////
+        final StringBuilder shareActionsObjects = new StringBuilder();
+        final DomContainer shareActionsDom = new DomContainer();
+
+        final List<EntityActionConfig> shareActions = webUiConfig.centreConfigShareActions();
+        for (int actionIndex = 0; actionIndex < shareActions.size(); actionIndex++) {
+            final FunctionalActionElement actionElement = new FunctionalActionElement(shareActions.get(actionIndex), actionIndex, FunctionalActionKind.SHARE);
+            importPaths.add(actionElement.importPath());
+            shareActionsDom.add(actionElement.render());
+            shareActionsObjects.append(prefix + createActionObject(actionElement));
+        }
+        ////////////////////front action (END)////////////////////
+
         logger.debug("Initiating secondary actions...");
 
         final List<FunctionalActionElement> secondaryActionElements = new ArrayList<>();
@@ -1087,6 +1104,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         }
         ///////////////////////////////////////
         final String frontActionString = frontActionsObjects.toString();
+        final String shareActionsString = shareActionsObjects.toString();
         final String funcActionString = functionalActionsObjects.toString();
         final String secondaryActionString = secondaryActionsObjects.toString();
         final String insertionPointActionsString = insertionPointActionsObjects.toString();
@@ -1129,6 +1147,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace(EGI_EDITORS, egiEditors.toString()).
                 replace(FRONT_ACTIONS_DOM, frontActionsDom.toString()).
                 replace(FRONT_ACTIONS, frontActionString.length() > prefixLength ? frontActionString.substring(prefixLength): frontActionString).
+                replace(SHARE_ACTIONS_DOM, shareActionsDom.toString()).
+                replace(SHARE_ACTIONS, shareActionsString.length() > prefixLength ? shareActionsString.substring(prefixLength): shareActionsString).
                 replace(EGI_ACTIONS, funcActionString.length() > prefixLength ? funcActionString.substring(prefixLength) : funcActionString).
                 replace(EGI_SECONDARY_ACTIONS, secondaryActionString.length() > prefixLength ? secondaryActionString.substring(prefixLength) : secondaryActionString).
                 replace(INSERTION_POINT_ACTIONS, insertionPointActionsString.length() > prefixLength ? insertionPointActionsString.substring(prefixLength)

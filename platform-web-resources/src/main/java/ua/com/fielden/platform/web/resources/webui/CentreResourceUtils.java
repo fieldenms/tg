@@ -512,6 +512,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final Annotation [] annotations = saveAsName.isPresent() ? new Annotation[] {miTypeAnnotation, new SaveAsNameAnnotation().newInstance(saveAsName.get())} : new Annotation[] {miTypeAnnotation};
         final M validationPrototype = (M) critGenerator.generateCentreQueryCriteria((Class<T>) getEntityType(miType), cdtmae, miType, annotations);
 
+        validationPrototype.miType = miType;
+        validationPrototype.device = device;
+
         // Functions for companion implementations:
 
         // returns an updated version of PREVIOUSLY_RUN centre

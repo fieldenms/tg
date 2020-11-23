@@ -111,6 +111,8 @@ public class FunctionalActionElement implements IRenderable, IImportable {
             attrs.put("data-route", getDataRoute());
         } else if (FunctionalActionKind.FRONT == functionalActionKind) {
             attrs.put("slot", "custom-front-action");
+        } else if (FunctionalActionKind.SHARE == functionalActionKind) {
+            attrs.put("slot", "custom-share-action");
         }
 
         attrs.put("ui-role", conf().role.toString());

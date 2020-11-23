@@ -20,8 +20,10 @@ import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.centre.LoadableCentreConfig;
+import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 
 /**
  * This class is the base class to enhance with criteria and resultant properties.
@@ -60,6 +62,8 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreAdjuster;
     private Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreColumnWidthsAdjuster;
     private CentreContextHolder centreContextHolder;
+    public Class<? extends MiWithConfigurationSupport<?>> miType;
+    public DeviceProfile device;
     
     /**
      * Constructs {@link EnhancedCentreEntityQueryCriteria} with specified {@link IValueMatcherFactory}. Needed mostly for instantiating through injector.
