@@ -43,7 +43,7 @@ public class EntProp3 implements ISingleOperand3 {
         result = prime * result + name.hashCode();
         result = prime * result + source.hashCode();
         result = prime * result + hibType.getClass().getName().hashCode();
-        result = prime * result + (type == null ? 0 : source.hashCode());
+        result = prime * result + (type == null ? 0 : type.hashCode());
         return result;
     }
 

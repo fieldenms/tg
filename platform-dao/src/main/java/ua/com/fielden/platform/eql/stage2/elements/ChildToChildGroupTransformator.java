@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.eql.stage2.elements;
 
 import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.joining;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -19,7 +18,7 @@ import ua.com.fielden.platform.eql.stage2.elements.sources.QrySource2BasedOnPers
 
 public class ChildToChildGroupTransformator {
     
-    public static List<ChildGroup> convertToGroup(final List<Child> children, final List<String> parentPrefix) {
+    public static List<ChildGroup> convertToGroup(final List<Child> children) {
         if (children.isEmpty()) {
             return emptyList();
         }
@@ -33,18 +32,10 @@ public class ChildToChildGroupTransformator {
         // transforming into ChildGroup list
         final List<ChildGroup> result = new ArrayList<>();
         for (final String childName : orderedChildrenNames) {
-            final List<String> newParentPrefix = new ArrayList<>(parentPrefix);
-            newParentPrefix.add(childName);
-            
             final DataForChildGroup dataForChildGroup = dataByChildName.get(childName);
-            if (dataForChildGroup.isHeader) {
-                result.addAll(convertToGroup(dataForChildGroup.items, newParentPrefix));   
-            } else {
-                final List<ChildGroup> groupItems = convertToGroup(dataForChildGroup.items, emptyList());
-                final String itemName = parentPrefix.isEmpty() ? childName : newParentPrefix.stream().collect(joining("."));
-                result.add(new ChildGroup(itemName, groupItems, dataForChildGroup.paths, dataForChildGroup.required, dataForChildGroup.source, dataForChildGroup.expr));
-            }
-        }  
+            final List<ChildGroup> groupItems = convertToGroup(dataForChildGroup.items);
+            result.add(new ChildGroup(childName, groupItems, dataForChildGroup.paths, dataForChildGroup.required, dataForChildGroup.source, dataForChildGroup.expr));
+        }
         
         return result;
     }
@@ -55,9 +46,7 @@ public class ChildToChildGroupTransformator {
         for (final Child child : children) {
             DataForChildGroup existing = dataMap.get(child.name);
             if (existing == null) {
-                final DataForChildGroup added = new DataForChildGroup(child.name, child.required, child.expr, //
-                        child.dependencies, //
-                        child.isHeader);
+                final DataForChildGroup added = new DataForChildGroup(child.name, child.required, child.expr, child.dependencies);
                 dataMap.put(added.mainName, added);
                 existing = added;
             }
@@ -69,6 +58,8 @@ public class ChildToChildGroupTransformator {
             if (child.fullPath != null) {
                 existing.paths.put(child.fullPath, child.explicitSourceId);    
             }
+            
+            existing.dependencies.addAll(child.dependencies);
             
             existing.items.addAll(child.getItems());
         }
@@ -113,18 +104,16 @@ public class ChildToChildGroupTransformator {
         
         private final Map<String, String> paths = new HashMap<>();
         
-        private final Set<String> dependencies;
+        private final Set<String> dependencies = new HashSet<>();
 
         private final Expression2 expr;
         
-        private final boolean isHeader;
 
-        public DataForChildGroup(String mainName, boolean required, Expression2 expr, final Set<String> dependencies, boolean isHeader) {
+        public DataForChildGroup(String mainName, boolean required, Expression2 expr, final Set<String> dependencies) {
             this.mainName = mainName;
             this.required = required;
             this.expr = expr;
-            this.dependencies = dependencies;
-            this.isHeader = isHeader;
+            this.dependencies.addAll(dependencies);
         }
     }
 }

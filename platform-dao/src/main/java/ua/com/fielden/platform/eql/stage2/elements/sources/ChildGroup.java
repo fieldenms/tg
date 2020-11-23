@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.stage2.elements.sources;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 
 import ua.com.fielden.platform.eql.stage2.elements.operands.Expression2;
@@ -23,8 +24,38 @@ public class ChildGroup {
         this.source = source;
         this.paths = paths;
         this.expr = expr;
-//        assert(items.isEmpty() || !items.isEmpty() && source !=null );
-//        assert(!items.isEmpty() || items.isEmpty() && !paths.isEmpty());
+
+//        assert(
+//                items.isEmpty() && !paths.isEmpty() && source == null && (expr == null || expr != null)//
+//                || //
+//                !items.isEmpty() && source != null & (paths.isEmpty() || !paths.isEmpty()) && (expr == null || expr != null)
+//                );
+    }
+    
+    @Override
+    public String toString() {
+        return toString("");
+    }
+
+    private static String offset = "              ";
+    
+    private String toString(final String currentOffset) {
+        final StringBuffer sb = new StringBuffer();
+        sb.append("\n" + currentOffset + "**** CHILDGROUP **** name : " + name + (expr != null ? " [CALC]" : ""));
+        if (!paths.isEmpty()) {
+            for (Entry<String, String> path : paths.entrySet()) {
+                sb.append("\n" + currentOffset + "-------- absolutePropPath : [" + path.getValue() + "]*[" +path.getKey()+ "]");    
+            }
+        }
+        if (!items.isEmpty()) {
+            sb.append("\n" + currentOffset + "-----------source + items : [" + source.contextId + "]");
+            for (final ChildGroup childGroup : items) {
+                sb.append("\n");
+                sb.append(childGroup.toString(currentOffset + offset));
+            }
+        }
+        
+        return sb.toString();
     }
     
     @Override

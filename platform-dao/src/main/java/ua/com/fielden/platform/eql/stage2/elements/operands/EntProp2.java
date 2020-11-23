@@ -1,9 +1,11 @@
 package ua.com.fielden.platform.eql.stage2.elements.operands;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableList;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -59,7 +61,7 @@ public class EntProp2 implements ISingleOperand2<Expression3> {
 
     @Override
     public Set<EntProp2> collectProps() {
-        return setOf(this);
+        return isHeader() ? emptySet() : setOf(this);
     }
     
     public List<AbstractPropInfo<?>> getPath() {

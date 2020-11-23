@@ -70,13 +70,14 @@ public class Sources2  {
         return result;
     }
     
-    private T2<IQrySources3, TransformationContext> enhance(final IQrySource2<?> source2, final IQrySource3 source, final TransformationContext context) {
+    private static T2<IQrySources3, TransformationContext> enhance(final IQrySource2<?> source2, final IQrySource3 source, final TransformationContext context) {
         return attachChildren(source, context.getSourceChildren(source2), context);
     }
     
-    private T2<IQrySources3, TransformationContext> attachChildren(final IQrySource3 source, final List<ChildGroup> children, final TransformationContext context) {
+    private static T2<IQrySources3, TransformationContext> attachChildren(final IQrySource3 source, final List<ChildGroup> children, final TransformationContext context) {
         IQrySources3 currMainSources = new SingleQrySource3(source);
         TransformationContext currentContext = context;
+        
         for (final ChildGroup fc : children) {
             for (final Entry<String, String> el : fc.paths.entrySet()) {
                 currentContext = currentContext.cloneWithResolutions(t2(el.getKey(), el.getValue()), t2(source, fc.expr == null ? fc.name : fc.expr));
@@ -92,7 +93,7 @@ public class Sources2  {
         return t2(currMainSources, currentContext);
     }
     
-    private T2<IQrySources3, TransformationContext> attachChild(final IQrySources3 mainSources, final IQrySource3 rootSource, final ChildGroup child, final TransformationContext context) {
+    private static T2<IQrySources3, TransformationContext> attachChild(final IQrySources3 mainSources, final IQrySource3 rootSource, final ChildGroup child, final TransformationContext context) {
         TransformationContext currentContext = context;
         final TransformationResult<QrySource3BasedOnTable> tr = child.source.transform(currentContext);
         final QrySource3BasedOnTable addedSource = tr.item;
