@@ -379,8 +379,8 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
     }
     
     _calcSharedByText (item) {
-        const value = typeof item.sharedBy !== 'undefined' && item.get('sharedBy');
-        return value ? '<i>shared by ' + value + '</i>' : '';
+        const value = typeof item.sharedByMessage !== 'undefined' && item.get('sharedByMessage');
+        return value ? value : '';
     }
     
     /**
@@ -580,7 +580,7 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
     }
     
     _sharedByTextHidden (item) {
-        return typeof item.sharedBy === 'undefined';
+        return typeof item.sharedByMessage === 'undefined';
     }
     
     _sortingIconHidden (_forReview, item) {

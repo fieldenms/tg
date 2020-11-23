@@ -35,6 +35,20 @@ public class LoadableCentreConfig extends AbstractEntity<String> {
     @Title(value = "Config", desc = "Entity centre config instance (FRESH kind).")
     private EntityCentreConfig config;
     
+    @IsProperty
+    @Title(value = "Shared By Message", desc = "In case of inherited from shared configuration, contains domain-driven message about whom created that configuration and shared it with current user.")
+    private String sharedByMessage;
+    
+    @Observable
+    public LoadableCentreConfig setSharedByMessage(final String sharedByMessage) {
+        this.sharedByMessage = sharedByMessage;
+        return this;
+    }
+    
+    public String getSharedByMessage() {
+        return sharedByMessage;
+    }
+    
     @Observable
     public LoadableCentreConfig setConfig(final EntityCentreConfig config) {
         this.config = config;

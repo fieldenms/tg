@@ -492,7 +492,8 @@ public class CentreUpdater {
             final User user,
             final Class<? extends MiWithConfigurationSupport<?>> miType,
             final DeviceProfile device,
-            final ICompanionObjectFinder companionFinder) {
+            final ICompanionObjectFinder companionFinder,
+            final ICentreConfigSharingModel sharingModel) {
         final List<LoadableCentreConfig> loadableConfigurations = new ArrayList<>();
         
         final IEntityCentreConfig eccCompanion = companionFinder.find(EntityCentreConfig.class);
@@ -532,20 +533,23 @@ public class CentreUpdater {
                     .collect(toSet());
                 
                 // find config creators not being equal to current user...
-                eccCompanion.getAllEntities(
-                    from(eccCompanion.withDbVersion(centreConfigQueryFor(miType, device, SAVED_CENTRE_NAME))
-                        .and().prop("configUuid").in().values(notInheritedFromBaseUuids.toArray())
-                        .and().prop("owner").ne().val(user)
-                        .model()
-                    )
-                    .with(fetch(EntityCentreConfig.class).with("configUuid").with("owner", fetch(User.class).with("key")))
-                    .lightweight().model()
-                ).stream()
-                .forEach(ecc -> {
-                    final LoadableCentreConfig foundLcc = loadableConfigurations.stream().filter(lcc -> lcc.getConfig().getConfigUuid().equals(ecc.getConfigUuid())).findAny().get();
-                    foundLcc.setInherited(true); // ... and make corresponding configuration inherited (from shared) ...
-                    foundLcc.setSharedBy(ecc.getOwner()); // ... with appropriate sharedBy property
-                });
+                if (!notInheritedFromBaseUuids.isEmpty()) {
+                    eccCompanion.getAllEntities(
+                        from(eccCompanion.withDbVersion(centreConfigQueryFor(miType, device, SAVED_CENTRE_NAME))
+                            .and().prop("configUuid").in().values(notInheritedFromBaseUuids.toArray())
+                            .and().prop("owner").ne().val(user)
+                            .model()
+                        )
+                        .with(fetch(EntityCentreConfig.class).with("configUuid").with("owner", fetch(User.class).with("key")))
+                        .lightweight().model()
+                    ).stream()
+                    .forEach(ecc -> {
+                        final LoadableCentreConfig foundLcc = loadableConfigurations.stream().filter(lcc -> lcc.getConfig().getConfigUuid().equals(ecc.getConfigUuid())).findAny().get();
+                        foundLcc.setInherited(true); // ... and make corresponding configuration inherited (from shared) ...
+                        foundLcc.setSharedBy(ecc.getOwner()); // ... with appropriate sharedBy property
+                        foundLcc.setSharedByMessage(sharingModel.sharedByMessage(foundLcc.getSharedBy())); // ... and domain-specific message indication about that
+                    });
+                }
             }
         }
         Collections.sort(loadableConfigurations);
