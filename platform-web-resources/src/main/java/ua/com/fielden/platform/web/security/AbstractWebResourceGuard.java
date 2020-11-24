@@ -11,9 +11,8 @@ import org.joda.time.DateTime;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
-import org.restlet.data.ChallengeScheme;
 import org.restlet.data.CookieSetting;
-import org.restlet.security.ChallengeAuthenticator;
+import org.restlet.data.Status;
 
 import com.google.inject.Injector;
 
@@ -34,7 +33,7 @@ import ua.com.fielden.platform.web.sse.SseUtils;
  * @author TG Team
  *
  */
-public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
+public abstract class AbstractWebResourceGuard extends org.restlet.security.Authenticator {
     private final Logger logger = Logger.getLogger(getClass());
     public static final String AUTHENTICATOR_COOKIE_NAME = "authenticator";
     protected final Injector injector;
@@ -50,7 +49,7 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
      * @throws IllegalArgumentException
      */
     public AbstractWebResourceGuard(final Context context, final String domainName, final String path, final Injector injector) {
-        super(context, ChallengeScheme.CUSTOM, "TG");
+        super(context);
         if (injector == null) {
             throw new IllegalArgumentException("Injector is required.");
         }
@@ -64,7 +63,6 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
             throw new IllegalStateException("Both the domain name and the applicatin binding path should be provided.");
         }
 
-        setRechallenging(false);
     }
 
     @Override
@@ -221,6 +219,10 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
      */
     protected boolean enforceUserSessionEvictionWhenDbSessionIsMissing() {
         return false;
+    }
+
+    private void forbid(final Response response) {
+        response.setStatus(Status.CLIENT_ERROR_FORBIDDEN);
     }
 
 }
