@@ -7,11 +7,13 @@ import static java.util.Optional.ofNullable;
 import static java.util.UUID.randomUUID;
 import static ua.com.fielden.platform.data.generator.IGenerator.FORCE_REGENERATION_KEY;
 import static ua.com.fielden.platform.data.generator.IGenerator.shouldForceRegeneration;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnlyAndInstrument;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
 import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.web.centre.CentreConfigUpdaterUtils.applyNewOrderVisibilityAndSorting;
+import static ua.com.fielden.platform.web.centre.CentreDiffSerialiser.CENTRE_DIFF_SERIALISER;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.SAVED_CENTRE_NAME;
@@ -218,6 +220,41 @@ public class CriteriaResource extends AbstractWebResource {
                 final Optional<EntityCentreConfig> freshConfigOpt = findConfigOptByUuid(eccCompanion.withDbVersion(centreConfigQueryFor(user, miType, device(), FRESH_CENTRE_NAME)), configUuid.get(), eccCompanion);
                 if (freshConfigOpt.isPresent()) {
                     actualSaveAsName = of(obtainTitleFrom(freshConfigOpt.get().getTitle(), deviceSpecific(FRESH_CENTRE_NAME, device())));
+                    
+                    if (!LINK_CONFIG_TITLE.equals(actualSaveAsName.get())) {
+                        // look for config creator;
+                        final Optional<EntityCentreConfig> savedConfigOpt = findConfigOptByUuid(eccCompanion.withDbVersion(centreConfigQueryFor(miType, device(), SAVED_CENTRE_NAME)), configUuid.get(), eccCompanion);
+                        if (savedConfigOpt.isPresent()) {
+                            final EntityCentreConfig savedConfig = savedConfigOpt.get();
+                            final User savedConfigCreator = savedConfig.getOwner();
+                            if (!areEqual(savedConfigCreator, user)) { // current user didn't create this config -> it is inherited
+                                final boolean centreChanged = isFreshCentreChanged(
+                                    updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder),
+                                    updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, actualSaveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder)
+                                );
+                                if (savedConfigCreator.isBase() && areEqual(savedConfigCreator, user.getBasedOnUser())) { // user.getBasedOnUser() is id-only-proxy
+                                    // inherited from base
+                                    if (centreChanged) { // if there are some user changes, only SAVED surrogate must be updated; if such centre will be discarded the base user changes will be loaded immediately
+                                        removeCentres(user, miType, device(), actualSaveAsName, eccCompanion, SAVED_CENTRE_NAME);
+                                    } else { // otherwise base user changes will be loaded immediately after centre loading
+                                        removeCentres(user, miType, device(), actualSaveAsName, eccCompanion, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
+                                    }
+                                    updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+                                } else {
+                                    // inherited from shared
+                                    final Map<String, Object> differences = restoreDiffFrom(savedConfig, eccCompanion, format("for type [%s] with name [%s] for user [%s]", miType.getSimpleName(), savedConfig.getTitle(), savedConfigCreator));
+                                    final EntityCentreConfig savedConfigForCurrUser = findConfig(miType, user, nameOf.apply(SAVED_CENTRE_NAME).apply(actualSaveAsName).apply(device()), eccCompanion, fetchKeyAndDescOnlyAndInstrument(EntityCentreConfig.class).with("configBody"));
+                                    savedConfigForCurrUser.setConfigBody(CENTRE_DIFF_SERIALISER.serialise(differences));
+                                    eccCompanion.quickSave(savedConfigForCurrUser);
+                                    if (!centreChanged) {
+                                        freshConfigOpt.get().setConfigBody(CENTRE_DIFF_SERIALISER.serialise(differences));
+                                        eccCompanion.quickSave(freshConfigOpt.get());
+                                    }
+                                }
+                            }
+                        } // else, there are no creator for this config; it means that it was shared but original config deleted; the inherited from shared configuration acts like own save-as configuration
+                    }
+                    
                     // TODO for the first stage we do not update from [base, shared], but it is perhaps required to achieve smooth flowing of configs from upstream (analogously when trying to load through Load action or when pressing Discard)
                     // if it is required then just findConfigOptByUuid(eccCompanion.withDbVersion(centreConfigQueryFor(user, miType, device(), SAVED_CENTRE_NAME)), configUuid.get(), eccCompanion) and if not present then it is [inherited from base, or inherited from shared]
                 } else {

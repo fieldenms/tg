@@ -8,7 +8,6 @@ import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 
 /** 
@@ -26,10 +25,6 @@ public class LoadableCentreConfig extends AbstractEntity<String> {
     @IsProperty
     @Title(value = "Inherited", desc = "Indicates whether this centre configuration is connected with some base user's configuration of the same name.")
     private boolean inherited;
-    
-    @IsProperty
-    @Title(value = "Shared By", desc = "In case of inherited from shared configuration, contains the user which created that configuration and shared it with current user.")
-    private User sharedBy;
     
     @IsProperty
     @Title(value = "Config", desc = "Entity centre config instance (FRESH kind).")
@@ -57,16 +52,6 @@ public class LoadableCentreConfig extends AbstractEntity<String> {
     
     public EntityCentreConfig getConfig() {
         return config;
-    }
-    
-    @Observable
-    public LoadableCentreConfig setSharedBy(final User sharedBy) {
-        this.sharedBy = sharedBy;
-        return this;
-    }
-    
-    public User getSharedBy() {
-        return sharedBy;
     }
     
     @Observable

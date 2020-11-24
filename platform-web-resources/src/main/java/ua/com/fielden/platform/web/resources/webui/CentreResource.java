@@ -1,17 +1,23 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
-import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isInherited;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnlyAndInstrument;
+import static ua.com.fielden.platform.web.centre.CentreDiffSerialiser.CENTRE_DIFF_SERIALISER;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.SAVED_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.commitCentreWithoutConflicts;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.loadableConfigurations;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.makePreferred;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.nameOf;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.removeCentres;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentreDesc;
+import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfig;
+import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfigOptByUuid;
+import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.restoreDiffFrom;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.createCriteriaDiscardEnvelope;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.createStaleCriteriaMessage;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
@@ -41,8 +47,11 @@ import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
+import ua.com.fielden.platform.web.centre.CentreConfigUtils;
+import ua.com.fielden.platform.web.centre.CentreUpdater;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.ICentreConfigSharingModel;
+import ua.com.fielden.platform.web.centre.LoadableCentreConfig;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
@@ -121,16 +130,30 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
             
             final ICentreDomainTreeManagerAndEnhancer newFreshCentre;
             
-            final boolean isInherited = isInherited(saveAsName, () -> loadableConfigurations(user, miType, device(), companionFinder, sharingModel).stream()); // this will also throw early failure in case where current configuration was deleted
+            final LoadableCentreConfig lcc = CentreConfigUtils.lcc(saveAsName, () -> loadableConfigurations(user, miType, device(), companionFinder, sharingModel).stream()); // this will also throw early failure in case where current configuration was deleted
+            final boolean isInherited = lcc != null && lcc.isInherited();
             if (isInherited) {
-                // remove cached instances of surrogate centres before updating from base user
-                removeCentres(user, miType, device(), saveAsName, eccCompanion, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
-                // it is necessary to use "fresh" instance of cdtme (after the discarding process)
-                newFreshCentre = updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
-                updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder); // do not leave only FRESH centre out of two (FRESH + SAVED) => update SAVED centre explicitly
-                // must leave current configuration preferred after deletion (only for named configs -- always true for inherited ones, and for non autoRun centres)
-                if (!centre.isRunAutomatically()) {
-                    makePreferred(user, miType, saveAsName, device(), companionFinder);
+                if (lcc.getSharedByMessage() != null) {
+                    final Optional<EntityCentreConfig> savedConfigOpt = findConfigOptByUuid(eccCompanion.withDbVersion(CentreUpdater.centreConfigQueryFor(miType, device(), SAVED_CENTRE_NAME)), lcc.getConfig().getConfigUuid(), eccCompanion);
+                    final EntityCentreConfig savedConfig = savedConfigOpt.get(); // it is present otherwise it should not be inherited
+                    final Map<String, Object> differences = restoreDiffFrom(savedConfig, eccCompanion, format("for type [%s] with name [%s]", miType.getSimpleName(), savedConfig.getTitle()));
+                    final EntityCentreConfig savedConfigForCurrUser = findConfig(miType, user, nameOf.apply(SAVED_CENTRE_NAME).apply(saveAsName).apply(device()), eccCompanion, fetchKeyAndDescOnlyAndInstrument(EntityCentreConfig.class).with("configBody"));
+                    savedConfigForCurrUser.setConfigBody(CENTRE_DIFF_SERIALISER.serialise(differences));
+                    eccCompanion.quickSave(savedConfigForCurrUser);
+                    final EntityCentreConfig freshConfigForCurrUser = findConfig(miType, user, nameOf.apply(FRESH_CENTRE_NAME).apply(saveAsName).apply(device()), eccCompanion, fetchKeyAndDescOnlyAndInstrument(EntityCentreConfig.class).with("configBody"));
+                    freshConfigForCurrUser.setConfigBody(CENTRE_DIFF_SERIALISER.serialise(differences));
+                    eccCompanion.quickSave(freshConfigForCurrUser);
+                    newFreshCentre = updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+                } else {
+                    // remove cached instances of surrogate centres before updating from base user
+                    removeCentres(user, miType, device(), saveAsName, eccCompanion, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
+                    // it is necessary to use "fresh" instance of cdtme (after the discarding process)
+                    newFreshCentre = updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+                    updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder); // do not leave only FRESH centre out of two (FRESH + SAVED) => update SAVED centre explicitly
+                    // must leave current configuration preferred after deletion (only for named configs -- always true for inherited ones, and for non autoRun centres)
+                    if (!centre.isRunAutomatically()) {
+                        makePreferred(user, miType, saveAsName, device(), companionFinder);
+                    }
                 }
             } else {
                 final ICentreDomainTreeManagerAndEnhancer updatedSavedCentre = updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);

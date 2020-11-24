@@ -22,6 +22,7 @@ import ua.com.fielden.platform.domaintree.impl.CalculatedPropertyInfo;
 import ua.com.fielden.platform.domaintree.impl.CustomProperty;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -222,6 +223,12 @@ public class CentreUpdaterUtils extends CentreUpdater {
     public static EntityCentreConfig findConfig(final Class<?> menuItemType, final User user, final String name, final IEntityCentreConfig eccCompanion) {
         return eccCompanion.getEntity(
             from(modelFor(user, menuItemType.getName(), name)).with(fetchWithKeyAndDesc(EntityCentreConfig.class, true).with("preferred").with("configUuid").fetchModel()).model()
+        );
+    }
+    
+    public static EntityCentreConfig findConfig(final Class<?> menuItemType, final User user, final String name, final IEntityCentreConfig eccCompanion, final fetch<EntityCentreConfig> fetch) {
+        return eccCompanion.getEntity(
+            from(modelFor(user, menuItemType.getName(), name)).with(fetch).model()
         );
     }
     

@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import static java.lang.Math.min;
+import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
@@ -8,6 +9,7 @@ import static java.util.UUID.randomUUID;
 import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteriaWithModelHandler.CRITERIA_ENTITY_ID;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isBooleanCriterion;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnlyAndInstrument;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isAndBeforeDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isDateMnemonicDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isDatePrefixDefault;
@@ -20,7 +22,11 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.APPLIED_CRITERIA_ENTITY_NAME;
 import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.WAS_RUN_NAME;
+import static ua.com.fielden.platform.web.centre.CentreDiffSerialiser.CENTRE_DIFF_SERIALISER;
+import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfig;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfigOpt;
+import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfigOptByUuid;
+import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.restoreDiffFrom;
 import static ua.com.fielden.platform.web.resources.webui.EntityResource.restoreMasterFunctionalEntity;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalManagedType;
@@ -70,6 +76,7 @@ import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
+import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
 import ua.com.fielden.platform.ui.menu.MiType;
@@ -596,7 +603,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             validationPrototype.makePreferredConfig(empty());
         });
         // updates inherited centre with title 'saveAsNameToLoad' from upstream base user's configuration -- just before LOAD action
-        validationPrototype.setInheritedCentreUpdater(saveAsNameToLoad -> {
+        validationPrototype.setInheritedFromBaseCentreUpdater(saveAsNameToLoad -> {
             // determine current preferred configuration
             final Optional<String> preferredConfigName = retrievePreferredConfigName(user, miType, device, companionFinder);
             // determine whether inherited configuration is changed
@@ -614,6 +621,26 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
 
             if (equalsEx(preferredConfigName, of(saveAsNameToLoad))) { // if inherited configuration being updated was preferred
                 makePreferred(user, miType, of(saveAsNameToLoad), device, companionFinder); // then must leave it preferred after deletion
+            }
+        });
+        // updates inherited centre with title 'saveAsNameToLoad' from upstream shared configuration -- just before LOAD action
+        validationPrototype.setInheritedFromSharedCentreUpdater(saveAsNameToLoad -> configUuid -> {
+            final Optional<EntityCentreConfig> savedConfigOpt = findConfigOptByUuid(eccCompanion.withDbVersion(centreConfigQueryFor(miType, device, SAVED_CENTRE_NAME)), configUuid, eccCompanion);
+            if (savedConfigOpt.isPresent()) {
+                final EntityCentreConfig savedConfig = savedConfigOpt.get();
+                final Map<String, Object> differences = restoreDiffFrom(savedConfig, eccCompanion, format("for type [%s] with name [%s]", miType.getSimpleName(), savedConfig.getTitle()));
+                final boolean centreChanged = isFreshCentreChanged(
+                    updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, of(saveAsNameToLoad), device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder),
+                    updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, of(saveAsNameToLoad), device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder)
+                );
+                final EntityCentreConfig savedConfigForCurrUser = findConfig(miType, user, nameOf.apply(SAVED_CENTRE_NAME).apply(of(saveAsNameToLoad)).apply(device), eccCompanion, fetchKeyAndDescOnlyAndInstrument(EntityCentreConfig.class).with("configBody"));
+                savedConfigForCurrUser.setConfigBody(CENTRE_DIFF_SERIALISER.serialise(differences));
+                eccCompanion.quickSave(savedConfigForCurrUser);
+                if (!centreChanged) {
+                    final EntityCentreConfig freshConfigForCurrUser = findConfig(miType, user, nameOf.apply(FRESH_CENTRE_NAME).apply(of(saveAsNameToLoad)).apply(device), eccCompanion, fetchKeyAndDescOnlyAndInstrument(EntityCentreConfig.class).with("configBody"));
+                    freshConfigForCurrUser.setConfigBody(CENTRE_DIFF_SERIALISER.serialise(differences));
+                    eccCompanion.quickSave(freshConfigForCurrUser);
+                }
             }
         });
         // clears default centre and fully prepares it for usage

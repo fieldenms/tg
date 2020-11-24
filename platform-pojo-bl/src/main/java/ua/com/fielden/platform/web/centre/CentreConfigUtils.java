@@ -107,10 +107,14 @@ public class CentreConfigUtils {
      * @throws Result failure for non-default and non-link configurations, that have been deleted
      */
     public static boolean isInherited(final Optional<String> saveAsName, final Supplier<Stream<LoadableCentreConfig>> streamLoadableConfigurations) throws Result {
-        return saveAsName.isPresent() && !LINK_CONFIG_TITLE.equals(saveAsName.get()) &&
+        final LoadableCentreConfig lcc = lcc(saveAsName, streamLoadableConfigurations);
+        return lcc != null && lcc.isInherited();
+    }
+    public static LoadableCentreConfig lcc(final Optional<String> saveAsName, final Supplier<Stream<LoadableCentreConfig>> streamLoadableConfigurations) throws Result {
+        return saveAsName.isPresent() && !LINK_CONFIG_TITLE.equals(saveAsName.get()) ?
             streamLoadableConfigurations.get()
             .filter(lcc -> lcc.getKey().equals(saveAsName.get()))
-            .findAny().map(lcc -> lcc.isInherited()).orElseThrow(() -> failure("Configuration has been deleted."));
+            .findAny().orElseThrow(() -> failure("Configuration has been deleted.")) : null;
     }
     
 }
