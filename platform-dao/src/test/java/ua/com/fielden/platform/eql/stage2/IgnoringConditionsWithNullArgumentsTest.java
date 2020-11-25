@@ -9,9 +9,9 @@ import java.util.HashMap;
 import org.junit.Test;
 
 import ua.com.fielden.platform.eql.meta.EqlStage2TestCase;
-import ua.com.fielden.platform.eql.stage2.elements.operands.ResultQuery2;
-import ua.com.fielden.platform.eql.stage2.elements.sources.QrySource2BasedOnPersistentType;
-import ua.com.fielden.platform.eql.stage2.elements.sources.Sources2;
+import ua.com.fielden.platform.eql.stage2.operands.ResultQuery2;
+import ua.com.fielden.platform.eql.stage2.sources.QrySource2BasedOnPersistentType;
+import ua.com.fielden.platform.eql.stage2.sources.Sources2;
 
 public class IgnoringConditionsWithNullArgumentsTest extends EqlStage2TestCase {
 

@@ -6,7 +6,7 @@ import java.util.Objects;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import ua.com.fielden.platform.eql.stage1.elements.PropResolutionProgress;
+import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
 
 public class ComponentTypePropInfo<T> extends AbstractPropInfo<T> {
     private final Class<T> javaType;

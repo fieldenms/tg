@@ -4,15 +4,15 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator;
-import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
-import ua.com.fielden.platform.eql.stage2.elements.PathsToTreeTransformator;
-import ua.com.fielden.platform.eql.stage2.elements.TablesAndSourceChildren;
-import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
-import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
-import ua.com.fielden.platform.eql.stage2.elements.operands.ResultQuery2;
-import ua.com.fielden.platform.eql.stage2.elements.sources.ChildGroup;
-import ua.com.fielden.platform.eql.stage3.elements.operands.ResultQuery3;
+import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
+import ua.com.fielden.platform.eql.stage1.PropsResolutionContext;
+import ua.com.fielden.platform.eql.stage2.PathsToTreeTransformator;
+import ua.com.fielden.platform.eql.stage2.TablesAndSourceChildren;
+import ua.com.fielden.platform.eql.stage2.TransformationContext;
+import ua.com.fielden.platform.eql.stage2.TransformationResult;
+import ua.com.fielden.platform.eql.stage2.operands.ResultQuery2;
+import ua.com.fielden.platform.eql.stage2.sources.ChildGroup;
+import ua.com.fielden.platform.eql.stage3.operands.ResultQuery3;
 
 public class EqlQueryTransformer {
     static <E extends AbstractEntity<?>> TransformationResult<ResultQuery3> transform(final QueryExecutionContext executionContext, final QueryProcessingModel<E, ?> qem, final DbVersion dbVersion, final IFilter filter, final String username) {

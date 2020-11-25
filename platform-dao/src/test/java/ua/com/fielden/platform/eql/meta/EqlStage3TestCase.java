@@ -23,36 +23,36 @@ import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
-import ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator;
-import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
-import ua.com.fielden.platform.eql.stage2.elements.PathsToTreeTransformator;
-import ua.com.fielden.platform.eql.stage2.elements.TablesAndSourceChildren;
-import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
-import ua.com.fielden.platform.eql.stage2.elements.operands.ResultQuery2;
-import ua.com.fielden.platform.eql.stage3.elements.EntQueryBlocks3;
-import ua.com.fielden.platform.eql.stage3.elements.conditions.ComparisonTest3;
-import ua.com.fielden.platform.eql.stage3.elements.conditions.Conditions3;
-import ua.com.fielden.platform.eql.stage3.elements.conditions.ICondition3;
-import ua.com.fielden.platform.eql.stage3.elements.conditions.NullTest3;
-import ua.com.fielden.platform.eql.stage3.elements.core.GroupBy3;
-import ua.com.fielden.platform.eql.stage3.elements.core.GroupBys3;
-import ua.com.fielden.platform.eql.stage3.elements.core.OrderBy3;
-import ua.com.fielden.platform.eql.stage3.elements.core.OrderBys3;
-import ua.com.fielden.platform.eql.stage3.elements.core.Yield3;
-import ua.com.fielden.platform.eql.stage3.elements.core.Yields3;
-import ua.com.fielden.platform.eql.stage3.elements.functions.CountAll3;
-import ua.com.fielden.platform.eql.stage3.elements.operands.EntProp3;
-import ua.com.fielden.platform.eql.stage3.elements.operands.Expression3;
-import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
-import ua.com.fielden.platform.eql.stage3.elements.operands.ResultQuery3;
-import ua.com.fielden.platform.eql.stage3.elements.operands.SourceQuery3;
-import ua.com.fielden.platform.eql.stage3.elements.operands.SubQuery3;
-import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySource3;
-import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySources3;
-import ua.com.fielden.platform.eql.stage3.elements.sources.JoinedQrySource3;
-import ua.com.fielden.platform.eql.stage3.elements.sources.QrySource3BasedOnSubqueries;
-import ua.com.fielden.platform.eql.stage3.elements.sources.QrySource3BasedOnTable;
-import ua.com.fielden.platform.eql.stage3.elements.sources.SingleQrySource3;
+import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
+import ua.com.fielden.platform.eql.stage1.PropsResolutionContext;
+import ua.com.fielden.platform.eql.stage2.PathsToTreeTransformator;
+import ua.com.fielden.platform.eql.stage2.TablesAndSourceChildren;
+import ua.com.fielden.platform.eql.stage2.TransformationContext;
+import ua.com.fielden.platform.eql.stage2.operands.ResultQuery2;
+import ua.com.fielden.platform.eql.stage3.EntQueryBlocks3;
+import ua.com.fielden.platform.eql.stage3.conditions.ComparisonTest3;
+import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
+import ua.com.fielden.platform.eql.stage3.conditions.ICondition3;
+import ua.com.fielden.platform.eql.stage3.conditions.NullTest3;
+import ua.com.fielden.platform.eql.stage3.core.GroupBy3;
+import ua.com.fielden.platform.eql.stage3.core.GroupBys3;
+import ua.com.fielden.platform.eql.stage3.core.OrderBy3;
+import ua.com.fielden.platform.eql.stage3.core.OrderBys3;
+import ua.com.fielden.platform.eql.stage3.core.Yield3;
+import ua.com.fielden.platform.eql.stage3.core.Yields3;
+import ua.com.fielden.platform.eql.stage3.functions.CountAll3;
+import ua.com.fielden.platform.eql.stage3.operands.EntProp3;
+import ua.com.fielden.platform.eql.stage3.operands.Expression3;
+import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import ua.com.fielden.platform.eql.stage3.operands.ResultQuery3;
+import ua.com.fielden.platform.eql.stage3.operands.SourceQuery3;
+import ua.com.fielden.platform.eql.stage3.operands.SubQuery3;
+import ua.com.fielden.platform.eql.stage3.sources.IQrySource3;
+import ua.com.fielden.platform.eql.stage3.sources.IQrySources3;
+import ua.com.fielden.platform.eql.stage3.sources.JoinedQrySource3;
+import ua.com.fielden.platform.eql.stage3.sources.QrySource3BasedOnSubqueries;
+import ua.com.fielden.platform.eql.stage3.sources.QrySource3BasedOnTable;
+import ua.com.fielden.platform.eql.stage3.sources.SingleQrySource3;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
 
 public class EqlStage3TestCase extends EqlTestCase {
@@ -66,7 +66,7 @@ public class EqlStage3TestCase extends EqlTestCase {
         final EntQueryGenerator qb = qb();
         final ResultQuery2 rq2 = qb.generateEntQueryAsResultQuery(countQry, null, null).transform(resolutionContext);
         final PathsToTreeTransformator pathsToTreeTransformator = new PathsToTreeTransformator( metadata(), qb);
-        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<ResultQuery3> s2tr = rq2.transform(new TransformationContext(new TablesAndSourceChildren(tables, pathsToTreeTransformator.groupChildren(rq2.collectProps()))));
+        final ua.com.fielden.platform.eql.stage2.TransformationResult<ResultQuery3> s2tr = rq2.transform(new TransformationContext(new TablesAndSourceChildren(tables, pathsToTreeTransformator.groupChildren(rq2.collectProps()))));
         return s2tr.item;
     }
     
@@ -75,7 +75,7 @@ public class EqlStage3TestCase extends EqlTestCase {
         final EntQueryGenerator qb = qb();
         final ResultQuery2 rq2 = qb.generateEntQueryAsResultQuery(qry, null, null).transform(resolutionContext);
         final PathsToTreeTransformator pathsToTreeTransformator = new PathsToTreeTransformator( metadata(), qb);
-        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<ResultQuery3> s2tr = rq2.transform(new TransformationContext(new TablesAndSourceChildren(tables, pathsToTreeTransformator.groupChildren(rq2.collectProps()))));
+        final ua.com.fielden.platform.eql.stage2.TransformationResult<ResultQuery3> s2tr = rq2.transform(new TransformationContext(new TablesAndSourceChildren(tables, pathsToTreeTransformator.groupChildren(rq2.collectProps()))));
         return s2tr.item;
     }
     
@@ -86,7 +86,7 @@ public class EqlStage3TestCase extends EqlTestCase {
         final EntQueryGenerator qb = qb(paramValues);
         final ResultQuery2 rq2 = qb.generateEntQueryAsResultQuery(countQry, null, null).transform(resolutionContext);
         final PathsToTreeTransformator pathsToTreeTransformator = new PathsToTreeTransformator( metadata(), qb);
-        final ua.com.fielden.platform.eql.stage2.elements.TransformationResult<ResultQuery3> s2tr = rq2.transform(new TransformationContext(new TablesAndSourceChildren(tables, pathsToTreeTransformator.groupChildren(rq2.collectProps()))));
+        final ua.com.fielden.platform.eql.stage2.TransformationResult<ResultQuery3> s2tr = rq2.transform(new TransformationContext(new TablesAndSourceChildren(tables, pathsToTreeTransformator.groupChildren(rq2.collectProps()))));
         return s2tr.item;
     }
 

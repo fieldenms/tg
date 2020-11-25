@@ -9,9 +9,9 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.eql.meta.EqlStage2TestCase;
-import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
-import ua.com.fielden.platform.eql.stage2.elements.operands.ResultQuery2;
-import ua.com.fielden.platform.eql.stage2.elements.sources.QrySource2BasedOnPersistentType;
+import ua.com.fielden.platform.eql.stage2.operands.EntProp2;
+import ua.com.fielden.platform.eql.stage2.operands.ResultQuery2;
+import ua.com.fielden.platform.eql.stage2.sources.QrySource2BasedOnPersistentType;
 
 public class OrderByYieldEnhancementTest extends EqlStage2TestCase {
 

@@ -16,8 +16,8 @@ import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.query.metadata.PersistedEntityMetadata;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
-import ua.com.fielden.platform.eql.stage3.elements.operands.ResultQuery3;
+import ua.com.fielden.platform.eql.stage2.TransformationResult;
+import ua.com.fielden.platform.eql.stage3.operands.ResultQuery3;
 
 public class EntityBatchDeleteByQueryModelOperation {
     private final QueryExecutionContext executionContext;

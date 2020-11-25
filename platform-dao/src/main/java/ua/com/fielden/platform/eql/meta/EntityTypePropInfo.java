@@ -4,7 +4,7 @@ import java.util.Objects;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
-import ua.com.fielden.platform.eql.stage1.elements.PropResolutionProgress;
+import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
 
 /**
  * A structure that captures a query source yield-able entity-typed-property resolution related info within a query source of type <code>PARENT</code>.

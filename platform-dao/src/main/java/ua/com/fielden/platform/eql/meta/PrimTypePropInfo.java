@@ -3,7 +3,7 @@ package ua.com.fielden.platform.eql.meta;
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
-import ua.com.fielden.platform.eql.stage1.elements.PropResolutionProgress;
+import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
 
 public class PrimTypePropInfo<T> extends AbstractPropInfo<T> {
     private final Class<T> propType;

@@ -12,26 +12,26 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.eql.stage1.elements.EntQueryBlocks1;
-import ua.com.fielden.platform.eql.stage1.elements.conditions.ComparisonTest1;
-import ua.com.fielden.platform.eql.stage1.elements.conditions.CompoundCondition1;
-import ua.com.fielden.platform.eql.stage1.elements.conditions.Conditions1;
-import ua.com.fielden.platform.eql.stage1.elements.conditions.ICondition1;
-import ua.com.fielden.platform.eql.stage1.elements.conditions.NullTest1;
-import ua.com.fielden.platform.eql.stage1.elements.core.GroupBys1;
-import ua.com.fielden.platform.eql.stage1.elements.core.OrderBys1;
-import ua.com.fielden.platform.eql.stage1.elements.core.Yield1;
-import ua.com.fielden.platform.eql.stage1.elements.core.Yields1;
-import ua.com.fielden.platform.eql.stage1.elements.functions.CountAll1;
-import ua.com.fielden.platform.eql.stage1.elements.operands.EntProp1;
-import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
-import ua.com.fielden.platform.eql.stage1.elements.operands.ResultQuery1;
-import ua.com.fielden.platform.eql.stage1.elements.sources.CompoundSource1;
-import ua.com.fielden.platform.eql.stage1.elements.sources.IQrySource1;
-import ua.com.fielden.platform.eql.stage1.elements.sources.QrySource1BasedOnPersistentType;
-import ua.com.fielden.platform.eql.stage1.elements.sources.Sources1;
-import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
-import ua.com.fielden.platform.eql.stage2.elements.sources.IQrySource2;
+import ua.com.fielden.platform.eql.stage1.EntQueryBlocks1;
+import ua.com.fielden.platform.eql.stage1.conditions.ComparisonTest1;
+import ua.com.fielden.platform.eql.stage1.conditions.CompoundCondition1;
+import ua.com.fielden.platform.eql.stage1.conditions.Conditions1;
+import ua.com.fielden.platform.eql.stage1.conditions.ICondition1;
+import ua.com.fielden.platform.eql.stage1.conditions.NullTest1;
+import ua.com.fielden.platform.eql.stage1.core.GroupBys1;
+import ua.com.fielden.platform.eql.stage1.core.OrderBys1;
+import ua.com.fielden.platform.eql.stage1.core.Yield1;
+import ua.com.fielden.platform.eql.stage1.core.Yields1;
+import ua.com.fielden.platform.eql.stage1.functions.CountAll1;
+import ua.com.fielden.platform.eql.stage1.operands.EntProp1;
+import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
+import ua.com.fielden.platform.eql.stage1.operands.ResultQuery1;
+import ua.com.fielden.platform.eql.stage1.sources.CompoundSource1;
+import ua.com.fielden.platform.eql.stage1.sources.IQrySource1;
+import ua.com.fielden.platform.eql.stage1.sources.QrySource1BasedOnPersistentType;
+import ua.com.fielden.platform.eql.stage1.sources.Sources1;
+import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage2.sources.IQrySource2;
 
 public class EqlStage1TestCase extends EqlTestCase {
 

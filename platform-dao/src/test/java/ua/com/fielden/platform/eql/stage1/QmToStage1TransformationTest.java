@@ -7,10 +7,10 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.eql.meta.EqlStage1TestCase;
-import ua.com.fielden.platform.eql.stage1.elements.EntQueryBlocks1;
-import ua.com.fielden.platform.eql.stage1.elements.conditions.Conditions1;
-import ua.com.fielden.platform.eql.stage1.elements.operands.ResultQuery1;
-import ua.com.fielden.platform.eql.stage1.elements.sources.Sources1;
+import ua.com.fielden.platform.eql.stage1.EntQueryBlocks1;
+import ua.com.fielden.platform.eql.stage1.conditions.Conditions1;
+import ua.com.fielden.platform.eql.stage1.operands.ResultQuery1;
+import ua.com.fielden.platform.eql.stage1.sources.Sources1;
 import ua.com.fielden.platform.sample.domain.TeVehicleModel;
 
 public class QmToStage1TransformationTest extends EqlStage1TestCase {
