@@ -555,7 +555,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 of(validationPrototype.centreTitleAndDesc(customObjectSaveAsName).map(titleDesc -> titleDesc._2)),
                 empty()
             );
-            customObject.put(WAS_RUN_NAME, null); // make VIEW button disabled by default; this behaviour can be overridden by removing 'wasRun' customObject's entry
+            disableViewButton(customObject); // make VIEW button disabled by default; this behaviour can be overridden by removing 'wasRun' customObject's entry
             customObject.put(APPLIED_CRITERIA_ENTITY_NAME, appliedCriteriaEntity);
             return customObject;
         });
@@ -740,6 +740,17 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                         EntityResourceUtils.getOriginalManagedType(validationPrototype.getType(), cdtmae)//
                 ), new LinkedHashSet<>()//
         );
+    }
+
+    /**
+     * Makes VIEW button disabled even if the centre has been running and had some results earlier.
+     * 
+     * @param customObject
+     * @return
+     */
+    public static Map<String, Object> disableViewButton(final Map<String, Object> customObject) {
+        customObject.put(WAS_RUN_NAME, null);
+        return customObject;
     }
 
     /**

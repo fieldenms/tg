@@ -44,6 +44,7 @@ import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.cr
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaMetaValuesCustomObjectWithResult;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaMetaValuesCustomObjectWithSaveAsInfo;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaValidationPrototype;
+import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.disableViewButton;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.isAutoRunning;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.isRunning;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.isSorting;
@@ -387,15 +388,15 @@ public class CriteriaResource extends AbstractWebResource {
             final IUser userCompanion,
             final ICentreConfigSharingModel sharingModel) {
         return restUtil.rawListJsonRepresentation(
-                createCriteriaValidationPrototype(miType, saveAsName, updatedFreshCentre, companionFinder, critGenerator, -1L, user, userProvider, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel),
-                createCriteriaMetaValuesCustomObjectWithSaveAsInfo(
-                        createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)),
-                        isFreshCentreChanged(updatedFreshCentre, updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder)),
-                        of(saveAsName),
-                        of(configUuid),
-                        of(ofNullable(saveAsDesc)),
-                        empty()
-                )//
+            createCriteriaValidationPrototype(miType, saveAsName, updatedFreshCentre, companionFinder, critGenerator, -1L, user, userProvider, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel),
+            disableViewButton(createCriteriaMetaValuesCustomObjectWithSaveAsInfo(
+                createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)),
+                isFreshCentreChanged(updatedFreshCentre, updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder)),
+                of(saveAsName),
+                of(configUuid),
+                of(ofNullable(saveAsDesc)),
+                empty()
+            ))
         );
     }
 
