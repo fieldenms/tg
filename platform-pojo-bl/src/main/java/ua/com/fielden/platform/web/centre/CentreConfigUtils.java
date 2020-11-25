@@ -74,14 +74,14 @@ public class CentreConfigUtils {
     }
     
     /**
-     * Returns <code>true</code> in case where <code>saveAsName</code>d configuration represents default configuration,
+     * Returns <code>true</code> in case where <code>saveAsName</code>d configuration represents default or link configuration,
      * otherwise <code>false</code>.
      * 
      * @param saveAsName
      * @return
      */
-    public static boolean isDefault(final Optional<String> saveAsName) {
-        return !saveAsName.isPresent();
+    public static boolean isDefaultOrLink(final Optional<String> saveAsName) {
+        return !saveAsName.isPresent() || LINK_CONFIG_TITLE.equals(saveAsName.get());
     }
     
     /**
@@ -93,28 +93,68 @@ public class CentreConfigUtils {
      * @return
      */
     public static boolean isDefaultOrLinkOrInherited(final Optional<String> saveAsName, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) {
-        return isDefault(saveAsName) || LINK_CONFIG_TITLE.equals(saveAsName.get()) || isInherited(saveAsName, () -> selectionCrit.loadableCentreConfigs().stream());
+        return isDefaultOrLink(saveAsName) || inherited(findLoadableConfig(saveAsName, selectionCrit)).isPresent();
     }
     
     /**
-     * Returns <code>true</code> in case where <code>saveAsName</code>d configuration represents inherited from base user configuration or inherited from shared configuration, <code>false</code> otherwise.
-     * <p>
-     * Default and link configurations are not inherited.
+     * Returns {@code loadableConfig} for non-empty inherited {@code loadableConfig}, empty optional otherwise.
+     * 
+     * @param loadableConfig
+     * @return
+     */
+    public static Optional<LoadableCentreConfig> inherited(final Optional<LoadableCentreConfig> loadableConfig) {
+        return loadableConfig.filter(LoadableCentreConfig::isInherited);
+    }
+    
+    /**
+     * Returns {@code loadableConfig} for non-empty 'inherited from shared' {@code loadableConfig}, empty optional otherwise.
+     * 
+     * @param loadableConfig
+     * @return
+     */
+    public static Optional<LoadableCentreConfig> inheritedFromShared(final Optional<LoadableCentreConfig> loadableConfig) {
+        return inherited(loadableConfig).filter(LoadableCentreConfig::isShared);
+    }
+    
+    /**
+     * Returns {@code loadableConfig} for non-empty 'inherited from base' {@code loadableConfig}, empty optional otherwise.
+     * 
+     * @param loadableConfig
+     * @return
+     */
+    public static Optional<LoadableCentreConfig> inheritedFromBase(final Optional<LoadableCentreConfig> loadableConfig) {
+        return inherited(loadableConfig).filter(LoadableCentreConfig::isBase);
+    }
+    
+    /**
+     * Finds {@link LoadableCentreConfig} instance for concrete {@code saveAsName}. Default or link configurations are not loadable and empty {@link Optional} is returned.
      * 
      * @param saveAsName
-     * @param streamLoadableConfigurations -- a function to stream loadable configurations for current user
+     * @param selectionCrit -- selection criteria being able to stream loadable configurations
      * @return
-     * @throws Result failure for non-default and non-link configurations, that have been deleted
+     * @throws Result if configuration is not present aka deleted
      */
-    public static boolean isInherited(final Optional<String> saveAsName, final Supplier<Stream<LoadableCentreConfig>> streamLoadableConfigurations) throws Result {
-        final LoadableCentreConfig lcc = lcc(saveAsName, streamLoadableConfigurations);
-        return lcc != null && lcc.isInherited();
+    public static Optional<LoadableCentreConfig> findLoadableConfig(final Optional<String> saveAsName, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) throws Result {
+        return findLoadableConfig(saveAsName, () -> selectionCrit.loadableCentreConfigs().stream());
     }
-    public static LoadableCentreConfig lcc(final Optional<String> saveAsName, final Supplier<Stream<LoadableCentreConfig>> streamLoadableConfigurations) throws Result {
-        return saveAsName.isPresent() && !LINK_CONFIG_TITLE.equals(saveAsName.get()) ?
-            streamLoadableConfigurations.get()
-            .filter(lcc -> lcc.getKey().equals(saveAsName.get()))
-            .findAny().orElseThrow(() -> failure("Configuration has been deleted.")) : null;
+    
+    /**
+     * Finds {@link LoadableCentreConfig} instance for concrete {@code saveAsName}. Default or link configurations are not loadable and empty {@link Optional} is returned.
+     * 
+     * @param saveAsName
+     * @param streamLoadableConfigurations -- function to stream loadable configurations
+     * @return
+     * @throws Result if configuration is not present aka deleted
+     */
+    public static Optional<LoadableCentreConfig> findLoadableConfig(final Optional<String> saveAsName, final Supplier<Stream<LoadableCentreConfig>> streamLoadableConfigurations) throws Result {
+        return isDefaultOrLink(saveAsName)
+            ? empty()
+            : of(
+                streamLoadableConfigurations.get()
+                .filter(lcc -> lcc.getKey().equals(saveAsName.get()))
+                .findAny()
+                .orElseThrow(() -> failure("Configuration has been deleted."))
+            );
     }
     
 }

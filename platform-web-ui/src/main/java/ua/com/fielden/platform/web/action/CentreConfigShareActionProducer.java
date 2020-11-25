@@ -53,8 +53,6 @@ public class CentreConfigShareActionProducer extends DefaultEntityProducerWithCo
                     final Optional<String> saveAsName = of(obtainTitleFrom(freshConfigOpt.get().getTitle(), deviceSpecific(FRESH_CENTRE_NAME, selectionCrit().device)));
                     if (isDefaultOrLinkOrInherited(saveAsName, selectionCrit())) {
                         entity.setErrorMsg(SAVE_MSG);
-                    } else {
-                        System.out.println("freshConfigOpt = " + freshConfigOpt);
                     }
                 } else {
                     throw failure("Unknown config");
@@ -65,7 +63,5 @@ public class CentreConfigShareActionProducer extends DefaultEntityProducerWithCo
         }
         return entity;
     }
-    
-    
     
 }

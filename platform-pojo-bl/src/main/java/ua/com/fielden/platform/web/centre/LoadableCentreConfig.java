@@ -64,4 +64,22 @@ public class LoadableCentreConfig extends AbstractEntity<String> {
         return inherited;
     }
     
+    /**
+     * Indicates whether loadable configuration represents inherited from shared.
+     * 
+     * @return
+     */
+    public boolean isShared() {
+        return getSharedByMessage() != null;
+    }
+    
+    /**
+     * Indicates whether loadable configuration represents inherited from base. Must be used in conjunction with {@link #isInherited()}.
+     * 
+     * @return
+     */
+    public boolean isBase() {
+        return !isShared();
+    }
+    
 }

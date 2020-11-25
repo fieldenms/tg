@@ -3,8 +3,7 @@ package ua.com.fielden.platform.web.centre;
 import static java.util.Optional.empty;
 import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.WAS_RUN_NAME;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.getCustomObject;
-import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefault;
-import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
+import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrLink;
 
 import java.util.Map;
 import java.util.Optional;
@@ -38,7 +37,7 @@ public class CentreConfigSaveActionProducer extends AbstractCentreConfigCommitAc
     protected Map<String, Object> performProduce(final CentreConfigSaveAction entity, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity, final boolean isDefaultOrLinkOrInherited) {
         if (isDefaultOrLinkOrInherited) {
             final Optional<String> saveAsName = selectionCrit.saveAsName();
-            if (isDefault(saveAsName) || LINK_CONFIG_TITLE.equals(saveAsName.get())) {
+            if (isDefaultOrLink(saveAsName)) {
                 makeTitleRequired(entity);
             } else {
                 setTitleAndDesc(entity, saveAsName.get(), selectionCrit, COPY_ACTION_SUFFIX);

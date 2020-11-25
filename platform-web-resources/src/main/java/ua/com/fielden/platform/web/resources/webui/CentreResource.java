@@ -5,6 +5,9 @@ import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnlyAndInstrument;
+import static ua.com.fielden.platform.web.centre.CentreConfigUtils.findLoadableConfig;
+import static ua.com.fielden.platform.web.centre.CentreConfigUtils.inheritedFromShared;
+import static ua.com.fielden.platform.web.centre.CentreConfigUtils.inherited;
 import static ua.com.fielden.platform.web.centre.CentreDiffSerialiser.CENTRE_DIFF_SERIALISER;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.SAVED_CENTRE_NAME;
@@ -47,7 +50,6 @@ import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
-import ua.com.fielden.platform.web.centre.CentreConfigUtils;
 import ua.com.fielden.platform.web.centre.CentreUpdater;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.ICentreConfigSharingModel;
@@ -130,11 +132,11 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
             
             final ICentreDomainTreeManagerAndEnhancer newFreshCentre;
             
-            final LoadableCentreConfig lcc = CentreConfigUtils.lcc(saveAsName, () -> loadableConfigurations(user, miType, device(), companionFinder, sharingModel).stream()); // this will also throw early failure in case where current configuration was deleted
-            final boolean isInherited = lcc != null && lcc.isInherited();
+            final Optional<LoadableCentreConfig> loadableConfig = findLoadableConfig(saveAsName, () -> loadableConfigurations(user, miType, device(), companionFinder, sharingModel).stream()); // this will also throw early failure in case where current configuration was deleted
+            final boolean isInherited = inherited(loadableConfig).isPresent();
             if (isInherited) {
-                if (lcc.getSharedByMessage() != null) {
-                    final Optional<EntityCentreConfig> savedConfigOpt = findConfigOptByUuid(eccCompanion.withDbVersion(CentreUpdater.centreConfigQueryFor(miType, device(), SAVED_CENTRE_NAME)), lcc.getConfig().getConfigUuid(), eccCompanion);
+                if (inheritedFromShared(loadableConfig).isPresent()) { // inherited from shared
+                    final Optional<EntityCentreConfig> savedConfigOpt = findConfigOptByUuid(eccCompanion.withDbVersion(CentreUpdater.centreConfigQueryFor(miType, device(), SAVED_CENTRE_NAME)), loadableConfig.get().getConfig().getConfigUuid(), eccCompanion);
                     final EntityCentreConfig savedConfig = savedConfigOpt.get(); // it is present otherwise it should not be inherited
                     final Map<String, Object> differences = restoreDiffFrom(savedConfig, eccCompanion, format("for type [%s] with name [%s]", miType.getSimpleName(), savedConfig.getTitle()));
                     final EntityCentreConfig savedConfigForCurrUser = findConfig(miType, user, nameOf.apply(SAVED_CENTRE_NAME).apply(saveAsName).apply(device()), eccCompanion, fetchKeyAndDescOnlyAndInstrument(EntityCentreConfig.class).with("configBody"));
@@ -144,7 +146,7 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
                     freshConfigForCurrUser.setConfigBody(CENTRE_DIFF_SERIALISER.serialise(differences));
                     eccCompanion.quickSave(freshConfigForCurrUser);
                     newFreshCentre = updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
-                } else {
+                } else { // inherited from base
                     // remove cached instances of surrogate centres before updating from base user
                     removeCentres(user, miType, device(), saveAsName, eccCompanion, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
                     // it is necessary to use "fresh" instance of cdtme (after the discarding process)

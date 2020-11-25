@@ -48,7 +48,7 @@ public class CentreConfigLoadActionDao extends CommonEntityDao<CentreConfigLoadA
             .findAny()
             .ifPresent(centreConfig -> {
                 if (centreConfig.isInherited()) {
-                    if (centreConfig.getSharedByMessage() != null) {
+                    if (centreConfig.isShared()) {
                         // if configuration being loaded is inherited from shared we need to update it from upstream changes
                         selectionCrit.updateInheritedFromSharedCentre(saveAsNameToLoad, centreConfig.getConfig().getConfigUuid());
                     } else {
