@@ -4,6 +4,7 @@ import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrLinkOrInherited;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.SAVED_CENTRE_NAME;
@@ -59,6 +60,10 @@ public class CentreConfigShareActionProducer extends DefaultEntityProducerWithCo
                         if (!savedConfigOpt.isPresent()) {
                             // in case where there is no configuration creator then it was inherited from base / shared and original configuration was deleted;
                             // this type of configuration (inherited, no upstream) still can exist and act like own-save as, however it should not be used for sharing
+                            entity.setErrorMsg(SAVE_MSG);
+                        } else if (!areEqual(savedConfigOpt.get().getOwner(), user)) {
+                            // the creator of configuration is not current user;
+                            // it means that configuration was made not shared to this user by original creator, and it should not be used for sharing
                             entity.setErrorMsg(SAVE_MSG);
                         }
                     }
