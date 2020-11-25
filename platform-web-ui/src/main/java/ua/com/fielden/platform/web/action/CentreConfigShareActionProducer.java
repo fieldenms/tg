@@ -6,6 +6,7 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrLinkOrInherited;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.SAVED_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.centreConfigQueryFor;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.deviceSpecific;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.obtainTitleFrom;
@@ -53,6 +54,13 @@ public class CentreConfigShareActionProducer extends DefaultEntityProducerWithCo
                     final Optional<String> saveAsName = of(obtainTitleFrom(freshConfigOpt.get().getTitle(), deviceSpecific(FRESH_CENTRE_NAME, selectionCrit().device)));
                     if (isDefaultOrLinkOrInherited(saveAsName, selectionCrit())) {
                         entity.setErrorMsg(SAVE_MSG);
+                    } else {
+                        final Optional<EntityCentreConfig> savedConfigOpt = findConfigOptByUuid(eccCompanion.withDbVersion(centreConfigQueryFor(selectionCrit().miType, selectionCrit().device, SAVED_CENTRE_NAME)), configUuid.get(), eccCompanion);
+                        if (!savedConfigOpt.isPresent()) {
+                            // in case where there is no configuration creator then it was inherited from base / shared and original configuration was deleted;
+                            // this type of configuration (inherited, no upstream) still can exist and act like own-save as, however it should not be used for sharing
+                            entity.setErrorMsg(SAVE_MSG);
+                        }
                     }
                 } else {
                     throw failure("Unknown config");
