@@ -10,7 +10,7 @@ import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage2.operands.ResultQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.QrySource2BasedOnPersistentType;
-import ua.com.fielden.platform.eql.stage2.sources.Sources2;
+import ua.com.fielden.platform.eql.stage2.sources.QrySources2;
 
 public class DotIdHandlingTest extends EqlStage2TestCase {
 
@@ -19,7 +19,7 @@ public class DotIdHandlingTest extends EqlStage2TestCase {
         final ResultQuery2 actQry = qryCountAll(select(MODEL).where().prop("make.id").isNotNull());
         
         final QrySource2BasedOnPersistentType source = source("1", MODEL);
-        final Sources2 sources = sources(source);
+        final QrySources2 sources = sources(source);
         final EntProp2 makeProp = propWithIsId(source, pi(MODEL, "make"));
         final Conditions2 conditions = cond(isNotNull(makeProp));
         final ResultQuery2 expQry = qryCountAll(sources, conditions);
@@ -32,7 +32,7 @@ public class DotIdHandlingTest extends EqlStage2TestCase {
         final ResultQuery2 actQry = qryCountAll(select(VEHICLE).where().prop("modelMake.id").isNotNull());
         
         final QrySource2BasedOnPersistentType source = source("1", VEHICLE);
-        final Sources2 sources = sources(source);
+        final QrySources2 sources = sources(source);
         final EntProp2 makeProp = propWithIsId(source, pi(VEHICLE, "modelMake"));
         final Conditions2 conditions = cond(isNotNull(makeProp));
         final ResultQuery2 expQry = qryCountAll(sources, conditions);

@@ -24,7 +24,7 @@ import ua.com.fielden.platform.eql.stage2.core.Yields2;
 import ua.com.fielden.platform.eql.stage2.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage2.operands.SourceQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.IQrySource2;
-import ua.com.fielden.platform.eql.stage2.sources.Sources2;
+import ua.com.fielden.platform.eql.stage2.sources.QrySources2;
 import ua.com.fielden.platform.eql.stage3.sources.IQrySource3;
 import ua.com.fielden.platform.types.tuples.T2;
 
@@ -43,9 +43,9 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableToS2<S
     @Override
     public SourceQuery2 transform(final PropsResolutionContext context) {
         final PropsResolutionContext localResolutionContext = isCorrelated ? context.produceForCorrelatedSourceQuery() : context.produceForUncorrelatedSourceQuery();
-        final T2<Sources2,PropsResolutionContext> sourcesTr = sources.transform(localResolutionContext);
+        final T2<QrySources2,PropsResolutionContext> sourcesTr = sources.transform(localResolutionContext);
         final PropsResolutionContext enhancedContext = sourcesTr._2; 
-        final Sources2 sources2 = sourcesTr._1;
+        final QrySources2 sources2 = sourcesTr._1;
         final Conditions2 conditions2 = conditions.transform(enhancedContext);
         final Yields2 yields2 = yields.transform(enhancedContext);
         final GroupBys2 groups2 = enhance(groups.transform(enhancedContext));

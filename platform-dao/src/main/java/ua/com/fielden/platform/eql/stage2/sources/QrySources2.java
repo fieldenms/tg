@@ -25,16 +25,16 @@ import ua.com.fielden.platform.eql.stage3.operands.Expression3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.sources.IQrySource3;
 import ua.com.fielden.platform.eql.stage3.sources.IQrySources3;
-import ua.com.fielden.platform.eql.stage3.sources.JoinedQrySource3;
+import ua.com.fielden.platform.eql.stage3.sources.MultipleNodesQrySources3;
 import ua.com.fielden.platform.eql.stage3.sources.QrySource3BasedOnTable;
-import ua.com.fielden.platform.eql.stage3.sources.SingleQrySource3;
+import ua.com.fielden.platform.eql.stage3.sources.SingleNodeQrySources3;
 import ua.com.fielden.platform.types.tuples.T2;
 
-public class Sources2  {
+public class QrySources2  {
     public final IQrySource2<? extends IQrySource3> main;
     private final List<CompoundSource2> compounds;
 
-    public Sources2(final IQrySource2<? extends IQrySource3> main, final List<CompoundSource2> compounds) {
+    public QrySources2(final IQrySource2<? extends IQrySource3> main, final List<CompoundSource2> compounds) {
         this.main = main;
         this.compounds = compounds;
     }
@@ -53,7 +53,7 @@ public class Sources2  {
             final IQrySources3 coumpoundSourceTree = compoundEnhancement._1;
             currentContext = compoundEnhancement._2;
             final TransformationResult<Conditions3> compConditionsTr = compoundSource.joinConditions.transform(currentContext);
-            currentSourceTree = new JoinedQrySource3(currentSourceTree, coumpoundSourceTree, compoundSource.joinType, compConditionsTr.item);
+            currentSourceTree = new MultipleNodesQrySources3(currentSourceTree, coumpoundSourceTree, compoundSource.joinType, compConditionsTr.item);
             currentContext = compConditionsTr.updatedContext;
         }
         
@@ -75,7 +75,7 @@ public class Sources2  {
     }
     
     private static T2<IQrySources3, TransformationContext> attachChildren(final IQrySource3 source, final List<ChildGroup> children, final TransformationContext context) {
-        IQrySources3 currMainSources = new SingleQrySource3(source);
+        IQrySources3 currMainSources = new SingleNodeQrySources3(source);
         TransformationContext currentContext = context;
         
         for (final ChildGroup fc : children) {
@@ -113,7 +113,7 @@ public class Sources2  {
         final ComparisonTest3 ct = new ComparisonTest3(lo, EQ, ro);
         final Conditions3 jc = new Conditions3(false, asList(asList(ct)));
         final T2<IQrySources3, TransformationContext> res = attachChildren(addedSource, child.items, currentContext);
-        return t2(new JoinedQrySource3(mainSources, res._1, (child.required ? IJ : LJ), jc), res._2);
+        return t2(new MultipleNodesQrySources3(mainSources, res._1, (child.required ? IJ : LJ), jc), res._2);
     }
     
     @Override
@@ -131,11 +131,11 @@ public class Sources2  {
             return true;
         }
 
-        if (!(obj instanceof Sources2)) {
+        if (!(obj instanceof QrySources2)) {
             return false;
         }
 
-        final Sources2 other = (Sources2) obj;
+        final QrySources2 other = (QrySources2) obj;
 
         return Objects.equals(main, other.main) && Objects.equals(compounds, other.compounds);
     }

@@ -29,7 +29,7 @@ import ua.com.fielden.platform.eql.stage1.operands.ResultQuery1;
 import ua.com.fielden.platform.eql.stage1.sources.CompoundSource1;
 import ua.com.fielden.platform.eql.stage1.sources.IQrySource1;
 import ua.com.fielden.platform.eql.stage1.sources.QrySource1BasedOnPersistentType;
-import ua.com.fielden.platform.eql.stage1.sources.Sources1;
+import ua.com.fielden.platform.eql.stage1.sources.QrySources1;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.sources.IQrySource2;
 
@@ -54,11 +54,11 @@ public class EqlStage1TestCase extends EqlTestCase {
         return qb().generateEntQueryAsResultQuery(qry, null, null);
     }
     
-    protected static EntQueryBlocks1 qb1(final Sources1 sources, final Conditions1 conditions) {
+    protected static EntQueryBlocks1 qb1(final QrySources1 sources, final Conditions1 conditions) {
         return new EntQueryBlocks1(sources, conditions, new Yields1(emptyList()), new GroupBys1(emptyList()), new OrderBys1(emptyList()), false);
     }
 
-    protected static EntQueryBlocks1 qb1(final Sources1 sources, final Conditions1 conditions, final Yields1 yields) {
+    protected static EntQueryBlocks1 qb1(final QrySources1 sources, final Conditions1 conditions, final Yields1 yields) {
         return new EntQueryBlocks1(sources, conditions, yields, new GroupBys1(emptyList()), new OrderBys1(emptyList()), false);
     }
 
@@ -78,12 +78,12 @@ public class EqlStage1TestCase extends EqlTestCase {
         return new Conditions1(false, firstCondition, emptyList());
     }
     
-    protected static Sources1 sources(final IQrySource1<? extends IQrySource2<?>> main) {
-        return new Sources1(main, emptyList());
+    protected static QrySources1 sources(final IQrySource1<? extends IQrySource2<?>> main) {
+        return new QrySources1(main, emptyList());
     }
 
-    protected static Sources1 sources(final IQrySource1<? extends IQrySource2<?>> main, final CompoundSource1... otherSources) {
-        return new Sources1(main, asList(otherSources));
+    protected static QrySources1 sources(final IQrySource1<? extends IQrySource2<?>> main, final CompoundSource1... otherSources) {
+        return new QrySources1(main, asList(otherSources));
     }
 
     protected static CompoundSource1 lj(final IQrySource1<? extends IQrySource2<?>> source, final Conditions1 conditions) {
@@ -142,11 +142,11 @@ public class EqlStage1TestCase extends EqlTestCase {
         return new QrySource1BasedOnPersistentType(sourceType, null, nextId());
     }
 
-    protected static Sources1 sources(final Class<? extends AbstractEntity<?>> sourceType, final String alias) {
+    protected static QrySources1 sources(final Class<? extends AbstractEntity<?>> sourceType, final String alias) {
         return sources(source(sourceType, alias));
     }
 
-    protected static Sources1 sources(final Class<? extends AbstractEntity<?>> sourceType) {
+    protected static QrySources1 sources(final Class<? extends AbstractEntity<?>> sourceType) {
         return sources(source(sourceType));
     }
 }

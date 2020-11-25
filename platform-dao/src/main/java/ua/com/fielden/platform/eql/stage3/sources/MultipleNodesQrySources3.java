@@ -8,13 +8,13 @@ import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
 
-public class JoinedQrySource3 implements IQrySources3 {
+public class MultipleNodesQrySources3 implements IQrySources3 {
     public final IQrySources3 leftSource;
     public final IQrySources3 rightSource;
     public final JoinType joinType;
     public final Conditions3 joinConditions;
 
-    public JoinedQrySource3(final IQrySources3 leftSource, final IQrySources3 rightSource, final JoinType joinType, final Conditions3 joinConditions) {
+    public MultipleNodesQrySources3(final IQrySources3 leftSource, final IQrySources3 rightSource, final JoinType joinType, final Conditions3 joinConditions) {
         this.leftSource = leftSource;
         this.rightSource = rightSource;
         this.joinType = joinType;
@@ -44,11 +44,11 @@ public class JoinedQrySource3 implements IQrySources3 {
             return true;
         }
 
-        if (!(obj instanceof JoinedQrySource3)) {
+        if (!(obj instanceof MultipleNodesQrySources3)) {
             return false;
         }
         
-        final JoinedQrySource3 other = (JoinedQrySource3) obj;
+        final MultipleNodesQrySources3 other = (MultipleNodesQrySources3) obj;
         
         return Objects.equals(leftSource, other.leftSource) &&
                 Objects.equals(rightSource, other.rightSource) &&

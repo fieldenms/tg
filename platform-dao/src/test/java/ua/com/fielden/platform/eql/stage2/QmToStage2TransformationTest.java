@@ -25,7 +25,7 @@ import ua.com.fielden.platform.eql.stage2.operands.ResultQuery2;
 import ua.com.fielden.platform.eql.stage2.operands.SourceQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.QrySource2BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage2.sources.QrySource2BasedOnSubqueries;
-import ua.com.fielden.platform.eql.stage2.sources.Sources2;
+import ua.com.fielden.platform.eql.stage2.sources.QrySources2;
 import ua.com.fielden.platform.sample.domain.TeVehicle;
 import ua.com.fielden.platform.sample.domain.TeVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgAuthorRoyalty;
@@ -48,7 +48,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final QrySource2BasedOnPersistentType modelSource = source("3", MODEL);
         
         final QrySource2BasedOnPersistentType vehSource = source("1", VEHICLE);
-        final Sources2 vehSources = sources(vehSource);
+        final QrySources2 vehSources = sources(vehSource);
         final EntProp2 vehModelProp = prop(vehSource, pi(VEHICLE, "model"));
         final EntProp2 modelIdProp = prop(modelSource, pi(MODEL, "id"));
         final Conditions2 vehConditions = cond(eq(vehModelProp, modelIdProp));
@@ -60,7 +60,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         entityInfo.addProp(new PrimTypePropInfo<>("qty", BIG_DECIMAL, BigDecimal.class));
         
         final QrySource2BasedOnSubqueries qtyQrySource = source(entityInfo, "2", vehSourceSubQry);
-        final Sources2 qtyQrySources = sources(qtyQrySource);
+        final QrySources2 qtyQrySources = sources(qtyQrySource);
         final Yields2 qtyQryYields = yields(yield(prop(qtyQrySource, new PrimTypePropInfo<Integer>("qty", H_INTEGER, INTEGER)), ""));
         
         
@@ -83,7 +83,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final EntProp2 modelIdProp = prop(modelSource, pi(MODEL, "id"));
         
         final QrySource2BasedOnPersistentType vehSource1 = source("1", VEHICLE);
-        final Sources2 vehSources1 = sources(vehSource1);
+        final QrySources2 vehSources1 = sources(vehSource1);
         final EntProp2 vehModelProp1 = prop(vehSource1, pi(VEHICLE, "model"));
         final EntProp2 vehIdProp1 = prop(vehSource1, pi(VEHICLE, "id"));
         final Conditions2 vehConditions1 = or(and(isNotNull(vehIdProp1), eq(vehModelProp1, modelIdProp)));
@@ -92,7 +92,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final SourceQuery2 vehSourceSubQry1 = srcqry(vehSources1, vehConditions1, vehYields1);
 
         final QrySource2BasedOnPersistentType vehSource2 = source("2", VEHICLE);
-        final Sources2 vehSources2 = sources(vehSource2);
+        final QrySources2 vehSources2 = sources(vehSource2);
         final EntProp2 vehModelProp2 = prop(vehSource2, pi(VEHICLE, "model"));
         final EntProp2 vehIdProp2 = prop(vehSource2, pi(VEHICLE, "id"));
         final Conditions2 vehConditions2 = or(and(isNull(vehIdProp2), eq(vehModelProp2, modelIdProp)));
@@ -104,7 +104,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         entityInfo.addProp(new PrimTypePropInfo<>("qty", BIG_DECIMAL, BigDecimal.class));
         
         final QrySource2BasedOnSubqueries qtyQrySource = source(entityInfo, "3", vehSourceSubQry1, vehSourceSubQry2);
-        final Sources2 qtyQrySources = sources(qtyQrySource);
+        final QrySources2 qtyQrySources = sources(qtyQrySource);
         final Yields2 qtyQryYields = yields(yield(prop(qtyQrySource, new PrimTypePropInfo<Integer>("qty", H_INTEGER, INTEGER)), ""));
         
         
@@ -119,7 +119,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final ResultQuery2 actQry = qryCountAll(select(MODEL).where().prop("make").isNotNull());
         
         final QrySource2BasedOnPersistentType source = source("1", MODEL);
-        final Sources2 sources = sources(source);
+        final QrySources2 sources = sources(source);
         final EntProp2 makeProp = prop(source, pi(MODEL, "make"));
         final Conditions2 conditions = cond(isNotNull(makeProp));
         final ResultQuery2 expQry = qryCountAll(sources, conditions);
@@ -132,7 +132,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final ResultQuery2 actQry = qryCountAll(select(MODEL).where().prop("make.key").isNotNull());
         
         final QrySource2BasedOnPersistentType source = source("1", MODEL);
-        final Sources2 sources = sources(source);
+        final QrySources2 sources = sources(source);
         final EntProp2 makeProp = prop(source, pi(MODEL, "make"), pi(MAKE, "key"));
         final Conditions2 conditions = cond(isNotNull(makeProp));
         final ResultQuery2 expQry = qryCountAll(sources, conditions);
@@ -145,7 +145,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final ResultQuery2 actQry = qryCountAll(select(VEHICLE).where().anyOfProps("initDate", "station.name", "station.parent.name", "replacedBy.initDate").isNotNull());
 
         final QrySource2BasedOnPersistentType source = source("1", VEHICLE);
-        final Sources2 sources = sources(source);
+        final QrySources2 sources = sources(source);
         final EntProp2 initDate = prop(source, pi(VEHICLE, "initDate"));
         final EntProp2 station_name = prop(source, pi(VEHICLE, "station"), pi(ORG5, "name"));
         final EntProp2 station_parent_name = prop(source, pi(VEHICLE, "station"), pi(ORG5, "parent"), pi(ORG4, "name"));
@@ -167,7 +167,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final ResultQuery2 actQry = qryCountAll(select(VEHICLE).as("v").where().anyOfProps("initDate", "station.name", "station.parent.name", "replacedBy.initDate").isNotNull());
         
         final QrySource2BasedOnPersistentType source = source("1", VEHICLE, "v");
-        final Sources2 sources = sources(source);
+        final QrySources2 sources = sources(source);
         final EntProp2 initDate = prop(source, pi(VEHICLE, "initDate"));
         final EntProp2 station_name = prop(source, pi(VEHICLE, "station"), pi(ORG5, "name"));
         final EntProp2 station_parent_name = prop(source, pi(VEHICLE, "station"), pi(ORG5, "parent"), pi(ORG4, "name"));
@@ -189,7 +189,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final ResultQuery2 actQry = qryCountAll(select(VEHICLE).as("v").where().anyOfProps("v.initDate", "station.name", "station.parent.name", "v.replacedBy.initDate").isNotNull());
         
         final QrySource2BasedOnPersistentType source = source("1", VEHICLE, "v");
-        final Sources2 sources = sources(source);
+        final QrySources2 sources = sources(source);
         final EntProp2 initDate = prop(source, pi(VEHICLE, "initDate"));
         final EntProp2 station_name = prop(source, pi(VEHICLE, "station"), pi(ORG5, "name"));
         final EntProp2 station_parent_name = prop(source, pi(VEHICLE, "station"), pi(ORG5, "parent"), pi(ORG4, "name"));
@@ -213,7 +213,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
 
         final QrySource2BasedOnPersistentType source = source("1", VEHICLE, "v");
         final QrySource2BasedOnPersistentType source2 = source("2", VEHICLE, "rv");
-        final Sources2 sources = sources(source, ij(source2, or(eq(prop(source, pi(VEHICLE, "replacedBy")), prop(source2, pi(VEHICLE, "id"))))));
+        final QrySources2 sources = sources(source, ij(source2, or(eq(prop(source, pi(VEHICLE, "replacedBy")), prop(source2, pi(VEHICLE, "id"))))));
         final EntProp2 initDate = prop(source, pi(VEHICLE, "initDate"));
         final EntProp2 station_name = prop(source2, pi(VEHICLE, "station"), pi(ORG5, "name"));
         final EntProp2 station_parent_name = prop(source, pi(VEHICLE, "station"), pi(ORG5, "parent"), pi(ORG4, "name"));
@@ -237,8 +237,8 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final QrySource2BasedOnPersistentType source = source("2", ORG1);
         final QrySource2BasedOnPersistentType subQrySource = source("1", ORG2);
 
-        final Sources2 sources = sources(source);
-        final Sources2 subQrySources = sources(subQrySource);
+        final QrySources2 sources = sources(source);
+        final QrySources2 subQrySources = sources(subQrySource);
         final Conditions2 subQryConditions = or(eq(prop(subQrySource, pi(ORG2, "parent")), prop(source, pi(ORG1, "id"))));
         final Yields2 subQryYields = yields(yield(prop(subQrySource, pi(ORG2, "id")), ""));
         final Conditions2 conditions = or(exists(subQrySources, subQryConditions, subQryYields, ORG2));
@@ -257,9 +257,9 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final QrySource2BasedOnPersistentType subQrySource1 = source("1", ORG2);
         final QrySource2BasedOnPersistentType subQrySource2 = source("2", ORG2);
 
-        final Sources2 sources = sources(source);
-        final Sources2 subQrySources1 = sources(subQrySource1);
-        final Sources2 subQrySources2 = sources(subQrySource2);
+        final QrySources2 sources = sources(source);
+        final QrySources2 subQrySources1 = sources(subQrySource1);
+        final QrySources2 subQrySources2 = sources(subQrySource2);
         final Conditions2 subQryConditions1 = or(eq(prop(subQrySource1, pi(ORG2, "parent")), prop(source, pi(ORG1, "id"))));
         final Conditions2 subQryConditions2 = or(eq(prop(subQrySource2, pi(ORG2, "parent")), prop(source, pi(ORG1, "id"))));
         final Yields2 subQryYields1 = yields(yield(prop(subQrySource1, pi(ORG2, "id")), ""));
@@ -290,11 +290,11 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final QrySource2BasedOnPersistentType sub3QrySource = source("2", ORG4);
         final QrySource2BasedOnPersistentType sub4QrySource = source("1", ORG5);
 
-        final Sources2 sources = sources(source);
-        final Sources2 sub1QrySources = sources(sub1QrySource);
-        final Sources2 sub2QrySources = sources(sub2QrySource);
-        final Sources2 sub3QrySources = sources(sub3QrySource);
-        final Sources2 sub4QrySources = sources(sub4QrySource);
+        final QrySources2 sources = sources(source);
+        final QrySources2 sub1QrySources = sources(sub1QrySource);
+        final QrySources2 sub2QrySources = sources(sub2QrySource);
+        final QrySources2 sub3QrySources = sources(sub3QrySource);
+        final QrySources2 sub4QrySources = sources(sub4QrySource);
 
         final Yields2 sub4QryYields = yields(yield(prop(sub4QrySource, pi(ORG5, "id")), ""));
         final Yields2 sub3QryYields = yields(yield(prop(sub3QrySource, pi(ORG4, "id")), ""));
@@ -332,11 +332,11 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final QrySource2BasedOnPersistentType sub3QrySource = source("2", ORG4, "L4");
         final QrySource2BasedOnPersistentType sub4QrySource = source("1", ORG5, "L5");
 
-        final Sources2 sources = sources(source);
-        final Sources2 sub1QrySources = sources(sub1QrySource);
-        final Sources2 sub2QrySources = sources(sub2QrySource);
-        final Sources2 sub3QrySources = sources(sub3QrySource);
-        final Sources2 sub4QrySources = sources(sub4QrySource);
+        final QrySources2 sources = sources(source);
+        final QrySources2 sub1QrySources = sources(sub1QrySource);
+        final QrySources2 sub2QrySources = sources(sub2QrySource);
+        final QrySources2 sub3QrySources = sources(sub3QrySource);
+        final QrySources2 sub4QrySources = sources(sub4QrySource);
 
         final Yields2 sub4QryYields = yields(yield(prop(sub4QrySource, pi(ORG5, "id")), ""));
         final Yields2 sub3QryYields = yields(yield(prop(sub3QrySource, pi(ORG4, "id")), ""));
@@ -374,11 +374,11 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final QrySource2BasedOnPersistentType sub3QrySource = source("2", ORG4, "L4");
         final QrySource2BasedOnPersistentType sub4QrySource = source("1", ORG5, "L5");
 
-        final Sources2 sources = sources(source);
-        final Sources2 sub1QrySources = sources(sub1QrySource);
-        final Sources2 sub2QrySources = sources(sub2QrySource);
-        final Sources2 sub3QrySources = sources(sub3QrySource);
-        final Sources2 sub4QrySources = sources(sub4QrySource);
+        final QrySources2 sources = sources(source);
+        final QrySources2 sub1QrySources = sources(sub1QrySource);
+        final QrySources2 sub2QrySources = sources(sub2QrySource);
+        final QrySources2 sub3QrySources = sources(sub3QrySource);
+        final QrySources2 sub4QrySources = sources(sub4QrySource);
 
         final Yields2 sub4QryYields = yields(yield(prop(sub4QrySource, pi(ORG5, "id")), ""));
         final Yields2 sub3QryYields = yields(yield(prop(sub3QrySource, pi(ORG4, "id")), ""));
@@ -416,11 +416,11 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final QrySource2BasedOnPersistentType sub3QrySource = source("2", ORG4, "L4");
         final QrySource2BasedOnPersistentType sub4QrySource = source("1", ORG5, "L5");
 
-        final Sources2 sources = sources(source);
-        final Sources2 sub1QrySources = sources(sub1QrySource);
-        final Sources2 sub2QrySources = sources(sub2QrySource);
-        final Sources2 sub3QrySources = sources(sub3QrySource);
-        final Sources2 sub4QrySources = sources(sub4QrySource);
+        final QrySources2 sources = sources(source);
+        final QrySources2 sub1QrySources = sources(sub1QrySource);
+        final QrySources2 sub2QrySources = sources(sub2QrySource);
+        final QrySources2 sub3QrySources = sources(sub3QrySource);
+        final QrySources2 sub4QrySources = sources(sub4QrySource);
         
         final Yields2 sub4QryYields = yields(yield(prop(sub4QrySource, pi(ORG5, "id")), ""));
         final Yields2 sub3QryYields = yields(yield(prop(sub3QrySource, pi(ORG4, "id")), ""));
@@ -445,7 +445,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final ResultQuery2 actQry = qryCountAll(select(MODEL).where().prop("make").eq().iVal(null));
         
         final QrySource2BasedOnPersistentType source = source("1", MODEL);
-        final Sources2 sources = sources(source);
+        final QrySources2 sources = sources(source);
         final ResultQuery2 expQry = qryCountAll(sources);
 
         assertEquals(expQry, actQry);
@@ -458,8 +458,8 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final QrySource2BasedOnPersistentType source = source("2", ORG1);
         final QrySource2BasedOnPersistentType subQrySource = source("1", ORG2);
 
-        final Sources2 sources = sources(source);
-        final Sources2 subQrySources = sources(subQrySource);
+        final QrySources2 sources = sources(source);
+        final QrySources2 subQrySources = sources(subQrySource);
         final Conditions2 subQryConditions = or(isNotNull(prop(subQrySource, pi(ORG2, "parent"))));
         final Yields2 subQryYields = yields(yield(prop(subQrySource, pi(ORG2, "id")), ""));
         

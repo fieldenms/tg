@@ -8,7 +8,7 @@ import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingExcept
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.eql.stage1.sources.CompoundSource1;
 import ua.com.fielden.platform.eql.stage1.sources.IQrySource1;
-import ua.com.fielden.platform.eql.stage1.sources.Sources1;
+import ua.com.fielden.platform.eql.stage1.sources.QrySources1;
 import ua.com.fielden.platform.eql.stage2.sources.IQrySource2;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -42,7 +42,7 @@ public class QrySourcesBuilder extends AbstractTokensBuilder {
         return getChild() == null;
     }
 
-    public Sources1 getModel() {
+    public QrySources1 getModel() {
         if (getChild() != null) {
             finaliseChild();
         }
@@ -53,7 +53,7 @@ public class QrySourcesBuilder extends AbstractTokensBuilder {
             final CompoundSource1 subsequentSource = (CompoundSource1) iterator.next().getValue();
             otherSources.add(subsequentSource);
         }
-        return mainSource != null ? new Sources1(mainSource, otherSources) : null;
+        return mainSource != null ? new QrySources1(mainSource, otherSources) : null;
 
     }
 

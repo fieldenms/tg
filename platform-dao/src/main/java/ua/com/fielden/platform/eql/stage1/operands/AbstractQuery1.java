@@ -24,7 +24,7 @@ import ua.com.fielden.platform.eql.stage1.conditions.Conditions1;
 import ua.com.fielden.platform.eql.stage1.core.GroupBys1;
 import ua.com.fielden.platform.eql.stage1.core.OrderBys1;
 import ua.com.fielden.platform.eql.stage1.core.Yields1;
-import ua.com.fielden.platform.eql.stage1.sources.Sources1;
+import ua.com.fielden.platform.eql.stage1.sources.QrySources1;
 import ua.com.fielden.platform.eql.stage2.core.GroupBy2;
 import ua.com.fielden.platform.eql.stage2.core.GroupBys2;
 import ua.com.fielden.platform.eql.stage2.core.OrderBy2;
@@ -38,7 +38,7 @@ import ua.com.fielden.platform.eql.stage3.sources.IQrySource3;
 
 public abstract class AbstractQuery1 {
 
-    public final Sources1 sources;
+    public final QrySources1 sources;
     public final Conditions1 conditions;
     public final Yields1 yields;
     public final GroupBys1 groups;

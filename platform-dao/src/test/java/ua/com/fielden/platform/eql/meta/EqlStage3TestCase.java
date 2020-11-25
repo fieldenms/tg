@@ -49,10 +49,10 @@ import ua.com.fielden.platform.eql.stage3.operands.SourceQuery3;
 import ua.com.fielden.platform.eql.stage3.operands.SubQuery3;
 import ua.com.fielden.platform.eql.stage3.sources.IQrySource3;
 import ua.com.fielden.platform.eql.stage3.sources.IQrySources3;
-import ua.com.fielden.platform.eql.stage3.sources.JoinedQrySource3;
+import ua.com.fielden.platform.eql.stage3.sources.MultipleNodesQrySources3;
 import ua.com.fielden.platform.eql.stage3.sources.QrySource3BasedOnSubqueries;
 import ua.com.fielden.platform.eql.stage3.sources.QrySource3BasedOnTable;
-import ua.com.fielden.platform.eql.stage3.sources.SingleQrySource3;
+import ua.com.fielden.platform.eql.stage3.sources.SingleNodeQrySources3;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
 
 public class EqlStage3TestCase extends EqlTestCase {
@@ -165,35 +165,35 @@ public class EqlStage3TestCase extends EqlTestCase {
     }
 
     protected static IQrySources3 sources(final IQrySources3 main, final JoinType jt, final IQrySources3 second, final Conditions3 conditions) {
-        return new JoinedQrySource3(main, second, jt, conditions);
+        return new MultipleNodesQrySources3(main, second, jt, conditions);
     }
 
     protected static IQrySources3 sources(final IQrySource3 main, final JoinType jt, final IQrySources3 second, final Conditions3 conditions) {
-        return new JoinedQrySource3(sources(main), second, jt, conditions);
+        return new MultipleNodesQrySources3(sources(main), second, jt, conditions);
     }
 
     protected static IQrySources3 sources(final IQrySources3 main, final JoinType jt, final IQrySource3 second, final Conditions3 conditions) {
-        return new JoinedQrySource3(main, sources(second), jt, conditions);
+        return new MultipleNodesQrySources3(main, sources(second), jt, conditions);
     }
     
     protected static IQrySources3 sources(final IQrySource3 main, final JoinType jt, final IQrySource3 second, final Conditions3 conditions) {
-        return new JoinedQrySource3(sources(main), sources(second), jt, conditions);
+        return new MultipleNodesQrySources3(sources(main), sources(second), jt, conditions);
     }
     
     protected static IQrySources3 sources(final IQrySources3 main, final JoinType jt, final IQrySources3 second, final ICondition3 condition) {
-        return new JoinedQrySource3(main, second, jt, cond(condition));
+        return new MultipleNodesQrySources3(main, second, jt, cond(condition));
     }
 
     protected static IQrySources3 sources(final IQrySource3 main, final JoinType jt, final IQrySources3 second, final ICondition3 condition) {
-        return new JoinedQrySource3(sources(main), second, jt, cond(condition));
+        return new MultipleNodesQrySources3(sources(main), second, jt, cond(condition));
     }
 
     protected static IQrySources3 sources(final IQrySources3 main, final JoinType jt, final IQrySource3 second, final ICondition3 condition) {
-        return new JoinedQrySource3(main, sources(second), jt, cond(condition));
+        return new MultipleNodesQrySources3(main, sources(second), jt, cond(condition));
     }
     
     protected static IQrySources3 sources(final IQrySource3 main, final JoinType jt, final IQrySource3 second, final ICondition3 condition) {
-        return new JoinedQrySource3(sources(main), sources(second), jt, cond(condition));
+        return new MultipleNodesQrySources3(sources(main), sources(second), jt, cond(condition));
     }
 
     protected static IQrySources3 lj(final IQrySources3 main, final IQrySources3 second, final Conditions3 conditions) {
@@ -261,7 +261,7 @@ public class EqlStage3TestCase extends EqlTestCase {
     }
 
     protected static IQrySources3 sources(final IQrySource3 main) {
-        return new SingleQrySource3(main);
+        return new SingleNodeQrySources3(main);
     }
 
 //    private static EntQuery3 qry(final IQrySources3 sources, final QueryCategory queryCategory, final Class<?> resultType) {

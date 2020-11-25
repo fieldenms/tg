@@ -5,10 +5,10 @@ import java.util.Objects;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import ua.com.fielden.platform.entity.query.DbVersion;
 
-public class SingleQrySource3 implements IQrySources3 {
+public class SingleNodeQrySources3 implements IQrySources3 {
     public final IQrySource3 source;
 
-    public SingleQrySource3(final IQrySource3 source) {
+    public SingleNodeQrySources3(final IQrySource3 source) {
         this.source = source;
     }
 
@@ -29,11 +29,11 @@ public class SingleQrySource3 implements IQrySources3 {
             return true;
         }
 
-        if (!(obj instanceof SingleQrySource3)) {
+        if (!(obj instanceof SingleNodeQrySources3)) {
             return false;
         }
         
-        final SingleQrySource3 other = (SingleQrySource3) obj;
+        final SingleNodeQrySources3 other = (SingleNodeQrySources3) obj;
         
         return Objects.equals(source, other.source);
     }

@@ -9,19 +9,19 @@ import java.util.Objects;
 import ua.com.fielden.platform.eql.stage1.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.sources.CompoundSource2;
 import ua.com.fielden.platform.eql.stage2.sources.IQrySource2;
-import ua.com.fielden.platform.eql.stage2.sources.Sources2;
+import ua.com.fielden.platform.eql.stage2.sources.QrySources2;
 import ua.com.fielden.platform.types.tuples.T2;
 
-public class Sources1  {
+public class QrySources1  {
     public final IQrySource1<? extends IQrySource2<?>> main;
     private final List<CompoundSource1> compounds;
 
-    public Sources1(final IQrySource1<? extends IQrySource2<?>> main, final List<CompoundSource1> compounds) {
+    public QrySources1(final IQrySource1<? extends IQrySource2<?>> main, final List<CompoundSource1> compounds) {
         this.main = main;
         this.compounds = compounds;
     }
 
-    public T2<Sources2, PropsResolutionContext> transform(final PropsResolutionContext context) {
+    public T2<QrySources2, PropsResolutionContext> transform(final PropsResolutionContext context) {
         final IQrySource2<?> mainTransformationResult = main.transform(context);    
         PropsResolutionContext currentContext = context.cloneWithAdded(mainTransformationResult);
 
@@ -31,7 +31,7 @@ public class Sources1  {
             transformed.add(compoundSourceTransformationResult._1);
             currentContext = compoundSourceTransformationResult._2;
         }
-        return t2(new Sources2(mainTransformationResult, transformed), currentContext);
+        return t2(new QrySources2(mainTransformationResult, transformed), currentContext);
     }
 
     @Override
@@ -49,11 +49,11 @@ public class Sources1  {
             return true;
         }
 
-        if (!(obj instanceof Sources1)) {
+        if (!(obj instanceof QrySources1)) {
             return false;
         }
         
-        final Sources1 other = (Sources1) obj;
+        final QrySources1 other = (QrySources1) obj;
         
         return Objects.equals(main, other.main) &&
                 Objects.equals(compounds, other.compounds);

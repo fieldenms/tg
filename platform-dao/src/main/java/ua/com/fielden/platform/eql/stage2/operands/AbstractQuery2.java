@@ -10,11 +10,11 @@ import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.core.GroupBys2;
 import ua.com.fielden.platform.eql.stage2.core.OrderBys2;
 import ua.com.fielden.platform.eql.stage2.core.Yields2;
-import ua.com.fielden.platform.eql.stage2.sources.Sources2;
+import ua.com.fielden.platform.eql.stage2.sources.QrySources2;
 
 public abstract class AbstractQuery2 {
 
-    public final Sources2 sources;
+    public final QrySources2 sources;
     public final Conditions2 conditions;
     public final Yields2 yields;
     public final GroupBys2 groups;
