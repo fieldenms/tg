@@ -311,7 +311,7 @@ public class CriteriaResource extends AbstractWebResource {
                 }
                 
                 // configuration being loaded need to become preferred
-                if (!LINK_CONFIG_TITLE.equals(actualSaveAsName.get())) {
+                if (!LINK_CONFIG_TITLE.equals(actualSaveAsName.get()) && !webUiConfig.getCentres().get(miType).isRunAutomatically()) {
                     makePreferred(userProvider.getUser(), miType, actualSaveAsName, device(), companionFinder);
                 }
                 resolvedConfigUuid = configUuid;
@@ -321,7 +321,9 @@ public class CriteriaResource extends AbstractWebResource {
                     resolvedConfigUuid = updateCentreConfigUuid(user, miType, actualSaveAsName, device(), eccCompanion);
                 } else {
                     actualSaveAsName = empty(); // in case where first time loading has been occurred earlier we still prefer configuration specified by absence of uuid: default
-                    makePreferred(userProvider.getUser(), miType, actualSaveAsName, device(), companionFinder); // most likely transition from save-as configuration has been occurred and need to update preferred config; in other case we can go to other centre and back from already loaded default config and this call will make default config preferred again
+                    if (!webUiConfig.getCentres().get(miType).isRunAutomatically()) {
+                        makePreferred(userProvider.getUser(), miType, actualSaveAsName, device(), companionFinder); // most likely transition from save-as configuration has been occurred and need to update preferred config; in other case we can go to other centre and back from already loaded default config and this call will make default config preferred again
+                    }
                     resolvedConfigUuid = empty();
                 }
             }
