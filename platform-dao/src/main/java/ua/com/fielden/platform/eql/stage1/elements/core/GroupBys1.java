@@ -1,11 +1,12 @@
-package ua.com.fielden.platform.eql.stage1.elements;
+package ua.com.fielden.platform.eql.stage1.elements.core;
 
 import static java.util.stream.Collectors.toList;
 
 import java.util.List;
 import java.util.Objects;
 
-import ua.com.fielden.platform.eql.stage2.elements.GroupBys2;
+import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
+import ua.com.fielden.platform.eql.stage2.elements.core.GroupBys2;
 
 public class GroupBys1 {
     private final List<GroupBy1> groups;

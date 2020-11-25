@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.eql.stage2.elements;
+package ua.com.fielden.platform.eql.stage2.elements.core;
 
 import static java.util.Collections.unmodifiableList;
 
@@ -8,9 +8,11 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
+import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
-import ua.com.fielden.platform.eql.stage3.elements.GroupBy3;
-import ua.com.fielden.platform.eql.stage3.elements.GroupBys3;
+import ua.com.fielden.platform.eql.stage3.elements.core.GroupBy3;
+import ua.com.fielden.platform.eql.stage3.elements.core.GroupBys3;
 
 public class GroupBys2 {
     private final List<GroupBy2> groups;

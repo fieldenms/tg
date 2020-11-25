@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.eql.stage3.elements.Yield3;
+import ua.com.fielden.platform.eql.stage3.elements.core.Yield3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.SourceQuery3;
 
 public class QrySource3BasedOnSubqueries implements IQrySource3 {

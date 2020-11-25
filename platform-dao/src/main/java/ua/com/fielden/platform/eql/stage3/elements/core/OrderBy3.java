@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.eql.stage3.elements;
+package ua.com.fielden.platform.eql.stage3.elements.core;
 
 import java.util.Objects;
 

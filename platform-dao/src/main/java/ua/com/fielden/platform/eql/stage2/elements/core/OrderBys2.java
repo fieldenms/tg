@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.eql.stage2.elements;
+package ua.com.fielden.platform.eql.stage2.elements.core;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -7,10 +7,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
+import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
-import ua.com.fielden.platform.eql.stage3.elements.OrderBy3;
-import ua.com.fielden.platform.eql.stage3.elements.OrderBys3;
-import ua.com.fielden.platform.eql.stage3.elements.Yields3;
+import ua.com.fielden.platform.eql.stage3.elements.core.OrderBy3;
+import ua.com.fielden.platform.eql.stage3.elements.core.OrderBys3;
+import ua.com.fielden.platform.eql.stage3.elements.core.Yields3;
 
 public class OrderBys2 {
     private final List<OrderBy2> models;

@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
-import ua.com.fielden.platform.eql.stage1.elements.Yield1;
-import ua.com.fielden.platform.eql.stage1.elements.Yields1;
+import ua.com.fielden.platform.eql.stage1.elements.core.Yield1;
+import ua.com.fielden.platform.eql.stage1.elements.core.Yields1;
 import ua.com.fielden.platform.utils.Pair;
 
 public class QryYieldsBuilder extends AbstractTokensBuilder {

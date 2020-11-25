@@ -10,7 +10,7 @@ import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.eql.meta.EntityInfo;
 import ua.com.fielden.platform.eql.meta.EqlStage2TestCase;
-import ua.com.fielden.platform.eql.stage2.elements.Yields2;
+import ua.com.fielden.platform.eql.stage2.elements.core.Yields2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ResultQuery2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.SourceQuery2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.QrySource2BasedOnPersistentType;

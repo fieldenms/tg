@@ -6,10 +6,10 @@ import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage2.elements.EntQueryBlocks2;
-import ua.com.fielden.platform.eql.stage2.elements.GroupBys2;
-import ua.com.fielden.platform.eql.stage2.elements.OrderBys2;
-import ua.com.fielden.platform.eql.stage2.elements.Yields2;
 import ua.com.fielden.platform.eql.stage2.elements.conditions.Conditions2;
+import ua.com.fielden.platform.eql.stage2.elements.core.GroupBys2;
+import ua.com.fielden.platform.eql.stage2.elements.core.OrderBys2;
+import ua.com.fielden.platform.eql.stage2.elements.core.Yields2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.Sources2;
 
 public abstract class AbstractQuery2 {

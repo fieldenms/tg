@@ -4,10 +4,10 @@ import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.stage3.elements.EntQueryBlocks3;
-import ua.com.fielden.platform.eql.stage3.elements.GroupBys3;
-import ua.com.fielden.platform.eql.stage3.elements.OrderBys3;
-import ua.com.fielden.platform.eql.stage3.elements.Yields3;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.Conditions3;
+import ua.com.fielden.platform.eql.stage3.elements.core.GroupBys3;
+import ua.com.fielden.platform.eql.stage3.elements.core.OrderBys3;
+import ua.com.fielden.platform.eql.stage3.elements.core.Yields3;
 import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySources3;
 
 public abstract class AbstractQuery3 {

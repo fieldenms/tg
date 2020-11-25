@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
-import ua.com.fielden.platform.eql.stage1.elements.GroupBy1;
-import ua.com.fielden.platform.eql.stage1.elements.GroupBys1;
+import ua.com.fielden.platform.eql.stage1.elements.core.GroupBy1;
+import ua.com.fielden.platform.eql.stage1.elements.core.GroupBys1;
 import ua.com.fielden.platform.utils.Pair;
 
 public class QryGroupsBuilder extends AbstractTokensBuilder {

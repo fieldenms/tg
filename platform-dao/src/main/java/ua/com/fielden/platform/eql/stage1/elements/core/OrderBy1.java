@@ -1,9 +1,10 @@
-package ua.com.fielden.platform.eql.stage1.elements;
+package ua.com.fielden.platform.eql.stage1.elements.core;
 
 import java.util.Objects;
 
+import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage1.elements.operands.ISingleOperand1;
-import ua.com.fielden.platform.eql.stage2.elements.OrderBy2;
+import ua.com.fielden.platform.eql.stage2.elements.core.OrderBy2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
 
 public class OrderBy1 {

@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.eql.stage1.elements;
 
 import ua.com.fielden.platform.eql.stage1.elements.conditions.Conditions1;
+import ua.com.fielden.platform.eql.stage1.elements.core.GroupBys1;
+import ua.com.fielden.platform.eql.stage1.elements.core.OrderBys1;
+import ua.com.fielden.platform.eql.stage1.elements.core.Yields1;
 import ua.com.fielden.platform.eql.stage1.elements.sources.Sources1;
 
 public class EntQueryBlocks1 {

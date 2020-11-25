@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.eql.stage1.elements;
+package ua.com.fielden.platform.eql.stage1.elements.core;
 
 import static java.lang.String.format;
 import static java.util.Collections.unmodifiableCollection;
@@ -11,7 +11,8 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import ua.com.fielden.platform.entity.query.exceptions.EqlStage1ProcessingException;
-import ua.com.fielden.platform.eql.stage2.elements.Yields2;
+import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
+import ua.com.fielden.platform.eql.stage2.elements.core.Yields2;
 
 public class Yields1 {
     private final SortedMap<String, Yield1> yieldsMap = new TreeMap<String, Yield1>();

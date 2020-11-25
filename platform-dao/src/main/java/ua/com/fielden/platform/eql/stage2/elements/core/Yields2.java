@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.eql.stage2.elements;
+package ua.com.fielden.platform.eql.stage2.elements.core;
 
 import static java.util.Collections.unmodifiableCollection;
 import static java.util.Collections.unmodifiableSortedMap;
@@ -11,9 +11,11 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
+import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.operands.EntProp2;
-import ua.com.fielden.platform.eql.stage3.elements.Yield3;
-import ua.com.fielden.platform.eql.stage3.elements.Yields3;
+import ua.com.fielden.platform.eql.stage3.elements.core.Yield3;
+import ua.com.fielden.platform.eql.stage3.elements.core.Yields3;
 
 public class Yields2 {
     private final SortedMap<String, Yield2> yieldsMap = new TreeMap<String, Yield2>();

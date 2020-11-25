@@ -32,8 +32,8 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 import ua.com.fielden.platform.entity.query.stream.ScrollableResultStream;
 import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
-import ua.com.fielden.platform.eql.stage3.elements.Yield3;
-import ua.com.fielden.platform.eql.stage3.elements.Yields3;
+import ua.com.fielden.platform.eql.stage3.elements.core.Yield3;
+import ua.com.fielden.platform.eql.stage3.elements.core.Yields3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ResultQuery3;
 import ua.com.fielden.platform.streaming.SequentialGroupingStream;
 

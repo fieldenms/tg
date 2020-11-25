@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.eql.stage3.elements;
+package ua.com.fielden.platform.eql.stage3.elements.core;
 
 import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.joining;

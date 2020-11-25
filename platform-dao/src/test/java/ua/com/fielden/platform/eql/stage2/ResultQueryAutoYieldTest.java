@@ -6,7 +6,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import org.junit.Test;
 
 import ua.com.fielden.platform.eql.meta.EqlStage2TestCase;
-import ua.com.fielden.platform.eql.stage2.elements.Yields2;
+import ua.com.fielden.platform.eql.stage2.elements.core.Yields2;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ResultQuery2;
 import ua.com.fielden.platform.eql.stage2.elements.sources.QrySource2BasedOnPersistentType;
 

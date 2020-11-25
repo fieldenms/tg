@@ -1,11 +1,12 @@
-package ua.com.fielden.platform.eql.stage1.elements;
+package ua.com.fielden.platform.eql.stage1.elements.core;
 
 import static java.util.stream.Collectors.toList;
 
 import java.util.List;
 import java.util.Objects;
 
-import ua.com.fielden.platform.eql.stage2.elements.OrderBys2;
+import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
+import ua.com.fielden.platform.eql.stage2.elements.core.OrderBys2;
 
 public class OrderBys1 {
     private final List<OrderBy1> models;

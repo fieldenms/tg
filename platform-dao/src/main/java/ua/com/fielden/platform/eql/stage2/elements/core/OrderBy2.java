@@ -1,10 +1,12 @@
-package ua.com.fielden.platform.eql.stage2.elements;
+package ua.com.fielden.platform.eql.stage2.elements.core;
 
 import java.util.Objects;
 
+import ua.com.fielden.platform.eql.stage2.elements.TransformationContext;
+import ua.com.fielden.platform.eql.stage2.elements.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.elements.operands.ISingleOperand2;
-import ua.com.fielden.platform.eql.stage3.elements.OrderBy3;
-import ua.com.fielden.platform.eql.stage3.elements.Yields3;
+import ua.com.fielden.platform.eql.stage3.elements.core.OrderBy3;
+import ua.com.fielden.platform.eql.stage3.elements.core.Yields3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 
 public class OrderBy2 {
