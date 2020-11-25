@@ -11,6 +11,7 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -60,7 +61,7 @@ public class PathsToTreeTransformator {
         for (final SourceAndItsProps sourceProps : groupBySource(props).values()) {
             final T2<List<Child>, Map<String, List<Child>>> genRes = generateQrySourceChildren( //
                     sourceProps.source, //
-                    sourceProps.source, //
+                    sourceProps.source.contextId(), //
                     sourceProps.propPathesByFullNames, //
                     emptyList());
             sourceChildren.put(sourceProps.source.contextId(), genRes._1);
@@ -123,7 +124,7 @@ public class PathsToTreeTransformator {
     
     private T2<List<Child>, Map<String, List<Child>>> generateQrySourceChildren( //
             final IQrySource2<?> sourceForCalcPropResolution, // 
-            final IQrySource2<?> explicitSource, //
+            final String explicitSourceId, //
             final Map<String, List<AbstractPropInfo<?>>> props, //long name + path
             final List<String> context //           
             ) {
@@ -136,7 +137,7 @@ public class PathsToTreeTransformator {
             
             final T2<List<Child>, Map<String, List<Child>>> genRes = generateChild( //
                     sourceForCalcPropResolution, // 
-                    explicitSource, //
+                    explicitSourceId, //
                     propEntry, //
                     childContext);
             
@@ -148,7 +149,7 @@ public class PathsToTreeTransformator {
     
     private T2<List<Child>, Map<String, List<Child>>> generateChild( //
             final IQrySource2<?> sourceForCalcPropResolution, //  
-            final IQrySource2<?> explicitSource, //
+            final String explicitSourceId, //
             final FirstPropInfoAndItsPathes firstPropInfoAndItsPathes,
             final List<String> childContext //
             ) {
@@ -158,38 +159,34 @@ public class PathsToTreeTransformator {
         
         final String childContextString = childContext.stream().collect(joining("_"));
 
-        final List<Child> dependencies = new ArrayList<>();
+        final Set<String> dependenciesNames = new HashSet<>();
         final CalcPropResult calcPropResult = processCalcProp(firstPropInfoAndItsPathes.firstPropInfo, sourceForCalcPropResolution, childContextString);
         other.putAll(calcPropResult.internalSources);
-        if (calcPropResult.expression != null) {
-                dependencies.addAll(calcPropResult.externalSourceChildren);
-                result.addAll(calcPropResult.externalSourceChildren);
-        }
+        dependenciesNames.addAll(calcPropResult.externalSourceChildren.stream().map(c -> c.name).collect(toSet()));
+        result.addAll(calcPropResult.externalSourceChildren);
 
         final T2<String, Map<String, List<AbstractPropInfo<?>>>> next = getPathAndNextProps(firstPropInfoAndItsPathes.itsPropPathesByFullNames);
         
         final String propName = firstPropInfoAndItsPathes.firstPropName;
         
-        final String explicitSourceContextId = next._1 == null ? null : explicitSource.contextId();
+        final String explicitSourceContextId = next._1 == null ? null : explicitSourceId;
         
         if (next._2.isEmpty()) {
             result.add(new Child(propName, emptyList(), next._1, false, null, calcPropResult.expression, explicitSourceContextId, emptySet()));    
         } else {
-            final boolean required = firstPropInfoAndItsPathes.firstPropInfo instanceof EntityTypePropInfo ? ((EntityTypePropInfo<?>) firstPropInfoAndItsPathes.firstPropInfo).required : false;
+            final EntityTypePropInfo<?> propInfo = (EntityTypePropInfo<?>) firstPropInfoAndItsPathes.firstPropInfo;
 
-            final QrySource2BasedOnPersistentType source = generateQrySourceForPropInfo(firstPropInfoAndItsPathes.firstPropInfo, explicitSource.contextId(), childContextString);
+            final QrySource2BasedOnPersistentType source = new QrySource2BasedOnPersistentType(propInfo.javaType(), propInfo.propEntityInfo, explicitSourceId + "_" + childContextString); 
             
             final T2<List<Child>, Map<String, List<Child>>> genRes = generateQrySourceChildren(
                     source, 
-                    explicitSource,
+                    explicitSourceId,
                     next._2,
                     childContext);
             
             other.putAll(genRes._2);
 
-            final Set<String> dependenciesNames = dependencies.stream().map(c -> c.name).collect(toSet());
-
-            result.add(new Child(propName, genRes._1, next._1, required, source, calcPropResult.expression, explicitSourceContextId, dependenciesNames));
+            result.add(new Child(propName, genRes._1, next._1, propInfo.required, source, calcPropResult.expression, explicitSourceContextId, dependenciesNames));
         }
         
         return t2(result, other); 
@@ -204,11 +201,6 @@ public class PathsToTreeTransformator {
         }
         
         return new CalcPropResult(null, emptyMap(), emptyList());
-    }
-    
-    private static QrySource2BasedOnPersistentType generateQrySourceForPropInfo(final AbstractPropInfo<?> propInfo, final String explicitSourceContextId, final String childContextString) {
-        final String sourceContextId = explicitSourceContextId + "_" + childContextString;
-        return new QrySource2BasedOnPersistentType(((EntityTypePropInfo<?>) propInfo).javaType(), ((EntityTypePropInfo<?>) propInfo).propEntityInfo, sourceContextId);
     }
     
     private static T2<String, Map<String, List<AbstractPropInfo<?>>>> getPathAndNextProps(final Map<String, List<AbstractPropInfo<?>>> subprops) {

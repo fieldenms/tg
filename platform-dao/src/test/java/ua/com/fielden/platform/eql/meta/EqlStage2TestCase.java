@@ -7,10 +7,10 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperat
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.NE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.IJ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.LJ;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -20,10 +20,10 @@ import ua.com.fielden.platform.entity.query.EntityRetrievalModel;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
+import ua.com.fielden.platform.eql.stage1.builders.EntQueryGenerator;
 import ua.com.fielden.platform.eql.stage1.elements.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage1.elements.operands.EntProp1;
 import ua.com.fielden.platform.eql.stage2.elements.EntQueryBlocks2;
@@ -51,6 +51,7 @@ import ua.com.fielden.platform.eql.stage2.elements.sources.Sources2;
 import ua.com.fielden.platform.eql.stage3.elements.conditions.ICondition3;
 import ua.com.fielden.platform.eql.stage3.elements.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.elements.sources.IQrySource3;
+import ua.com.fielden.platform.types.tuples.T2;
 
 public class EqlStage2TestCase extends EqlTestCase {
 
@@ -66,9 +67,9 @@ public class EqlStage2TestCase extends EqlTestCase {
     protected static AbstractPropInfo<?> pi(final Class<?> type, final String propName, final String subPropName) {
         final AbstractPropInfo<?> propInfo = DOMAIN_METADATA.lmd.getEntityInfo((Class<? extends AbstractEntity<?>>) type).getProps().get(propName);
         if (propInfo instanceof ComponentTypePropInfo) {
-            return (AbstractPropInfo<?>) ((ComponentTypePropInfo) propInfo).getProps().get(subPropName);
+            return (AbstractPropInfo<?>) ((ComponentTypePropInfo<?>) propInfo).getProps().get(subPropName);
         } else if (propInfo instanceof UnionTypePropInfo) {
-            return (AbstractPropInfo<?>) ((UnionTypePropInfo) propInfo).propEntityInfo.getProps().get(subPropName);
+            return (AbstractPropInfo<?>) ((UnionTypePropInfo<?>) propInfo).propEntityInfo.getProps().get(subPropName);
         } else {
             throw new EqlException("Can't obtain metadata for property " + propName + " and subproperty " + subPropName + " within type " + type);
         }
@@ -77,13 +78,24 @@ public class EqlStage2TestCase extends EqlTestCase {
     protected static <T extends AbstractEntity<?>> ResultQuery2 qryCountAll(final ICompoundCondition0<T> unfinishedQry) {
         return qryCountAll(unfinishedQry, emptyMap());
     }
-    
+
+    protected static <T extends AbstractEntity<?>> T2<EntQueryGenerator, ResultQuery2> qryCountAll2(final ICompoundCondition0<T> unfinishedQry) {
+        return qryCountAll2(unfinishedQry, emptyMap());
+    }
+
     protected static <T extends AbstractEntity<?>> ResultQuery2 qryCountAll(final ICompoundCondition0<T> unfinishedQry, final Map<String, Object> paramValues) {
         final AggregatedResultQueryModel countQry = unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate();
         final PropsResolutionContext resolutionContext = new PropsResolutionContext(DOMAIN_METADATA.lmd);
         return qb(paramValues).generateEntQueryAsResultQuery(countQry, null, null).transform(resolutionContext);
     }
-    
+
+    protected static <T extends AbstractEntity<?>> T2<EntQueryGenerator, ResultQuery2> qryCountAll2(final ICompoundCondition0<T> unfinishedQry, final Map<String, Object> paramValues) {
+        final AggregatedResultQueryModel countQry = unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate();
+        final PropsResolutionContext resolutionContext = new PropsResolutionContext(DOMAIN_METADATA.lmd);
+        final EntQueryGenerator qb = qb(paramValues);
+        return t2(qb, qb.generateEntQueryAsResultQuery(countQry, null, null).transform(resolutionContext));
+    }
+
     protected static <T extends AbstractEntity<?>> ResultQuery2 qry(final EntityResultQueryModel<T> qry) {
         return qry(qry, null);
     }

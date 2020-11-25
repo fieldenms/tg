@@ -28,6 +28,7 @@ import ua.com.fielden.platform.eql.stage3.elements.sources.QrySource3BasedOnSubq
 import ua.com.fielden.platform.eql.stage3.elements.sources.QrySource3BasedOnTable;
 import ua.com.fielden.platform.sample.domain.TeVehicle;
 import ua.com.fielden.platform.sample.domain.TeVehicleModel;
+import ua.com.fielden.platform.sample.domain.TgBogie;
 
 public class QmToStage3TransformationTest extends EqlStage3TestCase {
     
@@ -70,12 +71,12 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         
         final QrySource3BasedOnTable ou5 = source(ORG5, orgUnit5);
 
-        final QrySource3BasedOnTable veh1 = source(VEHICLE, orgUnit5, "maxVehPrice_amount_2");
+        final QrySource3BasedOnTable veh1 = source(VEHICLE, orgUnit5, "maxVehPrice.amount_2");
         final IQrySources3 subQrySources1 = sources(veh1); 
         final Conditions3 subQryConditions1 = cond(eq(expr(entityProp("station", veh1, ORG5)), expr(idProp(ou5))));
         final SubQuery3 expSubQry1 = subqry(subQrySources1, subQryConditions1, yields(new Yield3(new MaxOf3(expr(prop("price.amount", veh1, BigDecimal.class, H_BIG_DECIMAL))), "")), BigDecimal.class);
 
-        final QrySource3BasedOnTable veh2 = source(VEHICLE, orgUnit5, "maxVehPurchasePrice_amount_3");
+        final QrySource3BasedOnTable veh2 = source(VEHICLE, orgUnit5, "maxVehPurchasePrice.amount_3");
         final IQrySources3 subQrySources2 = sources(veh2); 
         final Conditions3 subQryConditions2 = cond(eq(expr(entityProp("station", veh2, ORG5)), expr(idProp(ou5))));
         final SubQuery3 expSubQry2 = subqry(subQrySources2, subQryConditions2, yields(new Yield3(new MaxOf3(expr(prop("purchasePrice.amount", veh2, BigDecimal.class, H_BIG_DECIMAL))), "")), BigDecimal.class);
@@ -162,6 +163,35 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         assertEquals(expQry, actQry);
     }
 
+    @Test
+    public void calc_prop_is_correctly_transformed_11() {
+        final ResultQuery3 actQry = qryCountAll(select(WORK_ORDER).where().anyOfProps("vehicle.modelMakeKey", "vehicle.modelMakeKeyDuplicate").isNotNull());
+        final String wo1 = "1";
+        final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
+        final QrySource3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
+        final QrySource3BasedOnTable model = source(MODEL, wo1, "vehicle_model");
+        final QrySource3BasedOnTable make = source(MAKE, wo1, "vehicle_model_make");
+        final IQrySources3 sources = 
+                lj(
+                        wo,
+                        ij(
+                                veh,
+                                ij(
+                                        model,
+                                        make,
+                                        eq(entityProp("make", model, MAKE), idProp(make))
+                                  ),
+                                eq(entityProp("model", veh, MODEL), idProp(model))
+                          ),
+                        eq(entityProp("vehicle", wo, VEHICLE), idProp(veh))
+                  );
+        final Conditions3 conditions = or(and(or(isNotNull(expr(expr(stringProp(KEY, make)))), isNotNull(expr(expr(stringProp(KEY, make)))))));
+        final ResultQuery3 expQry = qryCountAll(sources, conditions);
+        
+        assertEquals(expQry, actQry);
+    }
+
+    
     @Test
     public void calc_prop_is_correctly_transformed_13() {
         final ResultQuery3 actQry = qryCountAll(select(WORK_ORDER).where().anyOfProps("vehicle.modelKey", "vehicle.model.key").isNotNull());

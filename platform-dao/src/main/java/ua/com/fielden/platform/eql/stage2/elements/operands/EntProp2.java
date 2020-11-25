@@ -5,7 +5,6 @@ import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableList;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -61,6 +60,7 @@ public class EntProp2 implements ISingleOperand2<Expression3> {
 
     @Override
     public Set<EntProp2> collectProps() {
+        // header props may happen here as they carry useful type info for yielding purposes, but since they are not going to be resolved to any columns -- will not be included during props collection 
         return isHeader() ? emptySet() : setOf(this);
     }
     

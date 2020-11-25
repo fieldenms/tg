@@ -911,6 +911,31 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
         final AggregatedResultQueryModel qry = select(TgVehicle.class).yield().prop("lastFuelUsageQty").as("a").modelAsAggregate();
         aggregateDao.getAllEntities(from(qry).with("EQL3", null).with(orderBy().yield("a").asc().model()).model());
     }
+ 
+    @Test
+    public void eql3_query_executes_correctly105() {
+        run(select(TeVehicle.class).where().anyOfProps("modelMakeKey7").isNotNull());
+    }
+
+    @Test
+    public void eql3_query_executes_correctly106() {
+        run(select(TeVehicle.class).where().anyOfProps("modelMake2.key").isNotNull());
+    }
+    
+    @Test
+    public void eql3_query_executes_correctly107() {
+        run(select(TgBogie.class).where().prop("location.fuelType").isNotNull());
+    }
+    
+    @Test
+    public void eql3_query_executes_correctly108() {
+        run(select(TeVehicle.class).where().anyOfProps("avgRepPrice").isNotNull());
+    }
+
+    @Test
+    public void eql3_query_executes_correctly109() {
+        run(select(TeVehicle.class).where().anyOfProps("modelMakeKey8").isNotNull());
+    }
     
     @Test
     public void union_property_type_is_preserved_when_yielded_in_entity_aggregates() {

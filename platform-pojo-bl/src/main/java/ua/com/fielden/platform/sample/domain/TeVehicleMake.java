@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.sample.domain;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import org.junit.Ignore;
 
@@ -12,7 +13,10 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.Readonly;
+import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.types.Money;
 
 @KeyType(String.class)
 @MapEntityTo
@@ -60,6 +64,51 @@ public class TeVehicleMake extends AbstractEntity<String> {
     @Calculated
     private String c8;
     protected static final ExpressionModel c8_ = expr().concat().prop("c6").with().prop("c3").end().model();
+    
+    @IsProperty
+    @Calculated
+    private Money p9;
+    protected static final ExpressionModel p9_ = expr().val(1).model();
+
+    @IsProperty
+    @Calculated
+    private Money p8;
+    protected static final ExpressionModel p8_ = expr().val(2).model();
+
+    @IsProperty
+    @Calculated
+    private Money p7;
+    protected static final ExpressionModel p7_ = expr().prop("p8").add().prop("p9").model();
+
+    @Observable
+    protected TeVehicleMake setP7(final Money p7) {
+        this.p7 = p7;
+        return this;
+    }
+
+    public Money getP7() {
+        return p7;
+    }
+
+    @Observable
+    protected TeVehicleMake setP8(final Money p8) {
+        this.p8 = p8;
+        return this;
+    }
+
+    public Money getP8() {
+        return p8;
+    }
+    
+    @Observable
+    protected TeVehicleMake setP9(final Money p9) {
+        this.p9 = p9;
+        return this;
+    }
+
+    public Money getP9() {
+        return p9;
+    }
 
     @Observable
     protected TeVehicleMake setC1(final String c1) {

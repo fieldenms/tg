@@ -48,6 +48,11 @@ public class TeWorkOrder extends AbstractEntity<String> {
 
     @IsProperty
     @Calculated
+    private TeVehicleMake vehicleMake;
+    protected static final ExpressionModel vehicleMake_ = expr().prop("vehicle.modelMake").model();
+
+    @IsProperty
+    @Calculated
     private String makeKey;
     protected static final ExpressionModel makeKey_ = expr().model(select(TeVehicle.class).where().prop("id").eq().extProp("vehicle").yield().prop("model.make.key").modelAsPrimitive()).model();
 
@@ -294,6 +299,16 @@ public class TeWorkOrder extends AbstractEntity<String> {
 
     public TeVehicleModel getVehicleModel() {
         return vehicleModel;
+    }
+
+    @Observable
+    protected TeWorkOrder setVehicleMake(final TeVehicleMake vehicleMake) {
+        this.vehicleMake = vehicleMake;
+        return this;
+    }
+
+    public TeVehicleMake getVehicleMake() {
+        return vehicleMake;
     }
 
     @Observable

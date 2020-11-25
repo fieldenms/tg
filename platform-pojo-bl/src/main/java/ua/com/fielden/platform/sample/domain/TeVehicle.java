@@ -22,6 +22,7 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
+import ua.com.fielden.platform.entity.annotation.Readonly;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
@@ -67,13 +68,28 @@ public class TeVehicle extends AbstractEntity<String> {
 
     @IsProperty
     @Calculated
+    private TeVehicleMake mmake;
+    protected static final ExpressionModel mmake_ = expr().prop("model.make").model();
+
+    @IsProperty
+    @Calculated
     private TeVehicleMake modelMake2;
     protected static final ExpressionModel modelMake2_ = expr().model(select(TeVehicleModel.class).where().prop("id").eq().extProp("model").yield().prop("make").modelAsEntity(TeVehicleMake.class)).model();
 
     @IsProperty
     @Calculated
+    private TeVehicleMake mmake2;
+    protected static final ExpressionModel mmake2_ = expr().model(select(TeVehicleModel.class).where().prop("id").eq().extProp("model").yield().prop("make").modelAsEntity(TeVehicleMake.class)).model();
+
+    @IsProperty
+    @Calculated
     private String modelMakeKey;
     protected static final ExpressionModel modelMakeKey_ = expr().prop("model.make.key").model();
+
+    @IsProperty
+    @Calculated
+    private String modelMakeKeyDuplicate;
+    protected static final ExpressionModel modelMakeKeyDuplicate_ = expr().prop("model.make.key").model();
 
     @IsProperty
     @Calculated
@@ -240,6 +256,53 @@ public class TeVehicle extends AbstractEntity<String> {
     @CritOnly
     @Title("Date period")
     private Date datePeriod;
+    
+    @IsProperty
+    @Calculated
+    private Money repPrice;
+    protected static final ExpressionModel repPrice_ = expr().prop("replacedBy.price").model();
+
+    @IsProperty
+    @Calculated
+    private Money repPurchasePrice;
+    protected static final ExpressionModel repPurchasePrice_ = expr().prop("replacedBy.purchasePrice").model();
+
+    @IsProperty
+    @Readonly
+    @Calculated
+    @Title(value = "Title", desc = "Desc")
+    private Money avgRepPrice;
+    protected static final ExpressionModel avgRepPrice_ = expr().expr(expr().prop("repPrice").add().prop("repPurchasePrice").model()).div().val(2).model();
+
+    @Observable
+    protected TeVehicle setAvgRepPrice(final Money avgRepPrice) {
+        this.avgRepPrice = avgRepPrice;
+        return this;
+    }
+
+    public Money getAvgRepPrice() {
+        return avgRepPrice;
+    }
+
+    @Observable
+    protected TeVehicle setRepPurchasePrice(final Money repPurchasePrice) {
+        this.repPurchasePrice = repPurchasePrice;
+        return this;
+    }
+
+    public Money getRepPurchasePrice() {
+        return repPurchasePrice;
+    }
+
+    @Observable
+    protected TeVehicle setRepPrice(final Money repPrice) {
+        this.repPrice = repPrice;
+        return this;
+    }
+
+    public Money getRepPrice() {
+        return repPrice;
+    }
 
     @Observable
     public TeVehicle setDatePeriod(final Date datePeriod) {
@@ -481,6 +544,16 @@ public class TeVehicle extends AbstractEntity<String> {
     }
     
     @Observable
+    protected TeVehicle setMmake(final TeVehicleMake mmake) {
+        this.mmake = mmake;
+        return this;
+    }
+
+    public TeVehicleMake getMmake() {
+        return mmake;
+    }
+
+    @Observable
     protected TeVehicle setModelMake(final TeVehicleMake modelMake) {
         this.modelMake = modelMake;
         return this;
@@ -501,6 +574,16 @@ public class TeVehicle extends AbstractEntity<String> {
     }
 
     @Observable
+    protected TeVehicle setMmake2(final TeVehicleMake mmake2) {
+        this.mmake2 = mmake2;
+        return this;
+    }
+
+    public TeVehicleMake getMmake2() {
+        return mmake2;
+    }
+
+    @Observable
     protected TeVehicle setModelMakeKey(final String modelMakeKey) {
         this.modelMakeKey = modelMakeKey;
         return this;
@@ -508,6 +591,16 @@ public class TeVehicle extends AbstractEntity<String> {
 
     public String getModelMakeKey() {
         return modelMakeKey;
+    }
+
+    @Observable
+    protected TeVehicle setModelMakeKeyDuplicate(final String modelMakeKeyDuplicate) {
+        this.modelMakeKeyDuplicate = modelMakeKeyDuplicate;
+        return this;
+    }
+
+    public String getModelMakeKeyDuplicate() {
+        return modelMakeKeyDuplicate;
     }
 
     @Observable

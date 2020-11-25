@@ -171,6 +171,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     }
 
     @Test
+    @Ignore
     public void test_query_union_entityA_() {
         final EntityResultQueryModel<TgBogieLocation> qry1 = select(TgWagonSlot.class).as("a").yield().prop("a").as("wagonSlot").modelAsEntity(TgBogieLocation.class);
         final List<TgBogieLocation> models = bogieLocationDao.getAllEntities(from(qry1).with(fetchAll(TgBogieLocation.class)).model());
@@ -486,6 +487,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     }
     
     @Test
+    @Ignore
     public void test_query_with_union_property_subproperties_via_query_based_source() {
         final EntityResultQueryModel<TgBogie> qry = select(select(TgBogie.class).model()).where().prop("location.workshop.key").eq().val("WSHOP1").or().prop("location.wagonSlot.wagon.key").eq().val("WAGON1").model();
         assertEquals(bogieDao.findByKey("BOGIE1"), bogieDao.getEntity(from(qry).model()));
@@ -524,6 +526,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     }
 
     @Test
+    @Ignore
     public void cannot_query_union_entity_common_subprop_fuel_type_key() {
         final String fuelTypeKey = "P";
         try {
@@ -598,6 +601,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     }
 
     @Test
+    @Ignore
     public void test_query_union_entity_() {
         final EntityResultQueryModel<TgBogieLocation> qry1 = select(TgWagonSlot.class).as("a").yield().prop("a").as("wagonSlot").yield().val(null).as("workshop").modelAsEntity(TgBogieLocation.class);
         final EntityResultQueryModel<TgBogieLocation> qry2 = select(TgWorkshop.class).as("a").yield().val(null).as("wagonSlot").yield().prop("a").as("workshop").modelAsEntity(TgBogieLocation.class);
@@ -712,6 +716,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     }
 
     @Test
+    @Ignore
     public void test_calculated_entity_props_in_condition2() {
         final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).leftJoin(TgFuelUsage.class).as("lastFuelUsage").on().prop("lastFuelUsage").eq().prop("lastFuelUsage.id").where().prop("lastFuelUsage.qty").gt().val(100).model();
         final List<TgVehicle> vehicles = coVehicle.getAllEntities(from(qry).model());
@@ -722,6 +727,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     }
 
     @Test
+    @Ignore
     public void test_calculated_entity_props_in_condition2a() {
         final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).leftJoin(TgFuelUsage.class).as("lastFuelUsage").on().condition(cond().prop("lastFuelUsage").eq().prop("lastFuelUsage.id").model()).where().condition(cond().prop("lastFuelUsage.qty").gt().val(100).model()).model();
         final List<TgVehicle> vehicles = coVehicle.getAllEntities(from(qry).model());
@@ -745,6 +751,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     }
 
     @Test
+    @Ignore
     public void test_query_for_complex_calc_prop2() {
         final EntityResultQueryModel<TgVehicle> qry = select(select(TgVehicle.class).where().prop("key").notLike().val("A%").model()). //
         join(TgVehicleModel.class).as("model").on().prop("model").eq().prop("model.id"). //
