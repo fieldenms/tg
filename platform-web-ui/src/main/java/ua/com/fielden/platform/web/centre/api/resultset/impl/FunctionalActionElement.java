@@ -113,6 +113,8 @@ public class FunctionalActionElement implements IRenderable, IImportable {
             attrs.put("slot", "custom-front-action");
         } else if (FunctionalActionKind.SHARE == functionalActionKind) {
             attrs.put("slot", "custom-share-action");
+            attrs.put("disabled", "[[_buttonDisabled]]");
+            attrs.put(" style", "[[_computeButtonStyle(_buttonDisabled)]]"); // prepended with ' ' due to restriction in DOM API that requires only value pairs with ':' separator
         }
 
         attrs.put("ui-role", conf().role.toString());

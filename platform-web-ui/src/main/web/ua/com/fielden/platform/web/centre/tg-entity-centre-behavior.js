@@ -1153,6 +1153,10 @@ const TgEntityCentreBehaviorImpl = {
         this.currentState = 'EDIT';
         this.$.selection_criteria.enableView();
         this.$.egi.lock = false;
+    },
+    
+    _computeButtonStyle: function (_buttonDisabled) {
+        return _buttonDisabled ? 'cursor:initial' : '';
     }
 };
 

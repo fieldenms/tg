@@ -274,7 +274,16 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         return asList(
             action(CentreConfigShareAction.class)
             .withContext(context().withSelectionCrit().build())
-            .preAction(() -> new JsCode("action.chosenProperty = self.configUuid;\n"))
+            .preAction(() -> new JsCode(
+                    "action.chosenProperty = self.configUuid;\n" +
+                    "if (!action.oldIsActionInProgressChanged) {\n" + 
+                    "    action.oldIsActionInProgressChanged = action.isActionInProgressChanged.bind(action);\n" + 
+                    "    action.isActionInProgressChanged = (newValue, oldValue) => {\n" + 
+                    "        action.oldIsActionInProgressChanged(newValue, oldValue);\n" + 
+                    "        self._actionInProgress = newValue;\n" + 
+                    "    };\n" + 
+                    "}\n" + 
+                    ""))
             .postActionSuccess(() -> new JsCode(
                     "const link = window.location.href;\n" +
                     "const showNonCritical = toaster => {\n" + 
