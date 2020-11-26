@@ -130,7 +130,7 @@ public class CentreConfigurationWebUiConfig {
                                     + "        return self.retrieve().then(function () { self.run(undefined, true); });\n"
                                     + "    } else {\n"
                                     + "        self.$.egi.adjustColumnsVisibility(functionalEntity.get('chosenIds').map(column => column === 'this' ? '' : column));\n"
-                                    + "        self._centreChanged = functionalEntity.get('centreChanged');\n"
+                                    + "        self.$.selection_criteria._centreChanged = functionalEntity.get('centreChanged');\n"
                                     + "    }\n"
                                     + ""))
                         .icon("av:sort-by-alpha")

@@ -86,8 +86,8 @@ const createColumnAction = function (entityCentre) {
         return true;
     };
     actionModel.postActionSuccess = function (functionalEntity) {
-        // update disablement of save / discard buttons after changing column widths
-        entityCentre._centreChanged = functionalEntity.get('centreChanged');
+        // update presence of asterisk in centre / application titles after changing column widths
+        entityCentre.$.selection_criteria._centreChanged = functionalEntity.get('centreChanged');
     };
     actionModel.postActionError = function (functionalEntity) { };
     actionModel.attrs = {
@@ -279,21 +279,6 @@ const TgEntityCentreBehaviorImpl = {
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         /**
-         * The property which indicates whether the centre has been changed (should be bound from tg-selection-criteria).
-         */
-        _centreChanged: {
-            type: Boolean
-        },
-
-        /**
-         * The property is bound from respective property from tg-selection-criteria-behavior (which incorporates tg-entity-binder-behavior).
-         * This property and '_centreChanged' are needed for correct enabling / disabling of Save / Discard buttons.
-         */
-        _editedPropsExist: {
-            type: Boolean
-        },
-
-        /**
          * The property which indicates whether the centre has been fully loaded with its criteria entity (should be bound from tg-selection-criteria).
          */
         _criteriaLoaded: {
@@ -309,24 +294,14 @@ const TgEntityCentreBehaviorImpl = {
             observer: '_actionInProgressChanged'
         },
 
-        _saverDisabled: {
+        _buttonDisabled: {
             type: Boolean,
-            computed: '_computeSaverDisabled(saveAsName, _centreChanged, _editedPropsExist, _actionInProgress)'
-        },
-
-        _discarderDisabled: {
-            type: Boolean,
-            computed: '_computeDiscarderDisabled(_centreChanged, _editedPropsExist, _actionInProgress)'
-        },
-
-        _runnerDisabled: {
-            type: Boolean,
-            computed: '_computeRunnerDisabled(_criteriaLoaded, _actionInProgress)'
+            computed: '_computeDisabled(_criteriaLoaded, _actionInProgress)'
         },
 
         _viewerDisabled: {
             type: Boolean,
-            computed: '_computeViewerDisabled(_criteriaLoaded, _wasRun, _actionInProgress)'
+            computed: '_computeViewerDisabled(_buttonDisabled, _wasRun)'
         },
 
         _url: {
@@ -474,28 +449,12 @@ const TgEntityCentreBehaviorImpl = {
         }
     },
 
-    /**
-     * Computes SAVE button disablement: always enabled for default and link configurations, disabled when action is in progress. Otherwise enabled when centre is changed from last saved version.
-     */
-    _computeSaverDisabled: function (saveAsName, _centreChanged, _editedPropsExist, _actionInProgress) {
-        return _actionInProgress === true /* disabled when some action is in progress */ ||
-            (saveAsName !== '' && saveAsName !== this._reflector.LINK_CONFIG_TITLE /* always enabled for default and link configurations */ &&
-            !this.canSave(_centreChanged, _editedPropsExist));
-    },
-
-    /**
-     * Computes DISCARD button disablement: disabled when action is in progress. Otherwise enabled when centre is changed from last saved version.
-     */
-    _computeDiscarderDisabled: function (_centreChanged, _editedPropsExist, _actionInProgress) {
-        return _actionInProgress === true || !this.canDiscard(_centreChanged, _editedPropsExist);
-    },
-
-    _computeRunnerDisabled: function (_criteriaLoaded, _actionInProgress) {
+    _computeDisabled: function (_criteriaLoaded, _actionInProgress) {
         return _actionInProgress === true || _criteriaLoaded === false;
     },
 
-    _computeViewerDisabled: function (_criteriaLoaded, _wasRun, _actionInProgress) {
-        return _actionInProgress === true || _criteriaLoaded === false || _wasRun !== "yes";
+    _computeViewerDisabled: function (_buttonDisabled, _wasRun) {
+        return _buttonDisabled || _wasRun !== "yes";
     },
 
     _retrievedEntitiesChanged: function (retrievedEntities, oldValue) {
@@ -1108,19 +1067,6 @@ const TgEntityCentreBehaviorImpl = {
 
     currPageFeedback: function (pageNumberUpdated, pageCountUpdated) {
         return ('' + (pageNumberUpdated !== null ? (pageNumberUpdated + 1) : 1)) + ' / ' + ('' + (pageCountUpdated !== null ? pageCountUpdated : 1));
-    },
-
-    canSave: function (centreChanged, _editedPropsExist) {
-        return this.canManageCentreConfig(centreChanged, _editedPropsExist);
-    },
-
-    canDiscard: function (centreChanged, _editedPropsExist) {
-        return this.canManageCentreConfig(centreChanged, _editedPropsExist);
-    },
-
-    canManageCentreConfig: function (centreChanged, _editedPropsExist) {
-        return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? false :
-            this.$.selection_criteria.canManageCentreConfig(centreChanged, _editedPropsExist);
     },
 
     /**
