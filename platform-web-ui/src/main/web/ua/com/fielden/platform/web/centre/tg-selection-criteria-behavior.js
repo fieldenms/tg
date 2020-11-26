@@ -76,6 +76,15 @@ const TgSelectionCriteriaBehaviorImpl = {
         },
 
         /**
+         * Indicates whether currently loaded configuration is changed including not yet processed client-side changes in its editors.
+         */
+        configChanged: {
+            type: Boolean,
+            computed: 'canManageCentreConfig(_centreChanged, _editedPropsExist)',
+            observer: '_configChangedChanged'
+        },
+
+        /**
          * Centre URI parameters taken from tg-entity-centre-behavior.
          */
         queryPart: {
@@ -728,6 +737,13 @@ const TgSelectionCriteriaBehaviorImpl = {
         }
 
         return contextHolder;
+    },
+
+    /**
+     * Observer for 'configChanged' property.
+     */
+    _configChangedChanged: function (newConfigChanged, oldValue) {
+        this.fire('tg-config-changed-changed', newConfigChanged);
     }
 
 };

@@ -277,7 +277,7 @@ Polymer({
         },
         selectedPageTitle: {
             type: String,
-            computed: '_calcSelectedPageTitle(_selectedPage, saveAsName)'
+            computed: '_calcSelectedPageTitle(_selectedPage, saveAsName, configChanged)'
         },
         _hasSomeIcon: Boolean,
         _hasSomeMenu: Boolean,
@@ -288,6 +288,10 @@ Polymer({
         saveAsDesc: {
             type: String,
             value: ''
+        },
+        configChanged: {
+            type: Boolean,
+            value: false
         }
     },
 
@@ -303,7 +307,8 @@ Polymer({
     
     listeners: {
         'tg-save-as-name-changed': '_updateSaveAsName',
-        'tg-save-as-desc-changed': '_updateSaveAsDesc'
+        'tg-save-as-desc-changed': '_updateSaveAsDesc',
+        'tg-config-changed-changed': '_updateConfigChanged'
     },
     
     created: function () {
@@ -601,11 +606,11 @@ Polymer({
         return this.saveAsNamesAndDescs;
     },
     
-    _calcSelectedPageTitle: function (page, saveAsName) {
+    _calcSelectedPageTitle: function (page, saveAsName, configChanged) {
         if (!allDefined(arguments)) {
             return;
         }
-        const pageTitle = page === '_' ? '' : (decodeURIComponent(page.split('/').pop()) + (saveAsName !== '' ? ' (' + saveAsName + ')' : ''));
+        const pageTitle = page === '_' ? '' : (decodeURIComponent(page.split('/').pop()) + (saveAsName !== '' ? ' (' + saveAsName + ')' : '') + (configChanged ? '*' : ''));
         if (pageTitle) {
             document.title = pageTitle;
         }
@@ -637,9 +642,11 @@ Polymer({
         if (this._saveAsNamesAndDescs()[newValue]) {
             this.saveAsName = this._saveAsNamesAndDescs()[newValue].saveAsName;
             this.saveAsDesc = this._saveAsNamesAndDescs()[newValue].saveAsDesc;
+            this.configChanged = this._saveAsNamesAndDescs()[newValue].configChanged;
         } else {
             this.saveAsName = '';
             this.saveAsDesc = '';
+            this.configChanged = false;
         }
         var newFirstLevelItem = newValue && newValue.split('/')[0];
         var oldFirstLevelItem = oldValue && oldValue.split('/')[0];
@@ -694,6 +701,15 @@ Polymer({
         this._initSaveAsNamesAndDescsEntry();
         this._saveAsNamesAndDescs()[this._selectedPage].saveAsDesc = event.detail;
         this.saveAsDesc = event.detail;
+    },
+    
+    /**
+     * Updates configChanged from its 'change' event. It controls title change (asterisk part).
+     */
+    _updateConfigChanged: function (event) {
+        this._initSaveAsNamesAndDescsEntry();
+        this._saveAsNamesAndDescs()[this._selectedPage].configChanged = event.detail;
+        this.configChanged = event.detail;
     },
     
     /**
