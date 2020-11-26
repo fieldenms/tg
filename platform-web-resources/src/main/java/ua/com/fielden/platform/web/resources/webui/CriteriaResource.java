@@ -242,7 +242,7 @@ public class CriteriaResource extends AbstractWebResource {
                                     }
                                     updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
                                 } else {
-                                    if (sharingModel.isSharedTo(configUuid.get(), user).isSuccessful()) {
+                                    if (sharingModel.isSharedWith(configUuid.get(), user).isSuccessful()) {
                                         // inherited from shared
                                         final Map<String, Object> differences = restoreDiffFrom(savedConfig, eccCompanion, format("for type [%s] with name [%s] for user [%s]", miType.getSimpleName(), savedConfig.getTitle(), savedConfigCreator));
                                         final EntityCentreConfig savedConfigForCurrUser = findConfig(miType, user, nameOf.apply(SAVED_CENTRE_NAME).apply(actualSaveAsName).apply(device()), eccCompanion, fetchKeyAndDescOnlyAndInstrument(EntityCentreConfig.class).with("configBody"));
@@ -286,7 +286,7 @@ public class CriteriaResource extends AbstractWebResource {
                                 updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
                             } else {
                                 // if current user does not have access to shared configuration then sharing process should be prevented
-                                sharingModel.isSharedTo(configUuid.get(), user).ifFailure(Result::throwRuntime);
+                                sharingModel.isSharedWith(configUuid.get(), user).ifFailure(Result::throwRuntime);
                                 // this is definitely the case where current user gets uuid as part of sharing process from other base/non-base user;
                                 // the title of the shared config can conflict with preliminarySaveAsName;
                                 final Optional<EntityCentreConfig> conflictingConfigOpt = findConfigOpt(miType, user, nameOf.apply(FRESH_CENTRE_NAME).apply(preliminarySaveAsName).apply(device()), eccCompanion);

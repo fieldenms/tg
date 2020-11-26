@@ -153,7 +153,7 @@ public interface IWebUiConfig extends IMenuRetriever {
     boolean independentTimeZone();
     
     /**
-     * A set of domain-specific actions for sharing centre configurations.
+     * A set of domain-specific actions for centre configurations sharing.
      * 
      * @return
      */
