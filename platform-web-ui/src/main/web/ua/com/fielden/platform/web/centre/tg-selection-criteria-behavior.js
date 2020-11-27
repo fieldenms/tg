@@ -113,6 +113,15 @@ const TgSelectionCriteriaBehaviorImpl = {
             value: false
         },
 
+        /**
+         * Indicates whether currently loaded centre configuration is changed or criteria editors are being edited at the moment.
+         */
+        _centreChangedOrEdited: {
+            type: Boolean,
+            computed: '_calculateCentreChangedOrEdited(_centreChanged, _editedPropsExist)',
+            notify: true
+        },
+
         _criteriaLoaded: {
             type: Boolean,
             value: false,
@@ -527,7 +536,7 @@ const TgSelectionCriteriaBehaviorImpl = {
         return !(pageCount <= 0);
     },
 
-    canManageCentreConfig: function (centreChanged, _editedPropsExist) {
+    _calculateCentreChangedOrEdited: function (centreChanged, _editedPropsExist) {
         return _editedPropsExist || (centreChanged === true);
     },
 
