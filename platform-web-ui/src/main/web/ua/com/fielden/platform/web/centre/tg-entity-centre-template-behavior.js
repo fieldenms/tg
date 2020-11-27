@@ -13,7 +13,7 @@ const TgEntityCentreTemplateBehaviorImpl = {
         pageNumberUpdated: Number,
         pageCountUpdated: Number,
         staleCriteriaMessage: String,
-        _centreChangedOrEdited: Boolean
+        _centreDirtyOrEdited: Boolean
     },
 
     created: function () {

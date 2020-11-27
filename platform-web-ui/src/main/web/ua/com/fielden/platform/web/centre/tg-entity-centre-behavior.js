@@ -87,7 +87,7 @@ const createColumnAction = function (entityCentre) {
     };
     actionModel.postActionSuccess = function (functionalEntity) {
         // update presence of asterisk in centre / application titles after changing column widths
-        entityCentre.$.selection_criteria._centreChanged = functionalEntity.get('centreChanged');
+        entityCentre.$.selection_criteria._centreDirty = functionalEntity.get('centreDirty');
     };
     actionModel.postActionError = function (functionalEntity) { };
     actionModel.attrs = {

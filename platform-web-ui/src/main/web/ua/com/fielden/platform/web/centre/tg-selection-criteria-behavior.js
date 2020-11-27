@@ -108,17 +108,17 @@ const TgSelectionCriteriaBehaviorImpl = {
         //   alternatively, computing function needs to be specified). 									       //
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        _centreChanged: {
+        _centreDirty: {
             type: Boolean,
             value: false
         },
 
         /**
-         * Indicates whether currently loaded centre configuration is changed or criteria editors are being edited at the moment.
+         * Indicates whether currently loaded centre configuration is [default, link or inherited] or changed [own save-as] or criteria editors are being edited at the moment.
          */
-        _centreChangedOrEdited: {
+        _centreDirtyOrEdited: {
             type: Boolean,
-            computed: '_calculateCentreChangedOrEdited(_centreChanged, _editedPropsExist)',
+            computed: '_calculateCentreDirtyOrEdited(_centreDirty, _editedPropsExist)',
             notify: true
         },
 
@@ -238,7 +238,7 @@ const TgSelectionCriteriaBehaviorImpl = {
                 const pageCount = customObject.pageCount;
                 const pageNumber = customObject.pageNumber;
                 const metaValues = customObject.metaValues;
-                const centreChanged = customObject.isCentreChanged;
+                const centreDirty = customObject.centreDirty;
                 const renderingHints = customObject.renderingHints || [];
                 const dynamicColumns = customObject.dynamicColumns || {};
                 const summary = customObject.summary;
@@ -246,7 +246,7 @@ const TgSelectionCriteriaBehaviorImpl = {
                 const columnWidths = customObject.columnWidths;
                 const resultConfig = customObject.resultConfig;
 
-                self._postRunDefault(criteriaEntity, resultEntities, pageNumber, pageCount, metaValues, centreChanged, renderingHints, dynamicColumns, summary, staleCriteriaMessage, columnWidths, resultConfig);
+                self._postRunDefault(criteriaEntity, resultEntities, pageNumber, pageCount, metaValues, centreDirty, renderingHints, dynamicColumns, summary, staleCriteriaMessage, columnWidths, resultConfig);
             });
         };
 
@@ -257,7 +257,7 @@ const TgSelectionCriteriaBehaviorImpl = {
         };
 
         // calbacks, that will potentially be augmented by tg-action child elements: 
-        self._postRunDefault = (function (criteriaEntity, resultEntities, pageNumber, pageCount, metaValues, centreChanged, renderingHints, dynamicColumns, summary, staleCriteriaMessage, columnWidths, resultConfig) {
+        self._postRunDefault = (function (criteriaEntity, resultEntities, pageNumber, pageCount, metaValues, centreDirty, renderingHints, dynamicColumns, summary, staleCriteriaMessage, columnWidths, resultConfig) {
             this.fire('egi-entities-appeared', resultEntities);
 
             if (typeof staleCriteriaMessage !== 'undefined') { // if staleCriteriaMessage is defined (i.e. it can be 'null' or 'Selection criteria have been changed, but ...' message) -- then populate it into config button tooltip / colour
@@ -278,7 +278,7 @@ const TgSelectionCriteriaBehaviorImpl = {
                 this.postRun(null, null, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, resultConfig);
             } else {
                 this._setPropertyModel(metaValues);
-                this._centreChanged = centreChanged;
+                this._centreDirty = centreDirty;
 
                 const msg = this._toastMsg("Running", criteriaEntity);
                 this._openToast(criteriaEntity, msg, !criteriaEntity.isValid() || criteriaEntity.isValidWithWarning(), msg, false);
@@ -361,7 +361,7 @@ const TgSelectionCriteriaBehaviorImpl = {
             this.staleCriteriaMessage = customObject.staleCriteriaMessage;
         }
         this._setPropertyModel(customObject.metaValues);
-        this._centreChanged = customObject.isCentreChanged;
+        this._centreDirty = customObject.centreDirty;
         if (typeof customObject.saveAsDesc !== 'undefined') {
             this.saveAsDesc = customObject.saveAsDesc;
         }
@@ -536,8 +536,8 @@ const TgSelectionCriteriaBehaviorImpl = {
         return !(pageCount <= 0);
     },
 
-    _calculateCentreChangedOrEdited: function (centreChanged, _editedPropsExist) {
-        return _editedPropsExist || (centreChanged === true);
+    _calculateCentreDirtyOrEdited: function (centreDirty, _editedPropsExist) {
+        return _editedPropsExist || (centreDirty === true);
     },
 
     /**

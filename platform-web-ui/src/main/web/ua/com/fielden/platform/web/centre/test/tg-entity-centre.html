@@ -39,7 +39,7 @@
                 centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, resultConfig) {
                     old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, resultConfig);
                     
-                    assert.strictEqual(centre.$.selection_criteria._centreChanged, true, '_centreChanged flag should be defined and should equal true.');
+                    assert.strictEqual(centre.$.selection_criteria._centreDirty, true, '_centreDirty flag should be defined and should equal true.');
                     assert.ok(criteriaEntity, 'Criteria entity should arrive from the server.');
                     assert.strictEqual(criteriaEntity.isValid(), false, 'Criteria entity should be invalid.');
                     assert.deepEqual(resultEntities, [], 'Results should be empty, run should not be performed.');
@@ -63,7 +63,7 @@
                     centre.postRetrieved = oldPostRetrieved;
                     
                     assert.strictEqual(bindingEntity.get('tgFetchProviderTestEntity_propForValidation'), 'KEY8');
-                    assert.strictEqual(centre.$.selection_criteria._centreChanged, false, '_centreChanged flag should be defined and should be equal to false.');
+                    assert.strictEqual(centre.$.selection_criteria._centreDirty, false, '_centreDirty flag should be defined and should be equal to false.');
                     assert.ok(entity, 'Criteria entity should arrive from the server.');
                     assert.strictEqual(entity.isValid(), true, 'Criteria entity should be valid.');
                     

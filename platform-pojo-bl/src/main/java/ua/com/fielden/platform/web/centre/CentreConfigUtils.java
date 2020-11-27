@@ -50,7 +50,7 @@ public class CentreConfigUtils {
     /**
      * Creates custom object with centre information for concrete <code>appliedCriteriaEntity</code>.
      * <p>
-     * Contains <code>centreChanged</code> flag which is calculated comparing <code>appliedCriteriaEntity</code>'s centre against saved version of <code>saveAsNameToCompare</code>'s centre.
+     * Contains <code>centreDirty</code> flag which is calculated comparing <code>appliedCriteriaEntity</code>'s centre against saved version of <code>saveAsNameToCompare</code>'s centre or it is true if configuration is New (aka default, link or inherited).
      * 
      * @param selectionCrit
      * @param appliedCriteriaEntity

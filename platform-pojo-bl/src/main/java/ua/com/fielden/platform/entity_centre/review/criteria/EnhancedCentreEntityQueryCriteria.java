@@ -52,7 +52,8 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private Consumer<Optional<String>> preferredConfigMaker;
     private Function<Optional<String>, Optional<T2<String, String>>> centreTitleAndDescGetter;
     private Function<Optional<String>, Optional<String>> centreConfigUuidGetter;
-    private Supplier<Boolean> centreChangedGetter;
+    private Supplier<Boolean> centreDirtyGetter;
+    private Function<Optional<String>, Function<Supplier<ICentreDomainTreeManagerAndEnhancer>, Boolean>> centreDirtyCalculator;
     private Function<Optional<String>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>> criteriaValidationPrototypeCreator;
     private Function<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>, Function<Optional<String>, Function<Optional<Optional<String>>, Map<String, Object>>>> centreCustomObjectGetter;
     /**
@@ -256,12 +257,20 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
         return criteriaValidationPrototypeCreator.apply(saveAsName);
     }
 
-    public void setCentreChangedGetter(final Supplier<Boolean> centreChangedGetter) {
-        this.centreChangedGetter = centreChangedGetter;
+    public void setCentreDirtyCalculator(final Function<Optional<String>, Function<Supplier<ICentreDomainTreeManagerAndEnhancer>, Boolean>> centreDirtyCalculator) {
+        this.centreDirtyCalculator = centreDirtyCalculator;
     }
 
-    public boolean isCentreChanged() {
-        return centreChangedGetter.get();
+    public Function<Optional<String>, Function<Supplier<ICentreDomainTreeManagerAndEnhancer>, Boolean>> centreDirtyCalculator() {
+        return centreDirtyCalculator;
+    }
+
+    public void setCentreDirtyGetter(final Supplier<Boolean> centreDirtyGetter) {
+        this.centreDirtyGetter = centreDirtyGetter;
+    }
+
+    public boolean isCentreDirty() {
+        return centreDirtyGetter.get();
     }
 
     public void setExportQueryRunner(final Function<Map<String, Object>, Stream<AbstractEntity<?>>> exportQueryRunner) {

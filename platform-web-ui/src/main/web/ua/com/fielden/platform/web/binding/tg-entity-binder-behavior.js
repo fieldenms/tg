@@ -148,7 +148,7 @@ export const TgEntityBinderBehavior = {
          * Client-side logic handles this gracefully in method _extractBindingView(entity, previousModifiedPropertiesHolder, prevCurrBindingEntity).
          *
          * This property can not be used in tg-selection-criteria-behavior due to the fact that it will be isModified from previous, not from original version of centre.
-         * Currently _centreChanged property is used (see tg-selection-criteria-behavior).
+         * Currently _centreDirty property is used (see tg-selection-criteria-behavior).
          */
         _bindingEntityModified: {
             type: Boolean,

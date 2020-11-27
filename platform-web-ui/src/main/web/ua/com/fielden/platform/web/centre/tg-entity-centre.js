@@ -149,7 +149,7 @@ const template = html`
                                     component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigSaveAction' element-name='tg-CentreConfigSaveAction-master' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]'
                                     attrs='[[bottomActions.0.attrs]]' pre-action='[[bottomActions.0.preAction]]' post-action-success='[[bottomActions.0.postActionSuccess]]' post-action-error='[[bottomActions.0.postActionError]]'
                                     require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false'
-                                    disabled='[[_computeSaveButtonDisabled(_buttonDisabled, _centreChangedOrEdited)]]' style$='[[_computeSaveButtonStyle(_buttonDisabled, _centreChangedOrEdited)]]'></tg-ui-action>
+                                    disabled='[[_computeSaveButtonDisabled(_buttonDisabled, _centreDirtyOrEdited)]]' style$='[[_computeSaveButtonStyle(_buttonDisabled, _centreDirtyOrEdited)]]'></tg-ui-action>
                     <paper-button slot="left-selection-criteria-button" id="discarder" raised shortcut="ctrl+r" roll="button" on-tap="discardAsync" disabled$="[[_buttonDisabled]]" tooltip-text="Discard the latest changes to selection criteria, which effectively returns configuration to the last saved state, Ctrl&nbsp+&nbspr">Discard</paper-button>
                     <paper-button slot="right-selection-criteria-button" id="view" raised shortcut="ctrl+e" roll="button" on-tap="_activateResultSetView" disabled$="[[_viewerDisabled]]" tooltip-text="Show result view, Ctrl&nbsp+&nbspe">View</paper-button>
                     <paper-button slot="right-selection-criteria-button" id="runner" raised shortcut="f5" roll="button" on-tap="runAsync" style="margin-right: 0px;" disabled$="[[_buttonDisabled]]" tooltip-text="Execute entity centre and show result, F5">
@@ -217,7 +217,7 @@ Polymer({
         _processDiscarderResponse: Function,
         _processDiscarderError: Function,
         _buttonDisabled: Boolean,
-        _centreChangedOrEdited: Boolean,
+        _centreDirtyOrEdited: Boolean,
         _viewerDisabled: Boolean,
         discard: Function,
         run: Function,
@@ -566,16 +566,16 @@ Polymer({
     },
 
     /**
-     * SAVE button is disabled like any other button (DISCARD, RUN, Share, New ... Delete) or where (centre is not changed and its editors not being edited). 
+     * SAVE button is disabled like any other button (DISCARD, RUN, Share, New ... Delete) or where (centre is not dirty (aka changed or default, link or inherited) and its editors not being edited). 
      */
-    _computeSaveButtonDisabled: function (_buttonDisabled, _centreChangedOrEdited) {
-        return _buttonDisabled || !_centreChangedOrEdited;
+    _computeSaveButtonDisabled: function (_buttonDisabled, _centreDirtyOrEdited) {
+        return _buttonDisabled || !_centreDirtyOrEdited;
     },
 
     /**
      * SAVE button styles, that include standard non-hand cursor if disabled.
      */
-    _computeSaveButtonStyle: function (_buttonDisabled, _centreChangedOrEdited) {
-        return 'width:70px; margin-right:8px; ' + (this._computeSaveButtonDisabled(_buttonDisabled, _centreChangedOrEdited) ? 'cursor:initial' : '');
+    _computeSaveButtonStyle: function (_buttonDisabled, _centreDirtyOrEdited) {
+        return 'width:70px; margin-right:8px; ' + (this._computeSaveButtonDisabled(_buttonDisabled, _centreDirtyOrEdited) ? 'cursor:initial' : '');
     }
 });
