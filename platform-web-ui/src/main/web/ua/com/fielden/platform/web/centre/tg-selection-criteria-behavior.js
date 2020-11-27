@@ -80,7 +80,7 @@ const TgSelectionCriteriaBehaviorImpl = {
          */
         configChanged: {
             type: Boolean,
-            computed: '_calculateCentreConfigChanged(_centreChanged, _editedPropsExist)',
+            computed: 'canManageCentreConfig(_centreChanged, _editedPropsExist)',
             observer: '_configChangedChanged'
         },
 
@@ -536,7 +536,7 @@ const TgSelectionCriteriaBehaviorImpl = {
         return !(pageCount <= 0);
     },
 
-    _calculateCentreConfigChanged: function (centreChanged, _editedPropsExist) {
+    canManageCentreConfig: function (centreChanged, _editedPropsExist) {
         return _editedPropsExist || (centreChanged === true);
     },
 
