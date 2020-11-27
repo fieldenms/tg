@@ -706,7 +706,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             );
         });
         // returns ordered alphabetically list of 'loadable' configurations for current user
-        validationPrototype.setLoadableCentresSupplier(() -> loadableConfigurations(user, miType, device, companionFinder, sharingModel));
+        validationPrototype.setLoadableCentresSupplier(saveAsNameOpt -> () -> loadableConfigurations(user, miType, device, companionFinder, sharingModel).apply(saveAsNameOpt));
         // returns currently loaded configuration's saveAsName
         validationPrototype.setSaveAsNameSupplier(() -> saveAsName);
         // makes 'saveAsNameToBecomePreferred' configuration preferred in case where it differs from currently loaded configuration; does nothing otherwise

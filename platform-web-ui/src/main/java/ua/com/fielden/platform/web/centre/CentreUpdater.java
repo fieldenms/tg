@@ -49,6 +49,7 @@ import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.VAL
 import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.WIDTH;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.createDefaultCentre;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfig;
+import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.modelFor;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.retrieveDiff;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.saveEntityCentreManager;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.saveNewEntityCentreManager;
@@ -488,73 +489,86 @@ public class CentreUpdater {
      * @param companionFinder
      * @return
      */
-    public static List<LoadableCentreConfig> loadableConfigurations(
+    public static Function<Optional<Optional<String>>, List<LoadableCentreConfig>> loadableConfigurations(
             final User user,
             final Class<? extends MiWithConfigurationSupport<?>> miType,
             final DeviceProfile device,
             final ICompanionObjectFinder companionFinder,
             final ICentreConfigSharingModel sharingModel) {
-        final List<LoadableCentreConfig> loadableConfigurations = new ArrayList<>();
-        
-        final IEntityCentreConfig eccCompanion = companionFinder.find(EntityCentreConfig.class);
-        final ILoadableCentreConfig lccCompanion = companionFinder.find(LoadableCentreConfig.class);
-        
-        final String surrogateNamePrefix = deviceSpecific(FRESH_CENTRE_NAME, device);
-        final EntityResultQueryModel<EntityCentreConfig> queryForCurrentUser = eccCompanion.withDbVersion(centreConfigQueryFor(user, miType, device, FRESH_CENTRE_NAME)).model();
-        final fetch<EntityCentreConfig> fetch = fetchWithKeyAndDesc(EntityCentreConfig.class).with("configUuid").fetchModel();
-        if (user.isBase()) {
-            try (final Stream<EntityCentreConfig> stream = eccCompanion.stream(from(queryForCurrentUser).with(fetch).model()) ) {
-                stream.forEach(ecc -> {
-                    loadableConfigurations.add(createLoadableCentreConfig(ecc, false, surrogateNamePrefix, lccCompanion));
-                });
-                loadableConfigurations.remove(new LoadableCentreConfig().setKey(LINK_CONFIG_TITLE)); // exclude 'link' configuration from load dialog if it is present (aka centre 'link' with criteria parameters was loaded at least once)
-            }
-        } else {
-            final EntityResultQueryModel<EntityCentreConfig> queryForBaseUser = eccCompanion.withDbVersion(centreConfigQueryFor(user.getBasedOnUser(), miType, device, FRESH_CENTRE_NAME)).model();
-            try (final Stream<EntityCentreConfig> streamForCurrentUser = eccCompanion.stream(from(queryForCurrentUser).with(fetch).model());
-                 final Stream<EntityCentreConfig> streamForBaseUser = eccCompanion.stream(from(queryForBaseUser).with(fetch).model())) {
-                streamForCurrentUser.forEach(ecc -> {
-                    loadableConfigurations.add(createLoadableCentreConfig(ecc, false, surrogateNamePrefix, lccCompanion));
-                });
-                streamForBaseUser.forEach(ecc -> {
-                    final LoadableCentreConfig lcc = createLoadableCentreConfig(ecc, true, surrogateNamePrefix, lccCompanion);
-                    if (loadableConfigurations.contains(lcc)) {
-                        final LoadableCentreConfig foundLcc = loadableConfigurations.stream().filter(item -> item.equals(lcc)).findAny().get();
-                        foundLcc.setInherited(true); // description of specific config has a priority over base config
-                    } else {
-                        loadableConfigurations.add(lcc);
-                    }
-                });
-                loadableConfigurations.remove(new LoadableCentreConfig().setKey(LINK_CONFIG_TITLE)); // exclude 'link' configuration from load dialog if it is present (aka centre 'link' with criteria parameters was loaded at least once)
-                // collect uuids for not inherited from base configurations, aka own save-as configs or inherited from shared
-                final Set<String> notInheritedFromBaseUuids = loadableConfigurations.stream()
-                    .filter(lcc -> !lcc.isInherited())
-                    .map(lcc -> lcc.getConfig().getConfigUuid())
-                    .collect(toSet());
-                
-                // find config creators not being equal to current user...
-                if (!notInheritedFromBaseUuids.isEmpty()) {
-                    eccCompanion.getAllEntities(
-                        from(eccCompanion.withDbVersion(centreConfigQueryFor(miType, device, SAVED_CENTRE_NAME))
-                            .and().prop("configUuid").in().values(notInheritedFromBaseUuids.toArray())
-                            .and().prop("owner").ne().val(user)
-                            .model()
-                        )
-                        .with(fetch(EntityCentreConfig.class).with("configUuid").with("owner", fetch(User.class).with("key")))
-                        .lightweight().model()
-                    ).stream()
-                    .forEach(ecc -> {
-                        if (sharingModel.isSharedWith(ecc.getConfigUuid(), user).isSuccessful()) {
-                            final LoadableCentreConfig foundLcc = loadableConfigurations.stream().filter(lcc -> ecc.getConfigUuid().equals(lcc.getConfig().getConfigUuid())).findAny().get();
-                            foundLcc.setInherited(true); // ... and make corresponding configuration inherited (from shared) ...
-                            foundLcc.setSharedByMessage(sharingModel.sharedByMessage(ecc.getOwner())); // ... with appropriate domain-specific message indication about that
+        return saveAsNameOpt -> {
+            final List<LoadableCentreConfig> loadableConfigurations = new ArrayList<>();
+            
+            final IEntityCentreConfig eccCompanion = companionFinder.find(EntityCentreConfig.class);
+            final ILoadableCentreConfig lccCompanion = companionFinder.find(LoadableCentreConfig.class);
+            
+            final String surrogateNamePrefix = deviceSpecific(FRESH_CENTRE_NAME, device);
+            final EntityResultQueryModel<EntityCentreConfig> queryForCurrentUser = findConfigsFunction(user, miType, device, eccCompanion).apply(saveAsNameOpt);
+            final fetch<EntityCentreConfig> fetch = fetchWithKeyAndDesc(EntityCentreConfig.class).with("configUuid").fetchModel();
+            if (user.isBase()) {
+                try (final Stream<EntityCentreConfig> stream = eccCompanion.stream(from(queryForCurrentUser).with(fetch).model()) ) {
+                    stream.forEach(ecc -> {
+                        loadableConfigurations.add(createLoadableCentreConfig(ecc, false, surrogateNamePrefix, lccCompanion));
+                    });
+                    loadableConfigurations.remove(new LoadableCentreConfig().setKey(LINK_CONFIG_TITLE)); // exclude 'link' configuration from load dialog if it is present (aka centre 'link' with criteria parameters was loaded at least once)
+                }
+            } else {
+                final EntityResultQueryModel<EntityCentreConfig> queryForBaseUser = findConfigsFunction(user.getBasedOnUser(), miType, device, eccCompanion).apply(saveAsNameOpt);
+                try (final Stream<EntityCentreConfig> streamForCurrentUser = eccCompanion.stream(from(queryForCurrentUser).with(fetch).model());
+                     final Stream<EntityCentreConfig> streamForBaseUser = eccCompanion.stream(from(queryForBaseUser).with(fetch).model())) {
+                    streamForCurrentUser.forEach(ecc -> {
+                        loadableConfigurations.add(createLoadableCentreConfig(ecc, false, surrogateNamePrefix, lccCompanion));
+                    });
+                    streamForBaseUser.forEach(ecc -> {
+                        final LoadableCentreConfig lcc = createLoadableCentreConfig(ecc, true, surrogateNamePrefix, lccCompanion);
+                        if (loadableConfigurations.contains(lcc)) {
+                            final LoadableCentreConfig foundLcc = loadableConfigurations.stream().filter(item -> item.equals(lcc)).findAny().get();
+                            foundLcc.setInherited(true); // description of specific config has a priority over base config
+                        } else {
+                            loadableConfigurations.add(lcc);
                         }
                     });
+                    loadableConfigurations.remove(new LoadableCentreConfig().setKey(LINK_CONFIG_TITLE)); // exclude 'link' configuration from load dialog if it is present (aka centre 'link' with criteria parameters was loaded at least once)
+                    // collect uuids for not inherited from base configurations, aka own save-as configs or inherited from shared
+                    final Set<String> notInheritedFromBaseUuids = loadableConfigurations.stream()
+                        .filter(lcc -> !lcc.isInherited())
+                        .map(lcc -> lcc.getConfig().getConfigUuid())
+                        .collect(toSet());
+                    
+                    // find config creators not being equal to current user...
+                    if (!notInheritedFromBaseUuids.isEmpty()) {
+                        eccCompanion.getAllEntities(
+                            from(eccCompanion.withDbVersion(centreConfigQueryFor(miType, device, SAVED_CENTRE_NAME))
+                                .and().prop("configUuid").in().values(notInheritedFromBaseUuids.toArray())
+                                .and().prop("owner").ne().val(user)
+                                .model()
+                            )
+                            .with(fetch(EntityCentreConfig.class).with("configUuid").with("owner", fetch(User.class).with("key")))
+                            .lightweight().model()
+                        ).stream()
+                        .forEach(ecc -> {
+                            if (sharingModel.isSharedWith(ecc.getConfigUuid(), user).isSuccessful()) {
+                                final LoadableCentreConfig foundLcc = loadableConfigurations.stream().filter(lcc -> ecc.getConfigUuid().equals(lcc.getConfig().getConfigUuid())).findAny().get();
+                                foundLcc.setInherited(true); // ... and make corresponding configuration inherited (from shared) ...
+                                foundLcc.setSharedByMessage(sharingModel.sharedByMessage(ecc.getOwner())); // ... with appropriate domain-specific message indication about that
+                            }
+                        });
+                    }
                 }
             }
-        }
-        Collections.sort(loadableConfigurations);
-        return loadableConfigurations;
+            Collections.sort(loadableConfigurations);
+            return loadableConfigurations;
+        };
+    }
+
+    /**
+     * Creates function for loading of FRESH configs -- either all or one based on function argument.
+     */
+    private static Function<Optional<Optional<String>>, EntityResultQueryModel<EntityCentreConfig>> findConfigsFunction(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final IEntityCentreConfig eccCompanion) {
+        return saveAsNameOpt -> {
+            return saveAsNameOpt
+                .map(saveAsName -> modelFor(user, miType.getName(), nameOf.apply(FRESH_CENTRE_NAME).apply(saveAsName).apply(device)))
+                .orElseGet(() -> eccCompanion.withDbVersion(centreConfigQueryFor(user, miType, device, FRESH_CENTRE_NAME)).model());
+        };
     }
     
     /**

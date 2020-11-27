@@ -430,7 +430,7 @@ public class CriteriaResource extends AbstractWebResource {
                 createCriteriaValidationPrototype(miType, saveAsName, updatedFreshCentre, companionFinder, critGenerator, -1L, user, userProvider, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel),
                 createCriteriaMetaValuesCustomObjectWithSaveAsInfo(
                         createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)),
-                        isDefaultOrLink(saveAsName) || inherited(findLoadableConfig(saveAsName, () -> loadableConfigurations(user, miType, device, companionFinder, sharingModel).stream())).isPresent(), // if not [default, link, inherited] then it is own save-as; after discarding it is always not changed -- checking of isFreshCentreChanged is not needed
+                        isDefaultOrLink(saveAsName) || inherited(findLoadableConfig(saveAsName, () -> loadableConfigurations(user, miType, device, companionFinder, sharingModel).apply(of(saveAsName)).stream())).isPresent(), // if not [default, link, inherited] then it is own save-as; after discarding it is always not changed -- checking of isFreshCentreChanged is not needed
                         empty(),
                         empty(),
                         saveAsDesc,

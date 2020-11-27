@@ -135,7 +135,7 @@ public class CentreConfigUtils {
      * @throws Result if configuration is not present aka deleted
      */
     public static Optional<LoadableCentreConfig> findLoadableConfig(final Optional<String> saveAsName, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) throws Result {
-        return findLoadableConfig(saveAsName, () -> selectionCrit.loadableCentreConfigs().stream());
+        return findLoadableConfig(saveAsName, () -> selectionCrit.loadableCentreConfigs().apply(of(saveAsName)).stream());
     }
     
     /**

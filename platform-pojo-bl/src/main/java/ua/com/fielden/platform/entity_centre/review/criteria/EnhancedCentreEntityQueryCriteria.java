@@ -47,7 +47,7 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private Consumer<String> inheritedFromBaseCentreUpdater;
     private Function<String, Consumer<String>> inheritedFromSharedCentreUpdater;
     private Runnable defaultCentreClearer;
-    private Supplier<List<LoadableCentreConfig>> loadableCentresSupplier;
+    private Function<Optional<Optional<String>>, Supplier<List<LoadableCentreConfig>>> loadableCentresSupplier;
     private Supplier<Optional<String>> saveAsNameSupplier;
     private Consumer<Optional<String>> preferredConfigMaker;
     private Function<Optional<String>, Optional<T2<String, String>>> centreTitleAndDescGetter;
@@ -201,12 +201,12 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
         centreDeleter.run();
     }
 
-    public void setLoadableCentresSupplier(final Supplier<List<LoadableCentreConfig>> loadableCentresSupplier) {
+    public void setLoadableCentresSupplier(final Function<Optional<Optional<String>>, Supplier<List<LoadableCentreConfig>>> loadableCentresSupplier) {
         this.loadableCentresSupplier = loadableCentresSupplier;
     }
 
-    public List<LoadableCentreConfig> loadableCentreConfigs() {
-        return loadableCentresSupplier.get();
+    public Function<Optional<Optional<String>>, List<LoadableCentreConfig>> loadableCentreConfigs() {
+        return saveAsNameOpt -> loadableCentresSupplier.apply(saveAsNameOpt).get();
     }
 
     public void setSaveAsNameSupplier(final Supplier<Optional<String>> saveAsNameSupplier) {

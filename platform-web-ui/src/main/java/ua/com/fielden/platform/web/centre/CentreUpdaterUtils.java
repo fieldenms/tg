@@ -276,7 +276,7 @@ public class CentreUpdaterUtils extends CentreUpdater {
      * 
      * @return
      */
-    private static EntityResultQueryModel<EntityCentreConfig> modelFor(final User user, final String menuItemTypeName, final String title) {
+    public static EntityResultQueryModel<EntityCentreConfig> modelFor(final User user, final String menuItemTypeName, final String title) {
         return modelFor(user, menuItemTypeName).and()
             .prop("title").eq().val(title).model();
     }
