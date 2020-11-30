@@ -64,7 +64,8 @@ const TgSelectionCriteriaBehaviorImpl = {
         configUuid: {
             type: String,
             value: '',
-            notify: true
+            notify: true,
+            observer: '_configUuidChanged'
         },
 
         /**
@@ -383,6 +384,10 @@ const TgSelectionCriteriaBehaviorImpl = {
         if (typeof customObject.wasRun !== 'undefined') {
             this._wasRun = customObject.wasRun;
         }
+    },
+
+    _configUuidChanged: function (newConfigUuid) {
+        this.fire('tg-config-uuid-changed', newConfigUuid);
     },
 
     _saveAsDescChanged: function (newSaveAsDesc) {

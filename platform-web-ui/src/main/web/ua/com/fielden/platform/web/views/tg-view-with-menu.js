@@ -303,7 +303,8 @@ Polymer({
     
     listeners: {
         'tg-save-as-name-changed': '_updateSaveAsName',
-        'tg-save-as-desc-changed': '_updateSaveAsDesc'
+        'tg-save-as-desc-changed': '_updateSaveAsDesc',
+        'tg-config-uuid-changed': '_updateConfigUuid'
     },
     
     created: function () {
@@ -594,11 +595,11 @@ Polymer({
         this.$.drawerPanel.drawer.toggle();
     },
     
-    _saveAsNamesAndDescs: function () {
-        if (!this.saveAsNamesAndDescs) {
-            this.saveAsNamesAndDescs = {};
+    _centreConfigInfo: function () {
+        if (!this.centreConfigInfo) {
+            this.centreConfigInfo = {};
         }
-        return this.saveAsNamesAndDescs;
+        return this.centreConfigInfo;
     },
     
     _calcSelectedPageTitle: function (page, saveAsName) {
@@ -630,13 +631,15 @@ Polymer({
      * The listener that listens the menu item activation on tap.
      */
     _itemActivated: function (e, detail) {
-        this.selectedSubmodule = '/' + detail.selected;
+        const centreMenuItem = detail.selected;
+        const uuidPart = this._centreConfigInfo() && this._centreConfigInfo()[centreMenuItem] && this._centreConfigInfo()[centreMenuItem].configUuid;
+        this.selectedSubmodule = '/' + centreMenuItem + (uuidPart ? '/' + uuidPart : '');
     },
 
     _selectedPageChanged: function (newValue, oldValue) {
-        if (this._saveAsNamesAndDescs()[newValue]) {
-            this.saveAsName = this._saveAsNamesAndDescs()[newValue].saveAsName;
-            this.saveAsDesc = this._saveAsNamesAndDescs()[newValue].saveAsDesc;
+        if (this._centreConfigInfo()[newValue]) {
+            this.saveAsName = this._centreConfigInfo()[newValue].saveAsName;
+            this.saveAsDesc = this._centreConfigInfo()[newValue].saveAsDesc;
         } else {
             this.saveAsName = '';
             this.saveAsDesc = '';
@@ -681,9 +684,9 @@ Polymer({
      * Updates saveAsName from its 'change' event. It controls the title change.
      */
     _updateSaveAsName: function (event) {
-        this._initSaveAsNamesAndDescsEntry();
+        this._initCentreConfigInfoEntry();
         const saveAsNameForDisplay = this._reflector.LINK_CONFIG_TITLE !== event.detail ? event.detail : '';
-        this._saveAsNamesAndDescs()[this._selectedPage].saveAsName = saveAsNameForDisplay;
+        this._centreConfigInfo()[this._selectedPage].saveAsName = saveAsNameForDisplay;
         this.saveAsName = saveAsNameForDisplay;
     },
     
@@ -691,17 +694,25 @@ Polymer({
      * Updates saveAsDesc from its 'change' event. It controls the tooltip change of configuration title.
      */
     _updateSaveAsDesc: function (event) {
-        this._initSaveAsNamesAndDescsEntry();
-        this._saveAsNamesAndDescs()[this._selectedPage].saveAsDesc = event.detail;
+        this._initCentreConfigInfoEntry();
+        this._centreConfigInfo()[this._selectedPage].saveAsDesc = event.detail;
         this.saveAsDesc = event.detail;
     },
     
     /**
-     * Initialises current entry of 'saveAs' object (name and desc) if not present.
+     * Updates configUuid from its 'change' event. It controls URI change (uuid part).
      */
-    _initSaveAsNamesAndDescsEntry: function () {
-        if (!this._saveAsNamesAndDescs()[this._selectedPage]) {
-            this._saveAsNamesAndDescs()[this._selectedPage] = {};
+    _updateConfigUuid: function (event) {
+        this._initCentreConfigInfoEntry();
+        this._centreConfigInfo()[this._selectedPage].configUuid = event.detail;
+    },
+    
+    /**
+     * Initialises current entry of centre configuration object (name, desc and configUuid) if not present.
+     */
+    _initCentreConfigInfoEntry: function () {
+        if (!this._centreConfigInfo()[this._selectedPage]) {
+            this._centreConfigInfo()[this._selectedPage] = {};
         }
     }
 });

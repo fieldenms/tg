@@ -130,12 +130,17 @@ Polymer({
             const elementLoader = this.shadowRoot.querySelector("#elementToLoad")
             const centre = elementLoader.loadedElement;
             if (centre) {
-                this.async(() => { // load new centre config only after current loading completed; this can be achieved by putting next loading in the end of queue; this is useful for link-configurations
-                    centre._selectedView = 0;
-                    centre.queryPart = queryPart;
-                    centre.configUuid = unknownSubpath;
-                    this._loadCentre.bind(this)(centre, false);
-                });
+                if (queryPart // perform reloading in case where new ?crit=val params appear ...
+                 || unknownSubpath !== centre.configUuid // ... or new configUuid is different from already loaded ...
+                 || !centre._criteriaLoaded // ... or where criteria was not loaded (e.g. errors during previous loading attempts)
+                ) {
+                    this.async(() => { // load new centre config only after current loading completed; this can be achieved by putting next loading in the end of queue; this is useful for link-configurations
+                        centre._selectedView = 0;
+                        centre.queryPart = queryPart;
+                        centre.configUuid = unknownSubpath;
+                        this._loadCentre.bind(this)(centre, false);
+                    });
+                }
             } else {
                 if (elementLoader.attrs) {
                     elementLoader.attrs.configUuid = unknownSubpath;
