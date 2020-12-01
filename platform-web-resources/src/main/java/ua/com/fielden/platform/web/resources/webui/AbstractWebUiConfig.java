@@ -3,6 +3,8 @@ package ua.com.fielden.platform.web.resources.webui;
 import static java.util.Arrays.asList;
 import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.utils.ResourceLoader.getStream;
+import static ua.com.fielden.platform.web.action.CentreConfigShareActionProducer.createPostAction;
+import static ua.com.fielden.platform.web.action.CentreConfigShareActionProducer.createPreAction;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.resources.webui.FileResource.generateFileName;
@@ -48,7 +50,6 @@ import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.ioc.exceptions.MissingWebResourceException;
 import ua.com.fielden.platform.web.menu.IMainMenuBuilder;
 import ua.com.fielden.platform.web.menu.impl.MainMenuBuilder;
-import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.ref_hierarchy.ReferenceHierarchyWebUiConfig;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
@@ -274,36 +275,8 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         return asList(
             action(CentreConfigShareAction.class)
             .withContext(context().withSelectionCrit().build())
-            .preAction(() -> new JsCode(
-                    "action.chosenProperty = self.configUuid;\n" +
-                    "if (!action.oldIsActionInProgressChanged) {\n" + 
-                    "    action.oldIsActionInProgressChanged = action.isActionInProgressChanged.bind(action);\n" + 
-                    "    action.isActionInProgressChanged = (newValue, oldValue) => {\n" + 
-                    "        action.oldIsActionInProgressChanged(newValue, oldValue);\n" + 
-                    "        self._actionInProgress = newValue;\n" + 
-                    "    };\n" + 
-                    "}\n" + 
-                    ""))
-            .postActionSuccess(() -> new JsCode(
-                    "const link = window.location.href;\n" +
-                    "const showNonCritical = toaster => {\n" + 
-                    "    toaster.showProgress = false;\n" + 
-                    "    toaster.isCritical = false;\n" + 
-                    "    toaster.show();\n" + 
-                    "};\n" +
-                    "if (functionalEntity.get('errorMsg')) {\n" +
-                    "    master._toastGreeting().text = functionalEntity.get('errorMsg');\n" + 
-                    "    master._toastGreeting().hasMore = false;\n" + 
-                    "    master._toastGreeting().msgText = '';\n" + 
-                    "    showNonCritical(master._toastGreeting());\n" +
-                    "} else {\n" + 
-                    "    navigator.clipboard.writeText(window.location.href).then(() => {\n" + 
-                    "        master._toastGreeting().text = 'Copied to clipboard.';\n" + 
-                    "        master._toastGreeting().hasMore = true;\n" + 
-                    "        master._toastGreeting().msgText = link;\n" + 
-                    "        showNonCritical(master._toastGreeting());\n" + 
-                    "    });\n" +
-                    "}"))
+            .preAction(createPreAction())
+            .postActionSuccess(createPostAction("errorMessage"))
             .icon("tg-icons:share")
             .shortDesc("Share")
             .longDesc("Share centre configuration")

@@ -8,10 +8,15 @@ import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Title;
 
 /** 
  * Functional entity for sharing centre configuration.
+ * <p>
+ * It covers basic needs for validating whether configuration can be shared.<br>
+ * Shows non-intrusive informational message if not.<br>
+ * Copies URI into the clipboard otherwise.
+ * <p>
+ * Other functional actions for sharing can be implemented similarly using {@link CentreConfigShareAction} producer static methods.
  * 
  * @author TG Team
  *
@@ -24,18 +29,20 @@ public class CentreConfigShareAction extends AbstractFunctionalEntityWithCentreC
         setKey(NO_KEY);
     }
     
+    /**
+     * Error message if centre configuraton could not be shared (or {@code null} otherwise).
+     */
     @IsProperty
-    @Title("Error Message")
-    private String errorMsg;
+    private String errorMessage;
     
     @Observable
-    public CentreConfigShareAction setErrorMsg(final String errorMsg) {
-        this.errorMsg = errorMsg;
+    public CentreConfigShareAction setErrorMessage(final String errorMessage) {
+        this.errorMessage = errorMessage;
         return this;
     }
     
-    public String getErrorMsg() {
-        return errorMsg;
+    public String getErrorMessage() {
+        return errorMessage;
     }
     
 }
