@@ -1003,7 +1003,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         logger.debug("Initiating front actions...");
         //////////////////// front action ////////////////////
         final StringBuilder frontActionsObjects = new StringBuilder();
-        final DomContainer frontActionsDom = new DomContainer();
+        final DomElement frontActionsDom = new DomElement("div").attr("selectable-elements-container", null).attr("slot", "custom-front-action").clazz("first-group");
 
         final List<EntityActionConfig> frontActions = this.dslDefaultConfig.getFrontActions();
         for (int actionIndex = 0; actionIndex < frontActions.size(); actionIndex++) {

@@ -184,7 +184,7 @@ export class TgResponsiveToolbar extends mixinBehaviors([IronResizableBehavior],
     }
 
     /**
-     * Adds new action to the list of actions that can be hidden that should be within group woth specified index.
+     * Adds new action to the list of actions that can be hidden that should be within group with specified index.
      * 
      */
     _addToolbarActions (nodes, groupIndex) {
@@ -236,23 +236,9 @@ export class TgResponsiveToolbar extends mixinBehaviors([IronResizableBehavior],
         //As action in group. The group are also defined by end application developer.
         elementsToHide.forEach(element => {
             if (element.standartAction) {
-                this.$.standartActionContainer.prepend(element.element);                
-            } else if (typeof element.groupIndex !== 'undefined'){
-                this.$.specificActionContainer.prepend(element.element);
+                this.$.standartActionContainer.prepend(element.element);
             } else {
-                const groupContainer = this.$.specificActionContainer.querySelector("[group-index=" + element.groupIndex + "]");
-                if (groupContainer) {
-                    groupContainer.prepend(element.element);
-                } else {
-                    const newGroup = document.createElement("div");
-                    newGroup.setAttribute("group-index", element.groupIndex);
-                    newGroup.appendChild(element.element);
-                    this.$.specificActionContainer.prepend(newGroup);
-                }
-                const removedFromGroup = this.querySelector("[group-index=" + element.groupIndex + "]");
-                if (removedFromGroup && removedFromGroup.childElementCount === 0) {
-                    removedFromGroup.parentElement.removeChild(removedFromGroup);
-                }
+                this.$.specificActionContainer.prepend(element.element);
             }
         });
     }
@@ -283,26 +269,7 @@ export class TgResponsiveToolbar extends mixinBehaviors([IronResizableBehavior],
             //2. Specific element (the one that is defined by end application user in the centre configuration) in the group.
             //3. Standrat action (navigation and confg actions)
             elementsToShow.forEach(element => {
-                if (element.standartAction || typeof element.groupIndex !== 'undefined') {
-                    this._slottedElementParent.append(element.element);                
-                } else {
-                    const groupContainer = this.querySelector("[group-index=" + element.groupIndex + "]");
-                    if (groupContainer) {
-                        groupContainer.append(element.element);
-                    } else {
-                        const newGroup = document.createElement("div");
-                        newGroup.setAttribute("group-index", element.groupIndex);
-                        newGroup.setAttribute("slot", "entity-specific-action");
-                        newGroup.classList.toggle("entity-specific-action", true);
-                        newGroup.classList.toggle(element.groupIndex === 0 ? "first-group": "group", true);
-                        newGroup.append(element.element);
-                        this._slottedElementParent.append(newGroup);
-                    }
-                    const removedFromGroup = this.$.specificActionContainer.querySelector("[group-index=" + element.groupIndex + "]");
-                    if (removedFromGroup && removedFromGroup.childElementCount === 0) {
-                        removedFromGroup.parentElement.removeChild(removedFromGroup);
-                    }
-                }
+                this._slottedElementParent.append(element.element);
             });
         }
     }
