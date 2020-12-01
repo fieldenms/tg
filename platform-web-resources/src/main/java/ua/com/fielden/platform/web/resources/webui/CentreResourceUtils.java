@@ -563,7 +563,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             // In both cases (criteria entity valid or not) create customObject with criteriaEntity to be returned and bound into tg-entity-centre after save.
             final Map<String, Object> customObject = createCriteriaMetaValuesCustomObjectWithSaveAsInfo(
                 createCriteriaMetaValues(freshCentre, getEntityType(miType)),
-                validationPrototype.centreDirtyCalculator().apply(saveAsName).apply(() -> freshCentre),
+                validationPrototype.centreDirtyCalculator().apply(customObjectSaveAsName).apply(() -> freshCentre),
                 of(customObjectSaveAsName),
                 configUuid,
                 of(validationPrototype.centreTitleAndDesc(customObjectSaveAsName).map(titleDesc -> titleDesc._2)),
