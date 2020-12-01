@@ -12,6 +12,7 @@ import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
 import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+import static ua.com.fielden.platform.web.action.CentreConfigShareActionProducer.CONFIG_DOES_NOT_EXIST;
 import static ua.com.fielden.platform.web.centre.CentreConfigUpdaterUtils.applyNewOrderVisibilityAndSorting;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.findLoadableConfig;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.inherited;
@@ -314,7 +315,7 @@ public class CriteriaResource extends AbstractWebResource {
                             }
                         }
                     } else {
-                        throw failure("Configuration does not exist.");
+                        throw failure(CONFIG_DOES_NOT_EXIST);
                     }
                 }
                 

@@ -33,6 +33,8 @@ import ua.com.fielden.platform.web.centre.CentreConfigShareAction;
  *
  */
 public class CentreConfigShareActionProducer extends DefaultEntityProducerWithContext<CentreConfigShareAction> {
+    public static final String CONFIG_DOES_NOT_EXIST = "Configuration does not exist.";
+
     private static final String SAVE_MSG = "Please save and try again.";
     
     private final IUserProvider userProvider;
@@ -68,7 +70,7 @@ public class CentreConfigShareActionProducer extends DefaultEntityProducerWithCo
                         }
                     }
                 } else {
-                    throw failure("Unknown config");
+                    throw failure(CONFIG_DOES_NOT_EXIST);
                 }
             } else {
                 entity.setErrorMsg(SAVE_MSG);
