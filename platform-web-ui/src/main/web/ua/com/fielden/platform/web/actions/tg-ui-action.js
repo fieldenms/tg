@@ -494,6 +494,7 @@ Polymer({
             
             if (this.dynamicAction && this.currentEntity()) {
                 const currentEntityType = this._calculateCurrentEntityType();
+                const currentEntityInstance = this.currentEntity();
                 if (this._previousEntityType !== currentEntityType) {
                     if (!this.elementName) {//Element name for dynamic action is not specified at first run
                         this._originalShortDesc = this.shortDesc;//It means that shortDesc wasn't changed yet.
@@ -503,7 +504,7 @@ Polymer({
                     this.$.masterRetriever.generateRequest().completes
                         .then(res => {
                             try {
-                                this._processMasterRetriever(res);
+                                this._processMasterRetriever(res, currentEntityInstance);
                                 this._previousEntityType = currentEntityType;
                                 postMasterInfoRetrieve();
                             }catch (e) {
@@ -619,9 +620,10 @@ Polymer({
                 }
             };
 
-            master.entityId = master.savingContext.get('id') === null ? "new" : (+(master.savingContext.get('id')));
+            master.entityId = master.entityId !== null ? master.entityId : 
+                        (master.savingContext.get('id') === null ? "new" : (+(master.savingContext.get('id'))));
             // context-dependent retrieval of entity (this is necessary for centre-related functional entities, which creation is dependent on centre context!)
-            return master.retrieve(master.savingContext)
+            return master.retrieve(master.entityId === 'new' || master.entityId === 'find_or_new' ? master.savingContext : undefined)
                 .then(function (ironRequest) {
                     // the following IF block handles conditional displaying of the associated entity master
                     if (master.shouldSkipUi()) {
@@ -760,7 +762,7 @@ Polymer({
         }
     },
 
-    _processMasterRetriever: function(e) {
+    _processMasterRetriever: function(e, currentEntityInstance) {
         console.log("PROCESS MASTER INFO RETRIEVE:");
         console.log("Master info retrieve: iron-response: status = ", e.xhr.status, ", e.response = ", e.response);
         if (e.xhr.status === 200) { // successful execution of the request
@@ -777,6 +779,7 @@ Polymer({
             this.shortDesc = this._originalShortDesc || masterInfo.shortDesc;
             this.longDesc = this.longDesc || masterInfo.longDesc;
             this.attrs = Object.assign({}, this.attrs, {
+                entityId: currentEntityInstance.get("id"),
                 entityType: masterInfo.entityType,
                 currentState:'EDIT',
                 prefDim: masterInfo.width && masterInfo.height && masterInfo.widthUnit && masterInfo.heightUnit && {

@@ -4,7 +4,6 @@ import static java.lang.String.format;
 
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.master.MasterInfo;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
@@ -52,14 +51,18 @@ public class MasterInfoProvider {
         return webUiConfig.configApp().getMaster(type).map(master -> {
             final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(type).getKey();
             final MasterInfo  info = new MasterInfo();
-            info.setKey("tg-EntityEditAction-master");
-            info.setDesc("/master_ui/ua.com.fielden.platform.entity.EntityEditAction");
+            info.setKey(format("tg-%s-master", type.getSimpleName()));
+            info.setDesc(format("/master_ui/%s", type.getName()));
+            //TODO temporary commented out to test simple master invocation for dynamic type without using EntityEditAction
+//            info.setKey("tg-EntityEditAction-master");
+//            info.setDesc("/master_ui/ua.com.fielden.platform.entity.EntityEditAction");
             info.setShortDesc(format("Edit %s", entityTitle));
             info.setLongDesc(format("Edit %s", entityTitle));
             info.setRequireSelectionCriteria("false");
             info.setRequireSelectedEntities("ONE");
             info.setRequireMasterEntity("false");
-            info.setEntityType(EntityEditAction.class.getName());
+            info.setEntityType(type.getName());
+//            info.setEntityType(EntityEditAction.class.getName());
             return info;
         }).orElse(null);
     }
