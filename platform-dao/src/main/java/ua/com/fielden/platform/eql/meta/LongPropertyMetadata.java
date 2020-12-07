@@ -8,7 +8,7 @@ import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 
-public class LongPropertyMetadata implements Comparable<LongPropertyMetadata> {
+public class LongPropertyMetadata {
     public final String name;
     public final Class<?> javaType;
     public final Object hibType;
@@ -30,13 +30,6 @@ public class LongPropertyMetadata implements Comparable<LongPropertyMetadata> {
 
     public List<LongPropertyMetadata> subitems() {
         return unmodifiableList(subitems);
-    }
-
-    @Override
-    public int compareTo(final LongPropertyMetadata o) {
-        final boolean areEqual = this.equals(o);
-        final int nameComp = name.compareTo(o.name);
-        return nameComp != 0 ? nameComp : (areEqual ? 0 : 1);
     }
 
     @Override

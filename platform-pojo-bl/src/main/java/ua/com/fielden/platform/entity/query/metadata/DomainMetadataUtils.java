@@ -49,18 +49,18 @@ public class DomainMetadataUtils {
         return expressionModelInProgress.otherwise().val(null).end().model();
     }
 
-    public static ExpressionModel extractExpressionModelFromCalculatedProperty(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) throws Exception {
-        final Calculated calcAnnotation = getAnnotation(calculatedPropfield, Calculated.class);
-        if (isNotEmpty(calcAnnotation.value())) {
-            return createExpressionText2ModelConverter(entityType, calcAnnotation).convert().getModel();
-        } else {
-            try {
+    public static ExpressionModel extractExpressionModelFromCalculatedProperty(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) {
+        try {
+            final Calculated calcAnnotation = getAnnotation(calculatedPropfield, Calculated.class);
+            if (isNotEmpty(calcAnnotation.value())) {
+                return createExpressionText2ModelConverter(entityType, calcAnnotation).convert().getModel();
+            } else {
                 final Field exprField = getFieldByName(entityType, calculatedPropfield.getName() + "_");
                 exprField.setAccessible(true);
                 return (ExpressionModel) exprField.get(null);
-            } catch (final Exception e) {
-                throw new EqlException(format("Can't extract hard-coded expression model for prop [%s] due to: [%s]", calculatedPropfield.getName(), e.getMessage()));
             }
+        } catch (final Exception e) {
+            throw new EqlException(format("Can't extract hard-coded expression model for prop [%s] due to: [%s]", calculatedPropfield.getName(), e.getMessage()));
         }
     }
 
