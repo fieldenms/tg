@@ -50,7 +50,6 @@ import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
-import ua.com.fielden.platform.web.centre.CentreUpdater;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.ICentreConfigSharingModel;
 import ua.com.fielden.platform.web.centre.LoadableCentreConfig;
@@ -136,7 +135,7 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
             final boolean isInherited = inherited(loadableConfig).isPresent();
             if (isInherited) {
                 if (inheritedFromShared(loadableConfig).isPresent()) { // inherited from shared
-                    final Optional<EntityCentreConfig> savedConfigOpt = findConfigOptByUuid(eccCompanion.withDbVersion(CentreUpdater.centreConfigQueryFor(miType, device(), SAVED_CENTRE_NAME)), loadableConfig.get().getConfig().getConfigUuid(), eccCompanion);
+                    final Optional<EntityCentreConfig> savedConfigOpt = findConfigOptByUuid(loadableConfig.get().getConfig().getConfigUuid(), miType, device(), SAVED_CENTRE_NAME, eccCompanion);
                     final EntityCentreConfig savedConfig = savedConfigOpt.get(); // it is present otherwise it should not be inherited
                     final Map<String, Object> differences = restoreDiffFrom(savedConfig, eccCompanion, format("for type [%s] with name [%s]", miType.getSimpleName(), savedConfig.getTitle()));
                     final EntityCentreConfig savedConfigForCurrUser = findConfig(miType, user, nameOf.apply(SAVED_CENTRE_NAME).apply(saveAsName).apply(device()), eccCompanion, fetchKeyAndDescOnlyAndInstrument(EntityCentreConfig.class).with("configBody"));

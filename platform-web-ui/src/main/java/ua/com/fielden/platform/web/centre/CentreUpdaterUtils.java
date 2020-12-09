@@ -32,6 +32,7 @@ import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
+import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 
 /**
  * This utility class contains additional methods applicable to {@link CentreUpdater}.
@@ -240,6 +241,14 @@ public class CentreUpdaterUtils extends CentreUpdater {
         return eccCompanion.getEntityOptional(from(model
             .and().prop("configUuid").eq().val(uuid).model()
         ).with(fetchWithKeyAndDesc(EntityCentreConfig.class, true).with("preferred").with("configUuid").with("owner.base").with("configBody").fetchModel()).model());
+    }
+    
+    public static Optional<EntityCentreConfig> findConfigOptByUuid(final String uuid, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final String name, final IEntityCentreConfig eccCompanion) {
+        return findConfigOptByUuid(eccCompanion.withDbVersion(centreConfigQueryFor(miType, device, name)), uuid, eccCompanion);
+    }
+    
+    public static Optional<EntityCentreConfig> findConfigOptByUuid(final String uuid, final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final String name, final IEntityCentreConfig eccCompanion) {
+        return findConfigOptByUuid(eccCompanion.withDbVersion(centreConfigQueryFor(user, miType, device, name)), uuid, eccCompanion);
     }
     
     /**

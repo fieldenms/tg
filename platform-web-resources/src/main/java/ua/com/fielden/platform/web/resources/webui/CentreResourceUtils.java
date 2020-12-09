@@ -639,7 +639,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         });
         // updates inherited centre with title 'saveAsNameToLoad' from upstream shared configuration -- just before LOAD action
         validationPrototype.setInheritedFromSharedCentreUpdater(saveAsNameToLoad -> configUuid -> {
-            final Optional<EntityCentreConfig> savedConfigOpt = findConfigOptByUuid(eccCompanion.withDbVersion(centreConfigQueryFor(miType, device, SAVED_CENTRE_NAME)), configUuid, eccCompanion);
+            final Optional<EntityCentreConfig> savedConfigOpt = findConfigOptByUuid(configUuid, miType, device, SAVED_CENTRE_NAME, eccCompanion);
             if (savedConfigOpt.isPresent()) {
                 final EntityCentreConfig savedConfig = savedConfigOpt.get();
                 final Map<String, Object> differences = restoreDiffFrom(savedConfig, eccCompanion, format("for type [%s] with name [%s]", miType.getSimpleName(), savedConfig.getTitle()));
