@@ -82,7 +82,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
     }
     
     private <T extends AbstractEntity<?>> QrySource1BasedOnSubqueries buildQrySourceBasedOnSyntheticEntityType(final Class<T> resultType, final String alias) {
-        final EntityTypeInfo<T> parentInfo = new EntityTypeInfo<>(resultType);
+        final EntityTypeInfo<T> parentInfo = getQueryBuilder().domainMetadata.getEntityTypeInfo(resultType);
         final List<EntityResultQueryModel<T>> models = new ArrayList<>();
         models.addAll(parentInfo.entityModels);
         models.addAll(parentInfo.unionEntityModels);

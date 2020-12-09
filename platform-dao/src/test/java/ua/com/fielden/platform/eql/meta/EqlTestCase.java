@@ -124,7 +124,7 @@ public class EqlTestCase {
     }
     
     protected static final EntQueryGenerator qb(final IFilter filter, final String username, final IDates dates, final Map<String, Object> paramValues) {
-        return new EntQueryGenerator(H2, filter, username, dates, paramValues);
+        return new EntQueryGenerator(H2, filter, username, dates, paramValues, DOMAIN_METADATA.lmd);
     }
     
     protected static final LongMetadata metadata() {

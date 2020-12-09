@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import ua.com.fielden.platform.entity.query.metadata.DomainMetadataUtils;
 import ua.com.fielden.platform.eql.stage2.sources.ChildGroup;
 import ua.com.fielden.platform.eql.stage2.sources.IQrySource2;
 import ua.com.fielden.platform.eql.stage3.Table;
@@ -35,9 +36,7 @@ public class TransformationContext {
     }
     
     public Table getTable(final String sourceFullClassName) {
-        final int nameEnhancementStartIndex = sourceFullClassName.indexOf("$$");
-        final String properName = nameEnhancementStartIndex == -1 ? sourceFullClassName : sourceFullClassName.substring(0, nameEnhancementStartIndex);
-        return tablesAndSourceChildren.getTables().get(properName);
+        return tablesAndSourceChildren.getTables().get(DomainMetadataUtils.getOriginalEntityTypeFullName(sourceFullClassName));
     }
 
     public int getNextParamId() {

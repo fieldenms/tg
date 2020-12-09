@@ -16,7 +16,7 @@ import ua.com.fielden.platform.eql.stage3.operands.ResultQuery3;
 
 public class EqlQueryTransformer {
     static <E extends AbstractEntity<?>> TransformationResult<ResultQuery3> transform(final QueryExecutionContext executionContext, final QueryProcessingModel<E, ?> qem, final DbVersion dbVersion, final IFilter filter, final String username) {
-        final EntQueryGenerator gen = new EntQueryGenerator(dbVersion, filter, username, executionContext.dates(), qem.getParamValues());
+        final EntQueryGenerator gen = new EntQueryGenerator(dbVersion, filter, username, executionContext.dates(), qem.getParamValues(), executionContext.getDomainMetadata().lmd);
         final PropsResolutionContext resolutionContext = new PropsResolutionContext(executionContext.getDomainMetadata().lmd);
         final ResultQuery2 tr = gen.generateEntQueryAsResultQuery(qem.queryModel, qem.orderModel, qem.fetchModel).transform(resolutionContext);
         final PathsToTreeTransformator p2tt = new PathsToTreeTransformator(executionContext.getDomainMetadata().lmd, gen);

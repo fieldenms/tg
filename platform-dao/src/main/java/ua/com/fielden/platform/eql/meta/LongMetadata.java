@@ -3,7 +3,6 @@ package ua.com.fielden.platform.eql.meta;
 import static java.lang.String.format;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
@@ -17,6 +16,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import static ua.com.fielden.platform.entity.query.metadata.CompositeKeyEqlExpressionGenerator.generateCompositeKeyEqlExpression;
 import static ua.com.fielden.platform.entity.query.metadata.DomainMetadataUtils.extractExpressionModelFromCalculatedProperty;
 import static ua.com.fielden.platform.entity.query.metadata.DomainMetadataUtils.generateUnionEntityPropertyExpression;
+import static ua.com.fielden.platform.entity.query.metadata.DomainMetadataUtils.getOriginalEntityTypeFullName;
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.PERSISTED;
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.QUERY_BASED;
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.UNION;
@@ -28,6 +28,7 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotatio
 import static ua.com.fielden.platform.reflection.Finder.hasLinkProperty;
 import static ua.com.fielden.platform.reflection.Finder.isOne2One_association;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.types.tuples.T3.t3;
 import static ua.com.fielden.platform.utils.CollectionUtil.unmodifiableListOf;
 import static ua.com.fielden.platform.utils.EntityUtils.getRealProperties;
@@ -79,6 +80,7 @@ import ua.com.fielden.platform.eql.meta.LongPropertyMetadata.Builder;
 import ua.com.fielden.platform.eql.stage3.Table;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.utils.EntityUtils;
 
@@ -100,7 +102,8 @@ public class LongMetadata {
      * Map between java type and hibernate persistence type (implementers of Type, IUserTypeInstantiate, ICompositeUserTypeInstantiate).
      */
     private final ConcurrentMap<Class<?>, Object> hibTypesDefaults;
-    private final ConcurrentMap<Class<? extends AbstractEntity<?>>, Map<String, LongPropertyMetadata>> entityPropsMetadata;
+    private final ConcurrentMap<Class<? extends AbstractEntity<?>>, T2<EntityCategory, Map<String, LongPropertyMetadata>>> entityPropsMetadata;
+    private final ConcurrentMap<String, EntityTypeInfo<?>> entityTypesInfos = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, Table> tables = new ConcurrentHashMap<>();
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo;
     
@@ -144,7 +147,12 @@ public class LongMetadata {
             try {
                 final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo = new EntityTypeInfo<>(entityType);
                 if (parentInfo.category == PERSISTED || parentInfo.category == QUERY_BASED || parentInfo.category == UNION) {
-                    entityPropsMetadata.put(entityType, generatePropertyMetadatasForEntity(parentInfo));
+                    entityTypesInfos.put(entityType.getName(), parentInfo);
+                    final Map<String, LongPropertyMetadata> propsMetadatas = generatePropertyMetadatasForEntity(parentInfo);
+                    entityPropsMetadata.put(entityType, t2(parentInfo.category, propsMetadatas));
+                    if (isPersistedEntityType(entityType)) {
+                        tables.put(entityType.getName(), generateTable(parentInfo.tableName, propsMetadatas.values()));
+                    }
                 }
             } catch (final Exception e) {
                 e.printStackTrace();
@@ -152,11 +160,9 @@ public class LongMetadata {
             }
         });
 
-        tables.putAll(generateTables(entityTypes));
-
-        domainInfo = entityPropsMetadata.keySet().stream().filter(t -> isPersistedEntityType(t) || isSyntheticEntityType(t) || isSyntheticBasedOnPersistentEntityType(t)
-                || isUnionEntityType(t)).collect(Collectors.toConcurrentMap(k -> k, k -> new EntityInfo<>(k, determineCategory(k))));
-        domainInfo.values().stream().forEach(ei -> addProps(ei, domainInfo, entityPropsMetadata.get(ei.javaType()).values()));
+        domainInfo = entityPropsMetadata.entrySet().stream().filter(t -> isPersistedEntityType(t.getKey()) || isSyntheticEntityType(t.getKey()) || isSyntheticBasedOnPersistentEntityType(t.getKey())
+                || isUnionEntityType(t.getKey())).collect(Collectors.toConcurrentMap(k -> k.getKey(), k -> new EntityInfo<>(k.getKey(), k.getValue()._1)));
+        domainInfo.values().stream().forEach(ei -> addProps(ei, domainInfo, entityPropsMetadata.get(ei.javaType())._2.values()));
     }
     
     private <T extends AbstractEntity<?>> void addProps(final EntityInfo<T> entityInfo, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> allEntitiesInfo, final Collection<LongPropertyMetadata> entityPropsMetadatas) {
@@ -200,11 +206,6 @@ public class LongMetadata {
                 }
             }
         }
-    }
-    
-    private static <ET extends AbstractEntity<?>> EntityCategory determineCategory(final Class<ET> entityType) {
-        final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo = new EntityTypeInfo<>(entityType);
-        return parentInfo.category;
     }
     
     /**
@@ -503,7 +504,7 @@ public class LongMetadata {
         return new PropertyMetadata.Builder(propField.getName(), determinePropertyType(parentInfo.entityType, propField.getName()), true, parentInfo).category(COLLECTIONAL).build();
     }
     
-    public static ExpressionModel generateUnionEntityPropertyContextualExpression(final Class<? extends AbstractUnionEntity> entityType, final String commonPropName, final String contextPropName) {
+    private static ExpressionModel generateUnionEntityPropertyContextualExpression(final Class<? extends AbstractUnionEntity> entityType, final String commonPropName, final String contextPropName) {
         final List<Field> props = unionProperties(entityType);
         final Iterator<Field> iterator = props.iterator();
         final String firstUnionPropName = contextPropName + "." + iterator.next().getName();
@@ -518,17 +519,9 @@ public class LongMetadata {
         return expressionModelInProgress.end().model();
     }
     
-    private final Map<String, Table> generateTables(final Collection<Class<? extends AbstractEntity<?>>> entities) {
-        final Map<String, Table> result = entities.stream()
-                .filter(t -> isPersistedEntityType(t))
-                .collect(toMap(k -> k.getName(), k -> generateTable(k)));
-        return result;
-    }
-    
-    private final Table generateTable(final Class<? extends AbstractEntity<?>> entityType) {
-        final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo = new EntityTypeInfo<>(entityType);
+    private final Table generateTable(final String tableName, final Collection<LongPropertyMetadata> propsMetadatas) {
         final Map<String, String> columns = new HashMap<>();
-        for (final LongPropertyMetadata el : entityPropsMetadata.get(entityType).values()) {
+        for (final LongPropertyMetadata el : propsMetadatas) {
 
             if (el.column != null) {
                 columns.put(el.name, el.column.name);
@@ -545,7 +538,7 @@ public class LongMetadata {
 
         }
 
-        return new Table(parentInfo.tableName, columns);
+        return new Table(tableName, columns);
     }
     
     public Map<String, Table> getTables() {
@@ -558,11 +551,16 @@ public class LongMetadata {
             return existing;
         }
         
-        final Map<String, LongPropertyMetadata> propsMetadatas = generatePropertyMetadatasForEntity(new EntityTypeInfo<>(type));
-        entityPropsMetadata.put(type, propsMetadatas);
-        final EntityInfo<?> created = new EntityInfo<>(type, determineCategory(type));
-        domainInfo.put(type, created);
+        final EntityTypeInfo<?> eti = getEntityTypeInfo(type);
+        final Map<String, LongPropertyMetadata> propsMetadatas = generatePropertyMetadatasForEntity(eti);
+        //entityPropsMetadata.put(type, t2(eti.category, propsMetadatas));
+        final EntityInfo<?> created = new EntityInfo<>(type, eti.category);
+        //domainInfo.put(type, created);
         addProps(created, domainInfo, propsMetadatas.values());
         return created;
+    }
+    
+    public <T extends AbstractEntity<?>> EntityTypeInfo<T> getEntityTypeInfo(final Class<T> type) {
+        return (EntityTypeInfo<T>) entityTypesInfos.get(getOriginalEntityTypeFullName(type.getName()));
     }
 }
