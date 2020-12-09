@@ -256,8 +256,8 @@ Polymer({
     offloadDom: function () {
         // Remove children (likely consisting of only 'loadedElement') only if 'loadedElement' is attached to this 'tg-element-loader' (i.e. parentElement is not empty).
         // This is to avoid children removal if 'offloadDom' has already been executed earlier.
-        // Currently 'loadedElement' is always initialised in this moment.
-        if (this.loadedElement.parentElement) {
+        // 'loadedElement' can be empty in case of some loading error (e.g. the element could not be imported).
+        if (this.loadedElement && this.loadedElement.parentElement) {
             _removeAllLightDOMChildrenFrom(this);
         }
     },
@@ -268,8 +268,8 @@ Polymer({
     loadDom: function () {
         // Insert 'loadedElement' only if it is NOT attached to this 'tg-element-loader' (i.e. parentElement is empty).
         // This is to avoid 'loadedElement' insertion if it was inserted earlier.
-        // Currently 'loadedElement' is always initialised in this moment.
-        if (!this.loadedElement.parentElement) {
+        // 'loadedElement' can be empty in case of some loading error (e.g. the element could not be imported).
+        if (this.loadedElement && !this.loadedElement.parentElement) {
             return this.insert(this.loadedElement);
         }
         return this.loadedElement;

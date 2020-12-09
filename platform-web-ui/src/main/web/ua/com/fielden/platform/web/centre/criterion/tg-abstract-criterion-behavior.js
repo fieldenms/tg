@@ -259,6 +259,7 @@ const TgAbstractCriterionBehaviorImpl = {
             <template>
                 <paper-dialog id="metaValueEditor" 
                     class="layout vertical meta-value-editor"
+                    always-on-top
                     with-backdrop no-cancel-on-outside-click
                     entry-animation="scale-up-animation" exit-animation="fade-out-animation"
                     on-iron-overlay-closed="_closedBind"

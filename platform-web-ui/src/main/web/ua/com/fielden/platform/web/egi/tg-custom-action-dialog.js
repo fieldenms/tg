@@ -22,6 +22,7 @@ import {IronFitBehavior} from '/resources/polymer/@polymer/iron-fit-behavior/iro
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
+import { TgReflector } from '/app/tg-reflector.js';
 import {TgFocusRestorationBehavior} from '/resources/actions/tg-focus-restoration-behavior.js'
 import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';
 import {TgBackButtonBehavior} from '/resources/views/tg-back-button-behavior.js'
@@ -97,6 +98,7 @@ const template = html`
         }
         .title-bar-button {
             color: var(--paper-grey-100);
+            display: flex; /* this is to override default 'inline-block' that causes badly behaviour of shifting paper-icon-button.iron-icon from paper-icon-button.paper-ripple */
         }
         .title-bar-button[disabled] {
             color: var(--paper-grey-300);
@@ -112,11 +114,10 @@ const template = html`
         .navigation-button{
             margin: 0 8px;
         }
-        .minimise-button,.maximise-button {
+        .default-button {
             width: 19px;
             height: 19px;
             padding: 0px;
-            margin-bottom: 2px;
         }
         #navigationBar {
             color: white;
@@ -166,16 +167,17 @@ const template = html`
                 <paper-icon-button id="lastEntity" class="title-bar-button navigation-button" icon="hardware:keyboard-tab" on-tap="_lastEntry" disabled$="[[!_isNavigatonButtonEnable(_hasNext, isNavigationActionInProgress)]]" tooltip-text$="[[_getLastEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
             </div>
             <div class="layout horizontal center">
-                <!-- collapse/expand buttons -->
-                <paper-icon-button hidden="[[!_minimised]]" class="minimise-button title-bar-button" icon="tg-icons:expandMin" on-tap="_invertMinimiseState" tooltip-text="Restore, Alt&nbsp+&nbspc"></paper-icon-button>
-                <paper-icon-button hidden="[[_collapserHidden(_minimised, mobile)]]" class="title-bar-button minimise-button" icon="tg-icons:collapseMin"   on-tap="_invertMinimiseState" tooltip-text="Collapse, Alt&nbsp+&nbspc" disabled=[[_dialogInteractionsDisabled(_minimised,_maximised)]]></paper-icon-button>
+                <!-- Get A Link button -->
+                <paper-icon-button hidden="[[!_mainEntityType]]" class="default-button title-bar-button" icon="tg-icons:share" on-tap="_getLink" tooltip-text="Get a link"></paper-icon-button>
+
+                <!-- collapse/expand button -->
+                <paper-icon-button hidden="[[mobile]]" class="default-button title-bar-button" icon="[[_minimisedIcon(_minimised)]]" on-tap="_invertMinimiseState" tooltip-text$="[[_minimisedTooltip(_minimised)]]" disabled="[[_maximised]]"></paper-icon-button>
 
                 <!-- maximize/restore buttons -->
-                <paper-icon-button hidden="[[_maximised]]" class="maximise-button title-bar-button" icon="icons:fullscreen"       on-tap="_invertMaximiseState" tooltip-text="Maximise, Alt&nbsp+&nbspm" disabled=[[_dialogInteractionsDisabled(_minimised,_maximised)]]></paper-icon-button>
-                <paper-icon-button hidden="[[_maximiseRestorerHidden(_maximised, mobile)]]" class="maximise-button title-bar-button" icon="icons:fullscreen-exit"  on-tap="_invertMaximiseState" tooltip-text="Restore, Alt&nbsp+&nbspm"></paper-icon-button>
+                <paper-icon-button hidden="[[mobile]]" class="default-button title-bar-button" icon="[[_maximisedIcon(_maximised)]]" on-tap="_invertMaximiseState" tooltip-text$="[[_maximisedTooltip(_maximised)]]" disabled=[[_minimised]]></paper-icon-button>
 
                 <!-- close/next buttons -->
-                <paper-icon-button hidden="[[_closerHidden(_lastAction, mobile)]]" class="close-button title-bar-button" icon="icons:cancel"  on-tap="closeDialog" tooltip-text="Close, Alt&nbsp+&nbspx"></paper-icon-button>
+                <paper-icon-button id="closeButton" hidden="[[_closerHidden(_lastAction, mobile)]]" class="close-button title-bar-button" icon="icons:cancel"  on-tap="closeDialog" tooltip-text="Close, Alt&nbsp+&nbspx"></paper-icon-button>
                 <paper-icon-button id="skipNext" hidden="[[!_lastAction.continuous]]" disabled$="[[isNavigationActionInProgress]]" class="close-button title-bar-button" icon="av:skip-next" on-tap="_skipNext" tooltip-text="Skip to next without saving"></paper-icon-button>
             </div>
             <paper-spinner id="spinner" active="[[isNavigationActionInProgress]]" style="display: none;" alt="in progress"></paper-spinner>
@@ -226,7 +228,12 @@ Polymer({
         'tg-action-navigation-changed': '_handleActionNavigationChange',
         'tg-action-navigation-invoked': '_handleActionNavigationInvoked',
         'data-loaded-and-focused': '_handleDataLoaded',
-        'tg-error-happened': '_handleError'
+        'tg-error-happened': '_handleError',
+        'tg-entity-master-attached': '_entityMasterAttached',
+        'tg-entity-master-detached': '_entityMasterDetached',
+        'tg-master-menu-attached': '_masterMenuAttached',
+        'tg-master-menu-detached': '_masterMenuDetached',
+        'tg-entity-received': '_entityReceived'
     },
 
     hostAttributes: {
@@ -423,6 +430,49 @@ Polymer({
         mobile: {
             type: Boolean,
             value: isMobileApp()
+        },
+        
+        /**
+         * The type of entity being edited in this dialog.
+         * 
+         * For compound masters it represents the type of loaded compound master opener entity.
+         * For simple persistent masters (including those embedded by EntityNavigationAction / EntityEditAction / EntityNewAction) it represents the type of actual persistent entity.
+         * Otherwise (i.e. for functional masters) it is empty (null).
+         */
+        _mainEntityType: {
+            type: Object,
+            value: null // should not be 'undefined' because hidden="[[!_mainEntityType]]" binding will not work
+        },
+        
+        /**
+         * Represents the ID of the currently bound persisted entity (of type derived from _mainEntityType) or 'null' if the entity is not yet persisted or not yet loaded.
+         * Should only be used if '_mainEntityType' is present.
+         */
+        _mainEntityId: {
+            type: Number,
+            value: null
+        },
+        
+        /**
+         * The type of non-default (non-Main in most cases) currently activated compound menu item entity being edited in this dialog.
+         * 
+         * This is only relevant to compound masters.
+         * Otherwise (i.e. for simple masters and functional masters) it is empty (null).
+         */
+        _compoundMenuItemType: {
+            type: Object,
+            value: null
+        },
+        
+        /**
+         * The tg-master-menu instance attached in this dialog.
+         * 
+         * This is only relevant to compound masters.
+         * Otherwise (i.e. for simple masters and functional masters) it is empty (null).
+         */
+        _masterMenu: {
+            type: Object,
+            value: null
         }
     },
 
@@ -439,6 +489,8 @@ Polymer({
     },
 
     created: function () {
+        this._reflector = new TgReflector();
+        
         this.noAutoFocus = true;
         this.noCancelOnOutsideClick = true;
         this.noCancelOnEscKey = true;
@@ -473,29 +525,30 @@ Polymer({
         }
         //Add listener for custom event that was thrown when dialogs view is about to lost focus, then this focus should go to title-bar.
         this.addEventListener("tg-last-item-focused", this._viewFocusLostEventListener.bind(this));
-        //Retrieve title's bar element to focus.
-        this._componentsToFocus = Array.from(this.$.titleBar.querySelectorAll(FOCUSABLE_ELEMENTS_SELECTOR));
+        //Add listener for custom event that was thrown when dialogs view has no focusable elements.
+        this.addEventListener("tg-no-item-focused", this._focusFirstBestElement.bind(this));
         //Add event listener that listens when dialog body chang it's opacity
         this.$.dialogLoader.addEventListener("transitionend", this._handleBodyTransitionEnd.bind(this));
-       
     },
 
     attached: function() {
-        var clickEvent = ('ontouchstart' in window) ? 'touchstart' : 'mousedown';
+        const clickEvent = ('ontouchstart' in window) ? 'touchstart' : 'mousedown';
         this.addEventListener(clickEvent, this._onCaptureClick, true);
         this.addEventListener('focus', this._onCaptureFocus, true);
         this.addEventListener('keydown', this._onCaptureKeyDown);
     },
 
     detached: function() {
-        var clickEvent = ('ontouchstart' in window) ? 'touchstart' : 'mousedown';
+        const clickEvent = ('ontouchstart' in window) ? 'touchstart' : 'mousedown';
         this.removeEventListener(clickEvent, this._onCaptureClick, true);
         this.removeEventListener('focus', this._onCaptureFocus, true);
         this.removeEventListener('keydown', this._onCaptureKeyDown);
     },
     
     _getCurrentFocusableElements: function() {
-        return this._componentsToFocus.filter(element => !element.disabled && element.offsetParent !== null);
+        //Retrieve title's bar element to focus.
+        const componentsToFocus = Array.from(this.$.titleBar.querySelectorAll(FOCUSABLE_ELEMENTS_SELECTOR));
+        return componentsToFocus.filter(element => !element.disabled && element.offsetParent !== null);
     },
 
     _onTabDown: function(e) {
@@ -540,6 +593,20 @@ Polymer({
         }
         tearDownEvent(e);
 
+    },
+
+    _focusFirstBestElement: function (e) {
+        if  (this.$.closeButton.offsetParent) {
+            this.$.closeButton.focus();
+        } else if (this.$.skipNext.offsetParent) {
+            this.$.skipNext.focus();
+        } else {
+            const focusables = this._getCurrentFocusableElements();
+            if (focusables.length > 0) {
+                focusables[0].focus();
+            }
+        }
+        tearDownEvent(e);
     },
 
     _onCaptureClick: function(event) {
@@ -1413,23 +1480,130 @@ Polymer({
     },
 
     /**
-     * Returns 'true' if Restorer button of maximisation function is hidden, 'false' otherwise.
-     */
-    _maximiseRestorerHidden: function(_maximised, mobile) {
-        return !_maximised || mobile;
-    },
-
-    /**
      * Returns 'true' if Closer button is hidden, 'false' otherwise.
      */
     _closerHidden: function(_lastAction, mobile) {
         return (_lastAction && _lastAction.continuous) || mobile;
     },
 
+    _minimisedIcon: function (_minimised) {
+        return _minimised ? "tg-icons:expandMin" : "tg-icons:collapseMin";
+    },
+
+    _minimisedTooltip: function (_minimised) {
+        return _minimised ? "Restore, Alt&nbsp+&nbspc" : "Collapse, Alt&nbsp+&nbspc";
+    },
+
+    _maximisedIcon: function (_maximised) {
+        return _maximised ? "icons:fullscreen-exit" : "icons:fullscreen";
+    },
+    
+    _maximisedTooltip: function (_maximised) {
+        return _maximised ? "Restore, Alt&nbsp+&nbspm" : "Maximise, Alt&nbsp+&nbspm";
+    },
+    
     /**
-     * Returns 'true' if Collapser button of minimisation function is hidden, 'false' otherwise.
+     * Function that handles attaching of masters inside this dialog. This includes masters embedded into other ones.
+     * 
+     * Assigns _mainEntityType only if the master type is appropriate (see _mainEntityType for more details) and if _mainEntityType is not yet assigned.
      */
-    _collapserHidden: function(_minimised, mobile) {
-        return _minimised || mobile;
+    _entityMasterAttached: function (event) {
+        const entityMaster = event.detail;
+        const entityType = entityMaster.entityType ? this._reflector.getType(entityMaster.entityType) : null;
+        if (entityType) {
+            if (this._mainEntityType === null && (entityType.compoundOpenerType() || entityType.isPersistent())) {
+                this._mainEntityType = entityType;
+            } else if (this._compoundMenuItemType === null && entityType.isCompoundMenuItem() && entityType._simpleClassName() !== this._masterMenu._originalDefaultRoute) { // use only non-default menu item
+                // _masterMenu is present in above condition because of two possible cases:
+                // 1. _masterMenu attaches before parent compound opener master during first-time-creation+attachment of that master; and after that the master of concrete menu item creates and attaches through tg-element-loader in tg-master-menu-item-section after activation
+                // 2. for cached compound opener master it attaches in the following order: compound opener master => _masterMenu => previously opened menu item
+                this._compoundMenuItemType = entityType;
+            }
+        }
+        tearDownEvent(event);
+    },
+    
+    /**
+     * Function that handles detaching of masters inside this dialog. This includes masters embedded into other ones.
+     * 
+     * Removes _mainEntityType only if the master type is equal to _mainEntityType.
+     */
+    _entityMasterDetached: function (event) {
+        const entityMaster = event.detail;
+        const entityType = entityMaster.entityType ? this._reflector.getType(entityMaster.entityType) : null;
+        if (entityType) {
+            if (this._mainEntityType !== null && entityType === this._mainEntityType) {
+                this._mainEntityType = null;
+                this._mainEntityId = null;
+            } else if (this._compoundMenuItemType !== null && entityType === this._compoundMenuItemType) {
+                this._compoundMenuItemType = null;
+            } 
+        }
+        tearDownEvent(event);
+    },
+    
+    /**
+     * Function that handles attaching of tg-master-menu inside this dialog.
+     */
+    _masterMenuAttached: function (event) {
+        this._masterMenu = event.detail;
+        tearDownEvent(event);
+    },
+    
+    /**
+     * Function that handles detaching of tg-master-menu inside this dialog.
+     */
+    _masterMenuDetached: function (event) {
+        this._masterMenu = null;
+        tearDownEvent(event);
+    },
+    
+    /**
+     * Function that handles receiving of entities for masters with the type equal to _mainEntityType.
+     * 
+     * This updates the _mainEntityId deriving from received entity.
+     */
+    _entityReceived: function (event) {
+        const entity = event.detail;
+        if (entity.type() === this._mainEntityType) {
+            this._mainEntityId = entity.type().compoundOpenerType() ? entity.get('key').get('id') : entity.get('id');
+        }
+        tearDownEvent(event);
+    },
+    
+    /**
+     * Generates a link to entity master for persisted entity opened in this dialog; copies it to the clipboard; shows informational dialog with ability to review link (MORE button).
+     * or
+     * Shows informational dialog for not-yet-persisted entity opened in this dialog -- 'Please save and try again.'.
+     * 
+     * This functionality is only available for persistent entities.
+     */
+    _getLink: function () {
+        const type = this._mainEntityType.compoundOpenerType() ? this._reflector.getType(this._mainEntityType.compoundOpenerType()) : this._mainEntityType;
+        const showNonCritical = toaster => {
+            toaster.showProgress = false;
+            toaster.isCritical = false;
+            toaster.show();
+        };
+        if (this._mainEntityId !== null) {
+            const url = new URL(window.location.href);
+            const compoundItemSuffix = this._compoundMenuItemType !== null ? `/${this._compoundMenuItemType.fullClassName()}` : ``;
+            url.hash = `/master/${type.fullClassName()}/${this._mainEntityId}${compoundItemSuffix}`;
+            const link = url.href;
+            // Writing into clipboard is always permitted for currently open tab (https://developer.mozilla.org/en-US/docs/Web/API/Clipboard/writeText) -- that's why promise error should never occur;
+            // if for some reason the promise will be rejected then 'Unexpected error occured.' will be shown to the user and global handler will report that to the server.
+            navigator.clipboard.writeText(link).then(() => {
+                this.$.toaster.text = 'Copied to clipboard.';
+                this.$.toaster.hasMore = true;
+                this.$.toaster.msgText = link;
+                showNonCritical(this.$.toaster);
+            });
+        } else {
+            this.$.toaster.text = 'Please save and try again.';
+            this.$.toaster.hasMore = false;
+            this.$.toaster.msgText = '';
+            showNonCritical(this.$.toaster);
+        }
     }
+    
 });

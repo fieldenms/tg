@@ -324,7 +324,7 @@ export class TgDatetimePicker extends TgEditor {
 
         const dialogTemplate = document.createElement('template');
         dialogTemplate.innerHTML =
-            '<paper-dialog id="dateDialog" class="date-picker layout vertical" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_closedBind" on-iron-overlay-opened="_dialogOpened">' +
+            '<paper-dialog id="dateDialog" class="date-picker layout vertical" modal always-on-top entry-animation="scale-up-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_closedBind" on-iron-overlay-opened="_dialogOpened">' +
             '<tg-calendar id="datePicker" pick-time time-zone="[[timeZone]]"></tg-calendar>' +
             '<div class="buttons">' +
             '<paper-button dialog-dismiss affirmative>Cancel</paper-button>' +

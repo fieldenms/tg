@@ -78,6 +78,13 @@ const TgEntityCentreTemplateBehaviorImpl = {
     },
 
     /**
+     * Returns insertion point element for this entity centre in concrete 'location' ('left', 'top', 'bottom', 'right').
+     */
+    _getInsertionPoint: function (location) {
+        return this._dom().$[location + 'InsertionPointContent'].assignedNodes({flatten: true})[0].querySelector('tg-entity-centre-insertion-point');
+    },
+
+    /**
      * The iron-ajax component for centre discarding.
      */
     _ajaxDiscarder: function () {

@@ -72,7 +72,7 @@ export function shadeColor (hex, lum) {
 };
 
 /**
- * Returns true if the descendant is has parent as ancestor, otherwise returns false.
+ * Returns true if the descendant has the parent as an ancestor, otherwise returns false.
  */
 export function isInHierarchy (parent, descendant) {
     let current = descendant;

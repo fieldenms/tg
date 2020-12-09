@@ -9,6 +9,7 @@ import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.EntityUtils.coalesce;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
@@ -31,6 +32,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import org.joda.time.DateTime;
@@ -510,4 +512,33 @@ public class EntityUtilsTest {
         assertTrue(isNaturalOrderDescending(EntityExt.class));
         assertFalse(isNaturalOrderDescending(ChildEntity.class));
     }
+    
+    @Test
+    public void toString_converts_lists_to_CSV_in_square_brackets() {
+        assertEquals("[]", EntityUtils.toString(listOf()));
+        
+        final List<AbstractEntity<?>> moreThanOne = listOf(factory.newEntity(Entity.class).setKey("E1"), factory.newEntity(Entity.class).setKey("E2"), factory.newEntity(Entity.class).setKey("E3"));
+        assertEquals("[E1, E2, E3]", EntityUtils.toString(moreThanOne));
+
+        final List<AbstractEntity<?>> one = listOf(factory.newEntity(Entity.class).setKey("E1"));
+        assertEquals("[E1]", EntityUtils.toString(one));
+
+        final List<AbstractEntity<?>> someAndNull = listOf(factory.newEntity(Entity.class).setKey("E1"), null, factory.newEntity(Entity.class).setKey("E3"));
+        assertEquals("[E1, null, E3]", EntityUtils.toString(someAndNull));
+    }
+    
+    @Test
+    public void toString_converts_sets_to_CSV_in_square_brackets() {
+        assertEquals("[]", EntityUtils.toString(linkedSetOf()));
+        
+        final Set<AbstractEntity<?>> moreThanOne = linkedSetOf(factory.newEntity(Entity.class).setKey("E1"), factory.newEntity(Entity.class).setKey("E2"), factory.newEntity(Entity.class).setKey("E3"));
+        assertEquals("[E1, E2, E3]", EntityUtils.toString(moreThanOne));
+
+        final Set<AbstractEntity<?>> one = linkedSetOf(factory.newEntity(Entity.class).setKey("E1"));
+        assertEquals("[E1]", EntityUtils.toString(one));
+
+        final Set<AbstractEntity<?>> someAndNull = linkedSetOf(factory.newEntity(Entity.class).setKey("E1"), null, factory.newEntity(Entity.class).setKey("E3"));
+        assertEquals("[E1, null, E3]", EntityUtils.toString(someAndNull));
+    }
+
 }

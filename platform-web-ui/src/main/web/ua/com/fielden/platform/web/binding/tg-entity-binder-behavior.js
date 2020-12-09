@@ -502,10 +502,10 @@ export const TgEntityBinderBehavior = {
         self._processResponse = (function (e, name, customHandlerFor) {
             console.log("PROCESS RESPONSE");
             console.log(name, ": iron-response: status = ", e.detail.xhr.status, ", e.detail.response = ", e.detail.response);
-            if (e.detail.xhr.status === 200) { // successful execution of the request
+            if (e.detail.xhr.status === 200 && e.detail.response) { // successful execution of the request with written response; timeout errors can lead to status 200 and e.detail.response === null; also 504 error is possible, but this will be handled in _processError
                 e.detail.successful = true;
-                var deserialisedResult = this._serialiser().deserialise(e.detail.response);
-
+                const deserialisedResult = this._serialiser().deserialise(e.detail.response);
+                
                 if (this._reflector().isWarning(deserialisedResult)) {
                     console.warn(toastMsgForError(this._reflector(), deserialisedResult));
                     //this._openToastForError('Warning.', toastMsgForError(this._reflector(), deserialisedResult), false);
@@ -958,6 +958,7 @@ export const TgEntityBinderBehavior = {
         }
         // New entity should be promoted to the local cache:
         self._currEntity = entity;
+        self.fire('tg-entity-received', self._currEntity);
         // before the next assignment -- the editors should be already prepared for "refresh cycle" (for Retrieve and Save actions)
         var oldCurrBindingEntity = self._currBindingEntity;
         self._previousModifiedPropertiesHolder = previousModifiedPropertiesHolder;

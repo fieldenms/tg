@@ -6,6 +6,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isRangeType;
 
 import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.ITickManager;
@@ -147,7 +148,7 @@ public abstract class AbstractDomainTree {
      * @return
      */
     public static String reflectionProperty(final String property) {
-        return property.replaceAll(DUMMY_SUFFIX, "").replaceAll(COMMON_SUFFIX, "");
+        return StringUtils.remove(StringUtils.remove(property, DUMMY_SUFFIX), COMMON_SUFFIX);
     }
 
     /**
