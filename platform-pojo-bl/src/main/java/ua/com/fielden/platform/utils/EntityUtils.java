@@ -79,6 +79,7 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.types.try_wrapper.TryWrapper;
@@ -576,6 +577,15 @@ public class EntityUtils {
      */
     public static boolean isString(final Class<?> type) {
         return String.class.isAssignableFrom(type);
+    }
+
+    /**
+     * Indicates whether type represents {@link Hyperlink} values.
+     *
+     * @return
+     */
+    public static boolean isHyperlink(final Class<?> type) {
+        return Hyperlink.class.isAssignableFrom(type);
     }
 
     /**
