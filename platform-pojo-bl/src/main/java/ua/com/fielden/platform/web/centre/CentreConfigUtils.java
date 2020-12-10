@@ -74,8 +74,8 @@ public class CentreConfigUtils {
     }
     
     /**
-     * Returns <code>true</code> in case where <code>saveAsName</code>d configuration represents default or link configuration,
-     * otherwise <code>false</code>.
+     * Returns {@code true} in case where {@code saveAsName}d configuration represents default or link configuration,
+     * otherwise {@code false}.
      * 
      * @param saveAsName
      * @return
@@ -85,15 +85,15 @@ public class CentreConfigUtils {
     }
     
     /**
-     * Returns <code>true</code> in case where <code>saveAsName</code>d configuration represents default / link configuration or inherited from base user configuration or inherited from shared configuration,
-     * otherwise <code>false</code>.
+     * Returns {@code true} in case where {@code saveAsName}d configuration represents default / link configuration or inherited from base user configuration or inherited from shared configuration,
+     * otherwise {@code false}.
      * 
      * @param saveAsName
      * @param selectionCrit
      * @return
      */
     public static boolean isDefaultOrLinkOrInherited(final Optional<String> saveAsName, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) {
-        return isDefaultOrLink(saveAsName) || inherited(findLoadableConfig(saveAsName, selectionCrit)).isPresent();
+        return isDefaultOrLink(saveAsName) || isInherited(saveAsName, selectionCrit);
     }
     
     /**
@@ -107,13 +107,27 @@ public class CentreConfigUtils {
     }
     
     /**
-     * Returns {@code loadableConfig} for non-empty 'inherited from shared' {@code loadableConfig}, empty optional otherwise.
+     * Returns {@code true} in case where {@code saveAsName}d configuration represents inherited from base user configuration or inherited from shared configuration,
+     * otherwise {@code false}.
      * 
-     * @param loadableConfig
+     * @param saveAsName
+     * @param selectionCrit
      * @return
      */
-    public static Optional<LoadableCentreConfig> inheritedFromShared(final Optional<LoadableCentreConfig> loadableConfig) {
-        return inherited(loadableConfig).filter(LoadableCentreConfig::isShared);
+    public static boolean isInherited(final Optional<String> saveAsName, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) {
+        return inherited(findLoadableConfig(saveAsName, selectionCrit)).isPresent();
+    }
+    
+    /**
+     * Returns {@code true} in case where {@code saveAsName}d configuration represents inherited from base user configuration or inherited from shared configuration,
+     * otherwise {@code false}.
+     * 
+     * @param saveAsName
+     * @param streamLoadableConfigurations -- function to stream loadable configurations from which currently analysed configuration will be taken
+     * @return
+     */
+    public static boolean isInherited(final Optional<String> saveAsName, final Supplier<Stream<LoadableCentreConfig>> streamLoadableConfigurations) {
+        return inherited(findLoadableConfig(saveAsName, streamLoadableConfigurations)).isPresent();
     }
     
     /**
@@ -127,6 +141,18 @@ public class CentreConfigUtils {
     }
     
     /**
+     * Returns {@code true} in case where {@code saveAsName}d configuration represents inherited from base user configuration,
+     * otherwise {@code false}.
+     * 
+     * @param saveAsName
+     * @param selectionCrit
+     * @return
+     */
+    public static boolean isInheritedFromBase(final Optional<String> saveAsName, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) {
+        return inheritedFromBase(findLoadableConfig(saveAsName, selectionCrit)).isPresent();
+    }
+    
+    /**
      * Finds {@link LoadableCentreConfig} instance for concrete {@code saveAsName}. Default or link configurations are not loadable and empty {@link Optional} is returned.
      * 
      * @param saveAsName
@@ -134,7 +160,7 @@ public class CentreConfigUtils {
      * @return
      * @throws Result if configuration is not present aka deleted
      */
-    public static Optional<LoadableCentreConfig> findLoadableConfig(final Optional<String> saveAsName, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) throws Result {
+    private static Optional<LoadableCentreConfig> findLoadableConfig(final Optional<String> saveAsName, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) throws Result {
         return findLoadableConfig(saveAsName, () -> selectionCrit.loadableCentreConfigs().apply(of(saveAsName)).stream());
     }
     

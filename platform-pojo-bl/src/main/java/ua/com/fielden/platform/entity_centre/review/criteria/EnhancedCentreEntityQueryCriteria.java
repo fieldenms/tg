@@ -64,8 +64,8 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreAdjuster;
     private Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreColumnWidthsAdjuster;
     private CentreContextHolder centreContextHolder;
-    public Class<? extends MiWithConfigurationSupport<?>> miType;
-    public DeviceProfile device;
+    private DeviceProfile device;
+    private Class<? extends MiWithConfigurationSupport<?>> miType;
     
     /**
      * Constructs {@link EnhancedCentreEntityQueryCriteria} with specified {@link IValueMatcherFactory}. Needed mostly for instantiating through injector.
@@ -77,6 +77,34 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     @Inject
     protected EnhancedCentreEntityQueryCriteria(final IValueMatcherFactory valueMatcherFactory, final IGeneratedEntityController generatedEntityController, final ISerialiser serialiser, final ICompanionObjectFinder controllerProvider, final IDates dates) {
         super(valueMatcherFactory, generatedEntityController, serialiser, controllerProvider, dates);
+    }
+
+    /**
+     * Sets menu item type for this selection criteria entity.
+     */
+    public void setMiType(final Class<? extends MiWithConfigurationSupport<?>> miType) {
+        this.miType = miType;
+    }
+
+    /**
+     * Menu item type for this selection criteria entity.
+     */
+    public Class<? extends MiWithConfigurationSupport<?>> miType() {
+        return miType;
+    }
+
+    /**
+     * Sets device profile for this selection criteria entity.
+     */
+    public void setDevice(final DeviceProfile device) {
+        this.device = device;
+    }
+
+    /**
+     * Device profile for this selection criteria entity.
+     */
+    public DeviceProfile device() {
+        return device;
     }
 
     public void setCentreColumnWidthsAdjuster(final Consumer<Consumer<ICentreDomainTreeManagerAndEnhancer>> centreColumnWidthsAdjuster) {

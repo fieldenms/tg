@@ -232,7 +232,7 @@ SET ENTITY_CENTRE_CONFIG.CONFIGUUID_ = CASE WHEN TITLE LIKE '%__________FRESH[[]
             ECC.TITLE = ENTITY_CENTRE_CONFIG.TITLE
             AND ECC.ID_MAIN_MENU = ENTITY_CENTRE_CONFIG.ID_MAIN_MENU
             AND ECC.ID_CRAFT = (SELECT BASEDONUSER_ FROM USER_ U WHERE U._ID = ENTITY_CENTRE_CONFIG.ID_CRAFT)
-    ) END
+    ) END /* no ELSE means NULL and it is the expected value for SAVED inherited from base configuration */
 WHERE
     (TITLE LIKE '%__________FRESH[[]%' OR TITLE LIKE '%__________SAVED[[]%')
     AND TITLE NOT LIKE '%[[]_______________________link]__________DIFFERENCES'

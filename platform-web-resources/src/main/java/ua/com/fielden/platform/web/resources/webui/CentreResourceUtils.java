@@ -22,9 +22,8 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.APPLIED_CRITERIA_ENTITY_NAME;
 import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.WAS_RUN_NAME;
-import static ua.com.fielden.platform.web.centre.CentreConfigUtils.findLoadableConfig;
-import static ua.com.fielden.platform.web.centre.CentreConfigUtils.inherited;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrLink;
+import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isInherited;
 import static ua.com.fielden.platform.web.centre.CentreDiffSerialiser.CENTRE_DIFF_SERIALISER;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfig;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfigOpt;
@@ -526,8 +525,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final Annotation [] annotations = saveAsName.isPresent() ? new Annotation[] {miTypeAnnotation, new SaveAsNameAnnotation().newInstance(saveAsName.get())} : new Annotation[] {miTypeAnnotation};
         final M validationPrototype = (M) critGenerator.generateCentreQueryCriteria((Class<T>) getEntityType(miType), cdtmae, miType, annotations);
 
-        validationPrototype.miType = miType;
-        validationPrototype.device = device;
+        validationPrototype.setMiType(miType);
+        validationPrototype.setDevice(device);
 
         // Functions for companion implementations:
 
@@ -540,7 +539,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 freshCentreSupplier.get(),
                 updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, specificSaveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder)
             )
-            || inherited(findLoadableConfig(specificSaveAsName, validationPrototype)).isPresent()
+            || isInherited(specificSaveAsName, validationPrototype)
         );
         
         // returns whether centre is changed from previously saved (or the very original) configuration version or it is New (aka default, link or inherited)

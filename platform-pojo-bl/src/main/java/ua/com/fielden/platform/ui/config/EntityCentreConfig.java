@@ -74,7 +74,7 @@ public class EntityCentreConfig extends AbstractConfiguration<DynamicEntityKey> 
 
     @IsProperty
     @MapTo
-    @Title(value = "Config UUID", desc = "UUID of centre configuration [represented by this EntityCentreConfig instance] for the user that created it (SAVED or FRESH surrogate kind) or other users with which it was shared (FRESH surrogate kind only).")
+    @Title(value = "Config UUID", desc = "UUID of centre configuration [represented by this EntityCentreConfig instance] for the user that created it (SAVED or FRESH surrogate kind) or other users with which it was shared / based-on (FRESH surrogate kind only).")
     private String configUuid;
 
     @Observable

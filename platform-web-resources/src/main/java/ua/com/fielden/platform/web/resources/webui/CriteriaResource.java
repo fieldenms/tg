@@ -14,9 +14,8 @@ import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.web.action.CentreConfigShareActionProducer.CONFIG_DOES_NOT_EXIST;
 import static ua.com.fielden.platform.web.centre.CentreConfigUpdaterUtils.applyNewOrderVisibilityAndSorting;
-import static ua.com.fielden.platform.web.centre.CentreConfigUtils.findLoadableConfig;
-import static ua.com.fielden.platform.web.centre.CentreConfigUtils.inherited;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrLink;
+import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isInherited;
 import static ua.com.fielden.platform.web.centre.CentreDiffSerialiser.CENTRE_DIFF_SERIALISER;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME;
@@ -430,7 +429,7 @@ public class CriteriaResource extends AbstractWebResource {
                 createCriteriaValidationPrototype(miType, saveAsName, updatedFreshCentre, companionFinder, critGenerator, -1L, user, userProvider, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel),
                 createCriteriaMetaValuesCustomObjectWithSaveAsInfo(
                         createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)),
-                        isDefaultOrLink(saveAsName) || inherited(findLoadableConfig(saveAsName, () -> loadableConfigurations(user, miType, device, companionFinder, sharingModel).apply(of(saveAsName)).stream())).isPresent(), // if not [default, link, inherited] then it is own save-as; after discarding it is always not changed -- checking of isFreshCentreChanged is not needed
+                        isDefaultOrLink(saveAsName) || isInherited(saveAsName, () -> loadableConfigurations(user, miType, device, companionFinder, sharingModel).apply(of(saveAsName)).stream()), // if not [default, link, inherited] then it is own save-as; after discarding it is always not changed -- checking of isFreshCentreChanged is not needed
                         empty(),
                         empty(),
                         saveAsDesc,

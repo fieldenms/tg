@@ -26,13 +26,17 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
+import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.centre.CentreConfigShareAction;
+import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 
 /**
  * A producer for new instances of entity {@link CentreConfigShareAction}.
+ * <p>
+ * Contains static functions for implementing custom share actions.
  *
  * @author TG Team
  *
@@ -79,15 +83,17 @@ public class CentreConfigShareActionProducer extends DefaultEntityProducerWithCo
         final String configUuid = contextDecomposer.chosenProperty();
         final User user = userProvider.getUser();
         final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit = contextDecomposer.selectionCrit();
-        final Optional<EntityCentreConfig> freshConfigOpt = findConfigOptByUuid(configUuid, user, selectionCrit.miType, selectionCrit.device, FRESH_CENTRE_NAME, eccCompanion);
+        final Class<? extends MiWithConfigurationSupport<?>> miType = selectionCrit.miType();
+        final DeviceProfile device = selectionCrit.device();
+        final Optional<EntityCentreConfig> freshConfigOpt = findConfigOptByUuid(configUuid, user, miType, device, FRESH_CENTRE_NAME, eccCompanion);
         if (!freshConfigOpt.isPresent()) {
             return failure(CONFIG_DOES_NOT_EXIST); // configuration does not exist and can not be shared
         }
-        final Optional<String> saveAsName = of(obtainTitleFrom(freshConfigOpt.get().getTitle(), deviceSpecific(FRESH_CENTRE_NAME, selectionCrit.device)));
+        final Optional<String> saveAsName = of(obtainTitleFrom(freshConfigOpt.get().getTitle(), deviceSpecific(FRESH_CENTRE_NAME, device)));
         if (isDefaultOrLinkOrInherited(saveAsName, selectionCrit)) {
             return failure(SAVE_MSG); // [link; inherited from shared; inherited from base] configuration can not be shared
         }
-        final Optional<EntityCentreConfig> savedConfigOpt = findConfigOptByUuid(configUuid, selectionCrit.miType, selectionCrit.device, SAVED_CENTRE_NAME, eccCompanion);
+        final Optional<EntityCentreConfig> savedConfigOpt = findConfigOptByUuid(configUuid, miType, device, SAVED_CENTRE_NAME, eccCompanion);
         if (!savedConfigOpt.isPresent() // in case where there is no configuration creator then it was inherited from base / shared and original configuration was deleted; this type of configuration (inherited, no upstream) still can exist and act like own-save as, however it should not be used for sharing
          || !areEqual(savedConfigOpt.get().getOwner(), user)) { // the creator of configuration is not current user; it means that configuration was made not shared to this user by original creator, and it should not be used for sharing
             return failure(DUPLICATE_SAVE_MSG);

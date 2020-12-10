@@ -1,9 +1,8 @@
 package ua.com.fielden.platform.web.centre;
 
 import static ua.com.fielden.platform.error.Result.failure;
-import static ua.com.fielden.platform.web.centre.CentreConfigUtils.findLoadableConfig;
-import static ua.com.fielden.platform.web.centre.CentreConfigUtils.inheritedFromBase;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrLink;
+import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isInheritedFromBase;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.prepareDefaultCentre;
 
 import com.google.inject.Inject;
@@ -19,7 +18,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
  *
  */
 public class CentreConfigDeleteActionProducer extends DefaultEntityProducerWithContext<CentreConfigDeleteAction> {
-    private static final String ERR_CANNOT_BE_DELETED = "Only saved configurations can be deleted.";
+    private static final String ERR_CANNOT_BE_DELETED = "Only saved / shared configurations can be deleted.";
     
     @Inject
     public CentreConfigDeleteActionProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder) {
@@ -31,7 +30,7 @@ public class CentreConfigDeleteActionProducer extends DefaultEntityProducerWithC
         if (contextNotEmpty()) {
             if (
                 isDefaultOrLink(selectionCrit().saveAsName())
-                || inheritedFromBase(findLoadableConfig(selectionCrit().saveAsName(), selectionCrit())).isPresent()) { // this will also throw early failure in case where current configuration was deleted
+                || isInheritedFromBase(selectionCrit().saveAsName(), selectionCrit())) { // this will also throw early failure in case where current configuration was deleted
                 throw failure(ERR_CANNOT_BE_DELETED);
             }
             selectionCrit().deleteCentre();
