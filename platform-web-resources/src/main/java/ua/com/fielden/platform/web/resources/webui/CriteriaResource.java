@@ -25,7 +25,7 @@ import static ua.com.fielden.platform.web.centre.CentreUpdater.commitCentreWitho
 import static ua.com.fielden.platform.web.centre.CentreUpdater.deviceSpecific;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.loadableConfigurations;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.makePreferred;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.nameOf;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.NAME_OF;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.obtainTitleFrom;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.removeCentres;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.retrievePreferredConfigName;
@@ -207,12 +207,12 @@ public class CriteriaResource extends AbstractWebResource {
                 updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
                 updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, actualSaveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
                 // create configUuids there if not yet present
-                final EntityCentreConfig freshConfig = findConfig(miType, user, nameOf.apply(FRESH_CENTRE_NAME).apply(actualSaveAsName).apply(device()), eccCompanion);
+                final EntityCentreConfig freshConfig = findConfig(miType, user, NAME_OF.apply(FRESH_CENTRE_NAME).apply(actualSaveAsName).apply(device()), eccCompanion);
                 if (freshConfig.getConfigUuid() == null) {
                     final String newConfigUuid = randomUUID().toString();
                     // update both centres with newConfigUuid
                     eccCompanion.quickSave(freshConfig.setConfigUuid(newConfigUuid));
-                    eccCompanion.quickSave(findConfig(miType, user, nameOf.apply(SAVED_CENTRE_NAME).apply(actualSaveAsName).apply(device()), eccCompanion).setConfigUuid(newConfigUuid));
+                    eccCompanion.quickSave(findConfig(miType, user, NAME_OF.apply(SAVED_CENTRE_NAME).apply(actualSaveAsName).apply(device()), eccCompanion).setConfigUuid(newConfigUuid));
                     resolvedConfigUuid = of(newConfigUuid);
                 } else {
                     resolvedConfigUuid = of(freshConfig.getConfigUuid());
@@ -251,7 +251,7 @@ public class CriteriaResource extends AbstractWebResource {
                                     if (sharingModel.isSharedWith(configUuid.get(), user).isSuccessful()) {
                                         // inherited from shared
                                         final Map<String, Object> differences = restoreDiffFrom(savedConfig, eccCompanion, format("for type [%s] with name [%s] for user [%s]", miType.getSimpleName(), savedConfig.getTitle(), savedConfigCreator));
-                                        final EntityCentreConfig savedConfigForCurrUser = findConfig(miType, user, nameOf.apply(SAVED_CENTRE_NAME).apply(actualSaveAsName).apply(device()), eccCompanion, fetchKeyAndDescOnlyAndInstrument(EntityCentreConfig.class).with("configBody"));
+                                        final EntityCentreConfig savedConfigForCurrUser = findConfig(miType, user, NAME_OF.apply(SAVED_CENTRE_NAME).apply(actualSaveAsName).apply(device()), eccCompanion, fetchKeyAndDescOnlyAndInstrument(EntityCentreConfig.class).with("configBody"));
                                         savedConfigForCurrUser.setConfigBody(CENTRE_DIFF_SERIALISER.serialise(differences));
                                         eccCompanion.quickSave(savedConfigForCurrUser);
                                         if (!isCentreChanged(miType, user, eccCompanion, mmiCompanion, userCompanion, actualSaveAsName)) {
@@ -295,15 +295,15 @@ public class CriteriaResource extends AbstractWebResource {
                                 sharingModel.isSharedWith(configUuid.get(), user).ifFailure(Result::throwRuntime);
                                 // this is definitely the case where current user gets uuid as part of sharing process from other base/non-base user;
                                 // the title of the shared config can conflict with preliminarySaveAsName;
-                                final Optional<EntityCentreConfig> conflictingConfigOpt = findConfigOpt(miType, user, nameOf.apply(FRESH_CENTRE_NAME).apply(preliminarySaveAsName).apply(device()), eccCompanion);
+                                final Optional<EntityCentreConfig> conflictingConfigOpt = findConfigOpt(miType, user, NAME_OF.apply(FRESH_CENTRE_NAME).apply(preliminarySaveAsName).apply(device()), eccCompanion);
                                 if (conflictingConfigOpt.isPresent()) {
                                     final String conflictingSaveAsName = obtainTitleFrom(conflictingConfigOpt.get().getTitle(), deviceSpecific(FRESH_CENTRE_NAME, device()));
                                     actualSaveAsName = of(conflictingSaveAsName + " (shared)"); // TODO another conflict possible?
                                 } else {
                                     actualSaveAsName = preliminarySaveAsName;
                                 }
-                                final String freshSurrogateName = nameOf.apply(FRESH_CENTRE_NAME).apply(actualSaveAsName).apply(device());
-                                final String savedSurrogateName = nameOf.apply(SAVED_CENTRE_NAME).apply(actualSaveAsName).apply(device());
+                                final String freshSurrogateName = NAME_OF.apply(FRESH_CENTRE_NAME).apply(actualSaveAsName).apply(device());
+                                final String savedSurrogateName = NAME_OF.apply(SAVED_CENTRE_NAME).apply(actualSaveAsName).apply(device());
                                 final Map<String, Object> differences = restoreDiffFrom(savedConfigForOtherUser, eccCompanion, format("for type [%s] with name [%s] for user [%s]", miType.getSimpleName(), savedConfigForOtherUser.getTitle(), savedConfigCreator));
                                 final EntityCentreConfig freshConfigForCreator = findConfigOptByUuid(configUuid.get(), savedConfigCreator, miType, device(), FRESH_CENTRE_NAME, eccCompanion).get(); // need to retrieve FRESH config to get 'desc' -- that's because SAVED centres haven't stored descriptions, only FRESH do
                                 saveNewEntityCentreManager(false, differences, miType, user, freshSurrogateName, freshConfigForCreator.getDesc(), eccCompanion, mmiCompanion);

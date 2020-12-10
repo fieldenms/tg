@@ -137,4 +137,10 @@ public class EntityCentreConfig extends AbstractConfiguration<DynamicEntityKey> 
         return this;
     }
 
+    @Override
+    @Observable
+    public EntityCentreConfig setConfigBody(final byte[] configBody) {
+        return (EntityCentreConfig) super.setConfigBody(configBody);
+    }
+
 }

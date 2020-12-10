@@ -206,6 +206,10 @@ public class CentreUpdater {
             return ent.getKey().toString();
         }
     }, entity);
+    /**
+     * Function to get title of surrogate configuration from surrogate name, save-as name and device.
+     */
+    public static final Function<String, Function<Optional<String>, Function<DeviceProfile, String>>> NAME_OF = surrogateName -> saveAs -> device -> deviceSpecific(saveAsSpecific(surrogateName, saveAs), device) + DIFFERENCES_SUFFIX;
     
     /** Protected default constructor to prevent instantiation. */
     protected CentreUpdater() {
@@ -307,7 +311,6 @@ public class CentreUpdater {
             return eccWithDesc == null ? null : eccWithDesc.getConfigUuid();
         });
     }
-    public static final Function<String, Function<Optional<String>, Function<DeviceProfile, String>>> nameOf = surrogateName -> saveAs -> device -> deviceSpecific(saveAsSpecific(surrogateName, saveAs), device) + DIFFERENCES_SUFFIX;
     
     /**
      * Changes configuration title to <code>newTitle</code> and description to <code>newDesc</code> and saves these changes to persistent storage.
@@ -566,7 +569,7 @@ public class CentreUpdater {
     private static Function<Optional<Optional<String>>, EntityResultQueryModel<EntityCentreConfig>> findConfigsFunction(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final IEntityCentreConfig eccCompanion) {
         return saveAsNameOpt -> {
             return saveAsNameOpt
-                .map(saveAsName -> modelFor(user, miType.getName(), nameOf.apply(FRESH_CENTRE_NAME).apply(saveAsName).apply(device)))
+                .map(saveAsName -> modelFor(user, miType.getName(), NAME_OF.apply(FRESH_CENTRE_NAME).apply(saveAsName).apply(device)))
                 .orElseGet(() -> eccCompanion.withDbVersion(centreConfigQueryFor(user, miType, device, FRESH_CENTRE_NAME)).model());
         };
     }

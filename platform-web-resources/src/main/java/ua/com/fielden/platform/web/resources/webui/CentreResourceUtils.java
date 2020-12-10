@@ -646,11 +646,11 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                     updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, of(saveAsNameToLoad), device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder),
                     updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, of(saveAsNameToLoad), device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder)
                 );
-                final EntityCentreConfig savedConfigForCurrUser = findConfig(miType, user, nameOf.apply(SAVED_CENTRE_NAME).apply(of(saveAsNameToLoad)).apply(device), eccCompanion, fetchKeyAndDescOnlyAndInstrument(EntityCentreConfig.class).with("configBody"));
+                final EntityCentreConfig savedConfigForCurrUser = findConfig(miType, user, NAME_OF.apply(SAVED_CENTRE_NAME).apply(of(saveAsNameToLoad)).apply(device), eccCompanion, fetchKeyAndDescOnlyAndInstrument(EntityCentreConfig.class).with("configBody"));
                 savedConfigForCurrUser.setConfigBody(CENTRE_DIFF_SERIALISER.serialise(differences));
                 eccCompanion.quickSave(savedConfigForCurrUser);
                 if (!centreChanged) {
-                    final EntityCentreConfig freshConfigForCurrUser = findConfig(miType, user, nameOf.apply(FRESH_CENTRE_NAME).apply(of(saveAsNameToLoad)).apply(device), eccCompanion, fetchKeyAndDescOnlyAndInstrument(EntityCentreConfig.class).with("configBody"));
+                    final EntityCentreConfig freshConfigForCurrUser = findConfig(miType, user, NAME_OF.apply(FRESH_CENTRE_NAME).apply(of(saveAsNameToLoad)).apply(device), eccCompanion, fetchKeyAndDescOnlyAndInstrument(EntityCentreConfig.class).with("configBody"));
                     freshConfigForCurrUser.setConfigBody(CENTRE_DIFF_SERIALISER.serialise(differences));
                     eccCompanion.quickSave(freshConfigForCurrUser);
                 }
@@ -693,8 +693,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             commitCentre(user, userProvider, miType, FRESH_CENTRE_NAME, newSaveAsName, device, freshCentre, newDesc, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
             commitCentre(user, userProvider, miType, SAVED_CENTRE_NAME, newSaveAsName, device, freshCentre, null, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
             // update both centres with newConfigUuid
-            findConfigOpt(miType, user, nameOf.apply(FRESH_CENTRE_NAME).apply(newSaveAsName).apply(device), eccCompanion).ifPresent(config -> eccCompanion.quickSave(config.setConfigUuid(newConfigUuid)));
-            findConfigOpt(miType, user, nameOf.apply(SAVED_CENTRE_NAME).apply(newSaveAsName).apply(device), eccCompanion).ifPresent(config -> eccCompanion.quickSave(config.setConfigUuid(newConfigUuid)));
+            findConfigOpt(miType, user, NAME_OF.apply(FRESH_CENTRE_NAME).apply(newSaveAsName).apply(device), eccCompanion).ifPresent(config -> eccCompanion.quickSave(config.setConfigUuid(newConfigUuid)));
+            findConfigOpt(miType, user, NAME_OF.apply(SAVED_CENTRE_NAME).apply(newSaveAsName).apply(device), eccCompanion).ifPresent(config -> eccCompanion.quickSave(config.setConfigUuid(newConfigUuid)));
             
             // when switching to new configuration we need to make it preferred
             validationPrototype.makePreferredConfig(newSaveAsName);

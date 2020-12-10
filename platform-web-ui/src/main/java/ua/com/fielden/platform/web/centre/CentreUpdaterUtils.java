@@ -237,6 +237,10 @@ public class CentreUpdaterUtils extends CentreUpdater {
         return ofNullable(findConfig(menuItemType, user, name, eccCompanion));
     }
     
+    public static Optional<EntityCentreConfig> findConfigOpt(final Class<?> menuItemType, final User user, final String name, final IEntityCentreConfig eccCompanion, final fetch<EntityCentreConfig> fetch) {
+        return ofNullable(findConfig(menuItemType, user, name, eccCompanion, fetch));
+    }
+    
     public static Optional<EntityCentreConfig> findConfigOptByUuid(final ICompoundCondition0<EntityCentreConfig> model, final String uuid, final IEntityCentreConfig eccCompanion) {
         return eccCompanion.getEntityOptional(from(model
             .and().prop("configUuid").eq().val(uuid).model()
