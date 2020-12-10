@@ -19,13 +19,13 @@ public class SumOf2 extends SingleOperandFunction2<SumOf3> {
     }
 
     @Override
-    public Class<BigDecimal> type() {
-        return BigDecimal.class;
+    public Class<?> type() {
+        return operand.type() != null ? operand.type() : BigDecimal.class;
     }
 
     @Override
     public Object hibType() {
-        return BigDecimalType.INSTANCE;
+        return operand.hibType() != null ? operand.hibType() : BigDecimalType.INSTANCE;
     }
     
     @Override
