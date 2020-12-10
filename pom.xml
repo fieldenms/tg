@@ -127,6 +127,7 @@
                     <version>3.2.0</version>
                     <configuration>
                         <additionalparam>-Xdoclint:none</additionalparam>
+                        <detectJavaApiLink>false</detectJavaApiLink>
                     </configuration>
                     <executions>
                         <execution>
@@ -215,4 +216,3 @@
         <tag>HEAD</tag>
     </scm>
 </project>
-

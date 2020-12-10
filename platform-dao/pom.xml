@@ -77,13 +77,6 @@
 		    <version>2.3.2</version>
 		</dependency>
 		
-		<!-- https://mvnrepository.com/artifact/org.apache.tika/tika-core -->
-		<dependency>
-			<groupId>org.apache.tika</groupId>
-			<artifactId>tika-core</artifactId>
-			<version>1.22</version>
-		</dependency>
-
 	</dependencies>
 	<build>
 		<resources>
