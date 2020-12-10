@@ -307,13 +307,6 @@ public class SmtpEmailSender {
             final String body,
             final Path[] imagePaths,
             final Path... filePaths) {
-        if (imagePaths.length == 0) {
-            throw new EmailException("At least one image is expected.");
-        }
-        if (filePaths.length == 0) {
-            throw new EmailException("At least one attachment is expected.");
-        }
-
         final T2<String, Stream<T2<File, String>>> t2 = preProcessAttachments(EmailType.HTML, body, filePaths);
         sendHtmlMessageWithImagesAndAttachments(fromAddress, csvToAddresses, subject, t2._1, imagePaths, t2._2);
     }
