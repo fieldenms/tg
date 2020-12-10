@@ -48,6 +48,21 @@ public class DomainMetadataUtils {
 
         return expressionModelInProgress.otherwise().val(null).end().model();
     }
+    
+    public static ExpressionModel generateUnionEntityPropertyContextualExpression(final Class<? extends AbstractUnionEntity> entityType, final String commonPropName, final String contextPropName) {
+        final List<Field> props = unionProperties(entityType);
+        final Iterator<Field> iterator = props.iterator();
+        final String firstUnionPropName = contextPropName + "." + iterator.next().getName();
+        ICaseWhenFunctionWhen<IStandAloneExprOperationAndClose, AbstractEntity<?>> expressionModelInProgress = expr().caseWhen().prop(firstUnionPropName).isNotNull().then().prop(firstUnionPropName
+                + "." + commonPropName);
+
+        for (; iterator.hasNext();) {
+            final String unionPropName = contextPropName + "." + iterator.next().getName();
+            expressionModelInProgress = expressionModelInProgress.when().prop(unionPropName).isNotNull().then().prop(unionPropName + "." + commonPropName);
+        }
+
+        return expressionModelInProgress.end().model();
+    }
 
     public static ExpressionModel extractExpressionModelFromCalculatedProperty(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) {
         try {
