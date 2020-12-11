@@ -196,7 +196,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             customObject.put(SAVE_AS_NAME, name.orElse(""));
         });
         configUuid.ifPresent(uuid -> {
-            customObject.put(CONFIG_UUID, uuid.orElse("")); // explicit coding into URI path format is not needed because of possible UUID characters: -abcdef0123456789
+            customObject.put(CONFIG_UUID, uuid.orElse(""));
         });
         saveAsDesc.ifPresent(desc -> {
             customObject.put(SAVE_AS_DESC, desc.orElse(""));
@@ -651,7 +651,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 removeCentres(user, miType, device, of(saveAsNameToLoad), eccCompanion, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
             }
             updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, of(saveAsNameToLoad), device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
-            updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, of(saveAsNameToLoad), device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+            updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, of(saveAsNameToLoad), device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder); // do not leave only FRESH centre out of two (FRESH + SAVED) => update SAVED centre explicitly
 
             if (equalsEx(preferredConfigName, of(saveAsNameToLoad))) { // if inherited configuration being updated was preferred
                 makePreferred(user, miType, of(saveAsNameToLoad), device, companionFinder); // then must leave it preferred after deletion
@@ -668,7 +668,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         validationPrototype.setDefaultCentreClearer(() -> {
             removeCentres(user, miType, device, empty(), eccCompanion, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME);
             updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, empty(), device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
-            updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, empty(), device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+            updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, empty(), device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder); // do not leave only FRESH centre out of two (FRESH + SAVED) => update SAVED centre explicitly
         });
         // applies new criteria from client application against FRESH centre and returns respective criteria entity
         validationPrototype.setFreshCentreApplier(modifHolder -> {

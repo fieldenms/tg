@@ -248,6 +248,7 @@ public class CriteriaResource extends AbstractWebResource {
                                         removeCentres(user, miType, device(), actualSaveAsName, eccCompanion, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
                                     }
                                     updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+                                    updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, actualSaveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder); // do not leave only FRESH centre out of two (FRESH + SAVED) => update SAVED centre explicitly
                                 } else {
                                     if (sharingModel.isSharedWith(configUuid.get(), user).isSuccessful()) { // inherited from shared
                                         updateInheritedFromShared(savedConfig, miType, device(), actualSaveAsName, user, eccCompanion, of(() -> isCentreChanged(miType, user, eccCompanion, mmiCompanion, userCompanion, actualSaveAsName)));

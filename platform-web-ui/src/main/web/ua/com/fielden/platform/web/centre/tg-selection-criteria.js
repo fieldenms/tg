@@ -138,7 +138,7 @@ Polymer({
      */
     _computeRetrieverUrl: function (miType, saveAsName, queryPart, configUuid) {
         const wasLoadedPreviously = saveAsName === this._reflector.UNDEFINED_CONFIG_TITLE ? '-' : '+';
-        const _urlWithUuid = `/criteria/${miType}/${wasLoadedPreviously}${configUuid}`;
+        const _urlWithUuid = `/criteria/${miType}/${wasLoadedPreviously}${configUuid}`; // explicit coding into URI path format is not needed because of possible UUID characters: -abcdef0123456789
         return queryPart ? (_urlWithUuid + '?' + queryPart) : _urlWithUuid;
     },
 
