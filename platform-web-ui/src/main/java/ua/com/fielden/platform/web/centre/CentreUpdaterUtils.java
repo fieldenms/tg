@@ -2,6 +2,8 @@ package ua.com.fielden.platform.web.centre;
 
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnlyAndInstrument;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
@@ -42,6 +44,8 @@ import ua.com.fielden.platform.web.interfaces.DeviceProfile;
  */
 public class CentreUpdaterUtils extends CentreUpdater {
     private final static Logger logger = Logger.getLogger(CentreUpdaterUtils.class);
+    public static final fetch<EntityCentreConfig> FETCH_CONFIG_AND_INSTRUMENT = fetchKeyAndDescOnlyAndInstrument(EntityCentreConfig.class);
+    public static final fetch<EntityCentreConfig> FETCH_CONFIG = fetchKeyAndDescOnly(EntityCentreConfig.class);
     
     /** Protected default constructor to prevent instantiation. */
     protected CentreUpdaterUtils() {

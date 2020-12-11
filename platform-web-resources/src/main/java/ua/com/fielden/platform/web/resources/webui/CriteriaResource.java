@@ -7,10 +7,9 @@ import static java.util.Optional.ofNullable;
 import static java.util.UUID.randomUUID;
 import static ua.com.fielden.platform.data.generator.IGenerator.FORCE_REGENERATION_KEY;
 import static ua.com.fielden.platform.data.generator.IGenerator.shouldForceRegeneration;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnlyAndInstrument;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.web.action.CentreConfigShareActionProducer.CONFIG_DOES_NOT_EXIST;
@@ -32,7 +31,8 @@ import static ua.com.fielden.platform.web.centre.CentreUpdater.retrievePreferred
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentreConfigUuid;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentreDesc;
-import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfig;
+import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.FETCH_CONFIG;
+import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.FETCH_CONFIG_AND_INSTRUMENT;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfigOpt;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfigOptByUuid;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.restoreDiffFrom;
@@ -50,10 +50,10 @@ import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.cr
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaMetaValuesCustomObjectWithResult;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaMetaValuesCustomObjectWithSaveAsInfo;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaValidationPrototype;
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.disableViewButton;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.isAutoRunning;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.isRunning;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.isSorting;
+import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.removeWasRunIndication;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.updateInheritedFromShared;
 import static ua.com.fielden.platform.web.resources.webui.EntityValidationResource.VALIDATION_COUNTER;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
@@ -149,6 +149,11 @@ public class CriteriaResource extends AbstractWebResource {
     private final EntityFactory entityFactory;
     private final IDomainTreeEnhancerCache domainTreeEnhancerCache;
     private final ICentreConfigSharingModel sharingModel;
+    private User user;
+    private IEntityCentreConfig eccCompanion;
+    private IMainMenuItem mmiCompanion;
+    private IUser userCompanion;
+    private Class<? extends MiWithConfigurationSupport<?>> miType;
 
     public CriteriaResource(
             final RestServerUtil restUtil,
@@ -187,39 +192,20 @@ public class CriteriaResource extends AbstractWebResource {
     @Override
     public Representation get() {
         return handleUndesiredExceptions(getResponse(), () -> {
-            final Class<? extends MiWithConfigurationSupport<?>> miType = centre.getMenuItemType();
-            final User user = userProvider.getUser();
-            final IEntityCentreConfig eccCompanion = companionFinder.find(EntityCentreConfig.class);
-            final IMainMenuItem mmiCompanion = companionFinder.find(MainMenuItem.class);
-            final IUser userCompanion = companionFinder.find(User.class);
+            miType = centre.getMenuItemType();
+            user = userProvider.getUser();
+            eccCompanion = companionFinder.find(EntityCentreConfig.class);
+            mmiCompanion = companionFinder.find(MainMenuItem.class);
+            userCompanion = companionFinder.find(User.class);
             final T2<Boolean, Optional<String>> wasLoadedPreviouslyAndConfigUuid = wasLoadedPreviouslyAndConfigUuid(getRequest());
             final boolean wasLoadedPreviously = wasLoadedPreviouslyAndConfigUuid._1;
             final Optional<String> configUuid = wasLoadedPreviouslyAndConfigUuid._2;
-            System.out.println("configUuid === " + configUuid);
-            
             final Optional<String> actualSaveAsName;
             final Optional<String> resolvedConfigUuid;
             if (!getQuery().isEmpty()) {
-                // 'link' configuration loading is not limited only to first time loading;
-                // user can paste 'link' configuration URI into current app context;
-                // usually it will look like default config URI (no uuid) with appended params;
-                // however it is possible for user (or programmatically) to append params to save-as/link configuration that has uuid;
-                // in that case it still should act as applying those params against empty configuration on 'link' configuration infrastructure
-                actualSaveAsName = of(LINK_CONFIG_TITLE); // 'link' configuration should be loaded
-                // ensure that both FRESH and SAVED link centres are present (creates automatically without configUuid if not)
-                updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
-                updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, actualSaveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
-                // create configUuids there if not yet present
-                final EntityCentreConfig freshConfig = findConfig(miType, user, NAME_OF.apply(FRESH_CENTRE_NAME).apply(actualSaveAsName).apply(device()), eccCompanion);
-                if (freshConfig.getConfigUuid() == null) {
-                    final String newConfigUuid = randomUUID().toString();
-                    // update both centres with newConfigUuid
-                    eccCompanion.quickSave(freshConfig.setConfigUuid(newConfigUuid));
-                    eccCompanion.quickSave(findConfig(miType, user, NAME_OF.apply(SAVED_CENTRE_NAME).apply(actualSaveAsName).apply(device()), eccCompanion).setConfigUuid(newConfigUuid));
-                    resolvedConfigUuid = of(newConfigUuid);
-                } else {
-                    resolvedConfigUuid = of(freshConfig.getConfigUuid());
-                }
+                final T2<Optional<String>, Optional<String>> pair = prepareLinkConfigInfrastructure();
+                actualSaveAsName = pair._1;
+                resolvedConfigUuid = pair._2;
                 // clear current 'link' surrogate centres -- this is to make them empty before applying new selection criteria parameters (client-side action after this request's response will be delivered)
                 final ICentreDomainTreeManagerAndEnhancer emptyCentre = updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, actualSaveAsName /* empty link config -- SAVED surrogate centre */, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
                 commitCentre(user, userProvider, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), emptyCentre, null /* newDesc */, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
@@ -244,7 +230,7 @@ public class CriteriaResource extends AbstractWebResource {
                                 // current user didn't create this config -> it is inherited and needs updating
                                 if (savedConfigCreator.isBase() && areEqual(savedConfigCreator, user.getBasedOnUser())) { // user.getBasedOnUser() is id-only-proxy
                                     // inherited from base
-                                    if (isCentreChanged(miType, user, eccCompanion, mmiCompanion, userCompanion, actualSaveAsName)) { // if there are some user changes, only SAVED surrogate must be updated; if such centre will be discarded the base user changes will be loaded immediately
+                                    if (isCentreChanged(actualSaveAsName)) { // if there are some user changes, only SAVED surrogate must be updated; if such centre will be discarded the base user changes will be loaded immediately
                                         removeCentres(user, miType, device(), actualSaveAsName, eccCompanion, SAVED_CENTRE_NAME);
                                     } else { // otherwise base user changes will be loaded immediately after centre loading
                                         removeCentres(user, miType, device(), actualSaveAsName, eccCompanion, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
@@ -253,7 +239,7 @@ public class CriteriaResource extends AbstractWebResource {
                                     updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, actualSaveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder); // do not leave only FRESH centre out of two (FRESH + SAVED) => update SAVED centre explicitly
                                 } else {
                                     if (sharingModel.isSharedWith(configUuid.get(), user).isSuccessful()) { // inherited from shared
-                                        updateInheritedFromShared(savedConfig, miType, device(), actualSaveAsName, user, eccCompanion, of(() -> isCentreChanged(miType, user, eccCompanion, mmiCompanion, userCompanion, actualSaveAsName)));
+                                        updateInheritedFromShared(savedConfig, miType, device(), actualSaveAsName, user, eccCompanion, of(() -> isCentreChanged(actualSaveAsName)));
                                     } // already loaded inherited from shared config was made unshared; the inherited from shared configuration now acts like own save-as configuration
                                 }
                             }
@@ -291,7 +277,7 @@ public class CriteriaResource extends AbstractWebResource {
                                 sharingModel.isSharedWith(configUuid.get(), user).ifFailure(Result::throwRuntime);
                                 // this is definitely the case where current user gets uuid as part of sharing process from other base/non-base user;
                                 // the title of the shared config can conflict with preliminarySaveAsName;
-                                final Optional<EntityCentreConfig> conflictingConfigOpt = findConfigOpt(miType, user, NAME_OF.apply(FRESH_CENTRE_NAME).apply(preliminarySaveAsName).apply(device()), eccCompanion, fetchKeyAndDescOnly(EntityCentreConfig.class));
+                                final Optional<EntityCentreConfig> conflictingConfigOpt = findConfigOpt(miType, user, NAME_OF.apply(FRESH_CENTRE_NAME).apply(preliminarySaveAsName).apply(device()), eccCompanion, FETCH_CONFIG);
                                 if (conflictingConfigOpt.isPresent()) {
                                     final String conflictingSaveAsName = obtainTitleFrom(conflictingConfigOpt.get().getTitle(), deviceSpecific(FRESH_CENTRE_NAME, device()));
                                     actualSaveAsName = of(conflictingSaveAsName + " (shared)"); // TODO another conflict possible?
@@ -305,7 +291,7 @@ public class CriteriaResource extends AbstractWebResource {
                                 saveNewEntityCentreManager(false, differences, miType, user, freshSurrogateName, freshConfigForCreator.getDesc(), eccCompanion, mmiCompanion);
                                 saveNewEntityCentreManager(false, differences, miType, user, savedSurrogateName, null,                            eccCompanion, mmiCompanion);
                                 // update (FRESH only) with configUuid
-                                findConfigOpt(miType, user, freshSurrogateName, eccCompanion, fetchKeyAndDescOnlyAndInstrument(EntityCentreConfig.class).with("configUuid"))
+                                findConfigOpt(miType, user, freshSurrogateName, eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("configUuid"))
                                     .ifPresent(config -> eccCompanion.quickSave(config.setConfigUuid(configUuid.get())));
                             }
                         }
@@ -337,12 +323,45 @@ public class CriteriaResource extends AbstractWebResource {
         }, restUtil);
     }
 
-    private boolean isCentreChanged(final Class<? extends MiWithConfigurationSupport<?>> miType, final User user, final IEntityCentreConfig eccCompanion, final IMainMenuItem mmiCompanion, final IUser userCompanion, final Optional<String> actualSaveAsName) {
-        final boolean centreChanged = isFreshCentreChanged(
+    /**
+     * Prepares FRESH / SAVED link configs if not yet created. Returns a pair of resultant saveAsName and configUuid.
+     */
+    private T2<Optional<String>, Optional<String>> prepareLinkConfigInfrastructure() {
+        // 'link' configuration loading is not limited only to first time loading;
+        // user can paste 'link' configuration URI into current app context;
+        // usually it will look like default config URI (no uuid) with appended params;
+        // however it is possible for user (or programmatically) to append params to save-as/link/inherited configuration that has uuid;
+        // in that case it still should act as applying those params against empty configuration on 'link' configuration infrastructure
+        final Optional<String> actualSaveAsName = of(LINK_CONFIG_TITLE); // 'link' configuration should be loaded
+        // ensure that both FRESH link centre is present (creates automatically without configUuid if not)
+        updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+        // create configUuids there if not yet present
+        final Optional<EntityCentreConfig> freshConfigOpt = findConfigOpt(miType, user, NAME_OF.apply(FRESH_CENTRE_NAME).apply(actualSaveAsName).apply(device()), eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("configUuid"));
+        if (!freshConfigOpt.isPresent()) {
+            throw failure("Link configuration could not be loaded. Please try again."); // this should never happen, but just in case return a little bit more meaningful message
+        } else if (freshConfigOpt.get().getConfigUuid() == null) {
+            // if FRESH config does not have uuid yet then it was created just recently;
+            // so create SAVED config first;
+            updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, actualSaveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+            // and update both with newly generated config uuid
+            final String newConfigUuid = randomUUID().toString();
+            eccCompanion.quickSave(freshConfigOpt.get().setConfigUuid(newConfigUuid));
+            findConfigOpt(miType, user, NAME_OF.apply(SAVED_CENTRE_NAME).apply(actualSaveAsName).apply(device()), eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("configUuid"))
+                .ifPresent(savedConfig -> eccCompanion.quickSave(savedConfig.setConfigUuid(newConfigUuid)));
+            return t2(actualSaveAsName, of(newConfigUuid));
+        } else {
+            return t2(actualSaveAsName, of(freshConfigOpt.get().getConfigUuid()));
+        }
+    }
+
+    /**
+     * Returns whether FRESH config is changed from SAVED one.
+     */
+    private boolean isCentreChanged(final Optional<String> actualSaveAsName) {
+        return isFreshCentreChanged(
             updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder),
             updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, actualSaveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder)
         );
-        return centreChanged;
     }
 
     /**
@@ -353,12 +372,12 @@ public class CriteriaResource extends AbstractWebResource {
     public Representation post(final Representation envelope) {
         return handleUndesiredExceptions(getResponse(), () -> {
             final Optional<String> saveAsName = saveAsName(getRequest());
-            final IEntityCentreConfig eccCompanion = companionFinder.find(EntityCentreConfig.class);
-            final IMainMenuItem mmiCompanion = companionFinder.find(MainMenuItem.class);
-            final IUser userCompanion = companionFinder.find(User.class);
+            eccCompanion = companionFinder.find(EntityCentreConfig.class);
+            mmiCompanion = companionFinder.find(MainMenuItem.class);
+            userCompanion = companionFinder.find(User.class);
+            miType = centre.getMenuItemType();
+            user = userProvider.getUser();
             final Map<String, Object> modifiedPropertiesHolder = restoreModifiedPropertiesHolderFrom(envelope, restUtil);
-            final Class<? extends MiWithConfigurationSupport<?>> miType = centre.getMenuItemType();
-            final User user = userProvider.getUser();
             final DeviceProfile device = device();
             final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = createCriteriaEntityWithoutConflicts(modifiedPropertiesHolder, companionFinder, critGenerator, miType, saveAsName, user, userProvider, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
             final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre = appliedCriteriaEntity.getCentreDomainTreeMangerAndEnhancer();
@@ -393,7 +412,7 @@ public class CriteriaResource extends AbstractWebResource {
         final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = createCriteriaValidationPrototype(miType, saveAsName, updatedFreshCentre, companionFinder, critGenerator, -1L, user, userProvider, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
         return restUtil.rawListJsonRepresentation(
             appliedCriteriaEntity,
-            disableViewButton(createCriteriaMetaValuesCustomObjectWithSaveAsInfo(
+            removeWasRunIndication(createCriteriaMetaValuesCustomObjectWithSaveAsInfo(
                 createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)),
                 appliedCriteriaEntity.centreDirtyCalculator().apply(saveAsName).apply(() -> updatedFreshCentre),
                 of(saveAsName),
@@ -473,14 +492,13 @@ public class CriteriaResource extends AbstractWebResource {
         return handleUndesiredExceptions(getResponse(), () -> {
             logger.debug("CRITERIA_RESOURCE: run started.");
             final Optional<String> saveAsName = saveAsName(getRequest());
-            final User user = userProvider.getUser();
-            final IEntityCentreConfig eccCompanion = companionFinder.find(EntityCentreConfig.class);
-            final IMainMenuItem mmiCompanion = companionFinder.find(MainMenuItem.class);
-            final IUser userCompanion = companionFinder.find(User.class);
+            user = userProvider.getUser();
+            eccCompanion = companionFinder.find(EntityCentreConfig.class);
+            mmiCompanion = companionFinder.find(MainMenuItem.class);
+            userCompanion = companionFinder.find(User.class);
+            miType = centre.getMenuItemType();
 
-            final Class<? extends MiWithConfigurationSupport<?>> miType = centre.getMenuItemType();
             final CentreContextHolder centreContextHolder = restoreCentreContextHolder(envelope, restUtil);
-
             final Map<String, Object> customObject = new LinkedHashMap<>(centreContextHolder.getCustomObject());
 
             final boolean isRunning = isRunning(customObject);

@@ -9,7 +9,6 @@ import static java.util.UUID.randomUUID;
 import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteriaWithModelHandler.CRITERIA_ENTITY_ID;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isBooleanCriterion;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnlyAndInstrument;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isAndBeforeDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isDateMnemonicDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isDatePrefixDefault;
@@ -24,6 +23,7 @@ import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.APPL
 import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.WAS_RUN_NAME;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrLink;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isInherited;
+import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.FETCH_CONFIG_AND_INSTRUMENT;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfigOpt;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfigOptByUuid;
 import static ua.com.fielden.platform.web.resources.webui.EntityResource.restoreMasterFunctionalEntity;
@@ -590,7 +590,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 of(validationPrototype.centreTitleAndDesc(customObjectSaveAsName).map(titleDesc -> titleDesc._2)),
                 empty()
             );
-            disableViewButton(customObject); // make VIEW button disabled by default; this behaviour can be overridden by removing 'wasRun' customObject's entry
+            removeWasRunIndication(customObject); // make VIEW button disabled by default; this behaviour can be overridden by removing 'wasRun' customObject's entry
             customObject.put(APPLIED_CRITERIA_ENTITY_NAME, appliedCriteriaEntity);
             return customObject;
         });
@@ -701,7 +701,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final String newConfigUuid = randomUUID().toString();
             final Function<String, Consumer<String>> createAndOverrideUuid = newDescription -> surrogateName -> {
                 commitCentre(user, userProvider, miType, surrogateName, newSaveAsName, device, freshCentre, newDescription, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-                findConfigOpt(miType, user, NAME_OF.apply(surrogateName).apply(newSaveAsName).apply(device), eccCompanion, fetchKeyAndDescOnlyAndInstrument(EntityCentreConfig.class).with("configUuid"))
+                findConfigOpt(miType, user, NAME_OF.apply(surrogateName).apply(newSaveAsName).apply(device), eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("configUuid"))
                     .ifPresent(config -> eccCompanion.quickSave(config.setConfigUuid(newConfigUuid))); // update with newConfigUuid
             };
             createAndOverrideUuid.apply(newDesc).accept(FRESH_CENTRE_NAME);
@@ -767,12 +767,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     }
 
     /**
-     * Makes VIEW button disabled even if the centre has been running and had some results earlier.
-     * 
-     * @param customObject
-     * @return
+     * Removes customObject's 'wasRun' indication even if the centre has actually been running and had some results loaded earlier.
      */
-    public static Map<String, Object> disableViewButton(final Map<String, Object> customObject) {
+    public static Map<String, Object> removeWasRunIndication(final Map<String, Object> customObject) {
         customObject.put(WAS_RUN_NAME, null);
         return customObject;
     }
@@ -1260,7 +1257,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      */
     public static EntityCentreConfig updateInheritedFromShared(final EntityCentreConfig upstreamConfig, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final Optional<String> saveAsName, final User user, final IEntityCentreConfig eccCompanion, final Optional<Supplier<Boolean>> checkChanges) {
         final Consumer<String> overrideConfigBodyFor = name ->
-            findConfigOpt(miType, user, NAME_OF.apply(name).apply(saveAsName).apply(device), eccCompanion, fetchKeyAndDescOnlyAndInstrument(EntityCentreConfig.class).with("configBody"))
+            findConfigOpt(miType, user, NAME_OF.apply(name).apply(saveAsName).apply(device), eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("configBody"))
             .ifPresent(config -> eccCompanion.quickSave(config.setConfigBody(upstreamConfig.getConfigBody())));
         final boolean notUpdateFresh = checkChanges.map(check -> check.get()).orElse(FALSE);
         overrideConfigBodyFor.accept(SAVED_CENTRE_NAME);
