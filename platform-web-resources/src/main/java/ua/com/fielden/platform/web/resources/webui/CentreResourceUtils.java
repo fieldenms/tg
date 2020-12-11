@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static java.lang.Boolean.FALSE;
 import static java.lang.Math.min;
-import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
@@ -24,11 +24,8 @@ import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.APPL
 import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.WAS_RUN_NAME;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrLink;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isInherited;
-import static ua.com.fielden.platform.web.centre.CentreDiffSerialiser.CENTRE_DIFF_SERIALISER;
-import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfig;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfigOpt;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfigOptByUuid;
-import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.restoreDiffFrom;
 import static ua.com.fielden.platform.web.resources.webui.EntityResource.restoreMasterFunctionalEntity;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalManagedType;
@@ -44,6 +41,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -108,11 +107,32 @@ import ua.com.fielden.snappy.MnemonicEnum;
  *
  */
 public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtils<T> {
+    private static final Logger logger = Logger.getLogger(CentreResourceUtils.class);
+    
+    /**
+     * The key for customObject's value containing save-as name.
+     */
+    private static final String SAVE_AS_NAME = "saveAsName";
+    /**
+     * The key for customObject's value containing save-as description.
+     */
+    private static final String SAVE_AS_DESC = "saveAsDesc";
+    /**
+     * The key for customObject's value containing configuration uuid.
+     */
+    private static final String CONFIG_UUID = "configUuid";
     /**
      * The key for customObject's value indicating whether centre configuration is dirty meaning it is changed or of [default, link, inherited] kind.
      */
-    public static final String CENTRE_DIRTY = "centreDirty";
-    private static final Logger logger = Logger.getLogger(CentreResourceUtils.class);
+    static final String CENTRE_DIRTY = "centreDirty";
+    /**
+     * The key for customObject's value containing meta values e.g. mnemonics.
+     */
+    static final String META_VALUES = "metaValues";
+    /**
+     * The key for customObject's value containing message for stale criteria or empty if not stale.
+     */
+    static final String STALE_CRITERIA_MESSAGE = "staleCriteriaMessage";
 
     /** Private default constructor to prevent instantiation. */
     private CentreResourceUtils() {
@@ -146,7 +166,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     static Map<String, Object> createCriteriaMetaValuesCustomObject(final Map<String, Map<String, Object>> criteriaMetaValues, final boolean centreDirty) {
         final Map<String, Object> customObject = new LinkedHashMap<>();
         customObject.put(CENTRE_DIRTY, centreDirty);
-        customObject.put("metaValues", criteriaMetaValues);
+        customObject.put(META_VALUES, criteriaMetaValues);
         return customObject;
     }
 
@@ -173,16 +193,16 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     ) {
         final Map<String, Object> customObject = createCriteriaMetaValuesCustomObject(criteriaMetaValues, centreDirty);
         saveAsName.ifPresent(name -> {
-            customObject.put("saveAsName", name.orElse(""));
+            customObject.put(SAVE_AS_NAME, name.orElse(""));
         });
         configUuid.ifPresent(uuid -> {
-            customObject.put("configUuid", uuid.orElse("")); // explicit coding into URI path format is not needed because of possible UUID characters: -abcdef0123456789
+            customObject.put(CONFIG_UUID, uuid.orElse("")); // explicit coding into URI path format is not needed because of possible UUID characters: -abcdef0123456789
         });
         saveAsDesc.ifPresent(desc -> {
-            customObject.put("saveAsDesc", desc.orElse(""));
+            customObject.put(SAVE_AS_DESC, desc.orElse(""));
         });
         staleCriteriaMessage.ifPresent(message -> {
-            customObject.put("staleCriteriaMessage", message.orElse(null));
+            customObject.put(STALE_CRITERIA_MESSAGE, message.orElse(null));
         });
         return customObject;
     }
@@ -200,7 +220,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      */
     static Map<String, Object> createCriteriaMetaValuesCustomObject(final Map<String, Map<String, Object>> criteriaMetaValues, final boolean centreDirty, final String staleCriteriaMessage) {
         final Map<String, Object> customObject = createCriteriaMetaValuesCustomObject(criteriaMetaValues, centreDirty);
-        customObject.put("staleCriteriaMessage", staleCriteriaMessage);
+        customObject.put(STALE_CRITERIA_MESSAGE, staleCriteriaMessage);
         return customObject;
     }
 
@@ -533,9 +553,10 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         // returns an updated version of PREVIOUSLY_RUN centre
         validationPrototype.setPreviouslyRunCentreSupplier(() -> updateCentre(user, userProvider, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder));
         
+        // returns whether centre (defined by 'specificSaveAsName, freshCentreSupplier' arguments) is changed from previously saved (or the very original) configuration version or it is New (aka default, link or inherited)
         validationPrototype.setCentreDirtyCalculator(specificSaveAsName -> freshCentreSupplier ->
-            isDefaultOrLink(specificSaveAsName)
-            || isFreshCentreChanged(
+            isDefaultOrLink(specificSaveAsName) // this is very cheap operation
+            || isFreshCentreChanged( // this operation has been chosen to be calculated before isInherited as it is assumed to be slightly cheaper than isInherited
                 freshCentreSupplier.get(),
                 updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, specificSaveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder)
             )
@@ -638,23 +659,10 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         });
         // updates inherited centre with title 'saveAsNameToLoad' from upstream shared configuration -- just before LOAD action
         validationPrototype.setInheritedFromSharedCentreUpdater(saveAsNameToLoad -> configUuid -> {
-            final Optional<EntityCentreConfig> savedConfigOpt = findConfigOptByUuid(configUuid, miType, device, SAVED_CENTRE_NAME, eccCompanion);
-            if (savedConfigOpt.isPresent()) {
-                final EntityCentreConfig savedConfig = savedConfigOpt.get();
-                final Map<String, Object> differences = restoreDiffFrom(savedConfig, eccCompanion, format("for type [%s] with name [%s]", miType.getSimpleName(), savedConfig.getTitle()));
-                final boolean centreChanged = isFreshCentreChanged(
-                    updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, of(saveAsNameToLoad), device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder),
-                    updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, of(saveAsNameToLoad), device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder)
-                );
-                final EntityCentreConfig savedConfigForCurrUser = findConfig(miType, user, NAME_OF.apply(SAVED_CENTRE_NAME).apply(of(saveAsNameToLoad)).apply(device), eccCompanion, fetchKeyAndDescOnlyAndInstrument(EntityCentreConfig.class).with("configBody"));
-                savedConfigForCurrUser.setConfigBody(CENTRE_DIFF_SERIALISER.serialise(differences));
-                eccCompanion.quickSave(savedConfigForCurrUser);
-                if (!centreChanged) {
-                    final EntityCentreConfig freshConfigForCurrUser = findConfig(miType, user, NAME_OF.apply(FRESH_CENTRE_NAME).apply(of(saveAsNameToLoad)).apply(device), eccCompanion, fetchKeyAndDescOnlyAndInstrument(EntityCentreConfig.class).with("configBody"));
-                    freshConfigForCurrUser.setConfigBody(CENTRE_DIFF_SERIALISER.serialise(differences));
-                    eccCompanion.quickSave(freshConfigForCurrUser);
-                }
-            }
+            updateInheritedFromShared(configUuid, miType, device, of(saveAsNameToLoad), user, eccCompanion, of(() -> isFreshCentreChanged(
+                updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, of(saveAsNameToLoad), device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder),
+                updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, of(saveAsNameToLoad), device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder)
+            )));
         });
         // clears default centre and fully prepares it for usage
         validationPrototype.setDefaultCentreClearer(() -> {
@@ -1211,4 +1219,52 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 modifiedPropertiesHolder//
         );
     }
+
+    /**
+     * Updates FRESH / SAVED versions of configuration for {@code user} from upstream configuration if it exists.
+     * Returns upstream configuration.
+     * <p>
+     * This method safely checks whether FRESH / SAVED / upstream configs exist.
+     * They should, if prior isInherited check was true.
+     * However in highly concurrent system original creator could have performed deletion in between (unlikely),
+     *  also {@code user} could have performed deletion of current configuration too (very unlikely).
+     * 
+     * @param checkChanges -- optional function to check whether there are local changes; if they are -- not update FRESH from upstream; if no such check is needed i.e. empty function is passed (e.g. when discarding) -- force FRESH centre updating
+     */
+    public static Optional<EntityCentreConfig> updateInheritedFromShared(
+        final String configUuid,
+        final Class<? extends MiWithConfigurationSupport<?>> miType,
+        final DeviceProfile device,
+        final Optional<String> saveAsName,
+        final User user,
+        final IEntityCentreConfig eccCompanion,
+        final Optional<Supplier<Boolean>> checkChanges
+    ) {
+        return findConfigOptByUuid(configUuid, miType, device, SAVED_CENTRE_NAME, eccCompanion).map(upstreamConfig -> {
+            return updateInheritedFromShared(upstreamConfig, miType, device, saveAsName, user, eccCompanion, checkChanges);
+        });
+    }
+
+    /**
+     * Updates FRESH / SAVED versions of configuration for {@code user} from upstream configuration.
+     * Returns upstream configuration back.
+     * <p>
+     * This method safely checks whether FRESH / SAVED configs exist.
+     * They should, if prior isInherited check was true.
+     * However in highly concurrent system {@code user} could have performed deletion of current configuration (very unlikely).
+     * 
+     * @param checkChanges -- optional function to check whether there are local changes; if they are -- not update FRESH from upstream; if no such check is needed i.e. empty function is passed (e.g. when discarding) -- force FRESH centre updating
+     */
+    public static EntityCentreConfig updateInheritedFromShared(final EntityCentreConfig upstreamConfig, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final Optional<String> saveAsName, final User user, final IEntityCentreConfig eccCompanion, final Optional<Supplier<Boolean>> checkChanges) {
+        final Function<String, Optional<Long>> overrideConfigBodyFor = name ->
+            findConfigOpt(miType, user, NAME_OF.apply(name).apply(saveAsName).apply(device), eccCompanion, fetchKeyAndDescOnlyAndInstrument(EntityCentreConfig.class).with("configBody"))
+            .map(config -> eccCompanion.quickSave(config.setConfigBody(upstreamConfig.getConfigBody())));
+        final boolean notUpdateFresh = checkChanges.map(check -> check.get()).orElse(FALSE);
+        overrideConfigBodyFor.apply(SAVED_CENTRE_NAME);
+        if (!notUpdateFresh) {
+            overrideConfigBodyFor.apply(FRESH_CENTRE_NAME);
+        }
+        return upstreamConfig;
+    }
+
 }

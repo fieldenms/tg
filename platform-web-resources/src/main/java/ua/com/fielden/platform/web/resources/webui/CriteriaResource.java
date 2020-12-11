@@ -7,7 +7,6 @@ import static java.util.Optional.ofNullable;
 import static java.util.UUID.randomUUID;
 import static ua.com.fielden.platform.data.generator.IGenerator.FORCE_REGENERATION_KEY;
 import static ua.com.fielden.platform.data.generator.IGenerator.shouldForceRegeneration;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnlyAndInstrument;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
 import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
@@ -16,8 +15,8 @@ import static ua.com.fielden.platform.web.action.CentreConfigShareActionProducer
 import static ua.com.fielden.platform.web.centre.CentreConfigUpdaterUtils.applyNewOrderVisibilityAndSorting;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrLink;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isInherited;
-import static ua.com.fielden.platform.web.centre.CentreDiffSerialiser.CENTRE_DIFF_SERIALISER;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.NAME_OF;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.SAVED_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.commitCentre;
@@ -25,7 +24,6 @@ import static ua.com.fielden.platform.web.centre.CentreUpdater.commitCentreWitho
 import static ua.com.fielden.platform.web.centre.CentreUpdater.deviceSpecific;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.loadableConfigurations;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.makePreferred;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.NAME_OF;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.obtainTitleFrom;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.removeCentres;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.retrievePreferredConfigName;
@@ -42,6 +40,8 @@ import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
 import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.saveAsName;
 import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.wasLoadedPreviouslyAndConfigUuid;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.CENTRE_DIRTY;
+import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.META_VALUES;
+import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.STALE_CRITERIA_MESSAGE;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaEntityWithoutConflicts;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaMetaValues;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaMetaValuesCustomObject;
@@ -52,6 +52,7 @@ import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.di
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.isAutoRunning;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.isRunning;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.isSorting;
+import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.updateInheritedFromShared;
 import static ua.com.fielden.platform.web.resources.webui.EntityValidationResource.VALIDATION_COUNTER;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
@@ -248,16 +249,8 @@ public class CriteriaResource extends AbstractWebResource {
                                     }
                                     updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
                                 } else {
-                                    if (sharingModel.isSharedWith(configUuid.get(), user).isSuccessful()) {
-                                        // inherited from shared
-                                        final Map<String, Object> differences = restoreDiffFrom(savedConfig, eccCompanion, format("for type [%s] with name [%s] for user [%s]", miType.getSimpleName(), savedConfig.getTitle(), savedConfigCreator));
-                                        final EntityCentreConfig savedConfigForCurrUser = findConfig(miType, user, NAME_OF.apply(SAVED_CENTRE_NAME).apply(actualSaveAsName).apply(device()), eccCompanion, fetchKeyAndDescOnlyAndInstrument(EntityCentreConfig.class).with("configBody"));
-                                        savedConfigForCurrUser.setConfigBody(CENTRE_DIFF_SERIALISER.serialise(differences));
-                                        eccCompanion.quickSave(savedConfigForCurrUser);
-                                        if (!isCentreChanged(miType, user, eccCompanion, mmiCompanion, userCompanion, actualSaveAsName)) {
-                                            freshConfigOpt.get().setConfigBody(CENTRE_DIFF_SERIALISER.serialise(differences));
-                                            eccCompanion.quickSave(freshConfigOpt.get());
-                                        }
+                                    if (sharingModel.isSharedWith(configUuid.get(), user).isSuccessful()) { // inherited from shared
+                                        updateInheritedFromShared(savedConfig, miType, device(), actualSaveAsName, user, eccCompanion, of(() -> isCentreChanged(miType, user, eccCompanion, mmiCompanion, userCompanion, actualSaveAsName)));
                                     } // already loaded inherited from shared config was made unshared; the inherited from shared configuration now acts like own save-as configuration
                                 }
                             }
@@ -760,11 +753,11 @@ public class CriteriaResource extends AbstractWebResource {
             final IUser userCompanion,
             final ICompanionObjectFinder companionFinder) {
         resultantCustomObject.put(CENTRE_DIRTY, centreDirtyCalculator.apply(saveAsName).apply(() -> updatedFreshCentre));
-        resultantCustomObject.put("metaValues", createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)));
+        resultantCustomObject.put(META_VALUES, createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)));
 
         // Resultant custom object contains information whether selection criteria is stale (config button colour).
         // Such information should be updated just before returning resultant custom object to the client.
-        resultantCustomObject.put("staleCriteriaMessage", staleCriteriaMessage);
+        resultantCustomObject.put(STALE_CRITERIA_MESSAGE, staleCriteriaMessage);
 
         return resultantCustomObject;
     }
