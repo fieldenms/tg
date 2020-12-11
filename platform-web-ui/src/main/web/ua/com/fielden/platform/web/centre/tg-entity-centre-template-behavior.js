@@ -12,10 +12,13 @@ const TgEntityCentreTemplateBehaviorImpl = {
         pageCount: Number,
         pageNumberUpdated: Number,
         pageCountUpdated: Number,
-        staleCriteriaMessage: String
+        staleCriteriaMessage: String,
+
+        _defaultPropertyActionAttrs: Object
     },
 
     created: function () {
+        this._defaultPropertyActionAttrs = {currentState: "EDIT", centreUuid: this.uuid};
         // bind SSE event handling method regardless of the fact whether this particulare
         // centre is bound to some SSE url or not.
         this.dataHandler = function (msg) {

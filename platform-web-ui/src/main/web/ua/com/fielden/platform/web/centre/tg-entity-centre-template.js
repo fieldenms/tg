@@ -15,6 +15,7 @@ import '/resources/polymer/@polymer/paper-button/paper-button.js';
 import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 
+import '/resources/actions/tg-ui-action.js';
 import '/resources/egi/tg-entity-grid-inspector.js';
 import '/resources/master/actions/tg-action.js';
 import {TgEgiMasterBehavior} from '/resources/egi/tg-egi-master-behavior.js';
@@ -68,7 +69,18 @@ const entityCentreTemplate = html`
             <tg-egi-@mi_type-master slot="egi-master" centre-uuid="[[uuid]]"></tg-egi-@mi_type-master>
             
             <!--@toolbar-->
-
+            <tg-ui-action
+                slot="deafultPropertyAction"
+                ui-role='ICON'
+                show-dialog='[[_showDialog]]'
+                toaster='[[toaster]]'
+                create-context-holder='[[_createContextHolder]]'
+                dynamic-action
+                attrs='[[_defaultPropertyActionAttrs]]'
+                require-selection-criteria='false'
+                require-selected-entities='ONE'
+                require-master-entity='false'>
+            </tg-ui-action>
             <!--@primary_action-->
             <!--@secondary_actions-->
             <!--@insertion_point_actions-->
