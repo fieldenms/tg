@@ -7,6 +7,8 @@ import static java.util.Optional.ofNullable;
 import static java.util.UUID.randomUUID;
 import static ua.com.fielden.platform.data.generator.IGenerator.FORCE_REGENERATION_KEY;
 import static ua.com.fielden.platform.data.generator.IGenerator.shouldForceRegeneration;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnlyAndInstrument;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
 import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
@@ -289,7 +291,7 @@ public class CriteriaResource extends AbstractWebResource {
                                 sharingModel.isSharedWith(configUuid.get(), user).ifFailure(Result::throwRuntime);
                                 // this is definitely the case where current user gets uuid as part of sharing process from other base/non-base user;
                                 // the title of the shared config can conflict with preliminarySaveAsName;
-                                final Optional<EntityCentreConfig> conflictingConfigOpt = findConfigOpt(miType, user, NAME_OF.apply(FRESH_CENTRE_NAME).apply(preliminarySaveAsName).apply(device()), eccCompanion);
+                                final Optional<EntityCentreConfig> conflictingConfigOpt = findConfigOpt(miType, user, NAME_OF.apply(FRESH_CENTRE_NAME).apply(preliminarySaveAsName).apply(device()), eccCompanion, fetchKeyAndDescOnly(EntityCentreConfig.class));
                                 if (conflictingConfigOpt.isPresent()) {
                                     final String conflictingSaveAsName = obtainTitleFrom(conflictingConfigOpt.get().getTitle(), deviceSpecific(FRESH_CENTRE_NAME, device()));
                                     actualSaveAsName = of(conflictingSaveAsName + " (shared)"); // TODO another conflict possible?
@@ -303,7 +305,8 @@ public class CriteriaResource extends AbstractWebResource {
                                 saveNewEntityCentreManager(false, differences, miType, user, freshSurrogateName, freshConfigForCreator.getDesc(), eccCompanion, mmiCompanion);
                                 saveNewEntityCentreManager(false, differences, miType, user, savedSurrogateName, null,                            eccCompanion, mmiCompanion);
                                 // update (FRESH only) with configUuid
-                                findConfigOpt(miType, user, freshSurrogateName, eccCompanion).ifPresent(config -> eccCompanion.quickSave(config.setConfigUuid(configUuid.get())));
+                                findConfigOpt(miType, user, freshSurrogateName, eccCompanion, fetchKeyAndDescOnlyAndInstrument(EntityCentreConfig.class).with("configUuid"))
+                                    .ifPresent(config -> eccCompanion.quickSave(config.setConfigUuid(configUuid.get())));
                             }
                         }
                     } else {

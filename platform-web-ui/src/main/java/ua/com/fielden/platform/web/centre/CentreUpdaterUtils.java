@@ -227,21 +227,13 @@ public class CentreUpdaterUtils extends CentreUpdater {
         );
     }
     
-    public static EntityCentreConfig findConfig(final Class<?> menuItemType, final User user, final String name, final IEntityCentreConfig eccCompanion, final fetch<EntityCentreConfig> fetch) {
-        return eccCompanion.getEntity(
+    public static Optional<EntityCentreConfig> findConfigOpt(final Class<?> menuItemType, final User user, final String name, final IEntityCentreConfig eccCompanion, final fetch<EntityCentreConfig> fetch) {
+        return eccCompanion.getEntityOptional(
             from(modelFor(user, menuItemType.getName(), name)).with(fetch).model()
         );
     }
     
-    public static Optional<EntityCentreConfig> findConfigOpt(final Class<?> menuItemType, final User user, final String name, final IEntityCentreConfig eccCompanion) {
-        return ofNullable(findConfig(menuItemType, user, name, eccCompanion));
-    }
-    
-    public static Optional<EntityCentreConfig> findConfigOpt(final Class<?> menuItemType, final User user, final String name, final IEntityCentreConfig eccCompanion, final fetch<EntityCentreConfig> fetch) {
-        return ofNullable(findConfig(menuItemType, user, name, eccCompanion, fetch));
-    }
-    
-    public static Optional<EntityCentreConfig> findConfigOptByUuid(final ICompoundCondition0<EntityCentreConfig> model, final String uuid, final IEntityCentreConfig eccCompanion) {
+    private static Optional<EntityCentreConfig> findConfigOptByUuid(final ICompoundCondition0<EntityCentreConfig> model, final String uuid, final IEntityCentreConfig eccCompanion) {
         return eccCompanion.getEntityOptional(from(model
             .and().prop("configUuid").eq().val(uuid).model()
         ).with(fetchWithKeyAndDesc(EntityCentreConfig.class, true).with("preferred").with("configUuid").with("owner.base").with("configBody").fetchModel()).model());

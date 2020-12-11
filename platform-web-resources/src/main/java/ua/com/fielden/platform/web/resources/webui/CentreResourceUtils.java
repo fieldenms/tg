@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -696,13 +697,15 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         validationPrototype.setCentreSaver((newName, newDesc) -> {
             final Optional<String> newSaveAsName = of(newName);
             final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+            // save 'freshCentre' with a new name into FRESH / SAVED -- button SAVE will be disabled
             final String newConfigUuid = randomUUID().toString();
-            // save the 'fresh' centre with a new name -- buttons SAVE / DISCARD will be disabled
-            commitCentre(user, userProvider, miType, FRESH_CENTRE_NAME, newSaveAsName, device, freshCentre, newDesc, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-            commitCentre(user, userProvider, miType, SAVED_CENTRE_NAME, newSaveAsName, device, freshCentre, null, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-            // update both centres with newConfigUuid
-            findConfigOpt(miType, user, NAME_OF.apply(FRESH_CENTRE_NAME).apply(newSaveAsName).apply(device), eccCompanion).ifPresent(config -> eccCompanion.quickSave(config.setConfigUuid(newConfigUuid)));
-            findConfigOpt(miType, user, NAME_OF.apply(SAVED_CENTRE_NAME).apply(newSaveAsName).apply(device), eccCompanion).ifPresent(config -> eccCompanion.quickSave(config.setConfigUuid(newConfigUuid)));
+            final Function<String, Consumer<String>> createAndOverrideUuid = newDescription -> surrogateName -> {
+                commitCentre(user, userProvider, miType, surrogateName, newSaveAsName, device, freshCentre, newDescription, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+                findConfigOpt(miType, user, NAME_OF.apply(surrogateName).apply(newSaveAsName).apply(device), eccCompanion, fetchKeyAndDescOnlyAndInstrument(EntityCentreConfig.class).with("configUuid"))
+                    .ifPresent(config -> eccCompanion.quickSave(config.setConfigUuid(newConfigUuid))); // update with newConfigUuid
+            };
+            createAndOverrideUuid.apply(newDesc).accept(FRESH_CENTRE_NAME);
+            createAndOverrideUuid.apply(null).accept(SAVED_CENTRE_NAME);
             
             // when switching to new configuration we need to make it preferred
             validationPrototype.makePreferredConfig(newSaveAsName);
@@ -1256,13 +1259,13 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @param checkChanges -- optional function to check whether there are local changes; if they are -- not update FRESH from upstream; if no such check is needed i.e. empty function is passed (e.g. when discarding) -- force FRESH centre updating
      */
     public static EntityCentreConfig updateInheritedFromShared(final EntityCentreConfig upstreamConfig, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final Optional<String> saveAsName, final User user, final IEntityCentreConfig eccCompanion, final Optional<Supplier<Boolean>> checkChanges) {
-        final Function<String, Optional<Long>> overrideConfigBodyFor = name ->
+        final Consumer<String> overrideConfigBodyFor = name ->
             findConfigOpt(miType, user, NAME_OF.apply(name).apply(saveAsName).apply(device), eccCompanion, fetchKeyAndDescOnlyAndInstrument(EntityCentreConfig.class).with("configBody"))
-            .map(config -> eccCompanion.quickSave(config.setConfigBody(upstreamConfig.getConfigBody())));
+            .ifPresent(config -> eccCompanion.quickSave(config.setConfigBody(upstreamConfig.getConfigBody())));
         final boolean notUpdateFresh = checkChanges.map(check -> check.get()).orElse(FALSE);
-        overrideConfigBodyFor.apply(SAVED_CENTRE_NAME);
+        overrideConfigBodyFor.accept(SAVED_CENTRE_NAME);
         if (!notUpdateFresh) {
-            overrideConfigBodyFor.apply(FRESH_CENTRE_NAME);
+            overrideConfigBodyFor.accept(FRESH_CENTRE_NAME);
         }
         return upstreamConfig;
     }
