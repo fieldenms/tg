@@ -440,6 +440,7 @@ const template = html`
     <!--configuring slotted elements-->
     <slot id="column_selector" name="property-column" hidden></slot>
     <slot id="primary_action_selector" name="primary-action" hidden></slot>
+    <slot id="default_property_action" name="deafultPropertyAction" hidden></slot>
     <slot id="egi_master" name="egi-master" hidden></slot>
     <!--EGI template-->
     <div id="paperMaterial" class="grid-container" style$="[[_calcMaterialStyle(showMarginAround)]]" fit-to-height$="[[fitToHeight]]">
@@ -895,6 +896,8 @@ Polymer({
         _isSecondaryActionPresent: Boolean,
         //the list of secondary actions
         _secondaryActions: Array,
+        //Default action for property columns. It is invoked only if there were no other action specified for specific property column.
+        _defaultPropertyAction: Object,
         //The callback to open drop down for secondary action.
         _openDropDown: Function,
 
@@ -943,6 +946,9 @@ Polymer({
 
         //Initialising the primary action.
         this.primaryAction = primaryActions.length > 0 ? primaryActions[0] : null;
+
+        //Initialising the default property action
+        this._defaultPropertyAction = this.$.default_property_action.assignedNodes()[0];
 
         //Initialising event listeners.
         this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
@@ -1318,7 +1324,7 @@ Polymer({
         // This closure returns either 'entity' or the entity navigated to (EntityNavigationAction).
         // Each tapping overrides this function to provide proper context of execution.
         // This override should occur on every 'run' of the action so it is mandatory to use 'tg-property-column.runAction' public API.
-        if (column.runAction(this._currentEntity(entity)) === false) {
+        if (column.runAction(this._currentEntity(entity), this._defaultPropertyAction) === false) {
             // if the clicked property is a hyperlink and there was no custom action associted with it
             // then let's open the linked resources
             if (this.isHyperlinkProp(entity, column) === true) {

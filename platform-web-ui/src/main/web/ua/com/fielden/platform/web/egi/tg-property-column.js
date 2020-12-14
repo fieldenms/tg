@@ -3,6 +3,9 @@ import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
+import {getFirstEntityValue} from '/resources/reflection/tg-polymer-utils.js';
+import { TgReflector } from '/app/tg-reflector.js';
+
 const template = html`
     <slot id="action_selector" name="property-action" hidden></slot>
     <slot id="summary_selection" name="summary-property" hidden></slot>`;
@@ -33,11 +36,17 @@ Polymer({
         editable: {
             type: Boolean,
             value: false
-        }
+        },
+
+        _reflector: Object
     },
 
     hostAttributes: {
         hidden: true
+    },
+
+    created: function() {
+        this._reflector = new TgReflector();
     },
 
     ready: function () {
@@ -53,12 +62,19 @@ Polymer({
      * Otherwise, simply returns false to indicate that there was no custom action to be executed. 
      * the passed in currentEntity is a function that returns choosen entity. 
      */
-    runAction: function (currentEntity) {
+    runAction: function (currentEntity, defaultPropertyAction) {
         if (this.customAction) {
             this.customAction.currentEntity = currentEntity;
             this.customAction._run();
             return true;
-        }
+        } else if (defaultPropertyAction) {
+            const newCurrentEntity = () => {
+                return getFirstEntityValue(this._reflector, currentEntity(), this.property);
+            }
+            defaultPropertyAction.currentEntity = newCurrentEntity;
+            defaultPropertyAction._run();
+            return true;
+        } 
         return false;
     }
 });

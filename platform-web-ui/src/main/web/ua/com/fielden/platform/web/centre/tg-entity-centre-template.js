@@ -79,7 +79,8 @@ const entityCentreTemplate = html`
                 attrs='[[_defaultPropertyActionAttrs]]'
                 require-selection-criteria='false'
                 require-selected-entities='ONE'
-                require-master-entity='false'>
+                require-master-entity='false'
+                hidden>
             </tg-ui-action>
             <!--@primary_action-->
             <!--@secondary_actions-->
