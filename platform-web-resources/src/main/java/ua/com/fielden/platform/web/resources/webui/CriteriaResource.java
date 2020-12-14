@@ -135,18 +135,19 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  *
  */
 public class CriteriaResource extends AbstractWebResource {
-    private final static Logger logger = Logger.getLogger(CriteriaResource.class);
-
-    private final static String staleCriteriaMessage = "Selection criteria have been changed, but not applied. "
+    private static final Logger logger = Logger.getLogger(CriteriaResource.class);
+    private static final String CONFIG_COULD_NOT_BE_SHARED_WITH_BASE_USER = "Any configuration could not be shared with base users, e.g. with %s.";
+    private static final String LINK_CONFIG_COULD_NOT_BE_SHARED = "Link configuration could not be shared.";
+    private static final String CONFLICTING_TITLE_SUFFIX = " (shared%s)";
+    private static final String COULD_NOT_LOAD_CONFLICTING_SHARED_CONFIGURATION = "Could not load shared configuration with [%s] conflicting title.";
+    private static final String LINK_CONFIG_COULD_NOT_BE_LOADED = "Link configuration could not be loaded. Please try again.";
+    private static final String staleCriteriaMessage = "Selection criteria have been changed, but not applied. "
                                                      + "Previously applied values are in effect. "
                                                      + "Please tap action <b>RUN</b> to apply the updated selection criteria.";
-
     private final RestServerUtil restUtil;
     private final ICompanionObjectFinder companionFinder;
-
     private final ICriteriaGenerator critGenerator;
     private final EntityCentre<AbstractEntity<?>> centre;
-
     private final IWebUiConfig webUiConfig;
     private final IUserProvider userProvider;
     private final EntityFactory entityFactory;
@@ -206,25 +207,34 @@ public class CriteriaResource extends AbstractWebResource {
             final Optional<String> actualSaveAsName;
             final Optional<String> resolvedConfigUuid;
             if (!getQuery().isEmpty()) {
+                // start loading of link configuration with parameters;
+                // create two empty FRESH / SAVED centres if not yet created;
+                // return saveAsName and generated configUuid for further processing
                 final T2<Optional<String>, Optional<String>> saveAsNameAndConfigUuid = prepareLinkConfigInfrastructure();
                 actualSaveAsName = saveAsNameAndConfigUuid._1;
                 resolvedConfigUuid = saveAsNameAndConfigUuid._2;
-                // clear current 'link' surrogate FRESH centre -- this is to make it empty before applying new selection criteria parameters (client-side action after this request's response will be delivered)
-                final ICentreDomainTreeManagerAndEnhancer emptyCentre = updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, actualSaveAsName /* empty link config -- SAVED surrogate centre */, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+                // empty link config is taken from SAVED surrogate centre (which is always empty);
+                final ICentreDomainTreeManagerAndEnhancer emptyCentre = updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, actualSaveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+                // clear current 'link' surrogate FRESH centre -- this is to make it empty before applying new selection criteria parameters (client-side action after this request's response will be delivered);
                 commitCentre(user, userProvider, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), emptyCentre, null /* newDesc */, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
             } else if (configUuid.isPresent()) {
+                // start loading of configuration defined by concrete uuid;
                 // we look only through [link, own save-as, inherited from base, inherited from shared] set of configurations;
                 // default configurations are excluded in the lookup;
-                // only FRESH ones are looked for;
+                // only FRESH kind are looked for;
                 final Optional<EntityCentreConfig> freshConfigOpt = findConfigOptByUuid(configUuid.get(), user, miType, device(), FRESH_CENTRE_NAME, eccCompanion);
                 if (freshConfigOpt.isPresent()) {
+                    // for current user we already have FRESH configuration with uuid loaded;
                     actualSaveAsName = of(obtainTitleFrom(freshConfigOpt.get().getTitle(), deviceSpecific(FRESH_CENTRE_NAME, device())));
-                    updateFromUpstream(configUuid.get(), actualSaveAsName);
+                    // updating is required from upstream configuration;
+                    if (!LINK_CONFIG_TITLE.equals(actualSaveAsName.get())) { // (but not for link configuration);
+                        updateFromUpstream(configUuid.get(), actualSaveAsName);
+                    }
                 } else {
-                    final EntityCentreConfig savedConfigForOtherUser = validateConfigByUuid(configUuid.get()).orElseThrow(Result::asRuntime);
-                    actualSaveAsName = loadConfigByUuid(configUuid.get(), savedConfigForOtherUser);
+                    // if there is no FRESH configuration then there are no [link, own save-as] configuration with the specified uuid;
+                    // however there can exist [base, shared] config for other user with the specified uuid;
+                    actualSaveAsName = firstTimeLoadingFrom(validateUuidAndGetUpstreamConfig(configUuid.get()).orElseThrow(Result::asRuntime));
                 }
-                
                 // configuration being loaded need to become preferred
                 if (!LINK_CONFIG_TITLE.equals(actualSaveAsName.get()) && !webUiConfig.getCentres().get(miType).isRunAutomatically()) {
                     makePreferred(userProvider.getUser(), miType, actualSaveAsName, device(), companionFinder);
@@ -249,29 +259,24 @@ public class CriteriaResource extends AbstractWebResource {
     }
     
     /**
-     * Validates {@code configUuid} on the subject of configuration existence and general ability to share with current {@code user}.
+     * Validates {@code configUuid} on the subject of configuration existence and general ability to share it with current {@code user}.
      */
-    private Either<Result, EntityCentreConfig> validateConfigByUuid(final String configUuid) {
-        // if there is no FRESH configuration then there are no [link, own save-as] configuration with the specified uuid;
-        // however there can exist [base, shared] config for other user;
-        // in that case we look only for owners and "owning" is indicated by presence of SAVED configuration with the specified uuid;
+    private Either<Result, EntityCentreConfig> validateUuidAndGetUpstreamConfig(final String configUuid) {
+        // we look only for owners; "owning" is indicated by presence of SAVED configuration with the specified uuid
         final Optional<EntityCentreConfig> savedConfigOptForOtherUser = findConfigOptByUuid(configUuid, miType, device(), SAVED_CENTRE_NAME, eccCompanion);
         if (!savedConfigOptForOtherUser.isPresent()) {
+            // configuration does not exist (no SAVED surrogate centre) -- legitimate error; this can happen if configuration has been already deleted or didn't exist due to URI mistyping
             return left(failure(CONFIG_DOES_NOT_EXIST));
-        } else {
-            if (user.isBase()) {
-                // current user is base user;
-                // we have configuration owner not equal to current user;
-                // base user is not based on any other;
-                // so from two categories [base, shared] we can only consider [shared];
-                // so, at this stage, we prohibit loading of [inherited from shared] configurations for base users -- not really practical scenario and possibly will never be required
-                return left(failure(format("Any configuration could not be shared with base users, e.g. with %s.", user)));
-            } else {
-                // link-configs can not be shared anywhere neither from base (for current user) user nor from base/non-base user that gave its uuid as part of sharing process
-                if (LINK_CONFIG_TITLE.equals(obtainTitleFrom(savedConfigOptForOtherUser.get().getTitle(), deviceSpecific(SAVED_CENTRE_NAME, device())))) {
-                    return left(failure(format("%s link configuration could not be shared.", savedConfigOptForOtherUser.get().getOwner())));
-                }
-            }
+        } else if (user.isBase()) {
+            // current user is base user;
+            // we have configuration owner not equal to current user (because FRESH config with this uuid for current user didn't exist);
+            // base user is not based on any other;
+            // so from two categories [base, shared] we can only consider [shared];
+            // so, at this stage, we prohibit loading of [inherited from shared] configurations for base users -- not really practical scenario and possibly will never be required
+            return left(failure(format(CONFIG_COULD_NOT_BE_SHARED_WITH_BASE_USER, user)));
+        } else if (LINK_CONFIG_TITLE.equals(obtainTitleFrom(savedConfigOptForOtherUser.get().getTitle(), deviceSpecific(SAVED_CENTRE_NAME, device())))) {
+            // link-configs can not be shared anywhere neither from base user nor from base/non-base user that gave its uuid as part of sharing process
+            return left(failure(LINK_CONFIG_COULD_NOT_BE_SHARED));
         }
         return right(savedConfigOptForOtherUser.get());
     }
@@ -279,11 +284,12 @@ public class CriteriaResource extends AbstractWebResource {
     /**
      * Implements first time loading of configuration into 'inherited from base / shared'.
      */
-    private Optional<String> loadConfigByUuid(final String configUuid, final EntityCentreConfig savedConfigForOtherUser) {
-        final User savedConfigCreator = savedConfigForOtherUser.getOwner();
-        final String preliminarySaveAsName = obtainTitleFrom(savedConfigForOtherUser.getTitle(), deviceSpecific(SAVED_CENTRE_NAME, device()));
+    private Optional<String> firstTimeLoadingFrom(final EntityCentreConfig upstreamConfig) {
+        final String configUuid = upstreamConfig.getConfigUuid();
+        final User upstreamConfigCreator = upstreamConfig.getOwner();
+        final String preliminarySaveAsName = obtainTitleFrom(upstreamConfig.getTitle(), deviceSpecific(SAVED_CENTRE_NAME, device()));
         final Optional<String> actualSaveAsName;
-        if (savedConfigCreator.isBase() && areEqual(savedConfigCreator, user.getBasedOnUser())) { // user.getBasedOnUser() is id-only-proxy
+        if (upstreamConfigCreator.isBase() && areEqual(upstreamConfigCreator, user.getBasedOnUser() /*id-only-proxy*/)) {
             // we have base => basedOn relationship between current user and the creator of savedConfig;
             // we now know the actualSaveAsName from which the configuration should be updated;
             // CentreUpdater.updateCentre and .updateDifferences method should take care of that process;
@@ -298,7 +304,7 @@ public class CriteriaResource extends AbstractWebResource {
             actualSaveAsName = of(determineNonConflictingName(preliminarySaveAsName, -1));
             final Function<String, Function<String, Consumer<Optional<String>>>> createInheritedFromShared = surrogateName -> newDescription -> uuid -> saveNewEntityCentreManager(
                 true,
-                savedConfigForOtherUser.getConfigBody(),
+                upstreamConfig.getConfigBody(),
                 miType,
                 user,
                 NAME_OF.apply(surrogateName).apply(actualSaveAsName).apply(device()),
@@ -307,7 +313,7 @@ public class CriteriaResource extends AbstractWebResource {
                 mmiCompanion,
                 ecc -> uuid.map(u -> ecc.setConfigUuid(u)).orElse(ecc)
             );
-            final EntityCentreConfig freshConfigForCreator = findConfigOptByUuid(configUuid, savedConfigCreator, miType, device(), FRESH_CENTRE_NAME, eccCompanion).get(); // need to retrieve FRESH config to get 'desc' -- that's because SAVED centres haven't stored descriptions, only FRESH do; this config must be present, otherwise savedConfigForOtherUser would not exist
+            final EntityCentreConfig freshConfigForCreator = findConfigOptByUuid(configUuid, upstreamConfigCreator, miType, device(), FRESH_CENTRE_NAME, eccCompanion).get(); // need to retrieve FRESH config to get 'desc' -- that's because SAVED centres haven't stored descriptions, only FRESH do; this config must be present, otherwise savedConfigForOtherUser would not exist
             createInheritedFromShared.apply(FRESH_CENTRE_NAME).apply(freshConfigForCreator.getDesc()).accept(of(configUuid)); // update (FRESH only) with upstream description and configUuid during creation
             createInheritedFromShared.apply(SAVED_CENTRE_NAME).apply(null).accept(empty());
         }
@@ -325,9 +331,9 @@ public class CriteriaResource extends AbstractWebResource {
     private String determineNonConflictingName(final String preliminaryName, final int index) {
         final String name;
         if (index > 9) {
-            throw failure(format("Could not load shared configuration with [%s] conflicting title.", preliminaryName));
+            throw failure(format(COULD_NOT_LOAD_CONFLICTING_SHARED_CONFIGURATION, preliminaryName));
         } else {
-            name = preliminaryName + (index == -1 ? "" : format(" (shared%s)", index == 0 ? "" : " " + index));
+            name = preliminaryName + (index == -1 ? "" : format(CONFLICTING_TITLE_SUFFIX, index == 0 ? "" : " " + index));
         }
         return findConfigOpt(miType, user, NAME_OF.apply(FRESH_CENTRE_NAME).apply(of(name)).apply(device()), eccCompanion, FETCH_CONFIG)
             .map(conflictingConfig -> determineNonConflictingName(preliminaryName, index + 1))
@@ -335,36 +341,34 @@ public class CriteriaResource extends AbstractWebResource {
     }
 
     /**
-     * Updates already loaded by {@code user} configuration with concrete {@code configUuid} from its upstream configuration.
+     * Updates already loaded by {@code user} configuration with concrete {@code configUuid} from its upstream configuration (if it is inherited).
      */
     private void updateFromUpstream(final String configUuid, final Optional<String> actualSaveAsName) {
-        // we already have fresh configuration with uuid loaded;
-        // updating is required from upstream configuration; 
-        if (!LINK_CONFIG_TITLE.equals(actualSaveAsName.get())) { // (but not for link configuration);
-            // look for config creator;
-            final Optional<EntityCentreConfig> savedConfigOpt = findConfigOptByUuid(configUuid, miType, device(), SAVED_CENTRE_NAME, eccCompanion);
-            if (savedConfigOpt.isPresent()) {
-                // if savedConfig is present then creator is current user or other
-                final EntityCentreConfig savedConfig = savedConfigOpt.get();
-                final User savedConfigCreator = savedConfig.getOwner();
-                if (!areEqual(savedConfigCreator, user)) {
-                    // current user didn't create this config -> it is inherited and needs updating
-                    if (savedConfigCreator.isBase() && areEqual(savedConfigCreator, user.getBasedOnUser() /*user.getBasedOnUser() is id-only-proxy*/)) { // inherited from base
-                        if (isCentreChanged(actualSaveAsName)) { // if there are some user changes, only SAVED surrogate must be updated; if such centre will be discarded the base user changes will be loaded immediately
-                            removeCentres(user, miType, device(), actualSaveAsName, eccCompanion, SAVED_CENTRE_NAME);
-                        } else { // otherwise base user changes will be loaded immediately after centre loading
-                            removeCentres(user, miType, device(), actualSaveAsName, eccCompanion, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
-                        }
-                        updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
-                        updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, actualSaveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder); // do not leave only FRESH centre out of two (FRESH + SAVED) => update SAVED centre explicitly
-                    } else {
-                        if (sharingModel.isSharedWith(configUuid, user).isSuccessful()) { // inherited from shared
-                            updateInheritedFromShared(savedConfig, miType, device(), actualSaveAsName, user, eccCompanion, of(() -> isCentreChanged(actualSaveAsName)));
-                        } // already loaded inherited from shared config was made unshared; the inherited from shared configuration now acts like own save-as configuration
+        // look for config creator
+        final Optional<EntityCentreConfig> savedConfigOpt = findConfigOptByUuid(configUuid, miType, device(), SAVED_CENTRE_NAME, eccCompanion);
+        if (savedConfigOpt.isPresent()) {
+            // the creator is current user or other
+            final EntityCentreConfig savedConfig = savedConfigOpt.get();
+            final User savedConfigCreator = savedConfig.getOwner();
+            if (!areEqual(savedConfigCreator, user)) {
+                // current user didn't create this config -> it is inherited and needs updating
+                if (savedConfigCreator.isBase() && areEqual(savedConfigCreator, user.getBasedOnUser() /*id-only-proxy*/)) {
+                    // inherited from base
+                    if (isCentreChanged(actualSaveAsName)) { // if there are some user changes, only SAVED surrogate must be updated; if such centre will be discarded the base user changes will be loaded immediately
+                        removeCentres(user, miType, device(), actualSaveAsName, eccCompanion, SAVED_CENTRE_NAME);
+                    } else { // otherwise base user changes will be loaded immediately after centre loading
+                        removeCentres(user, miType, device(), actualSaveAsName, eccCompanion, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME);
                     }
+                    updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+                    updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, actualSaveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder); // do not leave only FRESH centre out of two (FRESH + SAVED) => update SAVED centre explicitly
+                } else {
+                    if (sharingModel.isSharedWith(configUuid, user).isSuccessful()) {
+                        // inherited from shared
+                        updateInheritedFromShared(savedConfig, miType, device(), actualSaveAsName, user, eccCompanion, of(() -> isCentreChanged(actualSaveAsName)));
+                    } // already loaded inherited from shared config was made unshared; the inherited from shared configuration now acts like own save-as configuration
                 }
-            } // else, there are no creator for this config; it means that it was shared / based but original config deleted; the inherited from shared / base configuration acts like own save-as configuration
-        }
+            } // if the current user is creator then no 'updating from upstream' is needed -- it is own save-as
+        } // else, there are no creator for this config; it means that it was shared / based but original config deleted; the inherited from shared / base configuration acts like own save-as configuration
     }
 
     /**
@@ -376,13 +380,13 @@ public class CriteriaResource extends AbstractWebResource {
         // usually it will look like default config URI (no uuid) with appended params;
         // however it is possible for user (or programmatically) to append params to save-as/link/inherited configuration that has uuid;
         // in that case it still should act as applying those params against empty configuration on 'link' configuration infrastructure
-        final Optional<String> actualSaveAsName = of(LINK_CONFIG_TITLE); // 'link' configuration should be loaded
-        // ensure that both FRESH link centre is present (creates automatically without configUuid if not)
+        final Optional<String> actualSaveAsName = of(LINK_CONFIG_TITLE); // 'link' configuration should saveAsName
+        // ensure that FRESH link centre is present (creates automatically without configUuid if not)
         updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
         // create configUuids there if not yet present
         final Optional<EntityCentreConfig> freshConfigOpt = findConfigOpt(miType, user, NAME_OF.apply(FRESH_CENTRE_NAME).apply(actualSaveAsName).apply(device()), eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("configUuid"));
         if (!freshConfigOpt.isPresent()) {
-            throw failure("Link configuration could not be loaded. Please try again."); // this should never happen, but just in case return a little bit more meaningful message
+            throw failure(LINK_CONFIG_COULD_NOT_BE_LOADED); // this should never happen, but just in case return a little bit more meaningful message
         } else if (freshConfigOpt.get().getConfigUuid() == null) {
             // if FRESH config does not have uuid yet then it was created just recently;
             // so create SAVED config first;
