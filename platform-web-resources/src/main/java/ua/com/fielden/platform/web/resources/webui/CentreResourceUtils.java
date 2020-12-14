@@ -1256,13 +1256,19 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @param checkChanges -- optional function to check whether there are local changes; if they are -- not update FRESH from upstream; if no such check is needed i.e. empty function is passed (e.g. when discarding) -- force FRESH centre updating
      */
     public static EntityCentreConfig updateInheritedFromShared(final EntityCentreConfig upstreamConfig, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final Optional<String> saveAsName, final User user, final IEntityCentreConfig eccCompanion, final Optional<Supplier<Boolean>> checkChanges) {
-        final Consumer<String> overrideConfigBodyFor = name ->
-            findConfigOpt(miType, user, NAME_OF.apply(name).apply(saveAsName).apply(device), eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("configBody"))
-            .ifPresent(config -> eccCompanion.quickSave(config.setConfigBody(upstreamConfig.getConfigBody())));
+        final Function<String, Consumer<Supplier<String>>> overrideConfigBodyFor = name -> calcDesc ->
+            findConfigOpt(miType, user, NAME_OF.apply(name).apply(saveAsName).apply(device), eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("configBody")) // contains 'desc' inside fetch model
+            .ifPresent(config -> {
+                final String desc = calcDesc.get();
+                if (desc != null) {
+                    config.setDesc(desc);
+                }
+                eccCompanion.quickSave(config.setConfigBody(upstreamConfig.getConfigBody()));
+            });
         final boolean notUpdateFresh = checkChanges.map(check -> check.get()).orElse(FALSE);
-        overrideConfigBodyFor.accept(SAVED_CENTRE_NAME);
+        overrideConfigBodyFor.apply(SAVED_CENTRE_NAME).accept(() -> null);
         if (!notUpdateFresh) {
-            overrideConfigBodyFor.accept(FRESH_CENTRE_NAME);
+            overrideConfigBodyFor.apply(FRESH_CENTRE_NAME).accept(() -> updateCentreDesc(upstreamConfig.getOwner(), miType, of(obtainTitleFrom(upstreamConfig.getTitle(), deviceSpecific(SAVED_CENTRE_NAME, device))), device, eccCompanion));
         }
         return upstreamConfig;
     }

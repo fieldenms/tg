@@ -37,7 +37,6 @@ import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.FETCH_CONFIG
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.FETCH_CONFIG_AND_INSTRUMENT;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfigOpt;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfigOptByUuid;
-import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.restoreDiffFrom;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.saveNewEntityCentreManager;
 import static ua.com.fielden.platform.web.centre.CentreUtils.isFreshCentreChanged;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
@@ -70,6 +69,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -277,33 +277,39 @@ public class CriteriaResource extends AbstractWebResource {
     }
 
     /**
-     * First time loading of configuration into 'inherited from base / shared'.
+     * Implements first time loading of configuration into 'inherited from base / shared'.
      */
     private Optional<String> loadConfigByUuid(final String configUuid, final EntityCentreConfig savedConfigForOtherUser) {
         final User savedConfigCreator = savedConfigForOtherUser.getOwner();
-        final Optional<String> preliminarySaveAsName = of(obtainTitleFrom(savedConfigForOtherUser.getTitle(), deviceSpecific(SAVED_CENTRE_NAME, device())));
+        final String preliminarySaveAsName = obtainTitleFrom(savedConfigForOtherUser.getTitle(), deviceSpecific(SAVED_CENTRE_NAME, device()));
         final Optional<String> actualSaveAsName;
         if (savedConfigCreator.isBase() && areEqual(savedConfigCreator, user.getBasedOnUser())) { // user.getBasedOnUser() is id-only-proxy
             // we have base => basedOn relationship between current user and the creator of savedConfig;
             // we now know the actualSaveAsName from which the configuration should be updated;
             // CentreUpdater.updateCentre and .updateDifferences method should take care of that process;
             // at least FRESH config should be prepared -- making it preferred requires existence
-            actualSaveAsName = preliminarySaveAsName;
+            actualSaveAsName = of(preliminarySaveAsName);
             updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
         } else {
             // if current user does not have access to shared configuration then sharing process should be prevented
             sharingModel.isSharedWith(configUuid, user).ifFailure(Result::throwRuntime);
             // current user gets uuid as part of sharing process from other base/non-base user;
             // need to determine non-conflicting name for current user from preliminarySaveAsName
-            actualSaveAsName = of(determineNonConflictingName(preliminarySaveAsName.get(), -1));
-            final Map<String, Object> differences = restoreDiffFrom(savedConfigForOtherUser, eccCompanion, format("for type [%s] with name [%s] for user [%s]", miType.getSimpleName(), savedConfigForOtherUser.getTitle(), savedConfigCreator));
-            final EntityCentreConfig freshConfigForCreator = findConfigOptByUuid(configUuid, savedConfigCreator, miType, device(), FRESH_CENTRE_NAME, eccCompanion).get(); // need to retrieve FRESH config to get 'desc' -- that's because SAVED centres haven't stored descriptions, only FRESH do
-            final Function<String, Function<String, Map<String, Object>>> createInheritedFromShared = surrogateName -> newDescription -> saveNewEntityCentreManager(true, differences, miType, user, NAME_OF.apply(surrogateName).apply(actualSaveAsName).apply(device()), newDescription, eccCompanion, mmiCompanion);
-            createInheritedFromShared.apply(FRESH_CENTRE_NAME).apply(freshConfigForCreator.getDesc());
-            createInheritedFromShared.apply(SAVED_CENTRE_NAME).apply(null);
-            // update (FRESH only) with configUuid
-            findConfigOpt(miType, user, NAME_OF.apply(FRESH_CENTRE_NAME).apply(actualSaveAsName).apply(device()), eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("configUuid"))
-                .ifPresent(config -> eccCompanion.quickSave(config.setConfigUuid(configUuid)));
+            actualSaveAsName = of(determineNonConflictingName(preliminarySaveAsName, -1));
+            final Function<String, Function<String, Consumer<Optional<String>>>> createInheritedFromShared = surrogateName -> newDescription -> uuid -> saveNewEntityCentreManager(
+                true,
+                savedConfigForOtherUser.getConfigBody(),
+                miType,
+                user,
+                NAME_OF.apply(surrogateName).apply(actualSaveAsName).apply(device()),
+                newDescription,
+                eccCompanion,
+                mmiCompanion,
+                ecc -> uuid.map(u -> ecc.setConfigUuid(u)).orElse(ecc)
+            );
+            final EntityCentreConfig freshConfigForCreator = findConfigOptByUuid(configUuid, savedConfigCreator, miType, device(), FRESH_CENTRE_NAME, eccCompanion).get(); // need to retrieve FRESH config to get 'desc' -- that's because SAVED centres haven't stored descriptions, only FRESH do; this config must be present, otherwise savedConfigForOtherUser would not exist
+            createInheritedFromShared.apply(FRESH_CENTRE_NAME).apply(freshConfigForCreator.getDesc()).accept(of(configUuid)); // update (FRESH only) with upstream description and configUuid during creation
+            createInheritedFromShared.apply(SAVED_CENTRE_NAME).apply(null).accept(empty());
         }
         return actualSaveAsName;
     }
