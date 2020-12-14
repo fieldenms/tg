@@ -24,7 +24,6 @@ import static ua.com.fielden.platform.web.centre.CentreUpdater.PREVIOUSLY_RUN_CE
 import static ua.com.fielden.platform.web.centre.CentreUpdater.SAVED_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.commitCentre;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.commitCentreWithoutConflicts;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.deviceSpecific;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.loadableConfigurations;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.makePreferred;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.obtainTitleFrom;
@@ -225,7 +224,7 @@ public class CriteriaResource extends AbstractWebResource {
                 final Optional<EntityCentreConfig> freshConfigOpt = findConfigOptByUuid(configUuid.get(), user, miType, device(), FRESH_CENTRE_NAME, eccCompanion);
                 if (freshConfigOpt.isPresent()) {
                     // for current user we already have FRESH configuration with uuid loaded;
-                    actualSaveAsName = of(obtainTitleFrom(freshConfigOpt.get().getTitle(), deviceSpecific(FRESH_CENTRE_NAME, device())));
+                    actualSaveAsName = of(obtainTitleFrom(freshConfigOpt.get().getTitle(), FRESH_CENTRE_NAME, device()));
                     // updating is required from upstream configuration;
                     if (!LINK_CONFIG_TITLE.equals(actualSaveAsName.get())) { // (but not for link configuration);
                         updateFromUpstream(configUuid.get(), actualSaveAsName);
@@ -274,7 +273,7 @@ public class CriteriaResource extends AbstractWebResource {
             // so from two categories [base, shared] we can only consider [shared];
             // so, at this stage, we prohibit loading of [inherited from shared] configurations for base users -- not really practical scenario and possibly will never be required
             return left(failure(format(CONFIG_COULD_NOT_BE_SHARED_WITH_BASE_USER, user)));
-        } else if (LINK_CONFIG_TITLE.equals(obtainTitleFrom(savedConfigOptForOtherUser.get().getTitle(), deviceSpecific(SAVED_CENTRE_NAME, device())))) {
+        } else if (LINK_CONFIG_TITLE.equals(obtainTitleFrom(savedConfigOptForOtherUser.get().getTitle(), SAVED_CENTRE_NAME, device()))) {
             // link-configs can not be shared anywhere neither from base user nor from base/non-base user that gave its uuid as part of sharing process
             return left(failure(LINK_CONFIG_COULD_NOT_BE_SHARED));
         }
@@ -287,7 +286,7 @@ public class CriteriaResource extends AbstractWebResource {
     private Optional<String> firstTimeLoadingFrom(final EntityCentreConfig upstreamConfig) {
         final String configUuid = upstreamConfig.getConfigUuid();
         final User upstreamConfigCreator = upstreamConfig.getOwner();
-        final String preliminarySaveAsName = obtainTitleFrom(upstreamConfig.getTitle(), deviceSpecific(SAVED_CENTRE_NAME, device()));
+        final String preliminarySaveAsName = obtainTitleFrom(upstreamConfig.getTitle(), SAVED_CENTRE_NAME, device());
         final Optional<String> actualSaveAsName;
         if (upstreamConfigCreator.isBase() && areEqual(upstreamConfigCreator, user.getBasedOnUser() /*id-only-proxy*/)) {
             // we have base => basedOn relationship between current user and the creator of savedConfig;

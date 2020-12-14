@@ -8,7 +8,6 @@ import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrLinkOrInherited;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.SAVED_CENTRE_NAME;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.deviceSpecific;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.obtainTitleFrom;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfigOptByUuid;
 
@@ -70,6 +69,8 @@ public class CentreConfigShareActionProducer extends DefaultEntityProducerWithCo
      * [default; link; inherited] configurations can not be shared;<br>
      * non-existent configurations can not be shared;<br>
      * [own save-as] configurations that have been inherited previously can not be shared.
+     * <p>
+     * IMPORTANT: at this stage computations are not supported for share actions.
      * 
      * @param contextDecomposer
      * @param eccCompanion
@@ -89,7 +90,7 @@ public class CentreConfigShareActionProducer extends DefaultEntityProducerWithCo
         if (!freshConfigOpt.isPresent()) {
             return failure(CONFIG_DOES_NOT_EXIST); // configuration does not exist and can not be shared
         }
-        final Optional<String> saveAsName = of(obtainTitleFrom(freshConfigOpt.get().getTitle(), deviceSpecific(FRESH_CENTRE_NAME, device)));
+        final Optional<String> saveAsName = of(obtainTitleFrom(freshConfigOpt.get().getTitle(), FRESH_CENTRE_NAME, device));
         if (isDefaultOrLinkOrInherited(saveAsName, selectionCrit)) {
             return failure(SAVE_MSG); // [link; inherited from shared; inherited from base] configuration can not be shared
         }

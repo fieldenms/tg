@@ -2,6 +2,8 @@ package ua.com.fielden.platform.web.resources.webui;
 
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static java.util.Optional.ofNullable;
+import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.valueOf;
 import static ua.com.fielden.platform.web.resources.webui.EntityResource.EntityIdKind.FIND_OR_NEW;
 import static ua.com.fielden.platform.web.resources.webui.EntityResource.EntityIdKind.ID;
 import static ua.com.fielden.platform.web.resources.webui.EntityResource.EntityIdKind.NEW;
@@ -58,7 +60,6 @@ import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.ICentreConfigSharingModel;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
-import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -470,8 +471,6 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
     public static <T extends AbstractEntity<?>> Optional<EntityActionConfig> restoreActionConfig(final IWebUiConfig webUiConfig, final CentreContextHolder centreContextHolder) {
         final Optional<EntityActionConfig> actionConfig;
         if (centreContextHolder.getCustomObject().get("@@miType") != null && centreContextHolder.getCustomObject().get("@@actionNumber") != null && centreContextHolder.getCustomObject().get("@@actionKind") != null) {
-            // System.err.println("===========miType = " + centreContextHolder.getCustomObject().get("@@miType") + "=======ACTION_IDENTIFIER = [" + centreContextHolder.getCustomObject().get("@@actionKind") + "; " + centreContextHolder.getCustomObject().get("@@actionNumber") + "]");
-
             final Class<? extends MiWithConfigurationSupport<?>> miType;
             try {
                 miType = (Class<? extends MiWithConfigurationSupport<?>>) Class.forName((String) centreContextHolder.getCustomObject().get("@@miType"));
@@ -479,10 +478,10 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
                 throw new IllegalStateException(e);
             }
             final EntityCentre<T> centre = (EntityCentre<T>) webUiConfig.getCentres().get(miType);
-            actionConfig = Optional.ofNullable(centre.actionConfig(
-                                FunctionalActionKind.valueOf((String) centreContextHolder.getCustomObject().get("@@actionKind")),
-                                Integer.valueOf((Integer) centreContextHolder.getCustomObject().get("@@actionNumber")
-                            )));
+            actionConfig = ofNullable(centre.actionConfig(
+                valueOf((String) centreContextHolder.getCustomObject().get("@@actionKind")),
+                Integer.valueOf((Integer) centreContextHolder.getCustomObject().get("@@actionNumber")
+            )));
         } else if (centreContextHolder.getCustomObject().get("@@masterEntityType") != null && centreContextHolder.getCustomObject().get("@@actionNumber") != null && centreContextHolder.getCustomObject().get("@@actionKind") != null) {
             final Class<?> entityType;
             try {
@@ -492,8 +491,9 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
             }
             final EntityMaster<T> master = (EntityMaster<T>) webUiConfig.getMasters().get(entityType);
             actionConfig = of(master.actionConfig(
-                                FunctionalActionKind.valueOf((String) centreContextHolder.getCustomObject().get("@@actionKind")),
-                                Integer.valueOf((Integer) centreContextHolder.getCustomObject().get("@@actionNumber"))));
+                valueOf((String) centreContextHolder.getCustomObject().get("@@actionKind")),
+                Integer.valueOf((Integer) centreContextHolder.getCustomObject().get("@@actionNumber")))
+            );
         } else {
             actionConfig = empty();
         }

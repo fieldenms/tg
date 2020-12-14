@@ -47,8 +47,11 @@ import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.OR_
 import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.VALUE;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.VALUE2;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.WIDTH;
+import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.FETCH_CONFIG;
+import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.FETCH_CONFIG_AND_INSTRUMENT;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.createDefaultCentre;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfig;
+import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfigOpt;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.modelFor;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.retrieveDiff;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.saveEntityCentreManager;
@@ -229,7 +232,7 @@ public class CentreUpdater {
      * @param device
      * @return
      */
-    public static String deviceSpecific(final String surrogateName, final DeviceProfile device) {
+    private static String deviceSpecific(final String surrogateName, final DeviceProfile device) {
         if (DESKTOP.equals(device)) {
             return surrogateName;
         } else if (MOBILE.equals(device)) {
@@ -243,7 +246,7 @@ public class CentreUpdater {
         }
     }
     
-    public static String saveAsSpecific(final String name, final Optional<String> saveAsName) {
+    private static String saveAsSpecific(final String name, final Optional<String> saveAsName) {
         return saveAsName.map(san -> format("%s[%s]", name, san)).orElse(name);
     }
     
@@ -506,7 +509,7 @@ public class CentreUpdater {
             
             final String surrogateNamePrefix = deviceSpecific(FRESH_CENTRE_NAME, device);
             final EntityResultQueryModel<EntityCentreConfig> queryForCurrentUser = findConfigsFunction(user, miType, device, eccCompanion).apply(saveAsNameOpt);
-            final fetch<EntityCentreConfig> fetch = fetchWithKeyAndDesc(EntityCentreConfig.class).with("configUuid").fetchModel();
+            final fetch<EntityCentreConfig> fetch = FETCH_CONFIG.with("configUuid");
             if (user.isBase()) {
                 try (final Stream<EntityCentreConfig> stream = eccCompanion.stream(from(queryForCurrentUser).with(fetch).model()) ) {
                     stream.forEach(ecc -> {
@@ -545,7 +548,7 @@ public class CentreUpdater {
                                 .and().prop("owner").ne().val(user)
                                 .model()
                             )
-                            .with(fetch(EntityCentreConfig.class).with("configUuid").with("owner", fetch(User.class).with("key")))
+                            .with(FETCH_CONFIG.with("configUuid").with("owner", fetch(User.class).with("key")))
                             .lightweight().model()
                         ).stream()
                         .forEach(ecc -> {
@@ -635,7 +638,7 @@ public class CentreUpdater {
     /**
      * Creates {@link LoadableCentreConfig} instance from <code>ecc</code>'s title and description.
      * 
-     * @param ecc
+     * @param ecc -- centre config entity with 'title', 'desc' and 'configUuid' fetched
      * @param inherited -- indicates whether {@link LoadableCentreConfig} instance being created needs to be 'inherited'
      * @param surrogateNamePrefix
      * @param lccCompanion
@@ -658,14 +661,26 @@ public class CentreUpdater {
     }
     
     /**
-     * Receives actual title from surrogate name persisted inside {@link EntityCentreConfig#getTitle()} (<code>surrogateName</code>).
+     * Receives actual title from surrogate name persisted inside {@link EntityCentreConfig#getTitle()}.
      * 
+     * @param title
      * @param surrogateName
+     * @param device
+     * @return
+     */
+    public static String obtainTitleFrom(final String title, final String surrogateName, final DeviceProfile device) {
+        return obtainTitleFrom(title, deviceSpecific(surrogateName, device));
+    }
+    
+    /**
+     * Receives actual title from surrogate name persisted inside {@link EntityCentreConfig#getTitle()}.
+     * 
+     * @param title
      * @param surrogateNamePrefix
      * @return
      */
-    public static String obtainTitleFrom(final String surrogateName, final String surrogateNamePrefix) {
-        final String surrogateWithSuffix = surrogateName.replaceFirst(surrogateNamePrefix, "");
+    private static String obtainTitleFrom(final String title, final String surrogateNamePrefix) {
+        final String surrogateWithSuffix = title.replaceFirst(surrogateNamePrefix, "");
         return surrogateWithSuffix.substring(1, surrogateWithSuffix.lastIndexOf("]"));
     }
     
@@ -679,7 +694,7 @@ public class CentreUpdater {
      * @param surrogateName -- surrogate name of the centre (fresh, previouslyRun etc.)
      * @return
      */
-    public static Function<DbVersion, ICompoundCondition0<EntityCentreConfig>> centreConfigQueryFor(final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final String surrogateName) {
+    static Function<DbVersion, ICompoundCondition0<EntityCentreConfig>> centreConfigQueryFor(final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final String surrogateName) {
         return dbVersion -> {
             final String escapedOpeningBracket = DbVersion.MSSQL == dbVersion ? "[[]" : "["; // need to provide escaping for opening bracket to find records with [, see https://stackoverflow.com/questions/439495/how-can-i-escape-square-brackets-in-a-like-clause
             return select(EntityCentreConfig.class).where()
@@ -700,7 +715,7 @@ public class CentreUpdater {
      * @param surrogateName -- surrogate name of the centre (fresh, previouslyRun etc.)
      * @return
      */
-    public static Function<DbVersion, ICompoundCondition0<EntityCentreConfig>> centreConfigQueryFor(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final String surrogateName) {
+    static Function<DbVersion, ICompoundCondition0<EntityCentreConfig>> centreConfigQueryFor(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final String surrogateName) {
         return dbVersion -> centreConfigQueryFor(miType, device, surrogateName).apply(dbVersion)
             .and().prop("owner").eq().val(user);
     }
@@ -767,7 +782,7 @@ public class CentreUpdater {
      * @param miType
      * @return
      */
-    public static ICentreDomainTreeManagerAndEnhancer getDefaultCentre(final Class<? extends MiWithConfigurationSupport<?>> miType, final IWebUiConfig webUiConfig) {
+    private static ICentreDomainTreeManagerAndEnhancer getDefaultCentre(final Class<? extends MiWithConfigurationSupport<?>> miType, final IWebUiConfig webUiConfig) {
         return applyWebUIDefaultValues(createDefaultCentre(miType, webUiConfig), getEntityType(miType));
     }
     
@@ -837,8 +852,9 @@ public class CentreUpdater {
                 }
                 // promotes diff to local cache and saves it into persistent storage
                 resultantDiff = saveNewEntityCentreManager(differences, miType, user, deviceSpecificDiffName, upstreamDesc, eccCompanion, mmiCompanion);
-                if (FRESH_CENTRE_NAME.equals(name)) { // inherited configs have uuid only in FRESH centre
-                    upstreamConfigUuid.ifPresent(configUuid -> eccCompanion.quickSave(findConfig(miType, user, deviceSpecificDiffName, eccCompanion).setConfigUuid(configUuid)));
+                if (FRESH_CENTRE_NAME.equals(name) && upstreamConfigUuid.isPresent()) { // inherited configs have uuid only in FRESH centre
+                    findConfigOpt(miType, user, deviceSpecificDiffName, eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("configUuid"))
+                        .ifPresent(freshConfig -> eccCompanion.quickSave(freshConfig.setConfigUuid(upstreamConfigUuid.get())));
                 }
             }
         }
@@ -976,7 +992,7 @@ public class CentreUpdater {
      * 
      * @return
      */
-    public static Map<String, Object> createDifferences(final ICentreDomainTreeManagerAndEnhancer centre, final ICentreDomainTreeManagerAndEnhancer defaultCentre, final Class<AbstractEntity<?>> root) {
+    static Map<String, Object> createDifferences(final ICentreDomainTreeManagerAndEnhancer centre, final ICentreDomainTreeManagerAndEnhancer defaultCentre, final Class<AbstractEntity<?>> root) {
         final Supplier<Class<?>> managedTypeSupplier = () -> centre.getEnhancer().getManagedType(root);
         
         final Map<String, Object> diff = createEmptyDifferences();

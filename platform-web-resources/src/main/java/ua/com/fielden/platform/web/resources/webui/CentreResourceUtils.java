@@ -1268,7 +1268,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final boolean notUpdateFresh = checkChanges.map(check -> check.get()).orElse(FALSE);
         overrideConfigBodyFor.apply(SAVED_CENTRE_NAME).accept(() -> null);
         if (!notUpdateFresh) {
-            overrideConfigBodyFor.apply(FRESH_CENTRE_NAME).accept(() -> updateCentreDesc(upstreamConfig.getOwner(), miType, of(obtainTitleFrom(upstreamConfig.getTitle(), deviceSpecific(SAVED_CENTRE_NAME, device))), device, eccCompanion));
+            overrideConfigBodyFor.apply(FRESH_CENTRE_NAME).accept(() -> updateCentreDesc(upstreamConfig.getOwner(), miType, of(obtainTitleFrom(upstreamConfig.getTitle(), SAVED_CENTRE_NAME, device)), device, eccCompanion));
         }
         return upstreamConfig;
     }

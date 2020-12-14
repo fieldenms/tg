@@ -117,7 +117,7 @@ public class CentreUpdaterUtils extends CentreUpdater {
      * @param loggingSuffix
      * @return
      */
-    public static Map<String, Object> restoreDiffFrom(
+    private static Map<String, Object> restoreDiffFrom(
             // params for actual deserialisation
             final EntityCentreConfig ecc,
             // params for: deserialisation failed -- create empty and save
@@ -178,6 +178,7 @@ public class CentreUpdaterUtils extends CentreUpdater {
      * Saves new {@link EntityCentreConfig} instance with {@code serialisedDifferences} inside.
      * 
      * @param withoutConflicts -- <code>true</code> to avoid self-conflict checks, <code>false</code> otherwise; <code>true</code> only to be used NOT IN another SessionRequired transaction scope
+     * @param adjustConfig -- function to adjust newly created centre config just before saving
      */
     public static Long saveNewEntityCentreManager(
         final boolean withoutConflicts,
@@ -241,34 +242,46 @@ public class CentreUpdaterUtils extends CentreUpdater {
      * 
      * @param menuItemType
      * @param user
-     * @param name
+     * @param deviceSpecificDiffName
      * @param eccCompanion
      * @return
      */
-    public static EntityCentreConfig findConfig(final Class<?> menuItemType, final User user, final String name, final IEntityCentreConfig eccCompanion) {
+    protected static EntityCentreConfig findConfig(final Class<?> menuItemType, final User user, final String deviceSpecificDiffName, final IEntityCentreConfig eccCompanion) {
         return eccCompanion.getEntity(
-            from(modelFor(user, menuItemType.getName(), name)).with(fetchWithKeyAndDesc(EntityCentreConfig.class, true).with("preferred").with("configUuid").fetchModel()).model()
+            from(modelFor(user, menuItemType.getName(), deviceSpecificDiffName)).with(fetchWithKeyAndDesc(EntityCentreConfig.class, true).with("preferred").with("configUuid").fetchModel()).model()
         );
     }
     
-    public static Optional<EntityCentreConfig> findConfigOpt(final Class<?> menuItemType, final User user, final String name, final IEntityCentreConfig eccCompanion, final fetch<EntityCentreConfig> fetch) {
+    /**
+     * Finds optional configuration for {@code user}, {@code miType} and {@code deviceSpecificDiffName} with custom {@code fetch}.
+     */
+    public static Optional<EntityCentreConfig> findConfigOpt(final Class<?> miType, final User user, final String deviceSpecificDiffName, final IEntityCentreConfig eccCompanion, final fetch<EntityCentreConfig> fetch) {
         return eccCompanion.getEntityOptional(
-            from(modelFor(user, menuItemType.getName(), name)).with(fetch).model()
+            from(modelFor(user, miType.getName(), deviceSpecificDiffName)).with(fetch).model()
         );
     }
     
+    /**
+     * Finds optional configuration for {@code model} and {@code uuid} with predefined fetch model, sufficient for most situations.
+     */
     private static Optional<EntityCentreConfig> findConfigOptByUuid(final ICompoundCondition0<EntityCentreConfig> model, final String uuid, final IEntityCentreConfig eccCompanion) {
         return eccCompanion.getEntityOptional(from(model
             .and().prop("configUuid").eq().val(uuid).model()
         ).with(fetchWithKeyAndDesc(EntityCentreConfig.class, true).with("preferred").with("configUuid").with("owner.base").with("configBody").fetchModel()).model());
     }
     
-    public static Optional<EntityCentreConfig> findConfigOptByUuid(final String uuid, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final String name, final IEntityCentreConfig eccCompanion) {
-        return findConfigOptByUuid(eccCompanion.withDbVersion(centreConfigQueryFor(miType, device, name)), uuid, eccCompanion);
+    /**
+     * Finds optional configuration for {@code uuid}, {@code miType}, {@code device} and {@code surrogateName} with predefined fetch model, sufficient for most situations.
+     */
+    public static Optional<EntityCentreConfig> findConfigOptByUuid(final String uuid, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final String surrogateName, final IEntityCentreConfig eccCompanion) {
+        return findConfigOptByUuid(eccCompanion.withDbVersion(centreConfigQueryFor(miType, device, surrogateName)), uuid, eccCompanion);
     }
     
-    public static Optional<EntityCentreConfig> findConfigOptByUuid(final String uuid, final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final String name, final IEntityCentreConfig eccCompanion) {
-        return findConfigOptByUuid(eccCompanion.withDbVersion(centreConfigQueryFor(user, miType, device, name)), uuid, eccCompanion);
+    /**
+     * Finds optional configuration for {@code uuid}, {@code user}, {@code miType}, {@code device} and {@code surrogateName} with predefined fetch model, sufficient for most situations.
+     */
+    public static Optional<EntityCentreConfig> findConfigOptByUuid(final String uuid, final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final String surrogateName, final IEntityCentreConfig eccCompanion) {
+        return findConfigOptByUuid(eccCompanion.withDbVersion(centreConfigQueryFor(user, miType, device, surrogateName)), uuid, eccCompanion);
     }
     
     /**
@@ -305,7 +318,7 @@ public class CentreUpdaterUtils extends CentreUpdater {
      * 
      * @return
      */
-    public static EntityResultQueryModel<EntityCentreConfig> modelFor(final User user, final String menuItemTypeName, final String title) {
+    static EntityResultQueryModel<EntityCentreConfig> modelFor(final User user, final String menuItemTypeName, final String title) {
         return modelFor(user, menuItemTypeName).and()
             .prop("title").eq().val(title).model();
     }
