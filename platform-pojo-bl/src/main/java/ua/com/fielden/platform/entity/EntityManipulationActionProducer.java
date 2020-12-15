@@ -8,6 +8,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 public class EntityManipulationActionProducer<T extends AbstractEntityManipulationAction> extends DefaultEntityProducerWithContext<T> {
@@ -22,7 +23,7 @@ public class EntityManipulationActionProducer<T extends AbstractEntityManipulati
         if (contextNotEmpty()) {
             final AbstractEntity<?> currEntity = currentEntity();
             final EnhancedCentreEntityQueryCriteria<?, ?> selCrit = selectionCrit();
-            final Class<AbstractEntity<?>> entityType = 
+            final Class<AbstractEntity<?>> entityType =
                 computation().map( computation -> {
                         final Object computed = computation.apply(entity, (CentreContext<AbstractEntity<?>, AbstractEntity<?>>) getContext());
                         // it is by convention that a computational context may return custom entity type of tg-entity-master to be displayed
@@ -30,14 +31,14 @@ public class EntityManipulationActionProducer<T extends AbstractEntityManipulati
                         if (computed instanceof Class) {
                             return (Class<AbstractEntity<?>>) computed;
                         } else if (computed instanceof T2) {
-                            final T2<Class<AbstractEntity<?>>, Long> typeAndId = (T2<Class<AbstractEntity<?>>, Long>) computed; 
+                            final T2<Class<AbstractEntity<?>>, Long> typeAndId = (T2<Class<AbstractEntity<?>>, Long>) computed;
                             return typeAndId._1;
                         } else {
                             return determineEntityType(currEntity, selCrit);
                         }
                     })
                 .orElse(determineEntityType(currEntity, selCrit));
-            
+
             if (entityType == null) {
                 throw new IllegalStateException("Please add selection criteria or current entity to the context of the functional entity with type: " + entity.getType().getName());
             } else {
@@ -49,13 +50,22 @@ public class EntityManipulationActionProducer<T extends AbstractEntityManipulati
 
     /**
      * Determines the type of tg-entity-master to be displayed from a) selCrit or b) currEntity depending on whether it is {@link EntityNewAction} or {@link EntityEditAction}.
-     * 
+     *
      * @param currEntity
      * @param selCrit
      * @return
      */
+    @SuppressWarnings("unchecked")
     private Class<AbstractEntity<?>> determineEntityType(final AbstractEntity<?> currEntity, final EnhancedCentreEntityQueryCriteria<?, ?> selCrit) {
         return selCrit != null ? (Class<AbstractEntity<?>>) selCrit.getEntityClass() :
-               currEntity != null ? getOriginalType(currEntity.getType()) : null;
+               currEntity != null ? determineBaseEntityType(getOriginalType(currEntity.getType())) : null;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Class<AbstractEntity<?>> determineBaseEntityType (final Class<AbstractEntity<?>> entityType) {
+        if (EntityUtils.isSyntheticBasedOnPersistentEntityType(entityType)) {
+            return (Class<AbstractEntity<?>>)entityType.getSuperclass();
+        }
+        return entityType;
     }
 }

@@ -68,9 +68,7 @@ Polymer({
             this.customAction._run();
             return true;
         } else if (defaultPropertyAction) {
-            const newCurrentEntity = () => {
-                return getFirstEntityValue(this._reflector, currentEntity(), this.property);
-            }
+            const newCurrentEntity = () => getFirstEntityValue(this._reflector, currentEntity.bind(defaultPropertyAction)(), this.collectionalProperty || this.property);
             defaultPropertyAction.currentEntity = newCurrentEntity;
             defaultPropertyAction._run();
             return true;

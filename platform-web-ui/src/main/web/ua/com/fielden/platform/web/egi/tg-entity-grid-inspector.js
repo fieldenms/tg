@@ -30,7 +30,7 @@ import { TgElementSelectorBehavior } from '/resources/components/tg-element-sele
 import { TgDragFromBehavior } from '/resources/components/tg-drag-from-behavior.js';
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
-import { tearDownEvent, getRelativePos, isMobileApp} from '/resources/reflection/tg-polymer-utils.js';
+import { getFirstEntityValue, tearDownEvent, getRelativePos, isMobileApp} from '/resources/reflection/tg-polymer-utils.js';
 
 const template = html`
     <style>
@@ -1110,7 +1110,7 @@ Polymer({
     },
 
     hasAction: function (entity, column) {
-        return entity && (column.customAction || this.isHyperlinkProp(entity, column) === true || this.getAttachmentIfPossible(entity, column));
+        return entity;
     },
 
     isVisible: function (entity) {
@@ -2027,7 +2027,7 @@ Polymer({
     _currentEntity: function (entity) {
         const egi = this;
         // Return old fashion javascript function (not arrow function). This function will be called by 
-        // action therefore this of the function will be the action (in case of arrow function this wpuld be the EGI).
+        // action therefore this of the function will be the action (in case of arrow function this would be the EGI).
         return function () {
             //this - is the action that calls this function.
             return this.supportsNavigation && egi.editingEntity ? egi.editingEntity : entity;
@@ -2077,6 +2077,13 @@ Polymer({
             return this._generateActionTooltip({
                 shortDesc: 'Download',
                 longDesc: 'Click to download attachment.'
+            });
+        } else {
+            const entityValue = getFirstEntityValue(this._reflector, entity, column.collectionalProperty || column.property);
+            const entityTitle = entityValue.type().entityTitle();
+            return this._generateActionTooltip({
+                shortDesc: `Edit ${entityTitle}`,
+                longDesc: `Edit ${entityTitle}`
             });
         }
         return "";

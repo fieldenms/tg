@@ -65,6 +65,10 @@ public class MasterInfo extends AbstractEntity<String> {
     @Title(value = "Long Description", desc = "Action's long description")
     private String longDesc;
 
+    @IsProperty
+    @Title(value = "Relative Property Name", desc = "Property name relative to entity type that has a master")
+    private String relativePropertyName;
+
     @Observable
     public MasterInfo setEntityType(final String entityType) {
         this.entityType = entityType;
@@ -173,5 +177,15 @@ public class MasterInfo extends AbstractEntity<String> {
 
     public String getShortDesc() {
         return shortDesc;
+    }
+
+    @Observable
+    public MasterInfo setRelativePropertyName(final String relativePropertyName) {
+        this.relativePropertyName = relativePropertyName;
+        return this;
+    }
+
+    public String getRelativePropertyName() {
+        return relativePropertyName;
     }
 }

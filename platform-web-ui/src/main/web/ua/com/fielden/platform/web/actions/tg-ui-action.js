@@ -494,7 +494,6 @@ Polymer({
             
             if (this.dynamicAction && this.currentEntity()) {
                 const currentEntityType = getFirstEntityValueType(this._reflector, this.currentEntity(), this.chosenProperty);
-                const currentEntityInstance = this.currentEntity();
                 if (this._previousEntityType !== currentEntityType) {
                     if (!this.elementName) {//Element name for dynamic action is not specified at first run
                         this._originalShortDesc = this.shortDesc;//It means that shortDesc wasn't changed yet.
@@ -504,8 +503,8 @@ Polymer({
                     this.$.masterRetriever.generateRequest().completes
                         .then(res => {
                             try {
-                                this._processMasterRetriever(res, currentEntityInstance);
-                                this._previousEntityType = currentEntityType;
+                                this._processMasterRetriever(res);
+                                this._previousEntityType = getFirstEntityValueType(this._reflector, this.currentEntity(), this.chosenProperty);
                                 postMasterInfoRetrieve();
                             }catch (e) {
                                 this.isActionInProgress = false;
@@ -620,10 +619,9 @@ Polymer({
                 }
             };
 
-            master.entityId = master.entityId !== null ? master.entityId : 
-                        (master.savingContext.get('id') === null ? "new" : (+(master.savingContext.get('id'))));
+            master.entityId = master.savingContext.get('id') === null ? "new" : (+(master.savingContext.get('id')));
             // context-dependent retrieval of entity (this is necessary for centre-related functional entities, which creation is dependent on centre context!)
-            return master.retrieve(master.entityId === 'new' || master.entityId === 'find_or_new' ? master.savingContext : undefined)
+            return master.retrieve(master.savingContext)
                 .then(function (ironRequest) {
                     // the following IF block handles conditional displaying of the associated entity master
                     if (master.shouldSkipUi()) {
@@ -747,7 +745,7 @@ Polymer({
         return isActionInProgress || disabled;
     },
 
-    _processMasterRetriever: function(e, currentEntityInstance) {
+    _processMasterRetriever: function(e) {
         console.log("PROCESS MASTER INFO RETRIEVE:");
         console.log("Master info retrieve: iron-response: status = ", e.xhr.status, ", e.response = ", e.response);
         if (e.xhr.status === 200) { // successful execution of the request
@@ -764,7 +762,6 @@ Polymer({
             this.shortDesc = this._originalShortDesc || masterInfo.shortDesc;
             this.longDesc = this.longDesc || masterInfo.longDesc;
             this.attrs = Object.assign({}, this.attrs, {
-                entityId: currentEntityInstance.get("id"),
                 entityType: masterInfo.entityType,
                 currentState:'EDIT',
                 prefDim: masterInfo.width && masterInfo.height && masterInfo.widthUnit && masterInfo.heightUnit && {
@@ -774,6 +771,12 @@ Polymer({
                     heightUnit: masterInfo.heightUnit
                 }
             });
+            if (masterInfo.relativePropertyName) {
+                const oldCurrentEntity = this.currentEntity.bind(this);
+                this.currentEntity = function () {
+                    return oldCurrentEntity().get(masterInfo.relativePropertyName);
+                }
+            }
             this.requireSelectionCriteria = masterInfo.requireSelectionCriteria;
             this.requireSelectedEntities = masterInfo.requireSelectedEntities;
             this.requireMasterEntity = masterInfo.requireMasterEntity;
