@@ -150,6 +150,9 @@ Polymer({
         this.processShortcut(e, ['paper-button', 'tg-ui-action', 'paper-icon-button']);
     },
 
+    /**
+     * Overrides standard hand cursor for disabled button to simple pointer.
+     */
     _computeButtonStyle: function (_buttonDisabled) {
         return _buttonDisabled ? 'cursor:initial' : '';
     }

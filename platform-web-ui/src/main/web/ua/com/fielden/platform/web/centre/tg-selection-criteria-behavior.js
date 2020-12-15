@@ -61,6 +61,12 @@ const TgSelectionCriteriaBehaviorImpl = {
             notify: true
         },
 
+        /**
+         * UUID for currently loaded centre configuration.
+         * 
+         * Returns '' for default configurations.
+         * Returns non-empty value (e.g. '4920dbe0-af69-4f57-a93a-cdd7157b75d8') for link, own save-as and inherited [from base / shared] configurations.
+         */
         configUuid: {
             type: String,
             value: '',
@@ -109,6 +115,9 @@ const TgSelectionCriteriaBehaviorImpl = {
         //   alternatively, computing function needs to be specified). 									       //
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+        /**
+         * Indicates whether currently loaded centre configuration is [default, link or inherited] or changed [own save-as].
+         */
         _centreDirty: {
             type: Boolean,
             value: false

@@ -115,7 +115,7 @@ public class CentreConfigShareActionProducer extends DefaultEntityProducerWithCo
             + "    action.oldIsActionInProgressChanged = action.isActionInProgressChanged.bind(action);\n"
             + "    action.isActionInProgressChanged = (newValue, oldValue) => {\n"
             + "        action.oldIsActionInProgressChanged(newValue, oldValue);\n"
-            + "        self._actionInProgress = newValue;\n" // enhance action's observer for isActionInProgress to set _actionInProgress on whole centre disabling / enabling all other buttons
+            + "        self._actionInProgress = newValue;\n" // enhance action's observer for isActionInProgress to set _actionInProgress to whole centre which controls disablement of all other buttons
             + "    };\n"
             + "}\n"
         );

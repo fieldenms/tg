@@ -121,34 +121,42 @@ Polymer({
         }
     },
 
+    /**
+     * Indicates whether this tg-menu-item-view contains centre inside.
+     */
     _isCentre: function (menuItem) {
         return menuItem.view.viewType === 'centre';
     },
 
-    _retrieveCentreAgainWithParams: function (queryPart, unknownSubpath) {
-        if (this.menuItem.view.viewType === 'centre') {
-            const elementLoader = this.shadowRoot.querySelector("#elementToLoad")
-            const centre = elementLoader.loadedElement;
-            if (centre) {
-                if (queryPart // perform reloading in case where new ?crit=val params appear ...
-                 || unknownSubpath !== centre.configUuid // ... or new configUuid is different from already loaded ...
-                 || !centre._criteriaLoaded // ... or where criteria was not loaded (e.g. errors during previous loading attempts)
-                ) {
-                    this.async(() => { // load new centre config only after current loading completed; this can be achieved by putting next loading in the end of queue; this is useful for link-configurations
-                        centre._selectedView = 0;
-                        centre.queryPart = queryPart;
-                        centre.configUuid = unknownSubpath;
-                        this._loadCentre.bind(this)(centre, false);
-                    });
-                }
-            } else {
-                if (elementLoader.attrs) {
-                    elementLoader.attrs.configUuid = unknownSubpath;
-                }
+    /**
+     * Retrieves loaded centre criteria if centre element has been loaded previously (except situation where exactly same config without link parameters is tried to be loaded).
+     * Provides parameters for tg-element-loader if centre element has not been loaded previously.
+     */
+    _retrieveCentreWithParams: function (queryPart, unknownSubpath) {
+        const elementLoader = this.shadowRoot.querySelector("#elementToLoad")
+        const centre = elementLoader.loadedElement;
+        if (centre) {
+            if (queryPart // perform reloading in case where new ?crit=val params appear ...
+             || unknownSubpath !== centre.configUuid // ... or new configUuid is different from already loaded ...
+             || !centre._criteriaLoaded // ... or where criteria was not loaded (e.g. errors during previous loading attempts)
+            ) {
+                this.async(() => { // load new centre config only after current loading completed; this can be achieved by putting next loading in the end of queue; this is useful for link-configurations
+                    centre._selectedView = 0;
+                    centre.queryPart = queryPart;
+                    centre.configUuid = unknownSubpath;
+                    this._loadCentre.bind(this)(centre, false);
+                });
+            }
+        } else {
+            if (elementLoader.attrs) {
+                elementLoader.attrs.configUuid = unknownSubpath;
             }
         }
     },
 
+    /**
+     * Loads criteria entity for the centre and initiates running for autoRun / link centres.
+     */
     _loadCentre: function (centre, isFirstTime) {
         const self = this;
         const oldPostRetrieved = centre.postRetrieved;
@@ -169,10 +177,13 @@ Polymer({
         return centre.retrieve().catch(error => {});
     },
 
+    /**
+     * Listener for tg-element-loader after successful loading of menu-item view.
+     */
     _afterLoadListener: function (e, detail, view) {
         const self = this;
         if (e.target === this.shadowRoot.querySelector("#elementToLoad")) {
-            if (this.menuItem.view.viewType === 'centre') {
+            if (this._isCentre(this.menuItem)) {
                 self._loadCentre.bind(this)(detail, true);
             } else if (this.menuItem.view.viewType === 'master') {
                 detail.postRetrieved = function (entity, bindingEntity, customObject) {

@@ -185,21 +185,21 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private static final String EGI_FUNCTIONAL_ACTION_DOM = "<!--@functional_actions-->";
     private static final String EGI_PRIMARY_ACTION_DOM = "<!--@primary_action-->";
     private static final String EGI_SECONDARY_ACTIONS_DOM = "<!--@secondary_actions-->";
-    //Front actions
+    // Front actions
     private static final String FRONT_ACTIONS_DOM = "<!--@custom-front-actions-->";
     private static final String FRONT_ACTIONS = "//generatedFrontActionObjects";
-    //Front actions
+    // Share actions
     private static final String SHARE_ACTIONS_DOM = "<!--@custom-share-actions-->";
     private static final String SHARE_ACTIONS = "//generatedShareActionObjects";
-    //Toolbar related
+    // Toolbar related
     private static final String TOOLBAR_DOM = "<!--@toolbar-->";
     private static final String TOOLBAR_JS = "//toolbarGeneratedFunction";
     private static final String TOOLBAR_STYLES = "/*toolbarStyles*/";
-    //Selection criteria related
+    // Selection criteria related
     private static final String QUERY_ENHANCER_CONFIG = "@queryEnhancerContextConfig";
     private static final String CRITERIA_DOM = "<!--@criteria_editors-->";
     private static final String SELECTION_CRITERIA_LAYOUT_CONFIG = "//@layoutConfig";
-    //Insertion points
+    // Insertion points
     private static final String INSERTION_POINT_ACTIONS = "//generatedInsertionPointActions";
     private static final String INSERTION_POINT_ACTIONS_DOM = "<!--@insertion_point_actions-->";
     private static final String LEFT_INSERTION_POINT_DOM = "<!--@left_insertion_points-->";
@@ -1001,7 +1001,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         ////////////////////Primary result-set action [END] //////////////
 
         logger.debug("Initiating front actions...");
-        //////////////////// front action ////////////////////
+        //////////////////// front actions ////////////////////
         final StringBuilder frontActionsObjects = new StringBuilder();
         final DomElement frontActionsDom = new DomElement("div").attr("selectable-elements-container", null).attr("slot", "custom-front-action").clazz("first-group");
 
@@ -1012,7 +1012,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             frontActionsDom.add(actionElement.render());
             frontActionsObjects.append(prefix + createActionObject(actionElement));
         }
-        ////////////////////front action (END)////////////////////
+        //////////////////// front actions (END) ////////////////////
 
         logger.debug("Initiating share actions...");
         //////////////////// share actions ////////////////////
@@ -1026,7 +1026,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             shareActionsDom.add(actionElement.render());
             shareActionsObjects.append(prefix + createActionObject(actionElement));
         }
-        ////////////////////front action (END)////////////////////
+        //////////////////// share actions (END) ////////////////////
 
         logger.debug("Initiating secondary actions...");
 

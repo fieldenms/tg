@@ -86,7 +86,7 @@ const createColumnAction = function (entityCentre) {
         return true;
     };
     actionModel.postActionSuccess = function (functionalEntity) {
-        // update presence of asterisk in centre / application titles after changing column widths
+        // update disablement of save button after changing column widths
         entityCentre.$.selection_criteria._centreDirty = functionalEntity.get('centreDirty');
     };
     actionModel.postActionError = function (functionalEntity) { };
@@ -171,6 +171,12 @@ const TgEntityCentreBehaviorImpl = {
             observer: '_saveAsNameChanged'
         },
 
+        /**
+         * UUID for currently loaded centre configuration.
+         * 
+         * Returns '' for default configurations.
+         * Returns non-empty value (e.g. '4920dbe0-af69-4f57-a93a-cdd7157b75d8') for link, own save-as and inherited [from base / shared] configurations.
+         */
         configUuid: {
             type: String,
             value: ''
@@ -1154,7 +1160,10 @@ const TgEntityCentreBehaviorImpl = {
         this.$.selection_criteria.enableView();
         this.$.egi.lock = false;
     },
-    
+
+    /**
+     * Overrides standard hand cursor for disabled button to simple pointer.
+     */
     _computeButtonStyle: function (_buttonDisabled) {
         return _buttonDisabled ? 'cursor:initial' : '';
     }

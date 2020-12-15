@@ -545,9 +545,9 @@ Polymer({
         const menuPath = findNestedMenuItem(pagePath, this.menuItem);
         if (menuPath.menuItem && !this._isMenuPresent(menuPath.menuItem.menu)) {
             this.set("_selectedPage", menuPath.path);
-            const currMenuItemView = this.shadowRoot.querySelector(`tg-menu-item-view[page-name="${this._selectedPage}"]`);
-            if (currMenuItemView) { // ... then find active tg-menu-item-view and ...
-                currMenuItemView._retrieveCentreAgainWithParams(paramsStr, menuPath.unknownSubpath);
+            const currMenuItemView = this.shadowRoot.querySelector(`tg-menu-item-view[page-name="${this._selectedPage}"]`); // find active tg-menu-item-view
+            if (currMenuItemView && currMenuItemView._isCentre(currMenuItemView.menuItem)) { // if it is present and contains centre
+                currMenuItemView._retrieveCentreWithParams(paramsStr, menuPath.unknownSubpath); // initiate retrieval
             }
         }
     },

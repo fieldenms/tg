@@ -278,7 +278,7 @@ Polymer({
                         action.oldIsActionInProgressChanged = action.isActionInProgressChanged.bind(action);
                         action.isActionInProgressChanged = (newValue, oldValue) => {
                             action.oldIsActionInProgressChanged(newValue, oldValue);
-                            self._actionInProgress = newValue;
+                            self._actionInProgress = newValue; // enhance action's observer for isActionInProgress to set _actionInProgress to whole centre which controls disablement of all other buttons
                         };
                     }
                     action.modifyFunctionalEntity = function (bindingEntity, master, action) {
