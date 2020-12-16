@@ -835,22 +835,15 @@ public class CentreUpdater {
                 // diff centre does not exist in persistent storage yet -- initialise EMPTY diff
                 resultantDiff = saveNewEntityCentreManager(createEmptyDifferences(), miType, user, deviceSpecificDiffName, null, eccCompanion, mmiCompanion);
             } else { // non-base user
-                final String upstreamDesc;
-                final Optional<String> upstreamConfigUuid;
-                final Map<String, Object> differences;
-                try {
-                    // diff centre does not exist in persistent storage yet -- create a diff by comparing basedOnCentre (configuration created by base user) and default centre
-                    final User baseUser = beginBaseUserOperations(userProvider, user, userCompanion);
-                    final Optional<Map<String, Object>> baseCentreDiffOpt = retrieveDiff(miType, baseUser, deviceSpecific(saveAsSpecific(SAVED_CENTRE_NAME, saveAsName), device) + DIFFERENCES_SUFFIX, eccCompanion);
-                    // find description of the centre configuration to be copied from
-                    upstreamDesc = baseCentreDiffOpt.isPresent() ? updateCentreDesc(baseUser, miType, saveAsName, device, eccCompanion) : null;
-                    upstreamConfigUuid = baseCentreDiffOpt.isPresent() ? updateCentreConfigUuid(baseUser, miType, saveAsName, device, eccCompanion) : empty();
-                    // creates differences centre from the differences between base user's 'default centre' (which can be user specific, see IValueAssigner for properties dependent on User) and 'baseCentre'
-                    differences = baseCentreDiffOpt.orElseGet(CentreUpdater::createEmptyDifferences);
-                } finally {
-                    endBaseUserOperations(user, userProvider);
-                }
-                // promotes diff to local cache and saves it into persistent storage
+                // diff centre does not exist in persistent storage yet -- load diff from base user's configuration
+                final User baseUser = userCompanion.findByEntityAndFetch(fetch(User.class).with(LAST_UPDATED_BY), user.getBasedOnUser());
+                final Optional<Map<String, Object>> baseCentreDiffOpt = retrieveDiff(miType, baseUser, deviceSpecific(saveAsSpecific(SAVED_CENTRE_NAME, saveAsName), device) + DIFFERENCES_SUFFIX, eccCompanion);
+                // find description of the centre configuration to be copied from
+                final String upstreamDesc = baseCentreDiffOpt.isPresent() ? updateCentreDesc(baseUser, miType, saveAsName, device, eccCompanion) : null;
+                final Optional<String> upstreamConfigUuid = baseCentreDiffOpt.isPresent() ? updateCentreConfigUuid(baseUser, miType, saveAsName, device, eccCompanion) : empty();
+                // creates differences centre from the differences between base user's 'default centre' (which can be user specific, see IValueAssigner for properties dependent on User) and 'baseCentre'
+                final Map<String, Object> differences = baseCentreDiffOpt.orElseGet(CentreUpdater::createEmptyDifferences);
+                // promotes diff to persistent storage
                 resultantDiff = saveNewEntityCentreManager(differences, miType, user, deviceSpecificDiffName, upstreamDesc, eccCompanion, mmiCompanion);
                 if (FRESH_CENTRE_NAME.equals(name) && upstreamConfigUuid.isPresent()) { // inherited configs have uuid only in FRESH centre
                     findConfigOpt(miType, user, deviceSpecificDiffName, eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("configUuid"))
@@ -859,36 +852,6 @@ public class CentreUpdater {
             }
         }
         return resultantDiff;
-    }
-    
-    /**
-     * Prepares environment for executing operations against base user. {@link IUserProvider} receives corresponding base user into it.
-     * <p>
-     * This method's call must be followed by {@link #endBaseUserOperations(User, IUserProvider)} call.
-     * 
-     * @param userProvider
-     * @param user
-     * @param userCompanion
-     * @return
-     */
-    private static User beginBaseUserOperations(final IUserProvider userProvider, final User user, final IUser userCompanion) {
-        // get base user
-        final User baseUser = userCompanion.findByEntityAndFetch(fetch(User.class).with(LAST_UPDATED_BY), user.getBasedOnUser());
-        // insert appropriate user into IUserProvider for a very brief period of time to facilitate any operations against baseUser
-        userProvider.setUser(baseUser);
-        return baseUser;
-    }
-    
-    /**
-     * Completes base user work: {@link IUserProvider} receives back <code>user</code>.
-     * 
-     * @param user
-     * @param userProvider
-     * @return
-     */
-    private static void endBaseUserOperations(final User user, final IUserProvider userProvider) {
-        // return 'user' into user provider
-        userProvider.setUser(user);
     }
     
     /**
