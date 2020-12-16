@@ -18,9 +18,9 @@ export function getFirstEntityValue (reflector, entity, propertyName) {
     if (entity && propertyName) {
         let currentProperty = propertyName;
         let currentValue = entity.get(currentProperty);
-        while (!reflector.isEntity(currentValue)) {
+        while (currentProperty && !reflector.isEntity(currentValue)) {
             const lastDotIndex = currentProperty.lastIndexOf(".");
-            currentProperty = lastDotIndex >=0 ? currentProperty.substring(0, lastDotIndex) : "";
+            currentProperty = lastDotIndex >= 0 ? currentProperty.substring(0, lastDotIndex) : "";
             currentValue = currentProperty ? entity.get(currentProperty) : entity;
         }
         return currentValue; 
