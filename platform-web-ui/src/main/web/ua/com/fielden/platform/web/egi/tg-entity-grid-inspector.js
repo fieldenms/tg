@@ -2080,7 +2080,7 @@ Polymer({
                 shortDesc: 'Download',
                 longDesc: 'Click to download attachment.'
             });
-        } else {
+        } else if (!this.isHyperlinkProp(entity, column)) {
             const entityValue = getFirstEntityValue(this._reflector, entity, column.collectionalProperty || column.property);
             const entityTitle = entityValue.type().entityTitle();
             return this._generateActionTooltip({
@@ -2088,6 +2088,7 @@ Polymer({
                 longDesc: `Edit ${entityTitle}`
             });
         }
+        return "";
     },
     
     _generateEntityTooltip: function (entity, column) {
