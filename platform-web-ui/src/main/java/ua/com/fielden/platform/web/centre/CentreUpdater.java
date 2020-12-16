@@ -546,7 +546,10 @@ public class CentreUpdater {
                             from(eccCompanion.withDbVersion(centreConfigQueryFor(miType, device, SAVED_CENTRE_NAME))
                                 .and().prop("configUuid").in().values(notInheritedFromBaseUuids.toArray())
                                 .and().prop("owner").ne().val(user)
-                                .model()
+                                .and().begin() // we look only for shared configs; base user could have changed the title of base config already loaded by current user; so we need to look for ...
+                                    .prop("owner.base").eq().val(false) // ... owners that are not base users ...
+                                    .or().prop("owner").ne().val(user.getBasedOnUser()) // ... or base users but not base for current user
+                                .end().model()
                             )
                             .with(FETCH_CONFIG.with("configUuid").with("owner", fetch(User.class).with("key")))
                             .lightweight().model()
