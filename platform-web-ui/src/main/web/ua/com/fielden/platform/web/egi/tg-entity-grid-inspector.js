@@ -2086,7 +2086,6 @@ Polymer({
                 longDesc: `Edit ${entityTitle}`
             });
         }
-        return "";
     },
     
     _generateEntityTooltip: function (entity, column) {
