@@ -57,8 +57,8 @@ public class EntityManipulationActionProducer<T extends AbstractEntityManipulati
      */
     @SuppressWarnings("unchecked")
     private Class<AbstractEntity<?>> determineEntityType(final AbstractEntity<?> currEntity, final EnhancedCentreEntityQueryCriteria<?, ?> selCrit) {
-        return selCrit != null ? (Class<AbstractEntity<?>>) selCrit.getEntityClass() :
-               currEntity != null ? determineBaseEntityType(getOriginalType(currEntity.getType())) : null;
+        return currEntity != null ? determineBaseEntityType(getOriginalType(currEntity.getType())) :
+            selCrit != null ? (Class<AbstractEntity<?>>) selCrit.getEntityClass() : null;
     }
 
     @SuppressWarnings("unchecked")
