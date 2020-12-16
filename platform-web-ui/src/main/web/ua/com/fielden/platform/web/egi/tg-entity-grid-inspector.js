@@ -440,7 +440,7 @@ const template = html`
     <!--configuring slotted elements-->
     <slot id="column_selector" name="property-column" hidden></slot>
     <slot id="primary_action_selector" name="primary-action" hidden></slot>
-    <slot id="default_property_action" name="deafultPropertyAction" hidden></slot>
+    <slot id="default_property_action" name="defaultPropertyAction" hidden></slot>
     <slot id="egi_master" name="egi-master" hidden></slot>
     <!--EGI template-->
     <div id="paperMaterial" class="grid-container" style$="[[_calcMaterialStyle(showMarginAround)]]" fit-to-height$="[[fitToHeight]]">
@@ -1324,7 +1324,7 @@ Polymer({
         // This closure returns either 'entity' or the entity navigated to (EntityNavigationAction).
         // Each tapping overrides this function to provide proper context of execution.
         // This override should occur on every 'run' of the action so it is mandatory to use 'tg-property-column.runAction' public API.
-        if (column.runAction(this._currentEntity(entity), this._defaultPropertyAction) === false) {
+        if (!column.runAction(this._currentEntity(entity))) {
             // if the clicked property is a hyperlink and there was no custom action associted with it
             // then let's open the linked resources
             if (this.isHyperlinkProp(entity, column) === true) {
@@ -1335,8 +1335,10 @@ Polymer({
                 const attachment = this.getAttachmentIfPossible(entity, column);
                 if (attachment && this.downloadAttachment) {
                     this.downloadAttachment(attachment);
+                } else {
+                    column.runDefaultAction(this._currentEntity(entity), this._defaultPropertyAction);
                 }
-            }
+            } 
         }
     },
 

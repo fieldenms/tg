@@ -62,12 +62,17 @@ Polymer({
      * Otherwise, simply returns false to indicate that there was no custom action to be executed. 
      * the passed in currentEntity is a function that returns choosen entity. 
      */
-    runAction: function (currentEntity, defaultPropertyAction) {
+    runAction: function (currentEntity) {
         if (this.customAction) {
             this.customAction.currentEntity = currentEntity;
             this.customAction._run();
             return true;
-        } else if (defaultPropertyAction) {
+        }
+        return false;
+    },
+
+    runDefaultAction: function (currentEntity, defaultPropertyAction) {
+        if (defaultPropertyAction) {
             const newCurrentEntity = () => getFirstEntityValue(this._reflector, currentEntity.bind(defaultPropertyAction)(), this.collectionalProperty || this.property);
             defaultPropertyAction.currentEntity = newCurrentEntity;
             defaultPropertyAction._run();

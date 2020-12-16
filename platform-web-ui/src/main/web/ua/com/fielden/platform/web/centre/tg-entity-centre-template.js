@@ -70,7 +70,7 @@ const entityCentreTemplate = html`
             
             <!--@toolbar-->
             <tg-ui-action
-                slot="deafultPropertyAction"
+                slot="defaultPropertyAction"
                 ui-role='ICON'
                 show-dialog='[[_showDialog]]'
                 toaster='[[toaster]]'
