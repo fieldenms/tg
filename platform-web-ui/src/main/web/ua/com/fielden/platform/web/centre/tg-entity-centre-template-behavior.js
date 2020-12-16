@@ -18,7 +18,6 @@ const TgEntityCentreTemplateBehaviorImpl = {
     },
 
     created: function () {
-        this._defaultPropertyActionAttrs = {currentState: "EDIT", centreUuid: this.uuid};
         // bind SSE event handling method regardless of the fact whether this particulare
         // centre is bound to some SSE url or not.
         this.dataHandler = function (msg) {
@@ -45,6 +44,7 @@ const TgEntityCentreTemplateBehaviorImpl = {
      */
     ready: function () {
         this.classList.add("canLeave");
+        this._defaultPropertyActionAttrs = {currentState: "EDIT", centreUuid: this.uuid};
     },
 
     ////////////// Template related method are here in order to reduce the template size ///////////////
