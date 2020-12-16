@@ -3,10 +3,12 @@ package ua.com.fielden.platform.web.view.master;
 import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -19,7 +21,6 @@ import ua.com.fielden.platform.master.MasterInfo;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.types.tuples.T2;
-import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.app.exceptions.WebUiBuilderException;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
@@ -93,17 +94,18 @@ public class MasterInfoProvider {
         final List<Field> keyMembers = Finder.getKeyMembers(type);
         if (keyMembers.size() == 1) {
             if (isCompositeEntity(type)) {
-                return isEntityType(keyMembers.get(0).getType()) ? of(t2((Class<? extends AbstractEntity<?>>)keyMembers.get(0).getType(), keyMembers.get(0).getName())) : empty();
+                return isEntityType(keyMembers.get(0).getType()) ? of(t2((Class<? extends AbstractEntity<?>>) keyMembers.get(0).getType(), keyMembers.get(0).getName())) : empty();
             }
-            return isEntityType(getKeyType(type)) ? of(t2((Class<? extends AbstractEntity<?>>)getKeyType(type), "key")) : empty();
+            final Class<? extends Comparable<?>> keyType = getKeyType(type);
+            return isEntityType(keyType) ? of(t2((Class<? extends AbstractEntity<?>>) keyType, KEY)) : empty();
         }
         return empty();
     }
 
     @SuppressWarnings("unchecked")
     private Optional<Class<? extends AbstractEntity<?>>> getBaseOfSyntheticType(final Class<? extends AbstractEntity<?>> type) {
-        if (EntityUtils.isSyntheticBasedOnPersistentEntityType(type)) {
-            return of((Class<? extends AbstractEntity<?>>)type.getSuperclass());
+        if (isSyntheticBasedOnPersistentEntityType(type)) {
+            return of((Class<? extends AbstractEntity<?>>) type.getSuperclass());
         }
         return empty();
     }

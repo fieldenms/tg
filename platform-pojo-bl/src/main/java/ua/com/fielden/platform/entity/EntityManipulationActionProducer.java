@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity;
 
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
+import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
 
 import com.google.inject.Inject;
 
@@ -8,7 +9,6 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.types.tuples.T2;
-import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 public class EntityManipulationActionProducer<T extends AbstractEntityManipulationAction> extends DefaultEntityProducerWithContext<T> {
@@ -63,8 +63,10 @@ public class EntityManipulationActionProducer<T extends AbstractEntityManipulati
 
     @SuppressWarnings("unchecked")
     private Class<AbstractEntity<?>> determineBaseEntityType (final Class<AbstractEntity<?>> entityType) {
-        if (EntityUtils.isSyntheticBasedOnPersistentEntityType(entityType)) {
-            return (Class<AbstractEntity<?>>)entityType.getSuperclass();
+        if (isSyntheticBasedOnPersistentEntityType(entityType)) {
+            // for the cases where EntityEditAction / EntityNavigationAction is used for opening SyntheticBasedOnPersistentEntity we explicitly use base type;
+            // however this is not the case for StandardActions.EDIT_ACTION because of computation existence that returns entityType.
+            return (Class<AbstractEntity<?>>) entityType.getSuperclass();
         }
         return entityType;
     }
