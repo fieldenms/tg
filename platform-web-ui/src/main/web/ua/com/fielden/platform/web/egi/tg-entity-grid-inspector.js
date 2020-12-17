@@ -1110,7 +1110,16 @@ Polymer({
     },
 
     hasAction: function (entity, column) {
-        return entity;
+        return entity && (
+            column.customAction
+            || this.isHyperlinkProp(entity, column) === true
+            || this.getAttachmentIfPossible(entity, column)
+            || this.isEntityProperty(entity, column)
+        );
+    },
+
+    isEntityProperty: function (entity, column) {
+        return entity && entity.type && entity.type() && this._reflector.tg_determinePropertyType(entity.type(), column.collectionalProperty || column.property) instanceof this._reflector._getEntityTypePrototype();
     },
 
     isVisible: function (entity) {
@@ -1335,7 +1344,7 @@ Polymer({
                 const attachment = this.getAttachmentIfPossible(entity, column);
                 if (attachment && this.downloadAttachment) {
                     this.downloadAttachment(attachment);
-                } else {
+                } else if (this.isEntityProperty(entity, column)) {
                     column.runDefaultAction(this._currentEntity(entity), this._defaultPropertyAction);
                 }
             } 
@@ -2080,7 +2089,7 @@ Polymer({
                 shortDesc: 'Download',
                 longDesc: 'Click to download attachment.'
             });
-        } else if (!this.isHyperlinkProp(entity, column)) {
+        } else if (!this.isHyperlinkProp(entity, column) && this.isEntityProperty(entity, column)) {
             const entityValue = getFirstEntityValue(this._reflector, entity, column.collectionalProperty || column.property);
             const entityTitle = entityValue.type().entityTitle();
             return this._generateActionTooltip({
