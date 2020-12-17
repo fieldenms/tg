@@ -196,7 +196,7 @@ public class CentreUpdaterUtils extends CentreUpdater {
             newMainMenuItem.setKey(menuItemType.getName());
             return mmiCompanion.save(newMainMenuItem);
         });
-        final EntityCentreConfig ecc = eccCompanion.new_().setOwner(user).setTitle(newName).setMenuItem(menuItem).setConfigBody(serialisedDifferences).setDesc(newDesc);
+        final EntityCentreConfig ecc = adjustConfig.apply(eccCompanion.new_().setOwner(user).setTitle(newName).setMenuItem(menuItem).setConfigBody(serialisedDifferences).setDesc(newDesc));
         if (withoutConflicts) {
             return eccCompanion.saveWithoutConflicts(ecc);
         } else {
