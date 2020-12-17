@@ -660,10 +660,12 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         });
         // updates inherited centre with title 'saveAsNameToLoad' from upstream shared configuration -- just before LOAD action
         validationPrototype.setInheritedFromSharedCentreUpdater(saveAsNameToLoad -> configUuid -> {
-            updateInheritedFromShared(configUuid, miType, device, of(saveAsNameToLoad), user, eccCompanion, of(() -> isFreshCentreChanged(
+            return updateInheritedFromShared(configUuid, miType, device, of(saveAsNameToLoad), user, eccCompanion, of(() -> isFreshCentreChanged(
                 updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, of(saveAsNameToLoad), device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder),
                 updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, of(saveAsNameToLoad), device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder)
-            )));
+            )))
+            .map(upstreamConfig -> of(obtainTitleFrom(upstreamConfig.getTitle(), SAVED_CENTRE_NAME, device)))
+            .orElseGet(() -> of(saveAsNameToLoad));
         });
         // clears default centre and fully prepares it for usage
         validationPrototype.setDefaultCentreClearer(() -> {
@@ -1221,13 +1223,16 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     }
 
     /**
-     * Updates FRESH / SAVED versions of configuration for {@code user} from upstream configuration if it exists.
+     * Updates FRESH / SAVED / PREVIOUSLY_RUN versions of configuration for {@code user} from upstream configuration if it exists.<br>
      * Returns upstream configuration.
      * <p>
-     * This method safely checks whether FRESH / SAVED / upstream configs exist.
-     * They should, if prior isInherited check was true.
-     * However in highly concurrent system original creator could have performed deletion in between (unlikely),
-     *  also {@code user} could have performed deletion of current configuration too (very unlikely).
+     * This method safely checks whether FRESH / SAVED / PREVIOUSLY_RUN configs exist.<br>
+     * They should (FRESH / SAVED), if prior isInherited check was true.<br>
+     * However in highly concurrent system {@code user} could have performed deletion of current configuration (very unlikely).<br>
+     * PREVIOUSLY_RUN may not be present, and this is checked also.<br>
+     * <p>
+     * IMPORTANT: In this method saveAsName of inherited configuration may be changed to the one from upstream configuration.<br>
+     *   In this case this new saveAsName must be taken from returning argument and used for further calculations and for returning to the client application.
      * 
      * @param checkChanges -- optional function to check whether there are local changes; if they are -- not update FRESH from upstream; if no such check is needed i.e. empty function is passed (e.g. when discarding) -- force FRESH centre updating
      */
@@ -1246,30 +1251,47 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     }
 
     /**
-     * Updates FRESH / SAVED versions of configuration for {@code user} from upstream configuration.
+     * Updates FRESH / SAVED / PREVIOUSLY_RUN versions of configuration for {@code user} from upstream configuration.<br>
      * Returns upstream configuration back.
      * <p>
-     * This method safely checks whether FRESH / SAVED configs exist.
-     * They should, if prior isInherited check was true.
-     * However in highly concurrent system {@code user} could have performed deletion of current configuration (very unlikely).
+     * This method safely checks whether FRESH / SAVED / PREVIOUSLY_RUN configs exist.<br>
+     * They should (FRESH / SAVED), if prior isInherited check was true.<br>
+     * However in highly concurrent system {@code user} could have performed deletion of current configuration (very unlikely).<br>
+     * PREVIOUSLY_RUN may not be present, and this is checked also.<br>
+     * <p>
+     * IMPORTANT: In this method saveAsName of inherited configuration may be changed to the one from upstream configuration.<br>
+     *   In this case this new saveAsName must be taken from returning argument and used for further calculations and for returning to the client application.
      * 
      * @param checkChanges -- optional function to check whether there are local changes; if they are -- not update FRESH from upstream; if no such check is needed i.e. empty function is passed (e.g. when discarding) -- force FRESH centre updating
      */
     public static EntityCentreConfig updateInheritedFromShared(final EntityCentreConfig upstreamConfig, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final Optional<String> saveAsName, final User user, final IEntityCentreConfig eccCompanion, final Optional<Supplier<Boolean>> checkChanges) {
+        final String upstreamTitle = obtainTitleFrom(upstreamConfig.getTitle(), SAVED_CENTRE_NAME, device);
+        final Optional<String> changedTitle = !equalsEx(upstreamTitle, saveAsName.get()) ? of(upstreamTitle) : empty();
         final Function<String, Consumer<Supplier<String>>> overrideConfigBodyFor = name -> calcDesc ->
-            findConfigOpt(miType, user, NAME_OF.apply(name).apply(saveAsName).apply(device), eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("configBody")) // contains 'desc' inside fetch model
+            findConfigOpt(miType, user, NAME_OF.apply(name).apply(saveAsName).apply(device), eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("configBody")) // contains 'title' / 'desc' inside fetch model
             .ifPresent(config -> {
                 final String desc = calcDesc.get();
                 if (desc != null) {
                     config.setDesc(desc);
                 }
+                changedTitle.ifPresent(ct -> config.setTitle(NAME_OF.apply(name).apply(of(ct)).apply(device))); // update title of configuration from upstream if it has changed
                 eccCompanion.quickSave(config.setConfigBody(upstreamConfig.getConfigBody()));
             });
+        final Function<String, Consumer<String>> overrideConfigTitleFor = name -> ct -> findConfigOpt(miType, user, NAME_OF.apply(name).apply(saveAsName).apply(device), eccCompanion, FETCH_CONFIG_AND_INSTRUMENT /*contains 'title' inside fetch model*/).ifPresent(config ->
+            eccCompanion.quickSave(config.setTitle(NAME_OF.apply(name).apply(of(ct)).apply(device)))
+        );
         final boolean notUpdateFresh = checkChanges.map(check -> check.get()).orElse(FALSE);
+        // update SAVED surrogate configuration; always
         overrideConfigBodyFor.apply(SAVED_CENTRE_NAME).accept(() -> null);
         if (!notUpdateFresh) {
-            overrideConfigBodyFor.apply(FRESH_CENTRE_NAME).accept(() -> updateCentreDesc(upstreamConfig.getOwner(), miType, of(obtainTitleFrom(upstreamConfig.getTitle(), SAVED_CENTRE_NAME, device)), device, eccCompanion));
+            // update FRESH surrogate configuration; if there are no local changes or if local changes are irrelevant (DISCARD)
+            overrideConfigBodyFor.apply(FRESH_CENTRE_NAME).accept(() -> updateCentreDesc(upstreamConfig.getOwner(), miType, of(upstreamTitle), device, eccCompanion));
+        } else {
+            // update FRESH surrogate configuration; only if upstream title has been changed
+            changedTitle.ifPresent(ct -> overrideConfigTitleFor.apply(FRESH_CENTRE_NAME).accept(ct));
         }
+        // update PREVIOUSLY_RUN surrogate configuration; only if upstream title has been changed and if PREVIOUSLY_RUN surrogate configuration does exist
+        changedTitle.ifPresent(ct -> overrideConfigTitleFor.apply(PREVIOUSLY_RUN_CENTRE_NAME).accept(ct)); // update title of configuration from upstream if it has changed
         return upstreamConfig;
     }
 
