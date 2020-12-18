@@ -12,6 +12,34 @@ export function generateUUID () {
 };
 
 /**
+ * Returns the first entity that lies on path of property name and entity
+ */
+export function getFirstEntityValue (reflector, entity, propertyName) {
+    if (entity && propertyName) {
+        let currentProperty = propertyName;
+        let currentValue = entity.get(currentProperty);
+        while (currentProperty && !reflector.isEntity(currentValue)) {
+            const lastDotIndex = currentProperty.lastIndexOf(".");
+            currentProperty = lastDotIndex >= 0 ? currentProperty.substring(0, lastDotIndex) : "";
+            currentValue = currentProperty ? entity.get(currentProperty) : entity;
+        }
+        return currentValue; 
+    } else if (entity) {
+        return entity;
+    }
+};
+
+/**
+ * Returns the first entity value type that lies on path of property name and entity.
+ */
+export function getFirstEntityValueType (reflector, entity, propertyName) {
+    const firstEntityValue = getFirstEntityValue(reflector, entity, propertyName);
+    if (firstEntityValue) {
+        return firstEntityValue.type().notEnhancedFullClassName();
+    }
+};
+
+/**
  * Removes all Light DOM children from Polymer 'element'.
  */
 export function _removeAllLightDOMChildrenFrom (element) {

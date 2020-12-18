@@ -15,6 +15,7 @@ const TgEntityCentreTemplateBehaviorImpl = {
         pageCountUpdated: Number,
         staleCriteriaMessage: String,
         _centreDirtyOrEdited: Boolean
+        _defaultPropertyActionAttrs: Object
     },
 
     created: function () {
@@ -44,6 +45,7 @@ const TgEntityCentreTemplateBehaviorImpl = {
      */
     ready: function () {
         this.classList.add("canLeave");
+        this._defaultPropertyActionAttrs = {currentState: "EDIT", centreUuid: this.uuid};
     },
 
     ////////////// Template related method are here in order to reduce the template size ///////////////
