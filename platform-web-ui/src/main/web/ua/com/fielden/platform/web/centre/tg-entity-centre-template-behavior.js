@@ -14,7 +14,7 @@ const TgEntityCentreTemplateBehaviorImpl = {
         pageNumberUpdated: Number,
         pageCountUpdated: Number,
         staleCriteriaMessage: String,
-        _centreDirtyOrEdited: Boolean
+        _centreDirtyOrEdited: Boolean,
         _defaultPropertyActionAttrs: Object
     },
 
