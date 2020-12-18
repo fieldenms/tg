@@ -45,7 +45,7 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     /** IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE. */
     private Runnable configDuplicateAction;
     private Consumer<String> inheritedFromBaseCentreUpdater;
-    private Function<String, Consumer<String>> inheritedFromSharedCentreUpdater;
+    private Function<String, Function<String, Optional<String>>> inheritedFromSharedCentreUpdater;
     private Runnable defaultCentreClearer;
     private Function<Optional<Optional<String>>, Supplier<List<LoadableCentreConfig>>> loadableCentresSupplier;
     private Supplier<Optional<String>> saveAsNameSupplier;
@@ -174,12 +174,12 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
         defaultCentreClearer.run();
     }
 
-    public void setInheritedFromSharedCentreUpdater(final Function<String, Consumer<String>> inheritedFromSharedCentreUpdater) {
+    public void setInheritedFromSharedCentreUpdater(final Function<String, Function<String, Optional<String>>> inheritedFromSharedCentreUpdater) {
         this.inheritedFromSharedCentreUpdater = inheritedFromSharedCentreUpdater;
     }
 
-    public void updateInheritedFromSharedCentre(final String saveAsNameToLoad, final String configUuid) {
-        inheritedFromSharedCentreUpdater.apply(saveAsNameToLoad).accept(configUuid);
+    public Optional<String> updateInheritedFromSharedCentre(final String saveAsNameToLoad, final String configUuid) {
+        return inheritedFromSharedCentreUpdater.apply(saveAsNameToLoad).apply(configUuid);
     }
 
     public void setInheritedFromBaseCentreUpdater(final Consumer<String> inheritedFromBaseCentreUpdater) {
