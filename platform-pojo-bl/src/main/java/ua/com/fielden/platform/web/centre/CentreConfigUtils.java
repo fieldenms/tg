@@ -22,7 +22,8 @@ import ua.com.fielden.platform.error.Result;
  *
  */
 public class CentreConfigUtils {
-    
+    private static final String CONFIGURATION_HAS_BEEN_DELETED = "Configuration has been deleted.";
+
     /**
      * Applies modifHolder from <code>selectionCrit</code> against fresh centre.
      * 
@@ -162,7 +163,7 @@ public class CentreConfigUtils {
      * @return
      * @throws Result if configuration is not present aka deleted
      */
-    private static Optional<LoadableCentreConfig> findLoadableConfig(final Optional<String> saveAsName, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) throws Result {
+    public static Optional<LoadableCentreConfig> findLoadableConfig(final Optional<String> saveAsName, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) throws Result {
         return findLoadableConfig(saveAsName, () -> selectionCrit.loadableCentreConfigs().apply(of(saveAsName)).stream());
     }
     
@@ -181,7 +182,7 @@ public class CentreConfigUtils {
                 streamLoadableConfigurations.get()
                 .filter(lcc -> lcc.getKey().equals(saveAsName.get()))
                 .findAny()
-                .orElseThrow(() -> failure("Configuration has been deleted."))
+                .orElseThrow(() -> failure(CONFIGURATION_HAS_BEEN_DELETED))
             );
     }
     

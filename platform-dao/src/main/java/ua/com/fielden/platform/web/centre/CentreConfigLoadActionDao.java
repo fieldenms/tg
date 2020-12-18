@@ -2,7 +2,10 @@ package ua.com.fielden.platform.web.centre;
 
 import static java.util.Optional.of;
 import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.web.centre.CentreConfigUtils.findLoadableConfig;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.getCustomObject;
+import static ua.com.fielden.platform.web.centre.CentreConfigUtils.inherited;
+import static ua.com.fielden.platform.web.centre.CentreConfigUtils.inheritedFromBase;
 
 import java.util.Optional;
 
@@ -49,13 +52,14 @@ public class CentreConfigLoadActionDao extends CommonEntityDao<CentreConfigLoadA
             .filter(centreConfig -> saveAsNameToLoad.equals(centreConfig.getKey()))
             .findAny()
             .flatMap(centreConfig -> {
-                if (centreConfig.isInherited()) {
-                    if (centreConfig.isShared()) {
-                        // if configuration being loaded is inherited from shared we need to update it from upstream changes
-                        return selectionCrit.updateInheritedFromSharedCentre(saveAsNameToLoad, centreConfig.getConfig().getConfigUuid());
-                    } else {
+                final Optional<LoadableCentreConfig> loadableConfig = findLoadableConfig(of(saveAsNameToLoad), selectionCrit); // this will also throw early failure in case where configuration was deleted
+                if (inherited(loadableConfig).isPresent()) {
+                    if (inheritedFromBase(loadableConfig).isPresent()) {
                         // if configuration being loaded is inherited from base we need to update it from upstream changes
                         selectionCrit.updateInheritedFromBaseCentre(saveAsNameToLoad);
+                    } else {
+                        // if configuration being loaded is inherited from shared we need to update it from upstream changes
+                        return selectionCrit.updateInheritedFromSharedCentre(saveAsNameToLoad, centreConfig.getConfig().getConfigUuid());
                     }
                 }
                 return of(saveAsNameToLoad);
