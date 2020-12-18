@@ -13,6 +13,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersis
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -84,13 +85,32 @@ public class MasterInfoProvider {
             info.setEntityType(EntityEditAction.class.getName());
             info.setRelativePropertyName(relativePropertyName);
             return info;
-        })
-                .orElseGet(() -> getBaseOfSyntheticType(type).map(baseType -> buildConfiguredMasterActionInfo(baseType, relativePropertyName))
-                .orElseGet(() -> getSingleEntityKey(type).map(keyTypeName -> buildConfiguredMasterActionInfo(keyTypeName._1, keyTypeName._2)).orElse(null)));
+        }).orElseGet(tryOtherMasters(type, relativePropertyName));
+    }
+    
+    /**
+     * Tries to determine a master for {@code type} in case it is a synthetic type based on some entity that may have a master (e.g. the case of ReWorkActivity extending WorkActivity).
+     * If that fails, it tries to check if {@code type} is perhaps an entity with a single composite key member of an entity type that may have a master (e.g. the case of Manager with a single key member of type Person).
+     * If none of the above yields anything, the constructed supplier returns {@code null}.
+     * 
+     * @param type
+     * @param relativePropertyName
+     * @return
+     */
+    private Supplier<? extends MasterInfo> tryOtherMasters(final Class<? extends AbstractEntity<?>> type, final String relativePropertyName) {
+         return () -> getBaseTypeForSyntheticEntity(type)
+                     .map(baseType -> buildConfiguredMasterActionInfo(baseType, relativePropertyName))
+                     .orElseGet(() -> getSingleMemberOfEntityType(type).map(keyTypeName -> buildConfiguredMasterActionInfo(keyTypeName._1, keyTypeName._2)).orElse(null));
     }
 
+    /**
+     * Returns a non-empty result if {@code type} has a composite key with a single, entity-typed member.
+     *
+     * @param type
+     * @return
+     */
     @SuppressWarnings("unchecked")
-    private Optional<T2<Class<? extends AbstractEntity<?>>, String>> getSingleEntityKey(final Class<? extends AbstractEntity<?>> type) {
+    private static Optional<T2<Class<? extends AbstractEntity<?>>, String>> getSingleMemberOfEntityType(final Class<? extends AbstractEntity<?>> type) {
         final List<Field> keyMembers = Finder.getKeyMembers(type);
         if (keyMembers.size() == 1) {
             if (isCompositeEntity(type)) {
@@ -102,8 +122,14 @@ public class MasterInfoProvider {
         return empty();
     }
 
+    /**
+     * Returns a non-empty result if {@code type} is a synthetic entity that is based on some persistent entity type.
+     *
+     * @param type
+     * @return
+     */
     @SuppressWarnings("unchecked")
-    private Optional<Class<? extends AbstractEntity<?>>> getBaseOfSyntheticType(final Class<? extends AbstractEntity<?>> type) {
+    private static Optional<Class<? extends AbstractEntity<?>>> getBaseTypeForSyntheticEntity(final Class<? extends AbstractEntity<?>> type) {
         if (isSyntheticBasedOnPersistentEntityType(type)) {
             return of((Class<? extends AbstractEntity<?>>) type.getSuperclass());
         }

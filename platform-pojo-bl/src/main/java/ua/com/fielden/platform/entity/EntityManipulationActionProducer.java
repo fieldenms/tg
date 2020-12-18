@@ -49,20 +49,30 @@ public class EntityManipulationActionProducer<T extends AbstractEntityManipulati
     }
 
     /**
-     * Determines the type of tg-entity-master to be displayed from a) selCrit or b) currEntity depending on whether it is {@link EntityNewAction} or {@link EntityEditAction}.
-     *
+     * Determines the precise type based on {@code currEntity} and {@code selCrit} to determine what Entity Master should be displayed:
+     * <ul>
+     * <li>a) {@code currEntity} depending on whether it is {@link EntityNewAction} or {@link EntityEditAction} (refer {@link #determineBaseEntityType(Class)}, or
+     * <li>b) {@code selCrit}.
+     * </ul>
      * @param currEntity
      * @param selCrit
      * @return
      */
     @SuppressWarnings("unchecked")
-    private Class<AbstractEntity<?>> determineEntityType(final AbstractEntity<?> currEntity, final EnhancedCentreEntityQueryCriteria<?, ?> selCrit) {
+    private static Class<AbstractEntity<?>> determineEntityType(final AbstractEntity<?> currEntity, final EnhancedCentreEntityQueryCriteria<?, ?> selCrit) {
         return currEntity != null ? determineBaseEntityType(getOriginalType(currEntity.getType())) :
-            selCrit != null ? (Class<AbstractEntity<?>>) selCrit.getEntityClass() : null;
+               selCrit != null ? (Class<AbstractEntity<?>>) selCrit.getEntityClass() : null;
     }
 
+    /**
+     * Returns the base type of {@code entityType} if it is a synthetic entity based on a persistent entity.
+     * Otherwise, returns {@code entityType}.
+     * 
+     * @param entityType
+     * @return
+     */
     @SuppressWarnings("unchecked")
-    private Class<AbstractEntity<?>> determineBaseEntityType (final Class<AbstractEntity<?>> entityType) {
+    private static Class<AbstractEntity<?>> determineBaseEntityType(final Class<AbstractEntity<?>> entityType) {
         if (isSyntheticBasedOnPersistentEntityType(entityType)) {
             // for the cases where EntityEditAction / EntityNavigationAction is used for opening SyntheticBasedOnPersistentEntity we explicitly use base type;
             // however this is not the case for StandardActions.EDIT_ACTION because of computation existence that returns entityType.
