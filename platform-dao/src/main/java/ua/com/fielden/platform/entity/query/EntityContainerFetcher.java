@@ -1,11 +1,11 @@
 package ua.com.fielden.platform.entity.query;
 
 import static java.lang.String.format;
-import static ua.com.fielden.platform.entity.query.EqlQueryTransformer.transform;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType.COMPOSITE_TYPE_HEADER;
 import static ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType.UNION_ENTITY_HEADER;
 import static ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType.USUAL_PROP;
+import static ua.com.fielden.platform.eql.stage3.EqlQueryTransformer.transform;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.util.List;

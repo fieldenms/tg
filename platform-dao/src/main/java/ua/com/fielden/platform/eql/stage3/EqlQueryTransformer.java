@@ -1,9 +1,13 @@
-package ua.com.fielden.platform.entity.query;
+package ua.com.fielden.platform.eql.stage3;
 
 import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.query.QueryExecutionContext;
+import ua.com.fielden.platform.entity.query.QueryProcessingModel;
 import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
 import ua.com.fielden.platform.eql.stage1.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.PathsToTreeTransformator;
