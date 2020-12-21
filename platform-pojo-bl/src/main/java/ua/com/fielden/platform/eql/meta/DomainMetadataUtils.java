@@ -1,6 +1,7 @@
-package ua.com.fielden.platform.entity.query.metadata;
+package ua.com.fielden.platform.eql.meta;
 
 import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
@@ -15,6 +16,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
@@ -35,32 +37,42 @@ public class DomainMetadataUtils {
     }
     
     public static ExpressionModel generateUnionEntityPropertyExpression(final Class<? extends AbstractUnionEntity> entityType, final String commonPropName) {
-        final List<Field> props = unionProperties(entityType);
-        final Iterator<Field> iterator = props.iterator();
-        final String firstUnionPropName = iterator.next().getName();
-        ICaseWhenFunctionWhen<IStandAloneExprOperationAndClose, AbstractEntity<?>> expressionModelInProgress = expr().caseWhen().prop(firstUnionPropName).isNotNull().then().prop(firstUnionPropName
-                + "." + commonPropName);
-
-        for (; iterator.hasNext();) {
-            final String unionPropName = iterator.next().getName();
-            expressionModelInProgress = expressionModelInProgress.when().prop(unionPropName).isNotNull().then().prop(unionPropName + "." + commonPropName);
-        }
-
-        return expressionModelInProgress.otherwise().val(null).end().model();
+        return generateUnionEntityPropertyContextualExpression(unionProperties(entityType).stream().map(e -> e.getName()).collect(toList()), commonPropName, null);
+    }
+    
+    public static ExpressionModel generateUnionEntityPropertyExpression(final List<String> unionProps, final String commonPropName) {
+        return generateUnionEntityPropertyContextualExpression(unionProps, commonPropName, null);
     }
 
-    public static ExpressionModel extractExpressionModelFromCalculatedProperty(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) throws Exception {
-        final Calculated calcAnnotation = getAnnotation(calculatedPropfield, Calculated.class);
-        if (isNotEmpty(calcAnnotation.value())) {
-            return createExpressionText2ModelConverter(entityType, calcAnnotation).convert().getModel();
-        } else {
-            try {
+    public static ExpressionModel generateUnionEntityPropertyContextualExpression(final List<String> unionMembers, final String commonSubpropName, final String contextPropName) {
+        if (unionMembers.isEmpty()) {
+            return expr().val(null).model();
+        }
+        final Iterator<String> iterator = unionMembers.iterator();
+        final String firstUnionPropName = (contextPropName == null ? "" :  contextPropName + ".") + iterator.next();
+        ICaseWhenFunctionWhen<IStandAloneExprOperationAndClose, AbstractEntity<?>> expressionModelInProgress = expr().caseWhen().prop(firstUnionPropName).isNotNull().then().prop(firstUnionPropName
+                + "." + commonSubpropName);
+
+        for (; iterator.hasNext();) {
+            final String unionPropName = (contextPropName == null ? "" :  contextPropName + ".") + iterator.next();
+            expressionModelInProgress = expressionModelInProgress.when().prop(unionPropName).isNotNull().then().prop(unionPropName + "." + commonSubpropName);
+        }
+
+        return expressionModelInProgress.end().model();
+    }
+
+    public static ExpressionModel extractExpressionModelFromCalculatedProperty(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) {
+        try {
+            final Calculated calcAnnotation = getAnnotation(calculatedPropfield, Calculated.class);
+            if (isNotEmpty(calcAnnotation.value())) {
+                return createExpressionText2ModelConverter(entityType, calcAnnotation).convert().getModel();
+            } else {
                 final Field exprField = getFieldByName(entityType, calculatedPropfield.getName() + "_");
                 exprField.setAccessible(true);
                 return (ExpressionModel) exprField.get(null);
-            } catch (final Exception e) {
-                throw new EqlException(format("Can't extract hard-coded expression model for prop [%s] due to: [%s]", calculatedPropfield.getName(), e.getMessage()));
             }
+        } catch (final Exception e) {
+            throw new EqlException(format("Can't extract hard-coded expression model for prop [%s] due to: [%s]", calculatedPropfield.getName(), e.getMessage()));
         }
     }
 
@@ -95,5 +107,10 @@ public class DomainMetadataUtils {
         final Field firstUnionProp = unionProps.get(0);
         final ISubsequentCompletedAndYielded<PT> initialModel = firstUnionProp.equals(currProp) ? startWith.yield().prop(ID).as(firstUnionProp.getName()) : startWith.yield().val(null).as(firstUnionProp.getName()); 
         return unionProps.stream().skip(1).reduce(initialModel, (m, f) -> f.equals(currProp) ? m.yield().prop(ID).as(f.getName()) : m.yield().val(null).as(f.getName()), (m1, m2) -> {throw new UnsupportedOperationException("Combining is not applicable here.");});
+    }
+    
+    public static String getOriginalEntityTypeFullName(final String entityTypeFullClassName) {
+        final int nameEnhancementStartIndex = entityTypeFullClassName.indexOf("$$");
+        return  nameEnhancementStartIndex == -1 ? entityTypeFullClassName : entityTypeFullClassName.substring(0, nameEnhancementStartIndex);
     }
 }

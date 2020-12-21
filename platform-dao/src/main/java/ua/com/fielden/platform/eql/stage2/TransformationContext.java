@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import ua.com.fielden.platform.entity.query.metadata.DomainMetadataUtils;
+import ua.com.fielden.platform.eql.meta.DomainMetadataUtils;
 import ua.com.fielden.platform.eql.stage2.sources.ChildGroup;
 import ua.com.fielden.platform.eql.stage2.sources.IQrySource2;
 import ua.com.fielden.platform.eql.stage3.Table;

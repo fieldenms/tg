@@ -32,6 +32,10 @@ public class LongPropertyMetadata {
         return unmodifiableList(subitems);
     }
 
+
+    public String getName() {
+        return name;
+    }
     @Override
     public int hashCode() {
         final int prime = 31;
