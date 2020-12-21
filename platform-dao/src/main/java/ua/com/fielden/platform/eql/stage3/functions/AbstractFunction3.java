@@ -5,14 +5,14 @@ import static java.lang.String.format;
 import java.util.Date;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.entity.query.exceptions.EqlException;
+import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
 public abstract class AbstractFunction3 implements ISingleOperand3 {
     
     @Override
     public String sql(final DbVersion dbVersion) {
-        throw new EqlException(format("Function [%s] is not yet implemented for RDBMS [%s]!", getClass().getSimpleName(), dbVersion));
+        throw new EqlStage3ProcessingException(format("Function [%s] is not yet implemented for RDBMS [%s]!", getClass().getSimpleName(), dbVersion));
     }
     
     protected String getConvertToStringSql(final DbVersion dbVersion, final ISingleOperand3 operand) {
@@ -26,7 +26,7 @@ public abstract class AbstractFunction3 implements ISingleOperand3 {
         case ORACLE:
             return getConvertToStringSqlForOracle(dbVersion, operand);
         default:
-            throw new IllegalStateException("Function of converting value to string [" + getClass().getSimpleName() + "] is not yet implemented for RDBMS [" + dbVersion + "]!");
+            throw new EqlStage3ProcessingException("Function of converting value to string [" + getClass().getSimpleName() + "] is not yet implemented for RDBMS [" + dbVersion + "]!");
         }
     }
 

@@ -1,4 +1,6 @@
-package ua.com.fielden.platform.entity.query.exceptions;
+package ua.com.fielden.platform.eql.exceptions;
+
+import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 
 /**
  * A generic runtime exception indicating any EQL related erroneous situation during stage 1 processing of EQL models.

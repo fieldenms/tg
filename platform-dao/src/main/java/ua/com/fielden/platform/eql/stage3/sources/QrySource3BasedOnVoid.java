@@ -3,18 +3,18 @@ package ua.com.fielden.platform.eql.stage3.sources;
 import static ua.com.fielden.platform.entity.query.DbVersion.ORACLE;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.entity.query.exceptions.EqlException;
+import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
 
 public class QrySource3BasedOnVoid implements IQrySource3 {
     
     @Override
     public String column(final String colName) {
-         throw new EqlException("This method shouldn't be invoked.");
+         throw new EqlStage3ProcessingException("This method shouldn't be invoked.");
     }
 
     @Override
     public String sqlAlias() {
-        throw new EqlException("This method shouldn't be invoked.");
+        throw new EqlStage3ProcessingException("This method shouldn't be invoked.");
     }
 
     @Override

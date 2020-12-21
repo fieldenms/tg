@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.eql.stage1.sources;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.exceptions.EqlException;
+import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.stage1.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.sources.QrySource2BasedOnVoid;
 
@@ -9,12 +9,12 @@ public class QrySource1BasedOnVoid  implements IQrySource1<QrySource2BasedOnVoid
 
     @Override
     public Class<? extends AbstractEntity<?>> sourceType() {
-        throw new EqlException("This method shouldn't be invoked.");    
+        throw new EqlStage1ProcessingException("This method shouldn't be invoked.");    
     }
     
     @Override
     public String getAlias() {
-        throw new EqlException("This method shouldn't be invoked.");
+        throw new EqlStage1ProcessingException("This method shouldn't be invoked.");
     } 
 
     @Override

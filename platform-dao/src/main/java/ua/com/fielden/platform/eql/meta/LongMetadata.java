@@ -74,11 +74,11 @@ import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
-import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.metadata.EntityCategory;
 import ua.com.fielden.platform.entity.query.metadata.EntityTypeInfo;
 import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
 import ua.com.fielden.platform.eql.meta.LongPropertyMetadata.Builder;
 import ua.com.fielden.platform.eql.stage3.Table;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -134,7 +134,7 @@ public class LongMetadata {
                 try {
                     this.hibTypesDefaults.put(entry.getKey(), entry.getValue().newInstance());
                 } catch (final Exception e) {
-                    throw new IllegalStateException("Couldn't generate instantiate hibernate type [" + entry.getValue() + "] due to: " + e);
+                    throw new EqlMetadataGenerationException("Couldn't generate instantiate hibernate type [" + entry.getValue() + "] due to: " + e);
                 }
             }
         }
@@ -156,7 +156,7 @@ public class LongMetadata {
                 }
             } catch (final Exception e) {
                 e.printStackTrace();
-                throw new EqlException("Couldn't generate persistence metadata for entity [" + entityType + "] due to: " + e);
+                throw new EqlMetadataGenerationException("Couldn't generate persistence metadata for entity [" + entityType + "] due to: " + e);
             }
         });
 
@@ -231,7 +231,7 @@ public class LongMetadata {
             } else { // trying to mimic hibernate logic when no type has been specified - use hibernate's map of defaults
                 final BasicType result = typeResolver.basic(propType.getName());
                 if (result == null) {
-                    throw new EqlException(propName + " of type " + propType.getName() + " has no hibType (1)");
+                    throw new EqlMetadataGenerationException(propName + " of type " + propType.getName() + " has no hibType (1)");
                 }
                 return result;
             }
@@ -241,13 +241,13 @@ public class LongMetadata {
             if (isNotEmpty(hibernateTypeName)) {
                 final BasicType result = typeResolver.basic(hibernateTypeName);
                 if (result == null) {
-                    throw new EqlException(propName + " of type " + propType.getName() + " has no hibType (2)");
+                    throw new EqlMetadataGenerationException(propName + " of type " + propType.getName() + " has no hibType (2)");
                 }
                 return result;
             } else if (hibTypesInjector != null && !Void.class.equals(hibernateUserTypeImplementor)) { // Hibernate type is definitely either IUserTypeInstantiate or ICompositeUserTypeInstantiate
                 return hibTypesInjector.getInstance(hibernateUserTypeImplementor);
             } else {
-                throw new EqlException("Persistent annotation doen't provide intended information.");
+                throw new EqlMetadataGenerationException("Persistent annotation doen't provide intended information.");
             }
         }
     }

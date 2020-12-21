@@ -14,7 +14,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.exceptions.EqlException;
+import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.meta.ComponentTypePropInfo;
 import ua.com.fielden.platform.eql.meta.UnionTypePropInfo;
@@ -140,7 +140,7 @@ public abstract class AbstractQuery1 {
             }
         }
         
-        throw new EqlException("Can't find yield [" + original.yieldName + "]!");
+        throw new EqlStage1ProcessingException("Can't find yield [" + original.yieldName + "]!");
     }
 
     private static List<OrderBy2> transformForOperand(final ISingleOperand2<?> operand, final boolean isDesc) {

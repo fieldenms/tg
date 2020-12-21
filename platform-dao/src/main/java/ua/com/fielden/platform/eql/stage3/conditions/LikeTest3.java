@@ -5,8 +5,8 @@ import static java.lang.String.format;
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.LikeOptions;
+import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
 public class LikeTest3 implements ICondition3 {
@@ -35,7 +35,7 @@ public class LikeTest3 implements ICondition3 {
         } else if (leftOperand.type() == null || String.class == leftOperand.type()) {
             return leftOperand.sql(dbVersion);
         } else {
-            throw new EqlException(format("Left operand type [%s] is not supported for operand LIKE.", leftOperand.type()));
+            throw new EqlStage3ProcessingException(format("Left operand type [%s] is not supported for operand LIKE.", leftOperand.type()));
         }
     }
     

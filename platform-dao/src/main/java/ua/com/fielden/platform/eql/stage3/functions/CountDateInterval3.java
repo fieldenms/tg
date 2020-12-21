@@ -7,8 +7,8 @@ import java.util.Objects;
 import org.hibernate.type.IntegerType;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.enums.DateIntervalUnit;
+import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
 public class CountDateInterval3 extends TwoOperandsFunction3 {
@@ -61,7 +61,7 @@ public class CountDateInterval3 extends TwoOperandsFunction3 {
         case DAY:
             return daySql;
         default:
-            throw new EqlException("Unexpected interval unit: " + intervalUnit);
+            throw new EqlStage3ProcessingException("Unexpected interval unit: " + intervalUnit);
         }
     }
 
@@ -100,7 +100,7 @@ public class CountDateInterval3 extends TwoOperandsFunction3 {
         case YEAR:
             return sqlForMssqlAndH2IntervalUnit("'YEAR'", op1Sql, op2Sql);
         default:
-            throw new EqlException("Unexpected interval unit: " + intervalUnit);
+            throw new EqlStage3ProcessingException("Unexpected interval unit: " + intervalUnit);
         }
     }
 
@@ -119,7 +119,7 @@ public class CountDateInterval3 extends TwoOperandsFunction3 {
         case YEAR:
             return sqlForMssqlAndH2IntervalUnit("YEAR", op1Sql, op2Sql);
         default:
-            throw new EqlException("Unexpected interval unit: " + intervalUnit);
+            throw new EqlStage3ProcessingException("Unexpected interval unit: " + intervalUnit);
         }
     }
     

@@ -5,7 +5,7 @@ import static java.util.Collections.emptySet;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.exceptions.EqlException;
+import ua.com.fielden.platform.eql.exceptions.EqlStage2ProcessingException;
 import ua.com.fielden.platform.eql.meta.EntityInfo;
 import ua.com.fielden.platform.eql.stage2.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.TransformationResult;
@@ -26,23 +26,22 @@ public class QrySource2BasedOnVoid implements IQrySource2<QrySource3BasedOnVoid>
     
     @Override
     public Class<? extends AbstractEntity<?>> sourceType() {
-        throw new EqlException("This method shouldn't be invoked.");
+        throw new EqlStage2ProcessingException("This method shouldn't be invoked.");
     }
 
     @Override
     public EntityInfo<?> entityInfo() {
-        throw new EqlException("This method shouldn't be invoked.");
+        throw new EqlStage2ProcessingException("This method shouldn't be invoked.");
     }
 
     @Override
     public String alias() {
-        throw new EqlException("This method shouldn't be invoked.");
+        throw new EqlStage2ProcessingException("This method shouldn't be invoked.");
     }
 
     @Override
     public String contextId() {
         return "";
-        //throw new EqlException("This method shouldn't be invoked.");
     }
     
     @Override
