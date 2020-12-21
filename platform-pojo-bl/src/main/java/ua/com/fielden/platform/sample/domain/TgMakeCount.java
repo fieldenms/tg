@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.sample.domain;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
 import java.math.BigInteger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -14,6 +12,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 @KeyType(TgVehicleMake.class)
 @CompanionObject(ITgMakeCount.class)
