@@ -10,9 +10,9 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 
-/** 
+/**
  * Entity that represents collectional item in {@link CentreConfigLoadAction}.
- * 
+ *
  * @author TG Team
  *
  */
@@ -21,65 +21,65 @@ import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 @CompanionObject(ILoadableCentreConfig.class)
 @DescTitle(value = "Description", desc = "Description of loadable centre configuration.")
 public class LoadableCentreConfig extends AbstractEntity<String> {
-    
+
     @IsProperty
     @Title(value = "Inherited", desc = "Indicates whether this centre configuration is connected with some base user's configuration of the same name.")
     private boolean inherited;
-    
+
     @IsProperty
     @Title(value = "Config", desc = "Entity centre config instance (FRESH kind).")
     private EntityCentreConfig config;
-    
+
     @IsProperty
-    @Title(value = "Shared By Message", desc = "In case of inherited from shared configuration, contains domain-driven message about whom created that configuration and shared it with current user.")
+    @Title(value = "Shared By Message", desc = "In case of inherited from shared configuration, contains domain-driven message about user who created that configuration and shared it with current user.")
     private String sharedByMessage;
-    
+
     @Observable
     public LoadableCentreConfig setSharedByMessage(final String sharedByMessage) {
         this.sharedByMessage = sharedByMessage;
         return this;
     }
-    
+
     public String getSharedByMessage() {
         return sharedByMessage;
     }
-    
+
     @Observable
     public LoadableCentreConfig setConfig(final EntityCentreConfig config) {
         this.config = config;
         return this;
     }
-    
+
     public EntityCentreConfig getConfig() {
         return config;
     }
-    
+
     @Observable
     public LoadableCentreConfig setInherited(final boolean inherited) {
         this.inherited = inherited;
         return this;
     }
-    
+
     public boolean isInherited() {
         return inherited;
     }
-    
+
     /**
      * Indicates whether loadable configuration represents inherited from shared.
-     * 
+     *
      * @return
      */
     public boolean isShared() {
         return getSharedByMessage() != null;
     }
-    
+
     /**
      * Indicates whether loadable configuration represents inherited from base. Must be used in conjunction with {@link #isInherited()}.
-     * 
+     *
      * @return
      */
     public boolean isBase() {
         return !isShared();
     }
-    
+
 }
