@@ -704,7 +704,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final Function<String, Consumer<String>> createAndOverrideUuid = newDescription -> surrogateName -> {
                 commitCentre(user, userProvider, miType, surrogateName, newSaveAsName, device, freshCentre, newDescription, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
                 findConfigOpt(miType, user, NAME_OF.apply(surrogateName).apply(newSaveAsName).apply(device), eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("configUuid"))
-                    .ifPresent(config -> eccCompanion.quickSave(config.setConfigUuid(newConfigUuid))); // update with newConfigUuid
+                    .ifPresent(config -> eccCompanion.saveWithConflicts(config.setConfigUuid(newConfigUuid))); // update with newConfigUuid
             };
             createAndOverrideUuid.apply(newDesc).accept(FRESH_CENTRE_NAME);
             createAndOverrideUuid.apply(null).accept(SAVED_CENTRE_NAME);
@@ -1275,10 +1275,10 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                     config.setDesc(desc);
                 }
                 changedTitle.ifPresent(ct -> config.setTitle(NAME_OF.apply(name).apply(of(ct)).apply(device))); // update title of configuration from upstream if it has changed
-                eccCompanion.quickSave(config.setConfigBody(upstreamConfig.getConfigBody()));
+                eccCompanion.saveWithConflicts(config.setConfigBody(upstreamConfig.getConfigBody()));
             });
         final Function<String, Consumer<String>> overrideConfigTitleFor = name -> ct -> findConfigOpt(miType, user, NAME_OF.apply(name).apply(saveAsName).apply(device), eccCompanion, FETCH_CONFIG_AND_INSTRUMENT /*contains 'title' inside fetch model*/).ifPresent(config ->
-            eccCompanion.quickSave(config.setTitle(NAME_OF.apply(name).apply(of(ct)).apply(device)))
+            eccCompanion.saveWithConflicts(config.setTitle(NAME_OF.apply(name).apply(of(ct)).apply(device)))
         );
         final boolean notUpdateFresh = checkChanges.map(check -> check.get()).orElse(FALSE);
         // update SAVED surrogate configuration; always

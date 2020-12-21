@@ -396,9 +396,9 @@ public class CriteriaResource extends AbstractWebResource {
             updateCentre(user, userProvider, miType, SAVED_CENTRE_NAME, actualSaveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
             // and update both with newly generated config uuid
             final String newConfigUuid = randomUUID().toString();
-            eccCompanion.quickSave(freshConfigOpt.get().setConfigUuid(newConfigUuid));
+            eccCompanion.saveWithConflicts(freshConfigOpt.get().setConfigUuid(newConfigUuid));
             findConfigOpt(miType, user, NAME_OF.apply(SAVED_CENTRE_NAME).apply(actualSaveAsName).apply(device()), eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("configUuid"))
-                .ifPresent(savedConfig -> eccCompanion.quickSave(savedConfig.setConfigUuid(newConfigUuid)));
+                .ifPresent(savedConfig -> eccCompanion.saveWithConflicts(savedConfig.setConfigUuid(newConfigUuid)));
             return t2(actualSaveAsName, of(newConfigUuid));
         } else {
             return t2(actualSaveAsName, of(freshConfigOpt.get().getConfigUuid()));

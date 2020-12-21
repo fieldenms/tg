@@ -850,7 +850,7 @@ public class CentreUpdater {
                 resultantDiff = saveNewEntityCentreManager(differences, miType, user, deviceSpecificDiffName, upstreamDesc, eccCompanion, mmiCompanion);
                 if (FRESH_CENTRE_NAME.equals(name) && upstreamConfigUuid.isPresent()) { // inherited configs have uuid only in FRESH centre
                     findConfigOpt(miType, user, deviceSpecificDiffName, eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("configUuid"))
-                        .ifPresent(freshConfig -> eccCompanion.quickSave(freshConfig.setConfigUuid(upstreamConfigUuid.get())));
+                        .ifPresent(freshConfig -> eccCompanion.saveWithConflicts(freshConfig.setConfigUuid(upstreamConfigUuid.get())));
                 }
             }
         }
