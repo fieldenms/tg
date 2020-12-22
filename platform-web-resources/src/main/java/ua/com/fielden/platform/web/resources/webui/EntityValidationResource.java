@@ -97,7 +97,7 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Abstr
             final IMainMenuItem mmiCompanion = companionFinder.find(MainMenuItem.class);
             final IUser userCompanion = companionFinder.find(User.class);
             
-            final T applied = restoreEntityFrom(false, savingInfoHolder, entityType, entityFactory, webUiConfig, companionFinder, user, userProvider, critGenerator, 0, device(), domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion, sharingModel);
+            final T applied = restoreEntityFrom(false, savingInfoHolder, entityType, entityFactory, webUiConfig, companionFinder, user, critGenerator, 0, device(), domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion, sharingModel);
             
             logger.debug("ENTITY_VALIDATION_RESOURCE: validate finished.");
             return restUtil.rawListJsonRepresentation(applied, linkedMapOf(t2(VALIDATION_COUNTER, savingInfoHolder.getModifHolder().get(VALIDATION_COUNTER)))); // savingInfoHolder and its modifHolder are never empty

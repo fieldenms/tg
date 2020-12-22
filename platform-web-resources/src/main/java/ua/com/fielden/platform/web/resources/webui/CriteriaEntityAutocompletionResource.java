@@ -130,15 +130,15 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
                 criteriaEntity = null;
                 final M enhancedCentreEntityQueryCriteria = createCriteriaValidationPrototype(
                     miType, saveAsName,
-                    updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder),
+                    updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder),
                     companionFinder, critGenerator, 0L, 
-                    user, userProvider,
+                    user,
                     device(),
                     domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel
                 );
                 criteriaType = (Class<M>) enhancedCentreEntityQueryCriteria.getClass();
             } else {
-                criteriaEntity = (M) createCriteriaEntityWithoutConflicts(modifHolder, companionFinder, critGenerator, miType, saveAsName, user, userProvider, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
+                criteriaEntity = (M) createCriteriaEntityWithoutConflicts(modifHolder, companionFinder, critGenerator, miType, saveAsName, user, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
                 criteriaType = (Class<M>) criteriaEntity.getClass();
             }
 
@@ -163,7 +163,6 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
                 webUiConfig,
                 companionFinder,
                 user,
-                userProvider,
                 critGenerator,
                 entityFactory,
                 centreContextHolder,

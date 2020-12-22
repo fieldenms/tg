@@ -64,6 +64,6 @@ public class CriteriaEntityRestorer implements ICriteriaEntityRestorer {
         final IMainMenuItem mmiCompanion = companionFinder.find(MainMenuItem.class);
         final IUser userCompanion = companionFinder.find(User.class);
         
-        return createCriteriaEntityForContext(centreContextHolder, companionFinder, user, critGenerator, userProvider, webUiConfig, entityFactory, deviceProvider.getDeviceProfile(), domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion, sharingModel);
+        return createCriteriaEntityForContext(centreContextHolder, companionFinder, user, critGenerator, webUiConfig, entityFactory, deviceProvider.getDeviceProfile(), domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion, sharingModel);
     }
 }

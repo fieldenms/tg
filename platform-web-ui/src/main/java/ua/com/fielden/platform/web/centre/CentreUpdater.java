@@ -267,7 +267,6 @@ public class CentreUpdater {
      */
     public static ICentreDomainTreeManagerAndEnhancer updateCentre(
             final User user,
-            final IUserProvider userProvider,
             final Class<? extends MiWithConfigurationSupport<?>> miType,
             final String name,
             final Optional<String> saveAsName,
@@ -279,7 +278,7 @@ public class CentreUpdater {
             final IUser userCompanion,
             final ICompanionObjectFinder companionFinder) {
         final String deviceSpecificName = deviceSpecific(saveAsSpecific(name, saveAsName), device);
-        final Map<String, Object> updatedDiff = updateDifferences(miType, user, userProvider, deviceSpecificName, name, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+        final Map<String, Object> updatedDiff = updateDifferences(miType, user, deviceSpecificName, name, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
         return loadCentreFromDefaultAndDiff(user, miType, saveAsName, updatedDiff, webUiConfig, domainTreeEnhancerCache, companionFinder);
     }
     
@@ -401,7 +400,6 @@ public class CentreUpdater {
      */
     public static ICentreDomainTreeManagerAndEnhancer commitCentre(
             final User user,
-            final IUserProvider userProvider,
             final Class<? extends MiWithConfigurationSupport<?>> miType,
             final String name,
             final Optional<String> saveAsName,
@@ -412,7 +410,7 @@ public class CentreUpdater {
             final IEntityCentreConfig eccCompanion,
             final IMainMenuItem mmiCompanion,
             final IUser userCompanion) {
-        return commitCentre(false, user, userProvider, miType, name, saveAsName, device, centre, newDesc, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+        return commitCentre(false, user, miType, name, saveAsName, device, centre, newDesc, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
     }
     
     /**
@@ -432,7 +430,6 @@ public class CentreUpdater {
      */
     public static ICentreDomainTreeManagerAndEnhancer commitCentreWithoutConflicts(
             final User user,
-            final IUserProvider userProvider,
             final Class<? extends MiWithConfigurationSupport<?>> miType,
             final String name,
             final Optional<String> saveAsName,
@@ -443,7 +440,7 @@ public class CentreUpdater {
             final IEntityCentreConfig eccCompanion,
             final IMainMenuItem mmiCompanion,
             final IUser userCompanion) {
-        return commitCentre(true, user, userProvider, miType, name, saveAsName, device, centre, newDesc, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+        return commitCentre(true, user, miType, name, saveAsName, device, centre, newDesc, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
     }
     
     /**
@@ -463,7 +460,6 @@ public class CentreUpdater {
     protected static ICentreDomainTreeManagerAndEnhancer commitCentre(
             final boolean withoutConflicts,
             final User user,
-            final IUserProvider userProvider,
             final Class<? extends MiWithConfigurationSupport<?>> miType,
             final String name,
             final Optional<String> saveAsName,
@@ -810,7 +806,6 @@ public class CentreUpdater {
     private static Map<String, Object> updateDifferences(
             final Class<? extends MiWithConfigurationSupport<?>> miType,
             final User user,
-            final IUserProvider userProvider,
             final String deviceSpecificName,
             final String name,
             final Optional<String> saveAsName,

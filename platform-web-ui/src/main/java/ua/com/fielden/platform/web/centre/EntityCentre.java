@@ -222,7 +222,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private Optional<JsCode> customCode = Optional.empty();
     private Optional<JsCode> customCodeOnAttach = Optional.empty();
 
-    private final IUserProvider userProvider;
     private final IDomainTreeEnhancerCache domainTreeEnhancerCache;
     private final IWebUiConfig webUiConfig;
     private final IEntityCentreConfig eccCompanion;
@@ -251,7 +250,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         this.companionFinder = this.injector.getInstance(ICompanionObjectFinder.class);
         this.postCentreCreated = postCentreCreated;
 
-        userProvider = injector.getInstance(IUserProvider.class);
         domainTreeEnhancerCache = injector.getInstance(IDomainTreeEnhancerCache.class);
         webUiConfig = injector.getInstance(IWebUiConfig.class);
         eccCompanion = companionFinder.find(ua.com.fielden.platform.ui.config.EntityCentreConfig.class);
@@ -839,7 +837,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         if (user == null) {
             return createUserUnspecificDefaultCentre(dslDefaultConfig, injector.getInstance(EntityFactory.class), postCentreCreated);
         } else {
-            return updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, empty(), DESKTOP, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+            return updateCentre(user, miType, FRESH_CENTRE_NAME, empty(), DESKTOP, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
         }
     }
 
