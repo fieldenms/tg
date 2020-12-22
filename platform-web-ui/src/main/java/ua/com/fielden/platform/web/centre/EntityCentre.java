@@ -829,7 +829,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return (List<IEntityMultiActionSelector>) this.dslDefaultConfig.getResultSetSecondaryEntityActions()
                 .map(multiActionConfigs -> multiActionConfigs.stream().filter(config -> !config.isNoAction())
                         .map(config -> injector.getInstance(config.actionSelectorClass()))
-                .collect(Collectors.toList())).get();
+                .collect(Collectors.toList())).orElse(new ArrayList<>());
     }
 
     public Optional<IDynamicColumnBuilder<T>> getDynamicColumnBuilderFor(final ResultSetProp<T> resProp) {
