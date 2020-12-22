@@ -23,14 +23,17 @@ const additionalTemplate = html`
             height: 24px;
             --paper-checkbox-label: {
                 display:grid !important;
-                transform:scale(0.75);
-                transform-origin: left;
-                /*TODO consider adding width:130% as the lable was scaled down*/
-                font-weight: 400;
-                -webkit-font-smoothing: antialiased;
-                text-rendering: optimizeLegibility;
-                color: #757575 !important;
             };
+        }
+
+        .label {
+            transform:scale(0.75);
+            transform-origin: left;
+            width:130%;
+            font-weight: 400;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
+            color: #757575 !important;
         }
         
         .truncate {
@@ -47,7 +50,7 @@ const customInputTemplate = html`
             checked="[[_isBooleanChecked(_editingValue)]]"
             disabled$="[[_disabled]]"
             on-change="_onChange"
-            tooltip-text$="[[_getTooltip(_editingValue)]]"><span class="truncate">[[propTitle]]</span></paper-checkbox>`;
+            tooltip-text$="[[_getTooltip(_editingValue)]]"><span class="label truncate">[[propTitle]]</span></paper-checkbox>`;
 const propertyActionTemplate = html`<slot name="property-action"></slot>`;
 
 export class TgBooleanEditor extends TgEditor {
