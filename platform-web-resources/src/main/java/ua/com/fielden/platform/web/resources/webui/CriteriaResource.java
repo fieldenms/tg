@@ -487,7 +487,7 @@ public class CriteriaResource extends AbstractWebResource {
     }
 
     private List<List<Integer>> createSecondaryActionIndices(final List<?> entities) {
-        final List<IEntityMultiActionSelector> selectors = centre.getSecondaryActionSelectors().orElse(new ArrayList<>());
+        final List<IEntityMultiActionSelector> selectors = centre.getSecondaryActionSelectors();
         return entities.stream().map(entity -> {
             return selectors.stream().map(selector -> (Integer)selector.getActionFor((AbstractEntity<?>)entity)).collect(Collectors.toList());
         }).collect(Collectors.toList());

@@ -825,11 +825,11 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     }
 
     @SuppressWarnings("unchecked")
-    public Optional<List<IEntityMultiActionSelector>> getSecondaryActionSelectors() {
-        return this.dslDefaultConfig.getResultSetSecondaryEntityActions()
+    public List<IEntityMultiActionSelector> getSecondaryActionSelectors() {
+        return (List<IEntityMultiActionSelector>) this.dslDefaultConfig.getResultSetSecondaryEntityActions()
                 .map(multiActionConfigs -> multiActionConfigs.stream().filter(config -> !config.isNoAction())
                         .map(config -> injector.getInstance(config.actionSelectorClass()))
-                .collect(Collectors.toList())).map(selectors -> selectors.isEmpty() ? null : (List<IEntityMultiActionSelector>)selectors);
+                .collect(Collectors.toList())).get();
     }
 
     public Optional<IDynamicColumnBuilder<T>> getDynamicColumnBuilderFor(final ResultSetProp<T> resProp) {
