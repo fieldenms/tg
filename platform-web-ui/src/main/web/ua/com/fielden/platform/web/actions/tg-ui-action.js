@@ -12,7 +12,7 @@ import '/resources/components/postal-lib.js';
 
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
-import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, getFirstEntityValueType } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
@@ -493,7 +493,7 @@ Polymer({
 
             
             if (this.dynamicAction && this.currentEntity()) {
-                const currentEntityType = this._calculateCurrentEntityType();
+                const currentEntityType = getFirstEntityValueType(this._reflector, this.currentEntity(), this.chosenProperty);
                 if (this._previousEntityType !== currentEntityType) {
                     if (!this.elementName) {//Element name for dynamic action is not specified at first run
                         this._originalShortDesc = this.shortDesc;//It means that shortDesc wasn't changed yet.
@@ -504,7 +504,7 @@ Polymer({
                         .then(res => {
                             try {
                                 this._processMasterRetriever(res);
-                                this._previousEntityType = currentEntityType;
+                                this._previousEntityType = getFirstEntityValueType(this._reflector, this.currentEntity(), this.chosenProperty);
                                 postMasterInfoRetrieve();
                             }catch (e) {
                                 this.isActionInProgress = false;
@@ -745,21 +745,6 @@ Polymer({
         return isActionInProgress || disabled;
     },
 
-    _calculateCurrentEntityType: function () {
-        if (this.currentEntity() && this.chosenProperty) {
-            let currentProperty = this.chosenProperty;
-            let currentValue = this.currentEntity().get(currentProperty);
-            while (!this._reflector.isEntity(currentValue)) {
-                const lastDotIndex = currentProperty.lastIndexOf(".");
-                currentProperty = lastDotIndex >=0 ? currentProperty.substring(0, lastDotIndex) : "";
-                currentValue = currentProperty ? this.currentEntity().get(currentProperty) : this.currentEntity();
-            }
-            return currentValue.type().notEnhancedFullClassName(); 
-        } else if (this.currentEntity()) {
-            return this.currentEntity().type().notEnhancedFullClassName();
-        }
-    },
-
     _processMasterRetriever: function(e) {
         console.log("PROCESS MASTER INFO RETRIEVE:");
         console.log("Master info retrieve: iron-response: status = ", e.xhr.status, ", e.response = ", e.response);
@@ -786,6 +771,12 @@ Polymer({
                     heightUnit: masterInfo.heightUnit
                 }
             });
+            if (masterInfo.relativePropertyName) {
+                const oldCurrentEntity = this.currentEntity.bind(this);
+                this.currentEntity = function () {
+                    return oldCurrentEntity().get(masterInfo.relativePropertyName);
+                }
+            }
             this.requireSelectionCriteria = masterInfo.requireSelectionCriteria;
             this.requireSelectedEntities = masterInfo.requireSelectedEntities;
             this.requireMasterEntity = masterInfo.requireMasterEntity;

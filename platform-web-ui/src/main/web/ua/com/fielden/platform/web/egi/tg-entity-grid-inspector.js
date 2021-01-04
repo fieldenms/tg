@@ -30,7 +30,7 @@ import { TgElementSelectorBehavior } from '/resources/components/tg-element-sele
 import { TgDragFromBehavior } from '/resources/components/tg-drag-from-behavior.js';
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
-import { tearDownEvent, getRelativePos, isMobileApp} from '/resources/reflection/tg-polymer-utils.js';
+import { getFirstEntityValue, tearDownEvent, getRelativePos, isMobileApp} from '/resources/reflection/tg-polymer-utils.js';
 
 const template = html`
     <style>
@@ -440,6 +440,7 @@ const template = html`
     <!--configuring slotted elements-->
     <slot id="column_selector" name="property-column" hidden></slot>
     <slot id="primary_action_selector" name="primary-action" hidden></slot>
+    <slot id="default_property_action" name="defaultPropertyAction" hidden></slot>
     <slot id="egi_master" name="egi-master" hidden></slot>
     <!--EGI template-->
     <div id="paperMaterial" class="grid-container" style$="[[_calcMaterialStyle(showMarginAround)]]" fit-to-height$="[[fitToHeight]]">
@@ -895,6 +896,8 @@ Polymer({
         _isSecondaryActionPresent: Boolean,
         //the list of secondary actions
         _secondaryActions: Array,
+        //Default action for property columns. It is invoked only if there were no other action specified for specific property column.
+        _defaultPropertyAction: Object,
         //The callback to open drop down for secondary action.
         _openDropDown: Function,
 
@@ -943,6 +946,9 @@ Polymer({
 
         //Initialising the primary action.
         this.primaryAction = primaryActions.length > 0 ? primaryActions[0] : null;
+
+        //Initialising the default property action
+        this._defaultPropertyAction = this.$.default_property_action.assignedNodes()[0];
 
         //Initialising event listeners.
         this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
@@ -1104,7 +1110,16 @@ Polymer({
     },
 
     hasAction: function (entity, column) {
-        return entity && (column.customAction || this.isHyperlinkProp(entity, column) === true || this.getAttachmentIfPossible(entity, column));
+        return entity && (
+            column.customAction
+            || this.isHyperlinkProp(entity, column) === true
+            || this.getAttachmentIfPossible(entity, column)
+            || this.isEntityProperty(entity, column)
+        );
+    },
+
+    isEntityProperty: function (entity, column) {
+        return entity && entity.type && entity.type() && this._reflector.tg_determinePropertyType(entity.type(), column.collectionalProperty || column.property) instanceof this._reflector._getEntityTypePrototype();
     },
 
     isVisible: function (entity) {
@@ -1318,7 +1333,7 @@ Polymer({
         // This closure returns either 'entity' or the entity navigated to (EntityNavigationAction).
         // Each tapping overrides this function to provide proper context of execution.
         // This override should occur on every 'run' of the action so it is mandatory to use 'tg-property-column.runAction' public API.
-        if (column.runAction(this._currentEntity(entity)) === false) {
+        if (!column.runAction(this._currentEntity(entity))) {
             // if the clicked property is a hyperlink and there was no custom action associted with it
             // then let's open the linked resources
             if (this.isHyperlinkProp(entity, column) === true) {
@@ -1329,8 +1344,10 @@ Polymer({
                 const attachment = this.getAttachmentIfPossible(entity, column);
                 if (attachment && this.downloadAttachment) {
                     this.downloadAttachment(attachment);
+                } else if (this.isEntityProperty(entity, column)) {
+                    column.runDefaultAction(this._currentEntity(entity), this._defaultPropertyAction);
                 }
-            }
+            } 
         }
     },
 
@@ -2021,7 +2038,7 @@ Polymer({
     _currentEntity: function (entity) {
         const egi = this;
         // Return old fashion javascript function (not arrow function). This function will be called by 
-        // action therefore this of the function will be the action (in case of arrow function this wpuld be the EGI).
+        // action therefore this of the function will be the action (in case of arrow function this would be the EGI).
         return function () {
             //this - is the action that calls this function.
             return this.supportsNavigation && egi.editingEntity ? egi.editingEntity : entity;
@@ -2071,6 +2088,13 @@ Polymer({
             return this._generateActionTooltip({
                 shortDesc: 'Download',
                 longDesc: 'Click to download attachment.'
+            });
+        } else if (!this.isHyperlinkProp(entity, column) && this.isEntityProperty(entity, column)) {
+            const entityValue = getFirstEntityValue(this._reflector, entity, column.collectionalProperty || column.property);
+            const entityTitle = entityValue.type().entityTitle();
+            return this._generateActionTooltip({
+                shortDesc: `Edit ${entityTitle}`,
+                longDesc: `Edit ${entityTitle}`
             });
         }
         return "";
