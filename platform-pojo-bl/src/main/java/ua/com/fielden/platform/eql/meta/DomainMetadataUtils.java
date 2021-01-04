@@ -39,10 +39,10 @@ public class DomainMetadataUtils {
         return generateUnionEntityPropertyContextualExpression(unionProperties(entityType).stream().map(e -> e.getName()).collect(toList()), commonPropName, null);
     }
     
-    public static ExpressionModel generateUnionEntityPropertyExpression(final List<String> unionProps, final String commonPropName) {
-        return generateUnionEntityPropertyContextualExpression(unionProps, commonPropName, null);
+    public static ExpressionModel generateUnionEntityPropertyExpression(final List<String> unionMembers, final String commonPropName) {
+        return generateUnionEntityPropertyContextualExpression(unionMembers, commonPropName, null);
     }
-
+    
     public static ExpressionModel generateUnionEntityPropertyContextualExpression(final List<String> unionMembers, final String commonSubpropName, final String contextPropName) {
         if (unionMembers.isEmpty()) {
             return expr().val(null).model();
