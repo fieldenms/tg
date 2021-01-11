@@ -1,21 +1,21 @@
 package ua.com.fielden.platform.utils;
 
 import static java.util.Arrays.asList;
-import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.utils.EntityUtils.isDateOnly;
 
 import java.lang.reflect.Field;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+
+import org.joda.time.DateTime;
 
 import ua.com.fielden.platform.dao.IEntityAggregatesOperations;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -26,11 +26,11 @@ import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneExprOperationAndClose;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere1;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
@@ -71,9 +71,9 @@ public final class Validators {
     }
 
     /**
-     * Identifies whether the provided entity overlaps with any of the existing entities. 
-     * <em>fromDateValue</em> and <em>toDateValue</em> are passed in as separate parameters - 
-     * this is especially useful if overlap check is performed as part of the validation of fromDateProperty or toDateProperty. 
+     * Identifies whether the provided entity overlaps with any of the existing entities.
+     * <em>fromDateValue</em> and <em>toDateValue</em> are passed in as separate parameters -
+     * this is especially useful if overlap check is performed as part of the validation of fromDateProperty or toDateProperty.
      *
      * @param entity
      *            -- entity which should be tested for overlapping.
@@ -322,11 +322,11 @@ public final class Validators {
      * @return
      */
     private static <T extends AbstractEntity<?>> EntityResultQueryModel<T> composeOverlappingCheckQueryModel(
-            final T entity, 
-            final String fromDateProperty, 
-            final String toDateProperty, 
-            final Date fromDateValue, 
-            final Date toDateValue, 
+            final T entity,
+            final String fromDateProperty,
+            final String toDateProperty,
+            final Date fromDateValue,
+            final Date toDateValue,
             final String... matchProperties) {
         // check preconditions
         if (fromDateValue == null) {
@@ -362,6 +362,13 @@ public final class Validators {
         /*                  */prop(toDateProperty).gt().val(fromDateValue)./* the end of the potentially overlapped entity is AFTER the fromDateValue */
         /*              */end();
 
+        //toDateValue should be corrected if the toDateProperty and fromDateProperty are DateOnly toDateValue should be set to beginning of the next day.
+        final Date correctedToDateVal;
+        if (isDateOnly(entity.getType(), fromDateProperty) && isDateOnly(entity.getType(), toDateProperty)) {
+            correctedToDateVal = new DateTime(toDateValue).withTimeAtStartOfDay().plusDays(1).toDate();
+        } else {
+            correctedToDateVal = toDateValue;
+        }
         // Condition for the beginning of the period for potentially overlapped existing entities
         // Open ended period does not require any condition, because any toDateProperty of the potentially overlapped entity would be BEFORE such an end.
         // Thus, if the condition_1 holds then there is an overlap and there is no reason to add any conditions
@@ -370,7 +377,7 @@ public final class Validators {
         condition_2: if (toDateValue != null) {
             cc = cc.and().//
             /*    */begin().//
-            /*        */prop(fromDateProperty).lt().val(toDateValue)./* the beginning of the potentially overlapped entity is BEFORE the toDateValue  */
+            /*        */prop(fromDateProperty).lt().val(correctedToDateVal)./* the beginning of the potentially overlapped entity is BEFORE the toDateValue  */
             /*    */end();
         }
 
