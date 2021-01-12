@@ -10,6 +10,7 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
+import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
@@ -21,33 +22,35 @@ import ua.com.fielden.platform.entity.annotation.Title;
 public class TgDateTestEntity extends AbstractEntity<String> {
 
     @IsProperty
-    @Title("From Date Prop Date Only")
+    @Title("From Date Prop")
     @DateOnly
-    private Date fromDatePropDateOnly;
+    @MapTo
+    private Date fromDateProp;
 
     @IsProperty
-    @Title("To Date Prop Date Only")
+    @Title("To Date Prop")
     @DateOnly
-    private Date toDatePropDateOnly;
+    @MapTo
+    private Date toDateProp;
 
     @Observable
-    public TgDateTestEntity setFromDatePropDateOnly(final Date fromDatePropDateOnly) {
-        this.fromDatePropDateOnly = fromDatePropDateOnly;
+    public TgDateTestEntity setFromDateProp(final Date fromDateProp) {
+        this.fromDateProp = fromDateProp;
         return this;
     }
 
-    public Date getFromDatePropDateOnly() {
-        return fromDatePropDateOnly;
+    public Date getFromDateProp() {
+        return fromDateProp;
     }
 
     @Observable
-    public TgDateTestEntity setToDatePropDateOnly(final Date toDatePropDateOnly) {
-        this.toDatePropDateOnly = toDatePropDateOnly;
+    public TgDateTestEntity setToDateProp(final Date toDatePropDateOnly) {
+        this.toDateProp = toDatePropDateOnly;
         return this;
     }
 
-    public Date getToDatePropDateOnly() {
-        return toDatePropDateOnly;
+    public Date getToDateProp() {
+        return toDateProp;
     }
 
 }

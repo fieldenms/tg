@@ -44,6 +44,7 @@ import ua.com.fielden.platform.sample.domain.ITgCentreDiffSerialisationNonPersis
 import ua.com.fielden.platform.sample.domain.ITgCentreDiffSerialisationPersistentChild;
 import ua.com.fielden.platform.sample.domain.ITgCollectionalSerialisationChild;
 import ua.com.fielden.platform.sample.domain.ITgCollectionalSerialisationParent;
+import ua.com.fielden.platform.sample.domain.ITgDateTestEntity;
 import ua.com.fielden.platform.sample.domain.ITgEntityWithComplexSummaries;
 import ua.com.fielden.platform.sample.domain.ITgEntityWithLoopedCalcProps;
 import ua.com.fielden.platform.sample.domain.ITgFuelType;
@@ -91,6 +92,7 @@ import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationNonPersist
 import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationPersistentChildDao;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationChildDao;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParentDao;
+import ua.com.fielden.platform.sample.domain.TgDateTestEntityDao;
 import ua.com.fielden.platform.sample.domain.TgEntityWithComplexSummariesDao;
 import ua.com.fielden.platform.sample.domain.TgEntityWithLoopedCalcPropsDao;
 import ua.com.fielden.platform.sample.domain.TgFuelTypeDao;
@@ -226,25 +228,26 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bind(ITgPerson.class).to(TgPersonDao.class);
         bind(ITgAuthoriser.class).to(TgAuthoriserDao.class);
         bind(ITgOriginator.class).to(TgOriginatorDao.class);
+        bind(ITgDateTestEntity.class).to(TgDateTestEntityDao.class);
 
         bind(ITgMakeCount.class).to(TgMakeCountDao.class);
         bind(ITgAverageFuelUsage.class).to(TgAverageFuelUsageDao.class);
         bind(ITgVehicleFuelUsage.class).to(TgVehicleFuelUsageDao.class);
         bind(ITgEntityWithComplexSummaries.class).to(TgEntityWithComplexSummariesDao.class);
-        
+
         bind(ITgAuthorship.class).to(TgAuthorshipDao.class);
         bind(ITgAuthorRoyalty.class).to(TgAuthorRoyaltyDao.class);
         bind(ITgEntityWithLoopedCalcProps.class).to(TgEntityWithLoopedCalcPropsDao.class);
         bind(ITgPublishedYearly.class).to(TgPublishedYearlyDao.class);
-        
+
 
         bind(ICompositeEntity.class).to(CompositeEntityDao.class);
         bind(ICompositeEntityKey.class).to(CompositeEntityKeyDao.class);
         bind(IComplexKeyEntity.class).to(ComplexKeyEntityDao.class);
-        
+
         bind(new TypeLiteral<IEntityDao<EntityWithMoney>>() {
         }).to(EntityWithMoneyDao.class);
-        
+
         bind(ITgCollectionalSerialisationParent.class).to(TgCollectionalSerialisationParentDao.class);
         bind(ITgCollectionalSerialisationChild.class).to(TgCollectionalSerialisationChildDao.class);
         bind(ITgCentreDiffSerialisation.class).to(TgCentreDiffSerialisationDao.class);
