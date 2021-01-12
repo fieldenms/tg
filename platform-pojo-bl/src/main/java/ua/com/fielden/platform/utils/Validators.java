@@ -15,8 +15,6 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
-import org.joda.time.DateTime;
-
 import ua.com.fielden.platform.dao.IEntityAggregatesOperations;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
@@ -355,30 +353,43 @@ public final class Validators {
         // 2. toDateProperty has no value (open period).
 
         // Condition for the end of the period for potentially overlapped existing entities
-        condition_1: cc = cc.and().
+        condition_1: if (isDateOnly(entity.getType(), toDateProperty)) {
+        //If to date property is annotated with DateOnly annotation then it should be greater or equal than fromDateValue
+        /*        */cc = cc.and().
+        /*              */begin().
+        /*                  */prop(toDateProperty).isNull()./* the end of the potentially overlapped entity is OPEN and thus is after the fromDateProperty value of the entity under test */
+        /*                  */or().
+        /*                  */prop(toDateProperty).ge().val(fromDateValue)./* the end of the potentially overlapped entity is AFTER the fromDateValue */
+        /*              */end();
+        } else {
+        //If to date property is not annotated with DateOnly annotation then it should be greater than fromDateValue
+        /*        */cc = cc.and().
         /*              */begin().
         /*                  */prop(toDateProperty).isNull()./* the end of the potentially overlapped entity is OPEN and thus is after the fromDateProperty value of the entity under test */
         /*                  */or().
         /*                  */prop(toDateProperty).gt().val(fromDateValue)./* the end of the potentially overlapped entity is AFTER the fromDateValue */
         /*              */end();
-
-        //toDateValue should be corrected if the toDateProperty and fromDateProperty are DateOnly toDateValue should be set to beginning of the next day.
-        final Date correctedToDateVal;
-        if (isDateOnly(entity.getType(), fromDateProperty) && isDateOnly(entity.getType(), toDateProperty)) {
-            correctedToDateVal = new DateTime(toDateValue).withTimeAtStartOfDay().plusDays(1).toDate();
-        } else {
-            correctedToDateVal = toDateValue;
         }
+
         // Condition for the beginning of the period for potentially overlapped existing entities
         // Open ended period does not require any condition, because any toDateProperty of the potentially overlapped entity would be BEFORE such an end.
         // Thus, if the condition_1 holds then there is an overlap and there is no reason to add any conditions
         // If condition_1 does not hold then there is no overlap and there is no reason to add any conditions too.
         // Closed ended period does require an additional condition to ensure the beginning of the potentially overlapped entity if BEFORE that end value of the entity under test
         condition_2: if (toDateValue != null) {
-            cc = cc.and().//
-            /*    */begin().//
-            /*        */prop(fromDateProperty).lt().val(correctedToDateVal)./* the beginning of the potentially overlapped entity is BEFORE the toDateValue  */
-            /*    */end();
+            //If from date property is annotated with DateOnly annotation then it should be less or equal than toDateValue
+            if (isDateOnly(entity.getType(), fromDateProperty)) {
+                cc = cc.and().//
+                /*    */begin().//
+                /*        */prop(fromDateProperty).le().val(toDateValue)./* the beginning of the potentially overlapped entity is BEFORE the toDateValue  */
+                /*    */end();
+           //If from date property is not annotated with DateOnly annotation then it should be less than toDateValue
+            } else {
+                cc = cc.and().//
+                /*    */begin().//
+                /*        */prop(fromDateProperty).lt().val(toDateValue)./* the beginning of the potentially overlapped entity is BEFORE the toDateValue  */
+                /*    */end();
+            }
         }
 
         // make a model with result ordered by fromDateProperty, which is only required if at some stage it would be used for selecting overlapped entities.
