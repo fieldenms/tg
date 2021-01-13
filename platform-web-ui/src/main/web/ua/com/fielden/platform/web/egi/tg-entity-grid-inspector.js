@@ -1351,7 +1351,7 @@ Polymer({
         this.filter();  
     },
 
-    _filteredEntitiesChanged: function (newValue, oldValue) {
+    _filteredEntitiesChanged: function (newValue) {
         const tempEgiModel = [];
         newValue.forEach(newEntity => {
             const selectEntInd = this._findEntity(newEntity, this.selectedEntities);
@@ -1364,11 +1364,11 @@ Polymer({
         });
         newValue.forEach(newEntity => {
             const isSelected = this.selectedEntities.indexOf(newEntity) > -1;
-            const oldIndex = this._findEntity(newEntity, oldValue);
-            const newRendHints = oldIndex < 0 ? {} : (this.renderingHints && this.renderingHints[oldIndex]) || {};
-            const newPrimaryActionIndex = oldIndex < 0 ? 0 : (this.primaryActionIndices && this.primaryActionIndices[oldIndex]) || 0;
+            const index = this.findEntityIndex(newEntity);
+            const newRendHints = (this.renderingHints && this.renderingHints[index]) || {};
+            const newPrimaryActionIndex = (this.primaryActionIndices && this.primaryActionIndices[index]) || 0;
             const defaultSecondaryActionIndices = this._secondaryActions.map(action => 0);
-            const newSecondaryActionIndices = oldIndex < 0 ? defaultSecondaryActionIndices : (this.secondaryActionIndices && this.secondaryActionIndices[oldIndex]) || defaultSecondaryActionIndices;
+            const newSecondaryActionIndices = (this.secondaryActionIndices && this.secondaryActionIndices[index]) || defaultSecondaryActionIndices;
             const egiEntity = {
                 over: this._areEqual(this.editingEntity, newEntity),
                 selected: isSelected,
@@ -1978,8 +1978,8 @@ Polymer({
 
     _renderingHintsChanged: function (newValue) {
         if (this.egiModel) {
-            this.egiModel.forEach((egiEntity, index) => {
-                egiEntity.renderingHints = (newValue && newValue[index]) || {};
+            this.egiModel.forEach((egiEntity) => {
+                egiEntity.renderingHints = (newValue && newValue[this.findEntityIndex(egiEntity.entity)]) || {};
                 egiEntity._renderingHintsChangedHandler && egiEntity._renderingHintsChangedHandler();
             });
             this._updateTableSizeAsync();
@@ -1989,7 +1989,7 @@ Polymer({
     _primaryActionIndicesChanged: function (newValue) {
         if (this.egiModel) {
             this.egiModel.forEach((egiEntity, index) => {
-                this.set("egiModel." + index + ".primaryActionIndex", newValue[index]);
+                this.set("egiModel." + index + ".primaryActionIndex", newValue[this.findEntityIndex(egiEntity.entity)]);
             });
         }
     },
@@ -1997,7 +1997,7 @@ Polymer({
     _secondaryActionIndicesChanged: function (newValue) {
         if (this.egiModel) {
             this.egiModel.forEach((egiEntity, index) => {
-                this.set("egiModel." + index + ".secondaryActionIndices", newValue[index]);
+                this.set("egiModel." + index + ".secondaryActionIndices", newValue[this.findEntityIndex(egiEntity.entity)]);
             });
         }
     },
