@@ -22,7 +22,7 @@ import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.meta.EntityInfo;
 import ua.com.fielden.platform.eql.meta.EntityTypePropInfo;
-import ua.com.fielden.platform.eql.meta.LongMetadata;
+import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.meta.PrimTypePropInfo;
 import ua.com.fielden.platform.eql.stage1.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage1.core.Yield1;
@@ -108,7 +108,7 @@ public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2Ba
         return Objects.equals(models, other.models);
     }
     
-    private static EntityInfo<?> produceEntityInfoForDefinedEntityType(final LongMetadata domainInfo, final Map<String, YieldInfoNode> yieldInfoNodes, final Class<? extends AbstractEntity<?>> sourceType) {
+    private static EntityInfo<?> produceEntityInfoForDefinedEntityType(final EqlDomainMetadata domainInfo, final Map<String, YieldInfoNode> yieldInfoNodes, final Class<? extends AbstractEntity<?>> sourceType) {
         final EntityInfo<? extends AbstractEntity<?>> entityInfo = new EntityInfo<>(sourceType, QUERY_BASED);
         final SortedMap<String, AbstractPropInfo<?>> declaredProps = domainInfo.getEntityInfo(sourceType).getProps();
         
@@ -137,7 +137,7 @@ public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2Ba
         return entityInfo;
     }
     
-    private static EntityInfo<?> produceEntityInfo(final LongMetadata domainInfo, final List<SourceQuery2> models, final Class<? extends AbstractEntity<?>> sourceType) {
+    private static EntityInfo<?> produceEntityInfo(final EqlDomainMetadata domainInfo, final List<SourceQuery2> models, final Class<? extends AbstractEntity<?>> sourceType) {
         final Collection<Yield2> yields = models.get(0).yields.getYields();
         final Map<String, YieldInfoNode> yieldInfoNodes = YieldInfoNodesGenerator.generate(yields);
         

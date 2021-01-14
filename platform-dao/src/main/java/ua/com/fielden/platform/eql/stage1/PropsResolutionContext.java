@@ -7,22 +7,22 @@ import static java.util.stream.Collectors.toList;
 import java.util.ArrayList;
 import java.util.List;
 
-import ua.com.fielden.platform.eql.meta.LongMetadata;
+import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.stage2.sources.IQrySource2;
 import ua.com.fielden.platform.eql.stage3.sources.IQrySource3;
 
 public class PropsResolutionContext {
     private final List<List<IQrySource2<? extends IQrySource3>>> sources;
-    private final LongMetadata domainInfo;
+    private final EqlDomainMetadata domainInfo;
     public final String sourceId;
 
-    public PropsResolutionContext(final LongMetadata domainInfo, final List<List<IQrySource2<? extends IQrySource3>>> sources, final String sourceId) {
+    public PropsResolutionContext(final EqlDomainMetadata domainInfo, final List<List<IQrySource2<? extends IQrySource3>>> sources, final String sourceId) {
         this.domainInfo = domainInfo;
         this.sources = sources;
         this.sourceId = sourceId;
     }
 
-    public PropsResolutionContext(final LongMetadata domainInfo) {
+    public PropsResolutionContext(final EqlDomainMetadata domainInfo) {
         this(domainInfo, buildSourcesStackForNewQuery(emptyList()), null);
     }
     
@@ -55,7 +55,7 @@ public class PropsResolutionContext {
         return unmodifiableList(sources);
     }
 
-    public LongMetadata getDomainInfo() {
+    public EqlDomainMetadata getDomainInfo() {
         return domainInfo;
     }
 }

@@ -8,17 +8,17 @@ import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 
-public class LongPropertyMetadata {
+public class EqlPropertyMetadata {
     public final String name;
     public final Class<?> javaType;
     public final Object hibType;
     public final Boolean required;
 
     public final PropColumn column;
-    private final List<LongPropertyMetadata> subitems;
+    private final List<EqlPropertyMetadata> subitems;
     public final ExpressionModel expressionModel;
     
-    private LongPropertyMetadata(final Builder builder) {
+    private EqlPropertyMetadata(final Builder builder) {
         name = Objects.requireNonNull(builder.name);
         javaType = Objects.requireNonNull(builder.javaType);
         hibType = builder.hibType;
@@ -28,7 +28,7 @@ public class LongPropertyMetadata {
         expressionModel = builder.expressionModel;
     }
 
-    public List<LongPropertyMetadata> subitems() {
+    public List<EqlPropertyMetadata> subitems() {
         return unmodifiableList(subitems);
     }
 
@@ -56,11 +56,11 @@ public class LongPropertyMetadata {
             return true;
         }
 
-        if (!(obj instanceof LongPropertyMetadata)) {
+        if (!(obj instanceof EqlPropertyMetadata)) {
             return false;
         }
 
-        final LongPropertyMetadata other = (LongPropertyMetadata) obj;
+        final EqlPropertyMetadata other = (EqlPropertyMetadata) obj;
 
         return Objects.equals(name, other.name) &&
                 Objects.equals(javaType, other.javaType) &&
@@ -79,11 +79,11 @@ public class LongPropertyMetadata {
 
         
         private PropColumn column;
-        private final List<LongPropertyMetadata> subitems = new ArrayList<>();
+        private final List<EqlPropertyMetadata> subitems = new ArrayList<>();
         private ExpressionModel expressionModel;
 
-        public LongPropertyMetadata build() {
-            return new LongPropertyMetadata(this);
+        public EqlPropertyMetadata build() {
+            return new EqlPropertyMetadata(this);
         }
 
         public Builder(final String name, final Class<?> javaType, final Object hibType) {
@@ -117,7 +117,7 @@ public class LongPropertyMetadata {
             return this;
         }
 
-        public Builder subitems(final List<LongPropertyMetadata> subitems) {
+        public Builder subitems(final List<EqlPropertyMetadata> subitems) {
             this.subitems.addAll(subitems);
             return this;
         }

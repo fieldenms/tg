@@ -24,7 +24,7 @@ import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
-import ua.com.fielden.platform.eql.meta.LongMetadata;
+import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.stage1.EntQueryBlocks1;
 import ua.com.fielden.platform.eql.stage1.conditions.CompoundCondition1;
 import ua.com.fielden.platform.eql.stage1.conditions.Conditions1;
@@ -45,10 +45,10 @@ public class EntQueryGenerator {
     public final IFilter filter;
     public final String username;
     private final Map<String, Object> paramValues = new HashMap<>();
-    public final LongMetadata domainMetadata;
+    public final EqlDomainMetadata domainMetadata;
     private final int increment = 1;
     
-    public EntQueryGenerator(final DbVersion dbVersion, final IFilter filter, final String username, final IDates dates, final Map<String, Object> paramValues, final LongMetadata domainMetadata) {
+    public EntQueryGenerator(final DbVersion dbVersion, final IFilter filter, final String username, final IDates dates, final Map<String, Object> paramValues, final EqlDomainMetadata domainMetadata) {
         this.dbVersion = dbVersion;
         this.filter = filter;
         this.username = username;

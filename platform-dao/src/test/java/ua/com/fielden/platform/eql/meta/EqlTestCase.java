@@ -127,7 +127,7 @@ public class EqlTestCase {
         return new EntQueryGenerator(H2, filter, username, dates, paramValues, DOMAIN_METADATA.lmd);
     }
     
-    protected static final LongMetadata metadata() {
+    protected static final EqlDomainMetadata metadata() {
         return DOMAIN_METADATA.lmd;
     }
 }

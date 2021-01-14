@@ -78,13 +78,13 @@ import ua.com.fielden.platform.entity.query.metadata.EntityCategory;
 import ua.com.fielden.platform.entity.query.metadata.EntityTypeInfo;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
-import ua.com.fielden.platform.eql.meta.LongPropertyMetadata.Builder;
+import ua.com.fielden.platform.eql.meta.EqlPropertyMetadata.Builder;
 import ua.com.fielden.platform.eql.stage3.Table;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.utils.EntityUtils;
 
-public class LongMetadata {
+public class EqlDomainMetadata {
     
     private static final TypeResolver typeResolver = new TypeResolver();
     private static final Type H_LONG = typeResolver.basic("long");
@@ -95,21 +95,21 @@ public class LongMetadata {
 
     private final PropColumn id;
     private final PropColumn version;
-    private final PropColumn key = new PropColumn("KEY_");
+    private static final PropColumn key = new PropColumn("KEY_");
 
     public final DbVersion dbVersion;
     /**
      * Map between java type and hibernate persistence type (implementers of Type, IUserTypeInstantiate, ICompositeUserTypeInstantiate).
      */
     private final ConcurrentMap<Class<?>, Object> hibTypesDefaults;
-    private final ConcurrentMap<Class<? extends AbstractEntity<?>>, T2<EntityCategory, SortedMap<String, LongPropertyMetadata>>> entityPropsMetadata;
+    private final ConcurrentMap<Class<? extends AbstractEntity<?>>, T2<EntityCategory, SortedMap<String, EqlPropertyMetadata>>> entityPropsMetadata;
     private final ConcurrentMap<String, EntityTypeInfo<?>> entityTypesInfos = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, Table> tables = new ConcurrentHashMap<>();
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo;
     
     private Injector hibTypesInjector;
 
-    public LongMetadata(//
+    public EqlDomainMetadata(//
             final Map<Class<?>, Class<?>> hibTypesDefaults, //
             final Injector hibTypesInjector, //
             final List<Class<? extends AbstractEntity<?>>> entityTypes, //
@@ -148,7 +148,7 @@ public class LongMetadata {
                 final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo = new EntityTypeInfo<>(entityType);
                 if (parentInfo.category != PURE) {
                     entityTypesInfos.put(entityType.getName(), parentInfo);
-                    final SortedMap<String, LongPropertyMetadata> propsMetadatas = generatePropertyMetadatasForEntity(parentInfo).stream().collect(toMap(LongPropertyMetadata::getName, Function.identity(), (o1, o2) -> o1, TreeMap::new));
+                    final SortedMap<String, EqlPropertyMetadata> propsMetadatas = generatePropertyMetadatasForEntity(parentInfo).stream().collect(toMap(EqlPropertyMetadata::getName, Function.identity(), (o1, o2) -> o1, TreeMap::new));
                     entityPropsMetadata.put(entityType, t2(parentInfo.category, propsMetadatas));
                     if (parentInfo.category == PERSISTED) {
                         tables.put(entityType.getName(), generateTable(parentInfo.tableName, propsMetadatas.values()));
@@ -165,8 +165,8 @@ public class LongMetadata {
         domainInfo.values().stream().forEach(ei -> addProps(ei, domainInfo, entityPropsMetadata.get(ei.javaType())._2.values()));
     }
     
-    private <T extends AbstractEntity<?>> void addProps(final EntityInfo<T> entityInfo, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> allEntitiesInfo, final Collection<LongPropertyMetadata> entityPropsMetadatas) {
-        for (final LongPropertyMetadata el : entityPropsMetadatas) {
+    private <T extends AbstractEntity<?>> void addProps(final EntityInfo<T> entityInfo, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> allEntitiesInfo, final Collection<EqlPropertyMetadata> entityPropsMetadatas) {
+        for (final EqlPropertyMetadata el : entityPropsMetadatas) {
             final String name = el.name;
             final Class<?> javaType = el.javaType;
             final Object hibType = el.hibType;
@@ -174,7 +174,7 @@ public class LongMetadata {
 
             if (isUnionEntityType(javaType)) {
                 final EntityInfo<? extends AbstractUnionEntity> ef = new EntityInfo<>((Class<? extends AbstractUnionEntity>) javaType, UNION);
-                for (final LongPropertyMetadata sub : el.subitems()) {
+                for (final EqlPropertyMetadata sub : el.subitems()) {
                     if (sub.expressionModel == null) {
                         ef.addProp(new EntityTypePropInfo(sub.name, allEntitiesInfo.get(sub.javaType), sub.hibType, false, null));
                     } else {
@@ -199,7 +199,7 @@ public class LongMetadata {
                     entityInfo.addProp(new PrimTypePropInfo(name, hibType, javaType, expr));
                 } else {
                     final ComponentTypePropInfo propTpi = new ComponentTypePropInfo(name, javaType, hibType);
-                    for (final LongPropertyMetadata sub : el.subitems()) {
+                    for (final EqlPropertyMetadata sub : el.subitems()) {
                         final ExpressionModel subExpr = sub.expressionModel;
                         propTpi.addProp(new PrimTypePropInfo(sub.name, sub.hibType, sub.javaType, subExpr));
                     }
@@ -253,9 +253,9 @@ public class LongMetadata {
         }
     }
     
-    private LongPropertyMetadata generateIdPropertyMetadata(final EntityTypeInfo <? extends AbstractEntity<?>> parentInfo) {
-        final LongPropertyMetadata idProperty = new LongPropertyMetadata.Builder(ID, Long.class, H_LONG).column(id).build();
-        final LongPropertyMetadata idPropertyInOne2One = new LongPropertyMetadata.Builder(ID, Long.class, H_LONG).required().column(id).build();
+    private EqlPropertyMetadata generateIdPropertyMetadata(final EntityTypeInfo <? extends AbstractEntity<?>> parentInfo) {
+        final EqlPropertyMetadata idProperty = new EqlPropertyMetadata.Builder(ID, Long.class, H_LONG).column(id).build();
+        final EqlPropertyMetadata idPropertyInOne2One = new EqlPropertyMetadata.Builder(ID, Long.class, H_LONG).required().column(id).build();
         switch (parentInfo.category) {
         case PERSISTED:
             return isOneToOne(parentInfo.entityType) ? idPropertyInOne2One : idProperty/*(entityType)*/;
@@ -266,42 +266,42 @@ public class LongMetadata {
                 }
                 return idProperty;
             } else if (isEntityType(getKeyType(parentInfo.entityType))) {
-                return new LongPropertyMetadata.Builder(ID, Long.class, H_LONG).expression(expr().prop(KEY).model()).build();
+                return new EqlPropertyMetadata.Builder(ID, Long.class, H_LONG).expression(expr().prop(KEY).model()).build();
             } else {
-                return new LongPropertyMetadata.Builder(ID, Long.class, H_LONG).build(); //return null;
+                return new EqlPropertyMetadata.Builder(ID, Long.class, H_LONG).build(); //return null;
             }
         default:
             return null;
         }
     }
     
-    private LongPropertyMetadata generateVersionPropertyMetadata(final EntityTypeInfo <? extends AbstractEntity<?>> parentInfo) {
-        return new LongPropertyMetadata.Builder(VERSION, Long.class, H_LONG).column(version).build();
+    private EqlPropertyMetadata generateVersionPropertyMetadata(final EntityTypeInfo <? extends AbstractEntity<?>> parentInfo) {
+        return new EqlPropertyMetadata.Builder(VERSION, Long.class, H_LONG).column(version).build();
     }
     
-    private LongPropertyMetadata generateKeyPropertyMetadata(final EntityTypeInfo <? extends AbstractEntity<?>> parentInfo) {
+    private EqlPropertyMetadata generateKeyPropertyMetadata(final EntityTypeInfo <? extends AbstractEntity<?>> parentInfo) {
         final Class<? extends Comparable<?>> keyType = getKeyType(parentInfo.entityType);
         if (isOneToOne(parentInfo.entityType)) {
             switch (parentInfo.category) {
             case PERSISTED:
-                return new LongPropertyMetadata.Builder(KEY, keyType, H_LONG).required().column(id).build();
+                return new EqlPropertyMetadata.Builder(KEY, keyType, H_LONG).required().column(id).build();
             case QUERY_BASED:
-                return new LongPropertyMetadata.Builder(KEY, keyType, H_LONG).notRequired().build();
+                return new EqlPropertyMetadata.Builder(KEY, keyType, H_LONG).notRequired().build();
             default:
                 return null;
             }
         } else if (DynamicEntityKey.class.equals(keyType)) {
-            return new LongPropertyMetadata.Builder(KEY, String.class, H_STRING).expression(generateCompositeKeyEqlExpression((Class<? extends AbstractEntity<DynamicEntityKey>>) parentInfo.entityType)).build();
+            return new EqlPropertyMetadata.Builder(KEY, String.class, H_STRING).expression(generateCompositeKeyEqlExpression((Class<? extends AbstractEntity<DynamicEntityKey>>) parentInfo.entityType)).build();
         } else {
             final Object keyHibType = typeResolver.basic(keyType.getName());
             switch (parentInfo.category) {
             case PERSISTED:
-                return new LongPropertyMetadata.Builder(KEY, keyType, keyHibType).column(key).build();
+                return new EqlPropertyMetadata.Builder(KEY, keyType, keyHibType).column(key).build();
             case QUERY_BASED:
                 if (isSyntheticBasedOnPersistentEntityType(parentInfo.entityType)) {
-                    return new LongPropertyMetadata.Builder(KEY, keyType, keyHibType).column(key).build();
+                    return new EqlPropertyMetadata.Builder(KEY, keyType, keyHibType).column(key).build();
                 }
-                return new LongPropertyMetadata.Builder(KEY, keyType, keyHibType).column(key).build();
+                return new EqlPropertyMetadata.Builder(KEY, keyType, keyHibType).column(key).build();
             default:
                 return null;
             }
@@ -313,8 +313,8 @@ public class LongMetadata {
         return generateUnionEntityPropertyContextualExpression(unionMembersNames, DESC, contextPropName); 
     }
 
-    private List<LongPropertyMetadata> generatePropertyMetadatasForEntity(final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo) {
-        final List<LongPropertyMetadata> result = new ArrayList<>();
+    private List<EqlPropertyMetadata> generatePropertyMetadatasForEntity(final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo) {
+        final List<EqlPropertyMetadata> result = new ArrayList<>();
         if (UNION == parentInfo.category) {
             result.addAll(generateUnionImplicitCalcSubprops((Class<? extends AbstractUnionEntity>) parentInfo.entityType, null));
             
@@ -362,17 +362,17 @@ public class LongMetadata {
         return new PropColumn(removeObsoleteUnderscore(columnName), length, precision, scale);
     }
     
-    private List<LongPropertyMetadata> getCompositeUserTypeSubpropsMetadata(final ICompositeUserTypeInstantiate hibType, final String parentColumnPrefix, final ExpressionModel expr) {
+    private List<EqlPropertyMetadata> getCompositeUserTypeSubpropsMetadata(final ICompositeUserTypeInstantiate hibType, final String parentColumnPrefix, final ExpressionModel expr) {
         final String[] propNames = hibType.getPropertyNames();
         final Object[] propHibTypes = hibType.getPropertyTypes();
         final Class<?> headerPropType = hibType.returnedClass();
-        final List<LongPropertyMetadata> result = new ArrayList<>();
+        final List<EqlPropertyMetadata> result = new ArrayList<>();
         for (int i = 0 ; i != propNames.length ; i++) {
             final String propName = propNames[i];
             final Object subHibType = propHibTypes[i];
             final Class<?> subJavaType = determinePropertyType(headerPropType, propName);
             
-            final LongPropertyMetadata.Builder subLmdInProgress = new LongPropertyMetadata.Builder(propName, subJavaType, subHibType);
+            final EqlPropertyMetadata.Builder subLmdInProgress = new EqlPropertyMetadata.Builder(propName, subJavaType, subHibType);
             if (parentColumnPrefix != null) { //persisted
                 final String mapToColumn = getPropertyAnnotation(MapTo.class, headerPropType, propName).value();
                 final String columnName = propNames.length == 1 ? parentColumnPrefix
@@ -388,13 +388,13 @@ public class LongMetadata {
         return result;
     }
     
-    private List<LongPropertyMetadata> generateUnionImplicitCalcSubprops(final Class<? extends AbstractUnionEntity> unionPropType, final String contextPropName) {
+    private List<EqlPropertyMetadata> generateUnionImplicitCalcSubprops(final Class<? extends AbstractUnionEntity> unionPropType, final String contextPropName) {
         final List<Field> unionMembers = unionProperties(unionPropType);
         final List<String> unionMembersNames = unionMembers.stream().map(up -> up.getName()).collect(toList());
-        final List<LongPropertyMetadata> subitems = new ArrayList<>();
-        subitems.add(new LongPropertyMetadata.Builder(KEY, String.class, H_STRING).expression(generateUnionEntityPropertyContextualExpression(unionMembersNames, KEY, contextPropName)).build());
-        subitems.add(new LongPropertyMetadata.Builder(ID, Long.class, H_LONG).expression(generateUnionEntityPropertyContextualExpression(unionMembersNames, ID, contextPropName)).build());
-        subitems.add(new LongPropertyMetadata.Builder(DESC, String.class, H_STRING).expression(generateUnionCommonDescPropExpressionModel(unionMembers, contextPropName)).build());
+        final List<EqlPropertyMetadata> subitems = new ArrayList<>();
+        subitems.add(new EqlPropertyMetadata.Builder(KEY, String.class, H_STRING).expression(generateUnionEntityPropertyContextualExpression(unionMembersNames, KEY, contextPropName)).build());
+        subitems.add(new EqlPropertyMetadata.Builder(ID, Long.class, H_LONG).expression(generateUnionEntityPropertyContextualExpression(unionMembersNames, ID, contextPropName)).build());
+        subitems.add(new EqlPropertyMetadata.Builder(DESC, String.class, H_STRING).expression(generateUnionCommonDescPropExpressionModel(unionMembers, contextPropName)).build());
 
         final List<String> commonProps = commonProperties(unionPropType).stream().filter(n -> !DESC.equals(n)).collect(toList());
         final Class<?> firstUnionEntityPropType = unionMembers.get(0).getType(); // e.g. WagonSlot in TgBogieLocation
@@ -405,13 +405,13 @@ public class LongMetadata {
             final Class<?> javaType = determinePropertyType(firstUnionEntityPropType, commonProp);
             final Object subHibType = getHibernateType(findFieldByName(firstUnionEntityPropType, commonProp));
 
-            subitems.add(new LongPropertyMetadata.Builder(commonProp, javaType, subHibType).expression(generateUnionEntityPropertyContextualExpression(unionMembersNames, commonProp, contextPropName)).build());
+            subitems.add(new EqlPropertyMetadata.Builder(commonProp, javaType, subHibType).expression(generateUnionEntityPropertyContextualExpression(unionMembersNames, commonProp, contextPropName)).build());
         }
 
         return subitems;
     }
 
-    private LongPropertyMetadata getCommonPropInfo(final Field propField, final Class<? extends AbstractEntity<?>> entityType, final String parentPrefix) {
+    private EqlPropertyMetadata getCommonPropInfo(final Field propField, final Class<? extends AbstractEntity<?>> entityType, final String parentPrefix) {
         final String propName = propField.getName();
         final Class<?> propType = propField.getType();
         final Object hibType = getHibernateType(propField);
@@ -419,7 +419,7 @@ public class LongMetadata {
         final IsProperty isProperty = getAnnotation(propField, IsProperty.class);
         final Calculated calculated = getAnnotation(propField, Calculated.class);
 
-        final Builder resultInProgress = new LongPropertyMetadata.Builder(propName, propType, hibType);
+        final Builder resultInProgress = new EqlPropertyMetadata.Builder(propName, propType, hibType);
 
         if (isEntityType(propType)) {
             resultInProgress.required(isRequiredByDefinition(propField, entityType));    
@@ -436,7 +436,7 @@ public class LongMetadata {
         if (mapTo != null && !isSyntheticEntityType(entityType) && calculated == null /* 2 last conditions are to overcome incorrect metadata combinations*/) {
             final String columnName = getColumnName(propName, mapTo, parentPrefix);
             if (isUnionEntityType(propType)) {
-                final List<LongPropertyMetadata> subitems = new ArrayList<>();
+                final List<EqlPropertyMetadata> subitems = new ArrayList<>();
                 final Class<? extends AbstractUnionEntity> unionPropType = (Class<? extends AbstractUnionEntity>) propType;
                 subitems.addAll(generateUnionImplicitCalcSubprops(unionPropType, propName));
                 for (final Field subpropField : unionProperties(unionPropType)) {
@@ -466,24 +466,24 @@ public class LongMetadata {
         }
     }
     
-    private LongPropertyMetadata getOneToOnePropInfo(final Field propField, final EntityTypeInfo <? extends AbstractEntity<?>> parentInfo) {
+    private EqlPropertyMetadata getOneToOnePropInfo(final Field propField, final EntityTypeInfo <? extends AbstractEntity<?>> parentInfo) {
         final String propName = propField.getName();
         final Class<?> javaType = propField.getType();
         final Object hibType = getHibernateType(propField);
 
         // 1-2-1 is not required to exist -- that's why need longer formula -- that's why 1-2-1 is in fact implicitly calculated nullable prop
         final ExpressionModel expressionModel = expr().model(select((Class<? extends AbstractEntity<?>>) propField.getType()).where().prop(KEY).eq().extProp(ID).model()).model();
-        return new LongPropertyMetadata.Builder(propName, javaType, hibType).notRequired().expression(expressionModel).build();
+        return new EqlPropertyMetadata.Builder(propName, javaType, hibType).notRequired().expression(expressionModel).build();
     }
 
-    private final Table generateTable(final String tableName, final Collection<LongPropertyMetadata> propsMetadatas) {
+    private final Table generateTable(final String tableName, final Collection<EqlPropertyMetadata> propsMetadatas) {
         final Map<String, String> columns = new HashMap<>();
-        for (final LongPropertyMetadata el : propsMetadatas) {
+        for (final EqlPropertyMetadata el : propsMetadatas) {
 
             if (el.column != null) {
                 columns.put(el.name, el.column.name);
             } else if (!el.subitems().isEmpty()) {
-                for (final LongPropertyMetadata subitem : el.subitems()) {
+                for (final EqlPropertyMetadata subitem : el.subitems()) {
                     if (subitem.expressionModel == null) {
                         columns.put(el.name + "." + subitem.name, subitem.column.name);
                     }
@@ -504,9 +504,9 @@ public class LongMetadata {
         return unmodifiableMap(tables);
     }
     
-    public SortedMap<String, T3<Class<? extends AbstractEntity<?>>, EntityCategory, SortedMap<String, LongPropertyMetadata>>> getEntityPropsMetadata() {
-        final SortedMap<String, T3<Class<? extends AbstractEntity<?>>, EntityCategory, SortedMap<String, LongPropertyMetadata>>> result = new TreeMap<>();
-        for (final Entry<Class<? extends AbstractEntity<?>>, T2<EntityCategory, SortedMap<String, LongPropertyMetadata>>> el : entityPropsMetadata.entrySet()) {
+    public SortedMap<String, T3<Class<? extends AbstractEntity<?>>, EntityCategory, SortedMap<String, EqlPropertyMetadata>>> getEntityPropsMetadata() {
+        final SortedMap<String, T3<Class<? extends AbstractEntity<?>>, EntityCategory, SortedMap<String, EqlPropertyMetadata>>> result = new TreeMap<>();
+        for (final Entry<Class<? extends AbstractEntity<?>>, T2<EntityCategory, SortedMap<String, EqlPropertyMetadata>>> el : entityPropsMetadata.entrySet()) {
             result.put(el.getKey().getName(), t3(el.getKey(), el.getValue()._1, el.getValue()._2));
         }
         return result;
@@ -519,7 +519,7 @@ public class LongMetadata {
         }
         
         final EntityTypeInfo<?> eti = getEntityTypeInfo(type);
-        final List<LongPropertyMetadata> propsMetadatas = generatePropertyMetadatasForEntity(eti);
+        final List<EqlPropertyMetadata> propsMetadatas = generatePropertyMetadatasForEntity(eti);
         //entityPropsMetadata.put(type, t2(eti.category, propsMetadatas));
         final EntityInfo<?> created = new EntityInfo<>(type, eti.category);
         //domainInfo.put(type, created);

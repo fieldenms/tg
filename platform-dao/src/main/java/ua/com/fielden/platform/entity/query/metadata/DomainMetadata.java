@@ -86,12 +86,12 @@ import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.dbschema.ColumnDefinitionExtractor;
 import ua.com.fielden.platform.eql.dbschema.TableDdl;
-import ua.com.fielden.platform.eql.meta.LongMetadata;
+import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.utils.StreamUtils;
 
 public class DomainMetadata {
     private static final Logger LOGGER = Logger.getLogger(DomainMetadata.class);
-    public final LongMetadata lmd;
+    public final EqlDomainMetadata lmd;
     
     private static final TypeResolver typeResolver = new TypeResolver();
     private static final Type H_LONG = typeResolver.basic("long");
@@ -174,7 +174,7 @@ public class DomainMetadata {
 
         this.hibTypesInjector = hibTypesInjector;
         
-        this.lmd = new LongMetadata(htd, hibTypesInjector, entityTypes, dbVersion);
+        this.lmd = new EqlDomainMetadata(htd, hibTypesInjector, entityTypes, dbVersion);
 
         // the following operations are a bit heave and benefit from parallel processing
         entityTypes.parallelStream().forEach(entityType -> {

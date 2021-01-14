@@ -19,8 +19,8 @@ import org.apache.log4j.Logger;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.metadata.EntityCategory;
-import ua.com.fielden.platform.eql.meta.LongMetadata;
-import ua.com.fielden.platform.eql.meta.LongPropertyMetadata;
+import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
+import ua.com.fielden.platform.eql.meta.EqlPropertyMetadata;
 import ua.com.fielden.platform.eql.meta.PropColumn;
 import ua.com.fielden.platform.types.tuples.T3;
 
@@ -35,7 +35,7 @@ public class HibernateMappingsGenerator {
 
     public static final String ID_SEQUENCE_NAME = "TG_ENTITY_ID_SEQ";
     
-    public static String generateMappings(final LongMetadata domainMetadata) {
+    public static String generateMappings(final EqlDomainMetadata domainMetadata) {
         final StringBuffer sb = new StringBuffer();
         sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
         sb.append("<!DOCTYPE hibernate-mapping PUBLIC\n");
@@ -43,7 +43,7 @@ public class HibernateMappingsGenerator {
         sb.append("\"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd\">\n");
         sb.append("<hibernate-mapping default-access=\"field\">\n");
 
-        for (final T3<Class<? extends AbstractEntity<?>>, EntityCategory, SortedMap<String, LongPropertyMetadata>> entry : domainMetadata.getEntityPropsMetadata().values()) {
+        for (final T3<Class<? extends AbstractEntity<?>>, EntityCategory, SortedMap<String, EqlPropertyMetadata>> entry : domainMetadata.getEntityPropsMetadata().values()) {
             if (entry._2 == PERSISTED) {
                 final String typeName = entry._1.getName();
                 try {
@@ -99,10 +99,10 @@ public class HibernateMappingsGenerator {
         return "\t<one-to-one name=\"" + propName + "\" class=\"" + entityType.getName() + "\" constrained=\"true\"/>\n";
     }
 
-    private static String generateUnionEntityPropertyMapping(final LongPropertyMetadata info) {
+    private static String generateUnionEntityPropertyMapping(final EqlPropertyMetadata info) {
         final StringBuffer sb = new StringBuffer();
         sb.append("\t<component name=\"" + info.getName() + "\" class=\"" + info.javaType.getName() + "\">\n");
-        for (final LongPropertyMetadata subpropField : info.subitems()) {
+        for (final EqlPropertyMetadata subpropField : info.subitems()) {
             if (subpropField.column != null) {
                 sb.append("\t\t<many-to-one name=\"" + subpropField.getName() + "\" class=\"" + subpropField.javaType.getName() + "\" column = \"" + subpropField.column.name.toUpperCase() + "\"/>\n");
             }
@@ -139,25 +139,25 @@ public class HibernateMappingsGenerator {
      * @return
      * @throws Exception
      */
-    private static <ET extends AbstractEntity<?>> String generateEntityClassMapping(final Class<? extends AbstractEntity<?>> type, final String tableName, final SortedMap<String, LongPropertyMetadata> propsMetadata, final DbVersion dbVersion) throws Exception {
+    private static <ET extends AbstractEntity<?>> String generateEntityClassMapping(final Class<? extends AbstractEntity<?>> type, final String tableName, final SortedMap<String, EqlPropertyMetadata> propsMetadata, final DbVersion dbVersion) throws Exception {
         final StringBuffer sb = new StringBuffer();
         sb.append("<class name=\"" + type.getName() + "\" table=\"" + tableName + "\">\n");
 
-        final LongPropertyMetadata id = propsMetadata.get(ID);
+        final EqlPropertyMetadata id = propsMetadata.get(ID);
         if (isOneToOne(type)) {
             sb.append(generateOneToOneEntityIdMapping(id.getName(), id.column.name, id.hibType.getClass().getName()));
         } else {
             sb.append(generateEntityIdMapping(id.getName(), id.column.name, id.hibType.getClass().getName(), dbVersion));    
         }
-        final LongPropertyMetadata version = propsMetadata.get(VERSION);
+        final EqlPropertyMetadata version = propsMetadata.get(VERSION);
         sb.append(generateEntityVersionMapping(version.getName(), version.column.name, version.hibType.getClass().getName()));
 
-        final LongPropertyMetadata keyProp = propsMetadata.get(KEY);
+        final EqlPropertyMetadata keyProp = propsMetadata.get(KEY);
         if (keyProp.column != null) {
             sb.append(generatePropertyMappingFromPropertyMetadata(keyProp));
         }
 
-        for (final LongPropertyMetadata ppi : propsMetadata.values()) {
+        for (final EqlPropertyMetadata ppi : propsMetadata.values()) {
             if (ppi.expressionModel == null && !specialProps.contains(ppi.getName()) && (ppi.column != null || ppi.subitems().stream().anyMatch(e -> e.column != null))) {
                 sb.append(generatePropertyMappingFromPropertyMetadata(ppi));
             }
@@ -173,7 +173,7 @@ public class HibernateMappingsGenerator {
      * @return
      * @throws Exception
      */
-    private static String generatePropertyMappingFromPropertyMetadata(final LongPropertyMetadata propMetadata) throws Exception {
+    private static String generatePropertyMappingFromPropertyMetadata(final EqlPropertyMetadata propMetadata) throws Exception {
         if (isUnionEntityType(propMetadata.javaType)) {
             return generateUnionEntityPropertyMapping(propMetadata);
         } else if (isPersistedEntityType(propMetadata.javaType)) {
@@ -184,7 +184,7 @@ public class HibernateMappingsGenerator {
             }
         } else {
             final List<String> columns = new ArrayList<>();
-            for (final LongPropertyMetadata subitem : propMetadata.subitems()) {
+            for (final EqlPropertyMetadata subitem : propMetadata.subitems()) {
                 if (subitem.expressionModel == null) {
                     columns.add(subitem.column.name);
                 }

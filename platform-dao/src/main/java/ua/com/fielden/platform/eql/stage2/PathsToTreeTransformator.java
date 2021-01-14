@@ -23,7 +23,7 @@ import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.meta.ComponentTypePropInfo;
 import ua.com.fielden.platform.eql.meta.EntityTypePropInfo;
-import ua.com.fielden.platform.eql.meta.LongMetadata;
+import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.meta.UnionTypePropInfo;
 import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
 import ua.com.fielden.platform.eql.stage0.StandAloneExpressionBuilder;
@@ -39,10 +39,10 @@ import ua.com.fielden.platform.types.tuples.T2;
 
 public class PathsToTreeTransformator {
     
-    private final LongMetadata domainInfo;
+    private final EqlDomainMetadata domainInfo;
     private final EntQueryGenerator gen;
     
-    public PathsToTreeTransformator(final LongMetadata domainInfo, final EntQueryGenerator gen) {
+    public PathsToTreeTransformator(final EqlDomainMetadata domainInfo, final EntQueryGenerator gen) {
         this.domainInfo = domainInfo;
         this.gen = gen;
     }
