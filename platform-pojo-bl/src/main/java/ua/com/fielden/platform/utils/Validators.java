@@ -359,7 +359,7 @@ public final class Validators {
         /*              */begin().
         /*                  */prop(toDateProperty).isNull()./* the end of the potentially overlapped entity is OPEN and thus is after the fromDateProperty value of the entity under test */
         /*                  */or().
-        /*                  */prop(toDateProperty).ge().val(fromDateValue)./* the end of the potentially overlapped entity is AFTER the fromDateValue */
+        /*                  */dateOf().prop(toDateProperty).ge().dateOf().val(fromDateValue)./* the end of the potentially overlapped entity is AFTER the fromDateValue */
         /*              */end();
         } else {
         //If to date property is not annotated with DateOnly annotation then it should be greater than fromDateValue
@@ -381,7 +381,7 @@ public final class Validators {
             if (isDateOnly(entity.getType(), fromDateProperty)) {
                 cc = cc.and().//
                 /*    */begin().//
-                /*        */prop(fromDateProperty).le().val(toDateValue)./* the beginning of the potentially overlapped entity is BEFORE the toDateValue  */
+                /*        */dateOf().prop(fromDateProperty).le().dateOf().val(toDateValue)./* the beginning of the potentially overlapped entity is BEFORE the toDateValue  */
                 /*    */end();
            //If from date property is not annotated with DateOnly annotation then it should be less than toDateValue
             } else {
