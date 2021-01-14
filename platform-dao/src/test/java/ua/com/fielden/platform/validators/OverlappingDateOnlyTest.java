@@ -55,14 +55,27 @@ public class OverlappingDateOnlyTest extends AbstractDaoTestCase {
     }
 
     @Test
+    public void test_overlapping_for_new_with_touched_end_period_and_time_portion() {
+        final TgDateTestEntity dte = new_(TgDateTestEntity.class, "next_date_test_entity").setFromDateProp(date("2021-02-20 15:00:00")).setToDateProp(date("2021-03-02 10:13:17"));
+        assertTrue(Validators.overlaps(dte, dao, "fromDateProp", "toDateProp"));
+    }
+
+    @Test
     public void test_overlapping_for_new_with_touched_start_period() {
         final TgDateTestEntity dte = new_(TgDateTestEntity.class, "next_date_test_entity").setFromDateProp(date("2021-02-01 00:00:00")).setToDateProp(date("2021-02-12 00:00:00"));
+        assertTrue(Validators.overlaps(dte, dao, "fromDateProp", "toDateProp"));
+    }
+
+    @Test
+    public void test_overlapping_for_new_with_touched_start_period_and_time_portion() {
+        final TgDateTestEntity dte = new_(TgDateTestEntity.class, "next_date_test_entity").setFromDateProp(date("2021-02-01 08:15:00")).setToDateProp(date("2021-02-12 00:00:00"));
         assertTrue(Validators.overlaps(dte, dao, "fromDateProp", "toDateProp"));
     }
 
     @Override
     protected void populateDomain() {
         save(new_(TgDateTestEntity.class, "date_test_entity").setFromDateProp(date("2021-01-12 00:00:00")).setToDateProp(date("2021-02-01 00:00:00")));
+        save(new_(TgDateTestEntity.class, "date_test_entity_with_time_portion").setFromDateProp(date("2021-03-02 13:01:12")).setToDateProp(date("2021-03-10 10:43:29")));
     }
 
     @Override
