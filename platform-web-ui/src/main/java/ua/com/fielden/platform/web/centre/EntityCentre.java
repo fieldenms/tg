@@ -108,6 +108,7 @@ import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfig;
 import ua.com.fielden.platform.web.centre.api.actions.multi.FunctionalMultiActionElement;
 import ua.com.fielden.platform.web.centre.api.actions.multi.IEntityMultiActionSelector;
+import ua.com.fielden.platform.web.centre.api.actions.multi.SingleActionSelector;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssigner;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.MultiCritBooleanValueMnemonic;
@@ -821,13 +822,22 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         }
     }
 
-    public Optional<? extends IEntityMultiActionSelector> getPrimaryActionSelector() {
+    /**
+     * Creates and returns instance of multi-action selector in case of primary multi-action specified in Centre DSL.
+     * Returns [singleton] instance of {@link SingleActionSelector} in case of primary single action specified in Centre DSL.
+     * Returns empty {@link Optional} otherwise.
+     */
+    public Optional<? extends IEntityMultiActionSelector> createPrimaryActionSelector() {
         return dslDefaultConfig
             .getResultSetPrimaryEntityAction()
             .map(multiActionConfig -> injector.getInstance(multiActionConfig.actionSelectorClass()));
     }
 
-    public List<? extends IEntityMultiActionSelector> getSecondaryActionSelectors() {
+    /**
+     * Creates instances of multi-action selectors (or {@link SingleActionSelector}s) in case of secondary multi-actions (or single actions) specified in Centre DSL.
+     * Returns empty {@link List} if there were no secondary multi-actions (or single actions) specified in Centre DSL.
+     */
+    public List<? extends IEntityMultiActionSelector> createSecondaryActionSelectors() {
         return dslDefaultConfig
             .getResultSetSecondaryEntityActions()
             .map(multiActionConfigs -> multiActionConfigs.stream().map(config -> injector.getInstance(config.actionSelectorClass())).collect(toList()))

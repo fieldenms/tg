@@ -495,7 +495,7 @@ public class CriteriaResource extends AbstractWebResource {
      * @return
      */
     private List<List<Integer>> createSecondaryActionIndices(final List<?> entities) {
-        final List<? extends IEntityMultiActionSelector> selectors = centre.getSecondaryActionSelectors(); // create all selectors before entities streaming (and reuse them for every entity)
+        final List<? extends IEntityMultiActionSelector> selectors = centre.createSecondaryActionSelectors(); // create all selectors before entities streaming (and reuse them for every entity)
         return entities.stream()
             .map(entity -> selectors.stream()
                 .map(selector -> selector.getActionFor((AbstractEntity<?>) entity))
@@ -511,7 +511,7 @@ public class CriteriaResource extends AbstractWebResource {
      * @return
      */
     private List<Integer> createPrimaryActionIndices(final List<?> entities) {
-        return centre.getPrimaryActionSelector().map(selector -> {
+        return centre.createPrimaryActionSelector().map(selector -> {
             return entities.stream().map(entity -> selector.getActionFor((AbstractEntity<?>) entity)).collect(toList());
         }).orElse(emptyList());
     }

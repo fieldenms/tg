@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.ioc;
 
+import static ua.com.fielden.platform.web.centre.api.actions.multi.SingleActionSelector.INSTANCE;
+
 import com.google.inject.Binder;
 import com.google.inject.Injector;
 import com.google.inject.Scopes;
@@ -25,6 +27,7 @@ import ua.com.fielden.platform.web.centre.ICentreConfigEditAction;
 import ua.com.fielden.platform.web.centre.ICentreConfigLoadAction;
 import ua.com.fielden.platform.web.centre.ICentreConfigSaveAction;
 import ua.com.fielden.platform.web.centre.ICentreConfigUpdater;
+import ua.com.fielden.platform.web.centre.api.actions.multi.SingleActionSelector;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.webui.AbstractWebUiConfig;
 import ua.com.fielden.platform.web.test.server.TgTestWebApplicationServerModule;
@@ -75,6 +78,8 @@ public interface IBasicWebApplicationServerModule {
         bindType(ICentreConfigLoadAction.class).to(CentreConfigLoadActionDao.class);
         bindType(ICentreConfigEditAction.class).to(CentreConfigEditActionDao.class);
         bindType(ICentreConfigSaveAction.class).to(CentreConfigSaveActionDao.class);
+        
+        bindType(SingleActionSelector.class).toInstance(INSTANCE); // singleton
     }
 
     /**
