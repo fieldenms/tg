@@ -12,7 +12,6 @@ import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
  *
  */
 public class EntityMultiActionConfigBuilder implements IEntityMultiActionConfigAddAction, IEntityMultiActionConfigBuild {
-
     private final Class<? extends IEntityMultiActionSelector> actionSelectorClass;
     private final List<EntityActionConfig> actions = new ArrayList<>();
 
@@ -37,6 +36,9 @@ public class EntityMultiActionConfigBuilder implements IEntityMultiActionConfigA
 
     @Override
     public EntityMultiActionConfig build() {
+        if (actions.isEmpty()) {
+            throw new IllegalStateException("Multi-action configuration is empty."); // API does not allow this, but check emptiness for additional safety.
+        }
         return new EntityMultiActionConfig(actionSelectorClass, actions);
     }
 

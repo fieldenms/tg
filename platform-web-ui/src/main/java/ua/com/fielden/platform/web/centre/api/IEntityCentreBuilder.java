@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.centre.api;
 
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
+import static ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfigBuilder.multiAction;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.multi;
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.range;
@@ -18,7 +19,7 @@ import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.utils.EntityUtils;
-import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
+import ua.com.fielden.platform.web.centre.api.actions.multi.SingleActionSelector;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActions;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 
@@ -110,9 +111,12 @@ public interface IEntityCentreBuilder<T extends AbstractEntity<?>> {
                 .setCollapsedCardLayoutFor(Device.MOBILE, Optional.empty(), "some other valid string")
                 .addPrimaryAction(action(null).withContext(context().withCurrentEntity().withSelectionCrit().build()).icon("name").longDesc("tooltip text").build())
                 .also()
-                .addSecondaryAction((EntityActionConfig)null)
+                .addSecondaryAction(action(null).withContext(context().withSelectionCrit().build()).build())
                 .also()
-                .addSecondaryAction((EntityActionConfig)null)
+                .addSecondaryAction(multiAction(SingleActionSelector.class)
+                    .addAction(null)
+                    .addAction(null)
+                    .build())
                 .setCustomPropsValueAssignmentHandler(null)
                 .setRenderingCustomiser(null)
                 .setQueryEnhancer(null, context().withMasterEntity().withSelectionCrit().build())

@@ -185,7 +185,7 @@ public class EntityCentreBuilderResultSetTest {
     public void null_primary_action_should_be_prevented() {
         centreFor(TgWorkOrder.class)
                 .addProp("key")
-                .addPrimaryAction((EntityActionConfig)null)
+                .addPrimaryAction((EntityActionConfig) null)
                 .also()
                 .addSecondaryAction(action(FunctionalEntity.class).withContext(context().withCurrentEntity().build()).build())
                 .also()
@@ -199,7 +199,7 @@ public class EntityCentreBuilderResultSetTest {
                 .addProp("key")
                 .addPrimaryAction(action(FunctionalEntity.class).withContext(context().withCurrentEntity().build()).build())
                 .also()
-                .addSecondaryAction((EntityActionConfig)null)
+                .addSecondaryAction((EntityActionConfig) null)
                 .build();
     }
 

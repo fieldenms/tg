@@ -6,7 +6,7 @@ package ua.com.fielden.platform.web.centre.api.actions.multi;
  * @author TG Team
  *
  */
-public interface IEntityMultiActionConfigBuild extends IEntityMultiActionConfigAddAction{
+public interface IEntityMultiActionConfigBuild extends IEntityMultiActionConfigAddAction {
 
     /**
      * Builds multi-action configuration object.
