@@ -1,8 +1,11 @@
 package ua.com.fielden.platform.web.centre.api;
 
 import static java.lang.String.format;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableList;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.domaintree.impl.CalculatedProperty.generateNameFrom;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
 
@@ -578,14 +581,14 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     }
 
     public Optional<EntityMultiActionConfig> getResultSetPrimaryEntityAction() {
-        return Optional.ofNullable(resultSetPrimaryEntityAction);
+        return ofNullable(resultSetPrimaryEntityAction);
     }
 
     public Optional<List<EntityMultiActionConfig>> getResultSetSecondaryEntityActions() {
         if (resultSetSecondaryEntityActions.isEmpty()) {
-            return Optional.empty();
+            return empty();
         }
-        return Optional.of(Collections.unmodifiableList(resultSetSecondaryEntityActions));
+        return of(unmodifiableList(resultSetSecondaryEntityActions));
     }
 
     public Optional<List<ResultSetProp<T>>> getResultSetProperties() {
@@ -810,10 +813,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             }
             return getResultSetPrimaryEntityAction().get().actions().get(actionNumber);
         } else if (FunctionalActionKind.SECONDARY_RESULT_SET == actionKind) {
-            if (!secondaryActionPresent(actionNumber)) {
-                throw new IllegalArgumentException("No secondary result-set action exists.");
-            }
-            return getSecondaryActionFor(actionNumber).get();
+            return getSecondaryActionFor(actionNumber).orElseThrow(() -> new IllegalArgumentException("No secondary result-set action exists."));
         } else if (FunctionalActionKind.PROP == actionKind) {
             if (!getResultSetProperties().isPresent()) {
                 throw new IllegalArgumentException("No result-set property exists.");
@@ -838,23 +838,23 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         throw new UnsupportedOperationException(actionKind + " is not supported yet.");
     }
 
-    private boolean secondaryActionPresent(final int actionNumber) {
-        return getResultSetSecondaryEntityActions().map(actions -> {
-            return actions.stream().reduce(0, (sum,  action) -> sum + action.actions().size(), (sum1, sum2) -> sum1 + sum2) > actionNumber;
-        }).orElse(false);
-    }
-
+    /**
+     * Finds action configuration with {@code actionNumber} in the list of secondary actions/multi-actions if it exists.
+     * 
+     * @param actionNumber
+     * @return
+     */
     private Optional<EntityActionConfig> getSecondaryActionFor(final int actionNumber) {
         int currentActionNumber = actionNumber;
-        for (final EntityMultiActionConfig config: getResultSetSecondaryEntityActions().get()) {
+        for (final EntityMultiActionConfig config: getResultSetSecondaryEntityActions().orElse(emptyList())) {
             final List<EntityActionConfig> configActions = config.actions();
             if (currentActionNumber < configActions.size()) {
-                return Optional.of(configActions.get(currentActionNumber));
+                return of(configActions.get(currentActionNumber));
             } else {
                 currentActionNumber -= configActions.size();
             }
         }
-        return Optional.empty();
+        return empty();
     }
 
     public Optional<List<Pair<EntityActionConfig, Optional<String>>>> getTopLevelActions() {
