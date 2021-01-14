@@ -38,9 +38,7 @@ public class FunctionalMultiActionElement implements IRenderable, IImportable {
 
         for (int configIndex = 0; configIndex < entityMultiActionConfig.actions().size(); configIndex++) {
             final EntityActionConfig entityActionConfig = entityMultiActionConfig.actions().get(configIndex);
-            if (!entityActionConfig.isNoAction()) {
-                actionElements.add(new FunctionalActionElement(entityActionConfig, numberOfAction + configIndex, actionKind));
-            }
+            actionElements.add(new FunctionalActionElement(entityActionConfig, numberOfAction + configIndex, actionKind));
         }
     }
 

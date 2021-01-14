@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.web.centre.api;
 
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
-import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.actionOff;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.multi;
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.range;
@@ -103,7 +102,7 @@ public interface IEntityCentreBuilder<T extends AbstractEntity<?>> {
                 .also()
                 .addProp(mkProp("ON", "Defect ON road", "ON")).withAction(action(null).withContext(context().withCurrentEntity().withSelectionCrit().build()).build())
                 .also()
-                .addProp(mkProp("OF", "Defect OFF road", "OF")).withAction(actionOff().build())
+                .addProp(mkProp("OF", "Defect OFF road", "OF"))
                 .also()
                 .addProp(mkProp("IS", "In service", "IS"))
                 .setCollapsedCardLayoutFor(Device.TABLET, Optional.empty(), "some valid string")

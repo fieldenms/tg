@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.web.centre;
 
 import static java.lang.String.format;
+import static java.util.Collections.emptyList;
 import static java.util.Optional.empty;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isCritOnlySingle;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.validateRootType;
@@ -819,17 +821,17 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         }
     }
 
-    public Optional<IEntityMultiActionSelector> getPrimaryActionSelector() {
-        return this.dslDefaultConfig.getResultSetPrimaryEntityAction()
-                .map(multiActionConfig -> !multiActionConfig.isNoAction() ? injector.getInstance(multiActionConfig.actionSelectorClass()) : null);
+    public Optional<? extends IEntityMultiActionSelector> getPrimaryActionSelector() {
+        return dslDefaultConfig
+            .getResultSetPrimaryEntityAction()
+            .map(multiActionConfig -> injector.getInstance(multiActionConfig.actionSelectorClass()));
     }
 
-    @SuppressWarnings("unchecked")
-    public List<IEntityMultiActionSelector> getSecondaryActionSelectors() {
-        return (List<IEntityMultiActionSelector>) this.dslDefaultConfig.getResultSetSecondaryEntityActions()
-                .map(multiActionConfigs -> multiActionConfigs.stream().filter(config -> !config.isNoAction())
-                        .map(config -> injector.getInstance(config.actionSelectorClass()))
-                .collect(Collectors.toList())).orElse(new ArrayList<>());
+    public List<? extends IEntityMultiActionSelector> getSecondaryActionSelectors() {
+        return dslDefaultConfig
+            .getResultSetSecondaryEntityActions()
+            .map(multiActionConfigs -> multiActionConfigs.stream().map(config -> injector.getInstance(config.actionSelectorClass())).collect(toList()))
+            .orElse(emptyList());
     }
 
     public Optional<IDynamicColumnBuilder<T>> getDynamicColumnBuilderFor(final ResultSetProp<T> resProp) {
@@ -1004,7 +1006,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final DomContainer primaryActionDom = new DomContainer();
         final StringBuilder primaryActionObject = new StringBuilder();
 
-        if (resultSetPrimaryEntityAction.isPresent() && !resultSetPrimaryEntityAction.get().isNoAction()) {
+        if (resultSetPrimaryEntityAction.isPresent()) {
             final FunctionalMultiActionElement el = new FunctionalMultiActionElement(resultSetPrimaryEntityAction.get(), 0, FunctionalActionKind.PRIMARY_RESULT_SET);
 
             importPaths.add(el.importPath());
@@ -1035,13 +1037,11 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         if (resultSetSecondaryEntityActions.isPresent()) {
             int numberOfAction = 0;
             for (final EntityMultiActionConfig multiActionConfig: resultSetSecondaryEntityActions.get()) {
-                if (!multiActionConfig.isNoAction()) {
-                    final FunctionalMultiActionElement el = new FunctionalMultiActionElement(multiActionConfig, numberOfAction, FunctionalActionKind.SECONDARY_RESULT_SET);
-                    importPaths.add(el.importPath());
-                    secondaryActionsDom.add(el.render().attr("slot", "secondary-action"));
-                    secondaryActionsObjects.append(prefix + el.createActionObject(importPaths));
-                    numberOfAction += multiActionConfig.actions().size();
-                }
+                final FunctionalMultiActionElement el = new FunctionalMultiActionElement(multiActionConfig, numberOfAction, FunctionalActionKind.SECONDARY_RESULT_SET);
+                importPaths.add(el.importPath());
+                secondaryActionsDom.add(el.render().attr("slot", "secondary-action"));
+                secondaryActionsObjects.append(prefix + el.createActionObject(importPaths));
+                numberOfAction += multiActionConfig.actions().size();
             }
         }
 

@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static java.util.Collections.emptyList;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
@@ -494,10 +495,13 @@ public class CriteriaResource extends AbstractWebResource {
      * @return
      */
     private List<List<Integer>> createSecondaryActionIndices(final List<?> entities) {
-        final List<IEntityMultiActionSelector> selectors = centre.getSecondaryActionSelectors();
-        return entities.stream().map(entity -> {
-            return selectors.stream().map(selector -> selector.getActionFor((AbstractEntity<?>) entity)).collect(toList());
-        }).collect(toList());
+        final List<? extends IEntityMultiActionSelector> selectors = centre.getSecondaryActionSelectors(); // create all selectors before entities streaming (and reuse them for every entity)
+        return entities.stream()
+            .map(entity -> selectors.stream()
+                .map(selector -> selector.getActionFor((AbstractEntity<?>) entity))
+                .collect(toList())
+            )
+            .collect(toList());
     }
 
     /**
@@ -509,7 +513,7 @@ public class CriteriaResource extends AbstractWebResource {
     private List<Integer> createPrimaryActionIndices(final List<?> entities) {
         return centre.getPrimaryActionSelector().map(selector -> {
             return entities.stream().map(entity -> selector.getActionFor((AbstractEntity<?>) entity)).collect(toList());
-        }).orElse(new ArrayList<Integer>());
+        }).orElse(emptyList());
     }
 
     /**
