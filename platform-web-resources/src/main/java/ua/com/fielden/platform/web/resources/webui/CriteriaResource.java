@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.resources.webui;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.data.generator.IGenerator.FORCE_REGENERATION_KEY;
 import static ua.com.fielden.platform.data.generator.IGenerator.shouldForceRegeneration;
 import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
@@ -439,11 +440,11 @@ public class CriteriaResource extends AbstractWebResource {
             // Running the rendering customiser for result set of entities.
             pair.getKey().put("renderingHints", createRenderingHints(pair.getValue()));
 
-            //Apply primary and secondary action selectors
+            // Apply primary and secondary action selectors
             pair.getKey().put("primaryActionIndices", createPrimaryActionIndices(pair.getValue()));
             pair.getKey().put("secondaryActionIndices", createSecondaryActionIndices(pair.getValue()));
 
-            //Build dynamic properties object
+            // Build dynamic properties object
             final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext = getDynamicResultProperties(
                     centre,
                     webUiConfig,
@@ -486,19 +487,37 @@ public class CriteriaResource extends AbstractWebResource {
         }, restUtil);
     }
 
+    /**
+     * Calculates indices of active secondary actions for {@code entities}.
+     * 
+     * @param entities
+     * @return
+     */
     private List<List<Integer>> createSecondaryActionIndices(final List<?> entities) {
         final List<IEntityMultiActionSelector> selectors = centre.getSecondaryActionSelectors();
         return entities.stream().map(entity -> {
-            return selectors.stream().map(selector -> (Integer)selector.getActionFor((AbstractEntity<?>)entity)).collect(Collectors.toList());
-        }).collect(Collectors.toList());
+            return selectors.stream().map(selector -> selector.getActionFor((AbstractEntity<?>) entity)).collect(toList());
+        }).collect(toList());
     }
 
+    /**
+     * Calculates indices of active primary action for {@code entities}.
+     * 
+     * @param entities
+     * @return
+     */
     private List<Integer> createPrimaryActionIndices(final List<?> entities) {
-        return centre.getPrimaryActionSelector().map(actionSelector -> {
-            return entities.stream().map(entity -> actionSelector.getActionFor((AbstractEntity<?>)entity)).collect(Collectors.toList());
+        return centre.getPrimaryActionSelector().map(selector -> {
+            return entities.stream().map(entity -> selector.getActionFor((AbstractEntity<?>) entity)).collect(toList());
         }).orElse(new ArrayList<Integer>());
     }
 
+    /**
+     * Calculates rendering hints for {@code entities}.
+     * 
+     * @param entities
+     * @return
+     */
     private List<Object> createRenderingHints(final List<?> entities) {
         final Optional<IRenderingCustomiser<?>> renderingCustomiser = centre.getRenderingCustomiser();
         if (renderingCustomiser.isPresent()) {
