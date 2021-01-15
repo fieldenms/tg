@@ -1,5 +1,6 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { TgEntityCentreBehavior } from '/resources/centre/tg-entity-centre-behavior.js';
+import '/resources/images/tg-icons.js'; // this is for common tg-icons:share icon
 
 const TgEntityCentreTemplateBehaviorImpl = {
 
@@ -13,7 +14,7 @@ const TgEntityCentreTemplateBehaviorImpl = {
         pageNumberUpdated: Number,
         pageCountUpdated: Number,
         staleCriteriaMessage: String,
-
+        _centreDirtyOrEdited: Boolean,
         _defaultPropertyActionAttrs: Object
     },
 

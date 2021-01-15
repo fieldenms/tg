@@ -1,13 +1,16 @@
 package ua.com.fielden.platform.web.centre;
 
 import static java.lang.String.format;
+import static java.util.Optional.empty;
 import static java.util.regex.Pattern.quote;
 import static java.util.stream.Collectors.partitioningBy;
+import static org.apache.commons.lang.StringUtils.uncapitalize;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.error.Result.warning;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.CENTRE_CONFIG_CONFLICT_ERROR;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.UNDEFINED_CONFIG_TITLE;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.CENTRE_CONFIG_CONFLICT_WARNING;
 
 import java.lang.annotation.Annotation;
@@ -22,8 +25,6 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
-import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
-import static ua.com.fielden.platform.web.centre.WebApiUtils.UNDEFINED_CONFIG_TITLE;
 import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 
 /**
@@ -56,28 +57,18 @@ public class CentreConfigCommitActionTitleValidator implements IBeforeChangeEven
             // in case of EDIT action (unlike SAVEAS) we need to skip currently loaded configuration when determining 'possible intersections' -- this is because 
             //  when EDIT is performed the user could leave title unchanged and change only description
             final boolean titleCanBeCurrent = CentreConfigEditAction.class.isAssignableFrom(entity.getType());
-            final Map<Boolean, List<LoadableCentreConfig>> possibleIntersections = criteriaEntity.loadableCentreConfigs().stream()
+            final Map<Boolean, List<LoadableCentreConfig>> possibleIntersections = criteriaEntity.loadableCentreConfigs().apply(empty()).stream()
                 .filter(config -> titleCanBeCurrent ? saveAsName.map(name -> !config.getKey().equals(name)).orElse(true) : true)
                 .collect(partitioningBy(LoadableCentreConfig::isInherited)); // split possible intersections by 'inherited' marker
             
-            if (match(newTitle, possibleIntersections.get(true))) { // inherited configuration conflict should fail title editing
-                return failure(CENTRE_CONFIG_CONFLICT_ERROR);
-            } else if (match(newTitle, possibleIntersections.get(false))) { // owned configuration should provide warning and, if saved, there should be a prompt about 'configuration override'
+            final Optional<LoadableCentreConfig> inheritedIntersection = possibleIntersections.get(true).stream().filter(config -> config.getKey().equalsIgnoreCase(newTitle)).findAny();
+            if (inheritedIntersection.isPresent()) { // inherited configuration conflict should fail title editing
+                return failure((inheritedIntersection.get().isShared() ? "Shared" : "Base") + " " + uncapitalize(CENTRE_CONFIG_CONFLICT_WARNING));
+            } else if (possibleIntersections.get(false).stream().anyMatch(config -> config.getKey().equalsIgnoreCase(newTitle))) { // owned configuration should provide warning and, if saved, there should be a prompt about 'configuration override'
                 return warning(CENTRE_CONFIG_CONFLICT_WARNING);
             }
         }
         return successful("ok");
-    }
-    
-    /**
-     * Returns <code>true</code> if <code>title</code> matches the key of some config from <code>intersections</code>, <code>false</code> otherwise.
-     * 
-     * @param title
-     * @param intersections
-     * @return
-     */
-    private static boolean match(final String title, final List<LoadableCentreConfig> intersections) {
-        return intersections.stream().anyMatch(config -> config.getKey().equalsIgnoreCase(title));
     }
     
 }

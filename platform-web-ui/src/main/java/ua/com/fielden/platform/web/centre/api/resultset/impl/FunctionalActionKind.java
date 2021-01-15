@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.centre.api.resultset.impl;
 public enum FunctionalActionKind {
 
     FRONT("frontActions"),
+    SHARE("shareActions"),
     TOP_LEVEL("topLevelActions"),
     PRIMARY_RESULT_SET("primaryAction"),
     SECONDARY_RESULT_SET("secondaryActions"),

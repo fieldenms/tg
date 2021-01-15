@@ -174,6 +174,7 @@ const customInputTemplate = html`
                             <div class$="[[_computedHeaderClass(item)]]" inner-h-t-m-l="[[_calcItemTextHighlighted(item, headerPropertyName, _phraseForSearchingCommited)]]"></div>
                             <div class$="[[_computedDescriptionClass(item)]]" inner-h-t-m-l="[[_calcItemTextHighlighted(item, descriptionPropertyName, _phraseForSearchingCommited)]]"></div>
                         </div>
+                        <div inner-h-t-m-l="[[_calcSharedByText(item)]]" hidden$="[[_sharedByTextHidden(item)]]"></div>
                         <div class$="[[_computeSortingClass(item)]]" hidden$="[[_sortingIconHidden(_forReview, item)]]">
                             <iron-icon icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_computeSortingIconStyle(item.sorting)]]" on-tap="_changeOrdering"></iron-icon>
                             <span class="ordering-number self-center">[[_calculateOrder(item.sortingNumber)]]</span>
@@ -377,6 +378,11 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
         return tooltip;
     }
     
+    _calcSharedByText (item) {
+        const value = typeof item.sharedByMessage !== 'undefined' && item.get('sharedByMessage');
+        return value ? value : '';
+    }
+    
     /**
      * Returns the text representation of the item to be shown in header or description.
      */
@@ -571,6 +577,10 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
     
     _selectingIconHidden (_forReview) {
         return _forReview;
+    }
+    
+    _sharedByTextHidden (item) {
+        return typeof item.sharedByMessage === 'undefined';
     }
     
     _sortingIconHidden (_forReview, item) {

@@ -8,6 +8,13 @@ import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.domaintree.impl.CalculatedProperty.generateNameFrom;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
+import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.FRONT;
+import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.INSERTION_POINT;
+import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.PRIMARY_RESULT_SET;
+import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.PROP;
+import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.SECONDARY_RESULT_SET;
+import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.SHARE;
+import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.TOP_LEVEL;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -802,19 +809,19 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
      * @return
      */
     public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
-        if (FunctionalActionKind.TOP_LEVEL == actionKind) {
+        if (TOP_LEVEL == actionKind) {
             if (!getTopLevelActions().isPresent()) {
                 throw new IllegalArgumentException("No top-level action exists.");
             }
             return getTopLevelActions().get().get(actionNumber).getKey();
-        } else if (FunctionalActionKind.PRIMARY_RESULT_SET == actionKind) {
+        } else if (PRIMARY_RESULT_SET == actionKind) {
             if (!getResultSetPrimaryEntityAction().isPresent()) {
                 throw new IllegalArgumentException("No primary result-set action exists.");
             }
             return getResultSetPrimaryEntityAction().get().actions().get(actionNumber);
-        } else if (FunctionalActionKind.SECONDARY_RESULT_SET == actionKind) {
+        } else if (SECONDARY_RESULT_SET == actionKind) {
             return getSecondaryActionFor(actionNumber).orElseThrow(() -> new IllegalArgumentException("No secondary result-set action exists."));
-        } else if (FunctionalActionKind.PROP == actionKind) {
+        } else if (PROP == actionKind) {
             if (!getResultSetProperties().isPresent()) {
                 throw new IllegalArgumentException("No result-set property exists.");
             }
@@ -823,16 +830,18 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
                     .map(resultSetProp -> resultSetProp.propAction.get().get())
                     .collect(Collectors.toList())
                     .get(actionNumber);
-        } else if (FunctionalActionKind.INSERTION_POINT == actionKind) {
+        } else if (INSERTION_POINT == actionKind) {
             if (!getInsertionPointConfigs().isPresent()) {
                 throw new IllegalArgumentException("No insertion point exists.");
             }
             return getInsertionPointConfigs().get().get(actionNumber).getInsertionPointAction();
-        } else if (FunctionalActionKind.FRONT == actionKind) {
+        } else if (FRONT == actionKind) {
             if (getFrontActions().isEmpty()) {
                 throw new IllegalArgumentException("No front action exists.");
             }
             return getFrontActions().get(actionNumber);
+        } else if (SHARE == actionKind) {
+            return null; // computation is not neccessary so identification of action config too
         }
         // TODO implement other types
         throw new UnsupportedOperationException(actionKind + " is not supported yet.");

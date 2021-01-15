@@ -62,6 +62,19 @@ const TgSelectionCriteriaBehaviorImpl = {
         },
 
         /**
+         * UUID for currently loaded centre configuration.
+         * 
+         * Returns '' for default configurations.
+         * Returns non-empty value (e.g. '4920dbe0-af69-4f57-a93a-cdd7157b75d8') for link, own save-as and inherited [from base / shared] configurations.
+         */
+        configUuid: {
+            type: String,
+            value: '',
+            notify: true,
+            observer: '_configUuidChanged'
+        },
+
+        /**
          * Description of currently loaded 'saveAs' configuration.
          */
         saveAsDesc: {
@@ -102,9 +115,20 @@ const TgSelectionCriteriaBehaviorImpl = {
         //   alternatively, computing function needs to be specified). 									       //
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        _centreChanged: {
+        /**
+         * Indicates whether currently loaded centre configuration is [default, link or inherited] or changed [own save-as].
+         */
+        _centreDirty: {
             type: Boolean,
-            value: false,
+            value: false
+        },
+
+        /**
+         * Indicates whether currently loaded centre configuration is [default, link or inherited] or changed [own save-as] or criteria editors are being edited at the moment.
+         */
+        _centreDirtyOrEdited: {
+            type: Boolean,
+            computed: '_calculateCentreDirtyOrEdited(_centreDirty, _editedPropsExist)',
             notify: true
         },
 
@@ -225,7 +249,7 @@ const TgSelectionCriteriaBehaviorImpl = {
                     pageCount: customObject.pageCount,
                     pageNumber: customObject.pageNumber,
                     metaValues: customObject.metaValues,
-                    centreChanged: customObject.isCentreChanged,
+                    centreDirty: customObject.centreDirty,
                     renderingHints: customObject.renderingHints || [],
                     dynamicColumns: customObject.dynamicColumns || {},
                     summary: customObject.summary,
@@ -268,7 +292,7 @@ const TgSelectionCriteriaBehaviorImpl = {
                 this.postRun(null, null, result);
             } else {
                 this._setPropertyModel(result.metaValues);
-                this._centreChanged = result.centreChanged;
+                this._centreDirty = result.centreDirty;
 
                 const msg = this._toastMsg("Running", criteriaEntity);
                 this._openToast(criteriaEntity, msg, !criteriaEntity.isValid() || criteriaEntity.isValidWithWarning(), msg, false);
@@ -351,16 +375,32 @@ const TgSelectionCriteriaBehaviorImpl = {
             this.staleCriteriaMessage = customObject.staleCriteriaMessage;
         }
         this._setPropertyModel(customObject.metaValues);
-        this._centreChanged = customObject.isCentreChanged;
+        this._centreDirty = customObject.centreDirty;
         if (typeof customObject.saveAsDesc !== 'undefined') {
             this.saveAsDesc = customObject.saveAsDesc;
         }
         if (typeof customObject.saveAsName !== 'undefined') {
             this.saveAsName = customObject.saveAsName;
         }
+        if (typeof customObject.configUuid !== 'undefined') {
+            const newConfigUuid = customObject.configUuid;
+            const hrefNoParams = window.location.href.split('?')[0];
+            const hrefNoParamsNoSlash = hrefNoParams.endsWith('/') ? hrefNoParams.substring(0, hrefNoParams.length - 1) : hrefNoParams;
+            const hrefNoParamsNoSlashNoUuid = this.configUuid === '' ? hrefNoParamsNoSlash : hrefNoParamsNoSlash.substring(0, hrefNoParamsNoSlash.lastIndexOf(this.configUuid) - 1 /* slash also needs removal */);
+            const hrefReplacedUuid = hrefNoParamsNoSlashNoUuid + (newConfigUuid === '' ? '' : '/' + newConfigUuid);
+            if (hrefReplacedUuid !== window.location.href) { // when configuration is loaded through some action then potentially new URI will be formed matching new loaded configuration;
+                window.history.pushState(window.history.state, '', hrefReplacedUuid); // in that case need to create new history entry for new URI;
+                window.dispatchEvent(new CustomEvent('location-changed')); // the 'window.history.state' number will be increased later in tg-app-template 'location-changed' listener
+            } // if the URI hasn't been changed then URI is already matching to new loaded configuration and history transition has been recorded earlier (e.g. when manually changing URI in address bar)
+            this.configUuid = newConfigUuid;
+        }
         if (typeof customObject.wasRun !== 'undefined') {
             this._wasRun = customObject.wasRun;
         }
+    },
+
+    _configUuidChanged: function (newConfigUuid) {
+        this.fire('tg-config-uuid-changed', newConfigUuid);
     },
 
     _saveAsDescChanged: function (newSaveAsDesc) {
@@ -514,8 +554,8 @@ const TgSelectionCriteriaBehaviorImpl = {
         return !(pageCount <= 0);
     },
 
-    canManageCentreConfig: function (centreChanged, _editedPropsExist) {
-        return _editedPropsExist || (centreChanged === true);
+    _calculateCentreDirtyOrEdited: function (centreDirty, _editedPropsExist) {
+        return _editedPropsExist || (centreDirty === true);
     },
 
     /**

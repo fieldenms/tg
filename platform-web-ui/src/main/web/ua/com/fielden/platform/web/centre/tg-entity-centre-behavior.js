@@ -86,8 +86,8 @@ const createColumnAction = function (entityCentre) {
         return true;
     };
     actionModel.postActionSuccess = function (functionalEntity) {
-        // update disablement of save / discard buttons after changing column widths
-        entityCentre._centreChanged = functionalEntity.get('centreChanged');
+        // update disablement of save button after changing column widths
+        entityCentre.$.selection_criteria._centreDirty = functionalEntity.get('centreDirty');
     };
     actionModel.postActionError = function (functionalEntity) { };
     actionModel.attrs = {
@@ -169,6 +169,17 @@ const TgEntityCentreBehaviorImpl = {
         saveAsName: {
             type: String,
             observer: '_saveAsNameChanged'
+        },
+
+        /**
+         * UUID for currently loaded centre configuration.
+         * 
+         * Returns '' for default configurations.
+         * Returns non-empty value (e.g. '4920dbe0-af69-4f57-a93a-cdd7157b75d8') for link, own save-as and inherited [from base / shared] configurations.
+         */
+        configUuid: {
+            type: String,
+            value: ''
         },
 
         dynamicColumns: {
@@ -274,21 +285,6 @@ const TgEntityCentreBehaviorImpl = {
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         /**
-         * The property which indicates whether the centre has been changed (should be bound from tg-selection-criteria).
-         */
-        _centreChanged: {
-            type: Boolean
-        },
-
-        /**
-         * The property is bound from respective property from tg-selection-criteria-behavior (which incorporates tg-entity-binder-behavior).
-         * This property and '_centreChanged' are needed for correct enabling / disabling of Save / Discard buttons.
-         */
-        _editedPropsExist: {
-            type: Boolean
-        },
-
-        /**
          * The property which indicates whether the centre has been fully loaded with its criteria entity (should be bound from tg-selection-criteria).
          */
         _criteriaLoaded: {
@@ -304,24 +300,14 @@ const TgEntityCentreBehaviorImpl = {
             observer: '_actionInProgressChanged'
         },
 
-        _saverDisabled: {
+        _buttonDisabled: {
             type: Boolean,
-            computed: '_computeSaverDisabled(saveAsName, _centreChanged, _editedPropsExist, _actionInProgress)'
-        },
-
-        _discarderDisabled: {
-            type: Boolean,
-            computed: '_computeDiscarderDisabled(saveAsName, _centreChanged, _editedPropsExist, _actionInProgress)'
-        },
-
-        _runnerDisabled: {
-            type: Boolean,
-            computed: '_computeRunnerDisabled(_criteriaLoaded, _actionInProgress)'
+            computed: '_computeDisabled(_criteriaLoaded, _actionInProgress)'
         },
 
         _viewerDisabled: {
             type: Boolean,
-            computed: '_computeViewerDisabled(_criteriaLoaded, _wasRun, _actionInProgress)'
+            computed: '_computeViewerDisabled(_buttonDisabled, _wasRun)'
         },
 
         _url: {
@@ -469,35 +455,12 @@ const TgEntityCentreBehaviorImpl = {
         }
     },
 
-    /**
-     * Computes SAVE button disablement: always enabled for default configurations, always disabled for link configurations and when action is in progress. Otherwise enabled when centre is changed from last saved version.
-     */
-    _computeSaverDisabled: function (saveAsName, _centreChanged, _editedPropsExist, _actionInProgress) {
-        return _actionInProgress === true /* disabled when some action is in progress */ ||
-            (saveAsName !== '' /* always enabled for default configuration */ &&
-            (this._isLinkConfig(saveAsName) || !this.canSave(_centreChanged, _editedPropsExist)));
-    },
-
-    /**
-     * Returns 'true' in case where current saveAsName represent link configuration, 'false' otherwise.
-     */
-    _isLinkConfig: function (saveAsName) {
-        return saveAsName === this._reflector.LINK_CONFIG_TITLE;
-    },
-
-    /**
-     * Computes DISCARD button disablement: always disabled for link configurations and when action is in progress. Otherwise enabled when centre is changed from last saved version.
-     */
-    _computeDiscarderDisabled: function (saveAsName, _centreChanged, _editedPropsExist, _actionInProgress) {
-        return this._isLinkConfig(saveAsName) || _actionInProgress === true || !this.canDiscard(_centreChanged, _editedPropsExist);
-    },
-
-    _computeRunnerDisabled: function (_criteriaLoaded, _actionInProgress) {
+    _computeDisabled: function (_criteriaLoaded, _actionInProgress) {
         return _actionInProgress === true || _criteriaLoaded === false;
     },
 
-    _computeViewerDisabled: function (_criteriaLoaded, _wasRun, _actionInProgress) {
-        return _actionInProgress === true || _criteriaLoaded === false || _wasRun !== "yes";
+    _computeViewerDisabled: function (_buttonDisabled, _wasRun) {
+        return _buttonDisabled || _wasRun !== "yes";
     },
 
     _retrievedEntitiesChanged: function (retrievedEntities, oldValue) {
@@ -1114,19 +1077,6 @@ const TgEntityCentreBehaviorImpl = {
         return ('' + (pageNumberUpdated !== null ? (pageNumberUpdated + 1) : 1)) + ' / ' + ('' + (pageCountUpdated !== null ? pageCountUpdated : 1));
     },
 
-    canSave: function (centreChanged, _editedPropsExist) {
-        return this.canManageCentreConfig(centreChanged, _editedPropsExist);
-    },
-
-    canDiscard: function (centreChanged, _editedPropsExist) {
-        return this.canManageCentreConfig(centreChanged, _editedPropsExist);
-    },
-
-    canManageCentreConfig: function (centreChanged, _editedPropsExist) {
-        return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? false :
-            this.$.selection_criteria.canManageCentreConfig(centreChanged, _editedPropsExist);
-    },
-
     /**
      * Contract that allows one to determine whether this component can be closed/left or not.
      *
@@ -1173,9 +1123,7 @@ const TgEntityCentreBehaviorImpl = {
     },
 
     _fireSaveAsNameChanged: function (newSaveAsName, self) {
-        if (self._reflector.LINK_CONFIG_TITLE !== newSaveAsName) {
-            self.fire('tg-save-as-name-changed', newSaveAsName);
-        }
+        self.fire('tg-save-as-name-changed', newSaveAsName);
     },
 
     runInsertionPointActions: function () {
@@ -1213,6 +1161,13 @@ const TgEntityCentreBehaviorImpl = {
         this.currentState = 'EDIT';
         this.$.selection_criteria.enableView();
         this.$.egi.lock = false;
+    },
+
+    /**
+     * Overrides standard hand cursor for disabled button to simple pointer.
+     */
+    _computeButtonStyle: function (_buttonDisabled) {
+        return _buttonDisabled ? 'cursor:initial' : '';
     }
 };
 
