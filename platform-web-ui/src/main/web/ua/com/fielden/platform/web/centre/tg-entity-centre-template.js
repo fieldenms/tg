@@ -127,6 +127,9 @@ Polymer({
         this.frontActions = [
             //generatedFrontActionObjects
         ];
+        this.shareActions = [
+            //generatedShareActionObjects
+        ];
         this.topLevelActions = [
             //generatedActionObjects
         ];
@@ -168,10 +171,6 @@ Polymer({
                 console.log("postRetrieved");
             }.bind(self);
 
-            ];
-            self.shareActions = [
-                //generatedShareActionObjects
-            
             //gridLayoutConfig
 
             //@centre-has-been-attached-custom-code
