@@ -1,6 +1,8 @@
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
+import '/resources/polymer/@polymer/iron-ajax/iron-ajax.js';
+
 import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 import '/resources/polymer/@polymer/paper-button/paper-button.js';
 import '/resources/polymer/@polymer/paper-spinner/paper-spinner.js';
@@ -10,8 +12,12 @@ import '/resources/components/postal-lib.js';
 
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
-import { tearDownEvent, allDefined } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, getFirstEntityValueType } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
+import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
+import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
+import {processResponseError, toastMsgForError} from '/resources/reflection/tg-ajax-utils.js';
+import { enhanceStateRestoration } from '/resources/components/tg-global-error-handler.js';
 
 const template = html`
     <style>
@@ -55,6 +61,8 @@ const template = html`
             padding: var(--tg-ui-action-icon-button-padding, 8px);
         }
     </style>
+    <iron-ajax id="masterRetriever" headers="[[_headers]]" url="[[_masterUri]]" method="GET" handle-as="json" reject-with-request on-error="_processMasterError">
+    </iron-ajax>
     <paper-icon-button id="iActionButton" hidden$="[[!isIconButton]]" icon="[[icon]]" on-tap="_run" disabled$="[[_computeDisabled(isActionInProgress, disabled)]]" tooltip-text$="[[longDesc]]"></paper-icon-button>
     <paper-button id="bActionButton" hidden$="[[isIconButton]]" raised roll="button" on-tap="_run" style="width:100%" disabled$="[[_computeDisabled(isActionInProgress, disabled)]]" tooltip-text$="[[longDesc]]">
         <span>[[shortDesc]]</span>
@@ -268,6 +276,12 @@ Polymer({
             type: Function
         },
 
+        /**
+         * The object that has function to open toast.
+         */
+        toaster: {
+            type: Object
+        },
 
         /** Sequential action number as provided by Java API. */
         numberOfAction: {
@@ -278,10 +292,14 @@ Polymer({
         /**
          * The 'currentEntity' should contain the entity that was clicked (result-set actions)
          * or the entity on which primary/secondary action was chosen. 
-         * Otherwise, as in case of a Top Level action, the 'currentEntity' should be empty.
+         * Otherwise, as in case of a Top Level action, the 'currentEntity' should be empty or specified in another way 
+         * (in preAction for example).
         */
         currentEntity: {
-            type: Object
+            type: Function,
+            value: function () {
+                return () => null;
+            }
         },
 
         /** Indicates of the action is currently in progress.
@@ -310,6 +328,15 @@ Polymer({
             type: Function
         },
 
+        /**
+         * Property that indicates whether element-name and import uri are defined from current entity and, if exists, chosen property.
+         */
+        dynamicAction : {
+            type: Boolean,
+            reflectToAttribute: true,
+            value: false,
+        },
+
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
         //////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -318,6 +345,23 @@ Polymer({
         // Also, these properties are designed to be bound to children element properties -- it is necessary to//
         //   populate their default values in ready callback (to have these values populated in children)!     //
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        /**
+         * The type of entity for which dynamic action was invoked previous time.
+         */
+        _previousEntityType: {
+            type: String,
+            value: ""
+        },
+        /**
+         * The saved short desc in case the action is dynamic 
+         * If short desc wasn't specified then short desc should be specified every time new master is retrieved
+         * And this property becomes an indicator of that fact. 
+         */
+        _originalShortDesc: {
+            type: String,
+            value:""
+        },
         /**
          * Executes the action in context of 'currentEntity'. 
          *
@@ -372,6 +416,22 @@ Polymer({
             value: false
         },
 
+        _masterUri: {
+            type: String,
+            value: ""
+        },
+
+        /**
+         * Additional headers for every 'iron-ajax' client-side requests. These only contain 
+         * our custom 'Time-Zone' header that indicates real time-zone for the client application.
+         * The time-zone then is to be assigned to threadlocal 'IDates.timeZone' to be able
+         * to compute 'Now' moment properly.
+         */
+        _headers: {
+            type: String,
+            value: _timeZoneHeader
+        },
+
         /**
          * In case where this tg-ui-action represents continuation action, continuationProperty uniquely identifies continuation in saving session of parent initiating entity (will be set into companion object).
          */
@@ -400,24 +460,69 @@ Polymer({
     created: function () {
         const self = this;
         this._reflector = new TgReflector();
+        this._serialiser = new TgSerialiser();
+
+        this._processMasterError = this._processMasterError.bind(this);
+
         self._run = (function (event) {
             console.log(this.shortDesc + ": execute");
 
+            const postMasterInfoRetrieve = function () {
+                if (this.preAction) {
+                    const result = this.preAction(this);
+                    
+                    const promise = result instanceof Promise ? result : Promise.resolve(result);
+    
+                    promise.then(function (value) {
+                        self.showDialog(self);
+                    }, function (error) {
+                        self.restoreActionState();
+                        if (error instanceof Error) {
+                            console.error("The action was rejected with error: " + error);
+                            throw error;
+                        } else {
+                            console.log("The action was rejected with error: " + error);
+                        }
+                    });
+                } else {
+                    this.showDialog(this);
+                }
+            }.bind(this);
+
             self.persistActiveElement();
 
-            if (this.preAction) {
-                const result = this.preAction(this)
-                const promise = result instanceof Promise ? result : Promise.resolve(result);
-
-                promise.then(function (value) {
-                    self.showDialog(self);
-                }, function (error) {
-                    self.restoreActionState();
-                    console.log("The action was rejected with error: " + error);
-                });
+            
+            if (this.dynamicAction && this.currentEntity()) {
+                const currentEntityType = getFirstEntityValueType(this._reflector, this.currentEntity(), this.chosenProperty);
+                if (this._previousEntityType !== currentEntityType) {
+                    if (!this.elementName) {//Element name for dynamic action is not specified at first run
+                        this._originalShortDesc = this.shortDesc;//It means that shortDesc wasn't changed yet.
+                    }
+                    this._masterUri = '/master/' + currentEntityType;
+                    this.isActionInProgress = true;
+                    this.$.masterRetriever.generateRequest().completes
+                        .then(res => {
+                            try {
+                                this._processMasterRetriever(res);
+                                this._previousEntityType = getFirstEntityValueType(this._reflector, this.currentEntity(), this.chosenProperty);
+                                postMasterInfoRetrieve();
+                            }catch (e) {
+                                this.isActionInProgress = false;
+                                this.restoreActionState();
+                                console.log("The action was rejected with error: " + e);
+                            }
+                        }).catch(error => {
+                            this.isActionInProgress = false;
+                            this.restoreActionState();
+                            console.log("The action was rejected with error: " + error);
+                        });
+                } else {
+                    postMasterInfoRetrieve();    
+                }
             } else {
-                this.showDialog(this);
+                postMasterInfoRetrieve();
             }
+
             tearDownEvent(event);
         }).bind(self);
 
@@ -460,6 +565,17 @@ Polymer({
             // One exception from that rule: embedded masters in master-with-master -- the flag is configured from MasterWithMasterBuilder API.
             master.shouldRefreshParentCentreAfterSave = self.shouldRefreshParentCentreAfterSave;
 
+            const restoreStateAfterSave = function () {
+                if (!self.skipAutomaticActionCompletion) {
+                    // action execution completes
+                    self.isActionInProgress = false;
+
+                    if (master.noUI === true) {
+                        self.restoreActionState();
+                    }
+                }
+            };
+
             master.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {
                 postal.publish({
                     channel: "centre_" + this.centreUuid,
@@ -472,24 +588,25 @@ Polymer({
                     }
                 });
 
-                if (potentiallySavedOrNewEntity.isValidWithoutException()) {
-                    if (self.postActionSuccess) {
-                        self.postActionSuccess(potentiallySavedOrNewEntity, self, master);
+                try {
+                    if (potentiallySavedOrNewEntity.isValidWithoutException()) {
+                        if (self.postActionSuccess) {
+                            self.postActionSuccess(potentiallySavedOrNewEntity, self, master);
+                        }
+                    } else {
+                        if (self.postActionError) {
+                            self.postActionError(potentiallySavedOrNewEntity, self, master);
+                        }
                     }
-                } else {
-                    if (self.postActionError) {
-                        self.postActionError(potentiallySavedOrNewEntity, self, master);
-                    }
+                } catch (e) {
+                    throw enhanceStateRestoration(e, () => {
+                        restoreStateAfterSave();
+                        master.restoreAfterSave();
+                    });
                 }
 
-                if (!self.skipAutomaticActionCompletion) {
-                    // action execution completes
-                    self.isActionInProgress = false;
-
-                    if (this.noUI === true) {
-                        self.restoreActionState();
-                    }
-                }
+                restoreStateAfterSave();
+                
             };
 
             master.postSavedError = function (errorResult) {
@@ -528,6 +645,7 @@ Polymer({
                 })
                 .catch(function (error) {
                     console.error(error);
+                    throw error;
                 });
         }).bind(self);
     },
@@ -567,9 +685,9 @@ Polymer({
         const self = this;
         // creates the context and
         const context = self.createContextHolder(self.requireSelectionCriteria, self.requireSelectedEntities, self.requireMasterEntity, self.actionKind, self.numberOfAction);
-        // enhances it with the information of 'currentEntity' (primary / secondary actions) and
-        if (self.currentEntity) {
-            self._enhanceContextWithCurrentEntity(context, self.currentEntity, self.requireSelectedEntities);
+        // enhances it with the information of 'currentEntity()' (primary / secondary actions) and
+        if (self.currentEntity()) {
+            self._enhanceContextWithCurrentEntity(context, self.currentEntity(), self.requireSelectedEntities);
         }
         // enhances it with information of what 'property' was chosen (property result-set actions)
         if (self.chosenProperty !== null) {
@@ -625,5 +743,52 @@ Polymer({
 
     _computeDisabled: function (isActionInProgress, disabled) {
         return isActionInProgress || disabled;
-    }
+    },
+
+    _processMasterRetriever: function(e) {
+        console.log("PROCESS MASTER INFO RETRIEVE:");
+        console.log("Master info retrieve: iron-response: status = ", e.xhr.status, ", e.response = ", e.response);
+        if (e.xhr.status === 200) { // successful execution of the request
+            const deserialisedResult = this._serialiser.deserialise(e.response);
+            
+            if (this._reflector.isError(deserialisedResult)) {
+                console.log('deserialisedResult: ', deserialisedResult);
+                this.toaster && this.toaster.openToastForError(deserialisedResult.message, toastMsgForError(this._reflector, deserialisedResult), true);
+                throw {msg: deserialisedResult};
+            }
+            const masterInfo = deserialisedResult.instance;
+            this.elementName = masterInfo.key;
+            this.componentUri = masterInfo.desc;
+            this.shortDesc = this._originalShortDesc || masterInfo.shortDesc;
+            this.longDesc = this.longDesc || masterInfo.longDesc;
+            this.attrs = Object.assign({}, this.attrs, {
+                entityType: masterInfo.entityType,
+                currentState:'EDIT',
+                prefDim: masterInfo.width && masterInfo.height && masterInfo.widthUnit && masterInfo.heightUnit && {
+                    width: () => masterInfo.width,
+                    height: () => masterInfo.height,
+                    widthUnit: masterInfo.widthUnit,
+                    heightUnit: masterInfo.heightUnit
+                }
+            });
+            if (masterInfo.relativePropertyName) {
+                const oldCurrentEntity = this.currentEntity.bind(this);
+                this.currentEntity = function () {
+                    return oldCurrentEntity().get(masterInfo.relativePropertyName);
+                }
+            }
+            this.requireSelectionCriteria = masterInfo.requireSelectionCriteria;
+            this.requireSelectedEntities = masterInfo.requireSelectedEntities;
+            this.requireMasterEntity = masterInfo.requireMasterEntity;
+            this.shouldRefreshParentCentreAfterSave = masterInfo.shouldRefreshParentCentreAfterSave;
+        } else { // other codes
+            this.toaster && this.toaster.openToastForError('Master load error: ', 'Request could not be dispatched.', true);
+            throw {msg: 'Request could not be dispatched.'};
+        }
+    }, 
+    
+    _processMasterError: function (e) {
+        processResponseError(e, this._reflector, this._serialiser, null, this.toaster);
+    },
+
 });

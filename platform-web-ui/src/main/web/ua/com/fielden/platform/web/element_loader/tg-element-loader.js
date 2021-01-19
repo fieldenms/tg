@@ -87,8 +87,32 @@ Polymer({
             reflectToAttribute: true
         },
 
+        /**
+         * Indicates whether element was already loaded or not.
+         */
         wasLoaded: {
             type: Boolean,
+            readOnly: true,
+            value: false,
+            reflectToAttribute: true
+        },
+
+        /**
+         * Indicates whether element is loading right now or not.
+         */
+        loading: {
+            type: Boolean,
+            readOnly: true,
+            value: false,
+            reflectToAttribute: true
+        },
+
+        /**
+         * Indicates whether there was an error during element loading or not.
+         */
+        wasError: {
+            type: Boolean,
+            readOnly: true,
             value: false,
             reflectToAttribute: true
         },
@@ -137,6 +161,8 @@ Polymer({
         this.appendChild(element);
 
         this.loadedElement = element;
+
+        return this.loadedElement;
     },
 
     /** 
@@ -158,6 +184,7 @@ Polymer({
             return Promise.resolve(this.loadedElement);
         } else {
             this.loadedElement = null;
+            this._startLoading();
             if (this.import && !customElements.get(elementName.toLowerCase())) {
 
                 return import(this.import).then((module) => {
@@ -165,7 +192,7 @@ Polymer({
 
                     // insert the element
                     const insertedElement = insertElement(this, elementName, attributes);
-                    this.wasLoaded = true;
+                    this._setLoadedSucceeded();
 
                     // fire event for backward compatibility
                     this.fire('after-load', insertedElement);
@@ -175,14 +202,16 @@ Polymer({
                     // TODO during 'import' method invocation the server error json can arrive instead of piece of DOM -- need to handle this somehow
                     console.warn("error happened", error);
                     // loading error
-                    throw new Error('Could not load element <tt>' + elementName + '</tt>.');
+                    this._setLoadedWithError();
+                    this.fire('after-load-error', error);
+                    throw new Error(`Could not load element <tt>${elementName}</tt> due to [<i>${error}</i>].`);
                 });
             } else {
                 return new Promise((resolve, reject) => {
 
                     // insert the element
                     const insertedElement = insertElement(this, elementName, attributes);
-                    this.wasLoaded = true;
+                    this._setLoadedSucceeded();
 
                     // resolve the promise
                     resolve(insertedElement);
@@ -194,12 +223,64 @@ Polymer({
         }
     },
 
+    /**
+     * Sets the element loader's state that indicates start of loading (loading becomes true, wasError becomes false).
+     * This may happen only if wasLoaded is false.
+     */
+    _startLoading: function () {
+        this._setLoading(true);
+        this._setWasError(false);
+    },
+
+    /**
+     * Set the element loader's state that indicates loading error (loading becomes false and wasError becomes true).
+     * Was loaded remains false.
+     */
+    _setLoadedWithError: function () {
+        this._setLoading(false);
+        this._setWasError(true);
+    },
+
+    /**
+     * Set the element loader's state that indicates successful loading (loading becomes false and wasLoaded becomes true).
+     * Was error remains false.
+     */
+    _setLoadedSucceeded: function () {
+        this._setLoading(false);
+        this._setWasLoaded(true);
+    },
+
+    /**
+     * Offloads the loaded element from light DOM of this element loader.
+     */
+    offloadDom: function () {
+        // Remove children (likely consisting of only 'loadedElement') only if 'loadedElement' is attached to this 'tg-element-loader' (i.e. parentElement is not empty).
+        // This is to avoid children removal if 'offloadDom' has already been executed earlier.
+        // 'loadedElement' can be empty in case of some loading error (e.g. the element could not be imported).
+        if (this.loadedElement && this.loadedElement.parentElement) {
+            _removeAllLightDOMChildrenFrom(this);
+        }
+    },
+
+    /**
+     * Inserts the loaded element into light DOM of this element loader.
+     */
+    loadDom: function () {
+        // Insert 'loadedElement' only if it is NOT attached to this 'tg-element-loader' (i.e. parentElement is empty).
+        // This is to avoid 'loadedElement' insertion if it was inserted earlier.
+        // 'loadedElement' can be empty in case of some loading error (e.g. the element could not be imported).
+        if (this.loadedElement && !this.loadedElement.parentElement) {
+            return this.insert(this.loadedElement);
+        }
+        return this.loadedElement;
+    },
+
     /** 
      * Enforces reloading of a resource that has failed to load during previous attampts.
      * Thsi method should not be confused with the actual element reloading, which would require deregistering of the element and handling of already existing instances.
      */
     reload: function () {
-        this.wasLoaded = false;
+        this._setWasLoaded(false);
         return this.load();
     },
 
@@ -216,7 +297,7 @@ Polymer({
             //if context changes from existing one then reasign context if the loaded element exists and his tag name is the same as elementName property for this element loader. Otherwise reload element.
             if (this.loadedElement && this.loadedElement.tagName === this.elementName.toUpperCase()) {
                 this.loadedElement[this.contextProperty] = newValue;
-            } else {
+            } else if (!this.loading) {
                 this.reload();
             }
         }

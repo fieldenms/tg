@@ -60,6 +60,7 @@ import ua.com.fielden.platform.sample.domain.TgPerson;
 import ua.com.fielden.platform.sample.domain.TgPolygon;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntity;
+import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityChild;
 import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
@@ -223,7 +224,8 @@ public class PopulateDb extends DomainDrivenDataPopulation {
 
         save(new_(TgGeneratedEntity.class).setEntityKey("KEY1").setCreatedBy(su));
 
-        save(new_(TgPersistentEntityWithProperties.class, "FILTERED").setIntegerProp(43).setRequiredValidatedProp(30).setDesc("Description for filtered entity.").setStatus(co$(TgPersistentStatus.class).findByKey("DR")));
+        final TgPersistentEntityWithProperties filteredEntity = save(new_(TgPersistentEntityWithProperties.class, "FILTERED").setIntegerProp(43).setRequiredValidatedProp(30).setDesc("Description for filtered entity.").setStatus(co$(TgPersistentStatus.class).findByKey("DR")));
+        save(defaultEnt.setEntityProp(filteredEntity));
         
         save(new_(TgCloseLeaveExample.class, "KEY1").setDesc("desc 1"));
         save(new_(TgCloseLeaveExample.class, "KEY2").setDesc("desc 2"));
@@ -236,6 +238,10 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         save(new_(TgCompoundEntity.class, "KEY3").setActive(true).setDesc("desc 3"));
         save(new_(TgCompoundEntity.class, "KEY4").setActive(true).setDesc("desc 4"));
         save(new_(TgCompoundEntity.class, "KEY5").setActive(true).setDesc("desc 5"));
+        
+        save(new_(TgCompoundEntity.class, "FILTERED1").setActive(true).setDesc("Description for filtered TgCompoundEntity entity."));
+        final TgCompoundEntity filteredEntity2 = save(new_(TgCompoundEntity.class, "FILTERED2").setActive(true).setDesc("Description for TgCompoundEntity entity, for which TgCompoundEntityDetail is filtered."));
+        save(new_composite(TgCompoundEntityChild.class, filteredEntity2, new Date()).setDesc("Description for filtered TgCompoundEntityChild entity."));
         
         LOGGER.info("\tPopulating messages...");
         final Map<String, TgMachine> machines = new HashMap<>();

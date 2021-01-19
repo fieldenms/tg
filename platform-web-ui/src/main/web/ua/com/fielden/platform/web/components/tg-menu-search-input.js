@@ -138,8 +138,9 @@ Polymer({
             document.body.removeChild(menuList);
         }
         this._showInput = false;
-        if (!this.cancelled && menuList.isSelected()) {
-            this.fire("menu-item-selected", menuList.getSelectedMenuItemPath());
+        const menuItemSelectedPath = menuList.getSelectedMenuItemPath();
+        if (!this.cancelled && menuItemSelectedPath) {
+            this.fire("menu-item-selected", menuItemSelectedPath);
             this._menuToSearch = "";
         }
         this.fire("menu-search-list-closed");

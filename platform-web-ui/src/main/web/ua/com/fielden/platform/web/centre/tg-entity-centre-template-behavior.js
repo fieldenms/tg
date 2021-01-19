@@ -12,7 +12,9 @@ const TgEntityCentreTemplateBehaviorImpl = {
         pageCount: Number,
         pageNumberUpdated: Number,
         pageCountUpdated: Number,
-        staleCriteriaMessage: String
+        staleCriteriaMessage: String,
+
+        _defaultPropertyActionAttrs: Object
     },
 
     created: function () {
@@ -42,6 +44,7 @@ const TgEntityCentreTemplateBehaviorImpl = {
      */
     ready: function () {
         this.classList.add("canLeave");
+        this._defaultPropertyActionAttrs = {currentState: "EDIT", centreUuid: this.uuid};
     },
 
     ////////////// Template related method are here in order to reduce the template size ///////////////
@@ -75,6 +78,13 @@ const TgEntityCentreTemplateBehaviorImpl = {
 
     _dom: function () {
         return this.$.dom;
+    },
+
+    /**
+     * Returns insertion point element for this entity centre in concrete 'location' ('left', 'top', 'bottom', 'right').
+     */
+    _getInsertionPoint: function (location) {
+        return this._dom().$[location + 'InsertionPointContent'].assignedNodes({flatten: true})[0].querySelector('tg-entity-centre-insertion-point');
     },
 
     /**

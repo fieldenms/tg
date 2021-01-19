@@ -15,6 +15,7 @@ import java.util.Random;
 
 import org.joda.time.DateTime;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.base.Ticker;
@@ -89,7 +90,7 @@ public class UserSessionCacheEvictionStrategyTestCase extends AbstractDaoTestCas
     }
 
     @Test
-    public void should_permit_burst_requests_from_the_same_untrusted_device_immeditely_afte_login_all_within_eviction_time() {
+    public void should_permit_burst_requests_from_the_same_untrusted_device_immeditely_after_login_all_within_eviction_time() {
         // establish a new sessions for user TEST, which effectively emulates the explicit login
         final User currUser = getInstance(IUserProvider.class).getUser();
         constants.setNow(dateTime("2015-04-23 13:00:00"));
@@ -189,7 +190,7 @@ public class UserSessionCacheEvictionStrategyTestCase extends AbstractDaoTestCas
         assertTrue(session.isPresent());
         // make sure both original and regenerated authenticators have been cached
         final String newAuthenticator = session.get().getAuthenticator().get().toString();
-        assertNotSame("Authenticator should have been reset.", authenticator, newAuthenticator);
+        assertNotEquals("Authenticator should have been reset.", authenticator, newAuthenticator);
         assertEquals("Unexpected number of session in cache.", 2, coSession.getCache().size());
         assertNotNull("Original authenticator should be present in cache.", coSession.getCache().getIfPresent(authenticator));
         assertNotNull("New authenticator should be present in cache.", coSession.getCache().getIfPresent(newAuthenticator));
@@ -203,8 +204,6 @@ public class UserSessionCacheEvictionStrategyTestCase extends AbstractDaoTestCas
         // making a request with the original authenticator should lead to blocking of user sessions due to suspected stolen authenticator
         final Optional<UserSession> ss = coSession.currentSession(currUser, authenticator, false);
         assertFalse(ss.isPresent());
-        final EntityResultQueryModel<UserSession> currUserSessions = select(UserSession.class).where().prop("user").eq().val(currUser).model();
-        assertEquals(0, coSession.count(currUserSessions));
     }
 
     @Override

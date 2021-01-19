@@ -3,6 +3,9 @@ import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
+import {getFirstEntityValue} from '/resources/reflection/tg-polymer-utils.js';
+import { TgReflector } from '/app/tg-reflector.js';
+
 const template = html`
     <slot id="action_selector" name="property-action" hidden></slot>
     <slot id="summary_selection" name="summary-property" hidden></slot>`;
@@ -33,11 +36,17 @@ Polymer({
         editable: {
             type: Boolean,
             value: false
-        }
+        },
+
+        _reflector: Object
     },
 
     hostAttributes: {
         hidden: true
+    },
+
+    created: function() {
+        this._reflector = new TgReflector();
     },
 
     ready: function () {
@@ -48,13 +57,27 @@ Polymer({
         this.customAction = this.$.action_selector.assignedNodes().length > 0 ? this.$.action_selector.assignedNodes()[0] : null;
     },
 
-    /** Executes a custom action and returns true if the action was provided. Otherwise, simply returns false to indicate that there was no custom action to be executed. */
-    runAction: function (entity) {
+    /** 
+     * Executes a custom action and returns true if the action was provided. 
+     * Otherwise, simply returns false to indicate that there was no custom action to be executed. 
+     * the passed in currentEntity is a function that returns choosen entity. 
+     */
+    runAction: function (currentEntity) {
         if (this.customAction) {
-            this.customAction.currentEntity = entity;
+            this.customAction.currentEntity = currentEntity;
             this.customAction._run();
             return true;
         }
+        return false;
+    },
+
+    runDefaultAction: function (currentEntity, defaultPropertyAction) {
+        if (defaultPropertyAction) {
+            const newCurrentEntity = () => getFirstEntityValue(this._reflector, currentEntity.bind(defaultPropertyAction)(), this.collectionalProperty || this.property);
+            defaultPropertyAction.currentEntity = newCurrentEntity;
+            defaultPropertyAction._run();
+            return true;
+        } 
         return false;
     }
 });

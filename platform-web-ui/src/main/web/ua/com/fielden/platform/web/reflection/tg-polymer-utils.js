@@ -12,23 +12,42 @@ export function generateUUID () {
 };
 
 /**
- * Removes all Light DOM children from Polymer 'element'.
- *
- * The need for such utility method arose from the fact that Polymer (currently 1.4 version) returns
- * from Polymer.dom(element).childNodes, Polymer.dom(element).firstChild, Polymer.dom(element).firstElementChild methods
- * not only Light DOM children, but also Local DOM children, including the elements in the template and whitespace
- * nodes in the template.
- *
- * Please, note that Polymer.dom().flush() call is needed to be done manually after this method has been used.
- * The intention was made for the cases, where some additional DOM manipulation is needed, and in such cases
- * flush() call could be efficiently done after all DOM manipulation once.
+ * Returns the first entity that lies on path of property name and entity
  */
-export function _removeAllLightDOMChildrenFrom (element) {
-    const childNodes = element.childNodes;
-    while (element.firstChild) {
-        element.removeChild(element.firstChild);
+export function getFirstEntityValue (reflector, entity, propertyName) {
+    if (entity && propertyName) {
+        let currentProperty = propertyName;
+        let currentValue = entity.get(currentProperty);
+        while (currentProperty && !reflector.isEntity(currentValue)) {
+            const lastDotIndex = currentProperty.lastIndexOf(".");
+            currentProperty = lastDotIndex >= 0 ? currentProperty.substring(0, lastDotIndex) : "";
+            currentValue = currentProperty ? entity.get(currentProperty) : entity;
+        }
+        return currentValue; 
+    } else if (entity) {
+        return entity;
     }
 };
+
+/**
+ * Returns the first entity value type that lies on path of property name and entity.
+ */
+export function getFirstEntityValueType (reflector, entity, propertyName) {
+    const firstEntityValue = getFirstEntityValue(reflector, entity, propertyName);
+    if (firstEntityValue) {
+        return firstEntityValue.type().notEnhancedFullClassName();
+    }
+};
+
+/**
+ * Removes all Light DOM children from Polymer 'element'.
+ */
+export function _removeAllLightDOMChildrenFrom (element) {
+    while (element.firstChild) {
+        element.removeChild(element.lastChild);
+    }
+};
+
 /**
  * Returns the x and y coordinates relatively to specified container
  */
@@ -81,7 +100,7 @@ export function shadeColor (hex, lum) {
 };
 
 /**
- * Returns true if the descendant is has parent as ancestor, otherwise returns false.
+ * Returns true if the descendant has the parent as an ancestor, otherwise returns false.
  */
 export function isInHierarchy (parent, descendant) {
     let current = descendant;
@@ -102,23 +121,6 @@ export function getParentAnd(element, predicate) {
 export function getActiveParentAnd(predicate) {
     return getParentAnd(deepestActiveElement(), predicate);
 }
-
-/**
- * Converts short collectional property with string value
- */
-export function generateShortCollection (entity, property, typeObject) {
-    const collectionValue = entity.get(property);
-    const containerPropertyValue = property.lastIndexOf('.') >= 0 ? entity.get(property.substr(0, property.lastIndexOf('.'))) : entity;
-    const keys = typeObject.compositeKeyNames();
-    return collectionValue.map(function (subEntity) {
-        const key = keys.find(function (key) {
-            if (subEntity.get(key) !== containerPropertyValue) {
-                return key;
-            }
-        });
-        return subEntity.get(key);
-    });
-};
 
 export function allDefined (args) {
     const convertedArgs = [...args];
@@ -186,10 +188,16 @@ export class EntityStub {
         this[property] = value;
     }
 
+    propType (name) {
+        return null;
+    }
+
     type() {
+        const self = this;
         return {
-            prop: (prop) => {
+            prop: (name) => {
                 return {
+                    type: () => self.propType(name),
                     scale: () => 0,
                     trailingZeros: () => true,
                     displayAs: () => ""
@@ -204,6 +212,15 @@ export class EntityStub {
         }
     }
 };
+
+/**
+ * Returns true if specified text contains html tags which are not allowed to be inserted as html text. 
+ *  
+ */
+export const containsRestictedTags = function (htmlText) {
+    const offensiveTag = new RegExp('<html|<body|<script|<img|<a', 'mi');
+    return offensiveTag.exec(htmlText) !== null;
+}
 
 /**
  * Returns 'true' if client application was loaded on mobile device, 'false' otherwise (see AbstractWebResource and DeviceProfile for more details).

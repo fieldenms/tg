@@ -5,8 +5,8 @@ import '/app/tg-app-config.js'
 
 import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
-import { TgEditor,  createEditorTemplate} from '/resources/editors/tg-editor.js';
-import { truncateInsignificantZeros } from '/resources/reflection/tg-numeric-utils.js'
+import { createEditorTemplate } from '/resources/editors/tg-editor.js';
+import { TgNumericEditor } from '/resources/editors/tg-numeric-editor.js';
 
 const additionalTemplate = html`
     <style>
@@ -50,22 +50,10 @@ const customInputTemplate = html`
 const inputLayerTemplate = html`<div class="input-layer" tooltip-text$="[[_getTooltip(_editingValue)]]">[[_formatText(_editingValue)]]</div>`;
 const propertyActionTemplate = html`<slot name="property-action"></slot>`;
 
-export class TgDecimalEditor extends TgEditor {
+export class TgDecimalEditor extends TgNumericEditor {
 
     static get template() { 
         return createEditorTemplate(additionalTemplate, html``, customInputTemplate, inputLayerTemplate, html``, propertyActionTemplate);
-    }
-
-    constructor () {
-        super();
-        this._hasLayer = true;
-    }
-    
-    /**
-     * Converts the value into string representation (which is used in editing / comm values).
-     */
-    convertToString (value) {
-        return value === null ? "" : "" + value;
     }
 
     /**
@@ -82,24 +70,6 @@ export class TgDecimalEditor extends TgEditor {
         return (+strValue);
     }
 
-    _formatText (valueToFormat) {
-        var value = this.convertFromString(valueToFormat);
-        if (value !== null) {
-            const metaProp = this.reflector().getEntityTypeProp(this.reflector()._getValueFor(this.entity, ''), this.propertyName);
-            return this.reflector().formatDecimal(value, this.$.appConfig.locale, metaProp && metaProp.scale(), metaProp && metaProp.trailingZeros());
-        }
-        return '';
-    }
-
-    /**
-     * Overridden to provide value corrections.
-     */
-    _commitForDescendants () {
-        const correctedValue = truncateInsignificantZeros(this._editingValue);
-        if (!this.reflector().equalsEx(correctedValue, this._editingValue)) {
-            this._editingValue = correctedValue;
-        }
-    }
 }
 
 customElements.define('tg-decimal-editor', TgDecimalEditor);

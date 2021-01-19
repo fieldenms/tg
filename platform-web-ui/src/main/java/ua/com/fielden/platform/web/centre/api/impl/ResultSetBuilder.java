@@ -3,12 +3,14 @@ package ua.com.fielden.platform.web.centre.api.impl;
 import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
 import static ua.com.fielden.platform.utils.EntityUtils.isCollectional;
 import static ua.com.fielden.platform.utils.EntityUtils.isDate;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isInteger;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
+import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
 import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp.dynamicProps;
 import static ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.mkInsertionPoint;
@@ -55,17 +57,18 @@ import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHa
 import ua.com.fielden.platform.web.centre.api.resultset.IDynamicColumnBuilder;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetAutocompleterConfig;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder0Checkbox;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder0HideEgi;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1Toolbar;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aScroll;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1bPageCapacity;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cHeaderWrap;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cVisibleRowsCount;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1dFitBehaviour;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1eRowHeight;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aHideEgi;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1bCheckbox;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cToolbar;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1dScroll;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1eDraggable;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1fPageCapacity;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1gMaxPageCapacity;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1hHeaderWrap;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1iVisibleRowsCount;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1jFitBehaviour;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1kRowHeight;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2Properties;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2aDraggable;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder3Ordering;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder4OrderingDirection;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder4aWidth;
@@ -82,6 +85,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.summary.ISummaryCardLayo
 import ua.com.fielden.platform.web.centre.api.resultset.summary.IWithSummary;
 import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.tooltip.IWithTooltip;
+import ua.com.fielden.platform.web.centre.exceptions.EntityCentreConfigurationException;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
 import ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.EntityAutocompletionWidget;
@@ -103,9 +107,11 @@ import ua.com.fielden.platform.web.view.master.api.widgets.spinner.impl.SpinnerW
  *
  * @param <T>
  */
-class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilderAlsoDynamicProps<T>, IResultSetBuilderWidgetSelector<T>, IResultSetBuilder3Ordering<T>, IResultSetBuilder0HideEgi<T>, IResultSetBuilder4OrderingDirection<T>, IResultSetBuilder7SecondaryAction<T>, IExpandedCardLayoutConfig<T>, ISummaryCardLayout<T>, IInsertionPointsFlexible<T> {
+class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilderAlsoDynamicProps<T>, IResultSetBuilderWidgetSelector<T>, IResultSetBuilder3Ordering<T>, IResultSetBuilder1aHideEgi<T>, IResultSetBuilder4OrderingDirection<T>, IResultSetBuilder7SecondaryAction<T>, IExpandedCardLayoutConfig<T>, ISummaryCardLayout<T>, IInsertionPointsFlexible<T> {
 
-    private final EntityCentreBuilder<T> builder;
+    private static final String ERR_EDITABLE_SUB_PROP_DISALLOWED = "Dot-notated property [%s] cannot be added as editable. Only first-level properties are supported.";
+
+    protected final EntityCentreBuilder<T> builder;
     private final ResultSetSecondaryActionsBuilder secondaryActionBuilder = new ResultSetSecondaryActionsBuilder();
 
     private final Map<String, Class<? extends IValueMatcherWithContext<T, ?>>> valueMatcherForProps = new HashMap<>();
@@ -126,11 +132,11 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     @Override
     public IResultSetBuilder3Ordering<T> addProp(final String propName) {
         if (StringUtils.isEmpty(propName)) {
-            throw new IllegalArgumentException("Property name should not be null.");
+            throw new EntityCentreConfigurationException("Property name should not be null.");
         }
 
         if (!"this".equals(propName) && !EntityUtils.isProperty(this.builder.getEntityType(), propName)) {
-            throw new IllegalArgumentException(String.format("Provided value '%s' is not a valid property expression for entity '%s'", propName, builder.getEntityType().getSimpleName()));
+            throw new EntityCentreConfigurationException(format("Provided value [%s] is not a valid property expression for entity [%s]", propName, builder.getEntityType().getSimpleName()));
         }
 
         this.propName = Optional.of(propName);
@@ -143,6 +149,9 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
 
     @Override
     public IResultSetBuilderWidgetSelector<T> addEditableProp(final String propName) {
+        if (propName.contains(".")) {
+            throw  new EntityCentreConfigurationException(format(ERR_EDITABLE_SUB_PROP_DISALLOWED, propName));
+        }
         this.addProp(propName);
         this.widget = createWidget(propName);
         return this;
@@ -155,27 +164,27 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         final Class<?> propertyType = isEntityItself ? root : PropertyTypeDeterminator.determinePropertyType(root, resultPropName);
         final String widgetPropName = "".equals(resultPropName) ? AbstractEntity.KEY : resultPropName;
         if (isEntityType(propertyType)) {
-            return of(new EntityAutocompletionWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(widgetPropName, root).getValue()), widgetPropName, (Class<AbstractEntity<?>>)propertyType));
+            return of(new EntityAutocompletionWidget(pair("", TitlesDescsGetter.getTitleAndDesc(widgetPropName, root).getValue()), widgetPropName, (Class<AbstractEntity<?>>)propertyType));
         } else if (isString(propertyType)) {
-            return of(new SinglelineTextWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName));
+            return of(new SinglelineTextWidget(pair("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName));
         } else if (isInteger(propertyType)) {
-            return of(new SpinnerWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName));
+            return of(new SpinnerWidget(pair("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName));
         } else if (Money.class.isAssignableFrom(propertyType)) {
-            return of(new MoneyWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName));
+            return of(new MoneyWidget(pair("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName));
         } else if (BigDecimal.class.isAssignableFrom(propertyType)) {
-            return of(new DecimalWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName));
+            return of(new DecimalWidget(pair("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName));
         } else if (Hyperlink.class.isAssignableFrom(propertyType)){
-            return of(new HyperlinkWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName));
+            return of(new HyperlinkWidget(pair("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName));
         } else if (Colour.class.isAssignableFrom(propertyType)) {
-            return of(new ColourWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName));
+            return of(new ColourWidget(pair("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName));
         } else if (isBoolean(propertyType)) {
-            return of(new CheckboxWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName));
+            return of(new CheckboxWidget(pair("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName));
         } else if (isDate(propertyType)) {
-            return of(new DateTimePickerWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName, false,
+            return of(new DateTimePickerWidget(pair("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()), propName, false,
                     DefaultValueContract.getTimeZone(root, propName),
                     DefaultValueContract.getTimePortionToDisplay(root, propName)));
         } else if (isCollectional(propertyType)) {
-            return of(new CollectionalRepresentorWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()),propName));
+            return of(new CollectionalRepresentorWidget(pair("", TitlesDescsGetter.getTitleAndDesc(propName, root).getValue()),propName));
         }
         return empty();
     }
@@ -183,7 +192,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     @Override
     public <M extends AbstractEntity<?>> IResultSetBuilderAlsoDynamicProps<T> addProps(final String propName, final Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, final BiConsumer<M, Optional<CentreContext<T, ?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
         final ResultSetProp<T> prop = dynamicProps(propName, dynColBuilderType, entityPreProcessor, contextConfig);
-        this.builder.resultSetProperties.add(prop);
+        this.builder.addToResultSet(prop);
         return this;
     }
 
@@ -191,7 +200,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     public IResultSetBuilder4OrderingDirection<T> order(final int orderSeq) {
         if (builder.resultSetOrdering.containsKey(orderSeq)) {
             final Pair<String, EntityCentreConfig.OrderDirection> pair = builder.resultSetOrdering.get(orderSeq);
-            throw new IllegalArgumentException(format("Ordering by property '%s' with sequence %s conflicts with ordering by property '%s'@'%s' (%s), which has the same sequence.",
+            throw new IllegalArgumentException(format("Ordering by property [%s] with sequence [%s] conflicts with ordering by property [%s@%s] (%s), which has the same sequence.",
                     propName, orderSeq, pair.getKey(), builder.getEntityType().getSimpleName(), pair.getValue()));
         }
         this.orderSeq = orderSeq;
@@ -200,13 +209,13 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
 
     @Override
     public IResultSetBuilder4aWidth<T> desc() {
-        this.builder.resultSetOrdering.put(orderSeq, new Pair<>(propName.get(), OrderDirection.DESC));
+        this.builder.resultSetOrdering.put(orderSeq, pair(propName.get(), OrderDirection.DESC));
         return this;
     }
 
     @Override
     public IResultSetBuilder4aWidth<T> asc() {
-        this.builder.resultSetOrdering.put(orderSeq, new Pair<>(propName.get(), OrderDirection.ASC));
+        this.builder.resultSetOrdering.put(orderSeq, pair(propName.get(), OrderDirection.ASC));
         return this;
     }
 
@@ -340,7 +349,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     @Override
     public IResultSetBuilder9RenderingCustomiser<T> setCustomPropsValueAssignmentHandler(final Class<? extends ICustomPropsAssignmentHandler> handler) {
         if (handler == null) {
-            throw new IllegalArgumentException("Assignment handler for custom properties should not be null.");
+            throw new EntityCentreConfigurationException("Assignment handler for custom properties should not be null.");
         }
 
         // complete property registration if there is an oustanding one
@@ -349,12 +358,12 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         // check if there are any custom properties
         // and indicate to the developer that assignment of an assigner handler
         // is not appropriate in case of no custom properties
-        if (builder.resultSetProperties.stream().filter(v -> v.propDef.isPresent()).count() == 0) {
-            throw new IllegalArgumentException("Assignment handler for custom properties is meaningless as there are the result set configuration contains no definitions for custom properties.");
+        if (builder.resultSetProperties().noneMatch(v -> v.propDef.isPresent())) {
+            throw new EntityCentreConfigurationException("Assignment handler for custom properties is meaningless as there are the result set configuration contains no definitions for custom properties.");
         }
         // then if there are custom properties, but all of them have default values already specified, there is no reason to have custom assignment logic
-        if (builder.resultSetProperties.stream().filter(v -> v.propDef.isPresent() && !v.propDef.get().value.isPresent()).count() == 0) {
-            throw new IllegalArgumentException("Assignment handler for custom properties is meaningless as all custom properties have been provided with default values.");
+        if (builder.resultSetProperties().noneMatch(v -> v.propDef.isPresent() && !v.propDef.get().value.isPresent())) {
+            throw new EntityCentreConfigurationException("Assignment handler for custom properties is meaningless as all custom properties have been provided with default values.");
         }
 
         this.builder.resultSetCustomPropAssignmentHandlerType = handler;
@@ -379,7 +388,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         }
 
         completePropIfNeeded();
-        this.builder.queryEnhancerConfig = new Pair<>(type, Optional.ofNullable(contextConfig));
+        this.builder.queryEnhancerConfig = pair(type, Optional.ofNullable(contextConfig));
         return this;
     }
 
@@ -412,10 +421,10 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         // construct and add property to the builder
         if (propName.isPresent()) {
             final ResultSetProp<T> prop = ResultSetProp.propByName(propName.get(), width, isFlexible, widget, (tooltipProp.isPresent() ? tooltipProp.get() : null), entityActionConfig);
-            this.builder.resultSetProperties.add(prop);
+            this.builder.addToResultSet(prop);
         } else if (propDef.isPresent()) {
             final ResultSetProp<T> prop = ResultSetProp.propByDef(propDef.get(), width, isFlexible, (tooltipProp.isPresent() ? tooltipProp.get() : null), entityActionConfig);
-            this.builder.resultSetProperties.add(prop);
+            this.builder.addToResultSet(prop);
         }
 
         // clear things up for the next property to be added if any
@@ -513,25 +522,25 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IResultSetBuilder0Checkbox<T> hideEgi() {
+    public IResultSetBuilder1bCheckbox<T> hideEgi() {
         this.builder.egiHidden = true;
         return this;
     }
 
     @Override
-    public IResultSetBuilder1Toolbar<T> hideCheckboxes() {
+    public IResultSetBuilder1cToolbar<T> hideCheckboxes() {
         this.builder.hideCheckboxes = true;
         return this;
     }
 
     @Override
-    public IResultSetBuilder1aScroll<T> hideToolbar() {
+    public IResultSetBuilder1dScroll<T> hideToolbar() {
         this.builder.hideToolbar = true;
         return this;
     }
 
     @Override
-    public IResultSetBuilder2aDraggable<T> notScrollable() {
+    public IResultSetBuilder1eDraggable<T> notScrollable() {
         this.builder.scrollConfig = ScrollConfig.configScroll()
                 .withFixedCheckboxesAndPrimaryActions()
                 .withFixedSecondaryActions()
@@ -542,43 +551,49 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IResultSetBuilder1cHeaderWrap<T> setPageCapacity(final int pageCapacity) {
+    public IResultSetBuilder1gMaxPageCapacity<T> setPageCapacity(final int pageCapacity) {
         this.builder.pageCapacity = pageCapacity;
         return this;
     }
 
     @Override
-    public IResultSetBuilder1dFitBehaviour<T> setVisibleRowsCount(final int visibleRowsCount) {
+    public IResultSetBuilder1hHeaderWrap<T> setMaxPageCapacity(final int maxPageCapacity) {
+        this.builder.maxPageCapacity = maxPageCapacity;
+        return this;
+    }
+
+    @Override
+    public IResultSetBuilder1jFitBehaviour<T> setVisibleRowsCount(final int visibleRowsCount) {
         this.builder.visibleRowsCount = visibleRowsCount;
         return this;
     }
 
     @Override
-    public IResultSetBuilder2aDraggable<T> withScrollingConfig(final IScrollConfig scrollConfig) {
+    public IResultSetBuilder1eDraggable<T> withScrollingConfig(final IScrollConfig scrollConfig) {
         this.builder.scrollConfig = scrollConfig;
         return this;
     }
 
     @Override
-    public IResultSetBuilder1aScroll<T> setToolbar(final IToolbarConfig toolbar) {
+    public IResultSetBuilder1dScroll<T> setToolbar(final IToolbarConfig toolbar) {
         this.builder.toolbarConfig = toolbar;
         return this;
     }
 
     @Override
-    public IResultSetBuilder1bPageCapacity<T> draggable() {
+    public IResultSetBuilder1fPageCapacity<T> draggable() {
         builder.draggable = true;
         return this;
     }
 
     @Override
-    public IResultSetBuilder1dFitBehaviour<T> setHeight(final String height) {
+    public IResultSetBuilder1jFitBehaviour<T> setHeight(final String height) {
         this.builder.egiHeight = height;
         return this;
     }
 
     @Override
-    public IResultSetBuilder1eRowHeight<T> fitToHeight() {
+    public IResultSetBuilder1kRowHeight<T> fitToHeight() {
         this.builder.fitToHeight = true;
         return this;
     }
@@ -603,7 +618,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         final boolean isEntityItself = "".equals(resultPropName); // empty property means "entity itself"
         final Class<?> propType = isEntityItself ? root : PropertyTypeDeterminator.determinePropertyType(root, resultPropName);
         final String widgetPropName = "".equals(resultPropName) ? AbstractEntity.KEY : resultPropName;
-        final EntityAutocompletionWidget editor = new EntityAutocompletionWidget(new Pair<>("", TitlesDescsGetter.getTitleAndDesc(widgetPropName, root).getValue()), widgetPropName, (Class<AbstractEntity<?>>)propType);
+        final EntityAutocompletionWidget editor = new EntityAutocompletionWidget(pair("", getTitleAndDesc(widgetPropName, root).getValue()), widgetPropName, (Class<AbstractEntity<?>>)propType);
         this.widget = Optional.of(editor);
         return new ResultSetAutocompleterConfig<>(this, editor);
     }
@@ -619,7 +634,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IResultSetBuilder1cVisibleRowsCount<T> wrapHeader(final int headerLineNumber) {
+    public IResultSetBuilder1iVisibleRowsCount<T> wrapHeader(final int headerLineNumber) {
         this.builder.setHeaderLineNumber(headerLineNumber);
         return this;
     }

@@ -7,7 +7,7 @@ import '/resources/polymer/@polymer/paper-toast/paper-toast.js';
 import '/resources/polymer/@polymer/paper-spinner/paper-spinner.js';
 import '/resources/polymer/@polymer/polymer/lib/elements/dom-bind.js';
 
-import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, containsRestictedTags } from '/resources/reflection/tg-polymer-utils.js';
 
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
@@ -66,11 +66,6 @@ const PROGRESS_DURATION = 3600000; // 1 hour
 const CRITICAL_DURATION = 5000; // 5 seconds
 const MORE_DURATION = 4000; // 4 seconds
 const STANDARD_DURATION = 2000; // 2 seconds
-
-function containsRestictedTags(htmlText) {
-    const offensiveTag = new RegExp('<html|<body|<script|<img|<a', 'mi');
-    return offensiveTag.exec(htmlText) !== null;
-}
 
 Polymer({
     // attributes="msgHeading -- TODO was this ever needed?"
@@ -172,6 +167,7 @@ Polymer({
 
     _showMessageDlg: function (event) {
         const self = this;
+        const _msgText = self._msgText; // provide strong guarantees on _msgText immutability here -- this will be used later for msgDialog message text (after two async calls)
         // need to open dialog asynchronously for it to open on mobile devices
         this.async(function () {
             // build and display the dialog
@@ -183,9 +179,9 @@ Polymer({
 
             domBind.innerHTML = `
                 <template>
-                    <paper-dialog id="msgDialog" class="toast-dialog" on-iron-overlay-closed="_dialogClosed" with-backdrop entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+                    <paper-dialog id="msgDialog" class="toast-dialog" on-iron-overlay-closed="_dialogClosed" always-on-top with-backdrop entry-animation="scale-up-animation" exit-animation="fade-out-animation">
                         <paper-dialog-scrollable>
-                            <p id="msgPar" style="padding: 10px;"></p>
+                            <p id="msgPar" style="padding: 10px;white-space: break-spaces;"></p>
                         </paper-dialog-scrollable>
                         <div class="buttons">
                             <paper-button dialog-confirm affirmative autofocus>
@@ -199,16 +195,16 @@ Polymer({
 
             this.async(function () {
                 // please note that domBind.$.msgPar is rendered after body.appendChild(domBind), but has been put here (into async(100)) to provide stronger guarantees along with msgDialog.open()
-                if (containsRestictedTags(self._msgText) === true) {
-                    domBind.$.msgPar.textContent = self._msgText;
+                if (containsRestictedTags(_msgText) === true) {
+                    domBind.$.msgPar.textContent = _msgText;
                 } else {
-                    domBind.$.msgPar.innerHTML = self._msgText;
+                    domBind.$.msgPar.innerHTML = _msgText;
                 }
                 // actual msgDialog opening
                 domBind.$.msgDialog.open();
+                self.$.toast.close(); // must close paper-toast after msgDialog is opened; this is because other fast toast messages can interfere -- paper-toast should still be opened to prevent other messages early opening (see '... && previousToast.opened && ...' condition in 'show' method)
             }, 100);
 
-            self.$.toast.close();
         }, 100);
 
         tearDownEvent(event);

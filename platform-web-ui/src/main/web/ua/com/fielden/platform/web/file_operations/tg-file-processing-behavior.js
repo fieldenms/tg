@@ -183,8 +183,8 @@ const TgFileProcessingBehaviorImpl = {
                 mimeTypes = 'application/vnd.visio';
             } else if (file.name.endsWith('.vsdx')) {
                 mimeTypes = 'application/vnd.ms-visio.drawing';
-            } else if (file.name.endsWith('.xls')) {
-                mimeTypes = 'application/vnd.ms-excel';
+            } else if (file.name.endsWith('.xlsx')) {
+                mimeTypes = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
             } else if (file.name.endsWith('.msg')) {
                 mimeTypes = 'application/vnd.ms-outlook';
             }

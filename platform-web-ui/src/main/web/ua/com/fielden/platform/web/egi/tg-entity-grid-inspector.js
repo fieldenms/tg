@@ -30,7 +30,7 @@ import { TgElementSelectorBehavior } from '/resources/components/tg-element-sele
 import { TgDragFromBehavior } from '/resources/components/tg-drag-from-behavior.js';
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
-import { tearDownEvent, getRelativePos, isMobileApp} from '/resources/reflection/tg-polymer-utils.js';
+import { getFirstEntityValue, tearDownEvent, getRelativePos, isMobileApp} from '/resources/reflection/tg-polymer-utils.js';
 
 const template = html`
     <style>
@@ -440,6 +440,7 @@ const template = html`
     <!--configuring slotted elements-->
     <slot id="column_selector" name="property-column" hidden></slot>
     <slot id="primary_action_selector" name="primary-action" hidden></slot>
+    <slot id="default_property_action" name="defaultPropertyAction" hidden></slot>
     <slot id="egi_master" name="egi-master" hidden></slot>
     <!--EGI template-->
     <div id="paperMaterial" class="grid-container" style$="[[_calcMaterialStyle(showMarginAround)]]" fit-to-height$="[[fitToHeight]]">
@@ -460,7 +461,7 @@ const template = html`
                         <div class="action-cell cell" hidden$="[[!_primaryActionFixedAndVisible(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
                             <!--Primary action stub header goes here-->
                         </div>
-                        <template is="dom-repeat" items="[[fixedColumns]]">
+                        <template id="fixedHeadersTemplate" is="dom-repeat" items="[[fixedColumns]]">
                             <div class="table-cell cell" fixed style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, item.shouldAddDynamicWidth, 'true')]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                                 <div class="table-header-column-content">
                                     <div class="truncate table-header-column-title" multiple-line$="[[_multipleHeaderLines]]" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
@@ -483,7 +484,7 @@ const template = html`
                         <div class="action-cell cell" hidden$="[[!_primaryActionNotFixedAndVisible(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
                             <!--Primary action stub header goes here-->
                         </div>
-                        <template is="dom-repeat" items="[[columns]]">
+                        <template id="scrollableHeadersTemplate" is="dom-repeat" items="[[columns]]">
                             <div class="table-cell cell" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, item.shouldAddDynamicWidth, 'false')]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                                 <div class="table-header-column-content">
                                     <div class="truncate table-header-column-title" multiple-line$="[[_multipleHeaderLines]]" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
@@ -510,7 +511,7 @@ const template = html`
                     <slot name="save-button"></slot>
                 </div>
                 <div id="left_egi" show-left-shadow$="[[_leftShadowVisible(_showLeftShadow, dragAnchorFixed)]]" class="grid-layout-container sticky-container z-index-1" style$="[[_calcLeftContainerStyle(dragAnchorFixed)]]">
-                    <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex" on-dom-change="_scrollContainerEntitiesStamped">
+                    <template id="left_egi_domRepeat" is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex" on-dom-change="_scrollContainerEntitiesStamped">
                         <div class="table-data-row" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" is-editing$="[[egiEntity.editing]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
                             <div class="drag-anchor" draggable$="[[_isDraggable(egiEntity.selected)]]" hidden$="[[!canDragFrom]]">
                                 <iron-icon icon="tg-icons:dragVertical"></iron-icon>
@@ -519,7 +520,7 @@ const template = html`
                                 <paper-checkbox class="blue body" checked="[[egiEntity.selected]]" on-change="_selectionChanged" on-mousedown="_checkSelectionState" on-keydown="_checkSelectionState"></paper-checkbox>
                             </div>
                             <div class="action-cell" hidden$="[[!_primaryActionFixedAndVisible(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
-                                <tg-ui-action class="action" show-dialog="[[primaryAction.showDialog]]" current-entity="[[egiEntity.entity]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" action-kind="[[primaryAction.actionKind]]" number-of-action="[[primaryAction.numberOfAction]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" ui-role="[[primaryAction.uiRole]]" icon-style="[[primaryAction.iconStyle]]"></tg-ui-action>
+                                <tg-ui-action class="action" show-dialog="[[primaryAction.showDialog]]" toaster="[[primaryAction.toaster]]" current-entity="[[_currentEntity(egiEntity.entity)]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" action-kind="[[primaryAction.actionKind]]" number-of-action="[[primaryAction.numberOfAction]]" dynamic-action="[[primaryAction.dynamicAction]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" ui-role="[[primaryAction.uiRole]]" icon-style="[[primaryAction.iconStyle]]"></tg-ui-action>
                             </div>
                             <template is="dom-repeat" items="[[fixedColumns]]" as="column">
                                 <tg-egi-cell column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'true')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapFixedAction"></tg-egi-cell>
@@ -542,13 +543,13 @@ const template = html`
                     </div>
                 </div>
                 <div id="centre_egi" class="grid-layout-container z-index-0">
-                    <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
+                    <template id="centre_egi_domRepeat" is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
                         <div class="table-data-row" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" is-editing$="[[egiEntity.editing]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
                             <div class="table-cell" hidden$="[[!_checkboxNotFixedAndVisible(checkboxVisible, checkboxesFixed)]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]" tooltip-text$="[[_selectTooltip(egiEntity.selected)]]">
                                 <paper-checkbox class="blue body" checked="[[egiEntity.selected]]" on-change="_selectionChanged" on-mousedown="_checkSelectionState" on-keydown="_checkSelectionState"></paper-checkbox>
                             </div>
                             <div class="action-cell" hidden$="[[!_primaryActionNotFixedAndVisible(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
-                                <tg-ui-action class="action" show-dialog="[[primaryAction.showDialog]]" current-entity="[[egiEntity.entity]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" action-kind="[[primaryAction.actionKind]]" number-of-action="[[primaryAction.numberOfAction]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" ui-role="[[primaryAction.uiRole]]" icon-style="[[primaryAction.iconStyle]]"></tg-ui-action>
+                                <tg-ui-action class="action" show-dialog="[[primaryAction.showDialog]]" toaster="[[primaryAction.toaster]]" current-entity="[[_currentEntity(egiEntity.entity)]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" action-kind="[[primaryAction.actionKind]]" number-of-action="[[primaryAction.numberOfAction]]" dynamic-action="[[primaryAction.dynamicAction]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" ui-role="[[primaryAction.uiRole]]" icon-style="[[primaryAction.iconStyle]]"></tg-ui-action>
                             </div>
                             <template is="dom-repeat" items="[[columns]]" as="column">
                                 <tg-egi-cell column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'false')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapAction"></tg-egi-cell>
@@ -570,10 +571,10 @@ const template = html`
                     </div>
                 </div>
                 <div id="right_egi" class="grid-layout-container sticky-container z-index-1" show-right-shadow$="[[_rightShadowVisible(_showRightShadow, secondaryActionsFixed, _isSecondaryActionPresent)]]" style$="[[_calcRightContainerStyle(secondaryActionsFixed)]]">
-                    <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
+                    <template id="right_egi_domRepeat" is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
                         <div class="table-data-row" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" is-editing$="[[egiEntity.editing]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
                             <div class="action-cell" hidden$="[[!_isSecondaryActionPresent]]">
-                                <tg-secondary-action-button class="action" actions="[[_secondaryActions]]" current-entity="[[egiEntity.entity]]" is-single="[[_isSingleSecondaryAction]]" dropdown-trigger="[[_openDropDown]]"></tg-secondary-action-button>
+                                <tg-secondary-action-button class="action" actions="[[_secondaryActions]]" current-entity="[[_currentEntity(egiEntity.entity)]]" is-single="[[_isSingleSecondaryAction]]" dropdown-trigger="[[_openDropDown]]"></tg-secondary-action-button>
                             </div>
                         </div>
                     </template>
@@ -895,6 +896,8 @@ Polymer({
         _isSecondaryActionPresent: Boolean,
         //the list of secondary actions
         _secondaryActions: Array,
+        //Default action for property columns. It is invoked only if there were no other action specified for specific property column.
+        _defaultPropertyAction: Object,
         //The callback to open drop down for secondary action.
         _openDropDown: Function,
 
@@ -943,6 +946,9 @@ Polymer({
 
         //Initialising the primary action.
         this.primaryAction = primaryActions.length > 0 ? primaryActions[0] : null;
+
+        //Initialising the default property action
+        this._defaultPropertyAction = this.$.default_property_action.assignedNodes()[0];
 
         //Initialising event listeners.
         this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
@@ -1086,7 +1092,7 @@ Polymer({
     setRenderingHints: function (entity, property, renderingHints) {
         const entityIndex = this._findEntity(entity, this.filteredEntities);
         if (entityIndex >= 0) {
-            this.set("egiModel." + entityIndex + ".renderingHints." + property, renderingHints);
+            this.egiModel[entityIndex].renderingHints[property] = renderingHints;
             const egiEntity = this.egiModel[entityIndex];
             egiEntity._propertyRenderingHintsChangedHandlers && egiEntity._propertyRenderingHintsChangedHandlers[property] && egiEntity._propertyRenderingHintsChangedHandlers[property]();
         }
@@ -1104,7 +1110,16 @@ Polymer({
     },
 
     hasAction: function (entity, column) {
-        return entity && (column.customAction || this.isHyperlinkProp(entity, column) === true || this.getAttachmentIfPossible(entity, column));
+        return entity && (
+            column.customAction
+            || this.isHyperlinkProp(entity, column) === true
+            || this.getAttachmentIfPossible(entity, column)
+            || this.isEntityProperty(entity, column)
+        );
+    },
+
+    isEntityProperty: function (entity, column) {
+        return entity && entity.type && entity.type() && this._reflector.tg_determinePropertyType(entity.type(), column.collectionalProperty || column.property) instanceof this._reflector._getEntityTypePrototype();
     },
 
     isVisible: function (entity) {
@@ -1115,14 +1130,14 @@ Polymer({
     editEntity: function (entity) {
         if (this.editingEntity) {
             const oldEntIndex = this._findEntity(this.editingEntity, this.filteredEntities);
+            this.editingEntity = null;
             if (oldEntIndex >= 0) {
-                this.editingEntity = null;
                 this.set("egiModel." + oldEntIndex + ".over", false);
             }
         }
         const entIndex = this._findEntity(entity, this.filteredEntities);
+        this.editingEntity = entity;
         if (entIndex >= 0) {
-            this.editingEntity = entity;
             this.set("egiModel." + entIndex + ".over", true);
         }
     },
@@ -1255,10 +1270,16 @@ Polymer({
      */
     adjustColumnsSorting: function (sortingConfig) {
         if (this.offsetParent !== null) {
-            const fixedHeaders = this.$.top_left_egi.querySelectorAll(".table-header-column-title");
-            const scrollingHeaders = this.$.top_egi.querySelectorAll(".table-header-column-title");
-            this._setSortingFor(sortingConfig, this.fixedColumns, fixedHeaders,"fixedColumns", "0"/*The index of fixed columns in summary row*/);
-            this._setSortingFor(sortingConfig, this.columns, scrollingHeaders, "columns", "1"/*The index of scrollable columns in summary row*/);
+            // Adding the sorting indicator to columns may require making columns wider. 
+            // In order to determine whether the column width should be increased, it is necessary to use the scroll width and offset width of the actual column element.
+            // Reading the values of these attributes requires access to the template's elements, which may have not been initialised at this stage.
+            // Therefore, async call is needed. See render() method invocations for this.fixedColumns and this.columns.
+            this.async(() => {
+                const fixedHeaders = this.$.top_left_egi.querySelectorAll(".table-header-column-title");
+                const scrollingHeaders = this.$.top_egi.querySelectorAll(".table-header-column-title");
+                this._setSortingFor(sortingConfig, this.fixedColumns, fixedHeaders,"fixedColumns", "0"/*The index of fixed columns in summary row*/);
+                this._setSortingFor(sortingConfig, this.columns, scrollingHeaders, "columns", "1"/*The index of scrollable columns in summary row*/);
+            });
         } else {
             this._postponedSortingConfig = sortingConfig;
         }
@@ -1303,8 +1324,16 @@ Polymer({
         }
     },
 
+    /**
+     * Initiates corresponding 'tg-ui-action' (if present) with concrete function representing current entity.
+     * Opens hyperlink or attachment if 'tg-ui-action' is not present.
+     */
     _tapColumn: function (entity, column) {
-        if (column.runAction(entity) === false) {
+        // 'this._currentEntity(entity)' returns closure with 'entity' tapped.
+        // This closure returns either 'entity' or the entity navigated to (EntityNavigationAction).
+        // Each tapping overrides this function to provide proper context of execution.
+        // This override should occur on every 'run' of the action so it is mandatory to use 'tg-property-column.runAction' public API.
+        if (!column.runAction(this._currentEntity(entity))) {
             // if the clicked property is a hyperlink and there was no custom action associted with it
             // then let's open the linked resources
             if (this.isHyperlinkProp(entity, column) === true) {
@@ -1315,8 +1344,10 @@ Polymer({
                 const attachment = this.getAttachmentIfPossible(entity, column);
                 if (attachment && this.downloadAttachment) {
                     this.downloadAttachment(attachment);
+                } else if (this.isEntityProperty(entity, column)) {
+                    column.runDefaultAction(this._currentEntity(entity), this._defaultPropertyAction);
                 }
-            }
+            } 
         }
     },
 
@@ -1358,6 +1389,9 @@ Polymer({
     _updateColumns: function (resultantColumns) {
         this.fixedColumns = resultantColumns.splice(0, this.numOfFixedCols);
         this.columns = resultantColumns;
+        // Need to initiate DOM rendering as soon as possible due to the need to process resultant DOM in method _setSortingFor.
+        this.$.fixedHeadersTemplate.render();
+        this.$.scrollableHeadersTemplate.render();
         const columnWithGrowFactor = this.columns.find((item) => item.growFactor > 0);
         if (!columnWithGrowFactor && this.columns.length > 0) {
             this.set("columns." + (this.columns.length - 1) + ".growFactor", 1);
@@ -2001,6 +2035,16 @@ Polymer({
         return (selected ? 'Unselect' : 'Select') + ' this entity';
     },
 
+    _currentEntity: function (entity) {
+        const egi = this;
+        // Return old fashion javascript function (not arrow function). This function will be called by 
+        // action therefore this of the function will be the action (in case of arrow function this would be the EGI).
+        return function () {
+            //this - is the action that calls this function.
+            return this.supportsNavigation && egi.editingEntity ? egi.editingEntity : entity;
+        };
+    },
+
     _getTooltip: function (entity, column, action) {
         try {
             let tooltip = this.getValueTooltip(entity, column);
@@ -2045,26 +2089,31 @@ Polymer({
                 shortDesc: 'Download',
                 longDesc: 'Click to download attachment.'
             });
+        } else if (!this.isHyperlinkProp(entity, column) && this.isEntityProperty(entity, column)) {
+            const entityValue = getFirstEntityValue(this._reflector, entity, column.collectionalProperty || column.property);
+            const entityTitle = entityValue.type().entityTitle();
+            return this._generateActionTooltip({
+                shortDesc: `Edit ${entityTitle}`,
+                longDesc: `Edit ${entityTitle}`
+            });
         }
         return "";
     },
     
     _generateEntityTooltip: function (entity, column) {
-        const key = this.getBindedValue(entity, column);
-        let desc;
-        try {
-            if (Array.isArray(this.getValueFromEntity(entity, column))) {
-                desc = generateShortCollection(this.getRealEntity(entity, column), this.getRealProperty(column), this._reflector.findTypeByName(column.type))
-                    .map(function (subEntity) {
-                        return subEntity.get("desc");
-                    }).join(", ");
-            } else {
+        const valueToFormat = this.getValueFromEntity(entity, column);
+        if (Array.isArray(valueToFormat)) {
+            return this._reflector.tg_toString(valueToFormat, this.getRealEntity(entity, column).type(), this.getRealProperty(column), { collection: true, asTooltip: true });
+        } else {
+            let desc;
+            try {
                 desc = entity.get(column.property === '' ? "desc" : (column.property + ".desc"));
+            } catch (e) {
+                desc = ""; // TODO consider leaving the exception (especially strict proxies) to be able to see the problems of 'badly fetched columns'
             }
-        } catch (e) {
-            desc = ""; // TODO consider leaving the exception (especially strict proxies) to be able to see the problems of 'badly fetched columns'
+            const key = this.getBindedValue(entity, column);
+            return (key && ("<b>" + key + "</b>")) + (desc ? "<br>" + desc : "");
         }
-        return (key && ("<b>" + key + "</b>")) + (desc ? "<br>" + desc : "");
     },
 
     _generateActionTooltip: function (action) {

@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
+import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -10,6 +11,8 @@ import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.con
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.range;
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.single;
 import static ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder.centreFor;
+import static ua.com.fielden.platform.web.interfaces.ILayout.Device.DESKTOP;
+import static ua.com.fielden.platform.web.interfaces.ILayout.Orientation.LANDSCAPE;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -36,8 +39,7 @@ import ua.com.fielden.platform.web.centre.api.impl.helpers.DefaultValueAssignerF
 import ua.com.fielden.platform.web.centre.api.impl.helpers.DefaultValueAssignerForSingleInteger;
 import ua.com.fielden.platform.web.centre.api.impl.helpers.DefaultValueAssignerForSingleString;
 import ua.com.fielden.platform.web.centre.api.impl.helpers.DefaultValueAssignerForSingleTgOrgUnit;
-import static ua.com.fielden.platform.web.interfaces.ILayout.Device.*;
-import static ua.com.fielden.platform.web.interfaces.ILayout.Orientation.*;
+import ua.com.fielden.platform.web.centre.exceptions.EntityCentreConfigurationException;
 
 
 /**
@@ -78,8 +80,8 @@ public class EntityCentreBuilderSelectionCritTest {
                     .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', [][]]")
                     .addProp("desc").build();
             fail();
-        } catch (final IllegalArgumentException ex) {
-            assertEquals(String.format("Provided value '%s' has been already added as a selection criterion for entity '%s'", "vehicle", TgWorkOrder.class.getSimpleName()), ex.getMessage());
+        } catch (final EntityCentreConfigurationException ex) {
+            assertEquals(format("Property [%s] has been already added to the selection critera for entity [%s].", "vehicle", TgWorkOrder.class.getSimpleName()), ex.getMessage());
         }
     }
 
@@ -148,8 +150,8 @@ public class EntityCentreBuilderSelectionCritTest {
                     .setLayoutFor(DESKTOP, Optional.of(LANDSCAPE), "['vertical', 'justified', 'margin:20px', []")
                     .addProp("desc").build();
             fail();
-        } catch (final IllegalArgumentException ex) {
-            assertEquals(String.format("Provided value '%s' is not a valid property expression for entity '%s'", "non.existing.property", TgWorkOrder.class.getSimpleName()), ex.getMessage());
+        } catch (final EntityCentreConfigurationException ex) {
+            assertEquals(format("Property expression [%s] is not valid for entity [%s].", "non.existing.property", TgWorkOrder.class.getSimpleName()), ex.getMessage());
         }
     }
 

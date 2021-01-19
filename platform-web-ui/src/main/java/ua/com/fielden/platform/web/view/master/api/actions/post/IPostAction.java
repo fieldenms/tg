@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.web.view.master.api.actions.post;
 
-import ua.com.fielden.platform.web.minijs.JsCode;
+import ua.com.fielden.platform.web.view.master.api.actions.IAction;
 
 /**
  * A contract that should be implemented by all concrete implementations of post-action behaviour for Entity Master actions.
@@ -10,6 +10,5 @@ import ua.com.fielden.platform.web.minijs.JsCode;
  * @author TG Team
  *
  */
-public interface IPostAction  {
-    JsCode build();
+public interface IPostAction extends IAction {
 }

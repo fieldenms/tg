@@ -1,7 +1,10 @@
 package ua.com.fielden.platform.web.centre.api;
 
+import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static ua.com.fielden.platform.domaintree.impl.CalculatedProperty.generateNameFrom;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -23,6 +26,7 @@ import com.google.common.collect.ListMultimap;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithCentreContext;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.utils.Pair;
@@ -46,6 +50,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.centre.api.resultset.scrolling.IScrollConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
+import ua.com.fielden.platform.web.centre.exceptions.PropertyDefinitionException;
 import ua.com.fielden.platform.web.layout.FlexLayout;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
 
@@ -65,6 +70,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     private final boolean hideToolbar;
     private final IScrollConfig scrollConfig;
     private final int pageCapacity;
+    private final int maxPageCapacity;
     private final int visibleRowsCount;
     private final int numberOfHeaderLines;
     private final String egiHeight;
@@ -232,15 +238,15 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         public final boolean isFlexible;
 
          public static <T extends AbstractEntity<?>> ResultSetProp<T> propByName(final String propName, final int width, final boolean isFlexible, final Optional<AbstractWidget> widget, final String tooltipProp, final Supplier<Optional<EntityActionConfig>> propAction) {
-            return new ResultSetProp<T>(propName, empty(), empty(), empty(), width, isFlexible, widget, tooltipProp, null, propAction);
+            return new ResultSetProp<>(propName, empty(), empty(), empty(), width, isFlexible, widget, tooltipProp, null, propAction);
         }
 
         public static <T extends AbstractEntity<?>> ResultSetProp<T> propByDef(final PropDef<?> propDef, final int width, final boolean isFlexible, final String tooltipProp, final Supplier<Optional<EntityActionConfig>> propAction) {
-            return new ResultSetProp<T>(null, empty(), empty(), empty(), width, isFlexible, Optional.empty(), tooltipProp, propDef, propAction);
+            return new ResultSetProp<>(null, empty(), empty(), empty(), width, isFlexible, Optional.empty(), tooltipProp, propDef, propAction);
         }
 
         public static <T extends AbstractEntity<?>> ResultSetProp<T> dynamicProps(final String collectionalPropertyName, final Class<? extends IDynamicColumnBuilder<T>> dynamicPropDefinerClass, final BiConsumer<? extends AbstractEntity<?>, Optional<CentreContext<T, ?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
-            return new ResultSetProp<T>(collectionalPropertyName, of(dynamicPropDefinerClass), of(contextConfig), of(entityPreProcessor), 0, false, Optional.empty(), null, null, () -> Optional.empty());
+            return new ResultSetProp<>(collectionalPropertyName, of(dynamicPropDefinerClass), of(contextConfig), of(entityPreProcessor), 0, false, Optional.empty(), null, null, () -> Optional.empty());
         }
 
         private ResultSetProp(
@@ -277,6 +283,25 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             this.dynamicColBuilderType = dynColBuilderType;
             this.contextConfig = contextConfig;
             this.entityPreProcessor = entityPreProcessor;
+        }
+        
+        /**
+         * Returns the property name for specified {@link ResultSetProp} instance. The returned property name can be used for retrieving and altering data in
+         * {@link ICentreDomainTreeManager}.
+         *
+         * @param property
+         * @return
+         */
+        public static <T extends AbstractEntity<?>> String derivePropName(final ResultSetProp<T> property) {
+            if (property.propName.isPresent()) {
+                return treeName(property.propName.get());
+            } else {
+                if (property.propDef.isPresent()) { // represents the 'custom' property
+                    return treeName(generateNameFrom(property.propDef.get().title));
+                } else {
+                    throw new PropertyDefinitionException(format("The state of result-set property [%s] definition is not correct, need to exist either a 'propName' for the property or 'propDef'.", property));
+                }
+            }
         }
     }
 
@@ -362,6 +387,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final boolean hideToolbar,
             final IScrollConfig scrollConfig,
             final int pageCapacity,
+            final int maxPageCapacity,
             final int visibleRowsCount,
             final int numberOfHeaderLines,
             final String egiHeight,
@@ -431,6 +457,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         this.hideToolbar = hideToolbar;
         this.scrollConfig = scrollConfig;
         this.pageCapacity = pageCapacity;
+        this.maxPageCapacity = maxPageCapacity;
         this.visibleRowsCount = visibleRowsCount;
         this.numberOfHeaderLines = numberOfHeaderLines;
         this.egiHeight = egiHeight;
@@ -858,6 +885,10 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     public int getPageCapacity() {
         return pageCapacity;
+    }
+
+    public int getMaxPageCapacity() {
+        return maxPageCapacity;
     }
 
     public int getVisibleRowsCount() {

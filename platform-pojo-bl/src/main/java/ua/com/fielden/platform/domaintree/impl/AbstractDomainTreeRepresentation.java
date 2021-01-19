@@ -3,13 +3,19 @@ package ua.com.fielden.platform.domaintree.impl;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static java.lang.String.format;
+import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determineClass;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.reflection.Finder.findProperties;
 import static ua.com.fielden.platform.reflection.Finder.getFieldByName;
 import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.transform;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
+import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
+import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -283,17 +289,47 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
         if (isEntityItself) {
             return false;
         }
-        final Pair<Class<?>, String> penultAndLast = PropertyTypeDeterminator.transform(root, property);
-        final Class<?> realType = PropertyTypeDeterminator.determineClass(penultAndLast.getKey(), penultAndLast.getValue(), true, false);
-        final Class<?> elementType = PropertyTypeDeterminator.determineClass(penultAndLast.getKey(), penultAndLast.getValue(), true, true);
+        final Pair<Class<?>, String> penultAndLast = transform(root, property);
+        final Class<?> realType = determineClass(penultAndLast.getKey(), penultAndLast.getValue(), true, false);
+        final Class<?> elementType = determineClass(penultAndLast.getKey(), penultAndLast.getValue(), true, true);
 
         // return !isEntityItself && realType != null && Collection.class.isAssignableFrom(realType); // or collections itself
         return Collection.class.isAssignableFrom(realType) &&
-                EntityUtils.isEntityType(elementType) &&
-                EntityUtils.isCompositeEntity((Class<AbstractEntity<?>>) elementType) &&
-                Finder.getKeyMembers(elementType).size() == 2 &&
-                Finder.getKeyMembers(elementType).stream().allMatch(field -> EntityUtils.isEntityType(field.getType())) &&
-                Finder.getKeyMembers(elementType).stream().anyMatch(field -> stripIfNeeded(getOriginalType(field.getType())).isAssignableFrom(stripIfNeeded(getOriginalType(penultAndLast.getKey()))));
+                isEntityType(elementType) &&
+                isCompositeEntity((Class<AbstractEntity<?>>) elementType) &&
+                getKeyMembers(elementType).size() == 2 &&
+                getKeyMembers(elementType).stream().allMatch(field -> isEntityType(field.getType())) &&
+                getKeyMembers(elementType).stream().anyMatch(field -> isShortCollectionKeyCompatible(field.getType(), penultAndLast.getKey()));
+    }
+
+    /**
+     * Returns <code>true</code> if the type of collectional prop element key (<code>keyType</code>) is equal or supertype of the entity type (<code>parentType</code>) holding collection.
+     * 
+     * @param keyType
+     * @param parentType
+     * @return
+     */
+    private static boolean isShortCollectionKeyCompatible(final Class<?> keyType, final Class<?> parentType) {
+        return stripIfNeeded(getOriginalType(keyType)).isAssignableFrom(stripIfNeeded(getOriginalType(parentType)));
+    }
+
+    /**
+     * Returns the name of significant key member of short collectional prop element; aka key member with type not compatible with parent type.
+     * <p>
+     * This must be used only inside <code>if (isShortCollection(root, property)) {...}</code> clause.
+     * 
+     * @param root
+     * @param property
+     * @return
+     */
+    public static String shortCollectionKey(final Class<?> root, final String property) {
+        final Pair<Class<?>, String> penultAndLast = transform(root, property);
+        final Class<?> elementType = determineClass(penultAndLast.getKey(), penultAndLast.getValue(), true, true);
+        return getKeyMembers(elementType).stream()
+            .filter(field -> !isShortCollectionKeyCompatible(field.getType(), penultAndLast.getKey()))
+            .findAny() // stream should return exactly one key field out of two entity-typed key fields after above filtering
+            .map(field -> field.getName())
+            .orElseThrow(() -> new IllegalStateException(format("Short collection (%s; %s) does not have significant key that is not compatible with parent type.", root.getSimpleName(), property)));
     }
 
     /**

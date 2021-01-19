@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity;
 
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
+import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
 
 import com.google.inject.Inject;
 
@@ -22,7 +23,7 @@ public class EntityManipulationActionProducer<T extends AbstractEntityManipulati
         if (contextNotEmpty()) {
             final AbstractEntity<?> currEntity = currentEntity();
             final EnhancedCentreEntityQueryCriteria<?, ?> selCrit = selectionCrit();
-            final Class<AbstractEntity<?>> entityType = 
+            final Class<AbstractEntity<?>> entityType =
                 computation().map( computation -> {
                         final Object computed = computation.apply(entity, (CentreContext<AbstractEntity<?>, AbstractEntity<?>>) getContext());
                         // it is by convention that a computational context may return custom entity type of tg-entity-master to be displayed
@@ -30,14 +31,14 @@ public class EntityManipulationActionProducer<T extends AbstractEntityManipulati
                         if (computed instanceof Class) {
                             return (Class<AbstractEntity<?>>) computed;
                         } else if (computed instanceof T2) {
-                            final T2<Class<AbstractEntity<?>>, Long> typeAndId = (T2<Class<AbstractEntity<?>>, Long>) computed; 
+                            final T2<Class<AbstractEntity<?>>, Long> typeAndId = (T2<Class<AbstractEntity<?>>, Long>) computed;
                             return typeAndId._1;
                         } else {
                             return determineEntityType(currEntity, selCrit);
                         }
                     })
                 .orElse(determineEntityType(currEntity, selCrit));
-            
+
             if (entityType == null) {
                 throw new IllegalStateException("Please add selection criteria or current entity to the context of the functional entity with type: " + entity.getType().getName());
             } else {
@@ -48,14 +49,35 @@ public class EntityManipulationActionProducer<T extends AbstractEntityManipulati
     }
 
     /**
-     * Determines the type of tg-entity-master to be displayed from a) selCrit or b) currEntity depending on whether it is {@link EntityNewAction} or {@link EntityEditAction}.
-     * 
+     * Determines the precise type based on {@code currEntity} and {@code selCrit} to determine what Entity Master should be displayed:
+     * <ul>
+     * <li>a) {@code currEntity} depending on whether it is {@link EntityNewAction} or {@link EntityEditAction} (refer {@link #determineBaseEntityType(Class)}, or
+     * <li>b) {@code selCrit}.
+     * </ul>
      * @param currEntity
      * @param selCrit
      * @return
      */
-    private Class<AbstractEntity<?>> determineEntityType(final AbstractEntity<?> currEntity, final EnhancedCentreEntityQueryCriteria<?, ?> selCrit) {
-        return selCrit != null ? (Class<AbstractEntity<?>>) selCrit.getEntityClass() :
-               currEntity != null ? getOriginalType(currEntity.getType()) : null;
+    @SuppressWarnings("unchecked")
+    private static Class<AbstractEntity<?>> determineEntityType(final AbstractEntity<?> currEntity, final EnhancedCentreEntityQueryCriteria<?, ?> selCrit) {
+        return currEntity != null ? determineBaseEntityType(getOriginalType(currEntity.getType())) :
+               selCrit != null ? (Class<AbstractEntity<?>>) selCrit.getEntityClass() : null;
+    }
+
+    /**
+     * Returns the base type of {@code entityType} if it is a synthetic entity based on a persistent entity.
+     * Otherwise, returns {@code entityType}.
+     * 
+     * @param entityType
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private static Class<AbstractEntity<?>> determineBaseEntityType(final Class<AbstractEntity<?>> entityType) {
+        if (isSyntheticBasedOnPersistentEntityType(entityType)) {
+            // for the cases where EntityEditAction / EntityNavigationAction is used for opening SyntheticBasedOnPersistentEntity we explicitly use base type;
+            // however this is not the case for StandardActions.EDIT_ACTION because of computation existence that returns entityType.
+            return (Class<AbstractEntity<?>>) entityType.getSuperclass();
+        }
+        return entityType;
     }
 }

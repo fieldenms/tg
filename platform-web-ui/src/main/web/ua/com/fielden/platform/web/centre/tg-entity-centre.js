@@ -134,7 +134,7 @@ const template = html`
     <style include="paper-material-styles iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <tg-serialiser id="serialiser"></tg-serialiser>
 
-    <iron-ajax id="ajaxDiscarder" headers="[[_headers]]" url="[[_url]]" method="PUT" handle-as="json" on-response="_processDiscarderResponse" on-error="_processDiscarderError"></iron-ajax>
+    <iron-ajax id="ajaxDiscarder" headers="[[_headers]]" url="[[_url]]" method="PUT" handle-as="json" on-response="_processDiscarderResponse" reject-with-request on-error="_processDiscarderError"></iron-ajax>
 
     <tg-confirmation-dialog id="confirmationDialog"></tg-confirmation-dialog>
 
@@ -168,9 +168,9 @@ const template = html`
                 <div class="arrow-right" tooltip-text="Expand to default width" on-tap="_expandLeftInsertionPoint"></div>
             </div>
             <div id="centreInsertionPointContainer" class="insertion-point-slot layout vertical flex" style="min-width:0">
-                <slot name="top-insertion-point"></slot>
+                <slot id="topInsertionPointContent" name="top-insertion-point"></slot>
                 <slot id="customEgiSlot" name="custom-egi"></slot>
-                <slot id="bottomInsertionPointSlot" name="bottom-insertion-point"></slot>
+                <slot id="bottomInsertionPointContent" name="bottom-insertion-point"></slot>
             </div>
             <div id="rightSplitter" class="splitter" hidden$="[[!rightInsertionPointPresent]]" on-down="_makeCentreUnselectable" on-up="_makeCentreSelectable" on-track="_changeRightInsertionPointSize">
                 <div class="arrow-left" tooltip-text="Expand to default width" on-tap="_expandRightInsertionPoint"></div>

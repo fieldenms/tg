@@ -8,6 +8,7 @@ import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.EntityExportAction;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
+import ua.com.fielden.platform.persistence.composite.EntityWithSingleMemberDynamicCompositeKey;
 import ua.com.fielden.platform.persistence.types.EntityBasedOnAbstractPersistentEntity;
 import ua.com.fielden.platform.persistence.types.EntityBasedOnAbstractPersistentEntity2;
 import ua.com.fielden.platform.persistence.types.EntityWithAutoAssignableProperties;
@@ -134,6 +135,7 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(EntityWithSimpleTaxMoney.class);
         add(EntityWithSimpleMoney.class);
         add(EntityWithDynamicCompositeKey.class);
+        add(EntityWithSingleMemberDynamicCompositeKey.class);
         add(EntityWithAutoAssignableProperties.class);
         add(EntityBasedOnAbstractPersistentEntity.class);
         add(EntityBasedOnAbstractPersistentEntity2.class);

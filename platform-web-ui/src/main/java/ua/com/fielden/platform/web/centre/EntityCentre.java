@@ -32,6 +32,7 @@ import static ua.com.fielden.platform.web.centre.EgiConfigurations.SUMMARY_FIXED
 import static ua.com.fielden.platform.web.centre.EgiConfigurations.TOOLBAR_VISIBLE;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
+import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp.derivePropName;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalPropertyName;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalType;
@@ -67,11 +68,9 @@ import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
-import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
 import ua.com.fielden.platform.domaintree.impl.CalculatedPropertyInfo;
 import ua.com.fielden.platform.domaintree.impl.CustomProperty;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -137,7 +136,6 @@ import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.PropertyColumnElement;
-import ua.com.fielden.platform.web.centre.exceptions.PropertyDefinitionException;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.layout.FlexLayout;
@@ -377,7 +375,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         if (resultSetProps.isPresent()) {
             final Map<String, Integer> growFactors = calculateGrowFactors(resultSetProps.get());
             for (final ResultSetProp<T> property : resultSetProps.get()) {
-                final String propertyName = getPropName(property);
+                final String propertyName = derivePropName(property);
                 if (!property.dynamicColBuilderType.isPresent()) {
                     cdtmae.getSecondTick().check(entityType, propertyName, true);
                     cdtmae.getSecondTick().use(entityType, propertyName, true);
@@ -414,6 +412,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         }
         
         cdtmae.getSecondTick().setPageCapacity(dslDefaultConfig.getPageCapacity());
+        cdtmae.getSecondTick().setMaxPageCapacity(dslDefaultConfig.getMaxPageCapacity());
         cdtmae.getSecondTick().setVisibleRowsCount(dslDefaultConfig.getVisibleRowsCount());
         cdtmae.getSecondTick().setNumberOfHeaderLines(dslDefaultConfig.getNumberOfHeaderLines());
         
@@ -431,26 +430,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      */
     private ICentreDomainTreeManagerAndEnhancer createDefaultCentre0(final EntityCentreConfig<T> dslDefaultConfig, final EntityFactory entityFactory, final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated, final boolean userSpecific) {
         return createDefaultCentreFrom(dslDefaultConfig, entityFactory, postCentreCreated, userSpecific, entityType, domainTreeEnhancerCache, miType, injector);
-    }
-
-    /**
-     * Returns the property name for specified {@link ResultSetProp} instance. The returned property name can be used for retrieving and altering data in
-     * {@link ICentreDomainTreeManager}.
-     *
-     * @param property
-     * @return
-     */
-    private static <T extends AbstractEntity<?>> String getPropName(final ResultSetProp<T> property) {
-        if (property.propName.isPresent()) {
-            return treeName(property.propName.get());
-        } else {
-            if (property.propDef.isPresent()) { // represents the 'custom' property
-                final String customPropName = CalculatedProperty.generateNameFrom(property.propDef.get().title);
-                return treeName(customPropName);
-            } else {
-                throw new PropertyDefinitionException(format("The state of result-set property [%s] definition is not correct, need to exist either a 'propName' for the property or 'propDef'.", property));
-            }
-        }
     }
 
     private static <T extends AbstractEntity<?>> void provideDefaultsFor(final String dslProperty, final ICentreDomainTreeManagerAndEnhancer cdtmae, final EntityCentreConfig<T> dslDefaultConfig, final Class<T> entityType, final Injector injector) {
@@ -910,14 +889,13 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
         final List<PropertyColumnElement> propertyColumns = new ArrayList<>();
         final Optional<List<ResultSetProp<T>>> resultProps = dslDefaultConfig.getResultSetProperties();
-        final List<DomElement> widgets = new ArrayList<>();
         final ListMultimap<String, SummaryPropDef> summaryProps = dslDefaultConfig.getSummaryExpressions();
         final Class<?> managedType = centre.getEnhancer().getManagedType(root);
         if (resultProps.isPresent()) {
             int actionIndex = 0;
             for (final ResultSetProp<T> resultProp : resultProps.get()) {
                 final String tooltipProp = resultProp.tooltipProp.isPresent() ? resultProp.tooltipProp.get() : null;
-                final String resultPropName = getPropName(resultProp);
+                final String resultPropName = derivePropName(resultProp);
                 final boolean isEntityItself = "".equals(resultPropName); // empty property means "entity itself"
                 final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, resultPropName);
 
@@ -1196,7 +1174,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return propertyColumns.stream()
                 .filter(column -> column.isFlexible && column.width > 0)
                 .collect(Collectors.toMap(
-                        column -> getPropName(column),
+                        column -> derivePropName(column),
                         column -> Math.round((float) column.width / minWidth)));
     }
 

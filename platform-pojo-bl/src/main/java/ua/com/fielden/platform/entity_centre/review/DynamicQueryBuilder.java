@@ -6,6 +6,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils.paramValue;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.baseEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
 import static ua.com.fielden.platform.utils.EntityUtils.isDate;
@@ -952,18 +953,20 @@ public class DynamicQueryBuilder {
     @SuppressWarnings("unchecked")
     private static <ET extends AbstractEntity<?>> ConditionModel buildAtomicCondition(final QueryProperty property, final String propertyName, final IDates dates) {
         if (isRangeType(property.getType())) {
-            if (isDate(property.getType()) && property.getDatePrefix() != null && property.getDateMnemonic() != null) {
+            final boolean isDate = isDate(property.getType());
+            final IStandAloneConditionComparisonOperator<ET> scag1 = EntityQueryUtils.<ET> cond().prop(propertyName);
+            if (isDate && property.getDatePrefix() != null && property.getDateMnemonic() != null) {
                 // left boundary should be inclusive and right -- exclusive!
                 final Pair<Date, Date> fromAndTo = getDateValuesFrom(property.getDatePrefix(), property.getDateMnemonic(), property.getAndBefore(), dates);
-                return cond().prop(propertyName).ge().iVal(fromAndTo.getKey()).and().prop(propertyName).lt().iVal(fromAndTo.getValue()).model();
+                return scag1.ge()
+                        .iVal(paramValue(fromAndTo.getKey  (), isDate, property)).and().prop(propertyName)
+                        .lt()
+                        .iVal(paramValue(fromAndTo.getValue(), isDate, property)).model();
             } else {
-                final IStandAloneConditionComparisonOperator<ET> scag = EntityQueryUtils.<ET> cond().prop(propertyName);
-                final IStandAloneConditionComparisonOperator<ET> scag2 = Boolean.TRUE.equals(property.getExclusive()) ? //
-                /*      */scag.gt().iVal(property.getValue()).and().prop(propertyName) // exclusive
-                : scag.ge().iVal(property.getValue()).and().prop(propertyName); // inclusive
-                return Boolean.TRUE.equals(property.getExclusive2()) ? //
-                /*      */scag2.lt().iVal(property.getValue2()).model() // exclusive
-                : scag2.le().iVal(property.getValue2()).model(); // inclusive
+                final IStandAloneConditionComparisonOperator<ET> scag2 = (TRUE.equals(property.getExclusive ()) ? scag1.gt() : scag1.ge())
+                        .iVal(paramValue(property.getValue (), isDate, property)).and().prop(propertyName);
+                return (TRUE.equals(property.getExclusive2()) ? scag2.lt() : scag2.le())
+                        .iVal(paramValue(property.getValue2(), isDate, property)).model();
             }
         } else if (isBoolean(property.getType())) {
             final boolean is = (Boolean) property.getValue();

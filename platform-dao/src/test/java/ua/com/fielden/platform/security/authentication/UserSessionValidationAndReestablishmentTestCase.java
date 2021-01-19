@@ -130,12 +130,13 @@ public class UserSessionValidationAndReestablishmentTestCase extends AbstractDao
         assertTrue(restoredSession.isPresent());
         assertEquals(session, restoredSession.get());
         assertTrue("Session is missing an authenticator.", restoredSession.get().getAuthenticator().isPresent());
+        assertEquals(session.getAuthenticator().get(), restoredSession.get().getAuthenticator().get());
         
         final Optional<UserSession> restoredAgainSession = coSession.currentSession(currUser, authenticator, true /*skipRegeneration*/);
         assertTrue(restoredAgainSession.isPresent());
         assertEquals(session, restoredAgainSession.get());
-        assertSame("Expected the cached session, but new instance is returned.", restoredSession.get(), restoredAgainSession.get());
-
+        assertEquals(restoredSession.get(), restoredAgainSession.get());
+        assertEquals(restoredSession.get().getAuthenticator().get(), restoredSession.get().getAuthenticator().get());
     }
 
     @Test

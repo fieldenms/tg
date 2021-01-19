@@ -6,6 +6,8 @@ import java.util.Optional;
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 
+import ua.com.fielden.platform.utils.EntityUtils;
+
 /**
  * This is a convenient abstraction for representing a user session authenticator.
  *
@@ -123,6 +125,19 @@ public final class Authenticator {
     @Override
     public int hashCode() {
         return value.hashCode();
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof Authenticator)) {
+            return false;
+        }
+
+        final Authenticator that = (Authenticator) obj;
+        return EntityUtils.equalsEx(this.value, that.value);
     }
 
     @Override

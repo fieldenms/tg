@@ -5,6 +5,7 @@ import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restorat
 import '/resources/actions/tg-ui-action.js';
 import '/resources/components/postal-lib.js';
 import { tearDownEvent, isInHierarchy, deepestActiveElement, FOCUSABLE_ELEMENTS_SELECTOR } from '/resources/reflection/tg-polymer-utils.js';
+import {createDialog} from '/resources/egi/tg-dialog-util.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import { TgElementSelectorBehavior, queryElements } from '/resources/components/tg-element-selector-behavior.js';
 
@@ -76,6 +77,7 @@ const createColumnAction = function (entityCentre) {
     actionModel.componentUri = '/master_ui/ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater';
     actionModel.elementName = 'tg-CentreColumnWidthConfigUpdater-master';
     actionModel.showDialog = entityCentre._showCentreConfigDialog;
+    actionModel.toaster = entityCentre.toaster;
     actionModel.createContextHolder = entityCentre._createContextHolder;
     actionModel.preAction = function (action) {
         action.modifyFunctionalEntity = (function (bindingEntity, master) {
@@ -97,13 +99,6 @@ const createColumnAction = function (entityCentre) {
     actionModel.requireSelectedEntities = 'NONE';
     actionModel.requireMasterEntity = 'false';
     return actionModel;
-};
-
-const createDialog = function (id) {
-    const dialog = document.createElement('tg-custom-action-dialog');
-    dialog.setAttribute("id", id);
-    document.body.appendChild(dialog);
-    return dialog;
 };
 
 const MSG_SAVE_OR_CANCEL = "Please save or cancel changes.";
@@ -231,8 +226,8 @@ const TgEntityCentreBehaviorImpl = {
 
         /**
          * A dialog instance that is used for displaying entity (functional and not) masters as part of centre actions logic.
-         * This dialog is of type tg-custom-action-dialog and gets created dynamically on attached event.
-         * Right away it is appended to document.body.
+         * This dialog is of type tg-custom-action-dialog and gets created on demand when needed i.e. on first _showDialog invocation.
+         * It is appended to document.body just before dialog opening and is removed just after dialog closing.
          */
         actionDialog: {
             type: Object,
@@ -335,6 +330,17 @@ const TgEntityCentreBehaviorImpl = {
         },
 
         /**
+         * Postal subscription.
+         * It can be populated anywhere but bare in mind that all postal subscriptions will be disposed in detached callback.
+         */
+        _subscriptions: {
+            type: Array,
+            value: function () {
+                return [];
+            }
+        },
+
+        /**
          * The currently selected view.
          */
         _selectedView: {
@@ -430,21 +436,29 @@ const TgEntityCentreBehaviorImpl = {
         'tg-egi-column-change': '_saveColumnWidth'
     },
 
+    _abortPreviousAndInitiateNewRun: function () {
+        // cancel previous running before starting new one; the results of previous running are irrelevant
+        this._reflector.abortRequestsIfAny(this.$.selection_criteria._ajaxRunner(), 'running');
+
+        this._setQueryParams();
+        if (this.autoRun || this.queryPart) {
+            this.run(!this.queryPart); // identify autoRunning situation only in case where centre has autoRun as true but does not represent 'link' centre (has no URI criteria values)
+            delete this.queryPart;
+        }
+    },
+
     _getMasterEntityAssigned: function (newValue, oldValue) {
-        const self = this;
-        if (oldValue === undefined) {
-            self.retrieve().then(function () {
-                self._setQueryParams();
-                if (self.autoRun || self.queryPart) {
-                    self.run(!self.queryPart); // identify autoRunning situation only in case where centre has autoRun as true but does not represent 'link' centre (has no URI criteria values)
-                    delete self.queryPart;
-                }
-            });
+        if (this._reflector.isEntity(this.$.selection_criteria._currBindingEntity)) {
+            this._abortPreviousAndInitiateNewRun();
         } else {
-            self._setQueryParams();
-            if (self.autoRun || self.queryPart) {
-                self.run(!self.queryPart); // identify autoRunning situation only in case where centre has autoRun as true but does not represent 'link' centre (has no URI criteria values)
-                delete self.queryPart;
+            // cancel previous retrieval requests except the last one -- if it exists then run process will be chained on top of that last retrieval process,
+            // otherwise -- run process will simply start immediately
+            const lastRetrievalPromise = this._reflector.abortRequestsExceptLastOne(this.$.selection_criteria._ajaxRetriever(), 'retrieval');
+            if (lastRetrievalPromise !== null) {
+                console.warn('Running is chained to the last retrieval promise...');
+                lastRetrievalPromise.then(() => this._abortPreviousAndInitiateNewRun());
+            } else {
+                this.retrieve().then(() => this._abortPreviousAndInitiateNewRun());
             }
         }
     },
@@ -662,7 +676,7 @@ const TgEntityCentreBehaviorImpl = {
          */
         self.run = (function (isAutoRunning, isSortingAction, forceRegeneration) {
             if (this._criteriaLoaded === false) {
-                throw "Cannot run centre (not initialised criteria).";
+                throw new Error(`Cannot run ${this.is} centre (not initialised criteria).`);
             }
 
             const self = this;
@@ -708,6 +722,9 @@ const TgEntityCentreBehaviorImpl = {
             const closeEventTopics = ['save.post.success', 'refresh.post.success'];
             if (!self.$.egi.isEditing()) {
                 this.async(function () {
+                    if (this.actionDialog === null) {
+                        this.actionDialog = createDialog(self.uuid + '');
+                    }
                     this.actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
                 }.bind(self), 1);
             } else {
@@ -722,6 +739,9 @@ const TgEntityCentreBehaviorImpl = {
             const closeEventChannel = self.uuid;
             const closeEventTopics = ['save.post.success', 'refresh.post.success'];
             this.async(function () {
+                if (this.centreConfigDialog === null) {
+                    this.centreConfigDialog = createDialog(self.uuid + '_centreConfig');
+                }
                 this.centreConfigDialog.showDialog(action, closeEventChannel, closeEventTopics);
             }.bind(self), 1);
         }).bind(self);
@@ -792,6 +812,9 @@ const TgEntityCentreBehaviorImpl = {
 
         self._columnAction = createColumnAction(self);
 
+        //Toaster object Can be used in other components on binder to show toasts.
+        self.toaster = self.$.selection_criteria.toaster;
+
     }, // end of ready callback
 
     wasLoaded: function () {
@@ -801,38 +824,30 @@ const TgEntityCentreBehaviorImpl = {
     attached: function () {
         const self = this;
 
-        if (this.actionDialog === null) {
-            this.actionDialog = createDialog(self.uuid + '');
-        }
-
-        if (this.centreConfigDialog === null) {
-            this.centreConfigDialog = createDialog(self.uuid + '_centreConfig');
-        }
-
         /* Provide predicate for egi that determines whether inline master can be opened or not.
          * It can not be opened if another master in dialog is opened. */
         this.$.egi.canOpenMaster = function () {
-            return !this.actionDialog.opened;
+            return this.actionDialog === null || !this.actionDialog.opened;
         }.bind(this);
 
         ///////////////////////// Detail postSaved listener //////////////////////////////////////
-        this.masterSavedListener = postal.subscribe({
+        this._subscriptions.push(postal.subscribe({
             channel: "centre_" + self.$.selection_criteria.uuid,
             topic: "detail.saved",
             callback: function (data, envelope) {
                 self._postFunctionalEntitySaved(data.savingException, data.entity, data.shouldRefreshParentCentreAfterSave, data.selectedEntitiesInContext);
             }
-        });
+        }));
 
         /////////////////////// Execute action for this centre subscriber////////////////////////
         //This event can be published from entity master which holds the call back that should be executed for this centre.
-        this.masterExecuteListener = postal.subscribe({
+        this._subscriptions.push(postal.subscribe({
             channel: "centre_" + self.$.selection_criteria.uuid,
             topic: "execute",
             callback: function (callback, envelope) {
                 callback(self);
             }
-        });
+        }));
 
         //Select the result view if autoRun is true
         if (self.autoRun || self.queryPart) {
@@ -855,8 +870,9 @@ const TgEntityCentreBehaviorImpl = {
     },
 
     detached: function () {
-        this.masterSavedListener.unsubscribe();
-        this.masterExecuteListener.unsubscribe();
+        while (this._subscriptions.length !== 0) {
+            this._subscriptions.pop().unsubscribe();
+        }
     },
 
     focusNextView: function (e) {
@@ -980,14 +996,19 @@ const TgEntityCentreBehaviorImpl = {
     currentPage: function () {
         const self = this;
         if (!this.$.egi.isEditing()) {
-            self.persistActiveElement();
             return this.$.selection_criteria.currentPage()
                 .then(function () {
                     self.runInsertionPointActions();
-                    self.restoreActiveElement();
                 });
         }
         return this._saveOrCancelPromise();
+    },
+
+    currentPageTap: function () {
+        this.persistActiveElement();
+        this.currentPage()
+            .then(() => this.restoreActiveElement())
+            .catch(() => this.restoreActiveElement());
     },
 
     /**

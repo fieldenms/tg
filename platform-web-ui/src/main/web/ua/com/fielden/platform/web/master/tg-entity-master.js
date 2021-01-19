@@ -45,6 +45,7 @@ const template = html`
         method="PUT"
         handle-as="json"
         on-response="_processRetrieverResponse"
+        reject-with-request
         on-error="_processRetrieverError">
     </iron-ajax>
     <iron-ajax id="ajaxSaver"
@@ -53,6 +54,7 @@ const template = html`
         method="POST"
         handle-as="json"
         on-response="_processSaverResponse"
+        reject-with-request
         on-error="_processSaverError"
         loading="{{_saverLoading}}">
     </iron-ajax>
@@ -146,7 +148,7 @@ Polymer({
     },
 
     _masterLoaded: function (_bodyLoaded, _actionBarLoaded) {
-        this.fire('tg-entity-master-content-loaded', this);
+        _bodyLoaded && _actionBarLoaded && this.fire('tg-entity-master-content-loaded', this);
     },
 
     /**

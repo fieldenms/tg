@@ -218,7 +218,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
             },
 
             /**
-             * tap event handler for list of founded items (this event handler may accept tapped item if the list is sisngle selection).
+             * Tap event handler for list of found items (this event handler may accept tapped item if the list is single selection).
              */
             selectionListTap: {
                 type: Function
@@ -332,8 +332,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
      * Obtains a value of the specified by name property for the passed in entity.
      */
     _propValueByName (entity, propName) {
-        const propValue = this.reflector.convert(entity.get(propName));
-        return (propValue === null ? '' : propValue) + '';
+        return this.reflector.tg_toString(entity.get(propName), entity.type(), propName);
     }
 
     /**

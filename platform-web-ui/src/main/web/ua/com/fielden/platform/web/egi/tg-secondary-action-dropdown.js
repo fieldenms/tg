@@ -40,10 +40,18 @@ Polymer({
         /**
          * The 'currentEntity' should contain the entity that was clicked (result-set actions)
          * or the entity on which primary / secondary action was chosen. In case when no of the above cases
-         * is invoking (for e.g. as in topLevel actions) -- 'currentEntity' should be empty.
+         * is invoking (for e.g. as in topLevel actions) -- 'currentEntity' should be empty or can be specified in some other way
+         * (via preAction for example).
          */
         currentEntity: {
-            type: Object,
+            type: Function,
+            value: function () {
+                return () => null;
+            },
+            /**
+             * This current entity observer is still needed even thou currentEntity is a function. It simplifies choosen entity management logic.
+             * Current entity function changes every time after another secondary action is pressed.
+             */
             observer: "_currentEntityChanged"
         },
 
