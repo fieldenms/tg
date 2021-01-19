@@ -26,7 +26,6 @@ import ua.com.fielden.platform.web.factories.webui.EgiExampleResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EntityAutocompletionResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EntityResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EntityValidationResourceFactory;
-import ua.com.fielden.platform.web.factories.webui.WebClientErrorLoggerResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.FileResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.GraphiQLResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.MainWebUiComponentResourceFactory;
@@ -37,6 +36,7 @@ import ua.com.fielden.platform.web.factories.webui.SerialisationTestResourceFact
 import ua.com.fielden.platform.web.factories.webui.ServiceWorkerResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.TgReflectorComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.WebApiResourceFactory;
+import ua.com.fielden.platform.web.factories.webui.WebClientErrorLoggerResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.WebUiPreferencesResourceFactory;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -140,8 +140,8 @@ public abstract class AbstractWebUiResources extends Application {
         //Attache master retrieve resource
         guardedRouter.attach("/master/{entityType}", new MasterInfoProviderResourceFactory(webApp, deviceProvider, dates, restUtil));
         // Web API resource
-        router.attach("/api", new WebApiResourceFactory(injector));
-        router.attach("/api/graphiql", new GraphiQLResourceFactory(injector));
+        guardedRouter.attach("/api", new WebApiResourceFactory(injector));
+        guardedRouter.attach("/api/graphiql", new GraphiQLResourceFactory(injector));
 
         //Attache client side error logger resource
         guardedRouter.attach("/error", new WebClientErrorLoggerResourceFactory(injector));
