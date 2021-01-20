@@ -163,6 +163,16 @@ public class FieldSchema {
         .build();
     
     /**
+     * Returns whether argument definition is related to query criteria.
+     * 
+     * @param argumentDefinition
+     * @return
+     */
+    public static boolean isQueryArgument(final GraphQLArgument argumentDefinition) {
+        return asList(LIKE, VALUE, FROM, TO).contains(argumentDefinition.getName());
+    }
+    
+    /**
      * Creates GraphQL field definition for <code>entityType</code> and <code>property</code>.
      * Set of supported property types:
      * <ul>

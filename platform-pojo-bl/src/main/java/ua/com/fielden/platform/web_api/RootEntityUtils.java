@@ -23,6 +23,7 @@ import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web_api.FieldSchema.FROM;
 import static ua.com.fielden.platform.web_api.FieldSchema.LIKE;
 import static ua.com.fielden.platform.web_api.FieldSchema.ORDER;
+import static ua.com.fielden.platform.web_api.FieldSchema.ORDER_ARGUMENT;
 import static ua.com.fielden.platform.web_api.FieldSchema.TO;
 import static ua.com.fielden.platform.web_api.FieldSchema.VALUE;
 
@@ -96,7 +97,7 @@ public class RootEntityUtils {
             properties(entityType, null, toFields(selectionSet, fragmentDefinitions), fragmentDefinitions, schema)
         ).collect(toLinkedHashMap(t3 -> t3._1, t3 -> t2(t3._2, t3._3)));
         final List<QueryProperty> queryProperties = propertiesAndArguments.entrySet().stream()
-            .filter(propertyAndArguments -> !propertyAndArguments.getValue()._1.isEmpty()) // if GraphQL argument definitions are not empty ...
+            .filter(propertyAndArguments -> propertyAndArguments.getValue()._1.stream().anyMatch(FieldSchema::isQueryArgument)) // if GraphQL argument definitions contain at least one query argument definition ...
             .map(propertyAndArguments -> createQueryProperty( // ... create query properties based on them
                 entityType,
                 propertyAndArguments.getKey(),
@@ -106,7 +107,7 @@ public class RootEntityUtils {
             ))
             .collect(toList());
         final List<Pair<String, Ordering>> orderingProperties = propertiesAndArguments.entrySet().stream()
-            .filter(propertyAndArguments -> !propertyAndArguments.getValue()._1.isEmpty()) // if GraphQL argument definitions are not empty ...
+            .filter(propertyAndArguments -> propertyAndArguments.getValue()._1.contains(ORDER_ARGUMENT)) // if GraphQL argument definitions contain ORDER_ARGUMENT ...
             .map(propertyAndArguments -> createOrderingProperty( // ... create ordering properties based on them
                 propertyAndArguments.getKey(),
                 propertyAndArguments.getValue(),
