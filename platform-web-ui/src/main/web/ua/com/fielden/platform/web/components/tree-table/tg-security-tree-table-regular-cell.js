@@ -22,7 +22,7 @@ const template = html`
 Polymer({
     _template: template,
 
-    is: 'tg-tree-table-regular-cell',
+    is: 'tg-security-tree-table-regular-cell',
 
     properties: {
         column: Object,

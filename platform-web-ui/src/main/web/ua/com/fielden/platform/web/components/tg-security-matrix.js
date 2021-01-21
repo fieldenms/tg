@@ -5,7 +5,7 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/resources/polymer/@polymer/paper-button/paper-button.js'
 
 import '/resources/master/tg-entity-master.js';
-import '/resources/components/tree-table/tg-tree-table.js';
+import '/resources/components/tree-table/tg-security-tree-table.js';
 import '/resources/master/actions/tg-action.js';
 
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
@@ -43,7 +43,7 @@ const template = html`
         tg-action {
             margin: 10px;
         }
-        tg-tree-table {
+        tg-security-tree-table {
             min-height:0;
         }
         .filter-panel ::slotted(.filter-element) {
@@ -70,7 +70,7 @@ const template = html`
             <div class="filter-panel">
                 <slot name="filter-element"></slot>
             </div>
-            <tg-tree-table id="securityMatrix" entities="[[entities]]" hierarchy-column="[[hierarchyColumn]]" columns="[[columns]]"></tg-tree-table>
+            <tg-security-tree-table id="securityMatrix" entities="[[entities]]" hierarchy-column="[[hierarchyColumn]]" columns="[[columns]]"></tg-security-tree-table>
             <div id="actionPanel">
                 <slot name="reload-action"></slot>
                 <tg-action id="cancelButton" enabled-states='[[_actions.REFRESH.enabledStates]]' short-desc='CANCEL' long-desc='Cancels all changes after save' current-state='EDIT' shortcut='ctrl+r meta+r' role='refresh' action='[[_resetSecurityMatrix]]' post-action='{{_postResetSecurityMatrix}}' post-action-error='{{_postResetSecurityMatrixError}}' style="margin:10px;"></tg-action>
