@@ -68,7 +68,7 @@ const generateChildrenModel = function (children, parentEntity, additionalInfoCb
                 parent.children = [generateLoadingIndicator(parent)];
             }
         }
-        parent.additionalInfoNodes = additionalInfoCb(parent).map(entity => {
+        parent.additionalInfoNodes = (additionalInfoCb ? additionalInfoCb(parent) : []).map(entity => {
             entity.relatedTo = parent;
             entity.over = false;
             return entity;

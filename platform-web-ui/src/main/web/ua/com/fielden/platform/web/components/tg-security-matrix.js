@@ -5,7 +5,7 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/resources/polymer/@polymer/paper-button/paper-button.js'
 
 import '/resources/master/tg-entity-master.js';
-import '/resources/components/tree-table/tg-security-tree-table.js';
+import '/resources/components/security-tree-table/tg-security-tree-table.js';
 import '/resources/master/actions/tg-action.js';
 
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
