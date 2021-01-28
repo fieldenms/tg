@@ -121,7 +121,7 @@ const generateLoadingIndicator = function (parent) {
 const refreshTree = function () {
     const props = ["opened", "highlight"];
     this._entities.forEach((entity, idx) => {
-        if (this.treeList()._isIndexRendered(idx)) {
+        if (this.isEntityRendered(idx)) {
             props.forEach(prop => this.notifyPath("_entities." + idx + "." + prop)); 
         }
     });
@@ -324,7 +324,7 @@ export const TgTreeListBehavior = {
             this._lastFilterText && this._filterSubTree(this._lastFilterText, parentItem.children, false);
             this.fire("tg-tree-model-changed", parentItem);
             this.splice("_entities", modelIdx + 1 + parentItem.additionalInfoNodes.length, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(parentItem, true, false));
-            this.treeList().notifyResize();
+            this.resizeTree();
         }
     },
 
@@ -339,13 +339,22 @@ export const TgTreeListBehavior = {
                 this._lastFilterText && this._filterSubTree(this._lastFilterText, parentItem.children.slice(splice.index, splice.index + splice.addedCount), false);
                 this.fire("tg-tree-model-changed", parentItem);
                 this.splice("_entities", indexForSplice, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(parentItem, true, false, splice.index, splice.addedCount));
-                this.treeList().notifyResize();
+                this.resizeTree();
             });
         }
     },
 
-    treeList: function () {
-        return null;
-    }
+    /**
+     * Resizes the tree component.
+     */
+    resizeTree: function () {
+        this.notifyResize();
+    },
 
+    /**
+     * Determines whether entity specified with index was rendered or not
+     */
+    isEntityRendered: function (index) {
+        return false;
+    }
 };

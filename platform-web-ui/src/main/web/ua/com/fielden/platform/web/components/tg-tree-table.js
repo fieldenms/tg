@@ -93,14 +93,20 @@ export class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRe
         this.regularColumns = this.$.regular_column_slot.assignedNodes({flatten:  true});
     }
 
+    resizeTree () {
+        this.$.mainTreeList.notifyResize();
+        this.$.regularTreeList.notifyResize();
+    }
+
+    isEntityRendered (index) {
+        this.$.mainTreeList._isIndexRendered(idx)
+    }
+
     _toggle (e) {
         e.stopPropagation();
         this.toggle(e.model.index);
     }
 
-    treeList () {
-        return this.$.treeList;
-    }
 }
 
 customElements.define('tg-tree-table', TgTreeTable);

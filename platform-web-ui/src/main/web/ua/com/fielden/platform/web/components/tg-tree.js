@@ -97,8 +97,12 @@ Polymer({
         this.treeItemAction = function(e){};
     },
 
-    treeList: function () {
-        return this.$.treeList;
+    resizeTree: function () {
+        this.$.treeList.notifyResize();
+    },
+
+    isEntityRendered: function (index) {
+        this.$.treeList._isIndexRendered(idx)
     },
 
     _isSelected: function (selectedEntity, entity) {
