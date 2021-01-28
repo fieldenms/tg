@@ -5,6 +5,7 @@ import java.util.Date;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.DateOnly;
+import ua.com.fielden.platform.entity.annotation.Dependent;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
@@ -13,27 +14,32 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.validation.annotation.GeProperty;
+import ua.com.fielden.platform.entity.validation.annotation.LeProperty;
 
 @KeyType(String.class)
-@KeyTitle(value = "Key", desc = "Some key description")
+@KeyTitle(value = "Date Test Entity Key", desc = "Date test entity key description")
 @CompanionObject(ITgDateTestEntity.class)
 @MapEntityTo
-@DescTitle(value = "Desc", desc = "Some desc description")
+@DescTitle(value = "Date Test Entity Description", desc = "Date test entity extended description")
 public class TgDateTestEntity extends AbstractEntity<String> {
 
     @IsProperty
-    @Title("From Date Prop")
-    @DateOnly
     @MapTo
+    @DateOnly
+    @Dependent("toDateProp")
+    @Title("From Date Property")
     private Date fromDateProp;
 
     @IsProperty
-    @Title("To Date Prop")
-    @DateOnly
     @MapTo
+    @DateOnly
+    @Dependent("fromDateProp")
+    @Title("To Date Property")
     private Date toDateProp;
 
     @Observable
+    @LeProperty("toDateProp")
     public TgDateTestEntity setFromDateProp(final Date fromDateProp) {
         this.fromDateProp = fromDateProp;
         return this;
@@ -44,13 +50,13 @@ public class TgDateTestEntity extends AbstractEntity<String> {
     }
 
     @Observable
-    public TgDateTestEntity setToDateProp(final Date toDatePropDateOnly) {
-        this.toDateProp = toDatePropDateOnly;
+    @GeProperty("fromDateProp")
+    public TgDateTestEntity setToDateProp(final Date toDateProp) {
+        this.toDateProp = toDateProp;
         return this;
     }
 
     public Date getToDateProp() {
         return toDateProp;
     }
-
 }
