@@ -19,55 +19,55 @@ public class OverlappingDateOnlyTest extends AbstractDaoTestCase {
     private final ITgDateTestEntity dao = getInstance(ITgDateTestEntity.class);
 
     @Test
-    public void test_overlapping_for_new_with_intersect_at_the_beginning() {
+    public void validator_detects_intersection_at_the_beginning_of_the_interval_of_the_new_entity() {
         final TgDateTestEntity dte = new_(TgDateTestEntity.class, "next_date_test_entity").setFromDateProp(date("2021-01-01 00:00:00")).setToDateProp(date("2021-01-15 00:00:00"));
         assertTrue(Validators.overlaps(dte, dao, "fromDateProp", "toDateProp"));
     }
 
     @Test
-    public void test_overlapping_for_new_with_intersect_at_the_end() {
+    public void validator_detects_intersection_at_the_end_of_the_iterval_of_the_new_entity() {
         final TgDateTestEntity dte = new_(TgDateTestEntity.class, "next_date_test_entity").setFromDateProp(date("2021-01-20 00:00:00")).setToDateProp(date("2021-02-15 00:00:00"));
         assertTrue(Validators.overlaps(dte, dao, "fromDateProp", "toDateProp"));
     }
 
     @Test
-    public void test_overlapping_for_new_that_incudes_intersecting_period() {
+    public void validator_detects_interval_that_contains_the_interval_of_the_new_entity() {
         final TgDateTestEntity dte = new_(TgDateTestEntity.class, "next_date_test_entity").setFromDateProp(date("2021-01-01 00:00:00")).setToDateProp(date("2021-02-15 00:00:00"));
         assertTrue(Validators.overlaps(dte, dao, "fromDateProp", "toDateProp"));
     }
 
     @Test
-    public void test_overlapping_for_new_that_is_within_intersecting_period() {
+    public void validator_detects_interval_that_is_inside_of_the_interval_of_the_new_entity() {
         final TgDateTestEntity dte = new_(TgDateTestEntity.class, "next_date_test_entity").setFromDateProp(date("2021-01-20 00:00:00")).setToDateProp(date("2021-01-25 00:00:00"));
         assertTrue(Validators.overlaps(dte, dao, "fromDateProp", "toDateProp"));
     }
 
     @Test
-    public void test_overlapping_for_new_that_has_no_overlaps() {
+    public void validator_didnt_find_the_interval_that_would_overlap_the_interval_of_the_new_entity() {
         final TgDateTestEntity dte = new_(TgDateTestEntity.class, "next_date_test_entity").setFromDateProp(date("2021-01-01 00:00:00")).setToDateProp(date("2021-01-10 00:00:00"));
         assertFalse(Validators.overlaps(dte, dao, "fromDateProp", "toDateProp"));
     }
 
     @Test
-    public void test_overlapping_for_new_with_touched_end_period() {
+    public void validator_detects_interval_that_touches_the_end_of_the_interval_of_the_new_entity() {
         final TgDateTestEntity dte = new_(TgDateTestEntity.class, "next_date_test_entity").setFromDateProp(date("2021-01-01 00:00:00")).setToDateProp(date("2021-01-12 00:00:00"));
         assertTrue(Validators.overlaps(dte, dao, "fromDateProp", "toDateProp"));
     }
 
     @Test
-    public void test_overlapping_for_new_with_touched_end_period_and_time_portion() {
+    public void validator_detects_interval_that_touches_the_end_of_the_interval_with_time_portion() {
         final TgDateTestEntity dte = new_(TgDateTestEntity.class, "next_date_test_entity").setFromDateProp(date("2021-02-20 15:00:00")).setToDateProp(date("2021-03-02 10:13:17"));
         assertTrue(Validators.overlaps(dte, dao, "fromDateProp", "toDateProp"));
     }
 
     @Test
-    public void test_overlapping_for_new_with_touched_start_period() {
+    public void validator_detects_interval_that_touches_the_begining_of_the_interval_of_the_new_entity() {
         final TgDateTestEntity dte = new_(TgDateTestEntity.class, "next_date_test_entity").setFromDateProp(date("2021-02-01 00:00:00")).setToDateProp(date("2021-02-12 00:00:00"));
         assertTrue(Validators.overlaps(dte, dao, "fromDateProp", "toDateProp"));
     }
 
     @Test
-    public void test_overlapping_for_new_with_touched_start_period_and_time_portion() {
+    public void validator_detects_interval_that_touches_the_begining_of_the_interval_with_time_portion() {
         final TgDateTestEntity dte = new_(TgDateTestEntity.class, "next_date_test_entity").setFromDateProp(date("2021-02-01 08:15:00")).setToDateProp(date("2021-02-12 00:00:00"));
         assertTrue(Validators.overlaps(dte, dao, "fromDateProp", "toDateProp"));
     }
