@@ -17,6 +17,8 @@ import static ua.com.fielden.platform.entity.fetch.FetchProviderFactory.createDe
 import static ua.com.fielden.platform.entity.fetch.FetchProviderFactory.createEmptyFetchProvider;
 import static ua.com.fielden.platform.entity.fetch.FetchProviderFactory.createFetchProviderWithKeyAndDesc;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotationPresent;
+import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
 import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.PROPERTY_SPLITTER;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
@@ -61,6 +63,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.annotation.DateOnly;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -731,7 +734,7 @@ public class EntityUtils {
     /**
      * Determines whether {@code type} represents entity query criteria.
      * It uses temporal caching to speedup successive calls.
-     * 
+     *
      * @param type
      * @return
      */
@@ -1026,9 +1029,9 @@ public class EntityUtils {
         //                (freshValue != null && !freshValue.equals(staleOriginalValue) && !freshValue.equals(staleNewValue));
         return isStale(staleOriginalValue, freshValue) && !EntityUtils.equalsEx(staleNewValue, freshValue);
     }
-    
-    ////////////////////////////////////////////// ID_AND_VERSION ////////////////////////////////////////////// 
-    
+
+    ////////////////////////////////////////////// ID_AND_VERSION //////////////////////////////////////////////
+
     /**
      * Creates empty {@link IFetchProvider} for concrete <code>entityType</code> with instrumentation.
      *
@@ -1043,7 +1046,7 @@ public class EntityUtils {
     public static <T extends AbstractEntity<?>> IFetchProvider<T> fetch(final Class<T> entityType) {
         return createDefaultFetchProvider(entityType, false);
     }
-    
+
     /**
      * Creates empty {@link IFetchProvider} for concrete <code>entityType</code> <b>without</b> instrumentation.
      *
@@ -1053,9 +1056,9 @@ public class EntityUtils {
     public static <T extends AbstractEntity<?>> IFetchProvider<T> fetchNotInstrumented(final Class<T> entityType) {
         return createDefaultFetchProvider(entityType, false);
     }
-    
-    ////////////////////////////////////////////// KEY_AND_DESC ////////////////////////////////////////////// 
-    
+
+    ////////////////////////////////////////////// KEY_AND_DESC //////////////////////////////////////////////
+
     /**
      * Creates {@link IFetchProvider} for concrete <code>entityType</code> with 'key' and 'desc' (analog of {@link EntityQueryUtils#fetchKeyAndDescOnly(Class)}) with instrumentation.
      *
@@ -1066,11 +1069,11 @@ public class EntityUtils {
     public static <T extends AbstractEntity<?>> IFetchProvider<T> fetchWithKeyAndDesc(final Class<T> entityType, final boolean instrumented) {
         return createFetchProviderWithKeyAndDesc(entityType, instrumented);
     }
-    
+
     public static <T extends AbstractEntity<?>> IFetchProvider<T> fetchWithKeyAndDesc(final Class<T> entityType) {
         return createFetchProviderWithKeyAndDesc(entityType, false);
     }
-    
+
     /**
      * Creates {@link IFetchProvider} for concrete <code>entityType</code> with 'key' and 'desc' (analog of {@link EntityQueryUtils#fetchKeyAndDescOnly(Class)}) <b>without</b> instrumentation.
      *
@@ -1080,8 +1083,8 @@ public class EntityUtils {
     public static <T extends AbstractEntity<?>> IFetchProvider<T> fetchNotInstrumentedWithKeyAndDesc(final Class<T> entityType) {
         return createFetchProviderWithKeyAndDesc(entityType, false);
     }
-    
-    ////////////////////////////////////////////// NONE ////////////////////////////////////////////// 
+
+    ////////////////////////////////////////////// NONE //////////////////////////////////////////////
     /**
      * Creates {@link IFetchProvider} for concrete <code>entityType</code> with no properties and concrete instrumentation.
      *
@@ -1092,7 +1095,7 @@ public class EntityUtils {
     public static <T extends AbstractEntity<?>> IFetchProvider<T> fetchNone(final Class<T> entityType, final boolean instrumented) {
         return createEmptyFetchProvider(entityType, instrumented);
     }
-    
+
     /**
      * Creates un-instrumented {@link IFetchProvider} for concrete <code>entityType</code> with no properties.
      *
@@ -1102,7 +1105,7 @@ public class EntityUtils {
     public static <T extends AbstractEntity<?>> IFetchProvider<T> fetchNone(final Class<T> entityType) {
         return fetchNone(entityType, false);
     }
-    
+
     /**
      * Tries to perform shallow copy of collectional value. If unsuccessful, throws unsuccessful {@link Result} describing the error.
      *
@@ -1246,7 +1249,7 @@ public class EntityUtils {
 
     /**
      * Finds entity by {@code id} and retrieves it with a fetch model suitable for mutation (i.e. the same as for entity masters).
-     * However, if the resultant entity to be mutated then argument {@code co} must correspond to an instrumenting instance. 
+     * However, if the resultant entity to be mutated then argument {@code co} must correspond to an instrumenting instance.
      *
      * @param id
      * @param co -- either pure reader or mutator if the resultant entity needs to be changed
@@ -1258,10 +1261,10 @@ public class EntityUtils {
 
     /**
      * Finds entity by {@code key} and retrieves it with a fetch model suitable for mutation (i.e. the same as for entity masters).
-     * However, if the resultant entity to be mutated then argument {@code co} must correspond to an instrumenting instance. 
+     * However, if the resultant entity to be mutated then argument {@code co} must correspond to an instrumenting instance.
      *
      * @param co -- either pure reader or mutator if the resultant entity needs to be changed
-     * @param kayValues -- an array of values for entity key members 
+     * @param kayValues -- an array of values for entity key members
      * @return
      */
     public static <T extends AbstractEntity<?>> Optional<T> findByKeyWithMasterFetch(final IEntityReader<T> co, final Object... keyValues) {
@@ -1275,8 +1278,8 @@ public class EntityUtils {
      * If the path is invalid then the resultant stream would be empty.
      * If the path is valid, but there {@code null} values on some of the intermediate properties then corresponding sub-path values would be represented as empty {@link Optional}.
      * <p>
-     * This functionality is useful if one needs to analyse the nested values of entities that conclude in the property described by {@code propertyPath} starting with entity {@code root}. 
-     * 
+     * This functionality is useful if one needs to analyse the nested values of entities that conclude in the property described by {@code propertyPath} starting with entity {@code root}.
+     *
      * @param root
      * @param propertyPath
      * @return
@@ -1296,10 +1299,10 @@ public class EntityUtils {
             return t2(propName, ofNullable(root.get(path)));
         });
     }
-    
+
     /**
-     * Gets list of all properties paths representing value of entity key. For composite entities props are listed in key members declaration order taking into account cases of multilevel nesting.   
-     * 
+     * Gets list of all properties paths representing value of entity key. For composite entities props are listed in key members declaration order taking into account cases of multilevel nesting.
+     *
      * @param parentContextPath -- path to key property within EQL query context.
      * @param entityType -- entity type containing key property.
      * @return
@@ -1311,17 +1314,17 @@ public class EntityUtils {
 
         return keyPaths(entityType, Optional.of(parentContextPath));
     }
-    
+
     /**
-     * Gets list of all properties paths representing value of entity key. For composite entities props are listed in key members declaration order taking into account cases of multilevel nesting.   
-     * 
+     * Gets list of all properties paths representing value of entity key. For composite entities props are listed in key members declaration order taking into account cases of multilevel nesting.
+     *
      * @param entityType -- entity type containing key property.
      * @return
      */
     public static List<String> keyPaths(final Class<? extends AbstractEntity<?>> entityType) {
         return keyPaths(entityType, Optional.empty());
     }
-    
+
     private static List<String> keyPaths(final Class<? extends AbstractEntity<?>> entityType, final Optional<String> parentContextPath) {
         final List<String> result = new ArrayList<>();
 
@@ -1345,5 +1348,16 @@ public class EntityUtils {
      */
     public static boolean isNaturalOrderDescending(final Class<? extends AbstractEntity<?>> type) {
         return AnnotationReflector.getAnnotation(type, KeyType.class).descendingOrder();
+    }
+
+    /**
+     * Returns true if propertyName in entityType has {@link DateOnly} annotation.
+     *
+     * @param entityType
+     * @param propertyName
+     * @return
+     */
+    public static boolean isDateOnly(final Class<? extends AbstractEntity<?>> entityType, final String propertyName) {
+        return isAnnotationPresent(findFieldByName(entityType, propertyName), DateOnly.class);
     }
 }
