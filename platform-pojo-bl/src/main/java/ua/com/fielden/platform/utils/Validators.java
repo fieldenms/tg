@@ -65,7 +65,7 @@ public final class Validators {
             final String toDateProperty, //
             final String... matchProperties) {
         final EntityResultQueryModel<T> model = composeOverlappingCheckQueryModel(entity, fromDateProperty, toDateProperty, matchProperties);
-        return co.count(model) > 0;
+        return co.exists(model);
     }
 
     /**
@@ -99,7 +99,7 @@ public final class Validators {
             final Date toDateValue, //
             final String... matchProperties) {
         final EntityResultQueryModel<T> model = composeOverlappingCheckQueryModel(entity, fromDateProperty, toDateProperty, fromDateValue, toDateValue, matchProperties);
-        return co.count(model) > 0;
+        return co.exists(model);
     }
 
     /**
