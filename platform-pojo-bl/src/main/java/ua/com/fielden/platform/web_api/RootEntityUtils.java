@@ -5,9 +5,11 @@ import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.concat;
+import static java.util.stream.Stream.empty;
 import static java.util.stream.Stream.of;
 import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.ASCENDING;
 import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.DESCENDING;
+import static ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeRepresentation.orderedPropertiesByDefaultFor;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity_centre.review.DynamicOrderingBuilder.createOrderingModel;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.createQuery;
@@ -106,7 +108,7 @@ public class RootEntityUtils {
                 schema.getCodeRegistry()
             ))
             .collect(toList());
-        final List<Pair<String, Ordering>> orderingProperties = propertiesAndArguments.entrySet().stream()
+        final List<Pair<String, Ordering>> specifiedOrderingProperties = propertiesAndArguments.entrySet().stream()
             .filter(propertyAndArguments -> propertyAndArguments.getValue()._1.contains(ORDER_ARGUMENT)) // if GraphQL argument definitions contain ORDER_ARGUMENT ...
             .map(propertyAndArguments -> createOrderingProperty( // ... create ordering properties based on them
                 propertyAndArguments.getKey(),
@@ -114,10 +116,11 @@ public class RootEntityUtils {
                 variables,
                 schema.getCodeRegistry()
             ))
-            .flatMap(orderingProperty -> orderingProperty.isPresent() ? Stream.of(orderingProperty.get()) : Stream.empty()) // exclude empty values
+            .flatMap(orderingProperty -> orderingProperty.isPresent() ? of(orderingProperty.get()) : empty()) // exclude empty values
             .sorted((p1, p2) -> p1._3.compareTo(p2._3)) // sort by ordering priority
             .map(prop -> pair(prop._1, prop._2)) // get (name; Ordering) only -- without priority 
             .collect(toList()); // make list -- order is important
+        final List<Pair<String, Ordering>> orderingProperties = specifiedOrderingProperties.isEmpty() ? orderedPropertiesByDefaultFor(entityType) : specifiedOrderingProperties; // ordering by default matches the entity centre's ordering by default
         return dates -> from(createQuery(entityType, queryProperties, dates).model())
             .with(fetchNotInstrumented(entityType).with(propertiesAndArguments.keySet()).fetchModel())
             .with(createOrderingModel(entityType, orderingProperties))
