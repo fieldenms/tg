@@ -267,7 +267,7 @@ public class TgScalars {
      * @param date
      * @return
      */
-    static Map<String, Object> createDateRepr(final Date date) {
+    public static Map<String, Object> createDateRepr(final Date date) {
         return linkedMapOf(
             t2("value", dateTimePrinter.print(new DateTime(date))),
             t2("millis", date.getTime())
