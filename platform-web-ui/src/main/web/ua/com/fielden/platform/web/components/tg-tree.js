@@ -102,7 +102,7 @@ Polymer({
     },
 
     isEntityRendered: function (index) {
-        this.$.treeList._isIndexRendered(idx)
+        this.$.treeList._isIndexRendered(index)
     },
 
     _isSelected: function (selectedEntity, entity) {
@@ -131,7 +131,7 @@ Polymer({
         while (toElement && !toElement.classList.contains("tree-node")) {
             toElement = toElement.parentElement;
         }
-        const entityModel = this.treeList().modelForElement(toElement);
+        const entityModel = this.$.treeList.modelForElement(toElement);
         const entity = entityModel && entityModel.entity;
         const toEntity = entity && entity.isAdditionalInfo ? entity.relatedTo : entity;
         if (fromEntity !== toEntity) {

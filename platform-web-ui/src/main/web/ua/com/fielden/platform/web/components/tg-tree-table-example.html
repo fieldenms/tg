@@ -5,16 +5,14 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
     <title>Menu list example</title>
+    <link rel="stylesheet" type="text/css" crossorigin="anonymous" href="https://fonts.googleapis.com/css?family=Roboto+Mono:400,700|Roboto:400,300,300italic,400italic,500,500italic,700,700italic"></link>
     <script src='/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js'></script>
     <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
-    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
     <script type="module">
         import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
         import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js';
         import '/resources/polymer/@polymer/paper-input/paper-input.js'
         import '/resources/egi/tg-property-column.js';
-
-        import { EntityStub } from '/resources/reflection/tg-polymer-utils.js';
 
         import './tg-tree-table.js';
     </script>
@@ -40,7 +38,10 @@
         </template>
     </dom-bind>
 </body>
-<script>
+<script type="module">
+
+    import { EntityStub } from '/resources/reflection/tg-polymer-utils.js';
+
     let idCounter = 0;
     class TreeEntry extends EntityStub {
 
@@ -52,7 +53,7 @@
             this.internalName = obj.internalName;
             this.dbSchema = obj.dbSchema;
             this.refTable = obj.refTable;
-            this.hasChildren = true;
+            this.hasChildren = obj.hasChildren;
             this.children = [];
         }
 
@@ -66,21 +67,41 @@
     const numberOfItems = 10;
     const types = [];
     for(let i = 0; i < numberOfItems; i++) {
-        types.push(new TreeEntry({name: "Type_" + i, desc: "Type_Desc_" + i, internalName: "Type_" + i, dbSchema: "TABLE_" + i, hasChildren: true}));
+        types.push({
+            name: "Type_" + i, 
+            desc: "Type_Desc_" + i, 
+            internalName: "Type_" + i, 
+            dbSchema: "TABLE_" + i, 
+            hasChildren: true});
     }
     const properties = [];
     for (let i = 0; i < numberOfItems; i++) {
-        properties.push[new TreeEntry({name: "Property_" + i, propertyType: "Type_" + i, desc: "Property_Desc_" + i, internalName: "property_" + i, dbSchema: "PROPERTY_" + i, refTable: "TABLE_" + i, hasChildren: true})];
+        properties.push({
+            name: "Property_" + i, 
+            propertyType: "Type_" + i, 
+            desc: "Property_Desc_" + i, 
+            internalName: "property_" + i, 
+            dbSchema: "PROPERTY_" + i, 
+            refTable: "TABLE_" + i, 
+            hasChildren: true
+        });
     }
-    properties.push[new TreeEntry({name: "Property_" + 10, propertyType: "String", desc: "Property_Desc_" + 10, internalName: "property_" + 10, dbSchema: "PROPERTY_" + 10, hasChildren: false})];
+    properties.push({
+        name: "Property_" + 10, 
+        propertyType: "String", 
+        desc: "Property_Desc_" + 10, 
+        internalName: "property_" + 10, 
+        dbSchema: "PROPERTY_" + 10, 
+        hasChildren: false
+    });
     
     const generateChildren = function (parent) {
         if (parent) {
             if (!parent.propertyType || parent.propertyType !== "String") {
-                return properties.slice();
+                return properties.map(property => new TreeEntry(property));
             }
         } else {
-            return types.slice();
+            return types.map(type => new TreeEntry(type));
         }
     }
     app.model = generateChildren();
@@ -89,24 +110,22 @@
     // }
     app._loadSubtree = function (e) {
         const parentsPath = e.detail.parentPath;
-        if (parentsPath.length < deepth) {
-            const idxs = [];
-            let modelList = app.model;
-            for (let i = 0; i < parentsPath.length; i++) {
-                const parentIdx = modelList.indexOf(parentsPath[i]);
-                if (parentIdx < 0) {
-                    throw {msg: "The item " + parentsPath[0].key + " couldn't be found at " + i + " level"};
-                } else {
-                    idxs.push(parentIdx);
-                }
-                modelList = parentsPath[i].children;
+        const idxs = [];
+        let modelList = app.model;
+        for (let i = 0; i < parentsPath.length; i++) {
+            const parentIdx = modelList.indexOf(parentsPath[i]);
+            if (parentIdx < 0) {
+                throw {msg: "The item " + parentsPath[0].key + " couldn't be found at " + i + " level"};
+            } else {
+                idxs.push(parentIdx);
             }
-            const pathToChange = idxs.reduce((acc, cur) => acc += "." + cur + ".children", "model");
-            const generatedChildren = generateChildren(parentsPath[parentsPath.length - 1]);
-            setTimeout(() => {
-                app.set(pathToChange, generatedChildren);
-            }, 2000);
+            modelList = parentsPath[i].children;
         }
+        const pathToChange = idxs.reduce((acc, cur) => acc += "." + cur + ".children", "model");
+        const generatedChildren = generateChildren(parentsPath[parentsPath.length - 1]);
+        setTimeout(() => {
+            app.set(pathToChange, generatedChildren);
+        }, 2000);
     }
     app._filterTree = function (e) {
         app.$.tree.filter(e.detail.value);
