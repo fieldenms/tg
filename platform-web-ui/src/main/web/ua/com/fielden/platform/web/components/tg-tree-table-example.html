@@ -13,11 +13,18 @@
         import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js';
         import '/resources/polymer/@polymer/paper-input/paper-input.js'
         import '/resources/egi/tg-property-column.js';
-
         import './tg-tree-table.js';
     </script>
     <custom-style>
-        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
+        <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning">
+            body {
+                font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 10pt;
+            }
+            #tree {
+                min-height: 0;
+            }
+        </style>
     </custom-style>
 </head>
 
@@ -68,10 +75,12 @@
     const types = [];
     for(let i = 0; i < numberOfItems; i++) {
         types.push({
-            name: "Type_" + i, 
+            name: "Type_" + i,
+            propertyType: null,  
             desc: "Type_Desc_" + i, 
             internalName: "Type_" + i, 
-            dbSchema: "TABLE_" + i, 
+            dbSchema: "TABLE_" + i,
+            refTable: null, 
             hasChildren: true});
     }
     const properties = [];
@@ -91,7 +100,8 @@
         propertyType: "String", 
         desc: "Property_Desc_" + 10, 
         internalName: "property_" + 10, 
-        dbSchema: "PROPERTY_" + 10, 
+        dbSchema: "PROPERTY_" + 10,
+        refTable: null,
         hasChildren: false
     });
     
