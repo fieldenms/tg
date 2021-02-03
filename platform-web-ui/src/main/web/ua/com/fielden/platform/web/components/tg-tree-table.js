@@ -9,6 +9,7 @@ import { FlattenedNodesObserver } from '/resources/polymer/@polymer/polymer/lib/
 
 import { TgTreeListBehavior } from '/resources/components/tg-tree-list-behavior.js';
 import { TgEgiDataRetrievalBehavior } from '/resources/egi/tg-egi-data-retrieval-behavior.js';
+import { tearDownEvent, getRelativePos } from '/resources/reflection/tg-polymer-utils.js';
 
 
 const template = html`
@@ -80,7 +81,6 @@ const template = html`
             @apply --layout-horizontal;
         }
         .table-header-column-title {
-            margin-right: 8px;
             @apply --layout-flex;
         }
         .table-data-row {
@@ -106,7 +106,6 @@ const template = html`
             background-color: #EEEEEE;
         }
         .table-cell-container {
-            margin-right: 8px;
             @apply --layout-flex;
         }
         .table-cell {
@@ -114,6 +113,12 @@ const template = html`
             @apply --layout-center;
             @apply --layout-relative;
             padding: 0 0.6rem;
+        }
+        .tree-table-cell {
+            @apply --layout-horizontal;
+            @apply --layout-center;
+            @apply --layout-relative;
+            @apply --layout-flex;
         }
         .truncate {
             white-space: nowrap;
@@ -239,9 +244,11 @@ const template = html`
                 <iron-list id="mainTreeList" items="[[_entities]]" as="entity" scroll-target="scrollableContainer">
                     <template>
                         <div class="table-data-row" selected$="[[entity.selected]]" over$="[[entity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
-                            <div class="table-cell cell" style$="[[_calcColumnStyle(entity, hierarchyColumn, hierarchyColumn.width, hierarchyColumn.growFactor, 'true')]]">
-                                <iron-icon class="expand-button" icon="av:play-arrow" style="flex-grow:0;flex-shrink:0;" invisible$="[[!entity.entity.hasChildren]]" collapsed$="[[!entity.opened]]" on-tap="_toggle"></iron-icon>
-                                <div class="truncate" highlighted$="[[entity.highlight]]" tooltip-text$="[[_getTooltip(entity, hierarchyColumn)]]">[[_getBindedTreeTableValue(entity, hierarchyColumn)]]</div>
+                            <div class="table-cell cell" style$="[[_calcColumnStyle(hierarchyColumn, hierarchyColumn.width, hierarchyColumn.growFactor, 'true')]]">
+                                <div class="tree-table-cell" style$="[[itemStyle(entity)]]">
+                                    <iron-icon class="expand-button" icon="av:play-arrow" style="flex-grow:0;flex-shrink:0;" invisible$="[[!entity.entity.hasChildren]]" collapsed$="[[!entity.opened]]" on-tap="_toggle"></iron-icon>
+                                    <div class="truncate table-cell-container" highlighted$="[[entity.highlight]]" tooltip-text$="[[_getTooltip(entity, hierarchyColumn)]]">[[_getBindedTreeTableValue(entity, hierarchyColumn)]]</div>
+                                </div>
                             </div>
                         </div>
                     </template>
@@ -252,7 +259,7 @@ const template = html`
                     <template>
                         <div class="table-data-row" selected$="[[entity.selected]]" over$="[[entity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
                             <template is="dom-repeat" items="[[regularColumns]]" as="column">
-                                <div class="table-cell cell" style$="[[_calcColumnStyle(entity, column, column.width, column.growFactor, 'false')]]" highlighted$="[[entity.highlight]]" tooltip-text$="[[_getTooltip(entity, column)]]">
+                                <div class="table-cell cell" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'false')]]" highlighted$="[[entity.highlight]]" tooltip-text$="[[_getTooltip(entity, column)]]">
                                     <div class="truncate table-cell-container">[[_getBindedTreeTableValue(entity, column)]]</div>
                                 </div>
                             </template>
@@ -264,6 +271,16 @@ const template = html`
         <!-- table lock layer -->
         <div class="lock-layer" lock$="[[lock]]"></div>
     </div>`; 
+
+function calculateColumnWidthExcept (columnIndex, columnElements, columnLength) {
+    let columnWidth = 0;
+    for (let i = 0; i < columnLength; i++) {
+        if (columnIndex !== i) {
+            columnWidth += columnElements[i].offsetWidth;
+        }
+    }
+    return columnWidth;
+};
 
 export class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRetrievalBehavior], PolymerElement) {
 
@@ -326,16 +343,28 @@ export class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRe
         return colStyle;
     }
 
-    _calcColumnStyle (entity, item, itemWidth, columnGrowFactor, fixed) {
+    _calcColumnStyle (item, itemWidth, columnGrowFactor, fixed) {
         let colStyle = this._calcColumnHeaderStyle(item, itemWidth, columnGrowFactor, fixed);
-        if (fixed === 'true') {
-            colStyle += this.itemStyle(entity);
-        }
         return colStyle;
     }
 
 
     /******************************EventListeners************************/
+
+    _updateTableSizeAsync () {
+        this.async(function () {
+            this._resizeEventListener();
+        }.bind(this), 1);
+    }
+
+    _resizeEventListener () {
+        this._handleScrollEvent();
+    }
+
+    _handleScrollEvent () {
+        this._showLeftShadow = this.$.scrollableContainer.scrollLeft > 0;
+        this._showTopShadow = this.$.scrollableContainer.scrollTop > 0;
+    }
 
     _handleTouchMove (e) {
         if (this._columnResizingObject) {
@@ -365,6 +394,145 @@ export class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRe
         document.body.style["cursor"] = "";
     }
 
+    _changeColumnSize (e) {
+        tearDownEvent(e);
+        switch (e.detail.state) {
+        case 'start':
+            this._startColumnResize(e);
+            break;
+        case 'track':
+            e.currentTarget.hasAttribute("fixed") ? this._trackFixedColumnSize(e) : this._trackColumnSize(e);
+            break;
+        case 'end':
+            this._endColumnResizing(e);
+            break;
+        }
+    }
+
+    _startColumnResize (e) {
+        //Change the style to visualise column resizing.
+        //this.style.cursor = "col-resize";
+        e.currentTarget.classList.toggle("resizing-action", true);
+        //Calculate all properties needed for column resizing logic and create appropriate resizing object
+        const columnElements = this._getHeaderColumns();
+        const isHierarchyColumn = e.currentTarget.hasAttribute("fixed");
+        this._columnResizingObject = {
+            oldColumnWidth: isHierarchyColumn ? this.hierarchyColumn.width : e.model.item.width,
+            oldColumnGrowFactor: isHierarchyColumn ? this.hierarchyColumn.growFactor : e.model.item.growFactor,
+            hierarchyContainerWidth: this.hierarchyColumn ? columnElements[0].offsetWidth : 0,
+            scrollableContainerWidth: this.$.scrollableContainer.clientWidth,
+            otherColumnWidth: calculateColumnWidthExcept(isHierarchyColumn ? 0 : (this.hierarchyColumn ? 1 : 0) + e.model.index, columnElements, (this.hierarchyColumn ? 1 : 0) + this.regularColumns.length),
+            widthCorrection: e.currentTarget.offsetWidth - e.currentTarget.firstElementChild.offsetWidth,
+            hasAnyFlex: this.regularColumns.some((column, index) => (!e.model || index !== e.model.index) && column.growFactor !== 0)
+        };
+    }
+
+    _trackFixedColumnSize (e) {
+        if (this._columnResizingObject) {
+            const columnWidth = e.currentTarget.firstElementChild.offsetWidth;
+            let newWidth = columnWidth + e.detail.ddx;
+
+            //Correct size if EGI is less then min width.
+            if (newWidth < this.hierarchyColumn.minWidth) {
+                newWidth = this.hierarchyColumn.minWidth;
+            }
+
+            //Correct width if fixed container has become bigger then scrollabel conatiner
+            if (newWidth + this._columnResizingObject.widthCorrection > this.$.scrollableContainer.clientWidth) {
+                newWidth = this.$.scrollableContainer.clientWidth - this._columnResizingObject.widthCorrection;
+            }
+
+            if (columnWidth !== newWidth) {
+                this.set("hierarchyColumn.width", newWidth);
+                this._updateTableSizeAsync();
+            }
+        }
+    }
+
+    _trackColumnSize (e) {
+        if (this._columnResizingObject) {
+            const columnWidth = e.currentTarget.firstElementChild.offsetWidth;
+            let newWidth = columnWidth + e.detail.ddx;
+
+            //Correct size for mouse out of EGI.
+            const mousePos = getRelativePos(e.detail.x, e.detail.y, this.$.scrollableContainer);
+            if (mousePos.x > this._columnResizingObject.scrollableContainerWidth) {
+                newWidth += mousePos.x - this._columnResizingObject.scrollableContainerWidth;
+            } else if (mousePos.x < this._columnResizingObject.hierarchyContainerWidth) {
+                newWidth -= this._columnResizingObject.hierarchyContainerWidth - mousePos.x;
+            }
+
+            //Correct new width when dragging last column or other column and overall width is less then width of container.
+            if (this._columnResizingObject.otherColumnWidth + newWidth + this._columnResizingObject.widthCorrection < this.$.scrollableContainer.clientWidth) {
+                console.log("width is less");
+                if (e.model.index === this.regularColumns.length - 1) {
+                    newWidth = this.$.scrollableContainer.clientWidth - this._columnResizingObject.otherColumnWidth - this._columnResizingObject.widthCorrection;
+                } else {
+                    if (!this._columnResizingObject.hasAnyFlex) {
+                        console.log("should set flex");
+                        this.set("regularColumns." + (this.regularColumns.length - 1) + ".growFactor", 1);
+                        this._columnResizingObject.hasAnyFlex = true;
+                        const columnParameters = this._columnResizingObject.columnParameters || {}; // this.$.reflector.newEntity("ua.com.fielden.platform.web.centre.ColumnParameter");
+                        columnParameters[this.regularColumns[this.regularColumns.length - 1].property] = {
+                            growFactor: 1
+                        };
+                        this._columnResizingObject.columnParameters = columnParameters;
+                    }
+                }
+            }
+
+            //Correct size if EGI is less then min width.
+            if (newWidth < e.model.item.minWidth) {
+                newWidth = e.model.item.minWidth;
+            }
+
+            //Change the column width if it is needed
+            if (columnWidth !== newWidth) {
+                if (e.model.item.growFactor !== 0) {
+                    this.set("regularColumns." + e.model.index + ".growFactor", 0);
+                    const columnParameters = this._columnResizingObject.columnParameters || {};
+                    columnParameters[e.model.item.property] = {
+                        growFactor: 1
+                    };
+                    this._columnResizingObject.columnParameters = columnParameters;
+                }
+                this.set("regularColumns." + e.model.index + ".width", newWidth);
+                this._updateTableSizeAsync();
+                //scroll if needed.
+                if (mousePos.x > this._columnResizingObject.scrollableContainerWidth || mousePos.x < this._columnResizingObject.hierarchyContainerWidth) {
+                    this.$.scrollableContainer.scrollLeft += newWidth - columnWidth;
+                }
+            }
+        }
+    }
+
+    _endColumnResizing (e) {
+        //this.style.cursor = "default";
+        e.currentTarget.classList.toggle("resizing-action", false);
+        const column = e.model ? e.model.item : this.hierarchyColumn;
+        if (this._columnResizingObject && (this._columnResizingObject.oldColumnWidth !== column.width || this._columnResizingObject.oldColumnGrowFactor !== column.growFactor)) {
+            const columnParameters = this._columnResizingObject.columnParameters || {};
+            const columnParameter = columnParameters[column.property] || {};
+            if (this._columnResizingObject.oldColumnWidth !== column.width) {
+                columnParameter.width = (+(column.width.toFixed(0)));
+            }
+            if (this._columnResizingObject.oldColumnGrowFactor !== column.growFactor) {
+                columnParameter.growFactor = column.growFactor;
+            }
+            columnParameters[column.property] = columnParameter;
+            this._columnResizingObject.columnParameters = columnParameters;
+        }
+        if (this._columnResizingObject && this._columnResizingObject.columnParameters) {
+            this.fire("tg-tree-table-column-change", this._columnResizingObject.columnParameters);
+        }
+        this._columnResizingObject = null;
+    }
+
+    _getHeaderColumns () {
+        const topLeftCells = this.$.top_left.querySelector(".table-header-row").querySelectorAll(".cell");
+        const topCells = this.$.top.querySelector(".table-header-row").querySelectorAll(".cell");
+        return [...topLeftCells, ...topCells];
+    }
 }
 
 customElements.define('tg-tree-table', TgTreeTable);
