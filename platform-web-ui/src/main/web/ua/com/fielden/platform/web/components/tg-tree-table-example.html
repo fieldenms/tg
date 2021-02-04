@@ -11,7 +11,10 @@
     <script type="module">
         import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
         import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js';
-        import '/resources/polymer/@polymer/paper-input/paper-input.js'
+        import '/resources/polymer/@polymer/paper-input/paper-input.js';
+        import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
+        import '/resources/polymer/@polymer/iron-icon/iron-icon.js';
+        import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
         import '/resources/egi/tg-property-column.js';
         import './tg-tree-table.js';
     </script>
@@ -32,7 +35,10 @@
     <dom-bind>
         <template is="dom-bind">
             <div class="fit layout vertical">
-                <paper-input on-bind-value-changed="_filterTree"></paper-input>
+                <div class="layout horizontal">
+                    <paper-input class="flex" on-bind-value-changed="_filterTree"></paper-input>
+                    <paper-icon-button on-tap="expandAll" icon="icons:arrow-drop-down-circle"></paper-icon-button>
+                </div>
                 <tg-tree-table class="flex" id="tree" model="[[model]]" on-tg-load-subtree="_loadSubtree">
                     <tg-property-column slot='hierarchy-column' property="name" type="String" width="200" min-width="80" grow-factor="1" column-title="Title" column-desc="Title description"></tg-property-column>
                     <tg-property-column slot='regular-column' property="propertyType" type="String" width="100" min-width="80" grow-factor="1" column-title="Property Type" column-desc="Property type"></tg-property-column>
@@ -105,16 +111,32 @@
         hasChildren: false
     });
     
-    const generateChildren = function (parent) {
+    const createTreeEntity = function (obj, deepth) {
+        const treeEntity = new TreeEntry(obj);
+        if (deepth > 1) {
+            treeEntity.children = generateChildren(treeEntity, deepth - 1);
+        }
+        return treeEntity;
+    }
+
+    const generateChildren = function (parent, deepth) {
         if (parent) {
             if (!parent.propertyType || parent.propertyType !== "String") {
-                return properties.map(property => new TreeEntry(property));
+                return properties.map(property => createTreeEntity(property, deepth));
             }
+            return [];
         } else {
-            return types.map(type => new TreeEntry(type));
+            return types.map(type => createTreeEntity(type, deepth));
         }
     }
-    app.model = generateChildren();
+    app.model = generateChildren(null, 4);
+    app.expandAll  = function (e) {
+        const entities = app.$.tree._entities.slice();
+        //app.$.tree.expandSubTreeView(0, entities[0], false);
+        entities.forEach(entity => {
+            app.$.tree.expandSubTreeView(entity, false);
+        });
+    };
     // app._buildContent = function (entity) {
     //     return "<span class='part-to-highlight'>" + entity.entity.key + "</span>&nbsp;&ndash;&nbsp;<span style='color:#737373'><i>" + entity.entity.desc + "</i></span>";
     // }
@@ -132,7 +154,7 @@
             modelList = parentsPath[i].children;
         }
         const pathToChange = idxs.reduce((acc, cur) => acc += "." + cur + ".children", "model");
-        const generatedChildren = generateChildren(parentsPath[parentsPath.length - 1]);
+        const generatedChildren = generateChildren(parentsPath[parentsPath.length - 1], 1);
         setTimeout(() => {
             app.set(pathToChange, generatedChildren);
         }, 2000);

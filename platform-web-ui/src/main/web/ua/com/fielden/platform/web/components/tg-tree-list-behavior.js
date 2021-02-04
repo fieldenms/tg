@@ -188,10 +188,11 @@ export const TgTreeListBehavior = {
         });
     },
 
-    expandSubTreeView: function (idx, parentItem) {
-        if (parentItem.entity.hasChildren) {
+    expandSubTreeView: function (parentItem, refreshLoaded) {
+        const idx = this._entities.indexOf(parentItem);
+        if (idx >= 0 && parentItem.entity.hasChildren) {
             const numOfItemsToDelete = calculateNumberOfOpenedItems(parentItem);
-            this.expandSubTree(parentItem, true);
+            this.expandSubTree(parentItem, refreshLoaded);
             this.notifyPath("_entities." + idx + ".opened", true);
             this.splice("_entities", idx + 1 + parentItem.additionalInfoNodes.length, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(parentItem, true, true));
             this.debounce("refreshTree", refreshTree.bind(this));
