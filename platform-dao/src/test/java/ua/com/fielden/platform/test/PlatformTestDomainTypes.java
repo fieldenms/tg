@@ -60,6 +60,8 @@ import ua.com.fielden.platform.sample.domain.TgWagonClass;
 import ua.com.fielden.platform.sample.domain.TgWagonClassCompatibility;
 import ua.com.fielden.platform.sample.domain.TgWagonSlot;
 import ua.com.fielden.platform.sample.domain.TgWebApiEntity;
+import ua.com.fielden.platform.sample.domain.TgWebApiEntitySyntheticMulti;
+import ua.com.fielden.platform.sample.domain.TgWebApiEntitySyntheticSingle;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.sample.domain.TgWorkshop;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntity;
@@ -114,6 +116,8 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(TgTimesheet.class);
         add(TgVehicle.class);
         add(TgWebApiEntity.class);
+        add(TgWebApiEntitySyntheticSingle.class);
+        add(TgWebApiEntitySyntheticMulti.class);
         add(TgCompoundEntity.class);
         add(TgCompoundEntityDetail.class);
         add(TgCompoundEntityChild.class);

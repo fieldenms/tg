@@ -56,7 +56,7 @@ public class DynamicParamBuilder {
      * @param propValEntry
      * @return
      */
-    private static Map<String, Object> getPropertyValues(final QueryProperty qp, final Entry<String, Pair<Object, Object>> propValEntry) {
+    public static Map<String, Object> getPropertyValues(final QueryProperty qp, final Entry<String, Pair<Object, Object>> propValEntry) {
         final Map<String, Object> pairVals = new HashMap<>();
         if (qp.isSingle()) {
             pairVals.put(propValEntry.getKey(), propValEntry.getValue().getKey());

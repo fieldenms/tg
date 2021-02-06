@@ -12,6 +12,7 @@ import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.
 import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.DESCENDING;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity_centre.review.DynamicParamBuilder.getPropertyValues;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.createConditionProperty;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.createQuery;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty.createEmptyQueryProperty;
@@ -19,6 +20,7 @@ import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determ
 import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.types.tuples.T3.t3;
+import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
 import static ua.com.fielden.platform.utils.EntityUtils.fetchNotInstrumented;
 import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
@@ -33,6 +35,7 @@ import static ua.com.fielden.platform.web_api.FieldSchema.VALUE;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -135,6 +138,14 @@ public class RootEntityUtils {
                 orderingPropertiesIterator,
                 entityType
             ).model())
+            .with(queryProperties.stream() // add params from crit-only property values
+                .filter(QueryProperty::isCritOnly)
+                .map(qp -> getPropertyValues(qp, mapOf(t2(qp.getPropertyName(), pair(qp.getValue(), qp.getValue2()))).entrySet().iterator().next()))
+                .reduce(new HashMap<>(), (accumulator, propValues) -> {
+                    accumulator.putAll(propValues);
+                    return accumulator;
+                })
+            )
             .model();
     }
     
