@@ -222,7 +222,7 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         return Collections.unmodifiableList(entityTypes.stream().collect(Collectors.toList()));
     }
 
-    public List<Class<? extends AbstractEntity<?>>> domainTypes() {
+    public static List<Class<? extends AbstractEntity<?>>> domainTypes() {
         return Collections.unmodifiableList(domainTypes.stream().collect(Collectors.toList()));
     }
 }
