@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web_api;
 
 import static java.lang.Byte.valueOf;
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.concat;
@@ -9,9 +10,9 @@ import static java.util.stream.Stream.empty;
 import static java.util.stream.Stream.of;
 import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.ASCENDING;
 import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.DESCENDING;
-import static ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeRepresentation.orderedPropertiesByDefaultFor;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity_centre.review.DynamicOrderingBuilder.createOrderingModel;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.createConditionProperty;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.createQuery;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty.createEmptyQueryProperty;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
@@ -32,6 +33,7 @@ import static ua.com.fielden.platform.web_api.FieldSchema.VALUE;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -55,7 +57,11 @@ import graphql.schema.GraphQLSchema;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IOrderingItem;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IOrderingItemCloseable;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISingleOperandOrderable;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity_centre.review.DynamicPropertyAnalyser;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.types.Money;
@@ -120,11 +126,42 @@ public class RootEntityUtils {
             .sorted((p1, p2) -> p1._3.compareTo(p2._3)) // sort by ordering priority
             .map(prop -> pair(prop._1, prop._2)) // get (name; Ordering) only -- without priority 
             .collect(toList()); // make list -- order is important
-        final List<Pair<String, Ordering>> orderingProperties = specifiedOrderingProperties.isEmpty() ? orderedPropertiesByDefaultFor(entityType) : specifiedOrderingProperties; // ordering by default matches the entity centre's ordering by default
+        final List<Pair<String, Ordering>> orderingProperties = specifiedOrderingProperties.isEmpty() ? asList(pair("", ASCENDING)) : specifiedOrderingProperties; // ordering by default: ascending by keys
+        final Iterator<Pair<String, Ordering>> orderingPropertiesIterator = orderingProperties.iterator();
         return dates -> from(createQuery(entityType, queryProperties, dates).model())
             .with(fetchNotInstrumented(entityType).with(propertiesAndArguments.keySet()).fetchModel())
-            .with(createOrderingModel(entityType, orderingProperties))
+            .with(orderingModelFrom(
+                appendPropertyOrdering(orderBy(), orderingPropertiesIterator.next(), entityType), // there is at least one item in the iterator
+                orderingPropertiesIterator,
+                entityType
+            ).model())
             .model();
+    }
+    
+    /**
+     * Iterates through {@code iterator} of [property; ordering] pairs and enhances {@code accumulator} (accumulated ordering model) with corresponding ordering.
+     * 
+     * @param accumulator
+     * @param iterator
+     * @param entityType -- root entity type
+     * @return
+     */
+    private static <T extends AbstractEntity<?>> IOrderingItemCloseable orderingModelFrom(final IOrderingItemCloseable accumulator, final Iterator<Pair<String, Ordering>> iterator, final Class<T> entityType) {
+        return !iterator.hasNext() ? accumulator : orderingModelFrom(appendPropertyOrdering(accumulator, iterator.next(), entityType), iterator, entityType);
+    }
+    
+    /**
+     * Appends {@code partialOrderingModel} with corresponding ordering from [property; ordering] pair ({@code propertyOrdering}).
+     * 
+     * @param partialOrderingModel
+     * @param propertyOrdering
+     * @param entityType -- root entity type
+     * @return
+     */
+    private static <T extends AbstractEntity<?>> IOrderingItemCloseable appendPropertyOrdering(final IOrderingItem partialOrderingModel, final Pair<String, Ordering> propertyOrdering, final Class<T> entityType) {
+        // we use '.prop(' EQL ordering instead of '.yield(' -- ordering by yield is only required for ad-hoc calculated properties that are not supported in Web API yet
+        final ISingleOperandOrderable part = partialOrderingModel.prop(createConditionProperty(new DynamicPropertyAnalyser(entityType, propertyOrdering.getKey()).getCriteriaFullName())); // createConditionProperty is required because of the need to have property prepended with alias
+        return ASCENDING.equals(propertyOrdering.getValue()) ? part.asc() : part.desc();
     }
     
     /**
