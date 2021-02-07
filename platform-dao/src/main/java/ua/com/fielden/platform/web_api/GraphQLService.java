@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web_api;
 
 import static graphql.ExecutionInput.newExecutionInput;
 import static graphql.GraphQL.newGraphQL;
+import static graphql.GraphqlErrorBuilder.newError;
 import static graphql.schema.FieldCoordinates.coordinates;
 import static graphql.schema.GraphQLCodeRegistry.newCodeRegistry;
 import static graphql.schema.GraphQLFieldDefinition.newFieldDefinition;
@@ -43,6 +44,7 @@ import org.apache.log4j.Logger;
 
 import com.google.inject.Inject;
 
+import graphql.ExecutionResultImpl;
 import graphql.GraphQL;
 import graphql.schema.GraphQLCodeRegistry;
 import graphql.schema.GraphQLFieldDefinition;
@@ -58,6 +60,9 @@ import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.security.IAuthorisationModel;
+import ua.com.fielden.platform.security.tokens.web_api.WebAPI_CanExecute_Token;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
@@ -76,6 +81,7 @@ import ua.com.fielden.platform.utils.Pair;
 public class GraphQLService implements IWebApi {
     private final Logger logger = Logger.getLogger(getClass());
     private final GraphQL graphQL;
+    private final IAuthorisationModel authorisation;
     
     /**
      * Creates GraphQLService instance based on <code>applicationDomainProvider</code> which contains all entity types.
@@ -86,11 +92,13 @@ public class GraphQLService implements IWebApi {
      * @param applicationDomainProvider
      * @param coFinder
      * @param dates
+     * @param authorisation
      */
     @Inject
-    public GraphQLService(final IApplicationDomainProvider applicationDomainProvider, final ICompanionObjectFinder coFinder, final IDates dates) {
+    public GraphQLService(final IApplicationDomainProvider applicationDomainProvider, final ICompanionObjectFinder coFinder, final IDates dates, final IAuthorisationModel authorisation) {
         try {
             logger.info("GraphQL Web API...");
+            this.authorisation = authorisation;
             final GraphQLCodeRegistry.Builder codeRegistryBuilder = newCodeRegistry();
             logger.info("\tBuilding dictionary...");
             final Map<Class<? extends AbstractEntity<?>>, GraphQLType> dictionary = createDictionary(persistentAndSyntheticDomainTypes(applicationDomainProvider));
@@ -134,6 +142,10 @@ public class GraphQLService implements IWebApi {
      */
     @Override
     public Map<String, Object> execute(final Map<String, Object> input) {
+        final Result authResult = authorisation.authorise(WebAPI_CanExecute_Token.class);
+        if (!authResult.isSuccessful()) {
+            return new ExecutionResultImpl(newError().message(authResult.getMessage()).build()).toSpecification();
+        }
         return graphQL.execute(newExecutionInput()
             .query(query(input))
             .operationName(operationName(input).orElse(null))
