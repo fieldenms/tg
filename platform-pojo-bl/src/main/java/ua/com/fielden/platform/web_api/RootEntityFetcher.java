@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web_api;
 
+import static graphql.GraphqlErrorBuilder.newError;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.web_api.FieldSchema.DEFAULT_PAGE_CAPACITY;
 import static ua.com.fielden.platform.web_api.FieldSchema.DEFAULT_PAGE_NUMBER;
@@ -10,14 +11,20 @@ import static ua.com.fielden.platform.web_api.RootEntityUtils.generateQueryModel
 import static ua.com.fielden.platform.web_api.RootEntityUtils.rootPropAndArguments;
 
 import java.util.List;
+import java.util.Optional;
 
+import graphql.execution.DataFetcherResult;
+import graphql.execution.DataFetcherResult.Builder;
 import graphql.language.Argument;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.GraphQLArgument;
 import graphql.schema.PropertyDataFetcher;
+import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.utils.IDates;
 
@@ -29,7 +36,7 @@ import ua.com.fielden.platform.utils.IDates;
  *
  * @param <T>
  */
-public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetcher<List<T>> {
+public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetcher<DataFetcherResult<List<T>>> {
     private final Class<T> entityType;
     private final ICompanionObjectFinder coFinder;
     private final IDates dates;
@@ -52,16 +59,17 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
      * {@inheritDoc}
      */
     @Override
-    public List<T> get(final DataFetchingEnvironment environment) {
+    public DataFetcherResult<List<T>> get(final DataFetchingEnvironment environment) {
         final T3<String, List<GraphQLArgument>, List<Argument>> rootArguments = rootPropAndArguments(environment.getGraphQLSchema(), environment.getField());
-        return coFinder.findAsReader(entityType, true).getPage( // reader must be uninstrumented
-            generateQueryModelFrom(
-                environment.getField(),
-                environment.getVariables(),
-                environment.getFragmentsByName(),
-                entityType,
-                environment.getGraphQLSchema()
-            ).apply(dates),
+        final T2<Optional<String>, QueryExecutionModel<T, EntityResultQueryModel<T>>> warningAndModel = generateQueryModelFrom(
+            environment.getField(),
+            environment.getVariables(),
+            environment.getFragmentsByName(),
+            entityType,
+            environment.getGraphQLSchema()
+        ).apply(dates);
+        final Builder<List<T>> result = DataFetcherResult.<List<T>>newResult().data(coFinder.findAsReader(entityType, true).getPage( // reader must be uninstrumented
+            warningAndModel._2,
             extractValue(
                 PAGE_NUMBER,
                 t2(rootArguments._2, rootArguments._3),
@@ -76,7 +84,9 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
                 environment.getGraphQLSchema().getCodeRegistry(),
                 1
             ).orElse(DEFAULT_PAGE_CAPACITY)
-        ).data();
+        ).data());
+        warningAndModel._1.ifPresent(warning -> result.error(newError(environment).message(warning).build()));
+        return result.build();
     }
     
 }

@@ -1,10 +1,12 @@
 package ua.com.fielden.platform.web_api;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+import static ua.com.fielden.platform.web_api.RootEntityUtils.ORDER_PRIORITIES_ARE_NOT_DISTINCT;
 import static ua.com.fielden.platform.web_api.TgScalars.createDateRepr;
 import static ua.com.fielden.platform.web_api.WebApiUtils.errors;
 import static ua.com.fielden.platform.web_api.WebApiUtils.input;
@@ -343,6 +345,69 @@ public class WebApiOrderingTest extends AbstractDaoTestCase {
                 linkedMapOf(t2("tgCompoundEntity", linkedMapOf(t2("key", "M2"))), t2("date", date4))
             ))
         )), result);
+    }
+    
+    // validation for ordering priorities
+    
+    @Test
+    public void non_distinct_ordering_priorities_returns_data_with_error() {
+        createEntities();
+        
+        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity(order: DESC_1){key model{key make(order: DESC_1){key}}}}"));
+        
+        assertFalse(errors(result).isEmpty());
+        assertEquals(result(
+            listOf(linkedMapOf(
+                t2("message", ORDER_PRIORITIES_ARE_NOT_DISTINCT),
+                t2("locations", listOf(linkedMapOf(t2("line", "1"), t2("column", "2")))),
+                t2("path", listOf("tgWebApiEntity")),
+                t2("extensions", linkedMapOf(t2("classification", "DataFetchingException")))
+            )),
+            linkedMapOf(
+                t2("tgWebApiEntity", listOf(
+                    linkedMapOf(t2("key", "VEH4"), t2("model", linkedMapOf(t2("key", "317"), t2("make", linkedMapOf(t2("key", "MERC")))))),
+                    linkedMapOf(t2("key", "VEH3"), t2("model", linkedMapOf(t2("key", "116"), t2("make", linkedMapOf(t2("key", "TOYOTA")))))),
+                    linkedMapOf(t2("key", "VEH2"), t2("model", linkedMapOf(t2("key", "316"), t2("make", linkedMapOf(t2("key", "MERC")))))),
+                    linkedMapOf(t2("key", "VEH1"), t2("model", linkedMapOf(t2("key", "117"), t2("make", linkedMapOf(t2("key", "TOYOTA"))))))
+                ))
+            )
+        ).toString(), result.toString());
+    }
+    
+    @Test
+    public void non_distinct_ordering_priorities_returns_data_with_errors_for_multiple_queries() {
+        createEntities();
+        
+        final Map<String, Object> result = webApi.execute(input("{q1:tgWebApiEntity(order: DESC_1){key model{key make(order: DESC_1){key}}}q2:tgWebApiEntity(order: ASC_1){key model{key make(order: DESC_1){key}}}}"));
+        
+        assertFalse(errors(result).isEmpty());
+        assertEquals(result(
+            listOf(linkedMapOf(
+                t2("message", ORDER_PRIORITIES_ARE_NOT_DISTINCT),
+                t2("locations", listOf(linkedMapOf(t2("line", "1"), t2("column", "2")))),
+                t2("path", listOf("q1")),
+                t2("extensions", linkedMapOf(t2("classification", "DataFetchingException")))
+            ), linkedMapOf(
+                t2("message", ORDER_PRIORITIES_ARE_NOT_DISTINCT),
+                t2("locations", listOf(linkedMapOf(t2("line", "1"), t2("column", "75")))),
+                t2("path", listOf("q2")),
+                t2("extensions", linkedMapOf(t2("classification", "DataFetchingException")))
+            )),
+            linkedMapOf(
+                t2("q1", listOf(
+                    linkedMapOf(t2("key", "VEH4"), t2("model", linkedMapOf(t2("key", "317"), t2("make", linkedMapOf(t2("key", "MERC")))))),
+                    linkedMapOf(t2("key", "VEH3"), t2("model", linkedMapOf(t2("key", "116"), t2("make", linkedMapOf(t2("key", "TOYOTA")))))),
+                    linkedMapOf(t2("key", "VEH2"), t2("model", linkedMapOf(t2("key", "316"), t2("make", linkedMapOf(t2("key", "MERC")))))),
+                    linkedMapOf(t2("key", "VEH1"), t2("model", linkedMapOf(t2("key", "117"), t2("make", linkedMapOf(t2("key", "TOYOTA"))))))
+                )),
+                t2("q2", listOf(
+                    linkedMapOf(t2("key", "VEH1"), t2("model", linkedMapOf(t2("key", "117"), t2("make", linkedMapOf(t2("key", "TOYOTA")))))),
+                    linkedMapOf(t2("key", "VEH2"), t2("model", linkedMapOf(t2("key", "316"), t2("make", linkedMapOf(t2("key", "MERC")))))),
+                    linkedMapOf(t2("key", "VEH3"), t2("model", linkedMapOf(t2("key", "116"), t2("make", linkedMapOf(t2("key", "TOYOTA")))))),
+                    linkedMapOf(t2("key", "VEH4"), t2("model", linkedMapOf(t2("key", "317"), t2("make", linkedMapOf(t2("key", "MERC"))))))
+                ))
+            )
+        ).toString(), result.toString());
     }
     
 }

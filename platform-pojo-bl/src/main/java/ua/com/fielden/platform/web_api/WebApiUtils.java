@@ -97,4 +97,8 @@ public class WebApiUtils {
         return linkedMapOf(t2(DATA, data));
     }
     
+    public static Map<String, Object> result(final List<Map<String, Object>> errors, final Map<String, Object> data) {
+        return linkedMapOf(t2(ERRORS, errors), t2(DATA, data));
+    }
+    
 }

@@ -3,11 +3,11 @@ package ua.com.fielden.platform.web_api;
 import static java.lang.Byte.valueOf;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.concat;
-import static java.util.stream.Stream.empty;
-import static java.util.stream.Stream.of;
 import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.ASCENDING;
 import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.DESCENDING;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
@@ -80,11 +80,12 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class RootEntityUtils {
+    public static final String ORDER_PRIORITIES_ARE_NOT_DISTINCT = "Order priorities are not distinct.";
     static final String QUERY_TYPE_NAME = "Query";
     private static final Logger LOGGER = Logger.getLogger(RootEntityUtils.class);
     
     /**
-     * Returns function for generation of EQL query execution model for retrieving <code>rootField</code> and its selection set in GraphQL query or mutation.
+     * Returns function for generation of EQL query execution model for retrieving <code>rootField</code> and its selection set in GraphQL query or mutation [and optional warning about ordering].
      * The argument of function is {@link IDates} instance from which 'now' moment can properly be retrieved and used for date property filtering.
      * 
      * @param rootField -- root field for GraphQL query or mutation
@@ -94,7 +95,7 @@ public class RootEntityUtils {
      * @param schema -- GraphQL schema to assist with resolving of argument values
      * @return
      */
-    public static <T extends AbstractEntity<?>> Function<IDates, QueryExecutionModel<T, EntityResultQueryModel<T>>> generateQueryModelFrom(
+    public static <T extends AbstractEntity<?>> Function<IDates, T2<Optional<String>, QueryExecutionModel<T, EntityResultQueryModel<T>>>> generateQueryModelFrom(
         final Field rootField,
         final Map<String, Object> variables,
         final Map<String, FragmentDefinition> fragmentDefinitions,
@@ -117,7 +118,7 @@ public class RootEntityUtils {
                 schema.getCodeRegistry()
             ))
             .collect(toList());
-        final List<Pair<String, Ordering>> specifiedOrderingProperties = propertiesAndArguments.entrySet().stream()
+        final List<T3<String, Ordering, Byte>> propOrderingWithPriorities = propertiesAndArguments.entrySet().stream()
             .filter(propertyAndArguments -> propertyAndArguments.getValue()._1.contains(ORDER_ARGUMENT)) // if GraphQL argument definitions contain ORDER_ARGUMENT ...
             .map(propertyAndArguments -> createOrderingProperty( // ... create ordering properties based on them
                 propertyAndArguments.getKey(),
@@ -125,13 +126,16 @@ public class RootEntityUtils {
                 variables,
                 schema.getCodeRegistry()
             ))
-            .flatMap(orderingProperty -> orderingProperty.isPresent() ? of(orderingProperty.get()) : empty()) // exclude empty values
+            .flatMap(orderingProperty -> orderingProperty.isPresent() ? Stream.of(orderingProperty.get()) : Stream.empty())
+            .collect(toList()); // exclude empty values
+        final Optional<String> optionalWarning = propOrderingWithPriorities.stream().map(t3 -> t3._3).distinct().count() < propOrderingWithPriorities.size() ? of(ORDER_PRIORITIES_ARE_NOT_DISTINCT) : empty(); // in case where order priorities are not distinct, return non-intrusive warning (with data still present)
+        final List<Pair<String, Ordering>> specifiedOrderingProperties = propOrderingWithPriorities.stream()
             .sorted((p1, p2) -> p1._3.compareTo(p2._3)) // sort by ordering priority
             .map(prop -> pair(prop._1, prop._2)) // get (name; Ordering) only -- without priority 
             .collect(toList()); // make list -- order is important
         final List<Pair<String, Ordering>> orderingProperties = specifiedOrderingProperties.isEmpty() ? asList(pair("", ASCENDING)) : specifiedOrderingProperties; // ordering by default: ascending by keys
         final Iterator<Pair<String, Ordering>> orderingPropertiesIterator = orderingProperties.iterator();
-        return dates -> from(createQuery(entityType, queryProperties, dates).model())
+        return dates -> t2(optionalWarning, from(createQuery(entityType, queryProperties, dates).model())
             .with(fetchNotInstrumented(entityType).with(propertiesAndArguments.keySet()).fetchModel())
             .with(orderingModelFrom(
                 appendPropertyOrdering(orderBy(), orderingPropertiesIterator.next(), entityType), // there is at least one item in the iterator
@@ -146,7 +150,7 @@ public class RootEntityUtils {
                     return accumulator;
                 })
             )
-            .model();
+            .model());
     }
     
     /**
@@ -320,7 +324,7 @@ public class RootEntityUtils {
             final String property = prefix == null ? graphQLField.getName() : prefix + "." + graphQLField.getName(); // 'property' has dot-notated property name from root entity type to currently selected 'graphQLField'
             final String entityTypeName = entityType.getSimpleName();
             return concat( // concatenate two streams: ...
-                of(propAndArgumentsFrom(schema, graphQLField, property, entityTypeName)), // ... first is single-element stream containing 'graphQLField' property itself and ...
+                Stream.of(propAndArgumentsFrom(schema, graphQLField, property, entityTypeName)), // ... first is single-element stream containing 'graphQLField' property itself and ...
                 properties( // ... second contains all selected sub-fields of 'graphQLField'
                     determinePropertyType(entityType, graphQLField.getName()),
                     property,
