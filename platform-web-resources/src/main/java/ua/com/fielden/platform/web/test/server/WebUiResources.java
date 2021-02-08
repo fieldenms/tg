@@ -50,7 +50,7 @@ public class WebUiResources extends AbstractWebUiResources {
     @Override
     protected void registerDomainWebResources(final Router router, final IWebUiConfig webApp) {
         // register some file processors
-        final FileProcessingResourceFactory<DumpCsvTxtProcessor> factory = new FileProcessingResourceFactory<>(
+        final FileProcessingResourceFactory<DumpCsvTxtProcessor> factory = new FileProcessingResourceFactory<DumpCsvTxtProcessor>(
                 router,
                 injector,
                 DumpCsvTxtProcessor.class,
