@@ -32,6 +32,7 @@ import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationNonPersist
 import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationPersistentChild;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationChild;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParent;
+import ua.com.fielden.platform.sample.domain.TgDateTestEntity;
 import ua.com.fielden.platform.sample.domain.TgEntityWithComplexSummaries;
 import ua.com.fielden.platform.sample.domain.TgEntityWithLoopedCalcProps;
 import ua.com.fielden.platform.sample.domain.TgFuelType;
@@ -163,6 +164,7 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(TgCentreDiffSerialisationNonPersistentChild.class);
         add(TgCentreDiffSerialisationNonPersistentCompositeChild.class);
         add(TgCategoryAttachment.class);
+        add(TgDateTestEntity.class);
     }
 
     @Override
