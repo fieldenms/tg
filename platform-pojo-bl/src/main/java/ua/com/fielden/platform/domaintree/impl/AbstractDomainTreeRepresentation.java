@@ -1,15 +1,14 @@
 package ua.com.fielden.platform.domaintree.impl;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static java.lang.String.format;
-import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determineClass;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.reflection.Finder.findProperties;
 import static ua.com.fielden.platform.reflection.Finder.getFieldByName;
 import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determineClass;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.transform;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
@@ -204,7 +203,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      * @param type
      * @return
      */
-    public static List<Field> constructKeysAndProperties(final Class<?> type) {
+    private static List<Field> constructKeysAndProperties(final Class<?> type) {
         return constructKeysAndProperties(type, false);
     }
 
@@ -212,7 +211,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      * Forms a list of fields for "type" in order ["key" or key members => ["id" => "version" => ]"desc" (if exists) => other properties in order as declared in domain].
      *
      * @param type
-     * @param withIdAndVersion -- <code>true</code> to include {@link AbstractEntity#ID} and {@link AbstractEntity#VERSION} properties right after keys and before {@link AbstractEntity#DESC}, <code>false</code> otherwise.
+     * @param withIdAndVersion -- {@code true} to include {@link AbstractEntity#ID} and {@link AbstractEntity#VERSION} properties right after keys and before {@link AbstractEntity#DESC}, {@code false} otherwise.
      * @return
      */
     public static List<Field> constructKeysAndProperties(final Class<?> type, final boolean withIdAndVersion) {

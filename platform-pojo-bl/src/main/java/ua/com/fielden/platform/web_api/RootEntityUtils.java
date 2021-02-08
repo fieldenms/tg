@@ -85,12 +85,12 @@ public class RootEntityUtils {
     private static final Logger LOGGER = Logger.getLogger(RootEntityUtils.class);
     
     /**
-     * Returns function for generation of EQL query execution model for retrieving <code>rootField</code> and its selection set in GraphQL query or mutation [and optional warning about ordering].
+     * Returns function for generation of EQL query execution model for retrieving {@code rootField} and its selection set in GraphQL query or mutation [and optional warning about ordering].
      * The argument of function is {@link IDates} instance from which 'now' moment can properly be retrieved and used for date property filtering.
      * 
      * @param rootField -- root field for GraphQL query or mutation
-     * @param variables -- existing variable values by names in the query; they can be used in <code>rootField.selectionSet</code>
-     * @param fragmentDefinitions -- fragment definitions by names in the query; <code>rootField.selectionSet</code> can contain fragment spreads based on that definitions
+     * @param variables -- existing variable values by names in the query; they can be used in {@code rootField.selectionSet}
+     * @param fragmentDefinitions -- fragment definitions by names in the query; {@code rootField.selectionSet} can contain fragment spreads based on that definitions
      * @param entityType
      * @param schema -- GraphQL schema to assist with resolving of argument values
      * @return
@@ -180,7 +180,7 @@ public class RootEntityUtils {
     }
     
     /**
-     * Returns non-empty {@link QueryProperty} instance representing criterion for <code>property</code> in <code>entityType</code>.
+     * Returns non-empty {@link QueryProperty} instance representing criterion for {@code property} in {@code entityType}.
      * Whether to disregard returned criterion is the responsibility of {@link DynamicQueryBuilder} logic.
      * 
      * @param entityType
@@ -239,7 +239,7 @@ public class RootEntityUtils {
     }
     
     /**
-     * Returns {@link Optional} tuple representing ordering <code>property</code> in <code>entityType</code>: dot-notation name, {@link Ordering} and number (priority).
+     * Returns {@link Optional} tuple representing ordering {@code property} in {@code entityType}: dot-notation name, {@link Ordering} and number (priority).
      * Returns {@link Optional#empty()} if there is no ordering.
      * 
      * @param property
@@ -273,7 +273,7 @@ public class RootEntityUtils {
     }
     
     /**
-     * Returns {@link Optional} integer representing custom value for <code>what</code>.
+     * Returns {@link Optional} integer representing custom value for {@code what}.
      * Returns {@link Optional#empty()} if there is no custom value.
      * 
      * @param what
@@ -306,8 +306,8 @@ public class RootEntityUtils {
     /**
      * Creates stream of dot-notated property names with their lists of argumentDefinitions / arguments.
      * 
-     * @param entityType -- type in which we process its selected <code>graphQLFields</code>
-     * @param prefix -- path to the <code>entityType</code> from its root
+     * @param entityType -- type in which we process its selected {@code graphQLFields}
+     * @param prefix -- path to the {@code entityType} from its root
      * @param graphQLFields
      * @param fragmentDefinitions -- definitions of named fragments to extract concrete field selections from fragment spreads
      * @param schema -- GraphQL schema needed to extract argument definitions
@@ -348,12 +348,12 @@ public class RootEntityUtils {
     }
     
     /**
-     * Creates tuple of: <code>property</code>, its argument definitions and actual arguments.
+     * Creates tuple of: {@code property}, its argument definitions and actual arguments.
      * 
      * @param schema -- GraphQL schema needed to extract argument definitions
      * @param graphQLField -- field instance with actual arguments
      * @param property
-     * @param parentTypeName -- name of parent GraphQL type that contains <code>graphQLField</code>
+     * @param parentTypeName -- name of parent GraphQL type that contains {@code graphQLField}
      * @return
      */
     private static T3<String, List<GraphQLArgument>, List<Argument>> propAndArgumentsFrom(final GraphQLSchema schema, final Field graphQLField, final String property, final String parentTypeName) {
@@ -368,7 +368,7 @@ public class RootEntityUtils {
      * Converts {@link SelectionSet} instance to a list of first-level fields.
      * <p>
      * This method also handles "fragment spreads" and "inline fragments" converting them to list of concrete fields.
-     * This requires access to external <code>fragmentDefinitions</code>.
+     * This requires access to external {@code fragmentDefinitions}.
      * 
      * @param selectionSet
      * @param fragmentDefinitions

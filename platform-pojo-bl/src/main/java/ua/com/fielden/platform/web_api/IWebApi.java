@@ -8,10 +8,10 @@ import java.util.Map;
  * <p>
  * Several layers of Web API is to be supported:
  *  1. internal server-side API (this interface);
- *  2. Web API resource (to be able to integrate from external applications by means of HTTP requests);
- *  3. web application UI for executing / validating queries.
+ *  2. web API resource (to be able to integrate from external applications by means of HTTP requests) -- at '/api';
+ *  3. web application UI for executing / validating queries -- at '/resources/api/graphiql.html'.
  * <p>
- * Please note that quering can support also 'active' / 'memory' functions and not only 'informative' (as per "Conceptual Modeling of Information Systems" by Antoni Olivé).
+ * Please note that quering can support 'active' / 'memory' functions and not only 'informative' (as per "Conceptual Modeling of Information Systems" by Antoni Olivé).
  *  
  * @author TG Team
  *

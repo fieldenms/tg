@@ -84,7 +84,7 @@ public class GraphQLService implements IWebApi {
     private final IAuthorisationModel authorisation;
     
     /**
-     * Creates GraphQLService instance based on <code>applicationDomainProvider</code> which contains all entity types.
+     * Creates GraphQLService instance based on {@code applicationDomainProvider} which contains all entity types.
      * <p>
      * We start by building dictionary of all our custom GraphQL types from existing domain entity types.
      * Next, we create GraphQL type for quering (aka GraphQL 'query') and assign it to the schema.
@@ -122,8 +122,7 @@ public class GraphQLService implements IWebApi {
     
     /**
      * Returns all domain [non-platform] types of persistent / synthetic nature. This includes persistent with activatable nature,
-     * synthetic based on persistent. This does not include union and functional entities. This does not include all entities that
-     * do not fall into any of the above categories.
+     * synthetic based on persistent. This does not include union, functional and any other entities.
      * 
      * @return
      */
@@ -131,8 +130,8 @@ public class GraphQLService implements IWebApi {
         final List<Class<? extends AbstractPersistentEntity<? extends Comparable<?>>>> supportedPlatformTypes = asList(User.class, UserRole.class, UserAndRoleAssociation.class, SecurityRoleAssociation.class, Attachment.class);
         return applicationDomainProvider.entityTypes().stream()
             .filter(type -> 
-                    (supportedPlatformTypes.stream().anyMatch(pType -> pType.isAssignableFrom(type)) || !PlatformDomainTypes.types.contains(type))
-                &&  (isSyntheticEntityType(type) || isPersistedEntityType(type) || type.getSimpleName().endsWith("GroupingProperty")) )
+                    (supportedPlatformTypes.stream().anyMatch(pType -> pType.isAssignableFrom(type)) || !PlatformDomainTypes.types.contains(type)) // includes supportedPlatformTypes OR non-platform domain types
+                &&  (isSyntheticEntityType(type) || isPersistedEntityType(type) || type.getSimpleName().endsWith("GroupingProperty")) ) // '...GroupingProperty' is the naming pattern for enum-like entities for groupBy criteria
             .collect(toList());
     }
     
@@ -171,7 +170,7 @@ public class GraphQLService implements IWebApi {
     }
     
     /**
-     * Creates type for GraphQL 'query' operation to query entities from <code>dictionary</code>.
+     * Creates type for GraphQL 'query' operation to query entities from {@code dictionary}.
      * <p>
      * All query field names are represented as uncapitalised entity type simple names. All sub-field names are represented as entity property names.
      * 
@@ -201,9 +200,9 @@ public class GraphQLService implements IWebApi {
     }
     
     /**
-     * Creates {@link Optional} GraphQL object type for <code>entityType</code>d entities querying.
+     * Creates {@link Optional} GraphQL object type for {@code entityType}d entities querying.
      * <p>
-     * The <code>entityType</code> will not have corresponding {@link GraphQLObjectType} only if there are no suitable fields for querying.
+     * The {@code entityType} will not have corresponding {@link GraphQLObjectType} only if there are no suitable fields for querying.
      * 
      * @param entityType
      * @return

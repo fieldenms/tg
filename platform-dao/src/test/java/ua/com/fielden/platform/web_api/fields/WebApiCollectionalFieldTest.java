@@ -17,7 +17,7 @@ import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.web_api.IWebApi;
 
 /**
- * Test for GraphQL Web API implementation for collection fields.
+ * Test for GraphQL Web API implementation for collectional fields.
  * 
  * @author TG Team
  *

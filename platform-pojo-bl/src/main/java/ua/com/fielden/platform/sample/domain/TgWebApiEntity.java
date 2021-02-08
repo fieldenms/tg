@@ -22,7 +22,7 @@ import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web_api.IWebApi;
 
 /**
- * Entity for for {@link IWebApi} testing.
+ * Entity for {@link IWebApi} testing.
  *
  * @author TG Team
  *

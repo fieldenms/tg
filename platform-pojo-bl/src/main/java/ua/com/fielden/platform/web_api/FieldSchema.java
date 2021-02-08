@@ -98,7 +98,7 @@ import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
- * Contains utilities to convert TG entity properties to GraphQL query fields that reside under <code>Query.exampleEntityType</code> fields.
+ * Contains utilities to convert TG entity properties to GraphQL query fields that reside under {@code Query.exampleEntityType} fields.
  * 
  * @author TG Team
  *
@@ -144,7 +144,7 @@ public class FieldSchema {
         )
         .build();
     /**
-     * Default page number of entities returned in a single root field of a <code>Query</code>.
+     * Default page number of entities returned in a single root field of a {@code Query}.
      */
     static final int DEFAULT_PAGE_NUMBER = 0;
     static final GraphQLArgument PAGE_NUMBER_ARGUMENT = newArgument()
@@ -153,7 +153,7 @@ public class FieldSchema {
             .type(GraphQLInt)
             .build();
     /**
-     * Default maximum number of entities returned in a single root field of a <code>Query</code>.
+     * Default maximum number of entities returned in a single root field of a {@code Query}.
      */
     static final int DEFAULT_PAGE_CAPACITY = 1000;
     static final GraphQLArgument PAGE_CAPACITY_ARGUMENT = newArgument()
@@ -173,7 +173,7 @@ public class FieldSchema {
     }
     
     /**
-     * Creates GraphQL field definition for <code>entityType</code> and <code>property</code>.
+     * Creates GraphQL field definition for {@code entityType} and {@code property}.
      * Set of supported property types:
      * <ul>
      * <li>{@link String}</li>
@@ -203,21 +203,34 @@ public class FieldSchema {
                         metaInformationFor(entityType, property)
                     ).stream()
                     .filter(s -> !isEmpty(s))
-                    .collect(joining(NEWLINE + NEWLINE)))
+                    .collect(joining(NEWLINE + NEWLINE))) // split title+desc from metaInfo
                 .type(typeAndArguments._1)
                 .arguments(typeAndArguments._2)
                 .build();
         });
     }
     
+    /**
+     * Concatenated [through en-dash] version of title and description for entity type with various representational improvements.
+     * 
+     * @param titleAndDesc
+     * @return
+     */
     public static String titleAndDescRepresentation(final Pair<String, String> titleAndDesc) {
-        final String title = isEmpty(titleAndDesc.getKey()) ? titleAndDesc.getKey() : bold(titleAndDesc.getKey());
-        return isEmpty(titleAndDesc.getValue())
-            || equalsEx(titleAndDesc.getKey(),             titleAndDesc.getValue())
-            || equalsEx(titleAndDesc.getKey() + " entity", titleAndDesc.getValue())
-            ? title : title + " &ndash; " + titleAndDesc.getValue();
+        final String title = isEmpty(titleAndDesc.getKey()) ? titleAndDesc.getKey() : bold(titleAndDesc.getKey()); // 'title' in bold if not empty
+        return isEmpty(titleAndDesc.getValue()) // no 'desc' -- only 'title' to be shown
+            || equalsEx(titleAndDesc.getKey(),             titleAndDesc.getValue()) // 'title' equals to 'desc' -- only 'title' to be shown
+            || equalsEx(titleAndDesc.getKey() + " entity", titleAndDesc.getValue()) // [title + ' entity'] equals to 'desc' -- only 'title' to be shown
+            ? title : title + " &ndash; " + titleAndDesc.getValue(); // ['title' en-dash 'desc'] to be shown
     }
     
+    /**
+     * A string relevant entity property meta-information to be included into field description.
+     * 
+     * @param entityType
+     * @param property
+     * @return
+     */
     private static String metaInformationFor(final Class<? extends AbstractEntity<?>> entityType, final String property) {
         return concat(
             asList(
@@ -236,21 +249,20 @@ public class FieldSchema {
                 Readonly.class,
                 Required.class,
                 ResultOnly.class,
-                Secrete.class, // TODO should it be exposed?
+                Secrete.class,
                 SkipActivatableTracking.class,
                 SkipEntityExistsValidation.class, // this annotation is believed to be of interest, mostly for skipActiveOnly situation, so TODO don't include if not skipActiveOnly
                 TimeOnly.class,
                 Unique.class,
                 UpperCase.class,
-                // TODO @WhenNullMessage is not used?
                 AfterChange.class,
                 BeforeChange.class,
                 Subtitles.class
             ).stream()
             .map(annotationType -> getPropertyAnnotationOptionally(annotationType, entityType, property))
-            .flatMap(annotation -> annotation.isPresent() ? Stream.of(annotation.get()) : Stream.empty())
+            .flatMap(annotation -> annotation.map(Stream::of).orElseGet(Stream::empty))
             .map(FieldSchema::toString)
-            .flatMap(str -> str.isPresent() ? Stream.of(str.get()) : Stream.empty()),
+            .flatMap(str -> str.map(Stream::of).orElseGet(Stream::empty)),
             
             Stream.of(Required.class, Readonly.class).filter(type -> {
                 if (KEY.equals(property)) {
@@ -264,21 +276,39 @@ public class FieldSchema {
                 } else {
                     return false;
                 }
-            }).map(type -> typeName(type))
+            }).map(type -> annotationTypeName(type))
             
             ).distinct().collect(joining(NEWLINE));
     }
     
-    private static String typeName(final Class<? extends Annotation> annotationType) {
+    /**
+     * Returns string representation for annotation type.
+     * 
+     * @param annotationType
+     * @return
+     */
+    private static String annotationTypeName(final Class<? extends Annotation> annotationType) {
         return bold("@" + annotationType.getSimpleName());
     }
     
-    private static String typeName(final Annotation annotation) {
-        return typeName(annotation.annotationType());
+    /**
+     * Returns string representation for annotation type taken from {@code annotation} instance.
+     * 
+     * @param annotation
+     * @return
+     */
+    private static String annotationTypeName(final Annotation annotation) {
+        return annotationTypeName(annotation.annotationType());
     }
     
+    /**
+     * Returns string representation for annotation.
+     * 
+     * @param annotation
+     * @return
+     */
     private static Optional<String> toString(final Annotation annotation) {
-        final String typeName = typeName(annotation);
+        final String typeName = annotationTypeName(annotation);
         final String str;
         if (annotation instanceof Calculated) {
             str = isValueDefault(annotation, "value") ? typeName : format("%s(%s)", typeName, ((Calculated) annotation).value());
@@ -310,7 +340,7 @@ public class FieldSchema {
                 final List<String> params = new ArrayList<>();
                 params.add(handler.value().getSimpleName());
                 addIfNonDefault(params, handler);
-                handlerStrs.add(annotationWithParams(typeName(handler), params, INDENT_STEP));
+                handlerStrs.add(annotationWithParams(annotationTypeName(handler), params, INDENT_STEP));
             });
             str = annotationWithParams(typeName, handlerStrs);
         } else if (annotation instanceof Subtitles) {
@@ -324,7 +354,7 @@ public class FieldSchema {
                 if (!isValueDefault(pathTitle, "desc")) {
                     params.add("desc=" + pathTitle.desc());
                 }
-                subtitleStrs.add(typeName(pathTitle) + "(" + params.stream().collect(joining(SPACE_SEPARATOR)) + ")");
+                subtitleStrs.add(annotationTypeName(pathTitle) + "(" + params.stream().collect(joining(SPACE_SEPARATOR)) + ")");
             });
             str = annotationWithParams(typeName, subtitleStrs);
         } else if (annotation instanceof StrParam) {
@@ -349,20 +379,47 @@ public class FieldSchema {
         return str == null ? empty() : of(str);
     }
     
+    /**
+     * Returns string representation for annotation with parameters.
+     * 
+     * @param typeName
+     * @param params
+     * @return
+     */
     private static String annotationWithParams(final String typeName, final List<String> params) {
         return annotationWithParams(typeName, params, "");
     }
     
+    /**
+     * Returns string representation for annotation with parameters.
+     * 
+     * @param typeName
+     * @param params
+     * @param base -- base indentation for all params
+     * @return
+     */
     private static String annotationWithParams(final String typeName, final List<String> params, final String base) {
         final String newLineLeft = params.size() > 1 ? NEWLINE + base + INDENT_STEP : "";
         final String newLineRight = params.size() > 1 ? NEWLINE + base : "";
         return typeName + "(" + newLineLeft + params.stream().collect(joining(NEWLINE_SEPARATOR + base + INDENT_STEP)) + newLineRight +")";
     }
     
+    /**
+     * Wraps the string to be bold in Markdown (used by GraphiQL).
+     * 
+     * @param str
+     * @return
+     */
     public static String bold(final String str) {
         return "**" + str + "**";
     }
     
+    /**
+     * Adds params from {@code annotation} if they are not default-valued.
+     * 
+     * @param params
+     * @param annotation
+     */
     private static void addIfNonDefault(final List<String> params, final Annotation annotation) {
         addIfNonDefault(params, annotation, "non_ordinary");
         addIfNonDefault(params, annotation, "clazz");
@@ -375,33 +432,47 @@ public class FieldSchema {
         addIfNonDefault(params, annotation, "enumeration");
     }
     
+    /**
+     * Adds param with concrete {@code methodName} from {@code annotation} if it is not default-valued.
+     * 
+     * @param params
+     * @param annotation
+     * @param methodName
+     */
     private static void addIfNonDefault(final List<String> params, final Annotation annotation, final String methodName) {
         try {
             final Method declaredMethod = annotation.annotationType().getDeclaredMethod(methodName);
             final Annotation[] value = (Annotation[]) declaredMethod.invoke(annotation);
-            if (!Arrays.equals((Object[])declaredMethod.getDefaultValue(), value) && value != null) {
-                params.addAll(Arrays.stream(value).map(FieldSchema::toString).flatMap(str -> str.isPresent() ? Stream.of(str.get()) : Stream.empty()).collect(toList()));
+            if (!Arrays.equals((Object[]) declaredMethod.getDefaultValue(), value) && value != null) {
+                params.addAll(Arrays.stream(value)
+                    .map(FieldSchema::toString)
+                    .flatMap(str -> str.map(Stream::of).orElseGet(Stream::empty))
+                    .collect(toList())
+                );
             }
         } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-            throw new IllegalStateException(e);
-        }
-    }
-    
-    private static boolean isValueDefault(final Annotation annotation, final String methodName) {
-        try {
-            final Method declaredMethod = annotation.annotationType().getDeclaredMethod(methodName);
-            return equalsEx(declaredMethod.getDefaultValue(), declaredMethod.invoke(annotation));
-        } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
             throw new IllegalStateException(e);
         }
     }
     
     /**
-     * Determines GraphQL field type for <code>entityType</code> and <code>property</code>.
+     * Checks whether value for param with concrete {@code methodName} in {@code annotation} is equal to default one.
+     * 
+     * @param annotation
+     * @param methodName
+     * @return
+     */
+    private static boolean isValueDefault(final Annotation annotation, final String methodName) {
+        try {
+            final Method declaredMethod = annotation.annotationType().getDeclaredMethod(methodName);
+            return equalsEx(declaredMethod.getDefaultValue(), declaredMethod.invoke(annotation));
+        } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+    
+    /**
+     * Determines GraphQL field type [+argument definitions] for {@code entityType} and {@code property}. Returns empty {@link Optional} if property is not supported / applicable.
      * <p>
      * This method takes into account collectional associations and creates {@link GraphQLList} wrapper around determined field type to be able to fetch list of
      * entities into such GraphQL fields.
@@ -418,7 +489,7 @@ public class FieldSchema {
     }
     
     /**
-     * Determines GraphQL field type for <code>propertyType</code>.
+     * Determines GraphQL field type for {@code propertyType}. Returns empty {@link Optional} if property is not supported / applicable.
      * <p>
      * See {@link #createGraphQLFieldDefinition(Class, String)} for the list of supported property types.
      * Note that abstract types derived from {@link AbstractEntity} are not supported; {@link PropertyDescriptor} and {@link AbstractUnionEntity} descendants too.

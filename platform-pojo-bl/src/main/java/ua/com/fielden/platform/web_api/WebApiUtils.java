@@ -77,26 +77,67 @@ public class WebApiUtils {
     
     /////////////////////////////////////////////// COMPOSE ///////////////////////////////////////////////
     
+    /**
+     * Composes Web API input object from {@code query}.
+     * 
+     * @param query
+     * @return
+     */
     public static Map<String, Object> input(final String query) {
         return input(query, null);
     }
     
+    /**
+     * Composes Web API input object from {@code query} and {@code variables}.
+     * 
+     * @param query
+     * @param variables
+     * @return
+     */
     public static Map<String, Object> input(final String query, final Map<String, Object> variables) {
         return linkedMapOf(t2(QUERY, query), t2(VARIABLES, variables));
     }
     
+    /**
+     * Composes Web API input object from {@code query} and {@code operationName}.
+     * 
+     * @param query
+     * @param operationName
+     * @return
+     */
     public static Map<String, Object> inputMult(final String query, final String operationName) {
         return input(query, null, operationName);
     }
     
+    /**
+     * Composes Web API input object from {@code query}, {@code variables} and {@code operationName}.
+     * 
+     * @param query
+     * @param variables
+     * @param operationName
+     * @return
+     */
     public static Map<String, Object> input(final String query, final Map<String, Object> variables, final String operationName) {
         return linkedMapOf(t2(QUERY, query), t2(VARIABLES, variables), t2(OPERATION_NAME, operationName));
     }
     
+    /**
+     * Composes Web API result object from {@code data}.
+     * 
+     * @param data
+     * @return
+     */
     public static Map<String, Object> result(final Map<String, Object> data) {
         return linkedMapOf(t2(DATA, data));
     }
     
+    /**
+     * Composes Web API result object from {@code errors} and {@code data}.
+     * 
+     * @param errors
+     * @param data
+     * @return
+     */
     public static Map<String, Object> result(final List<Map<String, Object>> errors, final Map<String, Object> data) {
         return linkedMapOf(t2(ERRORS, errors), t2(DATA, data));
     }

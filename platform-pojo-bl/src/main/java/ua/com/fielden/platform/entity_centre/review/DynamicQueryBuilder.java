@@ -178,7 +178,7 @@ public class DynamicQueryBuilder {
 
         /**
          * Creates {@link QueryProperty} ensuring that all its values (including {@link #value} and {@link #value2}) are empty.
-         * All other state (e.g. {@link #datePrefix}) is empty (aka <code>null</code>) by default -- please enhance this method
+         * All other state (e.g. {@link #datePrefix}) is empty (aka {@code null}) by default -- please enhance this method
          * if this will change in future.
          * 
          * @param entityClass

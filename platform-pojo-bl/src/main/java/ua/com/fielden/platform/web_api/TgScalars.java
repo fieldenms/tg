@@ -44,7 +44,7 @@ public class TgScalars {
     private static final String UNEXPECTED_TYPE_ERROR = "Expected [%] but was [%].";
     
     /**
-     * Creates builder for scalar type and assigns name and description derived from the specified <code>title</code>.
+     * Creates builder for scalar type and assigns name and description derived from the specified {@code title}.
      * 
      * @param title
      * @return
@@ -82,7 +82,7 @@ public class TgScalars {
          */
         String title();
         /**
-         * Converts <code>dataFetcherResult</code> to either value of type <code>O</code> if successful or otherwise returns error message.
+         * Converts {@code dataFetcherResult} to either value of type {@code O} if successful or otherwise returns error message.
          * 
          * @param dataFetcherResult
          * @return
@@ -176,7 +176,7 @@ public class TgScalars {
         }
         
         /**
-         * Converts <code>variableInput</code> to either value of type <code>I</code> if successful or otherwise returns error message.
+         * Converts {@code variableInput} to either value of type {@code I} if successful or otherwise returns error message.
          * 
          * @param variableInput
          * @return
@@ -189,7 +189,7 @@ public class TgScalars {
         }
         
         /**
-         * Converts <code>literalInput</code> to either value of type <code>I</code> if successful or otherwise returns error message.
+         * Converts {@code literalInput} to either value of type {@code I} if successful or otherwise returns error message.
          * 
          * @param literalInput
          * @return

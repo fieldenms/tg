@@ -21,7 +21,7 @@ import graphql.execution.UnknownOperationException;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
 /**
- * Test for GraphQL Web API implementation for different inputs: complete and incomplete queries, variables, variable definitions and mutiple queries.
+ * Test for GraphQL Web API implementation for different inputs: complete and incomplete queries, variables, variable definitions and multiple queries.
  * 
  * @author TG Team
  *

@@ -19,7 +19,7 @@ import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.web_api.IWebApi;
 
 /**
- * Test for GraphQL Web API implementation for Colour fields, their arguments with literals and variables.
+ * Test for GraphQL Web API implementation for Colour fields.
  * 
  * @author TG Team
  *

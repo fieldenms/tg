@@ -30,7 +30,7 @@ import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.utils.IDates;
 
 /**
- * {@link DataFetcher} implementation responsible for resolving root <code>Query</code> fields that correspond to main entity trees.
+ * {@link DataFetcher} implementation responsible for resolving root {@code Query} fields that correspond to main entity trees.
  * All other {@link DataFetcher}s for sub-fields can be left unchanged ({@link PropertyDataFetcher}) unless some specific behaviour is needed.
  * 
  * @author TG Team
@@ -44,7 +44,7 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
     private final ICanExecuteRootEntity canExecuteRootEntity;
     
     /**
-     * Creates {@link RootEntityFetcher} for concrete <code>entityType</code>.
+     * Creates {@link RootEntityFetcher} for concrete {@code entityType}.
      * 
      * @param entityType
      * @param coFinder
@@ -60,7 +60,7 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
     
     /**
      * Checks whether {@code entityType} can be executed by current user and returns error if not.
-     * Otherwise, finds an uninstrumented reader for the {@link #entityType} and retrieves first {@link #DEFAULT_PAGE_CAPACITY} entities.<p>
+     * Otherwise, finds an uninstrumented reader for the {@link #entityType} and retrieves first {@link #PAGE_CAPACITY} entities.<p>
      * {@inheritDoc}
      */
     @Override
