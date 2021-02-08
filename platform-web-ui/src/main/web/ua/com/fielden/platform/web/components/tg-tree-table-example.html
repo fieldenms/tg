@@ -15,7 +15,9 @@
         import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
         import '/resources/polymer/@polymer/iron-icon/iron-icon.js';
         import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
+        import '/resources/polymer/@polymer/iron-icons/communication-icons.js';
         import '/resources/egi/tg-property-column.js';
+        import '/resources/egi/tg-hierarchy-column.js';
         import './tg-tree-table.js';
     </script>
     <custom-style>
@@ -40,7 +42,7 @@
                     <paper-icon-button on-tap="expandAll" icon="icons:arrow-drop-down-circle"></paper-icon-button>
                 </div>
                 <tg-tree-table class="flex" id="tree" model="[[model]]" on-tg-load-subtree="_loadSubtree">
-                    <tg-property-column slot='hierarchy-column' property="name" type="String" width="200" min-width="80" grow-factor="1" column-title="Title" column-desc="Title description"></tg-property-column>
+                    <tg-hierarchy-column slot='hierarchy-column' property="name" type="String" width="200" min-width="80" grow-factor="1" column-title="Title" column-desc="Title description" content-builder="[[_buildContent]]"></tg-hierarchy-column>
                     <tg-property-column slot='regular-column' property="propertyType" type="String" width="100" min-width="80" grow-factor="1" column-title="Property Type" column-desc="Property type"></tg-property-column>
                     <tg-property-column slot='regular-column' property="desc" type="String" width="100" min-width="80" grow-factor="1" column-title="Description" column-desc="Description"></tg-property-column>
                     <tg-property-column slot='regular-column' property="internalName" type="String" width="160" min-width="80" grow-factor="1" column-title="Internal Name" column-desc="Internal type name"></tg-property-column>
@@ -68,6 +70,9 @@
             this.refTable = obj.refTable;
             this.hasChildren = obj.hasChildren;
             this.children = [];
+            this.isKey = obj.isKey;
+            this.order = obj.order;
+            this.isRequired = obj.isRequired;
         }
 
         propType (name) {
@@ -98,7 +103,10 @@
             internalName: "property_" + i, 
             dbSchema: "PROPERTY_" + i, 
             refTable: "TABLE_" + i, 
-            hasChildren: true
+            hasChildren: true,
+            isKey: i < 2,
+            order: i + 1,
+            isRequired: i < 1
         });
     }
     properties.push({
@@ -129,17 +137,29 @@
             return types.map(type => createTreeEntity(type, deepth));
         }
     }
+    const keyIcon = function (entity) {
+        return "<iron-icon icon='communication:vpn-key' style='transform: scale(-1, 1) rotate(90deg); color:" + (entity.entity.isRequired ? "#03A9F4" : "black") + "'></iron-icon>";
+    }
+    const keyNumber = function (entity) {
+        const parentEntity = entity.parent;
+        const numOfKeys = parentEntity ? parentEntity.entity.children.filter(ent => ent.isKey).length : 0;
+        return numOfKeys > 1 ? ("<sup style='position:absolute; top:-3px; left:20px;'><b>" + entity.entity.order + "</b></sup>") : ""; 
+    }
+    const getKeyIcon = function (entity) {
+        return entity.entity.isKey 
+                    ? "<span style='position:relative; margin-right:8px;'>" + keyIcon(entity) + keyNumber(entity) + "</span>" 
+                    : "";//"<span style='width:24px;margin-right:8px;'></span>";
+    };
     app.model = generateChildren(null, 4);
     app.expandAll  = function (e) {
         const entities = app.$.tree._entities.slice();
-        //app.$.tree.expandSubTreeView(0, entities[0], false);
         entities.forEach(entity => {
             app.$.tree.expandSubTreeView(entity, false);
         });
     };
-    // app._buildContent = function (entity) {
-    //     return "<span class='part-to-highlight'>" + entity.entity.key + "</span>&nbsp;&ndash;&nbsp;<span style='color:#737373'><i>" + entity.entity.desc + "</i></span>";
-    // }
+    app._buildContent = function (entity) {
+        return getKeyIcon(entity) + "<span>" + entity.entity.name + "</span>";
+    }
     app._loadSubtree = function (e) {
         const parentsPath = e.detail.parentPath;
         const idxs = [];

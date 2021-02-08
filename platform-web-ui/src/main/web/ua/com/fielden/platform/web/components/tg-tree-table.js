@@ -106,6 +106,8 @@ const template = html`
             background-color: #EEEEEE;
         }
         .table-cell-container {
+            min-width: 0;
+            @apply --layout-horizontal;
             @apply --layout-flex;
         }
         .table-cell {
@@ -115,9 +117,8 @@ const template = html`
             padding: 0 0.6rem;
         }
         .tree-table-cell {
+            min-width: 0;
             @apply --layout-horizontal;
-            @apply --layout-center;
-            @apply --layout-relative;
             @apply --layout-flex;
         }
         .truncate {
@@ -247,7 +248,7 @@ const template = html`
                             <div class="table-cell cell" style$="[[_calcColumnStyle(hierarchyColumn, hierarchyColumn.width, hierarchyColumn.growFactor, 'true')]]">
                                 <div class="tree-table-cell" style$="[[itemStyle(entity)]]">
                                     <iron-icon class="expand-button" icon="av:play-arrow" style="flex-grow:0;flex-shrink:0;" invisible$="[[!entity.entity.hasChildren]]" collapsed$="[[!entity.opened]]" on-tap="_toggle"></iron-icon>
-                                    <div class="truncate table-cell-container" highlighted$="[[entity.highlight]]" tooltip-text$="[[_getTooltip(entity, hierarchyColumn)]]">[[_getBindedTreeTableValue(entity, hierarchyColumn)]]</div>
+                                    <div class="truncate table-cell-container" highlighted$="[[entity.highlight]]" tooltip-text$="[[_getTooltip(entity, hierarchyColumn)]]" inner-h-t-m-l="[[_getBindedTreeTableValue(entity, hierarchyColumn)]]"></div>
                                 </div>
                             </div>
                         </div>
@@ -260,7 +261,7 @@ const template = html`
                         <div class="table-data-row" selected$="[[entity.selected]]" over$="[[entity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
                             <template is="dom-repeat" items="[[regularColumns]]" as="column">
                                 <div class="table-cell cell" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'false')]]" highlighted$="[[entity.highlight]]" tooltip-text$="[[_getTooltip(entity, column)]]">
-                                    <div class="truncate table-cell-container">[[_getBindedTreeTableValue(entity, column)]]</div>
+                                    <div class="truncate table-cell-container" inner-h-t-m-l="[[_getBindedTreeTableValue(entity, column)]]"></div>
                                 </div>
                             </template>
                         </div>
@@ -326,6 +327,8 @@ export class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRe
                 return entity.entity.key;
             }
             return "";
+        } else if (column.contentBuilder) {
+            return column.contentBuilder(entity, column);
         }
         return this.getBindedValue(entity.entity, column);
     }

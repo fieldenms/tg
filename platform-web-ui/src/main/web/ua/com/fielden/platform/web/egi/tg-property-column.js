@@ -1,10 +1,11 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 
-import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
-import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
+import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
+import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
-import {getFirstEntityValue} from '/resources/reflection/tg-polymer-utils.js';
+import { getFirstEntityValue } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
+import { TgPropertyColumnBehavior } from '/resources/egi/tg-property-column-behavior.js';
 
 const template = html`
     <slot id="action_selector" name="property-action" hidden></slot>
@@ -17,17 +18,9 @@ Polymer({
     is: "tg-property-column",
 
     properties: {
-        property: String,
         collectionalProperty: String,
         keyProperty: String,
         valueProperty: String,
-        tooltipProperty: String,
-        type: String,
-        width: Number,
-        minWidth: Number,
-        growFactor: Number,
-        columnTitle: String,
-        columnDesc: String,
         customAction: Object,
         sortable: {
             type: Boolean,
@@ -41,9 +34,7 @@ Polymer({
         _reflector: Object
     },
 
-    hostAttributes: {
-        hidden: true
-    },
+    behaviors: [TgPropertyColumnBehavior],
 
     created: function() {
         this._reflector = new TgReflector();
