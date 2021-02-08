@@ -50,7 +50,7 @@ public class WebUiResources extends AbstractWebUiResources {
     @Override
     protected void registerDomainWebResources(final Router router, final IWebUiConfig webApp) {
         // register some file processors
-        final FileProcessingResourceFactory<DumpCsvTxtProcessor> factory = new FileProcessingResourceFactory<DumpCsvTxtProcessor>(
+        final FileProcessingResourceFactory<DumpCsvTxtProcessor> factory = new FileProcessingResourceFactory<>(
                 router,
                 injector,
                 DumpCsvTxtProcessor.class,
@@ -90,5 +90,8 @@ public class WebUiResources extends AbstractWebUiResources {
         // router.attach("/sse/events",  new _EventSourcingResourceFactory()); -- some experimental stuff, which should be kept here for the moment
         router.attach("/sse/entity-centre-events",  new EventSourcingResourceFactory(injector, TgPersistentEntityWithPropertiesEventSrouce.class, deviceProvider, dates));
         router.attach("/sse/message-update-events", new EventSourcingResourceFactory(injector, TgMessageEventSource.class, deviceProvider, dates));
+        
+        // register Web API and GraphiQL resources
+        attachWebApiResources(router);
     }
 }

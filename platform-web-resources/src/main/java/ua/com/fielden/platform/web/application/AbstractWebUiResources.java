@@ -139,9 +139,6 @@ public abstract class AbstractWebUiResources extends Application {
 
         //Attache master retrieve resource
         guardedRouter.attach("/master/{entityType}", new MasterInfoProviderResourceFactory(webApp, deviceProvider, dates, restUtil));
-        // Web API resource
-        guardedRouter.attach("/api", new WebApiResourceFactory(injector));
-        guardedRouter.attach("/api/graphiql", new GraphiQLResourceFactory(injector));
 
         //Attache client side error logger resource
         guardedRouter.attach("/error", new WebClientErrorLoggerResourceFactory(injector));
@@ -180,6 +177,16 @@ public abstract class AbstractWebUiResources extends Application {
         mainRouter.attach(guard);
 
         return mainRouter;
+    }
+
+    /**
+     * Attaches Web API resource. Attaches GraphiQL UI resource.
+     * 
+     * @param router
+     */
+    protected void attachWebApiResources(final Router router) {
+        router.attach("/api", new WebApiResourceFactory(injector));
+        router.attach("/api/graphiql", new GraphiQLResourceFactory(injector));
     }
 
     /**
