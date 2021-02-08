@@ -12,8 +12,8 @@ import ua.com.fielden.platform.web_api.IWebApi;
  * @author TG Team
  * 
  */
-public class WebAPI_CanExecute_Token implements ISecurityToken {
+public class WebApi_CanExecute_Token implements ISecurityToken {
     private final static String ENTITY_TITLE = "Web API";
     public final static String TITLE = format(EXECUTE.forTitle(), ENTITY_TITLE);
-    public final static String DESC = format(EXECUTE.forDesc(), ENTITY_TITLE);
+    public final static String DESC = format("Authorises %s execution.", ENTITY_TITLE);
 }

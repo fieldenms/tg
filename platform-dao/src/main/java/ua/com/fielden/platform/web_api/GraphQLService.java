@@ -62,7 +62,7 @@ import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.IAuthorisationModel;
-import ua.com.fielden.platform.security.tokens.web_api.WebAPI_CanExecute_Token;
+import ua.com.fielden.platform.security.tokens.web_api.WebApi_CanExecute_Token;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
@@ -143,7 +143,7 @@ public class GraphQLService implements IWebApi {
      */
     @Override
     public Map<String, Object> execute(final Map<String, Object> input) {
-        final Result authResult = authorisation.authorise(WebAPI_CanExecute_Token.class);
+        final Result authResult = authorisation.authorise(WebApi_CanExecute_Token.class);
         if (!authResult.isSuccessful()) {
             return new ExecutionResultImpl(newError().message(authResult.getMessage()).build()).toSpecification();
         }

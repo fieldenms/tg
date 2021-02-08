@@ -20,7 +20,7 @@ import ua.com.fielden.platform.security.tokens.user.UserRole_CanSave_Token;
 import ua.com.fielden.platform.security.tokens.user.UserRolesUpdater_CanExecute_Token;
 import ua.com.fielden.platform.security.tokens.user.User_CanDelete_Token;
 import ua.com.fielden.platform.security.tokens.user.User_CanSave_Token;
-import ua.com.fielden.platform.security.tokens.web_api.WebAPI_CanExecute_Token;
+import ua.com.fielden.platform.security.tokens.web_api.WebApi_CanExecute_Token;
 
 /**
  * Searches for all available security tokens in the application based on the provided path and package name. The result is presented as as a tree-like structure containing all
@@ -56,7 +56,7 @@ public class SecurityTokenProvider {
         allTokens.add(Attachment_CanSave_Token.class);
         allTokens.add(Attachment_CanDelete_Token.class);
         allTokens.add(AttachmentDownload_CanExecute_Token.class);
-        allTokens.add(WebAPI_CanExecute_Token.class);
+        allTokens.add(WebApi_CanExecute_Token.class);
 
         topLevelSecurityTokenNodes = buildTokenNodes(allTokens);
     }
