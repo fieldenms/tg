@@ -93,9 +93,10 @@ public class GraphQLService implements IWebApi {
      * @param coFinder
      * @param dates
      * @param authorisation
+     * @param canExecuteRootEntity
      */
     @Inject
-    public GraphQLService(final IApplicationDomainProvider applicationDomainProvider, final ICompanionObjectFinder coFinder, final IDates dates, final IAuthorisationModel authorisation) {
+    public GraphQLService(final IApplicationDomainProvider applicationDomainProvider, final ICompanionObjectFinder coFinder, final IDates dates, final IAuthorisationModel authorisation, final ICanExecuteRootEntity canExecuteRootEntity) {
         try {
             logger.info("GraphQL Web API...");
             this.authorisation = authorisation;
@@ -103,7 +104,7 @@ public class GraphQLService implements IWebApi {
             logger.info("\tBuilding dictionary...");
             final Map<Class<? extends AbstractEntity<?>>, GraphQLType> dictionary = createDictionary(persistentAndSyntheticDomainTypes(applicationDomainProvider));
             logger.info("\tBuilding query type...");
-            final GraphQLObjectType queryType = createQueryType(dictionary.keySet(), coFinder, dates, codeRegistryBuilder);
+            final GraphQLObjectType queryType = createQueryType(dictionary.keySet(), coFinder, dates, codeRegistryBuilder, canExecuteRootEntity);
             logger.info("\tBuilding schema...");
             final GraphQLSchema schema = newSchema()
                     .codeRegistry(codeRegistryBuilder.build())
@@ -178,9 +179,10 @@ public class GraphQLService implements IWebApi {
      * @param coFinder
      * @param dates
      * @param codeRegistryBuilder -- a place to register root data fetchers
+     * @param canExecuteRootEntity
      * @return
      */
-    private static GraphQLObjectType createQueryType(final Set<Class<? extends AbstractEntity<?>>> dictionary, final ICompanionObjectFinder coFinder, final IDates dates, final GraphQLCodeRegistry.Builder codeRegistryBuilder) {
+    private static GraphQLObjectType createQueryType(final Set<Class<? extends AbstractEntity<?>>> dictionary, final ICompanionObjectFinder coFinder, final IDates dates, final GraphQLCodeRegistry.Builder codeRegistryBuilder, final ICanExecuteRootEntity canExecuteRootEntity) {
         final Builder queryTypeBuilder = newObject().name(QUERY_TYPE_NAME).description("Query following **entities** represented as GraphQL root fields:");
         dictionary.stream().forEach(entityType -> {
             final String simpleTypeName = entityType.getSimpleName();
@@ -193,7 +195,7 @@ public class GraphQLService implements IWebApi {
                 .argument(PAGE_CAPACITY_ARGUMENT)
                 .type(new GraphQLList(new GraphQLTypeReference(simpleTypeName)))
             );
-            codeRegistryBuilder.dataFetcher(coordinates(QUERY_TYPE_NAME, fieldName), new RootEntityFetcher<>((Class<AbstractEntity<?>>) entityType, coFinder, dates));
+            codeRegistryBuilder.dataFetcher(coordinates(QUERY_TYPE_NAME, fieldName), new RootEntityFetcher<>((Class<AbstractEntity<?>>) entityType, coFinder, dates, canExecuteRootEntity));
         });
         return queryTypeBuilder.build();
     }

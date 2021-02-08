@@ -24,6 +24,7 @@ import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.utils.IDates;
@@ -40,6 +41,7 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
     private final Class<T> entityType;
     private final ICompanionObjectFinder coFinder;
     private final IDates dates;
+    private final ICanExecuteRootEntity canExecuteRootEntity;
     
     /**
      * Creates {@link RootEntityFetcher} for concrete <code>entityType</code>.
@@ -47,19 +49,23 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
      * @param entityType
      * @param coFinder
      * @param dates
+     * @param canExecuteRootEntity
      */
-    public RootEntityFetcher(final Class<T> entityType, final ICompanionObjectFinder coFinder, final IDates dates) {
+    public RootEntityFetcher(final Class<T> entityType, final ICompanionObjectFinder coFinder, final IDates dates, final ICanExecuteRootEntity canExecuteRootEntity) {
         this.entityType = entityType;
         this.coFinder = coFinder;
         this.dates = dates;
+        this.canExecuteRootEntity = canExecuteRootEntity;
     }
     
     /**
-     * Finds an uninstrumented reader for the {@link #entityType} and retrieves first {@link #DEFAULT_PAGE_CAPACITY} entities.<p>
+     * Checks whether {@code entityType} can be executed by current user and returns error if not.
+     * Otherwise, finds an uninstrumented reader for the {@link #entityType} and retrieves first {@link #DEFAULT_PAGE_CAPACITY} entities.<p>
      * {@inheritDoc}
      */
     @Override
     public DataFetcherResult<List<T>> get(final DataFetchingEnvironment environment) {
+        canExecuteRootEntity.canExecute(entityType).ifFailure(Result::throwRuntime);
         final T3<String, List<GraphQLArgument>, List<Argument>> rootArguments = rootPropAndArguments(environment.getGraphQLSchema(), environment.getField());
         final T2<Optional<String>, QueryExecutionModel<T, EntityResultQueryModel<T>>> warningAndModel = generateQueryModelFrom(
             environment.getField(),
