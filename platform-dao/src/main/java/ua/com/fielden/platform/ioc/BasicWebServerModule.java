@@ -24,6 +24,10 @@ import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.dao.ISecurityRoleAssociation;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociation;
 import ua.com.fielden.platform.dao.IUserRole;
+import ua.com.fielden.platform.domain.metadata.DomainPropertyDao;
+import ua.com.fielden.platform.domain.metadata.DomainTypeDao;
+import ua.com.fielden.platform.domain.metadata.IDomainProperty;
+import ua.com.fielden.platform.domain.metadata.IDomainType;
 import ua.com.fielden.platform.entity.EntityDeleteActionDao;
 import ua.com.fielden.platform.entity.EntityEditActionDao;
 import ua.com.fielden.platform.entity.EntityNavigationActionDao;
@@ -275,6 +279,9 @@ public class BasicWebServerModule extends CommonFactoryModule {
         // warnings acknowledgement binding
         bind(IAcknowledgeWarnings.class).to(AcknowledgeWarningsDao.class);
         bind(IPropertyWarning.class).to(PropertyWarningDao.class);
+        
+        bind(IDomainType.class).to(DomainTypeDao.class);
+        bind(IDomainProperty.class).to(DomainPropertyDao.class);
     }
 
     public Properties getProps() {
