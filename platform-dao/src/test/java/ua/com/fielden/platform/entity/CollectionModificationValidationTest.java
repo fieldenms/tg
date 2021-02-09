@@ -35,6 +35,7 @@ import ua.com.fielden.platform.security.tokens.user.UserRole_CanSave_Token;
 import ua.com.fielden.platform.security.tokens.user.UserRolesUpdater_CanExecute_Token;
 import ua.com.fielden.platform.security.tokens.user.User_CanDelete_Token;
 import ua.com.fielden.platform.security.tokens.user.User_CanSave_Token;
+import ua.com.fielden.platform.security.tokens.web_api.WebApi_CanExecute_Token;
 import ua.com.fielden.platform.security.user.SecurityTokenInfo;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
@@ -88,15 +89,15 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
     
     @SafeVarargs
     private static <T> HashSet<T> setOf(final T ... elements) {
-        return new HashSet<T>(Arrays.asList(elements));
+        return new HashSet<>(Arrays.asList(elements));
     }
     @SafeVarargs
     private static <T> LinkedHashSet<T> linkedSetOf(final T ... elements) {
-        return new LinkedHashSet<T>(Arrays.asList(elements));
+        return new LinkedHashSet<>(Arrays.asList(elements));
     }
     @SafeVarargs
     private static <T> ArrayList<T> listOf(final T ... elements) {
-        return new ArrayList<T>(Arrays.asList(elements));
+        return new ArrayList<>(Arrays.asList(elements));
     }
     
     @Test
@@ -290,7 +291,9 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
         final SecurityTokenInfo attachmentSave = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(Attachment_CanSave_Token.class.getName());
         final SecurityTokenInfo attachmentDelete = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(Attachment_CanDelete_Token.class.getName());
         final SecurityTokenInfo attachmentDownload = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(AttachmentDownload_CanExecute_Token.class.getName());
-        
+
+        final SecurityTokenInfo webApiExecute = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(WebApi_CanExecute_Token.class.getName());
+
         final SecurityTokenInfo compoundModule = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(CompoundModuleToken.class.getName());
         final SecurityTokenInfo tgComoundEntity_CanDelete = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(TgCompoundEntity_CanDelete_Token.class.getName());
         final SecurityTokenInfo tgCompoundEntity_CanSave = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(TgCompoundEntity_CanSave_Token.class.getName());
@@ -309,6 +312,8 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
             userRoleDelete, userRoleSave,
             userRolesUpdater_CanExecute, userRoleTokensUpdater_CanExecute,
             attachmentSave, attachmentDelete, attachmentDownload,
+            webApiExecute,
+            
             compoundModule, tgComoundEntity_CanDelete, tgCompoundEntity_CanSave, tgCompoundEntityChild_CanDelete, tgCompoundEntityChild_CanSave, tgCompoundEntityDetail_CanSave, openTgCompoundEntityMasterAction_CanOpen, 
             tgCompoundEntityMaster_OpenMain_MenuItem_CanAccess, tgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem_CanAccess, tgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem_CanAccess
         );

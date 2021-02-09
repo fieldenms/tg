@@ -88,7 +88,7 @@ public class UserUserRoleTestCase extends AbstractDaoTestCase {
         User user = coUser.findUserByKeyWithRoles("user1");
         user.setEmail("new_email@gmail.com");
         UserAndRoleAssociation userAssociation = new_composite(UserAndRoleAssociation.class, user, new_(UserRole.class, "role1", ""));
-        final Set<UserAndRoleAssociation> associations = new HashSet<UserAndRoleAssociation>();
+        final Set<UserAndRoleAssociation> associations = new HashSet<>();
         for (final UserAndRoleAssociation roleAssociation : user.getRoles()) {
             if (roleAssociation.equals(userAssociation)) {
                 associations.add(roleAssociation);
@@ -120,7 +120,7 @@ public class UserUserRoleTestCase extends AbstractDaoTestCase {
         final String newUserName = "new_user";
         User user = save(new_(User.class, newUserName, "new user desc").setEmail("new_email@gmail.com"));
 
-        Set<UserAndRoleAssociation> userRolesAssociation = new HashSet<UserAndRoleAssociation>();
+        Set<UserAndRoleAssociation> userRolesAssociation = new HashSet<>();
         userRolesAssociation.add(new_composite(UserAndRoleAssociation.class, user, userRole1));
         userRolesAssociation.add(new_composite(UserAndRoleAssociation.class, user, userRole2));
         userRolesAssociation.add(new_composite(UserAndRoleAssociation.class, user, userRole3));
@@ -147,7 +147,7 @@ public class UserUserRoleTestCase extends AbstractDaoTestCase {
     public void test_that_security_associations_can_be_retrieved() {
         final EntityResultQueryModel<SecurityRoleAssociation> model = select(SecurityRoleAssociation.class).model();
         final List<SecurityRoleAssociation> associations = coSecurityRoleAssociation.firstPage(from(model).with(fetch(SecurityRoleAssociation.class).with("role")).model(), Integer.MAX_VALUE).data();
-        assertEquals("incorrect number of security token - role associations", 31, associations.size());
+        assertEquals("incorrect number of security token - role associations", 32, associations.size());
         final List<SecurityRoleAssociation> roles = coSecurityRoleAssociation.findAssociationsFor(FirstLevelSecurityToken1.class);
         assertEquals("Incorrect number of user roles for the " + FirstLevelSecurityToken1.class.getName() + " security token", 2, roles.size());
         UserRole role = new_(UserRole.class, "role1");
