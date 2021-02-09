@@ -138,17 +138,15 @@
         }
     }
     const keyIcon = function (entity) {
-        return "<iron-icon icon='communication:vpn-key' style='transform: scale(-1, 1) rotate(90deg); color:" + (entity.entity.isRequired ? "#03A9F4" : "black") + "'></iron-icon>";
+        return "<iron-icon icon='communication:vpn-key' style='height:18px; transform: scale(-1, 1) rotate(90deg); color:" + (entity.entity.isRequired ? "#03A9F4" : "black") + "'></iron-icon>";
     }
-    const keyNumber = function (entity) {
-        const parentEntity = entity.parent;
-        const numOfKeys = parentEntity ? parentEntity.entity.children.filter(ent => ent.isKey).length : 0;
-        return numOfKeys > 1 ? ("<sup style='position:absolute; top:-3px; left:20px;'><b>" + entity.entity.order + "</b></sup>") : ""; 
+    const keyNumber = function (entity, numOfKeys) {
+        return numOfKeys > 1 ? ("<sup style='position:absolute; left:18px;'><b>" + entity.entity.order + "</b></sup>") : ""; 
     }
-    const getKeyIcon = function (entity) {
+    const getKeyIcon = function (entity, numOfKeys) {
         return entity.entity.isKey 
-                    ? "<span style='position:relative; margin-right:8px;'>" + keyIcon(entity) + keyNumber(entity) + "</span>" 
-                    : "";//"<span style='width:24px;margin-right:8px;'></span>";
+                    ? "<span style='position:relative;'>" + keyIcon(entity) + keyNumber(entity, numOfKeys) + "</span>" 
+                    : (numOfKeys > 0 ? "<span style='min-width:24px;'></span>" : "");
     };
     app.model = generateChildren(null, 4);
     app.expandAll  = function (e) {
@@ -158,7 +156,9 @@
         });
     };
     app._buildContent = function (entity) {
-        return getKeyIcon(entity) + "<span>" + entity.entity.name + "</span>";
+        const parentEntity = entity.parent;
+        const numOfKeys = parentEntity ? parentEntity.entity.children.filter(ent => ent.isKey).length : 0;
+        return getKeyIcon(entity, numOfKeys) + "<span class='truncate'" + (numOfKeys !== 1 ? "style='margin-left:8px;'" : "") + ">" + entity.entity.name + "</span>";
     }
     app._loadSubtree = function (e) {
         const parentsPath = e.detail.parentPath;
