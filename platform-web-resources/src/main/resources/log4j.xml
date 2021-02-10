@@ -91,9 +91,13 @@
 		<appender-ref ref="stdout" />
 	</logger>
 	<logger name="ua.com.fielden.platform.entity.query.EntityHibernateRetrievalQueryProducer" additivity="false">
-        <level value="error" />
-        <appender-ref ref="stdout" />
-    </logger>
+		<level value="error" />
+		<appender-ref ref="stdout" />
+	</logger>
+		<logger name="ua.com.fielden.platform.entity.query.EntityContainerFetcher" additivity="false">
+		<level value="error" />
+		<appender-ref ref="stdout" />
+	</logger>
 		
 	<!-- 
 		Loggers for Hibernate.
@@ -128,7 +132,7 @@
 	  This means that if someone (e.g. third party library) is trying to obtain a nonexisting logger then root would be used instead.  
 	  -->
 	<root> 
-		<level value="error" /> 
-		<appender-ref ref="stdout" />		 
+		<level value="info" /> 
+		<appender-ref ref="stdout" />
 	</root>
 </log4j:configuration>

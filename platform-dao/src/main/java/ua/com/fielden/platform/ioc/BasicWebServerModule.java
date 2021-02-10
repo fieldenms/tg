@@ -191,6 +191,8 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bindConstant().annotatedWith(Names.named("email.smtp")).to(props.getProperty("email.smtp"));
         bindConstant().annotatedWith(Names.named("email.fromAddress")).to(props.getProperty("email.fromAddress"));
         bindConstant().annotatedWith(Names.named("independent.time.zone")).to(Boolean.valueOf(props.getProperty("independent.time.zone")));
+        final boolean webApiPresent = Boolean.valueOf(props.getProperty("web.api"));
+        bindConstant().annotatedWith(Names.named("web.api")).to(webApiPresent);
 
         bind(IApplicationSettings.class).to(ApplicationSettings.class).in(Scopes.SINGLETON);
         bind(IApplicationDomainProvider.class).toInstance(applicationDomainProvider);
@@ -278,8 +280,10 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(IAcknowledgeWarnings.class).to(AcknowledgeWarningsDao.class);
         bind(IPropertyWarning.class).to(PropertyWarningDao.class);
         
-        // Web API binding to platform-dao GraphQL-based implementation
-        bind(IWebApi.class).to(GraphQLService.class).in(Scopes.SINGLETON);
+        if (webApiPresent) { // in case where Web API has been turned-on in application.properties ...
+            // ... bind Web API to platform-dao GraphQL-based implementation
+            bind(IWebApi.class).to(GraphQLService.class).in(Scopes.SINGLETON);
+        }
     }
 
     public Properties getProps() {

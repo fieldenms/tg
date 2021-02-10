@@ -10,6 +10,8 @@ import org.restlet.routing.Template;
 import org.restlet.security.Authenticator;
 
 import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.name.Names;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.security.user.IUserProvider;
@@ -155,6 +157,12 @@ public abstract class AbstractWebUiResources extends Application {
         // Registering autocompletion resources:
         attachAutocompletionResources(guardedRouter, webApp);
 
+        if (injector.getInstance(Key.get(boolean.class, Names.named("web.api")))) { // in case where Web API has been turned-on in application.properties ...
+            // ... register Web API and GraphiQL resources
+            guardedRouter.attach("/api", new WebApiResourceFactory(injector));
+            guardedRouter.attach("/api/graphiql", new GraphiQLResourceFactory(injector));
+        }
+
         // register domain specific resources if any
         registerDomainWebResources(guardedRouter, webApp);
 
@@ -177,16 +185,6 @@ public abstract class AbstractWebUiResources extends Application {
         mainRouter.attach(guard);
 
         return mainRouter;
-    }
-
-    /**
-     * Attaches Web API resource. Attaches GraphiQL UI resource.
-     * 
-     * @param router
-     */
-    protected void attachWebApiResources(final Router router) {
-        router.attach("/api", new WebApiResourceFactory(injector));
-        router.attach("/api/graphiql", new GraphiQLResourceFactory(injector));
     }
 
     /**
