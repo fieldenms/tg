@@ -107,6 +107,13 @@
 			<version>13.0</version>
 		</dependency>
 		
+		<!-- Code generation library https://mvnrepository.com/artifact/com.helger/jcodemodel -->
+		<dependency>
+			<groupId>com.helger</groupId>
+			<artifactId>jcodemodel</artifactId>
+			<version>3.4.0</version>
+		</dependency>
+		
 		<dependency>
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi</artifactId>

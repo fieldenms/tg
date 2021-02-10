@@ -1,6 +1,10 @@
 package ua.com.fielden.platform.web_api;
 
 import static graphql.GraphqlErrorBuilder.newError;
+import static java.lang.Class.forName;
+import static java.lang.String.format;
+import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.security.tokens.web_api.WebApiTemplate.QUERY;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.web_api.FieldSchema.DEFAULT_PAGE_CAPACITY;
 import static ua.com.fielden.platform.web_api.FieldSchema.DEFAULT_PAGE_NUMBER;
@@ -25,6 +29,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.security.IAuthorisationModel;
+import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.utils.IDates;
@@ -41,7 +47,8 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
     private final Class<T> entityType;
     private final ICompanionObjectFinder coFinder;
     private final IDates dates;
-    private final ICanExecuteRootEntity canExecuteRootEntity;
+    private final IAuthorisationModel authorisation;
+    private final String securityTokensPackageName;
     
     /**
      * Creates {@link RootEntityFetcher} for concrete {@code entityType}.
@@ -49,13 +56,27 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
      * @param entityType
      * @param coFinder
      * @param dates
-     * @param canExecuteRootEntity
+     * @param authorisation
+     * @param securityTokensPackageName
      */
-    public RootEntityFetcher(final Class<T> entityType, final ICompanionObjectFinder coFinder, final IDates dates, final ICanExecuteRootEntity canExecuteRootEntity) {
+    public RootEntityFetcher(final Class<T> entityType, final ICompanionObjectFinder coFinder, final IDates dates, final IAuthorisationModel authorisation, final String securityTokensPackageName) {
         this.entityType = entityType;
         this.coFinder = coFinder;
         this.dates = dates;
-        this.canExecuteRootEntity = canExecuteRootEntity;
+        this.authorisation = authorisation;
+        this.securityTokensPackageName = securityTokensPackageName;
+    }
+    
+    public static String queryTokenNameFor(final Class<? extends AbstractEntity<?>> entityType) {
+        return format(QUERY.forClassName(), entityType.getSimpleName());
+    }
+    
+    public static String queryPackageName(final String rootPackageName) {
+        return rootPackageName + ".query";
+    }
+    
+    public static String rootPackageName(final String securityTokensPackageName) {
+        return securityTokensPackageName + ".web_api";
     }
     
     /**
@@ -65,7 +86,11 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
      */
     @Override
     public DataFetcherResult<List<T>> get(final DataFetchingEnvironment environment) {
-        canExecuteRootEntity.canExecute(entityType).ifFailure(Result::throwRuntime);
+        try {
+            authorisation.authorise(findToken(securityTokensPackageName, entityType)).ifFailure(Result::throwRuntime);
+        } catch (final ClassNotFoundException notFoundException) {
+            throw failure(notFoundException.toString());
+        }
         final T3<String, List<GraphQLArgument>, List<Argument>> rootArguments = rootPropAndArguments(environment.getGraphQLSchema(), environment.getField());
         final T2<Optional<String>, QueryExecutionModel<T, EntityResultQueryModel<T>>> warningAndModel = generateQueryModelFrom(
             environment.getField(),
@@ -93,6 +118,10 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
         ).data());
         warningAndModel._1.ifPresent(warning -> result.error(newError(environment).message(warning).build()));
         return result.build();
+    }
+
+    public static <T extends AbstractEntity<?>> Class<? extends ISecurityToken> findToken(final String securityTokensPackageName, final Class<T> entityType) throws ClassNotFoundException {
+        return (Class<? extends ISecurityToken>) forName(queryPackageName(rootPackageName(securityTokensPackageName)) + "." + queryTokenNameFor(entityType));
     }
     
 }
