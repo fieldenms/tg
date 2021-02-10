@@ -39,6 +39,21 @@ public class DomainProperty extends AbstractEntity<DynamicEntityKey> {
     @Title(value = "Title", desc = "Desc")
     private String title;
     
+    @IsProperty
+    @MapTo
+    @Title(value = "Key Index", desc = "Desc")
+    private Integer keyIndex;
+
+    @Observable
+    public DomainProperty setKeyIndex(final Integer keyIndex) {
+        this.keyIndex = keyIndex;
+        return this;
+    }
+
+    public Integer getKeyIndex() {
+        return keyIndex;
+    }
+    
     @Observable
     public DomainProperty setTitle(final String title) {
         this.title = title;
