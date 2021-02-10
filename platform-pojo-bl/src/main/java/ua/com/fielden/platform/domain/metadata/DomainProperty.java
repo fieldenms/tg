@@ -43,6 +43,21 @@ public class DomainProperty extends AbstractEntity<DynamicEntityKey> {
     @MapTo
     @Title(value = "Key Index", desc = "Desc")
     private Integer keyIndex;
+    
+    @IsProperty
+    @MapTo
+    @Title(value = "Required?", desc = "Desc")
+    private boolean required;
+
+    @Observable
+    public DomainProperty setRequired(final boolean required) {
+        this.required = required;
+        return this;
+    }
+
+    public boolean getRequired() {
+        return required;
+    }
 
     @Observable
     public DomainProperty setKeyIndex(final Integer keyIndex) {
