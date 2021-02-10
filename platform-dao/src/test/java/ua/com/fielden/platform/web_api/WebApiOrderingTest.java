@@ -31,6 +31,10 @@ import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
  *
  */
 public class WebApiOrderingTest extends AbstractDaoTestCase {
+    private static final Map<String, Object> VEH1 = linkedMapOf(t2("key", "VEH1"), t2("model", linkedMapOf(t2("key", "117"), t2("make", linkedMapOf(t2("key", "TOYOTA"))))));
+    private static final Map<String, Object> VEH2 = linkedMapOf(t2("key", "VEH2"), t2("model", linkedMapOf(t2("key", "316"), t2("make", linkedMapOf(t2("key", "MERC"))))));
+    private static final Map<String, Object> VEH3 = linkedMapOf(t2("key", "VEH3"), t2("model", linkedMapOf(t2("key", "116"), t2("make", linkedMapOf(t2("key", "TOYOTA"))))));
+    private static final Map<String, Object> VEH4 = linkedMapOf(t2("key", "VEH4"), t2("model", linkedMapOf(t2("key", "317"), t2("make", linkedMapOf(t2("key", "MERC"))))));
     private final IWebApi webApi = getInstance(IWebApi.class);
     
     private void createEntities() {
@@ -55,10 +59,10 @@ public class WebApiOrderingTest extends AbstractDaoTestCase {
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
             t2("tgWebApiEntity", listOf(
-                linkedMapOf(t2("key", "VEH1"), t2("model", linkedMapOf(t2("key", "117"), t2("make", linkedMapOf(t2("key", "TOYOTA")))))),
-                linkedMapOf(t2("key", "VEH2"), t2("model", linkedMapOf(t2("key", "316"), t2("make", linkedMapOf(t2("key", "MERC")))))),
-                linkedMapOf(t2("key", "VEH3"), t2("model", linkedMapOf(t2("key", "116"), t2("make", linkedMapOf(t2("key", "TOYOTA")))))),
-                linkedMapOf(t2("key", "VEH4"), t2("model", linkedMapOf(t2("key", "317"), t2("make", linkedMapOf(t2("key", "MERC"))))))
+                VEH1,
+                VEH2,
+                VEH3,
+                VEH4
             ))
         )), result);
     }
@@ -72,10 +76,10 @@ public class WebApiOrderingTest extends AbstractDaoTestCase {
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
             t2("tgWebApiEntity", listOf(
-                linkedMapOf(t2("key", "VEH1"), t2("model", linkedMapOf(t2("key", "117"), t2("make", linkedMapOf(t2("key", "TOYOTA")))))),
-                linkedMapOf(t2("key", "VEH2"), t2("model", linkedMapOf(t2("key", "316"), t2("make", linkedMapOf(t2("key", "MERC")))))),
-                linkedMapOf(t2("key", "VEH3"), t2("model", linkedMapOf(t2("key", "116"), t2("make", linkedMapOf(t2("key", "TOYOTA")))))),
-                linkedMapOf(t2("key", "VEH4"), t2("model", linkedMapOf(t2("key", "317"), t2("make", linkedMapOf(t2("key", "MERC"))))))
+                VEH1,
+                VEH2,
+                VEH3,
+                VEH4
             ))
         )), result);
     }
@@ -89,10 +93,10 @@ public class WebApiOrderingTest extends AbstractDaoTestCase {
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
             t2("tgWebApiEntity", listOf(
-                linkedMapOf(t2("key", "VEH4"), t2("model", linkedMapOf(t2("key", "317"), t2("make", linkedMapOf(t2("key", "MERC")))))),
-                linkedMapOf(t2("key", "VEH3"), t2("model", linkedMapOf(t2("key", "116"), t2("make", linkedMapOf(t2("key", "TOYOTA")))))),
-                linkedMapOf(t2("key", "VEH2"), t2("model", linkedMapOf(t2("key", "316"), t2("make", linkedMapOf(t2("key", "MERC")))))),
-                linkedMapOf(t2("key", "VEH1"), t2("model", linkedMapOf(t2("key", "117"), t2("make", linkedMapOf(t2("key", "TOYOTA"))))))
+                VEH4,
+                VEH3,
+                VEH2,
+                VEH1
             ))
         )), result);
     }
@@ -106,10 +110,10 @@ public class WebApiOrderingTest extends AbstractDaoTestCase {
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
             t2("tgWebApiEntity", listOf(
-                linkedMapOf(t2("key", "VEH1"), t2("model", linkedMapOf(t2("key", "117"), t2("make", linkedMapOf(t2("key", "TOYOTA")))))),
-                linkedMapOf(t2("key", "VEH2"), t2("model", linkedMapOf(t2("key", "316"), t2("make", linkedMapOf(t2("key", "MERC")))))),
-                linkedMapOf(t2("key", "VEH3"), t2("model", linkedMapOf(t2("key", "116"), t2("make", linkedMapOf(t2("key", "TOYOTA")))))),
-                linkedMapOf(t2("key", "VEH4"), t2("model", linkedMapOf(t2("key", "317"), t2("make", linkedMapOf(t2("key", "MERC"))))))
+                VEH1,
+                VEH2,
+                VEH3,
+                VEH4
             ))
         )), result);
     }
@@ -123,10 +127,10 @@ public class WebApiOrderingTest extends AbstractDaoTestCase {
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
             t2("tgWebApiEntity", listOf(
-                linkedMapOf(t2("key", "VEH4"), t2("model", linkedMapOf(t2("key", "317"), t2("make", linkedMapOf(t2("key", "MERC")))))),
-                linkedMapOf(t2("key", "VEH3"), t2("model", linkedMapOf(t2("key", "116"), t2("make", linkedMapOf(t2("key", "TOYOTA")))))),
-                linkedMapOf(t2("key", "VEH2"), t2("model", linkedMapOf(t2("key", "316"), t2("make", linkedMapOf(t2("key", "MERC")))))),
-                linkedMapOf(t2("key", "VEH1"), t2("model", linkedMapOf(t2("key", "117"), t2("make", linkedMapOf(t2("key", "TOYOTA"))))))
+                VEH4,
+                VEH3,
+                VEH2,
+                VEH1
             ))
         )), result);
     }
@@ -140,10 +144,10 @@ public class WebApiOrderingTest extends AbstractDaoTestCase {
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
             t2("tgWebApiEntity", listOf(
-                linkedMapOf(t2("key", "VEH3"), t2("model", linkedMapOf(t2("key", "116"), t2("make", linkedMapOf(t2("key", "TOYOTA")))))),
-                linkedMapOf(t2("key", "VEH1"), t2("model", linkedMapOf(t2("key", "117"), t2("make", linkedMapOf(t2("key", "TOYOTA")))))),
-                linkedMapOf(t2("key", "VEH2"), t2("model", linkedMapOf(t2("key", "316"), t2("make", linkedMapOf(t2("key", "MERC")))))),
-                linkedMapOf(t2("key", "VEH4"), t2("model", linkedMapOf(t2("key", "317"), t2("make", linkedMapOf(t2("key", "MERC"))))))
+                VEH3,
+                VEH1,
+                VEH2,
+                VEH4
             ))
         )), result);
     }
@@ -157,10 +161,10 @@ public class WebApiOrderingTest extends AbstractDaoTestCase {
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
             t2("tgWebApiEntity", listOf(
-                linkedMapOf(t2("key", "VEH4"), t2("model", linkedMapOf(t2("key", "317"), t2("make", linkedMapOf(t2("key", "MERC")))))),
-                linkedMapOf(t2("key", "VEH2"), t2("model", linkedMapOf(t2("key", "316"), t2("make", linkedMapOf(t2("key", "MERC")))))),
-                linkedMapOf(t2("key", "VEH1"), t2("model", linkedMapOf(t2("key", "117"), t2("make", linkedMapOf(t2("key", "TOYOTA")))))),
-                linkedMapOf(t2("key", "VEH3"), t2("model", linkedMapOf(t2("key", "116"), t2("make", linkedMapOf(t2("key", "TOYOTA"))))))
+                VEH4,
+                VEH2,
+                VEH1,
+                VEH3
             ))
         )), result);
     }
@@ -174,10 +178,10 @@ public class WebApiOrderingTest extends AbstractDaoTestCase {
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
             t2("tgWebApiEntity", listOf(
-                linkedMapOf(t2("key", "VEH2"), t2("model", linkedMapOf(t2("key", "316"), t2("make", linkedMapOf(t2("key", "MERC")))))),
-                linkedMapOf(t2("key", "VEH4"), t2("model", linkedMapOf(t2("key", "317"), t2("make", linkedMapOf(t2("key", "MERC")))))),
-                linkedMapOf(t2("key", "VEH3"), t2("model", linkedMapOf(t2("key", "116"), t2("make", linkedMapOf(t2("key", "TOYOTA")))))),
-                linkedMapOf(t2("key", "VEH1"), t2("model", linkedMapOf(t2("key", "117"), t2("make", linkedMapOf(t2("key", "TOYOTA"))))))
+                VEH2,
+                VEH4,
+                VEH3,
+                VEH1
             ))
         )), result);
     }
@@ -191,10 +195,10 @@ public class WebApiOrderingTest extends AbstractDaoTestCase {
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
             t2("tgWebApiEntity", listOf(
-                linkedMapOf(t2("key", "VEH1"), t2("model", linkedMapOf(t2("key", "117"), t2("make", linkedMapOf(t2("key", "TOYOTA")))))),
-                linkedMapOf(t2("key", "VEH3"), t2("model", linkedMapOf(t2("key", "116"), t2("make", linkedMapOf(t2("key", "TOYOTA")))))),
-                linkedMapOf(t2("key", "VEH4"), t2("model", linkedMapOf(t2("key", "317"), t2("make", linkedMapOf(t2("key", "MERC")))))),
-                linkedMapOf(t2("key", "VEH2"), t2("model", linkedMapOf(t2("key", "316"), t2("make", linkedMapOf(t2("key", "MERC"))))))
+                VEH1,
+                VEH3,
+                VEH4,
+                VEH2
             ))
         )), result);
     }
@@ -208,10 +212,10 @@ public class WebApiOrderingTest extends AbstractDaoTestCase {
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
             t2("tgWebApiEntity", listOf(
-                linkedMapOf(t2("key", "VEH2"), t2("model", linkedMapOf(t2("key", "316"), t2("make", linkedMapOf(t2("key", "MERC")))))),
-                linkedMapOf(t2("key", "VEH4"), t2("model", linkedMapOf(t2("key", "317"), t2("make", linkedMapOf(t2("key", "MERC")))))),
-                linkedMapOf(t2("key", "VEH1"), t2("model", linkedMapOf(t2("key", "117"), t2("make", linkedMapOf(t2("key", "TOYOTA")))))),
-                linkedMapOf(t2("key", "VEH3"), t2("model", linkedMapOf(t2("key", "116"), t2("make", linkedMapOf(t2("key", "TOYOTA"))))))
+                VEH2,
+                VEH4,
+                VEH1,
+                VEH3
             ))
         )), result);
     }
@@ -225,10 +229,10 @@ public class WebApiOrderingTest extends AbstractDaoTestCase {
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
             t2("tgWebApiEntity", listOf(
-                linkedMapOf(t2("key", "VEH3"), t2("model", linkedMapOf(t2("key", "116"), t2("make", linkedMapOf(t2("key", "TOYOTA")))))),
-                linkedMapOf(t2("key", "VEH1"), t2("model", linkedMapOf(t2("key", "117"), t2("make", linkedMapOf(t2("key", "TOYOTA")))))),
-                linkedMapOf(t2("key", "VEH4"), t2("model", linkedMapOf(t2("key", "317"), t2("make", linkedMapOf(t2("key", "MERC")))))),
-                linkedMapOf(t2("key", "VEH2"), t2("model", linkedMapOf(t2("key", "316"), t2("make", linkedMapOf(t2("key", "MERC"))))))
+                VEH3,
+                VEH1,
+                VEH4,
+                VEH2
             ))
         )), result);
     }
@@ -257,10 +261,10 @@ public class WebApiOrderingTest extends AbstractDaoTestCase {
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
             t2("tgWebApiEntity", listOf(
-                linkedMapOf(t2("key", "VEH1"), t2("model", linkedMapOf(t2("key", "117"), t2("make", linkedMapOf(t2("key", "TOYOTA")))))),
-                linkedMapOf(t2("key", "VEH2"), t2("model", linkedMapOf(t2("key", "316"), t2("make", linkedMapOf(t2("key", "MERC")))))),
-                linkedMapOf(t2("key", "VEH3"), t2("model", linkedMapOf(t2("key", "116"), t2("make", linkedMapOf(t2("key", "TOYOTA")))))),
-                linkedMapOf(t2("key", "VEH4"), t2("model", linkedMapOf(t2("key", "317"), t2("make", linkedMapOf(t2("key", "MERC"))))))
+                VEH1,
+                VEH2,
+                VEH3,
+                VEH4
             ))
         )), result);
     }
@@ -291,10 +295,10 @@ public class WebApiOrderingTest extends AbstractDaoTestCase {
         assertTrue(errors(result).isEmpty());
         assertEquals(result(linkedMapOf(
             t2("tgWebApiEntity", listOf(
-                linkedMapOf(t2("key", "VEH4"), t2("model", linkedMapOf(t2("key", "317"), t2("make", linkedMapOf(t2("key", "MERC")))))),
-                linkedMapOf(t2("key", "VEH3"), t2("model", linkedMapOf(t2("key", "116"), t2("make", linkedMapOf(t2("key", "TOYOTA")))))),
-                linkedMapOf(t2("key", "VEH2"), t2("model", linkedMapOf(t2("key", "316"), t2("make", linkedMapOf(t2("key", "MERC")))))),
-                linkedMapOf(t2("key", "VEH1"), t2("model", linkedMapOf(t2("key", "117"), t2("make", linkedMapOf(t2("key", "TOYOTA"))))))
+                VEH4,
+                VEH3,
+                VEH2,
+                VEH1
             ))
         )), result);
     }
@@ -365,10 +369,10 @@ public class WebApiOrderingTest extends AbstractDaoTestCase {
             )),
             linkedMapOf(
                 t2("tgWebApiEntity", listOf(
-                    linkedMapOf(t2("key", "VEH4"), t2("model", linkedMapOf(t2("key", "317"), t2("make", linkedMapOf(t2("key", "MERC")))))),
-                    linkedMapOf(t2("key", "VEH3"), t2("model", linkedMapOf(t2("key", "116"), t2("make", linkedMapOf(t2("key", "TOYOTA")))))),
-                    linkedMapOf(t2("key", "VEH2"), t2("model", linkedMapOf(t2("key", "316"), t2("make", linkedMapOf(t2("key", "MERC")))))),
-                    linkedMapOf(t2("key", "VEH1"), t2("model", linkedMapOf(t2("key", "117"), t2("make", linkedMapOf(t2("key", "TOYOTA"))))))
+                    VEH4,
+                    VEH3,
+                    VEH2,
+                    VEH1
                 ))
             )
         ).toString(), result.toString());
@@ -395,16 +399,16 @@ public class WebApiOrderingTest extends AbstractDaoTestCase {
             )),
             linkedMapOf(
                 t2("q1", listOf(
-                    linkedMapOf(t2("key", "VEH4"), t2("model", linkedMapOf(t2("key", "317"), t2("make", linkedMapOf(t2("key", "MERC")))))),
-                    linkedMapOf(t2("key", "VEH3"), t2("model", linkedMapOf(t2("key", "116"), t2("make", linkedMapOf(t2("key", "TOYOTA")))))),
-                    linkedMapOf(t2("key", "VEH2"), t2("model", linkedMapOf(t2("key", "316"), t2("make", linkedMapOf(t2("key", "MERC")))))),
-                    linkedMapOf(t2("key", "VEH1"), t2("model", linkedMapOf(t2("key", "117"), t2("make", linkedMapOf(t2("key", "TOYOTA"))))))
+                    VEH4,
+                    VEH3,
+                    VEH2,
+                    VEH1
                 )),
                 t2("q2", listOf(
-                    linkedMapOf(t2("key", "VEH1"), t2("model", linkedMapOf(t2("key", "117"), t2("make", linkedMapOf(t2("key", "TOYOTA")))))),
-                    linkedMapOf(t2("key", "VEH2"), t2("model", linkedMapOf(t2("key", "316"), t2("make", linkedMapOf(t2("key", "MERC")))))),
-                    linkedMapOf(t2("key", "VEH3"), t2("model", linkedMapOf(t2("key", "116"), t2("make", linkedMapOf(t2("key", "TOYOTA")))))),
-                    linkedMapOf(t2("key", "VEH4"), t2("model", linkedMapOf(t2("key", "317"), t2("make", linkedMapOf(t2("key", "MERC"))))))
+                    VEH1,
+                    VEH2,
+                    VEH3,
+                    VEH4
                 ))
             )
         ).toString(), result.toString());
