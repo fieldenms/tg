@@ -13,6 +13,8 @@ import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
+import ua.com.fielden.platform.web.view.master.EntityMaster;
+import ua.com.fielden.platform.web.view.master.hierarchy.DomainExplorerInsertionPointMaster;
 
 public class DomainExplorerWebUiConfig {
 
@@ -25,6 +27,13 @@ public class DomainExplorerWebUiConfig {
     private DomainExplorerWebUiConfig(final Injector injector, final IWebUiBuilder builder) {
         centre = createCentre(injector);
         builder.register(centre);
+
+        builder.register(createDomainExplorerInsertionPointMaster(injector));
+    }
+
+    private EntityMaster<DomainExplorerInsertionPoint> createDomainExplorerInsertionPointMaster(final Injector injector) {
+        return new EntityMaster<>(DomainExplorerInsertionPoint.class,
+                null, new DomainExplorerInsertionPointMaster(),injector);
     }
 
     /**
