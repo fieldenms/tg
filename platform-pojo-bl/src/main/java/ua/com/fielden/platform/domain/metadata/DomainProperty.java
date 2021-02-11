@@ -48,6 +48,21 @@ public class DomainProperty extends AbstractEntity<DynamicEntityKey> {
     @MapTo
     @Title(value = "Required?", desc = "Desc")
     private boolean required;
+    
+    @IsProperty
+    @MapTo
+    @Title(value = "Db column", desc = "Desc")
+    private String dbColumn;
+
+    @Observable
+    public DomainProperty setDbColumn(final String dbColumn) {
+        this.dbColumn = dbColumn;
+        return this;
+    }
+
+    public String getDbColumn() {
+        return dbColumn;
+    }
 
     @Observable
     public DomainProperty setRequired(final boolean required) {
