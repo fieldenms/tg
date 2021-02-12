@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.web.view.master.hierarchy;
+package ua.com.fielden.platform.web.view.master.metadata;
 
 import static java.util.Optional.empty;
 import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
