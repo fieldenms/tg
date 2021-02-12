@@ -16,7 +16,7 @@ public class DateOf extends SingleOperandFunction {
         case MSSQL:
             return "DATEADD(dd, DATEDIFF(dd, 0, " + getOperand().sql() + "), 0)";
         case POSTGRESQL:
-            return "DATE_TRUNC('day', " + getOperand().sql() + ")";
+            return  "DATE_TRUNC('day', cast (" + getOperand().sql() + " as timestamp))";
         default:
             throw new IllegalStateException("Function [" + getClass().getSimpleName() + "] is not yet implemented for RDBMS [" + getDbVersion() + "]!");
         }
