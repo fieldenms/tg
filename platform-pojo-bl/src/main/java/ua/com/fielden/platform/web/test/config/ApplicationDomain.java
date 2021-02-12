@@ -86,6 +86,9 @@ import ua.com.fielden.platform.sample.domain.TgWagon;
 import ua.com.fielden.platform.sample.domain.TgWagonClass;
 import ua.com.fielden.platform.sample.domain.TgWagonClassCompatibility;
 import ua.com.fielden.platform.sample.domain.TgWagonSlot;
+import ua.com.fielden.platform.sample.domain.TgWebApiEntity;
+import ua.com.fielden.platform.sample.domain.TgWebApiEntitySyntheticMulti;
+import ua.com.fielden.platform.sample.domain.TgWebApiEntitySyntheticSingle;
 import ua.com.fielden.platform.sample.domain.TgWorkshop;
 import ua.com.fielden.platform.sample.domain.UnionEntity;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntity;
@@ -215,6 +218,10 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgEntityCompositeBooleanKey.class);
         add(TgEntityTwoEntityKeys.class);
         add(TgEntityBigDecimalKey.class);
+        
+        add(TgWebApiEntity.class);
+        add(TgWebApiEntitySyntheticSingle.class);
+        add(TgWebApiEntitySyntheticMulti.class);
     }
 
     @Override
