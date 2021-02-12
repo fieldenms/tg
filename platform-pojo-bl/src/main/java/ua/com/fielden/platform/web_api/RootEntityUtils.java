@@ -150,6 +150,7 @@ public class RootEntityUtils {
                     return accumulator;
                 })
             )
+            .lightweight() // must be lightweight to avoid fetching instrumented entities
             .model());
     }
     
