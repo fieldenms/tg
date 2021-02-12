@@ -135,7 +135,7 @@ public class RootEntityUtils {
             .collect(toList()); // make list -- order is important
         final List<Pair<String, Ordering>> orderingProperties = specifiedOrderingProperties.isEmpty() ? asList(pair("", ASCENDING)) : specifiedOrderingProperties; // ordering by default: ascending by keys
         final Iterator<Pair<String, Ordering>> orderingPropertiesIterator = orderingProperties.iterator();
-        return dates -> t2(optionalWarning, from(createQuery(entityType, queryProperties, dates).model())
+        return dates -> t2(optionalWarning, from(createQuery(entityType, queryProperties, dates).model().setFilterable(true)) // must be filterable to support IFilter part of the model
             .with(fetchNotInstrumentedWithKeyAndDesc(entityType).with(propertiesAndArguments.keySet()).fetchModel()) // KEY_AND_DESC strategy for root entities is required for loading collectional associations linked through key of root entity; explicit fetching of all keys in GraphQL query does not always work
             .with(orderingModelFrom(
                 appendPropertyOrdering(orderBy(), orderingPropertiesIterator.next(), entityType), // there is at least one item in the iterator
