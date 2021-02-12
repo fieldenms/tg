@@ -24,7 +24,7 @@ import ua.com.fielden.platform.web_api.IWebApi;
  *
  */
 @KeyType(String.class)
-@CompanionObject(ITgWebApiEntitySyntheticSingle.class)
+@CompanionObject(ITgWebApiEntitySyntheticMulti.class)
 public class TgWebApiEntitySyntheticMulti extends TgWebApiEntity {
     
     private static final Pair<String, String> entityTitleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(TgWebApiEntitySyntheticMulti.class);
