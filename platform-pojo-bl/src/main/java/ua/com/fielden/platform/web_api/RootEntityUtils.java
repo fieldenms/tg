@@ -21,7 +21,7 @@ import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.types.tuples.T3.t3;
 import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
-import static ua.com.fielden.platform.utils.EntityUtils.fetchNotInstrumented;
+import static ua.com.fielden.platform.utils.EntityUtils.fetchNotInstrumentedWithKeyAndDesc;
 import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
 import static ua.com.fielden.platform.utils.Pair.pair;
@@ -136,7 +136,7 @@ public class RootEntityUtils {
         final List<Pair<String, Ordering>> orderingProperties = specifiedOrderingProperties.isEmpty() ? asList(pair("", ASCENDING)) : specifiedOrderingProperties; // ordering by default: ascending by keys
         final Iterator<Pair<String, Ordering>> orderingPropertiesIterator = orderingProperties.iterator();
         return dates -> t2(optionalWarning, from(createQuery(entityType, queryProperties, dates).model())
-            .with(fetchNotInstrumented(entityType).with(propertiesAndArguments.keySet()).fetchModel())
+            .with(fetchNotInstrumentedWithKeyAndDesc(entityType).with(propertiesAndArguments.keySet()).fetchModel()) // KEY_AND_DESC strategy for root entities is required for loading collectional associations linked through key of root entity; explicit fetching of all keys in GraphQL query does not always work
             .with(orderingModelFrom(
                 appendPropertyOrdering(orderBy(), orderingPropertiesIterator.next(), entityType), // there is at least one item in the iterator
                 orderingPropertiesIterator,
