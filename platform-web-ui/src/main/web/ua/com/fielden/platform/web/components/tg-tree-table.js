@@ -279,7 +279,7 @@ function calculateColumnWidthExcept (columnIndex, columnElements, columnLength) 
     return columnWidth;
 };
 
-export class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRetrievalBehavior], PolymerElement) {
+class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRetrievalBehavior], PolymerElement) {
 
     static get template() { 
         return template;

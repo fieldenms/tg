@@ -46,7 +46,6 @@ public class DomainExplorerInsertionPointMaster implements IMaster<DomainExplore
                 .attr("id", "domainExplorer")
                 .attr("entity", "{{_currBindingEntity}}")
                 .attr("on-tg-load-sub-domain", "_loadSubDomain")
-                .attr("centre-uuid", "[[uuid]]")
                 .add(domainFilter);
 
         final StringBuilder prefDimBuilder = new StringBuilder();
