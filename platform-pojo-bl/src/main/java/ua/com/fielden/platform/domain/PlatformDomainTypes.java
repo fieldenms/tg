@@ -10,6 +10,8 @@ import ua.com.fielden.platform.attachment.AttachmentsUploadAction;
 import ua.com.fielden.platform.domain.metadata.DomainExplorer;
 import ua.com.fielden.platform.domain.metadata.DomainExplorerInsertionPoint;
 import ua.com.fielden.platform.domain.metadata.DomainProperty;
+import ua.com.fielden.platform.domain.metadata.DomainPropertyTreeEntity;
+import ua.com.fielden.platform.domain.metadata.DomainTreeEntity;
 import ua.com.fielden.platform.domain.metadata.DomainType;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.EntityDeleteAction;
@@ -141,5 +143,7 @@ public class PlatformDomainTypes {
         types.add(DomainProperty.class);
         types.add(DomainExplorer.class);
         types.add(DomainExplorerInsertionPoint.class);
+        types.add(DomainTreeEntity.class);
+        types.add(DomainPropertyTreeEntity.class);
     }
 }

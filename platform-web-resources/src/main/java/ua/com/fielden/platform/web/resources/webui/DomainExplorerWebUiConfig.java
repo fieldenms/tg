@@ -14,7 +14,7 @@ import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
-import ua.com.fielden.platform.web.view.master.hierarchy.DomainExplorerInsertionPointMaster;
+import ua.com.fielden.platform.web.view.master.metadata.DomainExplorerInsertionPointMaster;
 
 public class DomainExplorerWebUiConfig {
 
