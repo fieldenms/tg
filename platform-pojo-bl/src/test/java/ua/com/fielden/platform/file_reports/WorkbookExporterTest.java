@@ -2,12 +2,15 @@ package ua.com.fielden.platform.file_reports;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.IOException;
 import java.util.Arrays;
 
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.util.DefaultTempFileCreationStrategy;
 import org.joda.time.DateTime;
+import org.junit.Before;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
@@ -19,6 +22,26 @@ import ua.com.fielden.platform.types.Money;
 
 public class WorkbookExporterTest {
 
+    @Before
+    public void setUp() {
+        final DefaultTempFileCreationStrategy def = new DefaultTempFileCreationStrategy();
+        System.out.println("CREATING poifiles tmp-dir");
+        try {
+            def.createTempDirectory("poifiles");
+            System.out.println("CREATED poifiles tmp-dir");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("CREATING test-tmp tmp-file");
+        try {
+            def.createTempFile("test", "tmp");
+            System.out.println("CREATING test-tmp tmp-file");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    
     @Test
     public void date_property_can_be_exported() {
         final MasterEntity entityToExport = new MasterEntity();
