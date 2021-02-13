@@ -65,6 +65,7 @@ public class WorkbookExporterTest {
 
     @Test
     public void string_property_can_be_exported() {
+        try {
         final MasterEntity entityToExport = new MasterEntity();
         entityToExport.setStringProp("master1");
         final String[] propertyNames = { "stringProp" };
@@ -72,6 +73,10 @@ public class WorkbookExporterTest {
         final Sheet sheet = WorkbookExporter.export(Arrays.asList(entityToExport).stream(), propertyNames, propertyTitles).getSheetAt(0);
         final Row exportedRow = sheet.getRow(1);
         assertEquals("String property of the exported row is incorrect", "master1", exportedRow.getCell(0).getStringCellValue());
+        } catch (final Exception ex) {
+            ex.printStackTrace();
+            throw ex;
+        }
     }
 
     @Test
