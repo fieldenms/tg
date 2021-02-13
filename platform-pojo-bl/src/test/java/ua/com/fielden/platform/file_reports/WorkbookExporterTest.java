@@ -328,4 +328,5 @@ public class WorkbookExporterTest {
         final Row exportedRow = sheet.getRow(1);
         assertEquals("Short collection property of the exported row is incorrect", "master key1 1, master key1 2", exportedRow.getCell(0).getStringCellValue());
     }
+   
 }

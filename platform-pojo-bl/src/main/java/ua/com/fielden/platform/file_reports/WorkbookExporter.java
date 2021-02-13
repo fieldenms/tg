@@ -34,6 +34,7 @@ import org.joda.time.DateTime;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity_centre.review.criteria.DynamicColumnForExport;
+import ua.com.fielden.platform.file_reports.exceptions.ExportException;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.serialisation.GZipOutputStreamEx;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -125,11 +126,14 @@ public class WorkbookExporter {
     }
 
     public static SXSSFWorkbook export(final List<DataForWorkbookSheet<? extends AbstractEntity<?>>> sheetsData) {
-        final SXSSFWorkbook wb = new SXSSFWorkbook(SXSSF_WINDOW_SIZE);
-        for (final DataForWorkbookSheet<? extends AbstractEntity<?>> sheetData : sheetsData) {
-            addSheetWithData(wb, sheetData);
+        try (final SXSSFWorkbook wb = new SXSSFWorkbook(SXSSF_WINDOW_SIZE)) {
+            for (final DataForWorkbookSheet<? extends AbstractEntity<?>> sheetData : sheetsData) {
+                addSheetWithData(wb, sheetData);
+            }
+            return wb;
+        } catch (final IOException ex) {
+            throw new ExportException("Error occurred during export to Excel.", ex);
         }
-        return wb;
     }
 
     private static <M extends AbstractEntity<?>> void addSheetWithData(final SXSSFWorkbook wb, final DataForWorkbookSheet<M> sheetData) {
