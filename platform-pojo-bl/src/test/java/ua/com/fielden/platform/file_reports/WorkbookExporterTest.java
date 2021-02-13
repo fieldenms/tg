@@ -25,21 +25,7 @@ public class WorkbookExporterTest {
     @Before
     public void setUp() {
         final DefaultTempFileCreationStrategy def = new DefaultTempFileCreationStrategy();
-        System.out.println("CREATING poifiles tmp-dir");
-        try {
-            def.createTempDirectory("poifiles");
-            System.out.println("CREATED poifiles tmp-dir");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        System.out.println("CREATING test-tmp tmp-file");
-        try {
-            def.createTempFile("test", "tmp");
-            System.out.println("CREATING test-tmp tmp-file");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        System.out.println("JAVA TMP FOLDER: " + System.getProperty("java.io.tmpdir"));
     }
     
     @Test
