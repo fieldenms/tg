@@ -7,7 +7,7 @@ package ua.com.fielden.platform.security.tokens.web_api;
  *
  */
 public enum WebApiTemplate {
-    QUERY ("%s_WebApi_CanQuery_Token", "%s Can Query", "Authorises Query root field execution.");
+    QUERY ("%s_WebApi_CanQuery_Token", "%s Can Query", "Authorises Query root field (%s) execution.");
     
     private final String forClassName;
     private final String forTitle;

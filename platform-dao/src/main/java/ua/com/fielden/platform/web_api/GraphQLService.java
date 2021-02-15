@@ -52,6 +52,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
 import com.google.inject.Inject;
@@ -224,7 +225,7 @@ public class GraphQLService implements IWebApi {
             final JFieldVar jEntityTitleField = 
                 tokenType.field(PRIVATE | STATIC | FINAL, String.class, "ENTITY_TITLE", jTitlesDescsGetter.staticInvoke("getEntityTitleAndDesc").arg(JExpr.dotclass(jEntityType)).invoke("getKey"));
             tokenType.field(PUBLIC | STATIC | FINAL, String.class, "TITLE", jStringType.staticInvoke("format").arg(JExpr.invoke(jTemplateValue, "forTitle")).arg(jEntityTitleField));
-            tokenType.field(PUBLIC | STATIC | FINAL, String.class, "DESC", jStringType.staticInvoke("format").arg(JExpr.invoke(jTemplateValue, "forDesc")).arg(jEntityTitleField));
+            tokenType.field(PUBLIC | STATIC | FINAL, String.class, "DESC", jStringType.staticInvoke("format").arg(JExpr.invoke(jTemplateValue, "forDesc")).arg(JExpr.lit(StringUtils.uncapitalize(entityType.getSimpleName()))));
             
             final File srcDir = new File(pathToSecurityTokens.replace("target/classes", "") + "src/main/java/");
             cm.build(srcDir);
