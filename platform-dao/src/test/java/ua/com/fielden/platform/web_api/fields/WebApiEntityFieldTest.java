@@ -65,4 +65,79 @@ public class WebApiEntityFieldTest extends AbstractDaoTestCase {
         )), result);
     }
     
+    // LIKE
+    
+    @Test
+    public void entity_prop_returns_with_null_argument_literal() {
+        createEntities();
+        
+        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity(like:null){key}}"));
+        
+        assertTrue(errors(result).isEmpty());
+        assertEquals(result(linkedMapOf(
+            t2("tgWebApiEntity", listOf(
+                linkedMapOf(t2("key", "VEH1")),
+                linkedMapOf(t2("key", "VEH2"))
+            ))
+        )), result);
+    }
+    
+    @Test
+    public void entity_prop_returns_with_non_empty_argument_literal() {
+        createEntities();
+        
+        final Map<String, Object> result = webApi.execute(input("{tgWebApiEntity(like:\"*1\"){key}}"));
+        
+        assertTrue(errors(result).isEmpty());
+        assertEquals(result(linkedMapOf(
+            t2("tgWebApiEntity", listOf(
+                linkedMapOf(t2("key", "VEH1"))
+            ))
+        )), result);
+    }
+    
+    @Test
+    public void entity_prop_returns_with_argument_variable() {
+        createEntities();
+        
+        final Map<String, Object> result = webApi.execute(input("query($val:String){tgWebApiEntity(like:$val){key}}"));
+        
+        assertTrue(errors(result).isEmpty());
+        assertEquals(result(linkedMapOf(
+            t2("tgWebApiEntity", listOf(
+                linkedMapOf(t2("key", "VEH1")),
+                linkedMapOf(t2("key", "VEH2"))
+            ))
+        )), result);
+    }
+    
+    @Test
+    public void entity_prop_returns_with_null_argument_variable() {
+        createEntities();
+        
+        final Map<String, Object> result = webApi.execute(input("query($val:String){tgWebApiEntity(like:$val){key}}", linkedMapOf(t2("val", null))));
+        
+        assertTrue(errors(result).isEmpty());
+        assertEquals(result(linkedMapOf(
+            t2("tgWebApiEntity", listOf(
+                linkedMapOf(t2("key", "VEH1")),
+                linkedMapOf(t2("key", "VEH2"))
+            ))
+        )), result);
+    }
+    
+    @Test
+    public void entity_prop_returns_with_non_empty_argument_variable() {
+        createEntities();
+        
+        final Map<String, Object> result = webApi.execute(input("query($val:String){tgWebApiEntity(like:$val){key}}", linkedMapOf(t2("val", "*1"))));
+        
+        assertTrue(errors(result).isEmpty());
+        assertEquals(result(linkedMapOf(
+            t2("tgWebApiEntity", listOf(
+                linkedMapOf(t2("key", "VEH1"))
+            ))
+        )), result);
+    }
+    
 }

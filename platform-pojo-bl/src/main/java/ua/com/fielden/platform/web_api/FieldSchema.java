@@ -116,6 +116,11 @@ public class FieldSchema {
     static final String ORDER = "order";
     static final String PAGE_NUMBER = "pageNumber";
     static final String PAGE_CAPACITY = "pageCapacity";
+    static final GraphQLArgument LIKE_ARGUMENT = newArgument()
+        .name(LIKE)
+        .description("Include entities with specified string value pattern with * as a wildcard.")
+        .type(GraphQLString)
+        .build();
     static final GraphQLArgument ORDER_ARGUMENT = newArgument()
         .name(ORDER)
         .description("Order entities by this property with specified **ASC_n** / **DESC_m** value. Use **n** / **m** numbers (0..9) to define priority among other properties.")
@@ -499,13 +504,7 @@ public class FieldSchema {
      */
     private static Optional<T2<GraphQLOutputType, List<GraphQLArgument>>> determineFieldTypeNonCollectional(final Class<?> propertyType) {
         if (isString(propertyType)) {
-            return of(t2(GraphQLString, asList(newArgument()
-                .name(LIKE)
-                .description("Include entities with specified string value pattern with % as a wildcard.")
-                .type(GraphQLString)
-                .build(),
-                ORDER_ARGUMENT
-            )));
+            return of(t2(GraphQLString, asList(LIKE_ARGUMENT, ORDER_ARGUMENT)));
         } else if (isBoolean(propertyType)) {
             return of(t2(GraphQLBoolean, asList(newArgument() // null-valued or non-existing argument in GraphQL query means entities with both true and false values in the property
                 .name(VALUE)
@@ -537,7 +536,7 @@ public class FieldSchema {
             || isAbstract(propertyType.getModifiers())) { // be careful with boolean.class because it has abstract modifier
             return empty();
         } else if (isEntityType(propertyType)) {
-            return of(t2(new GraphQLTypeReference(propertyType.getSimpleName()), asList(ORDER_ARGUMENT)));
+            return of(t2(new GraphQLTypeReference(propertyType.getSimpleName()), asList(LIKE_ARGUMENT, ORDER_ARGUMENT)));
         } else {
             return empty();
         }

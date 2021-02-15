@@ -23,6 +23,7 @@ import static ua.com.fielden.platform.types.tuples.T3.t3;
 import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
 import static ua.com.fielden.platform.utils.EntityUtils.fetchNotInstrumentedWithKeyAndDesc;
 import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
+import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web_api.FieldSchema.FROM;
@@ -214,6 +215,10 @@ public class RootEntityUtils {
         if (isString(type)) {
             ofNullable(argumentValues.get(LIKE)).ifPresent(value -> {
                 queryProperty.setValue(value);
+            });
+        } else if (isEntityType(type)) {
+            ofNullable(argumentValues.get(LIKE)).ifPresent(value -> {
+                queryProperty.setValue(queryProperty.isSingle() ? value : asList(((String) value).split(",")));
             });
         } else if (isBoolean(type)) {
             ofNullable(argumentValues.get(VALUE)).ifPresent(value -> {
