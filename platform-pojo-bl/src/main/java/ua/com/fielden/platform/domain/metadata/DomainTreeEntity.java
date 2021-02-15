@@ -21,7 +21,7 @@ public class DomainTreeEntity extends AbstractTreeEntry<String> {
 
     @IsProperty
     @Title(value = "Property Type", desc = "Property Type Title")
-    private String propertyType;
+    private DomainType propertyType;
 
     @IsProperty
     @Title(value = "Internal Name", desc = "Internal type/property name")
@@ -66,12 +66,12 @@ public class DomainTreeEntity extends AbstractTreeEntry<String> {
     }
 
     @Observable
-    public DomainTreeEntity setPropertyType(final String propertyType) {
+    public DomainTreeEntity setPropertyType(final DomainType propertyType) {
         this.propertyType = propertyType;
         return this;
     }
 
-    public String getPropertyType() {
+    public DomainType getPropertyType() {
         return propertyType;
     }
 }
