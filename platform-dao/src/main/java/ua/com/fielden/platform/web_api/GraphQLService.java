@@ -17,6 +17,7 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang.StringUtils.uncapitalize;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.reflectionProperty;
@@ -51,6 +52,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
@@ -138,20 +140,23 @@ public class GraphQLService implements IWebApi {
             this.authorisation = authorisation;
             final GraphQLCodeRegistry.Builder codeRegistryBuilder = newCodeRegistry();
             logger.info("\tBuilding dictionary...");
-            final Map<Class<? extends AbstractEntity<?>>, GraphQLType> dictionary = createDictionary(persistentAndSyntheticDomainTypes(applicationDomainProvider));
-            final Set<Class<? extends AbstractEntity<?>>> dictionaryTypes = dictionary.keySet();
+            final Predicate<Class<? extends AbstractEntity<?>>> toInclude = type -> isSyntheticEntityType(type) || isPersistedEntityType(type); // this includes persistent with activatable nature, synthetic based on persistent; this does not include union, functional and any other entities
+            final Set<Class<? extends AbstractEntity<?>>> domainTypes = domainTypesOf(applicationDomainProvider, toInclude);
+            final Set<Class<? extends AbstractEntity<?>>> allTypes = new LinkedHashSet<>(domainTypes);
+            allTypes.addAll(domainTypesOf(applicationDomainProvider, type -> !toInclude.test(type) && type.getSimpleName().endsWith("GroupingProperty"))); // '...GroupingProperty' is the naming pattern for enum-like entities for groupBy criteria
+            final Map<Class<? extends AbstractEntity<?>>, GraphQLType> dictionary = createDictionary(allTypes);
             if (Workflows.development.equals(Workflows.valueOf(workflow))) {
                 logger.info("\tUpdating security tokens [DEVELOPMENT MODE]...");
-                updateSecurityTokens(dictionaryTypes, pathToSecurityTokens, securityTokensPackageName);
+                updateSecurityTokens(domainTypes, pathToSecurityTokens, securityTokensPackageName);
             }
             logger.info("\tBuilding query type...");
-            final GraphQLObjectType queryType = createQueryType(dictionaryTypes, coFinder, dates, codeRegistryBuilder, authorisation, securityTokensPackageName);
+            final GraphQLObjectType queryType = createQueryType(domainTypes, coFinder, dates, codeRegistryBuilder, authorisation, securityTokensPackageName);
             logger.info("\tBuilding schema...");
             final GraphQLSchema schema = newSchema()
-                    .codeRegistry(codeRegistryBuilder.build())
-                    .query(queryType)
-                    .additionalTypes(new LinkedHashSet<>(dictionary.values()))
-                    .build();
+                .codeRegistry(codeRegistryBuilder.build())
+                .query(queryType)
+                .additionalTypes(new LinkedHashSet<>(dictionary.values()))
+                .build();
             logger.info("\tBuilding service...");
             graphQL = newGraphQL(schema).build();
             logger.info("GraphQL Web API...done");
@@ -262,18 +267,17 @@ public class GraphQLService implements IWebApi {
     }
     
     /**
-     * Returns all domain [non-platform] types of persistent / synthetic nature. This includes persistent with activatable nature,
-     * synthetic based on persistent. This does not include union, functional and any other entities.
+     * Returns all domain types of {@code toInclude} nature.
      * 
      * @return
      */
-    private List<Class<? extends AbstractEntity<?>>> persistentAndSyntheticDomainTypes(final IApplicationDomainProvider applicationDomainProvider) {
+    private Set<Class<? extends AbstractEntity<?>>> domainTypesOf(final IApplicationDomainProvider applicationDomainProvider, final Predicate<Class<? extends AbstractEntity<?>>> toInclude) {
         final List<Class<? extends AbstractPersistentEntity<? extends Comparable<?>>>> supportedPlatformTypes = asList(User.class, UserRole.class, UserAndRoleAssociation.class, SecurityRoleAssociation.class, Attachment.class);
         return applicationDomainProvider.entityTypes().stream()
             .filter(type -> 
                     (supportedPlatformTypes.stream().anyMatch(pType -> pType.isAssignableFrom(type)) || !PlatformDomainTypes.types.contains(type)) // includes supportedPlatformTypes OR non-platform domain types
-                &&  (isSyntheticEntityType(type) || isPersistedEntityType(type) || type.getSimpleName().endsWith("GroupingProperty")) ) // '...GroupingProperty' is the naming pattern for enum-like entities for groupBy criteria
-            .collect(toList());
+                &&  toInclude.test(type) )
+            .collect(toCollection(LinkedHashSet::new));
     }
     
     /**
@@ -302,7 +306,7 @@ public class GraphQLService implements IWebApi {
      * @param entityTypes
      * @return
      */
-    private static Map<Class<? extends AbstractEntity<?>>, GraphQLType> createDictionary(final List<Class<? extends AbstractEntity<?>>> entityTypes) {
+    private static Map<Class<? extends AbstractEntity<?>>, GraphQLType> createDictionary(final Set<Class<? extends AbstractEntity<?>>> entityTypes) {
         return entityTypes.stream()
             .map(GraphQLService::createGraphQLTypeFor)
             .flatMap(optType -> optType.map(Stream::of).orElseGet(Stream::empty))
