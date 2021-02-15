@@ -14,5 +14,5 @@ public class TgCloseLeaveExample_WebApi_CanQuery_Token
 {
     private static final String ENTITY_TITLE = TitlesDescsGetter.getEntityTitleAndDesc(TgCloseLeaveExample.class).getKey();
     public static final String TITLE = String.format(WebApiTemplate.QUERY.forTitle(), ENTITY_TITLE);
-    public static final String DESC = String.format(WebApiTemplate.QUERY.forDesc(), ENTITY_TITLE);
+    public static final String DESC = String.format(WebApiTemplate.QUERY.forDesc(), "tgCloseLeaveExample");
 }
