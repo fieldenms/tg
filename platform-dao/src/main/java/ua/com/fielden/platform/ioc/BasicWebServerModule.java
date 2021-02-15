@@ -25,6 +25,8 @@ import ua.com.fielden.platform.dao.ISecurityRoleAssociation;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociation;
 import ua.com.fielden.platform.dao.IUserRole;
 import ua.com.fielden.platform.domain.metadata.DomainPropertyDao;
+import ua.com.fielden.platform.domain.metadata.DomainPropertyHolderCo;
+import ua.com.fielden.platform.domain.metadata.DomainPropertyHolderDao;
 import ua.com.fielden.platform.domain.metadata.DomainTypeDao;
 import ua.com.fielden.platform.domain.metadata.IDomainProperty;
 import ua.com.fielden.platform.domain.metadata.IDomainType;
@@ -282,6 +284,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
         
         bind(IDomainType.class).to(DomainTypeDao.class);
         bind(IDomainProperty.class).to(DomainPropertyDao.class);
+        bind(DomainPropertyHolderCo.class).to(DomainPropertyHolderDao.class);
     }
 
     public Properties getProps() {
