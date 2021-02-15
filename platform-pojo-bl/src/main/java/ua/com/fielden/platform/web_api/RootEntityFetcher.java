@@ -3,8 +3,11 @@ package ua.com.fielden.platform.web_api;
 import static graphql.GraphqlErrorBuilder.newError;
 import static java.lang.Class.forName;
 import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.error.Result.failure;
-import static ua.com.fielden.platform.security.tokens.web_api.WebApiTemplate.QUERY;
+import static ua.com.fielden.platform.security.tokens.Template.READ;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.web_api.FieldSchema.DEFAULT_PAGE_CAPACITY;
 import static ua.com.fielden.platform.web_api.FieldSchema.DEFAULT_PAGE_NUMBER;
@@ -31,6 +34,7 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.ISecurityToken;
+import ua.com.fielden.platform.security.tokens.Template;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.utils.IDates;
@@ -67,16 +71,12 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
         this.securityTokensPackageName = securityTokensPackageName;
     }
     
-    public static String queryTokenNameFor(final Class<? extends AbstractEntity<?>> entityType) {
-        return format(QUERY.forClassName(), entityType.getSimpleName());
+    public static String tokenNameFor(final Class<? extends AbstractEntity<?>> entityType, final Template tokenKind) {
+        return format(tokenKind.forClassName(), entityType.getSimpleName());
     }
     
-    public static String queryPackageName(final String rootPackageName) {
-        return rootPackageName + ".query";
-    }
-    
-    public static String rootPackageName(final String securityTokensPackageName) {
-        return securityTokensPackageName + ".web_api";
+    public static String defaultTokenNameFor(final Template tokenKind) {
+        return format(tokenKind.forClassName(), "");
     }
     
     /**
@@ -86,11 +86,12 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
      */
     @Override
     public DataFetcherResult<List<T>> get(final DataFetchingEnvironment environment) {
-        try {
-            authorisation.authorise(findToken(securityTokensPackageName, entityType)).ifFailure(Result::throwRuntime);
-        } catch (final ClassNotFoundException notFoundException) {
-            throw failure(notFoundException.toString());
-        }
+        ofNullable(
+            findToken(securityTokensPackageName, entityType, READ)
+            .orElseGet(() -> findDefaultToken(securityTokensPackageName, READ))
+        )   .map(token -> authorisation.authorise(token))
+            .orElseGet(() -> failure(format("Read token has not been found for %s.", entityType.getSimpleName())))
+            .ifFailure(Result::throwRuntime);
         final T3<String, List<GraphQLArgument>, List<Argument>> rootArguments = rootPropAndArguments(environment.getGraphQLSchema(), environment.getField());
         final T2<Optional<String>, QueryExecutionModel<T, EntityResultQueryModel<T>>> warningAndModel = generateQueryModelFrom(
             environment.getField(),
@@ -119,9 +120,25 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
         warningAndModel._1.ifPresent(warning -> result.error(newError(environment).message(warning).build()));
         return result.build();
     }
-
-    public static <T extends AbstractEntity<?>> Class<? extends ISecurityToken> findToken(final String securityTokensPackageName, final Class<T> entityType) throws ClassNotFoundException {
-        return (Class<? extends ISecurityToken>) forName(queryPackageName(rootPackageName(securityTokensPackageName)) + "." + queryTokenNameFor(entityType));
+    
+    public static <T extends AbstractEntity<?>> Optional<Class<? extends ISecurityToken>> findToken(final String securityTokensPackageName, final Class<T> entityType, final Template tokenKind) {
+        try {
+            return of((Class<? extends ISecurityToken>) forName(securityTokensPackageName + ".persistent." + tokenNameFor(entityType, tokenKind)));
+        } catch (final ClassNotFoundException notFound1) {
+            try {
+                return of((Class<? extends ISecurityToken>) forName(securityTokensPackageName + ".synthetic." + tokenNameFor(entityType, tokenKind)));
+            } catch (final ClassNotFoundException notFound2) {
+                return empty();
+            }
+        }
+    }
+    
+    public static <T extends AbstractEntity<?>> Class<? extends ISecurityToken> findDefaultToken(final String securityTokensPackageName, final Template tokenKind) {
+        try {
+            return (Class<? extends ISecurityToken>) forName(securityTokensPackageName + ".persistent." + defaultTokenNameFor(tokenKind));
+        } catch (final ClassNotFoundException notFound) {
+            return null;
+        }
     }
     
 }

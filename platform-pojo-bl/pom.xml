@@ -99,21 +99,14 @@
 			<artifactId>mail</artifactId>
 			<version>1.5.0-b01</version>
 		</dependency>
-		
+
 		<!-- Java GraphQL implementation -->
 		<dependency>
 			<groupId>com.graphql-java</groupId>
 			<artifactId>graphql-java</artifactId>
 			<version>13.0</version>
 		</dependency>
-		
-		<!-- Code generation library https://mvnrepository.com/artifact/com.helger/jcodemodel -->
-		<dependency>
-			<groupId>com.helger</groupId>
-			<artifactId>jcodemodel</artifactId>
-			<version>3.4.0</version>
-		</dependency>
-		
+
 		<dependency>
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi</artifactId>

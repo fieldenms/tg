@@ -1,18 +1,12 @@
 package ua.com.fielden.platform.web_api;
 
-import static com.helger.jcodemodel.JMod.FINAL;
-import static com.helger.jcodemodel.JMod.PRIVATE;
-import static com.helger.jcodemodel.JMod.PUBLIC;
-import static com.helger.jcodemodel.JMod.STATIC;
 import static graphql.ExecutionInput.newExecutionInput;
 import static graphql.GraphQL.newGraphQL;
-import static graphql.GraphqlErrorBuilder.newError;
 import static graphql.schema.FieldCoordinates.coordinates;
 import static graphql.schema.GraphQLCodeRegistry.newCodeRegistry;
 import static graphql.schema.GraphQLFieldDefinition.newFieldDefinition;
 import static graphql.schema.GraphQLObjectType.newObject;
 import static graphql.schema.GraphQLSchema.newSchema;
-import static java.lang.Class.forName;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Optional.empty;
@@ -23,9 +17,7 @@ import static org.apache.commons.lang.StringUtils.uncapitalize;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.reflectionProperty;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.constructKeysAndProperties;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isExcluded;
-import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
-import static ua.com.fielden.platform.security.tokens.web_api.WebApiTemplate.QUERY;
 import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
@@ -37,16 +29,11 @@ import static ua.com.fielden.platform.web_api.FieldSchema.PAGE_NUMBER_ARGUMENT;
 import static ua.com.fielden.platform.web_api.FieldSchema.bold;
 import static ua.com.fielden.platform.web_api.FieldSchema.createGraphQLFieldDefinition;
 import static ua.com.fielden.platform.web_api.FieldSchema.titleAndDescRepresentation;
-import static ua.com.fielden.platform.web_api.RootEntityFetcher.findToken;
-import static ua.com.fielden.platform.web_api.RootEntityFetcher.queryPackageName;
-import static ua.com.fielden.platform.web_api.RootEntityFetcher.queryTokenNameFor;
-import static ua.com.fielden.platform.web_api.RootEntityFetcher.rootPackageName;
 import static ua.com.fielden.platform.web_api.RootEntityUtils.QUERY_TYPE_NAME;
 import static ua.com.fielden.platform.web_api.WebApiUtils.operationName;
 import static ua.com.fielden.platform.web_api.WebApiUtils.query;
 import static ua.com.fielden.platform.web_api.WebApiUtils.variables;
 
-import java.io.File;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -55,20 +42,11 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.helger.jcodemodel.AbstractJClass;
-import com.helger.jcodemodel.JCodeModel;
-import com.helger.jcodemodel.JDefinedClass;
-import com.helger.jcodemodel.JExpr;
-import com.helger.jcodemodel.JFieldRef;
-import com.helger.jcodemodel.JFieldVar;
-import com.helger.jcodemodel.JPackage;
 
-import graphql.ExecutionResultImpl;
 import graphql.GraphQL;
 import graphql.schema.GraphQLCodeRegistry;
 import graphql.schema.GraphQLFieldDefinition;
@@ -80,17 +58,11 @@ import graphql.schema.GraphQLType;
 import graphql.schema.GraphQLTypeReference;
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
-import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.security.IAuthorisationModel;
-import ua.com.fielden.platform.security.ISecurityToken;
-import ua.com.fielden.platform.security.tokens.web_api.WebApiTemplate;
-import ua.com.fielden.platform.security.tokens.web_api.WebApi_CanExecute_Token;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
@@ -109,7 +81,6 @@ import ua.com.fielden.platform.utils.Pair;
 public class GraphQLService implements IWebApi {
     private final Logger logger = Logger.getLogger(getClass());
     private final GraphQL graphQL;
-    private final IAuthorisationModel authorisation;
     
     /**
      * Creates GraphQLService instance based on {@code applicationDomainProvider} which contains all entity types.
@@ -121,9 +92,7 @@ public class GraphQLService implements IWebApi {
      * @param coFinder
      * @param dates
      * @param authorisation
-     * @param pathToSecurityTokens
      * @param securityTokensPackageName
-     * @param workflow -- in case of {@link Workflows#development}, security tokens will be updated
      */
     @Inject
     public GraphQLService(
@@ -131,13 +100,10 @@ public class GraphQLService implements IWebApi {
         final ICompanionObjectFinder coFinder,
         final IDates dates,
         final IAuthorisationModel authorisation,
-        final @Named("tokens.path") String pathToSecurityTokens,
-        final @Named("tokens.package") String securityTokensPackageName,
-        final @Named("workflow") String workflow
+        final @Named("tokens.package") String securityTokensPackageName
     ) {
         try {
             logger.info("GraphQL Web API...");
-            this.authorisation = authorisation;
             final GraphQLCodeRegistry.Builder codeRegistryBuilder = newCodeRegistry();
             logger.info("\tBuilding dictionary...");
             final Predicate<Class<? extends AbstractEntity<?>>> toInclude = type -> isSyntheticEntityType(type) || isPersistedEntityType(type); // this includes persistent with activatable nature, synthetic based on persistent; this does not include union, functional and any other entities
@@ -145,10 +111,6 @@ public class GraphQLService implements IWebApi {
             final Set<Class<? extends AbstractEntity<?>>> allTypes = new LinkedHashSet<>(domainTypes);
             allTypes.addAll(domainTypesOf(applicationDomainProvider, type -> !toInclude.test(type) && type.getSimpleName().endsWith("GroupingProperty"))); // '...GroupingProperty' is the naming pattern for enum-like entities for groupBy criteria
             final Map<Class<? extends AbstractEntity<?>>, GraphQLType> dictionary = createDictionary(allTypes);
-            if (Workflows.development.equals(Workflows.valueOf(workflow))) {
-                logger.info("\tUpdating security tokens [DEVELOPMENT MODE]...");
-                updateSecurityTokens(domainTypes, pathToSecurityTokens, securityTokensPackageName);
-            }
             logger.info("\tBuilding query type...");
             final GraphQLObjectType queryType = createQueryType(domainTypes, coFinder, dates, codeRegistryBuilder, authorisation, securityTokensPackageName);
             logger.info("\tBuilding schema...");
@@ -163,106 +125,6 @@ public class GraphQLService implements IWebApi {
         } catch (final Throwable t) {
             logger.error("GraphQL Web API error.", t);
             throw t;
-        }
-    }
-    
-    /**
-     * Updates Web API security tokens.
-     * <p>
-     * Generates root (top-level) token if not yet present.<br>
-     * Generates tokens for entity types in {@code dictionaryTypes} if not yet present.
-     * <p>
-     * At this stage it does not remove tokens for the types that have been removed and does not update existing tokens.
-     * All tokens can be deleted manually before starting server to achieve deletion / updating.
-     * 
-     * @param dictionaryTypes
-     * @param pathToSecurityTokens
-     * @param securityTokensPackageName
-     */
-    private void updateSecurityTokens(final Set<Class<? extends AbstractEntity<?>>> dictionaryTypes, final String pathToSecurityTokens, final String securityTokensPackageName) {
-        final String rootPackageName = rootPackageName(securityTokensPackageName);
-        final String rootTokenName = "WebApiToken";
-        try {
-            final Class<? extends ISecurityToken> rootTokenType = (Class<? extends ISecurityToken>) forName(rootPackageName + "." + rootTokenName);
-            final boolean someGenerated = dictionaryTypes.stream()
-                .map(entityType -> {
-                    try {
-                        findToken(securityTokensPackageName, entityType);
-                        return false;
-                    } catch (final ClassNotFoundException notFoundEx) {
-                        genSecurityTokenFor(entityType, pathToSecurityTokens, queryPackageName(rootPackageName), queryTokenNameFor(entityType), rootTokenType);
-                        return true;
-                    }
-                })
-                .reduce(Boolean::logicalOr).orElse(false);
-            if (someGenerated) {
-                throw new IllegalStateException("Refresh pojo-bl module. Some Web API tokens have been added.");
-            }
-        } catch (final ClassNotFoundException notFoundEx) {
-            genRootSecurityToken(pathToSecurityTokens, rootPackageName, rootTokenName);
-            throw new IllegalStateException(format("Refresh pojo-bl module. Top-level Web API token [%s] has been generated.", rootTokenName));
-        }
-    }
-    
-    /**
-     * Generates [Can Query] security token for the specified entity type (GraphQL root fields).
-     * 
-     * @param entityType
-     * @param pathToSecurityTokens
-     * @param packageName -- package name for the token to be generated
-     * @param tokenName - the name for the token
-     * @param topLevelToken
-     */
-    public static void genSecurityTokenFor(final Class<? extends AbstractEntity<?>> entityType, final String pathToSecurityTokens, final String packageName, final String tokenName, final Class<? extends ISecurityToken> topLevelToken) {
-        try {
-            final JCodeModel cm = new JCodeModel();
-            final JPackage jp = cm._package(packageName);
-            
-            final AbstractJClass jTitlesDescsGetter = cm.ref(TitlesDescsGetter.class.getName());
-            final AbstractJClass jEntityType = cm.ref(entityType.getName());
-            final AbstractJClass jStringType = cm.ref(String.class.getName());
-            final AbstractJClass jTemplateType = cm.ref(WebApiTemplate.class.getName());
-            final JFieldRef jTemplateValue = jTemplateType.staticRef(QUERY.name());
-            
-            final JDefinedClass tokenType = jp._class(tokenName);
-            tokenType.javadoc().add(format("A security token for entity {@link %s} to guard Web API querying.", entityType.getSimpleName()));
-            tokenType._extends(topLevelToken);
-            
-            final JFieldVar jEntityTitleField = 
-                tokenType.field(PRIVATE | STATIC | FINAL, String.class, "ENTITY_TITLE", jTitlesDescsGetter.staticInvoke("getEntityTitleAndDesc").arg(JExpr.dotclass(jEntityType)).invoke("getKey"));
-            tokenType.field(PUBLIC | STATIC | FINAL, String.class, "TITLE", jStringType.staticInvoke("format").arg(JExpr.invoke(jTemplateValue, "forTitle")).arg(jEntityTitleField));
-            tokenType.field(PUBLIC | STATIC | FINAL, String.class, "DESC", jStringType.staticInvoke("format").arg(JExpr.invoke(jTemplateValue, "forDesc")).arg(JExpr.lit(StringUtils.uncapitalize(entityType.getSimpleName()))));
-            
-            final File srcDir = new File(pathToSecurityTokens.replace("target/classes", "") + "src/main/java/");
-            cm.build(srcDir);
-        } catch (final Exception ex) {
-            throw failure(entityType, ex);
-        }
-    }
-    
-    /**
-     * Generates root (top-level) security token.
-     * 
-     * @param pathToSecurityTokens
-     * @param packageName -- package name for the token to be generated
-     * @param tokenName - the name for the token
-     */
-    public static void genRootSecurityToken(final String pathToSecurityTokens, final String packageName, final String tokenName) {
-        try {
-            final JCodeModel cm = new JCodeModel();
-            final JPackage jp = cm._package(packageName);
-            
-            final JDefinedClass tokenType = jp._class(tokenName);
-            tokenType.javadoc().add("Top level security token for all security tokens that belong to Web API.");
-            tokenType._implements(ISecurityToken.class);
-            
-            tokenType.field(PUBLIC | STATIC | FINAL, String.class, "TITLE", JExpr.lit("Web API"));
-            tokenType.field(PUBLIC | STATIC | FINAL, String.class, "DESC", JExpr.lit("Web API tokens."));
-            
-            final File srcDir = new File(pathToSecurityTokens.replace("target/classes", "") + "src/main/java/");
-            cm.build(srcDir);
-        } catch (final Exception ex) {
-            throw failure(ex);
         }
     }
     
@@ -287,10 +149,6 @@ public class GraphQLService implements IWebApi {
      */
     @Override
     public Map<String, Object> execute(final Map<String, Object> input) {
-        final Result authResult = authorisation.authorise(WebApi_CanExecute_Token.class);
-        if (!authResult.isSuccessful()) {
-            return new ExecutionResultImpl(newError().message(authResult.getMessage()).build()).toSpecification();
-        }
         return graphQL.execute(newExecutionInput()
             .query(query(input))
             .operationName(operationName(input).orElse(null))
