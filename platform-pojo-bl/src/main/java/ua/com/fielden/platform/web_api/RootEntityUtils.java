@@ -7,6 +7,7 @@ import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static java.util.stream.Stream.concat;
 import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.ASCENDING;
 import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.DESCENDING;
@@ -35,6 +36,7 @@ import static ua.com.fielden.platform.web_api.FieldSchema.VALUE;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -57,6 +59,7 @@ import graphql.language.Selection;
 import graphql.language.SelectionSet;
 import graphql.schema.GraphQLArgument;
 import graphql.schema.GraphQLCodeRegistry;
+import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLSchema;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
@@ -81,6 +84,11 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class RootEntityUtils {
+    /**
+     * The name for built-in data introspection field returning the name of actual data object type in runtime.<br>
+     * This is a part of GraphQL spec.
+     */
+    private static final String __TYPENAME = "__typename";
     public static final String ORDER_PRIORITIES_ARE_NOT_DISTINCT = "Order priorities are not distinct.";
     static final String QUERY_TYPE_NAME = "Query";
     private static final Logger LOGGER = Logger.getLogger(RootEntityUtils.class);
@@ -137,7 +145,12 @@ public class RootEntityUtils {
         final List<Pair<String, Ordering>> orderingProperties = specifiedOrderingProperties.isEmpty() ? asList(pair("", ASCENDING)) : specifiedOrderingProperties; // ordering by default: ascending by keys
         final Iterator<Pair<String, Ordering>> orderingPropertiesIterator = orderingProperties.iterator();
         return dates -> t2(optionalWarning, from(createQuery(entityType, queryProperties, dates).model().setFilterable(true)) // must be filterable to support IFilter part of the model
-            .with(fetchNotInstrumentedWithKeyAndDesc(entityType).with(propertiesAndArguments.keySet()).fetchModel()) // KEY_AND_DESC strategy for root entities is required for loading collectional associations linked through key of root entity; explicit fetching of all keys in GraphQL query does not always work
+            .with(fetchNotInstrumentedWithKeyAndDesc(entityType) // KEY_AND_DESC strategy for root entities is required for loading collectional associations linked through key of root entity; explicit fetching of all keys in GraphQL query does not always work
+                .with(propertiesAndArguments.keySet().stream()
+                    .filter(name -> !name.endsWith(__TYPENAME)) // do not include built-in data introspection __typename field (possibly dot-notated) as it does not exist in TG entities; resolving of this field is governed by graphql-java internal logic
+                    .collect(toSet())
+                ).fetchModel()
+            )
             .with(orderingModelFrom(
                 appendPropertyOrdering(orderBy(), orderingPropertiesIterator.next(), entityType), // there is at least one item in the iterator
                 orderingPropertiesIterator,
@@ -332,7 +345,7 @@ public class RootEntityUtils {
             return concat( // concatenate two streams: ...
                 Stream.of(propAndArgumentsFrom(schema, graphQLField, property, entityTypeName)), // ... first is single-element stream containing 'graphQLField' property itself and ...
                 properties( // ... second contains all selected sub-fields of 'graphQLField'
-                    determinePropertyType(entityType, graphQLField.getName()),
+                    __TYPENAME.equals(graphQLField.getName()) ? String.class : determinePropertyType(entityType, graphQLField.getName()),
                     property,
                     toFields(graphQLField.getSelectionSet(), fragmentDefinitions),
                     fragmentDefinitions,
@@ -365,7 +378,9 @@ public class RootEntityUtils {
     private static T3<String, List<GraphQLArgument>, List<Argument>> propAndArgumentsFrom(final GraphQLSchema schema, final Field graphQLField, final String property, final String parentTypeName) {
         return t3(
             property,
-            schema.getObjectType(parentTypeName).getFieldDefinition(graphQLField.getName()).getArguments(), // argument definitions
+            ofNullable(schema.getObjectType(parentTypeName).getFieldDefinition(graphQLField.getName())) // there can be no field definition, e.g. this is the case for built-in data introspection __typename field
+                .map(GraphQLFieldDefinition::getArguments) // argument definitions
+                .orElseGet(Collections::emptyList),
             graphQLField.getArguments() // arguments with actual values
         );
     }
