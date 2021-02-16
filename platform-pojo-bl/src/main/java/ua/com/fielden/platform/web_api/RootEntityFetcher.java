@@ -71,14 +71,6 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
         this.securityTokensPackageName = securityTokensPackageName;
     }
     
-    public static String tokenNameFor(final Class<? extends AbstractEntity<?>> entityType, final Template tokenKind) {
-        return format(tokenKind.forClassName(), entityType.getSimpleName());
-    }
-    
-    public static String defaultTokenNameFor(final Template tokenKind) {
-        return format(tokenKind.forClassName(), "");
-    }
-    
     /**
      * Checks whether {@code entityType} can be executed by current user and returns error if not.
      * Otherwise, finds an uninstrumented reader for the {@link #entityType} and retrieves first {@link #PAGE_CAPACITY} entities.<p>
@@ -123,19 +115,23 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
     
     public static <T extends AbstractEntity<?>> Optional<Class<? extends ISecurityToken>> findToken(final String securityTokensPackageName, final Class<T> entityType, final Template tokenKind) {
         try {
-            return of((Class<? extends ISecurityToken>) forName(securityTokensPackageName + ".persistent." + tokenNameFor(entityType, tokenKind)));
+            return of(findTokenByName(securityTokensPackageName, tokenKind, ".persistent.", entityType.getSimpleName()));
         } catch (final ClassNotFoundException notFound1) {
             try {
-                return of((Class<? extends ISecurityToken>) forName(securityTokensPackageName + ".synthetic." + tokenNameFor(entityType, tokenKind)));
+                return of(findTokenByName(securityTokensPackageName, tokenKind, ".synthetic.", entityType.getSimpleName()));
             } catch (final ClassNotFoundException notFound2) {
                 return empty();
             }
         }
     }
     
+    private static <T extends AbstractEntity<?>> Class<? extends ISecurityToken> findTokenByName(final String securityTokensPackageName, final Template tokenKind, final String packagePart, final String templateParam) throws ClassNotFoundException {
+        return (Class<? extends ISecurityToken>) forName(securityTokensPackageName + packagePart + format(tokenKind.forClassName(), templateParam));
+    }
+    
     public static <T extends AbstractEntity<?>> Class<? extends ISecurityToken> findDefaultToken(final String securityTokensPackageName, final Template tokenKind) {
         try {
-            return (Class<? extends ISecurityToken>) forName(securityTokensPackageName + ".persistent." + defaultTokenNameFor(tokenKind));
+            return findTokenByName(securityTokensPackageName, tokenKind, ".persistent.", "");
         } catch (final ClassNotFoundException notFound) {
             return null;
         }
