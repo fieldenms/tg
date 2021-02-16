@@ -52,7 +52,8 @@ public class DomainExplorerInsertionPointMaster implements IMaster<DomainExplore
         prefDimBuilder.append("{'width': function() {return '100%'}, 'height': function() {return '100%'}, 'widthUnit': '', 'heightUnit': ''}");
 
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
-                .replace(IMPORTS, createImports(importPaths))
+                .replace(IMPORTS, createImports(importPaths)
+                        + "\nimport { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';\n")
                 .replace(ENTITY_TYPE, flattenedNameOf(DomainExplorerInsertionPoint.class))
                 .replace("<!--@tg-entity-master-content-->", domainExplorerDom.toString())
                 .replace("//@ready-callback", readyCallback())
@@ -75,7 +76,7 @@ public class DomainExplorerInsertionPointMaster implements IMaster<DomainExplore
                 + "    return null;\n"
                 + "}.bind(self);\n"
                 + "self._showDataLoadingPromt = function (msg) {\n"
-                + "    this.$.refrenceHierarchy.lock = true;\n"
+                + "    this.$.domainExplorer.lock = true;\n"
                 + "    this._toastGreeting().text = msg;\n"
                 + "    this._toastGreeting().hasMore = false;\n"
                 + "    this._toastGreeting().showProgress = true;\n"
@@ -84,7 +85,7 @@ public class DomainExplorerInsertionPointMaster implements IMaster<DomainExplore
                 + "    this._toastGreeting().show();\n"
                 + "}.bind(self);\n"
                 + "self._showDataLoadedPromt = function (msg) {\n"
-                + "    this.$.refrenceHierarchy.lock = false;\n"
+                + "    this.$.domainExplorer.lock = false;\n"
                 + "    this._toastGreeting().text = msg;\n"
                 + "    this._toastGreeting().hasMore = false;\n"
                 + "    this._toastGreeting().showProgress = false;\n"
@@ -103,9 +104,9 @@ public class DomainExplorerInsertionPointMaster implements IMaster<DomainExplore
                 + "}.bind(self);\n"
                 + "//Need for security marix editors binding.\n"
                 + "self._isNecessaryForConversion = function (propertyName) { \n"
-                + "    return ['domainFilter'].indexOf(propertyName) >= 0; \n"
+                + "    return ['domainTypeName', 'loadedHierarchy', 'domainFilter'].indexOf(propertyName) >= 0; \n"
                 + "}; \n"
-                + "self.$.domainExplorerFilter._onInput = function () {\n"
+                + "self.$.domainFilter._onInput = function () {\n"
                 + "    // clear domain explorer filter timer if it is in progress.\n"
                 + "    this._cancelDomainExplorerFilterTimer();\n"
                 + "    this._domainExplorerFilterTimer = this.async(this._filterDomainExplorer, 500);\n"
@@ -117,7 +118,7 @@ public class DomainExplorerInsertionPointMaster implements IMaster<DomainExplore
                 + "    }\n"
                 + "}.bind(self);\n"
                 + "self._filterDomainExplorer = function () {\n"
-                + "    this.$.domainExplorer.filterDomain(this.$.domainExplorerFilter._editingValue);\n"
+                + "    this.$.domainExplorer.filterDomain(this.$.domainFilter._editingValue);\n"
                 + "}.bind(self);\n"
                 + "self._loadSubDomain = function (e) {\n"
                 + "    this.save();\n"

@@ -48,8 +48,8 @@ const template = html`
             <slot name="filter-element"></slot>
         </div>
         <tg-tree-table id="domainExplorerTree" class="domain-explorer-tree" model="[[treeModel]]" on-tg-load-subtree="_loadSubtree">
-            <tg-hierarchy-column slot='hierarchy-column' property="name" type="String" width="200" min-width="80" grow-factor="1" column-title="Title" column-desc="Title description" content-builder="[[_buildContent]]"></tg-hierarchy-column>
-            <tg-property-column slot='regular-column' property="propertyType" type="String" width="100" min-width="80" grow-factor="1" column-title="Property Type" column-desc="Property type"></tg-property-column>
+            <tg-hierarchy-column slot='hierarchy-column' property="key" type="String" width="200" min-width="80" grow-factor="1" column-title="Title" column-desc="Title description" content-builder="[[_buildContent]]"></tg-hierarchy-column>
+            <tg-property-column slot='regular-column' property="propertyType.desc" type="String" width="100" min-width="80" grow-factor="1" column-title="Property Type" column-desc="Property type"></tg-property-column>
             <tg-property-column slot='regular-column' property="desc" type="String" width="100" min-width="80" grow-factor="1" column-title="Description" column-desc="Description"></tg-property-column>
             <tg-property-column slot='regular-column' property="internalName" type="String" width="160" min-width="80" grow-factor="1" column-title="Internal Name" column-desc="Internal type name"></tg-property-column>
             <tg-property-column slot='regular-column' property="dbSchema" type="String" width="200" min-width="80" grow-factor="1" column-title="DB Schema" column-desc="Table Name"></tg-property-column>
@@ -62,12 +62,35 @@ const keyIcon = function (entity) {
     return "<iron-icon icon='communication:vpn-key' style='height:18px; transform: scale(-1, 1) rotate(90deg); color:" + (entity.entity.isRequired ? "#03A9F4" : "black") + "'></iron-icon>";
 }
 const keyNumber = function (entity, numOfKeys) {
-    return numOfKeys > 1 ? ("<sup style='position:absolute; left:18px;'><b>" + entity.entity.order + "</b></sup>") : ""; 
+    return numOfKeys > 1 ? ("<sup style='position:absolute; left:18px;'><b>" + entity.entity.keyOrder + "</b></sup>") : ""; 
 }
 const getKeyIcon = function (entity, numOfKeys) {
     return entity.entity.isKey 
                 ? "<span style='position:relative;'>" + keyIcon(entity) + keyNumber(entity, numOfKeys) + "</span>" 
                 : (numOfKeys > 0 ? "<span style='min-width:24px;'></span>" : "");
+};
+const generatePath = function(treeModel, loadedHierarchy) {
+    let path = "treeModel";
+    let model = treeModel;
+    loadedHierarchy.forEach((entityIndex, index) => {
+        const treeEntry = model[entityIndex];
+        if (treeEntry) {
+            path += "." + entityIndex + ".children";
+        } else {
+            throw {
+                msg: "The domain wasn't detecteted for entity index: " + entityIndex + " at level: " + (index + 1)
+            };
+        }
+        model = model[entityIndex].children;
+    });
+    return path;
+};
+const getPathItem = function(treeModel, loadedHierarchy) {
+    let parent = null;
+    loadedHierarchy.forEach(entityIndex => {
+        parent = ((parent && parent.children) || treeModel)[entityIndex];
+    });
+    return parent;
 };
 
 class TgDomainExplorer extends PolymerElement {
@@ -102,18 +125,27 @@ class TgDomainExplorer extends PolymerElement {
 
     ready () {
         super.ready();
+        //Configure the component's properties.
+        this._saveQueue = [];
+        this._saveInProgress = false;
     }
 
     _buildContent (entity) {
         const parentEntity = entity.parent;
         const numOfKeys = parentEntity ? parentEntity.entity.children.filter(ent => ent.isKey).length : 0;
-        return getKeyIcon(entity, numOfKeys) + "<span class='truncate'" + (numOfKeys !== 1 ? "style='margin-left:8px;'" : "") + ">" + entity.entity.name + "</span>";
+        return getKeyIcon(entity, numOfKeys) + "<span class='truncate'" + (numOfKeys !== 1 ? "style='margin-left:8px;'" : "") + ">" + entity.entity.key + "</span>";
     }
 
     _entityChanged (newBindingEntity) {
         const newEntity = newBindingEntity ? newBindingEntity['@@origin'] : null;
         if (newEntity) {
-            //TODO Implement logic that updates the treeModel according to new data that arrived from server.
+            const path = generatePath(this.treeModel, newEntity.loadedHierarchy);
+            const parent = getPathItem(this.treeModel, newEntity.loadedHierarchy);
+            newEntity.generatedHierarchy.forEach(entity => {
+                entity.parent = parent;
+            });
+            this.set(path, newEntity.generatedHierarchy);
+            newEntity.set("generatedHierarchy", []);
         }
         if (this._saveInProgress) {
             this._saveInProgress = false;
@@ -132,9 +164,16 @@ class TgDomainExplorer extends PolymerElement {
     }
 
     _processEvent (e) {
-        //TODO nned to initialise entity for next save action
+        const parentsPath = e.detail.parentPath;
+        const indexes = parentsPath.map(entity =>  {
+            const parentList = entity.parent ? entity.parent.children: this.treeModel;
+            return parentList.indexOf(entity);
+        });
+        const lastEntity = parentsPath[parentsPath.length - 1];
+        this.entity.setAndRegisterPropertyTouch("loadedHierarchy", indexes);
+        this.entity.setAndRegisterPropertyTouch("domainTypeName", (lastEntity.propertyType && lastEntity.propertyType.key) || lastEntity.internalName);
         this._saveInProgress = true;
-        this.fire("tg-load-sub-domain", this.entity);
+        this.dispatchEvent(new CustomEvent('tg-load-sub-domain',  { bubbles: true, composed: true, detail: this.entity }));
     }
 
     /**
