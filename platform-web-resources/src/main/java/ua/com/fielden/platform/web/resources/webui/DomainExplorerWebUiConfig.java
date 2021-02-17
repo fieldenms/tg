@@ -44,6 +44,7 @@ public class DomainExplorerWebUiConfig {
      */
     private EntityCentre<DomainExplorer> createCentre(final Injector injector) {
         final EntityCentreConfig<DomainExplorer> ecc = EntityCentreBuilder.centreFor(DomainExplorer.class)
+                .runAutomatically()
                 .hideEgi()
                 .addProp("this").order(1).asc().minWidth(100)
                 .addInsertionPoint(

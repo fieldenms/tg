@@ -118,21 +118,13 @@ const template = html`
             padding: 0 0.6rem;
         }
         .truncate {
+            min-width:0;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        .truncate[multiple-line] {
-            overflow: hidden;
-            white-space: normal;
-            word-break: break-word;
-            display: -webkit-box;
-            -webkit-box-orient: vertical;
-            -webkit-line-clamp: var(--egi-number-of-header-lines, 1);
-        }
         /*miscellanea styles*/
         iron-list {
-            overflow-x: hidden;
             @apply --layout-flex;
         }
         .expand-button {
@@ -146,7 +138,7 @@ const template = html`
         iron-icon[invisible] {
             visibility: hidden;
         }
-        [highlighted] .part-to-highlight {
+        .part-to-highlight[highlighted]  {
             font-weight: bold;
         }
         .lock-layer {
@@ -244,7 +236,7 @@ const template = html`
                             <div class="table-cell cell" style$="[[_calcColumnStyle(hierarchyColumn, hierarchyColumn.width, hierarchyColumn.growFactor, 'true')]]">
                                 <div class="cell-container" style$="[[itemStyle(entity)]]">
                                     <iron-icon class="expand-button" icon="av:play-arrow" style="flex-grow:0;flex-shrink:0;" invisible$="[[!entity.entity.hasChildren]]" collapsed$="[[!entity.opened]]" on-tap="_toggle"></iron-icon>
-                                    <div class="truncate cell-container" highlighted$="[[entity.highlight]]" tooltip-text$="[[_getTooltip(entity, hierarchyColumn)]]" inner-h-t-m-l="[[_getBindedTreeTableValue(entity, hierarchyColumn)]]"></div>
+                                    <div class="truncate cell-container part-to-highlight" highlighted$="[[entity.highlight]]" tooltip-text$="[[_getTooltip(entity, hierarchyColumn)]]" inner-h-t-m-l="[[_getBindedTreeTableValue(entity, hierarchyColumn)]]"></div>
                                 </div>
                             </div>
                         </div>
@@ -257,7 +249,7 @@ const template = html`
                         <div class="table-data-row" selected$="[[entity.selected]]" over$="[[entity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
                             <template is="dom-repeat" items="[[regularColumns]]" as="column">
                                 <div class="table-cell cell" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'false')]]" highlighted$="[[entity.highlight]]" tooltip-text$="[[_getTooltip(entity, column)]]">
-                                    <div class="truncate cell-container" inner-h-t-m-l="[[_getBindedTreeTableValue(entity, column)]]"></div>
+                                    <div class="truncate" inner-h-t-m-l="[[_getBindedTreeTableValue(entity, column)]]"></div>
                                 </div>
                             </template>
                         </div>
@@ -312,7 +304,7 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRetrieval
     }
 
     isEntityRendered (index) {
-        this.$.mainTreeList._isIndexRendered(idx)
+        return this.$.mainTreeList._isIndexRendered(index);
     }
 
     /******************************Binding functions those calculate attributes, styles and other stuf************/
@@ -349,6 +341,16 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRetrieval
 
 
     /******************************EventListeners************************/
+
+    _mouseRowEnter (event) {
+        const index = event.model.index;
+        this.set("_entities." + index + ".over", true);
+    }
+
+    _mouseRowLeave (event) {
+        const index = event.model.index;
+        this.set("_entities." + index + ".over", false);
+    }
 
     _updateTableSizeAsync () {
         this.async(function () {

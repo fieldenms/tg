@@ -11,16 +11,16 @@ import {html, PolymerElement} from '/resources/polymer/@polymer/polymer/polymer-
 const template = html`
     <style>
         :host {
-            position: relative;
             width: 100%;
             height: 100%;
             @apply --layout-horizontal;
+            @apply --layout-justified;
         }
 
         .domain-explorer-container {
             padding: 0 18px;
+            @apply --layout-fit;
             @apply --layout-vertical;
-            @apply --layout-flex;
         }
 
         .editor-container {
@@ -51,8 +51,8 @@ const template = html`
             <tg-hierarchy-column slot='hierarchy-column' property="key" type="String" width="200" min-width="80" grow-factor="1" column-title="Title" column-desc="Title description" content-builder="[[_buildContent]]"></tg-hierarchy-column>
             <tg-property-column slot='regular-column' property="propertyType.desc" type="String" width="100" min-width="80" grow-factor="1" column-title="Property Type" column-desc="Property type"></tg-property-column>
             <tg-property-column slot='regular-column' property="desc" type="String" width="100" min-width="80" grow-factor="1" column-title="Description" column-desc="Description"></tg-property-column>
-            <tg-property-column slot='regular-column' property="internalName" type="String" width="160" min-width="80" grow-factor="1" column-title="Internal Name" column-desc="Internal type name"></tg-property-column>
-            <tg-property-column slot='regular-column' property="dbSchema" type="String" width="200" min-width="80" grow-factor="1" column-title="DB Schema" column-desc="Table Name"></tg-property-column>
+            <tg-property-column slot='regular-column' property="internalName" type="String" width="160" min-width="80" grow-factor="1" column-title="Internal Name" column-desc="Internal type name" content-builder="[[_buildInternalNameContent]]"></tg-property-column>
+            <tg-property-column slot='regular-column' property="dbSchema" type="String" width="200" min-width="80" grow-factor="1" column-title="DB Schema" column-desc="Table Name" content-builder="[[_buildDbSchemaContent]]"></tg-property-column>
             <tg-property-column slot='regular-column' property="refTable" type="String" width="160" min-width="80" grow-factor="1" column-title="Ref Table" column-desc="References Table Name"></tg-property-column>
         </tg-tree-table>
     </div>
@@ -128,12 +128,33 @@ class TgDomainExplorer extends PolymerElement {
         //Configure the component's properties.
         this._saveQueue = [];
         this._saveInProgress = false;
+
+        this._buildContent = this._buildContent.bind(this);
+        this._buildInternalNameContent = this._buildInternalNameContent.bind(this);
+        this._buildDbSchemaContent = this._buildDbSchemaContent.bind(this);
     }
 
     _buildContent (entity) {
         const parentEntity = entity.parent;
         const numOfKeys = parentEntity ? parentEntity.entity.children.filter(ent => ent.isKey).length : 0;
         return getKeyIcon(entity, numOfKeys) + "<span class='truncate'" + (numOfKeys !== 1 ? "style='margin-left:8px;'" : "") + ">" + entity.entity.key + "</span>";
+    }
+
+    _buildInternalNameContent (entity) {
+        let internalName = entity.entity.internalName;
+        let parent = entity.parent;
+        while(parent !== null && parent.parent !== null) {
+            internalName = parent.entity.internalName + "." + internalName;
+            parent = parent.parent;
+        }
+        return internalName
+    }
+
+    _buildDbSchemaContent (entity, column) {
+        if (entity.parent !== null && entity.parent.parent !== null) {
+            return "[JOIN]";
+        }
+        return this.$.domainExplorerTree.getBindedValue(entity.entity, column);
     }
 
     _entityChanged (newBindingEntity) {

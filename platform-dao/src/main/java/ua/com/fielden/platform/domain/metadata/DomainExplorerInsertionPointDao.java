@@ -3,6 +3,7 @@ package ua.com.fielden.platform.domain.metadata;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.util.List;
@@ -16,6 +17,7 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 
 /**
  * DAO for {@link DomainExplorerInsertionPoint}.
@@ -66,7 +68,8 @@ public class DomainExplorerInsertionPointDao extends CommonEntityDao<DomainExplo
 
     private List<DomainTreeEntity> loadTypes(final DomainExplorerInsertionPoint entity) {
         final EntityResultQueryModel<DomainType> queryModel = select(DomainType.class).where().prop("entity").eq().val(true).model();
-        try(final Stream<DomainType> stream = co(DomainType.class).stream(from(queryModel).model())) {
+        final OrderingModel orderingModel = orderBy().yield("desc").asc().model();
+        try(final Stream<DomainType> stream = co(DomainType.class).stream(from(queryModel).with(orderingModel).model())) {
             return stream.map(domainType -> createDomainType(domainType)).collect(Collectors.toList());
         }
     }
