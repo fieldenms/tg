@@ -107,7 +107,9 @@ public class GraphQLService implements IWebApi {
             final GraphQLCodeRegistry.Builder codeRegistryBuilder = newCodeRegistry();
             logger.info("\tBuilding dictionary...");
             final Predicate<Class<? extends AbstractEntity<?>>> toInclude = type -> isSyntheticEntityType(type) || isPersistedEntityType(type); // this includes persistent with activatable nature, synthetic based on persistent; this does not include union, functional and any other entities
-            final Set<Class<? extends AbstractEntity<?>>> domainTypes = domainTypesOf(applicationDomainProvider, toInclude);
+            final Set<Class<? extends AbstractEntity<?>>> domainTypes = domainTypesOf(applicationDomainProvider, toInclude).stream()
+                .sorted((type1, type2) -> type1.getSimpleName().compareTo(type2.getSimpleName()))
+                .collect(toCollection(LinkedHashSet::new));
             final Set<Class<? extends AbstractEntity<?>>> allTypes = new LinkedHashSet<>(domainTypes);
             allTypes.addAll(domainTypesOf(applicationDomainProvider, type -> !toInclude.test(type) && type.getSimpleName().endsWith("GroupingProperty"))); // '...GroupingProperty' is the naming pattern for enum-like entities for groupBy criteria
             final Map<Class<? extends AbstractEntity<?>>, GraphQLType> dictionary = createDictionary(allTypes);
