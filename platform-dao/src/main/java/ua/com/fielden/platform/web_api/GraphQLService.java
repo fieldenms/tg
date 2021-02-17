@@ -115,6 +115,8 @@ public class GraphQLService implements IWebApi {
             final Map<Class<? extends AbstractEntity<?>>, GraphQLType> dictionary = createDictionary(allTypes);
             logger.info("\tBuilding query type...");
             final GraphQLObjectType queryType = createQueryType(domainTypes, coFinder, dates, codeRegistryBuilder, authorisation, securityTokensPackageName);
+            logger.info("\tBuilding field visibility...");
+            codeRegistryBuilder.fieldVisibility(new FieldVisibility(authorisation, domainTypes, securityTokensPackageName));
             logger.info("\tBuilding schema...");
             final GraphQLSchema schema = newSchema()
                 .codeRegistry(codeRegistryBuilder.build())
