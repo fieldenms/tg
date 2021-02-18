@@ -5,6 +5,7 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
+import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrLink;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrLinkOrInherited;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.SAVED_CENTRE_NAME;
@@ -43,6 +44,7 @@ import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 public class CentreConfigShareActionProducer extends DefaultEntityProducerWithContext<CentreConfigShareAction> {
     public static final String CONFIG_DOES_NOT_EXIST = "Configuration does not exist.";
     private static final String SAVE_MSG = "Please save and try again.";
+    private static final String SAVE_OWN_COPY_MSG = "Only sharing of your own configurations is supported. Please save as your copy and try again.";
     private static final String DUPLICATE_SAVE_MSG = "Please duplicate, save and try again.";
     
     private final IUserProvider userProvider;
@@ -92,7 +94,10 @@ public class CentreConfigShareActionProducer extends DefaultEntityProducerWithCo
         }
         final Optional<String> saveAsName = of(obtainTitleFrom(freshConfigOpt.get().getTitle(), FRESH_CENTRE_NAME, device));
         if (isDefaultOrLinkOrInherited(saveAsName, selectionCrit)) {
-            return failure(SAVE_MSG); // [link; inherited from shared; inherited from base] configuration can not be shared
+            if (isDefaultOrLink(saveAsName)) {
+                return failure(SAVE_MSG); // [link] configuration can not be shared
+            }
+            return failure(SAVE_OWN_COPY_MSG); // [inherited from shared; inherited from base] configuration can not be shared
         }
         final Optional<EntityCentreConfig> savedConfigOpt = findConfigOptByUuid(configUuid, miType, device, SAVED_CENTRE_NAME, eccCompanion);
         if (!savedConfigOpt.isPresent() // in case where there is no configuration creator then it was inherited from base / shared and original configuration was deleted; this type of configuration (inherited, no upstream) still can exist and act like own-save as, however it should not be used for sharing
