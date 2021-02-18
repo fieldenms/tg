@@ -1,13 +1,8 @@
 package ua.com.fielden.platform.web_api;
 
 import static graphql.GraphqlErrorBuilder.newError;
-import static java.lang.Class.forName;
-import static java.lang.String.format;
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
-import static java.util.Optional.ofNullable;
-import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.security.tokens.Template.READ;
+import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseReading;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.web_api.FieldSchema.DEFAULT_PAGE_CAPACITY;
 import static ua.com.fielden.platform.web_api.FieldSchema.DEFAULT_PAGE_NUMBER;
@@ -33,8 +28,6 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.IAuthorisationModel;
-import ua.com.fielden.platform.security.ISecurityToken;
-import ua.com.fielden.platform.security.tokens.Template;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.utils.IDates;
@@ -78,12 +71,7 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
      */
     @Override
     public DataFetcherResult<List<T>> get(final DataFetchingEnvironment environment) {
-        ofNullable(
-            findToken(securityTokensPackageName, entityType.getSimpleName(), READ)
-            .orElseGet(() -> findDefaultToken(securityTokensPackageName, READ))
-        )   .map(token -> authorisation.authorise(token))
-            .orElseGet(() -> failure(format("Read token has not been found for %s.", entityType.getSimpleName())))
-            .ifFailure(Result::throwRuntime);
+        authoriseReading(entityType.getSimpleName(), READ, securityTokensPackageName, authorisation).ifFailure(Result::throwRuntime);
         final T3<String, List<GraphQLArgument>, List<Argument>> rootArguments = rootPropAndArguments(environment.getGraphQLSchema(), environment.getField());
         final T2<Optional<String>, QueryExecutionModel<T, EntityResultQueryModel<T>>> warningAndModel = generateQueryModelFrom(
             environment.getField(),
@@ -111,30 +99,6 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
         ).data());
         warningAndModel._1.ifPresent(warning -> result.error(newError(environment).message(warning).build()));
         return result.build();
-    }
-    
-    public static Optional<Class<? extends ISecurityToken>> findToken(final String securityTokensPackageName, final String entityTypeSimpleName, final Template tokenKind) {
-        try {
-            return of(findTokenByName(securityTokensPackageName, tokenKind, ".persistent.", entityTypeSimpleName));
-        } catch (final ClassNotFoundException notFound1) {
-            try {
-                return of(findTokenByName(securityTokensPackageName, tokenKind, ".synthetic.", entityTypeSimpleName));
-            } catch (final ClassNotFoundException notFound2) {
-                return empty();
-            }
-        }
-    }
-    
-    private static Class<? extends ISecurityToken> findTokenByName(final String securityTokensPackageName, final Template tokenKind, final String packagePart, final String templateParam) throws ClassNotFoundException {
-        return (Class<? extends ISecurityToken>) forName(securityTokensPackageName + packagePart + format(tokenKind.forClassName(), templateParam));
-    }
-    
-    public static Class<? extends ISecurityToken> findDefaultToken(final String securityTokensPackageName, final Template tokenKind) {
-        try {
-            return findTokenByName(securityTokensPackageName, tokenKind, ".persistent.", "");
-        } catch (final ClassNotFoundException notFound) {
-            return null;
-        }
     }
     
 }
