@@ -86,6 +86,19 @@ const makeParentVisible = function (entity) {
     }
 };
 
+/**
+ * Expands all ancestors of specified entity.
+ * 
+ * @param {Object} entity - the entity which ancestors should be expanded. 
+ */
+const expandAncestors = function (entity) {
+    let parent = entity.parent;
+    while (parent) {
+        parent.opened = true;
+        parent = parent.parent;
+    }
+};
+
 const hasMatchedAncestor = function (entity) {
     let parent = entity.parent;
     while (parent) {
@@ -164,7 +177,13 @@ export const TgTreeListBehavior = {
         _lastFilterText: {
             type: String,
             value: ""
+        },
+
+        _matchedTreeItems: {
+            type: Array,
+            value: () => []
         }
+
     },
     
     observers: ["_modelChanged(model.*)"],
@@ -174,6 +193,22 @@ export const TgTreeListBehavior = {
         this._filterSubTree(text, this._treeModel, true);
         this.splice("_entities", 0, this._entities.length, ...composeChildren.bind(this)(this._treeModel, true));
         this.debounce("refreshTree", refreshTree.bind(this));
+    },
+
+    /**
+     * Searches the tree item with key that matches the specified text.
+     * 
+     * @param {String} text - pattern to find among tree items of treeModel.
+     */
+    find: function (text) {
+        this._matchedTreeItems = this._find(text, this._treeModel);
+        this.splice("_entities", 0, this._entities.length, ...composeChildren.bind(this)(this._treeModel, true));
+        this.debounce("refreshTree", () => {
+            refreshTree.bind(this)();
+            if (this._matchedTreeItems.length > 0) {
+                this.scrollToItem(this._matchedTreeItems[0]);
+            }
+        });
     },
 
     expandSubTree: function(parentItem, refreshLoaded) {
@@ -294,6 +329,30 @@ export const TgTreeListBehavior = {
         });
     },
 
+    /**
+     * Highlights tree items in subtree and their children those matches the specified text. 
+     * Also it expands ancestors if some of their child matches the specified text.  
+     *   
+     * @param {String} text - text to find
+     * @param {Array} subtree - list of items to search in
+     * 
+     * returns the list of matched items.
+     */
+    _find: function (text, subtree) {
+        let matchedItems = [];
+        subtree.forEach(treeEntity => {
+            if (treeEntity.entity.key.toLowerCase().search(text.toLowerCase()) >= 0) {
+                treeEntity.highlight = text ? true : false;
+                matchedItems.push(treeEntity);
+                expandAncestors(treeEntity);
+            } 
+            if (treeEntity.entity.hasChildren && wasLoaded(treeEntity)) {
+                matchedItems.push(...this._find(text, treeEntity.children));
+            }
+        });
+        return matchedItems;
+    },
+
     _regenerateModel: function () {
         this._treeModel = generateChildrenModel(this.model, null, this.additionalInfoCb); 
         this._entities = this._treeModel.slice();
@@ -357,5 +416,14 @@ export const TgTreeListBehavior = {
      */
     isEntityRendered: function (index) {
         return false;
+    },
+
+    /**
+     * Scrolls current view to the specified item.
+     * 
+     * @param {Object} treeItem - tree node to which view should be scrolled to.
+     */
+    scrollToItem: function (treeItem) {
+
     }
 };

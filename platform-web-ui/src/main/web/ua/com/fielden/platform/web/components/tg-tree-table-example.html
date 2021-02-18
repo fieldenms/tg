@@ -38,11 +38,11 @@
         <template is="dom-bind">
             <div class="fit layout vertical">
                 <div class="layout horizontal">
-                    <paper-input class="flex" on-bind-value-changed="_filterTree"></paper-input>
+                    <paper-input class="flex" on-bind-value-changed="_findTreeItems"></paper-input>
                     <paper-icon-button on-tap="expandAll" icon="icons:arrow-drop-down-circle"></paper-icon-button>
                 </div>
                 <tg-tree-table class="flex" id="tree" model="[[model]]" on-tg-load-subtree="_loadSubtree">
-                    <tg-hierarchy-column slot='hierarchy-column' property="name" type="String" width="200" min-width="80" grow-factor="1" column-title="Title" column-desc="Title description" content-builder="[[_buildContent]]"></tg-hierarchy-column>
+                    <tg-hierarchy-column slot='hierarchy-column' property="key" type="String" width="200" min-width="80" grow-factor="1" column-title="Title" column-desc="Title description" content-builder="[[_buildContent]]"></tg-hierarchy-column>
                     <tg-property-column slot='regular-column' property="propertyType" type="String" width="100" min-width="80" grow-factor="1" column-title="Property Type" column-desc="Property type"></tg-property-column>
                     <tg-property-column slot='regular-column' property="desc" type="String" width="100" min-width="80" grow-factor="1" column-title="Description" column-desc="Description"></tg-property-column>
                     <tg-property-column slot='regular-column' property="internalName" type="String" width="160" min-width="80" grow-factor="1" column-title="Internal Name" column-desc="Internal type name"></tg-property-column>
@@ -62,7 +62,7 @@
 
         constructor(obj) {
             super(idCounter++);
-            this.name = obj.name;
+            this.key = obj.key;
             this.propertyType = obj.propertyType;
             this.desc = obj.desc;
             this.internalName = obj.internalName;
@@ -86,7 +86,7 @@
     const types = [];
     for(let i = 0; i < numberOfItems; i++) {
         types.push({
-            name: "Type_" + i,
+            key: "Type_" + i,
             propertyType: null,  
             desc: "Type_Desc_" + i, 
             internalName: "Type_" + i, 
@@ -97,7 +97,7 @@
     const properties = [];
     for (let i = 0; i < numberOfItems; i++) {
         properties.push({
-            name: "Property_" + i, 
+            key: "Property_" + i, 
             propertyType: "Type_" + i, 
             desc: "Property_Desc_" + i, 
             internalName: "property_" + i, 
@@ -110,7 +110,7 @@
         });
     }
     properties.push({
-        name: "Property_" + 10, 
+        key: "Property_" + 10, 
         propertyType: "String", 
         desc: "Property_Desc_" + 10, 
         internalName: "property_" + 10, 
@@ -158,7 +158,7 @@
     app._buildContent = function (entity) {
         const parentEntity = entity.parent;
         const numOfKeys = parentEntity ? parentEntity.entity.children.filter(ent => ent.isKey).length : 0;
-        return getKeyIcon(entity, numOfKeys) + "<span class='truncate'" + (numOfKeys !== 1 ? "style='margin-left:8px;'" : "") + ">" + entity.entity.name + "</span>";
+        return getKeyIcon(entity, numOfKeys) + "<span class='truncate'" + (numOfKeys !== 1 ? "style='margin-left:8px;'" : "") + ">" + entity.entity.key + "</span>";
     }
     app._loadSubtree = function (e) {
         const parentsPath = e.detail.parentPath;
@@ -179,8 +179,8 @@
             app.set(pathToChange, generatedChildren);
         }, 2000);
     }
-    app._filterTree = function (e) {
-        app.$.tree.filter(e.detail.value);
+    app._findTreeItems = function (e) {
+        app.$.tree.find(e.detail.value);
     }
 </script>
 

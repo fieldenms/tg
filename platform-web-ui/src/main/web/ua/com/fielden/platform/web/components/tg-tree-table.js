@@ -312,7 +312,11 @@ export class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRe
     }
 
     isEntityRendered (index) {
-        this.$.mainTreeList._isIndexRendered(idx)
+        return this.$.mainTreeList._isIndexRendered(index);
+    }
+
+    scrollToItem (treeItem) {
+        this.$.mainTreeList.scrollToItem(treeItem);
     }
 
     /******************************Binding functions those calculate attributes, styles and other stuf************/
