@@ -348,12 +348,14 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRetrieval
 
     _mouseRowEnter (event) {
         const index = event.model.index;
-        this.set("_entities." + index + ".over", true);
+        this.setOver(index, true);
     }
 
     _mouseRowLeave (event) {
         const index = event.model.index;
-        this.set("_entities." + index + ".over", false);
+        if (this.currentMatchedItem !== this._entities[index]) {
+            this.setOver(index, false);
+        }
     }
 
     _updateTableSizeAsync () {

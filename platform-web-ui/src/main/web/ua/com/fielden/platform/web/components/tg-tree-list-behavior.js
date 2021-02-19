@@ -92,7 +92,7 @@ const makeParentVisible = function (entity) {
  * @param {Object} entity - the entity which ancestors should be expanded. 
  */
 const expandAncestors = function (entity) {
-    let parent = entity.parent;
+    let parent = entity && entity.parent;
     while (parent) {
         parent.opened = true;
         parent = parent.parent;
@@ -159,6 +159,25 @@ export const TgTreeListBehavior = {
          * in entity. Then this additional nodes will be rendered under the "related to" node. 
          */
         additionalInfoCb: Function,
+
+        /**
+         * The last text that was used to find tree items in tree
+         */
+        lastSearchText: {
+            type: String,
+            value: "",
+            notify: true
+        },
+
+        /**
+         * Currently matched item, among _matchedTreeItems, to which tree view was scrolled to.
+         */
+        currentMatchedItem: {
+            type: Object,
+            value: null,
+            notify: true,
+            observer: "_curentMatchedItemChanged"
+        },
         
         /**
          * The tree model that holds some visual specific properties and is created from model.
@@ -203,11 +222,36 @@ export const TgTreeListBehavior = {
     find: function (text) {
         this._matchedTreeItems = this._find(text, this._treeModel);
         this.splice("_entities", 0, this._entities.length, ...composeChildren.bind(this)(this._treeModel, true));
+        this.lastSearchText = text;
+        this.currentMatchedItem = null;
+        this.goToMatchedItem();
+    },
+
+    goToNextMatchedItem: function () {
+        this.goToMatchedItem(1);
+    },
+
+    goToPreviousMatchedItem: function () {
+        this.goToMatchedItem(-1);
+    },
+
+    goToMatchedItem: function (inc) {
+        const matchedItemIndex = this._matchedTreeItems.indexOf(this.currentMatchedItem);
+        if (matchedItemIndex >= 0) {
+            const nextIdx = matchedItemIndex + inc < 0 ? this._matchedTreeItems.length - 1 : 
+                        (matchedItemIndex + inc >= this._matchedTreeItems.length ? 0 : matchedItemIndex + inc);
+            this.currentMatchedItem = this._matchedTreeItems[nextIdx];
+        } else {
+            if (this._matchedTreeItems.length > 0) {
+                this.currentMatchedItem = this._matchedTreeItems[0];
+            } else  {
+                this.currentMatchedItem = null;
+            }
+        }
+        expandAncestors(this.currentMatchedItem);
         this.debounce("refreshTree", () => {
             refreshTree.bind(this)();
-            if (this._matchedTreeItems.length > 0) {
-                this.scrollToItem(this._matchedTreeItems[0]);
-            }
+            this.scrollToItem(this.currentMatchedItem);
         });
     },
 
@@ -341,11 +385,13 @@ export const TgTreeListBehavior = {
     _find: function (text, subtree) {
         let matchedItems = [];
         subtree.forEach(treeEntity => {
-            if (treeEntity.entity.key.toLowerCase().search(text.toLowerCase()) >= 0) {
-                treeEntity.highlight = text ? true : false;
+            if (text && treeEntity.entity.key.toLowerCase().search(text.toLowerCase()) >= 0) {
+                treeEntity.highlight = true;
                 matchedItems.push(treeEntity);
                 expandAncestors(treeEntity);
-            } 
+            } else {
+                treeEntity.highlight = false;
+            }
             if (treeEntity.entity.hasChildren && wasLoaded(treeEntity)) {
                 matchedItems.push(...this._find(text, treeEntity.children));
             }
@@ -401,6 +447,15 @@ export const TgTreeListBehavior = {
                 this.splice("_entities", indexForSplice, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(parentItem, true, false, splice.index, splice.addedCount));
                 this.resizeTree();
             });
+        }
+    },
+
+    _curentMatchedItemChanged: function (newValue, oldValue) {
+        if (newValue) {
+            this.setOver(this._entities.indexOf(newValue), true);
+        } 
+        if (oldValue){
+            this.setOver(this._entities.indexOf(oldValue), false);
         }
     },
 

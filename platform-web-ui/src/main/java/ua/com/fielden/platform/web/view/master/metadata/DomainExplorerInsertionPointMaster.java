@@ -28,6 +28,14 @@ public class DomainExplorerInsertionPointMaster implements IMaster<DomainExplore
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
         importPaths.add("components/tg-domain-explorer");
         importPaths.add("editors/tg-singleline-text-editor");
+        importPaths.add("polymer/@polymer/iron-icons/iron-icons");
+        importPaths.add("polymer/@polymer/paper-icon-button/paper-icon-button");
+        final DomElement searchItemsText = new DomElement("div").attr("slot", "property-action").attr("hidden", "[[!_searchText]]").add(new InnerTextElement("[[_calcMatchedItems(_searchText, _matchedItemOrder, _matchedItemsNumber)]]"))
+                .style("font-size: 0.9rem", "color:#757575", "margin-right: 8px");
+        final DomElement prevButton = new DomElement("paper-icon-button").attr("slot", "property-action").attr("hidden", "[[!_searchText]]").attr("icon", "icons:expand-less").attr("on-tap", "_goToPrevMatchedItem")
+                .style("width:24px","height:24px", "padding:4px", "color:#757575");
+        final DomElement nextButton = new DomElement("paper-icon-button").attr("slot", "property-action").attr("hidden", "[[!_searchText]]").attr("icon", "icons:expand-more").attr("on-tap", "_goToNextMatchedItem")
+                .style("width:24px","height:24px", "padding:4px", "color:#757575");
 
         final DomElement domainFilter = new DomElement("tg-singleline-text-editor")
                 .attr("id", "domainFilter")
@@ -40,11 +48,15 @@ public class DomainExplorerInsertionPointMaster implements IMaster<DomainExplore
                 .attr("validation-callback", "[[doNotValidate]]")
                 .attr("prop-title", "Type to filter domain")
                 .attr("prop-desc", "Display types or properties those matched entered text")
-                .attr("current-state", "[[currentState]]");
+                .attr("current-state", "[[currentState]]")
+                .add(searchItemsText, prevButton, nextButton);
 
         final DomElement domainExplorerDom = new DomElement("tg-domain-explorer")
                 .attr("id", "domainExplorer")
                 .attr("entity", "{{_currBindingEntity}}")
+                .attr("last-search-text", "{{_searchText}}")
+                .attr("matched-item-order", "{{_matchedItemOrder}}")
+                .attr("number-of-matched-items", "{{_matchedItemsNumber}}")
                 .attr("on-tg-load-sub-domain", "_loadSubDomain")
                 .add(domainFilter);
 
@@ -71,6 +83,9 @@ public class DomainExplorerInsertionPointMaster implements IMaster<DomainExplore
 
     private String readyCallback() {
         return "self.classList.add('layout');\n"
+                + "self._searchText = '';\n"
+                + "self._matchedItemOrder = 0;\n"
+                + "self._matchedItemsNumber = 0;\n"
                 + "self.classList.add('vertical');\n"
                 + "self.canLeave = function () {\n"
                 + "    return null;\n"
@@ -109,7 +124,7 @@ public class DomainExplorerInsertionPointMaster implements IMaster<DomainExplore
                 + "self.$.domainFilter._onInput = function () {\n"
                 + "    // clear domain explorer filter timer if it is in progress.\n"
                 + "    this._cancelDomainExplorerFilterTimer();\n"
-                + "    this._domainExplorerFilterTimer = this.async(this._filterDomainExplorer, 500);\n"
+                + "    this._domainExplorerFilterTimer = this.async(this._findTreeItems, 500);\n"
                 + "}.bind(self);\n"
                 + "self._cancelDomainExplorerFilterTimer = function () {\n"
                 + "    if (this._domainExplorerFilterTimer) {\n"
@@ -117,11 +132,23 @@ public class DomainExplorerInsertionPointMaster implements IMaster<DomainExplore
                 + "        this._domainExplorerFilterTimer = null;\n"
                 + "    }\n"
                 + "}.bind(self);\n"
-                + "self._filterDomainExplorer = function () {\n"
-                + "    this.$.domainExplorer.filterDomain(this.$.domainFilter._editingValue);\n"
+                + "self._findTreeItems = function () {\n"
+                + "    this.$.domainExplorer.find(this.$.domainFilter._editingValue);\n"
                 + "}.bind(self);\n"
                 + "self._loadSubDomain = function (e) {\n"
                 + "    this.save();\n"
+                + "}.bind(self);\n"
+                + "self._calcMatchedItems= function (_searchText, _matchedItemOrder, _matchedItemsNumber) {\n"
+                + "    if (_searchText) {\n"
+                + "        return _matchedItemOrder + ' / ' + _matchedItemsNumber;\n"
+                + "    }\n"
+                + "    return '';\n"
+                + "}.bind(self);\n"
+                + "self._goToPrevMatchedItem = function (e) {\n"
+                + "    this.$.domainExplorer.goToPreviousMatchedItem();"
+                + "}.bind(self);\n"
+                + "self._goToNextMatchedItem = function (e) {\n"
+                + "    this.$.domainExplorer.goToNextMatchedItem();"
                 + "}.bind(self);\n";
     }
 

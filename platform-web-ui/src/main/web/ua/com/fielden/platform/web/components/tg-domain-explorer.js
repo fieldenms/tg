@@ -47,7 +47,7 @@ const template = html`
         <div class="editor-container">
             <slot name="filter-element"></slot>
         </div>
-        <tg-tree-table id="domainExplorerTree" class="domain-explorer-tree" model="[[treeModel]]" on-tg-load-subtree="_loadSubtree">
+        <tg-tree-table id="domainExplorerTree" class="domain-explorer-tree" model="[[treeModel]]" last-search-text="{{lastSearchText}}" on-current-matched-item-changed="_updateCurrentMatchedItemRelatedData" on-tg-load-subtree="_loadSubtree" on>
             <tg-hierarchy-column slot='hierarchy-column' property="key" type="String" width="200" min-width="80" grow-factor="1" column-title="Title" column-desc="Title description" content-builder="[[_buildContent]]"></tg-hierarchy-column>
             <tg-property-column slot='regular-column' property="propertyType.desc" type="String" width="100" min-width="80" grow-factor="1" column-title="Property Type" column-desc="Property type"></tg-property-column>
             <tg-property-column slot='regular-column' property="desc" type="String" width="100" min-width="80" grow-factor="1" column-title="Description" column-desc="Description"></tg-property-column>
@@ -117,6 +117,24 @@ class TgDomainExplorer extends PolymerElement {
                 type: Boolean,
                 value: false
             },
+
+            lastSearchText: {
+                type: String,
+                value: "",
+                notify: true
+            },
+            
+            matchedItemOrder: {
+                type: Number,
+                value: 0,
+                notify: true
+            },
+                
+            numberOfMatchedItems: {
+                type: Number,
+                value: 0,
+                notify: true
+            },
             
             _saveQueue: Array,
             _saveInProgress: Boolean
@@ -132,6 +150,22 @@ class TgDomainExplorer extends PolymerElement {
         this._buildContent = this._buildContent.bind(this);
         this._buildInternalNameContent = this._buildInternalNameContent.bind(this);
         this._buildDbSchemaContent = this._buildDbSchemaContent.bind(this);
+    }
+
+    goToNextMatchedItem () {
+        this.$.domainExplorerTree.goToNextMatchedItem();
+    }
+
+    goToPreviousMatchedItem () {
+        this.$.domainExplorerTree.goToPreviousMatchedItem();
+    }
+
+    _updateCurrentMatchedItemRelatedData(e) {
+        const oldItemIdx = this.matchedItemOrder - 1;
+        if (this.$.domainExplorerTree._matchedTreeItems) {
+            this.matchedItemOrder = this.$.domainExplorerTree._matchedTreeItems.indexOf(this.$.domainExplorerTree.currentMatchedItem) + 1;
+            this.numberOfMatchedItems = this.$.domainExplorerTree._matchedTreeItems.length;
+        }
     }
 
     _buildContent (entity) {
@@ -198,10 +232,10 @@ class TgDomainExplorer extends PolymerElement {
     }
 
     /**
-     * Filters the hierarchy tree.
+     * Performs search of tree items in tree table.
      */
-    filterDomain (text) {
-        this.$.domainExplorerTree.filter(text);
+    find (text) {
+        this.$.domainExplorerTree.find(text);
     }
 }
 
