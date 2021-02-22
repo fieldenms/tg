@@ -3,9 +3,9 @@ import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
 import '/resources/polymer/@polymer/iron-icons/av-icons.js';
 import '/resources/polymer/@polymer/iron-list/iron-list.js';
 
-import {mixinBehaviors} from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
-import {html, PolymerElement} from '/resources/polymer/@polymer/polymer/polymer-element.js';
-import { FlattenedNodesObserver } from '/resources/polymer/@polymer/polymer/lib/utils/flattened-nodes-observer.js';
+import { mixinBehaviors } from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
+import { html, PolymerElement } from '/resources/polymer/@polymer/polymer/polymer-element.js';
+import { flush } from "/resources/polymer/@polymer/polymer/lib/utils/flush.js";
 
 import { TgTreeListBehavior } from '/resources/components/tg-tree-list-behavior.js';
 import { TgEgiDataRetrievalBehavior } from '/resources/egi/tg-egi-data-retrieval-behavior.js';
@@ -296,6 +296,7 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRetrieval
         
         this.hierarchyColumn = this.$.hierarchy_column_slot.assignedNodes({flatten: true})[0];
         this.regularColumns = this.$.regular_column_slot.assignedNodes({flatten: true});
+        //this.$.mainTreeList.scrollToIndex = this._scrollToIndexAndCorrect();
     }
 
     resizeTree () {
@@ -539,6 +540,63 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRetrieval
         const topLeftCells = this.$.top_left.querySelector(".table-header-row").querySelectorAll(".cell");
         const topCells = this.$.top.querySelector(".table-header-row").querySelectorAll(".cell");
         return [...topLeftCells, ...topCells];
+    }
+
+    /**
+     * This method is a overriden copy of scrollToIndex method in iron-list that was made in order to correct scrolling
+     * to item because of sticky table header that was counted when calculating _scrollTargetHeight property.
+     */
+    _scrollToIndexAndCorrect () {
+        const self = this;
+        return function (idx) {
+            if (typeof idx !== 'number' || idx < 0 || idx > this.items.length - 1) {
+                return;
+            }
+        
+            flush(); // Items should have been rendered prior scrolling to an index.
+        
+            if (this._physicalCount === 0) {
+                return;
+            }
+        
+            idx = this._clamp(idx, 0, this._virtualCount - 1); // Update the virtual start only when needed.
+        
+            if (!this._isIndexRendered(idx) || idx >= this._maxVirtualStart) {
+                this._virtualStart = this.grid ? idx - this._itemsPerRow * 2 : idx - 1;
+            }
+        
+            this._manageFocus();
+        
+            this._assignModels();
+        
+            this._updateMetrics(); // Estimate new physical offset.
+        
+        
+            this._physicalTop = Math.floor(this._virtualStart / this._itemsPerRow) * this._physicalAverage;
+            var currentTopItem = this._physicalStart;
+            var currentVirtualItem = this._virtualStart;
+            var targetOffsetTop = 0;
+            var hiddenContentSize = this._hiddenContentSize + self.$.top.offsetHeight; // scroll to the item as much as we can. IMPORTANT NOTE: this was adjusted 
+            //by the height of sticky header.
+        
+            while (currentVirtualItem < idx && targetOffsetTop <= hiddenContentSize) {
+                targetOffsetTop = targetOffsetTop + this._getPhysicalSizeIncrement(currentTopItem);
+                currentTopItem = (currentTopItem + 1) % this._physicalCount;
+                currentVirtualItem++;
+            }
+        
+            this._updateScrollerSize(true);
+        
+            this._positionItems();
+        
+            this._resetScrollPosition(this._physicalTop + this._scrollOffset + targetOffsetTop);
+        
+            this._increasePoolIfNeeded(0); // clear cached visible index.
+        
+        
+            this._firstVisibleIndexVal = null;
+            this._lastVisibleIndexVal = null;
+        }.bind(this.$.mainTreeList);
     }
 }
 

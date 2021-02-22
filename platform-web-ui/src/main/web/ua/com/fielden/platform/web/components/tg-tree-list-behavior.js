@@ -1,6 +1,8 @@
+import { searchRegExp } from '/resources/editors/tg-highlighter.js';
+
 const calculateNumberOfOpenedItems = function (entity, from, count) {
     let length = 0;
-    if (entity.entity.hasChildren && entity.opened) {
+    if (entity && entity.entity.hasChildren && entity.opened) {
         const children = (typeof from !== 'undefined' && typeof count !== 'undefined') ? 
             entity.children.slice(from, from + count) : entity.children
         children.forEach(child => {
@@ -85,6 +87,19 @@ const makeParentVisible = function (entity) {
         parent = parent.parent;
     }
 };
+
+/**
+ * Returns the top most parent of the tree item.
+ * 
+ * @param {Object} entity - treeItem which top most ancestor should be find.
+ */
+const topMostParent = function (entity) {
+    let parent = entity;
+    while (parent && parent.parent) {
+        parent = parent.parent;
+    }
+    return parent;
+}
 
 /**
  * Expands all ancestors of specified entity.
@@ -209,7 +224,7 @@ export const TgTreeListBehavior = {
 
     filter: function (text) {
         this._lastFilterText = text;
-        this._filterSubTree(text, this._treeModel, true);
+        this._filterSubTree(searchRegExp(text), !!text, this._treeModel, true);
         this.splice("_entities", 0, this._entities.length, ...composeChildren.bind(this)(this._treeModel, true));
         this.debounce("refreshTree", refreshTree.bind(this));
     },
@@ -220,11 +235,15 @@ export const TgTreeListBehavior = {
      * @param {String} text - pattern to find among tree items of treeModel.
      */
     find: function (text) {
-        this._matchedTreeItems = this._find(text, this._treeModel);
+        this._matchedTreeItems = this._find(searchRegExp(text), !!text, this._treeModel);
         this.splice("_entities", 0, this._entities.length, ...composeChildren.bind(this)(this._treeModel, true));
         this.lastSearchText = text;
         this.currentMatchedItem = null;
-        this.goToMatchedItem();
+        this.debounce("refreshTree", () => {
+            refreshTree.bind(this)();
+            this.currentMatchedItem = this._matchedTreeItems[0];
+            //this.scrollToItem(this.currentMatchedItem);
+        });
     },
 
     goToNextMatchedItem: function () {
@@ -237,21 +256,31 @@ export const TgTreeListBehavior = {
 
     goToMatchedItem: function (inc) {
         const matchedItemIndex = this._matchedTreeItems.indexOf(this.currentMatchedItem);
+        let nextMatchedItem = null;
         if (matchedItemIndex >= 0) {
             const nextIdx = matchedItemIndex + inc < 0 ? this._matchedTreeItems.length - 1 : 
                         (matchedItemIndex + inc >= this._matchedTreeItems.length ? 0 : matchedItemIndex + inc);
-            this.currentMatchedItem = this._matchedTreeItems[nextIdx];
+            nextMatchedItem = this._matchedTreeItems[nextIdx];
         } else {
             if (this._matchedTreeItems.length > 0) {
-                this.currentMatchedItem = this._matchedTreeItems[0];
+                nextMatchedItem = this._matchedTreeItems[0];
             } else  {
-                this.currentMatchedItem = null;
+                nextMatchedItem = null;
             }
         }
-        expandAncestors(this.currentMatchedItem);
+        if (nextMatchedItem) {
+            const topParent = topMostParent(nextMatchedItem);
+            const idx = this._entities.indexOf(topParent);
+            if (idx >= 0) {
+                const numOfItemsToDelete = calculateNumberOfOpenedItems(topParent);
+                expandAncestors(nextMatchedItem);
+                this.splice("_entities", idx + 1 + topParent.additionalInfoNodes.length, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(topParent, true, true));
+            }
+        }
         this.debounce("refreshTree", () => {
             refreshTree.bind(this)();
-            this.scrollToItem(this.currentMatchedItem);
+            //this.scrollToItem(nextMatchedItem);
+            this.currentMatchedItem = nextMatchedItem;
         });
     },
 
@@ -324,8 +353,9 @@ export const TgTreeListBehavior = {
         const entity = this._entities[idx];
         if (entity) {
             if (entity.opened) {
-                this.splice("_entities", idx + 1 + entity.additionalInfoNodes.length, calculateNumberOfOpenedItems(entity));
+                const numOfOpenedItems = calculateNumberOfOpenedItems(entity);
                 this.set("_entities." + idx + ".opened", false);
+                this.splice("_entities", idx + 1 + entity.additionalInfoNodes.length, numOfOpenedItems);
             } else {
                 this.set("_entities." + idx + ".opened", true);
                 this.splice("_entities", idx + 1 + entity.additionalInfoNodes.length, 0, ...getChildrenToAdd.bind(this)(entity, true, false));
@@ -353,11 +383,11 @@ export const TgTreeListBehavior = {
         return "padding-left: " + paddingLeft + "px";
     },
     
-    _filterSubTree: function (text, subtree, expand) {
+    _filterSubTree: function (text, notEmpty, subtree, expand) {
         subtree.forEach(treeEntity => {
-            if (treeEntity.entity.key.toLowerCase().search(text.toLowerCase()) >= 0) {
+            if (treeEntity.entity.key.search(text) >= 0) {
                 treeEntity.visible = true;
-                treeEntity.highlight = text ? true : false;
+                treeEntity.highlight = notEmpty ? true : false;
                 makeParentVisible(treeEntity);
             } else if (hasMatchedAncestor(treeEntity)) {
                 treeEntity.visible = true;
@@ -368,7 +398,7 @@ export const TgTreeListBehavior = {
             }
             if (treeEntity.entity.hasChildren && wasLoaded(treeEntity)) {
                 treeEntity.opened = expand;
-                this._filterSubTree(text, treeEntity.children, expand);
+                this._filterSubTree(text, notEmpty, treeEntity.children, expand);
             }
         });
     },
@@ -379,13 +409,14 @@ export const TgTreeListBehavior = {
      *   
      * @param {String} text - text to find
      * @param {Array} subtree - list of items to search in
+     * @param {Boolen} notEmpty - determines whether search text is notEmpty
      * 
      * returns the list of matched items.
      */
-    _find: function (text, subtree) {
+    _find: function (text, notEmpty, subtree) {
         let matchedItems = [];
         subtree.forEach(treeEntity => {
-            if (text && treeEntity.entity.key.toLowerCase().search(text.toLowerCase()) >= 0) {
+            if (notEmpty && treeEntity.entity.key.search(text) >= 0) {
                 treeEntity.highlight = true;
                 matchedItems.push(treeEntity);
                 expandAncestors(treeEntity);
@@ -393,7 +424,7 @@ export const TgTreeListBehavior = {
                 treeEntity.highlight = false;
             }
             if (treeEntity.entity.hasChildren && wasLoaded(treeEntity)) {
-                matchedItems.push(...this._find(text, treeEntity.children));
+                matchedItems.push(...this._find(text, notEmpty, treeEntity.children));
             }
         });
         return matchedItems;
@@ -427,7 +458,7 @@ export const TgTreeListBehavior = {
         if (parentItem) {
             const numOfItemsToDelete = calculateNumberOfOpenedItems(parentItem);
             parentItem.children = generateChildrenModel(change.value, parentItem, this.additionalInfoCb);
-            this._lastFilterText && this._filterSubTree(this._lastFilterText, parentItem.children, false);
+            this._lastFilterText && this._filterSubTree(this._lastFilterText, !!this._lastFilterText, parentItem.children, false);
             this.fire("tg-tree-model-changed", parentItem);
             this.splice("_entities", modelIdx + 1 + parentItem.additionalInfoNodes.length, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(parentItem, true, false));
             this.resizeTree();
@@ -442,7 +473,7 @@ export const TgTreeListBehavior = {
                 const indexForSplice = this._entities.indexOf(parentItem.children[splice.index]);
                 const numOfItemsToDelete = calculateNumberOfOpenedItems(parentItem, splice.index, splice.removed.length);
                 parentItem.children.splice(splice.index, splice.removed.length, ...generateChildrenModel(splice.object.slice(splice.index, splice.index + splice.addedCount), parentItem, this.additionalInfoCb));
-                this._lastFilterText && this._filterSubTree(this._lastFilterText, parentItem.children.slice(splice.index, splice.index + splice.addedCount), false);
+                this._lastFilterText && this._filterSubTree(this._lastFilterText, !!this._lastFilterText, parentItem.children.slice(splice.index, splice.index + splice.addedCount), false);
                 this.fire("tg-tree-model-changed", parentItem);
                 this.splice("_entities", indexForSplice, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(parentItem, true, false, splice.index, splice.addedCount));
                 this.resizeTree();
