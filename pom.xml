@@ -198,12 +198,12 @@
 
     <distributionManagement>
         <repository>
-            <id>github</id>
+            <id>github-tg</id>
             <name>GitHub fieldenms Apache Maven Packages</name>
             <url>https://maven.pkg.github.com/fieldenms/tg</url>
         </repository>
         <snapshotRepository>
-            <id>github</id>
+            <id>github-tg</id>
             <name>GitHub fieldenms Apache Maven Packages</name>
             <url>https://maven.pkg.github.com/fieldenms/tg</url>
         </snapshotRepository>
