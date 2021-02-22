@@ -27,7 +27,7 @@ public class DomainProperty extends AbstractEntity<DynamicEntityKey> {
     @MapTo
     @Title(value = "holder", desc = "Desc")
     @CompositeKeyMember(2)
-    private DomainType holder;
+    private DomainPropertyHolder holder;
 
     @IsProperty
     @MapTo
@@ -105,12 +105,12 @@ public class DomainProperty extends AbstractEntity<DynamicEntityKey> {
     }
 
     @Observable
-    public DomainProperty setHolder(final DomainType holder) {
+    public DomainProperty setHolder(final DomainPropertyHolder holder) {
         this.holder = holder;
         return this;
     }
 
-    public DomainType getHolder() {
+    public DomainPropertyHolder getHolder() {
         return holder;
     }
 
