@@ -41,7 +41,7 @@ public abstract class AbstractTreeEntry<K extends Comparable<?>> extends Abstrac
     }
 
     @Observable
-    protected AbstractTreeEntry<?> setChildren(final List<? extends AbstractTreeEntry<?>> children) {
+    public AbstractTreeEntry<?> setChildren(final List<? extends AbstractTreeEntry<?>> children) {
         this.children.clear();
         this.children.addAll(children);
         for (final AbstractTreeEntry<?> entry : this.children) {

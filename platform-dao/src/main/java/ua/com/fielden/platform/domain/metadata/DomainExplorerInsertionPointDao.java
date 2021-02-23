@@ -8,7 +8,9 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.order
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -89,15 +91,27 @@ public class DomainExplorerInsertionPointDao extends CommonEntityDao<DomainExplo
         entry.setKeyOrder(domainProperty.getKeyIndex());
         entry.setIsRequired(domainProperty.getRequired());
         return entry;
-
-
     }
 
     private List<DomainTreeEntity> loadTypes(final DomainExplorerInsertionPoint entity) {
         final EntityResultQueryModel<DomainType> queryModel = select(DomainType.class).where().prop("entity").eq().val(true).model();
         final OrderingModel orderingModel = orderBy().yield("desc").asc().model();
         try(final Stream<DomainType> stream = co(DomainType.class).stream(from(queryModel).with(orderingModel).model())) {
-            return stream.map(domainType -> createDomainType(domainType)).collect(Collectors.toList());
+            final List<DomainTreeEntity> types = stream.map(domainType -> createDomainType(domainType)).collect(Collectors.toList());
+            final Map<Long, List<DomainPropertyTreeEntity>> groupedProperties = loadProperties();
+            types.forEach(type -> {
+                type.setChildren(groupedProperties.getOrDefault(type.getEntityId(), new ArrayList<>()));
+            });
+            return types;
+        }
+    }
+
+    private Map<Long, List<DomainPropertyTreeEntity>> loadProperties() {
+        final EntityResultQueryModel<DomainProperty> queryModel = select(DomainProperty.class).where()
+                .prop("holder.domainType").isNotNull().model();
+        final fetch<DomainProperty> fetch = fetchAll(DomainProperty.class).with("holder").with("domainType", fetchKeyAndDescOnly(DomainType.class).with("entity").with("dbTable"));
+        try(final Stream<DomainProperty> stream = co(DomainProperty.class).stream(from(queryModel).with(fetch).model())) {
+            return stream.collect(Collectors.groupingBy(domainProp -> domainProp.getHolder().getDomainType().getId(), Collectors.mapping(domainProperty -> createDomainProperty(domainProperty), Collectors.toList())));
         }
     }
 
