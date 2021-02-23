@@ -22,7 +22,7 @@ public class DomainProperty extends AbstractEntity<DynamicEntityKey> {
     @Title(value = "name", desc = "Desc")
     @CompositeKeyMember(1)
     private String name;
-    
+
     @IsProperty
     @MapTo
     @Title(value = "holder", desc = "Desc")
@@ -38,17 +38,17 @@ public class DomainProperty extends AbstractEntity<DynamicEntityKey> {
     @MapTo
     @Title(value = "Title", desc = "Desc")
     private String title;
-    
+
     @IsProperty
     @MapTo
     @Title(value = "Key Index", desc = "Desc")
     private Integer keyIndex;
-    
+
     @IsProperty
     @MapTo
     @Title(value = "Required?", desc = "Desc")
     private boolean required;
-    
+
     @IsProperty
     @MapTo
     @Title(value = "Db column", desc = "Desc")
@@ -83,7 +83,7 @@ public class DomainProperty extends AbstractEntity<DynamicEntityKey> {
     public Integer getKeyIndex() {
         return keyIndex;
     }
-    
+
     @Observable
     public DomainProperty setTitle(final String title) {
         this.title = title;
@@ -105,12 +105,12 @@ public class DomainProperty extends AbstractEntity<DynamicEntityKey> {
     }
 
     @Observable
-    public DomainProperty setHolder(final DomainType holder) {
+    public DomainProperty setHolder(final DomainPropertyHolder holder) {
         this.holder = holder;
         return this;
     }
 
-    public DomainType getHolder() {
+    public DomainPropertyHolder getHolder() {
         return holder;
     }
 
