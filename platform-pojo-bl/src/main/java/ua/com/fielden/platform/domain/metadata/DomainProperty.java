@@ -27,7 +27,7 @@ public class DomainProperty extends AbstractEntity<DynamicEntityKey> {
     @MapTo
     @Title(value = "holder", desc = "Desc")
     @CompositeKeyMember(2)
-    private DomainType holder;
+    private DomainPropertyHolder holder;
 
     @IsProperty
     @MapTo
