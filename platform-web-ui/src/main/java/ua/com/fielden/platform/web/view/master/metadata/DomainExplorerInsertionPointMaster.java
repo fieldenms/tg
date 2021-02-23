@@ -119,7 +119,7 @@ public class DomainExplorerInsertionPointMaster implements IMaster<DomainExplore
                 + "}.bind(self);\n"
                 + "//Need for security marix editors binding.\n"
                 + "self._isNecessaryForConversion = function (propertyName) { \n"
-                + "    return ['domainTypeName', 'loadedHierarchy', 'domainFilter'].indexOf(propertyName) >= 0; \n"
+                + "    return ['domainTypeName', 'loadedHierarchy', 'domainFilter', 'domainTypeHolderId', 'domainPropertyHolderId'].indexOf(propertyName) >= 0; \n"
                 + "}; \n"
                 + "self.$.domainFilter._onInput = function () {\n"
                 + "    // clear domain explorer filter timer if it is in progress.\n"

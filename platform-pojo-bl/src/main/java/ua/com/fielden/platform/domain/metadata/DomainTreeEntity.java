@@ -35,6 +35,20 @@ public class DomainTreeEntity extends AbstractTreeEntry<String> {
     @Title(value = "Ref. Table", desc = "Referencing Table")
     private String refTable;
 
+    @IsProperty
+    @Title("Tree Entity Id")
+    private Long entityId;
+
+    @Observable
+    public DomainTreeEntity setEntityId(final Long entityId) {
+        this.entityId = entityId;
+        return this;
+    }
+
+    public Long getEntityId() {
+        return entityId;
+    }
+
     @Observable
     public DomainTreeEntity setRefTable(final String refTable) {
         this.refTable = refTable;

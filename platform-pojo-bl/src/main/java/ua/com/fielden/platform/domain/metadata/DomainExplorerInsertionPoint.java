@@ -40,6 +40,34 @@ public class DomainExplorerInsertionPoint extends AbstractFunctionalEntityWithCe
     @Title(value = "Domain Type", desc = "Domain Type which properties should be loaded")
     private String domainTypeName;
 
+    @IsProperty
+    @Title("Domain Type Holder Id")
+    private Long domainTypeHolderId;
+
+    @IsProperty
+    @Title("Domain Property Holder Id")
+    private Long domainPropertyHolderId;
+
+    @Observable
+    public DomainExplorerInsertionPoint setDomainPropertyHolderId(final Long domainPropertyHolderId) {
+        this.domainPropertyHolderId = domainPropertyHolderId;
+        return this;
+    }
+
+    public Long getDomainPropertyHolderId() {
+        return domainPropertyHolderId;
+    }
+
+    @Observable
+    public DomainExplorerInsertionPoint setDomainTypeHolderId(final Long domainTypeHolderId) {
+        this.domainTypeHolderId = domainTypeHolderId;
+        return this;
+    }
+
+    public Long getDomainTypeHolderId() {
+        return domainTypeHolderId;
+    }
+
     @Observable
     public DomainExplorerInsertionPoint setDomainTypeName(final String domainTypeName) {
         this.domainTypeName = domainTypeName;

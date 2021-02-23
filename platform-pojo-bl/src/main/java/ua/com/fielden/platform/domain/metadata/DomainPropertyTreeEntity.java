@@ -28,6 +28,20 @@ public class DomainPropertyTreeEntity extends DomainTreeEntity{
     @Title("Is Required?")
     private boolean isRequired;
 
+    @IsProperty
+    @Title("Is Union?")
+    private boolean union;
+
+    @Observable
+    public DomainPropertyTreeEntity setUnion(final boolean union) {
+        this.union = union;
+        return this;
+    }
+
+    public boolean isUnion() {
+        return union;
+    }
+
     @Observable
     public DomainPropertyTreeEntity setIsRequired(final boolean isRequired) {
         this.isRequired = isRequired;

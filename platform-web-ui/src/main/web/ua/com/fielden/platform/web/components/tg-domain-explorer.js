@@ -92,7 +92,15 @@ const getPathItem = function(treeModel, loadedHierarchy) {
     });
     return parent;
 };
-
+const calculateNumberOfLevels = function (entity) {
+    let parent = entity;
+    let numberOfLevels = 0;
+    while (parent) {
+        numberOfLevels += 1;
+        parent = parent.parent;
+    }
+    return numberOfLevels;
+};
 class TgDomainExplorer extends PolymerElement {
 
     static get template() { 
@@ -185,7 +193,8 @@ class TgDomainExplorer extends PolymerElement {
     }
 
     _buildDbSchemaContent (entity, column) {
-        if (entity.parent !== null && entity.parent.parent !== null) {
+        const numOfLevels = calculateNumberOfLevels(entity);
+        if (numOfLevels > 3 || (numOfLevels === 3 && !entity.parent.entity.union)) {
             return "[JOIN]";
         }
         return this.$.domainExplorerTree.getBindedValue(entity.entity, column);
@@ -227,6 +236,8 @@ class TgDomainExplorer extends PolymerElement {
         const lastEntity = parentsPath[parentsPath.length - 1];
         this.entity.setAndRegisterPropertyTouch("loadedHierarchy", indexes);
         this.entity.setAndRegisterPropertyTouch("domainTypeName", (lastEntity.propertyType && lastEntity.propertyType.key) || lastEntity.internalName);
+        this.entity.setAndRegisterPropertyTouch("domainTypeHolderId", (lastEntity.propertyType && lastEntity.propertyType.id) || lastEntity.entityId);
+        this.entity.setAndRegisterPropertyTouch("domainPropertyHolderId", (lastEntity.propertyType && lastEntity.entityId) || null);
         this._saveInProgress = true;
         this.dispatchEvent(new CustomEvent('tg-load-sub-domain',  { bubbles: true, composed: true, detail: this.entity }));
     }
