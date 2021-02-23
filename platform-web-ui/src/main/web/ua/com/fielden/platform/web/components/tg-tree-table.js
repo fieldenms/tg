@@ -309,7 +309,10 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRetrieval
     }
 
     scrollToItem (treeItem) {
-        this.$.mainTreeList.scrollToItem(treeItem);
+        const itemIndex = this._entities.indexOf(treeItem);
+        if (itemIndex >= 0 && (this.$.mainTreeList.firstVisibleIndex > itemIndex || this.$.mainTreeList.lastVisibleIndex < itemIndex)) {
+            this.$.mainTreeList.scrollToItem(treeItem);
+        }
     }
 
     /******************************Binding functions those calculate attributes, styles and other stuf************/
