@@ -296,12 +296,12 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRetrieval
         
         this.hierarchyColumn = this.$.hierarchy_column_slot.assignedNodes({flatten: true})[0];
         this.regularColumns = this.$.regular_column_slot.assignedNodes({flatten: true});
-        //this.$.mainTreeList.scrollToIndex = this._scrollToIndexAndCorrect();
+        this.$.mainTreeList.scrollToIndex = this._scrollToIndexAndCorrect();
     }
 
     resizeTree () {
         this.$.mainTreeList.notifyResize();
-        //this.$.regularTreeList.notifyResize();
+        this.$.regularTreeList.notifyResize();
     }
 
     isEntityRendered (index) {

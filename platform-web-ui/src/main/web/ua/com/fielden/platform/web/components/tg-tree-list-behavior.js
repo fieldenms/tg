@@ -242,7 +242,7 @@ export const TgTreeListBehavior = {
         this.debounce("refreshTree", () => {
             refreshTree.bind(this)();
             this.currentMatchedItem = this._matchedTreeItems[0];
-            //this.scrollToItem(this.currentMatchedItem);
+            this.scrollToItem(this.currentMatchedItem);
         });
     },
 
@@ -279,7 +279,7 @@ export const TgTreeListBehavior = {
         }
         this.debounce("refreshTree", () => {
             refreshTree.bind(this)();
-            //this.scrollToItem(nextMatchedItem);
+            this.scrollToItem(nextMatchedItem);
             this.currentMatchedItem = nextMatchedItem;
         });
     },
