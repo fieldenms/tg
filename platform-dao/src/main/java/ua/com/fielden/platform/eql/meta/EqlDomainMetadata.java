@@ -2,7 +2,6 @@ package ua.com.fielden.platform.eql.meta;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
@@ -29,8 +28,6 @@ import static ua.com.fielden.platform.reflection.Finder.hasLinkProperty;
 import static ua.com.fielden.platform.reflection.Finder.isOne2One_association;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isRequiredByDefinition;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.types.tuples.T3.t3;
 import static ua.com.fielden.platform.utils.CollectionUtil.unmodifiableListOf;
 import static ua.com.fielden.platform.utils.EntityUtils.getRealProperties;
 import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
@@ -48,11 +45,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.SortedMap;
-import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.hibernate.type.BasicType;
@@ -72,13 +66,10 @@ import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
-import ua.com.fielden.platform.entity.query.metadata.EntityCategory;
 import ua.com.fielden.platform.entity.query.metadata.EntityTypeInfo;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
 import ua.com.fielden.platform.eql.meta.EqlPropertyMetadata.Builder;
-import ua.com.fielden.platform.types.tuples.T2;
-import ua.com.fielden.platform.types.tuples.T3;
 
 public class EqlDomainMetadata {
     
@@ -98,8 +89,7 @@ public class EqlDomainMetadata {
      * Map between java type and hibernate persistence type (implementers of Type, IUserTypeInstantiate, ICompositeUserTypeInstantiate).
      */
     private final ConcurrentMap<Class<?>, Object> hibTypesDefaults;
-    private final ConcurrentMap<Class<? extends AbstractEntity<?>>, T2<EntityCategory, SortedMap<String, EqlPropertyMetadata>>> entityPropsMetadata;
-    private final ConcurrentMap<String, EntityTypeInfo<?>> entityTypesInfos = new ConcurrentHashMap<>();
+    private final ConcurrentMap<Class<? extends AbstractEntity<?>>, EqlEntityMetadata> entityPropsMetadata;
     
     private Injector hibTypesInjector;
 
@@ -141,9 +131,7 @@ public class EqlDomainMetadata {
             try {
                 final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo = new EntityTypeInfo<>(entityType);
                 if (parentInfo.category != PURE) {
-                    entityTypesInfos.put(entityType.getName(), parentInfo);
-                    final SortedMap<String, EqlPropertyMetadata> propsMetadatas = generatePropertyMetadatasForEntity(parentInfo).stream().collect(toMap(EqlPropertyMetadata::getName, Function.identity(), (o1, o2) -> o1, TreeMap::new));
-                    entityPropsMetadata.put(entityType, t2(parentInfo.category, propsMetadatas));
+                    entityPropsMetadata.put(entityType, new EqlEntityMetadata(parentInfo, generatePropertyMetadatasForEntity(parentInfo)));
                 }
             } catch (final Exception e) {
                 e.printStackTrace();
@@ -273,6 +261,7 @@ public class EqlDomainMetadata {
             }
             
             result.add(generateKeyPropertyMetadata(parentInfo));
+            
             if (PERSISTED == parentInfo.category) {
                 result.add(generateVersionPropertyMetadata(parentInfo));
             }
@@ -370,9 +359,7 @@ public class EqlDomainMetadata {
 
         final Builder resultInProgress = new EqlPropertyMetadata.Builder(propName, propType, hibType);
 
-        if (isEntityType(propType)) {
-            resultInProgress.required(isRequiredByDefinition(propField, entityType));    
-        }
+        resultInProgress.required(isRequiredByDefinition(propField, entityType));    
         
 //        if (calculated != null) { // calc prop on PE/SE
 //            
@@ -431,15 +418,7 @@ public class EqlDomainMetadata {
                 :name;
     }
     
-    public SortedMap<String, T3<Class<? extends AbstractEntity<?>>, EntityCategory, SortedMap<String, EqlPropertyMetadata>>> getEntityPropsMetadata() {
-        final SortedMap<String, T3<Class<? extends AbstractEntity<?>>, EntityCategory, SortedMap<String, EqlPropertyMetadata>>> result = new TreeMap<>();
-        for (final Entry<Class<? extends AbstractEntity<?>>, T2<EntityCategory, SortedMap<String, EqlPropertyMetadata>>> el : entityPropsMetadata.entrySet()) {
-            result.put(el.getKey().getName(), t3(el.getKey(), el.getValue()._1, el.getValue()._2));
-        }
-        return result;
-    }
-    
-    public Map<String, EntityTypeInfo<?>> getEntityTypesInfos() {
-        return Collections.unmodifiableMap(entityTypesInfos);
+    public Map<Class<? extends AbstractEntity<?>>, EqlEntityMetadata> entityPropsMetadata() {
+        return Collections.unmodifiableMap(entityPropsMetadata);
     }
 }
