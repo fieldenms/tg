@@ -168,7 +168,7 @@ const template = html`
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <app-drawer-layout id="drawerPanel" fullbleed force-narrow>
 
-        <app-drawer disable-swipe="[[!mobile]]" slot="drawer">
+        <app-drawer disable-swipe="[[!mobile]]" slot="drawer" on-app-drawer-transitioned="_appDrawerTransitioned">
             <div id="menuToolBar" class="tool-bar layout horizontal center">
                 <div class="flex">[[menuItem.key]]</div>
             </div>
@@ -631,9 +631,15 @@ Polymer({
      * The listener that listens the menu item activation on tap.
      */
     _itemActivated: function (e, detail) {
-        const centreMenuItem = detail.selected;
-        const uuidPart = this._centreConfigInfo() && this._centreConfigInfo()[centreMenuItem] && this._centreConfigInfo()[centreMenuItem].configUuid;
-        this.selectedSubmodule = '/' + centreMenuItem + (uuidPart ? '/' + uuidPart : '');
+        this._updateSelectedModuleWith(detail.selected);
+    },
+
+    /**
+     * Updates URI 'selectedSubmodule' part with 'selectedPage' including 'configUuid' sub-part if 'selectedPage' has been loaded before and had that sub-part.
+     */
+    _updateSelectedModuleWith: function (selectedPage) {
+        const uuidPart = this._centreConfigInfo() && this._centreConfigInfo()[selectedPage] && this._centreConfigInfo()[selectedPage].configUuid; // configUuid of previously loaded centre configuration (selectedPage), if any
+        this.selectedSubmodule = '/' + selectedPage + (uuidPart ? '/' + uuidPart : '');
     },
 
     _selectedPageChanged: function (newValue, oldValue) {
@@ -713,6 +719,18 @@ Polymer({
     _initCentreConfigInfoEntry: function () {
         if (!this._centreConfigInfo()[this._selectedPage]) {
             this._centreConfigInfo()[this._selectedPage] = {};
+        }
+    },
+    
+    /**
+     * Event listener on completion of drawer transition.
+     * It handles drawer closing to adjust browser address bar's URI to conform to loaded centre (if it was loaded before).
+     */
+    _appDrawerTransitioned: function (event) {
+        if (event.target && !event.target.opened) { // if drawer has just been fully closed ...
+            if (this.selectedSubmodule && !this.selectedSubmodule.startsWith('/' + this._selectedPage)) { // ... look for situation where selectedSubmodule (URI part) does not conform to selected page; this is the case, for example, if some centre was loaded (in module X), then went to main menu, then tapped on module X tile, and then tapped outside the module menu
+                this._updateSelectedModuleWith(this._selectedPage); // ... and then load new URI conforming to previously loaded page (in most cases, centre)
+            }
         }
     }
 });
