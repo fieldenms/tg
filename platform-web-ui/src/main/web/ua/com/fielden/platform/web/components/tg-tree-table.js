@@ -21,18 +21,16 @@ const template = html`
             z-index: 0;
             min-height: 0;
             overflow:auto;
-            background-color: white;
             @apply --layout-vertical;
             @apply --layout-flex;
             @apply --layout-relative;
         }
         #baseContainer {
-            display: grid;
-            grid-template-columns: min-content auto;
-            grid-template-rows: min-content auto;
             min-width: fit-content;
             min-height: fit-content;
             z-index: 0;
+            @apply --layout-relative;
+            @apply --layout-vertical;
             @apply --layout-flex;
         }
         .noselect {
@@ -84,7 +82,6 @@ const template = html`
             @apply --layout-flex;
         }
         .table-data-row {
-            z-index: 0;
             font-size: 1rem;
             font-weight: 400;
             color: #212121;
@@ -99,23 +96,25 @@ const template = html`
             flex-shrink: 0;
             @apply --layout-horizontal;
         }
-        .table-data-row[selected] {
-            background-color: #F5F5F5;
-        }
-        .table-data-row[over] {
-            background-color: #EEEEEE;
-        }
-        .cell-container {
+        .flexible-horizontal-container {
             min-width: 0;
+            overflow: hidden;
             @apply --layout-horizontal;
             @apply --layout-center;
             @apply --layout-flex;
         }
         .table-cell {
+            background-color: white;
+            padding: 0 var(--tree-table-cell-padding, 0.6rem);
             @apply --layout-horizontal;
             @apply --layout-center;
             @apply --layout-relative;
-            padding: 0 0.6rem;
+        }
+        .table-cell[selected] {
+            background-color: #F5F5F5;
+        }
+        .table-cell[over] {
+            background-color: #EEEEEE;
         }
         .truncate {
             min-width:0;
@@ -141,6 +140,13 @@ const template = html`
         .part-to-highlight[highlighted]  {
             font-weight: bold;
         }
+        .left-shadow {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 2;
+        }
         .lock-layer {
             z-index: 1;
             opacity: 0.5;
@@ -152,11 +158,7 @@ const template = html`
             display: initial;
             pointer-events: none;
         }
-        .grid-layout-container {
-            background-color: white;
-            @apply --layout-vertical;
-        }
-        .grid-layout-container[show-top-shadow]:before {
+        [show-top-shadow]:before {
             content: "";
             position: absolute;
             bottom: -4px;
@@ -168,7 +170,7 @@ const template = html`
             background: -webkit-linear-gradient(bottom, rgba(0,0,0,0.4) 0%,rgba(0,0,0,0) 100%); 
             background: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%,rgba(0,0,0,0) 100%); 
         }
-        .grid-layout-container[show-left-shadow]:after {
+        [show-left-shadow]:after {
             content: "";
             position: absolute;
             bottom: 0;
@@ -211,32 +213,30 @@ const template = html`
     <!--EGI template-->
     <div id="scrollableContainer" on-scroll="_handleScrollEvent">
         <div id="baseContainer">
-            <div id="header" show-top-shadow$="[[_showTopShadow]]" show-left-shadow$="[[_showLeftShadow]]" class="grid-layout-container sticky-container stick-top-left z-index-2">
-                <div class="table-header-row"  on-touchmove="_handleTouchMove">
-                    <div class="table-cell cell" fixed style$="[[_calcColumnHeaderStyle(hierarchyColumn, hierarchyColumn.width, hierarchyColumn.growFactor, 'true')]]" on-down="_makeTreeTableUnselectable" on-up="_makeTreeTableSelectable" on-track="_changeColumnSize" tooltip-text$="[[hierarchyColumn.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
-                        <div class="truncate table-header-column-title">[[hierarchyColumn.columnTitle]]</div>
+            <div id="header" show-top-shadow$="[[_showTopShadow]]" class="table-header-row sticky-container stick-top z-index-1"  on-touchmove="_handleTouchMove">
+                <div class="table-cell sticky-container stick-top-left z-index-2" fixed style$="[[_calcColumnHeaderStyle(hierarchyColumn, hierarchyColumn.width, hierarchyColumn.growFactor, 'true')]]" on-down="_makeTreeTableUnselectable" on-up="_makeTreeTableSelectable" on-track="_changeColumnSize" tooltip-text$="[[hierarchyColumn.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
+                    <div class="truncate table-header-column-title">[[hierarchyColumn.columnTitle]]</div>
+                    <div class="resizing-box"></div>
+                </div>
+                <template is="dom-repeat" items="[[regularColumns]]">
+                    <div class="table-cell" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, 'false')]]" on-down="_makeTreeTableUnselectable" on-up="_makeTreeTableSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
+                        <div class="truncate table-header-column-title">[[item.columnTitle]]</div>
                         <div class="resizing-box"></div>
                     </div>
-                    <template is="dom-repeat" items="[[regularColumns]]">
-                        <div class="table-cell cell" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, 'false')]]" on-down="_makeTreeTableUnselectable" on-up="_makeTreeTableSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
-                            <div class="truncate table-header-column-title">[[item.columnTitle]]</div>
-                            <div class="resizing-box"></div>
-                        </div>
-                    </template>
-                </div>
+                </template>
             </div>
-            <div id="body" class="grid-layout-container z-index-0">
-                <iron-list id="regularTreeList" items="[[_entities]]" as="entity" scroll-target="scrollableContainer">
+            <div id="body">
+                <iron-list id="treeList" items="[[_entities]]" as="entity" scroll-target="scrollableContainer">
                     <template>
-                        <div class="table-data-row" selected$="[[entity.selected]]" over$="[[entity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
-                            <div class="table-cell cell" style$="[[_calcColumnStyle(hierarchyColumn, hierarchyColumn.width, hierarchyColumn.growFactor, 'true')]]">
-                                <div class="cell-container" style$="[[itemStyle(entity)]]">
+                        <div class="table-data-row" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
+                            <div class="table-cell sticky-container stick-left z-index-1" selected$="[[entity.selected]]" over$="[[entity.over]]" style$="[[_calcColumnStyle(hierarchyColumn, hierarchyColumn.width, hierarchyColumn.growFactor, 'true')]]">
+                                <div class="flexible-horizontal-container" style$="[[itemStyle(entity)]]">
                                     <iron-icon class="expand-button" icon="av:play-arrow" style="flex-grow:0;flex-shrink:0;" invisible$="[[!entity.entity.hasChildren]]" collapsed$="[[!entity.opened]]" on-tap="_toggle"></iron-icon>
-                                    <div class="truncate cell-container part-to-highlight" highlighted$="[[entity.highlight]]" tooltip-text$="[[_getTooltip(entity, hierarchyColumn)]]" inner-h-t-m-l="[[_getBindedTreeTableValue(entity, hierarchyColumn)]]"></div>
+                                    <div class="truncate flexible-horizontal-container part-to-highlight" highlighted$="[[entity.highlight]]" tooltip-text$="[[_getTooltip(entity, hierarchyColumn)]]" inner-h-t-m-l="[[_getBindedTreeTableValue(entity, hierarchyColumn)]]"></div>
                                 </div>
                             </div>
                             <template is="dom-repeat" items="[[regularColumns]]" as="column">
-                                <div class="table-cell cell" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'false')]]" highlighted$="[[entity.highlight]]" tooltip-text$="[[_getTooltip(entity, column)]]">
+                                <div class="table-cell" selected$="[[entity.selected]]" over$="[[entity.over]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'false')]]" highlighted$="[[entity.highlight]]" tooltip-text$="[[_getTooltip(entity, column)]]">
                                     <div class="truncate" inner-h-t-m-l="[[_getBindedTreeTableValue(entity, column)]]"></div>
                                 </div>
                             </template>
@@ -244,9 +244,10 @@ const template = html`
                     </template>
                 </iron-list>
             </div>
+            <div class="left-shadow" show-left-shadow$="[[_showLeftShadow]]" style$="[[_leftShadowStyle(hierarchyColumn.width, _leftShadowPosition)]]"></div>
+            <!-- table lock layer -->
+            <div class="lock-layer" lock$="[[lock]]"></div>
         </div>
-        <!-- table lock layer -->
-        <div class="lock-layer" lock$="[[lock]]"></div>
     </div>`; 
 
 function calculateColumnWidthExcept (columnIndex, columnElements, columnLength) {
@@ -275,7 +276,15 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRetrieval
             /**
              * Array of columns with information about additional properties that should be displayed along with hierarchy property.
              */
-            regularColumns: Array
+            regularColumns: Array,
+
+            /**
+             * The position of fixed hierarchy column shadow (this should change when scrolling).
+             */
+            _leftShadowPosition: {
+                type: Number,
+                value: 0
+            }
         };
     }
 
@@ -284,22 +293,21 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRetrieval
         
         this.hierarchyColumn = this.$.hierarchy_column_slot.assignedNodes({flatten: true})[0];
         this.regularColumns = this.$.regular_column_slot.assignedNodes({flatten: true});
-        this.$.mainTreeList.scrollToIndex = this._scrollToIndexAndCorrect();
+        this.$.treeList.scrollToIndex = this._scrollToIndexAndCorrect();
     }
 
     resizeTree () {
-        this.$.mainTreeList.notifyResize();
-        this.$.regularTreeList.notifyResize();
+        this.$.treeList.notifyResize();
     }
 
     isEntityRendered (index) {
-        return this.$.mainTreeList._isIndexRendered(index);
+        return this.$.treeList._isIndexRendered(index);
     }
 
     scrollToItem (treeItem) {
         const itemIndex = this._entities.indexOf(treeItem);
-        if (itemIndex >= 0 && (this.$.mainTreeList.firstVisibleIndex > itemIndex || this.$.mainTreeList.lastVisibleIndex < itemIndex)) {
-            this.$.mainTreeList.scrollToItem(treeItem);
+        if (itemIndex >= 0 && (this.$.treeList.firstVisibleIndex > itemIndex || this.$.treeList.lastVisibleIndex < itemIndex)) {
+            this.$.treeList.scrollToItem(treeItem);
         }
     }
 
@@ -315,6 +323,30 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRetrieval
             return column.contentBuilder(entity, column);
         }
         return this.getBindedValue(entity.entity, column);
+    }
+
+    _getTooltip (entity, column) {
+        try {
+            let tooltip = this.getValueTooltip(entity, column);
+            const columnDescPart = this.getDescTooltip(entity, column);
+            tooltip += (columnDescPart && tooltip && "<br><br>") + columnDescPart;
+            return tooltip;
+        } catch (e) {
+            return '';
+        }
+    }
+
+    getValueTooltip (entity, column) {
+        const value = this.getBindedValue(entity.entity, column).toString();
+        return value && ("<b>" + value + "</b>");
+        
+    }
+
+    getDescTooltip (entity, column) {
+        if (column.columnDesc) {
+            return column.columnDesc;
+        }
+        return "";
     }
 
     _calcColumnHeaderStyle (item, itemWidth, columnGrowFactor, fixed) {
@@ -333,6 +365,11 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRetrieval
     _calcColumnStyle (item, itemWidth, columnGrowFactor, fixed) {
         let colStyle = this._calcColumnHeaderStyle(item, itemWidth, columnGrowFactor, fixed);
         return colStyle;
+    }
+
+    _leftShadowStyle (width, leftShadowPosition) {
+        const cellPadding = this.getComputedStyleValue('--tree-table-cell-padding').trim() || "0.6rem";
+        return "left: " + leftShadowPosition + "px; width: calc(" + width + "px + 2 * " + cellPadding +");";
     }
 
 
@@ -362,6 +399,7 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRetrieval
 
     _handleScrollEvent () {
         this._showLeftShadow = this.$.scrollableContainer.scrollLeft > 0;
+        this._leftShadowPosition = this.$.scrollableContainer.scrollLeft;
         this._showTopShadow = this.$.scrollableContainer.scrollTop > 0;
     }
 
@@ -528,8 +566,7 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRetrieval
     }
 
     _getHeaderColumns () {
-        const topCells = this.$.header.querySelector(".table-header-row").querySelectorAll(".cell");
-        return [...topLeftCells, ...topCells];
+        return [...this.$.header.querySelectorAll(".table-cell")];
     }
 
     /**
@@ -586,7 +623,7 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRetrieval
         
             this._firstVisibleIndexVal = null;
             this._lastVisibleIndexVal = null;
-        }.bind(this.$.mainTreeList);
+        }.bind(this.$.treeList);
     }
 }
 
