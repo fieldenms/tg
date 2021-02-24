@@ -3,9 +3,9 @@ import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
 import '/resources/polymer/@polymer/iron-icons/av-icons.js';
 import '/resources/polymer/@polymer/iron-list/iron-list.js';
 
-import {mixinBehaviors} from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
-import {html, PolymerElement} from '/resources/polymer/@polymer/polymer/polymer-element.js';
-import { FlattenedNodesObserver } from '/resources/polymer/@polymer/polymer/lib/utils/flattened-nodes-observer.js';
+import { mixinBehaviors } from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
+import { html, PolymerElement } from '/resources/polymer/@polymer/polymer/polymer-element.js';
+import { flush } from "/resources/polymer/@polymer/polymer/lib/utils/flush.js";
 
 import { TgTreeListBehavior } from '/resources/components/tg-tree-list-behavior.js';
 import { TgEgiDataRetrievalBehavior } from '/resources/egi/tg-egi-data-retrieval-behavior.js';
@@ -118,21 +118,13 @@ const template = html`
             padding: 0 0.6rem;
         }
         .truncate {
+            min-width:0;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        .truncate[multiple-line] {
-            overflow: hidden;
-            white-space: normal;
-            word-break: break-word;
-            display: -webkit-box;
-            -webkit-box-orient: vertical;
-            -webkit-line-clamp: var(--egi-number-of-header-lines, 1);
-        }
         /*miscellanea styles*/
         iron-list {
-            overflow-x: hidden;
             @apply --layout-flex;
         }
         .expand-button {
@@ -146,7 +138,7 @@ const template = html`
         iron-icon[invisible] {
             visibility: hidden;
         }
-        [highlighted] .part-to-highlight {
+        .part-to-highlight[highlighted]  {
             font-weight: bold;
         }
         .lock-layer {
@@ -219,16 +211,12 @@ const template = html`
     <!--EGI template-->
     <div id="scrollableContainer" on-scroll="_handleScrollEvent">
         <div id="baseContainer">
-            <div id="top_left" show-top-shadow$="[[_showTopShadow]]" show-left-shadow$="[[_showLeftShadow]]" class="grid-layout-container sticky-container stick-top-left z-index-2">
+            <div id="header" show-top-shadow$="[[_showTopShadow]]" show-left-shadow$="[[_showLeftShadow]]" class="grid-layout-container sticky-container stick-top-left z-index-2">
                 <div class="table-header-row"  on-touchmove="_handleTouchMove">
                     <div class="table-cell cell" fixed style$="[[_calcColumnHeaderStyle(hierarchyColumn, hierarchyColumn.width, hierarchyColumn.growFactor, 'true')]]" on-down="_makeTreeTableUnselectable" on-up="_makeTreeTableSelectable" on-track="_changeColumnSize" tooltip-text$="[[hierarchyColumn.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                         <div class="truncate table-header-column-title">[[hierarchyColumn.columnTitle]]</div>
                         <div class="resizing-box"></div>
                     </div>
-                </div>
-            </div>
-            <div id="top" show-top-shadow$="[[_showTopShadow]]" class="grid-layout-container sticky-container stick-top z-index-1">
-                <div class="table-header-row"  on-touchmove="_handleTouchMove">
                     <template is="dom-repeat" items="[[regularColumns]]">
                         <div class="table-cell cell" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, 'false')]]" on-down="_makeTreeTableUnselectable" on-up="_makeTreeTableSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                             <div class="truncate table-header-column-title">[[item.columnTitle]]</div>
@@ -237,27 +225,19 @@ const template = html`
                     </template>
                 </div>
             </div>
-            <div id="left" show-left-shadow$="[[_showLeftShadow]]" class="grid-layout-container sticky-container stick-left z-index-1">
-                <iron-list id="mainTreeList" items="[[_entities]]" as="entity" scroll-target="scrollableContainer">
+            <div id="body" class="grid-layout-container z-index-0">
+                <iron-list id="regularTreeList" items="[[_entities]]" as="entity" scroll-target="scrollableContainer">
                     <template>
                         <div class="table-data-row" selected$="[[entity.selected]]" over$="[[entity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
                             <div class="table-cell cell" style$="[[_calcColumnStyle(hierarchyColumn, hierarchyColumn.width, hierarchyColumn.growFactor, 'true')]]">
                                 <div class="cell-container" style$="[[itemStyle(entity)]]">
                                     <iron-icon class="expand-button" icon="av:play-arrow" style="flex-grow:0;flex-shrink:0;" invisible$="[[!entity.entity.hasChildren]]" collapsed$="[[!entity.opened]]" on-tap="_toggle"></iron-icon>
-                                    <div class="truncate cell-container" highlighted$="[[entity.highlight]]" tooltip-text$="[[_getTooltip(entity, hierarchyColumn)]]" inner-h-t-m-l="[[_getBindedTreeTableValue(entity, hierarchyColumn)]]"></div>
+                                    <div class="truncate cell-container part-to-highlight" highlighted$="[[entity.highlight]]" tooltip-text$="[[_getTooltip(entity, hierarchyColumn)]]" inner-h-t-m-l="[[_getBindedTreeTableValue(entity, hierarchyColumn)]]"></div>
                                 </div>
                             </div>
-                        </div>
-                    </template>
-                </iron-list>
-            </div>
-            <div id="centre" class="grid-layout-container z-index-0">
-                <iron-list id="regularTreeList" items="[[_entities]]" as="entity" scroll-target="scrollableContainer">
-                    <template>
-                        <div class="table-data-row" selected$="[[entity.selected]]" over$="[[entity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
                             <template is="dom-repeat" items="[[regularColumns]]" as="column">
                                 <div class="table-cell cell" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'false')]]" highlighted$="[[entity.highlight]]" tooltip-text$="[[_getTooltip(entity, column)]]">
-                                    <div class="truncate cell-container" inner-h-t-m-l="[[_getBindedTreeTableValue(entity, column)]]"></div>
+                                    <div class="truncate" inner-h-t-m-l="[[_getBindedTreeTableValue(entity, column)]]"></div>
                                 </div>
                             </template>
                         </div>
@@ -279,7 +259,7 @@ function calculateColumnWidthExcept (columnIndex, columnElements, columnLength) 
     return columnWidth;
 };
 
-export class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRetrievalBehavior], PolymerElement) {
+class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRetrievalBehavior], PolymerElement) {
 
     static get template() { 
         return template;
@@ -304,11 +284,12 @@ export class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRe
         
         this.hierarchyColumn = this.$.hierarchy_column_slot.assignedNodes({flatten: true})[0];
         this.regularColumns = this.$.regular_column_slot.assignedNodes({flatten: true});
+        this.$.mainTreeList.scrollToIndex = this._scrollToIndexAndCorrect();
     }
 
     resizeTree () {
         this.$.mainTreeList.notifyResize();
-        //this.$.regularTreeList.notifyResize();
+        this.$.regularTreeList.notifyResize();
     }
 
     isEntityRendered (index) {
@@ -316,7 +297,10 @@ export class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRe
     }
 
     scrollToItem (treeItem) {
-        this.$.mainTreeList.scrollToItem(treeItem);
+        const itemIndex = this._entities.indexOf(treeItem);
+        if (itemIndex >= 0 && (this.$.mainTreeList.firstVisibleIndex > itemIndex || this.$.mainTreeList.lastVisibleIndex < itemIndex)) {
+            this.$.mainTreeList.scrollToItem(treeItem);
+        }
     }
 
     /******************************Binding functions those calculate attributes, styles and other stuf************/
@@ -353,6 +337,18 @@ export class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRe
 
 
     /******************************EventListeners************************/
+
+    _mouseRowEnter (event) {
+        const index = event.model.index;
+        this.setOver(index, true);
+    }
+
+    _mouseRowLeave (event) {
+        const index = event.model.index;
+        if (this.currentMatchedItem !== this._entities[index]) {
+            this.setOver(index, false);
+        }
+    }
 
     _updateTableSizeAsync () {
         this.async(function () {
@@ -532,9 +528,65 @@ export class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRe
     }
 
     _getHeaderColumns () {
-        const topLeftCells = this.$.top_left.querySelector(".table-header-row").querySelectorAll(".cell");
-        const topCells = this.$.top.querySelector(".table-header-row").querySelectorAll(".cell");
+        const topCells = this.$.header.querySelector(".table-header-row").querySelectorAll(".cell");
         return [...topLeftCells, ...topCells];
+    }
+
+    /**
+     * This method is a overriden copy of scrollToIndex method in iron-list that was made in order to correct scrolling
+     * to item because of sticky table header that was counted when calculating _scrollTargetHeight property.
+     */
+    _scrollToIndexAndCorrect () {
+        const self = this;
+        return function (idx) {
+            if (typeof idx !== 'number' || idx < 0 || idx > this.items.length - 1) {
+                return;
+            }
+        
+            flush(); // Items should have been rendered prior scrolling to an index.
+        
+            if (this._physicalCount === 0) {
+                return;
+            }
+        
+            idx = this._clamp(idx, 0, this._virtualCount - 1); // Update the virtual start only when needed.
+        
+            if (!this._isIndexRendered(idx) || idx >= this._maxVirtualStart) {
+                this._virtualStart = this.grid ? idx - this._itemsPerRow * 2 : idx - 1;
+            }
+        
+            this._manageFocus();
+        
+            this._assignModels();
+        
+            this._updateMetrics(); // Estimate new physical offset.
+        
+        
+            this._physicalTop = Math.floor(this._virtualStart / this._itemsPerRow) * this._physicalAverage;
+            var currentTopItem = this._physicalStart;
+            var currentVirtualItem = this._virtualStart;
+            var targetOffsetTop = 0;
+            var hiddenContentSize = this._hiddenContentSize + self.$.header.offsetHeight; // scroll to the item as much as we can. IMPORTANT NOTE: this was adjusted 
+            //by the height of sticky header.
+        
+            while (currentVirtualItem < idx && targetOffsetTop <= hiddenContentSize) {
+                targetOffsetTop = targetOffsetTop + this._getPhysicalSizeIncrement(currentTopItem);
+                currentTopItem = (currentTopItem + 1) % this._physicalCount;
+                currentVirtualItem++;
+            }
+        
+            this._updateScrollerSize(true);
+        
+            this._positionItems();
+        
+            this._resetScrollPosition(this._physicalTop + this._scrollOffset + targetOffsetTop);
+        
+            this._increasePoolIfNeeded(0); // clear cached visible index.
+        
+        
+            this._firstVisibleIndexVal = null;
+            this._lastVisibleIndexVal = null;
+        }.bind(this.$.mainTreeList);
     }
 }
 
