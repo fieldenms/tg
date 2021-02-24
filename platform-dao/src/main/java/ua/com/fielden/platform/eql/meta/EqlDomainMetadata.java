@@ -185,7 +185,7 @@ public class EqlDomainMetadata {
     }
     
     private EqlPropertyMetadata generateIdPropertyMetadata(final EntityTypeInfo <? extends AbstractEntity<?>> parentInfo) {
-        final EqlPropertyMetadata idProperty = new EqlPropertyMetadata.Builder(ID, Long.class, H_LONG).column(id).build();
+        final EqlPropertyMetadata idProperty = new EqlPropertyMetadata.Builder(ID, Long.class, H_LONG).required().column(id).build();
         final EqlPropertyMetadata idPropertyInOne2One = new EqlPropertyMetadata.Builder(ID, Long.class, H_LONG).required().column(id).build();
         switch (parentInfo.category) {
         case PERSISTED:
@@ -209,7 +209,7 @@ public class EqlDomainMetadata {
     }
     
     private EqlPropertyMetadata generateVersionPropertyMetadata(final EntityTypeInfo <? extends AbstractEntity<?>> parentInfo) {
-        return new EqlPropertyMetadata.Builder(VERSION, Long.class, H_LONG).column(version).build();
+        return new EqlPropertyMetadata.Builder(VERSION, Long.class, H_LONG).required().column(version).build();
     }
     
     private EqlPropertyMetadata generateKeyPropertyMetadata(final EntityTypeInfo <? extends AbstractEntity<?>> parentInfo) {
@@ -229,10 +229,10 @@ public class EqlDomainMetadata {
             final Object keyHibType = typeResolver.basic(keyType.getName());
             switch (parentInfo.category) {
             case PERSISTED:
-                return new EqlPropertyMetadata.Builder(KEY, keyType, keyHibType).column(key).build();
+                return new EqlPropertyMetadata.Builder(KEY, keyType, keyHibType).required().column(key).build();
             case QUERY_BASED:
                 if (isSyntheticBasedOnPersistentEntityType(parentInfo.entityType)) {
-                    return new EqlPropertyMetadata.Builder(KEY, keyType, keyHibType).column(key).build();
+                    return new EqlPropertyMetadata.Builder(KEY, keyType, keyHibType).required().column(key).build();
                 }
                 return new EqlPropertyMetadata.Builder(KEY, keyType, keyHibType).column(key).build();
             default:
