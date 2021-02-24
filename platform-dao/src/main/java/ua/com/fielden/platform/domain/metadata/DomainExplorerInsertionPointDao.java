@@ -61,7 +61,7 @@ public class DomainExplorerInsertionPointDao extends CommonEntityDao<DomainExplo
                 queryModel = partialQueryModel.prop("holder.domainType").eq().val(entity.getDomainTypeHolderId()).model();
             }
             final fetch<DomainProperty> fetch = fetchAll(DomainProperty.class).with("domainType", fetchKeyAndDescOnly(DomainType.class).with("entity").with("dbTable"));
-            try(final Stream<DomainProperty> stream = co(DomainProperty.class).stream(from(queryModel).with(fetch).model())) {
+            try(final Stream<DomainProperty> stream = co(DomainProperty.class).stream(from(queryModel).with(fetch).with(orderProperies()).model())) {
                 return stream.map(domainProperty -> createDomainProperty(domainProperty)).collect(Collectors.toList());
             }
         } catch (final ClassNotFoundException e) {
@@ -110,7 +110,7 @@ public class DomainExplorerInsertionPointDao extends CommonEntityDao<DomainExplo
         final EntityResultQueryModel<DomainProperty> queryModel = select(DomainProperty.class).where()
                 .prop("holder.domainType").isNotNull().model();
         final fetch<DomainProperty> fetch = fetchAll(DomainProperty.class).with("holder").with("domainType", fetchKeyAndDescOnly(DomainType.class).with("entity").with("dbTable"));
-        try(final Stream<DomainProperty> stream = co(DomainProperty.class).stream(from(queryModel).with(fetch).model())) {
+        try(final Stream<DomainProperty> stream = co(DomainProperty.class).stream(from(queryModel).with(fetch).with(orderProperies()).model())) {
             return stream.collect(Collectors.groupingBy(domainProp -> domainProp.getHolder().getDomainType().getId(), Collectors.mapping(domainProperty -> createDomainProperty(domainProperty), Collectors.toList())));
         }
     }
@@ -124,5 +124,9 @@ public class DomainExplorerInsertionPointDao extends CommonEntityDao<DomainExplo
         entry.setDbSchema(domainType.getDbTable());
         entry.setHasChildren(true);
         return entry;
+    }
+
+    private OrderingModel orderProperies() {
+        return orderBy().yield("position").asc().model();
     }
 }
