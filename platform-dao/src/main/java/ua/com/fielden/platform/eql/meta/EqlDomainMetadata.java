@@ -370,9 +370,9 @@ public class EqlDomainMetadata {
 
         final Builder resultInProgress = new EqlPropertyMetadata.Builder(propName, propType, hibType);
 
-        if (isEntityType(propType)) {
+//        if (isEntityType(propType)) {
             resultInProgress.required(isRequiredByDefinition(propField, entityType));    
-        }
+//        }
         
 //        if (calculated != null) { // calc prop on PE/SE
 //            

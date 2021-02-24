@@ -7,14 +7,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 
 public class EqlPropertyMetadata {
     public final String name;
     public final Class<?> javaType;
     public final Object hibType;
-    public final Boolean required;
+    public final boolean required;
 
     public final PropColumn column;
     private final List<EqlPropertyMetadata> subitems;
@@ -81,7 +80,7 @@ public class EqlPropertyMetadata {
         private final String name;
         private final Class<?> javaType;
         private Object hibType;
-        private Boolean required;
+        private boolean required;
 
         
         private PropColumn column;
