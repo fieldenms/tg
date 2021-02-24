@@ -10,6 +10,7 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
 
 @KeyType(DynamicEntityKey.class)
@@ -25,13 +26,13 @@ public class DomainProperty extends AbstractEntity<DynamicEntityKey> {
     
     @IsProperty
     @MapTo
-    @Title(value = "holder", desc = "Desc")
+    @Title(value = "Holder", desc = "Desc")
     @CompositeKeyMember(2)
     private DomainPropertyHolder holder;
 
     @IsProperty
     @MapTo
-    @Title(value = "domain type", desc = "Desc")
+    @Title(value = "Domain type", desc = "Desc")
     private DomainType domainType;
 
     @IsProperty
@@ -53,6 +54,22 @@ public class DomainProperty extends AbstractEntity<DynamicEntityKey> {
     @MapTo
     @Title(value = "Db column", desc = "Desc")
     private String dbColumn;
+    
+    @IsProperty
+    @MapTo
+    @Required
+    @Title(value = "Position", desc = "Desc")
+    private Integer position;
+
+    @Observable
+    public DomainProperty setPosition(final Integer position) {
+        this.position = position;
+        return this;
+    }
+
+    public Integer getPosition() {
+        return position;
+    }
 
     @Observable
     public DomainProperty setDbColumn(final String dbColumn) {
