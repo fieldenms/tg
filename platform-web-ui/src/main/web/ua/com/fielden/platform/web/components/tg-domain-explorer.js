@@ -194,6 +194,9 @@ class TgDomainExplorer extends PolymerElement {
 
     _buildDbSchemaContent (entity, column) {
         const numOfLevels = calculateNumberOfLevels(entity);
+        if (entity.entity.union) {
+            return "[REFER SUBPROPERTIES]"   
+        }
         if (numOfLevels > 3 || (numOfLevels === 3 && !entity.parent.entity.union)) {
             return "[JOIN]";
         }
