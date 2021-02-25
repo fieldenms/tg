@@ -242,7 +242,7 @@ export const TgTreeListBehavior = {
         this.debounce("refreshTree", () => {
             refreshTree.bind(this)();
             this.currentMatchedItem = this._matchedTreeItems[0];
-            this.scrollToItem(this.currentMatchedItem);
+            this.scrollToItem(this.currentMatchedItem, true);
         });
     },
 
@@ -279,7 +279,7 @@ export const TgTreeListBehavior = {
         }
         this.debounce("refreshTree", () => {
             refreshTree.bind(this)();
-            this.scrollToItem(nextMatchedItem);
+            this.scrollToItem(nextMatchedItem, false);
             this.currentMatchedItem = nextMatchedItem;
         });
     },
@@ -505,11 +505,12 @@ export const TgTreeListBehavior = {
     },
 
     /**
-     * Scrolls current view to the specified item.
+     * Scrolls current view to the specified item if the the specified item is out of bounds of visible items.
      * 
      * @param {Object} treeItem - tree node to which view should be scrolled to.
+     * @param {Boolean} force - forces to scroll to item even if the specified item is in bounds of visible items.
      */
-    scrollToItem: function (treeItem) {
+    scrollToItem: function (treeItem, force) {
 
     }
 };
