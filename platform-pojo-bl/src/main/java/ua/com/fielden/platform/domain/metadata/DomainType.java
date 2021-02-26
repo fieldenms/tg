@@ -34,6 +34,21 @@ public class DomainType extends AbstractEntity<String> {
     @Title(value = "Is Entity?", desc = "Desc")
     private boolean entity;
 
+    @IsProperty
+    @MapTo
+    @Title(value = "Props count", desc = "Desc")
+    private int propsCount;
+
+    @Observable
+    public DomainType setPropsCount(final int propsCount) {
+        this.propsCount = propsCount;
+        return this;
+    }
+
+    public int getPropsCount() {
+        return propsCount;
+    }
+
     @Observable
     public DomainType setEntity(final boolean entity) {
         this.entity = entity;
