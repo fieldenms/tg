@@ -34,7 +34,7 @@ import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.types.tuples.T2;
 
 public class PopulateDomainMetadataModel {
-    final static String DOMAINTYPE_INSERT_STMT = "INSERT INTO DOMAINTYPE_ VALUES(?,?,?,?,?,?,?);";
+    final static String DOMAINTYPE_INSERT_STMT = "INSERT INTO DOMAINTYPE_ VALUES(?,?,?,?,?,?,?,?);";
     final static String DOMAINPROPERTY_INSERT_STMT = "INSERT INTO DOMAINPROPERTY_ VALUES(?,?,?,?,?,?,?,?,?,?,?);";
 
     public static void populate( //
@@ -57,6 +57,7 @@ public class PopulateDomainMetadataModel {
         final Set<Class<?>> propTypes = new HashSet<>();
 
         final Map<Class<?>, String> tableNamesMap = new HashMap<>();
+        final Map<Class<?>, Integer> propsCountMap = new HashMap<>();
 
         for (final Class<? extends AbstractEntity<?>> et : entityTypes) {
             final EqlEntityMetadata el = dm.entityPropsMetadata().get(et);
@@ -66,12 +67,19 @@ public class PopulateDomainMetadataModel {
                     tableNamesMap.put(el.typeInfo.entityType, el.typeInfo.tableName);
                 }
 
-                for (final EqlPropertyMetadata pmd : el.props()) {
+                List<EqlPropertyMetadata> propsMd = el.props().stream().filter(pm -> !pm.name.equals(VERSION) && !pm.isVirtualKey()).collect(toList());
+                
+                for (final EqlPropertyMetadata pmd : propsMd) {
                     propTypes.add(pmd.javaType);
+                    final List<EqlPropertyMetadata> subItems = pmd.subitems().stream().filter(si -> si.column != null).collect(toList());
+                    if (!subItems.isEmpty()) {
+                        propsCountMap.put(pmd.javaType, subItems.size());
+                    }
                     for (final EqlPropertyMetadata subPmd : pmd.subitems()) {
                         propTypes.add(subPmd.javaType);
                     }
                 }
+                propsCountMap.put(el.typeInfo.entityType, propsMd.size());
             }
         }
 
@@ -104,7 +112,9 @@ public class PopulateDomainMetadataModel {
                         pst.setString(4, tableNamesMap.get(propType));
                         pst.setString(5, (isEntity ? getEntityTitleAndDesc((Class<? extends AbstractEntity<?>>) propType).getValue() : propType.getSimpleName()));
                         pst.setString(6, isEntity && !isUnionEntityType(propType) ? "Y" : "N");
-                        pst.setInt(7, 0);
+                        final Integer propsCount = propsCountMap.get(propType);
+                        pst.setInt(7, propsCount != null ? propsCount : 0);
+                        pst.setInt(8, 0);
                         pst.addBatch();
                     } catch (final SQLException ex) {
                         final String error = format("Could not create insert for [%s].", propType.getName());
