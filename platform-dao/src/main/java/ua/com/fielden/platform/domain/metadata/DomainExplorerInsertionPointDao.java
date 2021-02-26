@@ -60,7 +60,7 @@ public class DomainExplorerInsertionPointDao extends CommonEntityDao<DomainExplo
             } else {
                 queryModel = partialQueryModel.prop("holder.domainType").eq().val(entity.getDomainTypeHolderId()).model();
             }
-            final fetch<DomainProperty> fetch = fetchAll(DomainProperty.class).with("domainType", fetchKeyAndDescOnly(DomainType.class).with("entity").with("dbTable"));
+            final fetch<DomainProperty> fetch = fetchAll(DomainProperty.class).with("domainType", fetchKeyAndDescOnly(DomainType.class).with("entity").with("dbTable").with("propsCount"));
             try(final Stream<DomainProperty> stream = co(DomainProperty.class).stream(from(queryModel).with(fetch).with(orderProperies()).model())) {
                 return stream.map(domainProperty -> createDomainProperty(domainProperty)).collect(Collectors.toList());
             }
@@ -85,7 +85,7 @@ public class DomainExplorerInsertionPointDao extends CommonEntityDao<DomainExplo
         entry.setInternalName(domainProperty.getName());
         entry.setDbSchema(domainProperty.getDbColumn());
         entry.setRefTable(domainProperty.getDomainType().getDbTable());
-        entry.setHasChildren(domainProperty.getDomainType().getEntity() || isUnionEntityType(domainType));
+        entry.setHasChildren(domainProperty.getDomainType().getPropsCount() > 0);
         entry.setUnion(isUnionEntityType(domainType));
         entry.setIsKey(domainProperty.getKeyIndex() != null);
         entry.setKeyOrder(domainProperty.getKeyIndex());
@@ -122,7 +122,7 @@ public class DomainExplorerInsertionPointDao extends CommonEntityDao<DomainExplo
         entry.setDesc(domainType.getEntityTypeDesc());
         entry.setInternalName(domainType.getKey());
         entry.setDbSchema(domainType.getDbTable());
-        entry.setHasChildren(true);
+        entry.setHasChildren(domainType.getPropsCount() > 0);
         return entry;
     }
 
