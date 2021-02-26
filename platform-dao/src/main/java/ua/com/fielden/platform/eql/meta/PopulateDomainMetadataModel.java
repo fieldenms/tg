@@ -31,6 +31,7 @@ import ua.com.fielden.platform.dao.session.TransactionalExecution;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
+import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.tuples.T2;
 
 public class PopulateDomainMetadataModel {
@@ -72,7 +73,7 @@ public class PopulateDomainMetadataModel {
                 for (final EqlPropertyMetadata pmd : propsMd) {
                     propTypes.add(pmd.javaType);
                     final List<EqlPropertyMetadata> subItems = pmd.subitems().stream().filter(si -> si.column != null).collect(toList());
-                    if (!subItems.isEmpty()) {
+                    if (!subItems.isEmpty() && !(Money.class.equals(pmd.javaType) && subItems.size() == 1)) {
                         propsCountMap.put(pmd.javaType, subItems.size());
                     }
                     for (final EqlPropertyMetadata subPmd : pmd.subitems()) {
