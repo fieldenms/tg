@@ -3,8 +3,8 @@ import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 
-import '/resources/components/tree-table/tg-hierarchy-tree-table-cell.js';
-import '/resources/components/tree-table/tg-security-tree-table-regular-cell.js';
+import '/resources/components/security-tree-table/tg-hierarchy-tree-table-cell.js';
+import '/resources/components/security-tree-table/tg-security-tree-table-regular-cell.js';
 
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
