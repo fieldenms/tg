@@ -138,14 +138,14 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  */
 public class CriteriaResource extends AbstractWebResource {
     private static final Logger logger = Logger.getLogger(CriteriaResource.class);
-    private static final String CONFIG_COULD_NOT_BE_SHARED_WITH_BASE_USER = "Any configuration could not be shared with base users, e.g. with %s.";
-    private static final String LINK_CONFIG_COULD_NOT_BE_SHARED = "Link configuration could not be shared.";
+    private static final String CONFIG_COULD_NOT_BE_SHARED_WITH_BASE_USER = "No configuration can be shared with base users, e.g. with %s.";
+    private static final String LINK_CONFIG_COULD_NOT_BE_SHARED = "Link configurations cannot be shared.";
     private static final String CONFLICTING_TITLE_SUFFIX = " (shared%s)";
-    private static final String COULD_NOT_LOAD_CONFLICTING_SHARED_CONFIGURATION = "Could not load shared configuration with [%s] conflicting title.";
-    private static final String LINK_CONFIG_COULD_NOT_BE_LOADED = "Link configuration could not be loaded. Please try again.";
-    private static final String staleCriteriaMessage = "Selection criteria have been changed, but not applied. "
+    private static final String COULD_NOT_LOAD_CONFLICTING_SHARED_CONFIGURATION = "Cannot load a shared configuration with conflicting title [%s].";
+    private static final String LINK_CONFIG_COULD_NOT_BE_LOADED = "A link configuration could not be loaded. Please try again.";
+    private static final String ERR_STALE_CRITERIA = "Selection criteria have been changed, but not applied. "
                                                      + "Previously applied values are in effect. "
-                                                     + "Please tap action <b>RUN</b> to apply the updated selection criteria.";
+                                                     + "Please tap <b>RUN</b> to apply the updated selection criteria.";
     private final RestServerUtil restUtil;
     private final ICompanionObjectFinder companionFinder;
     private final ICriteriaGenerator critGenerator;
@@ -527,7 +527,7 @@ public class CriteriaResource extends AbstractWebResource {
             // Please be careful when adding some new contracts to 'firstTick' not to violate this premise.
             final boolean isCriteriaStale = !equalsEx(updateCentre(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder).getFirstTick(), freshCentre.getFirstTick());
             if (isCriteriaStale) {
-                return staleCriteriaMessage;
+                return ERR_STALE_CRITERIA;
             }
         }
         return null;
