@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.web.factories.webui;
 
 import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.getEntityCentre;
-import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.saveAsName;
+import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.extractSaveAsName;
 
 import org.restlet.Request;
 import org.restlet.Response;
@@ -64,7 +64,7 @@ public class CentreResourceFactory extends Restlet {
             new CentreResource<>(
                     restUtil,
                     getEntityCentre(request, webUiConfig),
-                    saveAsName(request),
+                    extractSaveAsName(request),
                     userProvider,
                     deviceProvider,
                     dates,

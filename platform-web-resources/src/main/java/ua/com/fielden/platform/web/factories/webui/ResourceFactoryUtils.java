@@ -63,18 +63,18 @@ public class ResourceFactoryUtils {
     }
     
     /**
-     * Determines 'saveAsName' from corresponding centre's request attribute.
+     * Extracts {@code saveAsName} from entity centre or selection criteria HTTP request attributes.
      *
      * @param request
      * @return
      */
-    public static Optional<String> saveAsName(final Request request) {
+    public static Optional<String> extractSaveAsName(final Request request) {
         final String saveAsName = ((String) request.getAttributes().get("saveAsName")).replaceFirst("default", "").replace("%20", " ");
         return "".equals(saveAsName) ? empty() : of(saveAsName);
     }
     
     /**
-     * Extracts [wasLoadedPreviously; configUuid] pair from criteria retrieval request attribute.
+     * Extracts pair {@code (wasLoadedPreviously, configUuid)} from criteria retrieval request attribute.
      *
      * @param request
      * @return

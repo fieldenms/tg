@@ -41,7 +41,7 @@ import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfigOp
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.saveNewEntityCentreManager;
 import static ua.com.fielden.platform.web.centre.CentreUtils.isFreshCentreChanged;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.LINK_CONFIG_TITLE;
-import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.saveAsName;
+import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.extractSaveAsName;
 import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.wasLoadedPreviouslyAndConfigUuid;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.CENTRE_DIRTY;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.META_VALUES;
@@ -425,7 +425,7 @@ public class CriteriaResource extends AbstractWebResource {
     @Override
     public Representation post(final Representation envelope) {
         return handleUndesiredExceptions(getResponse(), () -> {
-            final Optional<String> saveAsName = saveAsName(getRequest());
+            final Optional<String> saveAsName = extractSaveAsName(getRequest());
             eccCompanion = companionFinder.find(EntityCentreConfig.class);
             mmiCompanion = companionFinder.find(MainMenuItem.class);
             userCompanion = companionFinder.find(User.class);
@@ -542,7 +542,7 @@ public class CriteriaResource extends AbstractWebResource {
     public Representation put(final Representation envelope) {
         return handleUndesiredExceptions(getResponse(), () -> {
             logger.debug("CRITERIA_RESOURCE: run started.");
-            final Optional<String> saveAsName = saveAsName(getRequest());
+            final Optional<String> saveAsName = extractSaveAsName(getRequest());
             user = userProvider.getUser();
             eccCompanion = companionFinder.find(EntityCentreConfig.class);
             mmiCompanion = companionFinder.find(MainMenuItem.class);
