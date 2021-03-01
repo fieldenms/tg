@@ -114,7 +114,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     /**
      * The key for customObject's value containing save-as name.
      */
-    private static final String SAVE_AS_NAME = "saveAsName";
+    public static final String SAVE_AS_NAME = "saveAsName";
     /**
      * The key for customObject's value containing save-as description.
      */

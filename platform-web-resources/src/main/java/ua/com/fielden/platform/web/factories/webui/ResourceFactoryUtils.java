@@ -6,6 +6,7 @@ import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.SAVE_AS_NAME;
 
 import java.util.Optional;
 
@@ -69,7 +70,7 @@ public class ResourceFactoryUtils {
      * @return
      */
     public static Optional<String> extractSaveAsName(final Request request) {
-        final String saveAsName = ((String) request.getAttributes().get("saveAsName")).replaceFirst("default", "").replace("%20", " ");
+        final String saveAsName = ((String) request.getAttributes().get(SAVE_AS_NAME)).replaceFirst("default", "").replace("%20", " ");
         return "".equals(saveAsName) ? empty() : of(saveAsName);
     }
     
@@ -80,7 +81,7 @@ public class ResourceFactoryUtils {
      * @return
      */
     public static T2<Boolean, Optional<String>> wasLoadedPreviouslyAndConfigUuid(final Request request) {
-        final String str = (String) request.getAttributes().get("saveAsName");
+        final String str = (String) request.getAttributes().get(SAVE_AS_NAME);
         final String configUuidStr = str.substring(1); // remove 'wasLoadedPreviously' character at the beginning
         return t2(
             str.charAt(0) == '+' ? TRUE : FALSE,
