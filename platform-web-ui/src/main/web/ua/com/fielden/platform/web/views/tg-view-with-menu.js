@@ -546,7 +546,7 @@ Polymer({
         if (menuPath.menuItem && !this._isMenuPresent(menuPath.menuItem.menu)) {
             this.set("_selectedPage", menuPath.path);
             const currMenuItemView = this.shadowRoot.querySelector(`tg-menu-item-view[page-name="${this._selectedPage}"]`); // find active tg-menu-item-view
-            if (currMenuItemView && currMenuItemView._isCentre(currMenuItemView.menuItem)) { // if it is present and contains centre
+            if (currMenuItemView && currMenuItemView.menuItem.view && currMenuItemView._isCentre(currMenuItemView.menuItem)) { // if it is present and contains centre
                 currMenuItemView._retrieveCentreWithParams(paramsStr, menuPath.unknownSubpath); // initiate retrieval
             }
         }
