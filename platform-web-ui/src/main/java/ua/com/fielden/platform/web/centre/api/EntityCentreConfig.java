@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.web.centre.api;
 
 import static java.lang.String.format;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
@@ -591,11 +590,8 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         return ofNullable(resultSetPrimaryEntityAction);
     }
 
-    public Optional<List<EntityMultiActionConfig>> getResultSetSecondaryEntityActions() {
-        if (resultSetSecondaryEntityActions.isEmpty()) {
-            return empty();
-        }
-        return of(unmodifiableList(resultSetSecondaryEntityActions));
+    public List<EntityMultiActionConfig> getResultSetSecondaryEntityActions() {
+        return unmodifiableList(resultSetSecondaryEntityActions);
     }
 
     public Optional<List<ResultSetProp<T>>> getResultSetProperties() {
@@ -848,14 +844,15 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     }
 
     /**
-     * Finds action configuration with {@code actionNumber} in the list of secondary actions/multi-actions if it exists.
-     * 
+     * Finds action configuration with {@code actionNumber} in the list of secondary actions/multi-actions, if it exists.
+     * The value of {@code actionNumber} represents an absolute index across all actions as if they were linear (i.e. regardless of how actions might be grouped by multi-actions).
+     *
      * @param actionNumber
      * @return
      */
     private Optional<EntityActionConfig> getSecondaryActionFor(final int actionNumber) {
         int currentActionNumber = actionNumber;
-        for (final EntityMultiActionConfig config: getResultSetSecondaryEntityActions().orElse(emptyList())) {
+        for (final EntityMultiActionConfig config: getResultSetSecondaryEntityActions()) {
             final List<EntityActionConfig> configActions = config.actions();
             if (currentActionNumber < configActions.size()) {
                 return of(configActions.get(currentActionNumber));

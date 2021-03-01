@@ -177,8 +177,8 @@ public class EntityCentreBuilderResultSetTest {
                 .addSecondaryAction(action(FunctionalEntity.class).withContext(context().withCurrentEntity().build()).build())
                 .build();
         assertTrue(config.getResultSetPrimaryEntityAction().isPresent());
-        assertTrue(config.getResultSetSecondaryEntityActions().isPresent());
-        assertEquals(2, config.getResultSetSecondaryEntityActions().get().size());
+        assertFalse(config.getResultSetSecondaryEntityActions().isEmpty());
+        assertEquals(2, config.getResultSetSecondaryEntityActions().size());
     }
 
     @Test(expected = IllegalArgumentException.class)

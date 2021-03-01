@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.web.centre;
 
 import static java.lang.String.format;
-import static java.util.Collections.emptyList;
 import static java.util.Optional.empty;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
@@ -839,8 +838,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     public List<? extends IEntityMultiActionSelector> createSecondaryActionSelectors() {
         return dslDefaultConfig
             .getResultSetSecondaryEntityActions()
-            .map(multiActionConfigs -> multiActionConfigs.stream().map(config -> injector.getInstance(config.actionSelectorClass())).collect(toList()))
-            .orElse(emptyList());
+            .stream().map(config -> injector.getInstance(config.actionSelectorClass())).collect(toList());
     }
 
     public Optional<IDynamicColumnBuilder<T>> getDynamicColumnBuilderFor(final ResultSetProp<T> resProp) {
@@ -1056,10 +1054,10 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
         final DomContainer secondaryActionsDom = new DomContainer();
         final StringBuilder secondaryActionsObjects = new StringBuilder();
-        final Optional<List<EntityMultiActionConfig>> resultSetSecondaryEntityActions = this.dslDefaultConfig.getResultSetSecondaryEntityActions();
-        if (resultSetSecondaryEntityActions.isPresent()) {
+        final List<EntityMultiActionConfig> resultSetSecondaryEntityActions = this.dslDefaultConfig.getResultSetSecondaryEntityActions();
+        if (!resultSetSecondaryEntityActions.isEmpty()) {
             int numberOfAction = 0;
-            for (final EntityMultiActionConfig multiActionConfig: resultSetSecondaryEntityActions.get()) {
+            for (final EntityMultiActionConfig multiActionConfig: resultSetSecondaryEntityActions) {
                 final FunctionalMultiActionElement el = new FunctionalMultiActionElement(multiActionConfig, numberOfAction, FunctionalActionKind.SECONDARY_RESULT_SET);
                 importPaths.add(el.importPath());
                 secondaryActionsDom.add(el.render().attr("slot", "secondary-action"));
