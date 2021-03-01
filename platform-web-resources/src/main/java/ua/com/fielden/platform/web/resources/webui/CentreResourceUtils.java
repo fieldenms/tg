@@ -1234,9 +1234,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final IEntityCentreConfig eccCompanion,
         final Optional<Supplier<Boolean>> checkChanges
     ) {
-        return findConfigOptByUuid(configUuid, miType, device, SAVED_CENTRE_NAME, eccCompanion).map(upstreamConfig -> {
-            return updateInheritedFromShared(upstreamConfig, miType, device, saveAsName, user, eccCompanion, checkChanges);
-        });
+        return findConfigOptByUuid(configUuid, miType, device, SAVED_CENTRE_NAME, eccCompanion)
+               .map(upstreamConfig -> updateInheritedFromShared(upstreamConfig, miType, device, saveAsName, user, eccCompanion, checkChanges));
     }
 
     /**
