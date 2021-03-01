@@ -7,7 +7,7 @@ import ua.com.fielden.platform.security.user.User;
 
 /**
  * API for centre configuration sharing.
- * Together with IWebUiConfig.centreConfigShareActions it defines how centre configurations are shared and how sharing is displayed.
+ * Together with {@code IWebUiConfig.centreConfigShareActions} it defines how centre configurations are shared and how sharing information is displayed.
  * 
  * @author TG Team
  *

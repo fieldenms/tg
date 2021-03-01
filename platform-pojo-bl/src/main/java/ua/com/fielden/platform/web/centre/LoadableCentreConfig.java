@@ -31,7 +31,7 @@ public class LoadableCentreConfig extends AbstractEntity<String> {
     private EntityCentreConfig config;
 
     @IsProperty
-    @Title(value = "Shared By Message", desc = "In case of inherited from shared configuration, contains domain-driven message about user who created that configuration and shared it with current user.")
+    @Title(value = "Shared By Message", desc = "For inherited from shared configurations, contains domain-driven message about a user, who created that configuration and shared it with the current user.")
     private String sharedByMessage;
 
     @Observable
