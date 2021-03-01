@@ -46,15 +46,15 @@ public class CentreConfigShareActionProducer extends DefaultEntityProducerWithCo
     private static final String SAVE_MSG = "Please save and try again.";
     private static final String SAVE_OWN_COPY_MSG = "Only sharing of your own configurations is supported. Please save as your copy and try again.";
     private static final String DUPLICATE_SAVE_MSG = "Please duplicate, save and try again.";
-    
+
     private final IUserProvider userProvider;
-    
+
     @Inject
     public CentreConfigShareActionProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder, final IUserProvider userProvider) {
         super(factory, CentreConfigShareAction.class, companionFinder);
         this.userProvider = userProvider;
     }
-    
+
     @Override
     protected CentreConfigShareAction provideDefaultValues(final CentreConfigShareAction entity) {
         if (contextNotEmpty()) {
@@ -63,7 +63,7 @@ public class CentreConfigShareActionProducer extends DefaultEntityProducerWithCo
         }
         return entity;
     }
-    
+
     /**
      * Validates share action context, that contains {@code configUuid} inside it's {@code chosenProperty}.<br>
      * <p>
@@ -106,7 +106,7 @@ public class CentreConfigShareActionProducer extends DefaultEntityProducerWithCo
         }
         return successful("Ok");
     }
-    
+
     /**
      * Creates {@link IPreAction} for centre configuration sharing actions.
      * <p>
@@ -125,7 +125,7 @@ public class CentreConfigShareActionProducer extends DefaultEntityProducerWithCo
             + "}\n"
         );
     }
-    
+
     /**
      * Creates {@link IPostAction} for centre configuration sharing actions.
      * <p>
@@ -162,5 +162,5 @@ public class CentreConfigShareActionProducer extends DefaultEntityProducerWithCo
             + "}\n"
         );
     }
-    
+
 }
