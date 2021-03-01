@@ -11,6 +11,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 public class SingleActionSelector implements IEntityMultiActionSelector {
     public static final SingleActionSelector INSTANCE = new SingleActionSelector();
     
+    private SingleActionSelector() {}
+    
     @Override
     public int getActionFor(final AbstractEntity<?> entity) {
         return 0;
