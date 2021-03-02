@@ -34,6 +34,20 @@ public class LoadableCentreConfig extends AbstractEntity<String> {
     @Title(value = "Shared By Message", desc = "For inherited from shared configurations, contains domain-driven message about a user, who created that configuration and shared it with the current user.")
     private String sharedByMessage;
 
+    @IsProperty
+    @Title(value = "Orphaned Sharing Message", desc = "For own save-as configurations, contains message whether configuration was orphaned from based / shared. Such orphaned configurations act like own save-as except they can not be shared, unless duplicated and saved.")
+    private String orphanedSharingMessage;
+
+    @Observable
+    public LoadableCentreConfig setOrphanedSharingMessage(final String orphanedSharingMessage) {
+        this.orphanedSharingMessage = orphanedSharingMessage;
+        return this;
+    }
+
+    public String getOrphanedSharingMessage() {
+        return orphanedSharingMessage;
+    }
+
     @Observable
     public LoadableCentreConfig setSharedByMessage(final String sharedByMessage) {
         this.sharedByMessage = sharedByMessage;

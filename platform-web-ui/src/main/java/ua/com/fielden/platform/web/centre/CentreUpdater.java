@@ -27,6 +27,7 @@ import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determ
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.isGenerated;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
+import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.utils.EntityUtils.fetchWithKeyAndDesc;
 import static ua.com.fielden.platform.utils.EntityUtils.isDate;
@@ -122,6 +123,11 @@ import ua.com.fielden.snappy.MnemonicEnum;
  */
 public class CentreUpdater {
     private static final Logger logger = Logger.getLogger(CentreUpdater.class);
+    
+    private static final String UPSTREAM_CONFIG_DELETED_MESSAGE = "<i>shared / base, no longer available</i>";
+    private static final String SHARED_CONFIG_MADE_UNSHARED_MESSAGE = "<i>shared, no longer available</i>";
+    private static final String BASED_CONFIG_RENAMED_MESSAGE = "<i>base, no longer available</i>";
+    
     private static final String DIFFERENCES_SUFFIX = "__________DIFFERENCES";
     
     public static final String FRESH_CENTRE_NAME = "__________FRESH";
@@ -558,6 +564,48 @@ public class CentreUpdater {
                             }
                         });
                     }
+                    
+                    // Mark own save-as configurations as orphaned for those being disconnected from base / shared (not created by current 'user'):
+                    
+                    // function for getting own save-as LoadableCentreConfigs
+                    final Supplier<Stream<LoadableCentreConfig>> ownLoadableConfigurationsSupplier = () -> loadableConfigurations.stream()
+                        .filter(lcc -> !lcc.isInherited()); // all non-inherited configurations, that were left after shared / base processing, are considered own save-as
+                    
+                    // collect uuids for own save-as configurations
+                    final Set<String> ownSaveAsUuids = ownLoadableConfigurationsSupplier.get()
+                        .map(lcc -> lcc.getConfig().getConfigUuid()) // all loadable configs always have configUuids present
+                        .collect(toSet());
+                    
+                    if (!ownSaveAsUuids.isEmpty()) {
+                        // find config creators for that uuids
+                        final List<EntityCentreConfig> savedConfigsWithCreators = eccCompanion.getAllEntities(
+                            from(eccCompanion.withDbVersion(centreConfigQueryFor(miType, device, SAVED_CENTRE_NAME))
+                                .and().prop("configUuid").in().values(ownSaveAsUuids.toArray()).model()
+                            )
+                            .with(FETCH_CONFIG.with("configUuid").with("owner", fetch(User.class).with("key")))
+                            .lightweight().model()
+                        );
+                        
+                        // iterate through own loadable configurations and ...
+                        ownLoadableConfigurationsSupplier.get().forEach(lcc -> {
+                            final Optional<EntityCentreConfig> creatorConfigOpt = savedConfigsWithCreators.stream()
+                                .filter(savedConfig -> savedConfig.getConfigUuid().equals(lcc.getConfig().getConfigUuid())) // savedConfig.getConfigUuid() always present, also lcc.getConfig() / lcc.getConfig().getConfigUuid() are always present too
+                                .findAny();
+                            if (!creatorConfigOpt.isPresent()) { // ... mark orphaned due to upstream config deleted (either base or shared)
+                                lcc.setOrphanedSharingMessage(UPSTREAM_CONFIG_DELETED_MESSAGE);
+                            } else {
+                                final User creator = creatorConfigOpt.get().getOwner();
+                                if (!areEqual(user, creator)) { // (consider only not own save-as)
+                                    if (areEqual(user.getBasedOnUser(), creator)) { // ... mark as orphaned from based configuration
+                                        lcc.setOrphanedSharingMessage(BASED_CONFIG_RENAMED_MESSAGE);
+                                    } else { // ... mark as orphaned from shared configuration
+                                        lcc.setOrphanedSharingMessage(SHARED_CONFIG_MADE_UNSHARED_MESSAGE);
+                                    }
+                                }
+                            }
+                        });
+                    }
+                    
                 }
             }
             Collections.sort(loadableConfigurations);

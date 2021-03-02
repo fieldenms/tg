@@ -379,8 +379,9 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
     }
     
     _calcSharedByText (item) {
-        const value = typeof item.sharedByMessage !== 'undefined' && item.get('sharedByMessage');
-        return value ? value : '';
+        const sharedByMessage = typeof item.sharedByMessage !== 'undefined' && item.get('sharedByMessage');
+        const orphanedSharingMessage = typeof item.orphanedSharingMessage !== 'undefined' && item.get('orphanedSharingMessage');
+        return sharedByMessage ? sharedByMessage : (orphanedSharingMessage ? orphanedSharingMessage : '');
     }
     
     /**
@@ -580,7 +581,7 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
     }
     
     _sharedByTextHidden (item) {
-        return typeof item.sharedByMessage === 'undefined';
+        return typeof item.sharedByMessage === 'undefined' && typeof item.orphanedSharingMessage === 'undefined';
     }
     
     _sortingIconHidden (_forReview, item) {
