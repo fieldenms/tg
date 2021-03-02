@@ -15,6 +15,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -37,6 +38,7 @@ import ua.com.fielden.platform.types.tuples.T2;
 public class PopulateDomainMetadataModel {
     final static String DOMAINTYPE_INSERT_STMT = "INSERT INTO DOMAINTYPE_ VALUES(?,?,?,?,?,?,?,?);";
     final static String DOMAINPROPERTY_INSERT_STMT = "INSERT INTO DOMAINPROPERTY_ VALUES(?,?,?,?,?,?,?,?,?,?,?);";
+    final static String EXISTING_DATA_DELETE_STMT = "DELETE FROM DOMAINPROPERTY_; DELETE FROM DOMAINTYPE_;";
 
     public static void populate( //
             final IApplicationDomainProvider applicationDomainProvider, //
@@ -44,53 +46,44 @@ public class PopulateDomainMetadataModel {
             final TransactionalExecution trEx, //
             final Map<Class, Class> hibTypesDefaults, //
             final DbVersion dbVersion) {
-
+        
+        clearExistingMetadata(trEx);
+        
         final Map<Class<?>, Class<?>> htd = new HashMap<>();
         for (final Entry<Class, Class> el : hibTypesDefaults.entrySet()) {
             htd.put(el.getKey(), el.getValue());
         }
 
-        final EqlDomainMetadata dm = new EqlDomainMetadata(//
+        final EqlDomainMetadata domainMd = new EqlDomainMetadata(//
                 htd, //
                 Guice.createInjector(new HibernateUserTypesModule()), //
                 applicationDomainProvider.entityTypes(), dbVersion);
 
         final Set<Class<?>> propTypes = new HashSet<>();
-
         final Map<Class<?>, String> tableNamesMap = new HashMap<>();
         final Map<Class<?>, Integer> propsCountMap = new HashMap<>();
 
-        for (final Class<? extends AbstractEntity<?>> et : entityTypes) {
-            final EqlEntityMetadata el = dm.entityPropsMetadata().get(et);
-            if (el != null) {
-                propTypes.add(el.typeInfo.entityType);
-                if (el.typeInfo.category == PERSISTED) {
-                    tableNamesMap.put(el.typeInfo.entityType, el.typeInfo.tableName);
+        for (final Class<? extends AbstractEntity<?>> entityType : entityTypes) {
+            final EqlEntityMetadata entityMd = domainMd.entityPropsMetadata().get(entityType);
+            if (entityMd != null) {
+                propTypes.add(entityMd.typeInfo.entityType);
+                if (entityMd.typeInfo.category == PERSISTED) {
+                    tableNamesMap.put(entityMd.typeInfo.entityType, entityMd.typeInfo.tableName);
                 }
 
-                List<EqlPropertyMetadata> propsMd = el.props().stream().filter(pm -> !pm.name.equals(VERSION) && !pm.isVirtualKey()).collect(toList());
-                
+                final List<EqlPropertyMetadata> propsMd = entityMd.props().stream().filter(pm -> !pm.name.equals(VERSION) && !pm.isVirtualKey()).collect(toList());
+                propsCountMap.put(entityMd.typeInfo.entityType, propsMd.size());
+
                 for (final EqlPropertyMetadata pmd : propsMd) {
                     propTypes.add(pmd.javaType);
                     final List<EqlPropertyMetadata> subItems = pmd.subitems().stream().filter(si -> si.column != null).collect(toList());
                     if (!subItems.isEmpty() && !(Money.class.equals(pmd.javaType) && subItems.size() == 1)) {
                         propsCountMap.put(pmd.javaType, subItems.size());
                     }
-                    for (final EqlPropertyMetadata subPmd : pmd.subitems()) {
-                        propTypes.add(subPmd.javaType);
-                    }
+                    pmd.subitems().forEach(subPmd -> propTypes.add(subPmd.javaType));
                 }
-                propsCountMap.put(el.typeInfo.entityType, propsMd.size());
             }
         }
-
-        trEx.exec(conn -> {
-            try (final PreparedStatement pst = conn.prepareStatement("DELETE FROM DOMAINPROPERTY_; DELETE FROM DOMAINTYPE_;")) {
-                pst.execute();
-            } catch (final SQLException ex) {
-                throw new DbException(format("Could not delete"), ex);
-            }
-        });
 
         final Map<Class<?>, Integer> domainTypesIdsByClass = new HashMap<>();
         int id = 0;
@@ -131,10 +124,10 @@ public class PopulateDomainMetadataModel {
             }
         });
 
-        List<DomainPropertyData> dpd = new ArrayList<>();
+        final List<DomainPropertyData> dpd = new ArrayList<>();
 
         for (final Class<?> et : entityTypes) {
-            final EqlEntityMetadata em = dm.entityPropsMetadata().get(et);
+            final EqlEntityMetadata em = domainMd.entityPropsMetadata().get(et);
 
             if (em != null) {
                 int position = 0;
@@ -187,6 +180,20 @@ public class PopulateDomainMetadataModel {
             }
         }
 
+        populateDomainProperties(dpd, trEx);
+    }
+
+    private static void clearExistingMetadata(final TransactionalExecution trEx) {
+        trEx.exec(conn -> {
+            try (final Statement st = conn.createStatement()) {
+                st.execute(EXISTING_DATA_DELETE_STMT);
+            } catch (final SQLException ex) {
+                throw new DbException(format("Could not delete"), ex);
+            }
+        });
+    }
+    
+    private static void populateDomainProperties(final List<DomainPropertyData> dpd, final TransactionalExecution trEx) {
         trEx.exec(conn -> {
 
             try (final PreparedStatement pst = conn.prepareStatement(DOMAINPROPERTY_INSERT_STMT)) {
@@ -225,10 +232,11 @@ public class PopulateDomainMetadataModel {
                 // execute the batch
                 pst.executeBatch();
             } catch (final SQLException ex) {
-                final String error = format("Could not batch insert [%s].", propTypes.size());
+                final String error = format("Could not batch insert [%s].", dpd.size());
                 throw new DbException(error, ex);
             }
         });
+
     }
 
     private static class DomainPropertyData {
