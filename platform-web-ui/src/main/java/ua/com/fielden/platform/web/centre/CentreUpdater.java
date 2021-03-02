@@ -124,9 +124,10 @@ import ua.com.fielden.snappy.MnemonicEnum;
 public class CentreUpdater {
     private static final Logger logger = Logger.getLogger(CentreUpdater.class);
     
-    private static final String UPSTREAM_CONFIG_DELETED_MESSAGE = "<i>shared / base, no longer available</i>";
-    private static final String SHARED_CONFIG_MADE_UNSHARED_MESSAGE = "<i>shared, no longer available</i>";
-    private static final String BASED_CONFIG_RENAMED_MESSAGE = "<i>base, no longer available</i>";
+    /**
+     * Message that marks own save-as configuration when it was inherited from base / shared but was disconnected; this occurs if upstream config is deleted, base upstream config is renamed or shared upstream config is made unshared.
+     */
+    private static final String UPSTREAM_CONFIG_DISCONNECTED_MESSAGE = "<i>shared, no longer available</i>";
     
     private static final String DIFFERENCES_SUFFIX = "__________DIFFERENCES";
     
@@ -592,15 +593,11 @@ public class CentreUpdater {
                                 .filter(savedConfig -> savedConfig.getConfigUuid().equals(lcc.getConfig().getConfigUuid())) // savedConfig.getConfigUuid() always present, also lcc.getConfig() / lcc.getConfig().getConfigUuid() are always present too
                                 .findAny();
                             if (!creatorConfigOpt.isPresent()) { // ... mark orphaned due to upstream config deleted (either base or shared)
-                                lcc.setOrphanedSharingMessage(UPSTREAM_CONFIG_DELETED_MESSAGE);
+                                lcc.setOrphanedSharingMessage(UPSTREAM_CONFIG_DISCONNECTED_MESSAGE);
                             } else {
                                 final User creator = creatorConfigOpt.get().getOwner();
                                 if (!areEqual(user, creator)) { // (consider only not own save-as)
-                                    if (areEqual(user.getBasedOnUser(), creator)) { // ... mark as orphaned from based configuration
-                                        lcc.setOrphanedSharingMessage(BASED_CONFIG_RENAMED_MESSAGE);
-                                    } else { // ... mark as orphaned from shared configuration
-                                        lcc.setOrphanedSharingMessage(SHARED_CONFIG_MADE_UNSHARED_MESSAGE);
-                                    }
+                                    lcc.setOrphanedSharingMessage(UPSTREAM_CONFIG_DISCONNECTED_MESSAGE); // ... mark as orphaned from shared / based configuration
                                 }
                             }
                         });
