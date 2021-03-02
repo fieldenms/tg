@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.eql.meta;
 
 import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
@@ -42,9 +44,12 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
@@ -184,27 +189,27 @@ public class EqlDomainMetadata {
         }
     }
     
-    private EqlPropertyMetadata generateIdPropertyMetadata(final EntityTypeInfo <? extends AbstractEntity<?>> parentInfo) {
+    private Optional<EqlPropertyMetadata> generateIdPropertyMetadata(final EntityTypeInfo <? extends AbstractEntity<?>> parentInfo) {
         final EqlPropertyMetadata idProperty = new EqlPropertyMetadata.Builder(ID, Long.class, H_LONG).required().column(id).build();
         final EqlPropertyMetadata idPropertyInOne2One = new EqlPropertyMetadata.Builder(ID, Long.class, H_LONG).required().column(id).build();
         switch (parentInfo.category) {
         case PERSISTED:
-            return isOneToOne(parentInfo.entityType) ? idPropertyInOne2One : idProperty/*(entityType)*/;
+            return isOneToOne(parentInfo.entityType) ? of(idPropertyInOne2One) : of(idProperty)/*(entityType)*/;
         case QUERY_BASED:
             if (isSyntheticBasedOnPersistentEntityType(parentInfo.entityType)) {
                 if (isEntityType(getKeyType(parentInfo.entityType))) {
                     throw new EntityDefinitionException(format("Entity [%s] is recognised as synthetic that is based on a persistent type with an entity-typed key. This is not supported.", parentInfo.entityType.getName()));
                 }
-                return idProperty;
+                return of(idProperty);
             } else if (isEntityType(getKeyType(parentInfo.entityType))) {
-                return new EqlPropertyMetadata.Builder(ID, Long.class, H_LONG).expression(expr().prop(KEY).model()).build();
+                return of(new EqlPropertyMetadata.Builder(ID, Long.class, H_LONG).expression(expr().prop(KEY).model()).build());
             } else {
-                return null;
+                return empty();
                 //return new EqlPropertyMetadata.Builder(ID, Long.class, H_LONG).build(); //return null;
                 
             }
         default:
-            return null;
+            return empty();
         }
     }
     
@@ -250,23 +255,25 @@ public class EqlDomainMetadata {
         final List<EqlPropertyMetadata> result = new ArrayList<>();
         if (UNION == parentInfo.category) {
             result.addAll(generateUnionImplicitCalcSubprops((Class<? extends AbstractUnionEntity>) parentInfo.entityType, null));
-            
-            for (final Field subpropField : unionProperties((Class<? extends AbstractUnionEntity>) parentInfo.entityType)) {
-                result.add(getCommonPropInfo(subpropField, parentInfo.entityType, null));
-            }
+            unionProperties((Class<? extends AbstractUnionEntity>) parentInfo.entityType).stream().forEach(field -> result.add(getCommonPropInfo(field, parentInfo.entityType, null)));
         } else {
-            final EqlPropertyMetadata idProp = generateIdPropertyMetadata(parentInfo);
-            if (idProp != null) {
-                result.add(idProp);    
-            }
+            generateIdPropertyMetadata(parentInfo).ifPresent(idPmd -> result.add(idPmd));
             
             result.add(generateKeyPropertyMetadata(parentInfo));
+            
+            final List<Field> restOfPropsFields = getRestOfProperties(parentInfo);
+            final Set<String> addedProps = new HashSet<>();
+            addedProps.add(DESC);
+            parentInfo.compositeKeyMembers.stream().forEach(f -> addedProps.add(f._1));
+            parentInfo.compositeKeyMembers.stream().forEach(f -> restOfPropsFields.stream().filter(p -> f._1.equals(p.getName())).findAny().ifPresent(km -> result.add(getCommonPropInfo(km, parentInfo.entityType, null))));
+            
+            restOfPropsFields.stream().filter(p -> DESC.equals(p.getName())).findAny().ifPresent(desc -> result.add(getCommonPropInfo(desc, parentInfo.entityType, null)));
             
             if (PERSISTED == parentInfo.category) {
                 result.add(generateVersionPropertyMetadata(parentInfo));
             }
 
-            for (final Field field : getRestOfProperties(parentInfo)) {
+            for (final Field field : restOfPropsFields.stream().filter(p -> !addedProps.contains(p.getName())).collect(toList())) {
                 result.add(isOne2One_association(parentInfo.entityType, field.getName()) ? getOneToOnePropInfo(field, parentInfo) : getCommonPropInfo(field, parentInfo.entityType, null));
             }
         }
