@@ -46,8 +46,8 @@ public class DomainExplorerInsertionPointMaster implements IMaster<DomainExplore
                 .attr("previous-modified-properties-holder", "[[_previousModifiedPropertiesHolder]]")
                 .attr("property-name", "domainFilter")
                 .attr("validation-callback", "[[doNotValidate]]")
-                .attr("prop-title", "Type to filter domain")
-                .attr("prop-desc", "Display types or properties those matched entered text")
+                .attr("prop-title", "Type to search domain by title")
+                .attr("prop-desc", "Finds types or properties those matched the text")
                 .attr("current-state", "[[currentState]]")
                 .add(searchItemsText, prevButton, nextButton);
 
