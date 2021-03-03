@@ -33,7 +33,6 @@ import jakarta.mail.internet.MimeMultipart;
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.mail.exceptions.EmailException;
-import ua.com.fielden.platform.types.try_wrapper.TryWrapper;
 import ua.com.fielden.platform.types.tuples.T2;
 
 /**
