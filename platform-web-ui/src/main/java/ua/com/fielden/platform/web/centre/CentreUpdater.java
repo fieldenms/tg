@@ -127,7 +127,7 @@ public class CentreUpdater {
     /**
      * Message that marks own save-as configuration when it was inherited from base / shared but was disconnected; this occurs if upstream config is deleted, base upstream config is renamed or shared upstream config is made unshared.
      */
-    private static final String UPSTREAM_CONFIG_DISCONNECTED_MESSAGE = "<i>shared, no longer available</i>";
+    private static final String UPSTREAM_CONFIG_DISCONNECTED_MESSAGE = "<i>was shared, removed by user</i>";
     
     private static final String DIFFERENCES_SUFFIX = "__________DIFFERENCES";
     
