@@ -44,7 +44,6 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
     private IPostAction successPostAction;
     private IPostAction errorPostAction;
     private PrefDim prefDimForView;
-    private boolean returnNoAction;
     private boolean shouldRefreshParentCentreAfterSave = true;
 
     /**
@@ -64,7 +63,7 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
      * @return
      */
     public static <T extends AbstractEntity<?>> IEntityActionBuilder0WithViews<T> action(final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity, final Injector injector, final IWebUiBuilder builder) {
-        final EntityActionBuilder<T> actionBuilder = new EntityActionBuilder<T>();
+        final EntityActionBuilder<T> actionBuilder = new EntityActionBuilder<>();
         actionBuilder.injector = injector;
         actionBuilder.builder = builder;
         return actionBuilder.addAction(functionalEntity);
@@ -76,16 +75,7 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
      * @return
      */
     public static <T extends AbstractEntity<?>> IEntityActionBuilder0<T> editAction() {
-        return new EntityActionBuilder<T>();
-    }
-
-    /**
-     * Constructs entity action configuration that indicates the need to remove the default action if any.
-     *
-     * @return
-     */
-    public static <T extends AbstractFunctionalEntityWithCentreContext<?>> IEntityActionBuilder7a<T> actionOff() {
-        return new EntityActionBuilder<T>().noAction();
+        return new EntityActionBuilder<>();
     }
 
     private EntityActionBuilder() {
@@ -93,23 +83,19 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
 
     @Override
     public EntityActionConfig build() {
-        if (returnNoAction) {
-            return EntityActionConfig.createNoActionConfig();
-        } else {
-            return EntityActionConfig.createActionConfig(
-                    functionalEntity,
-                    context,
-                    icon,
-                    iconStyle,
-                    shortDesc,
-                    longDesc,
-                    shortcut,
-                    preAciton,
-                    successPostAction,
-                    errorPostAction,
-                    prefDimForView,
-                    shouldRefreshParentCentreAfterSave);
-        }
+        return EntityActionConfig.createActionConfig(
+            functionalEntity,
+            context,
+            icon,
+            iconStyle,
+            shortDesc,
+            longDesc,
+            shortcut,
+            preAciton,
+            successPostAction,
+            errorPostAction,
+            prefDimForView,
+            shouldRefreshParentCentreAfterSave);
     }
 
     @Override
@@ -205,12 +191,6 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
         }
 
         this.shortcut = shortcut;
-        return this;
-    }
-
-    @Override
-    public IEntityActionBuilder7a<T> noAction() {
-        this.returnNoAction = true;
         return this;
     }
 

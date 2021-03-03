@@ -31,17 +31,17 @@ public class CentreColumnWidthConfigUpdater extends AbstractFunctionalEntityWith
     private CentreContextHolder criteriaEntityHolder;
     
     @IsProperty
-    @Title(value = "Centre Changed", desc = "Indicates whether successful saving of this entity actually changed centre.")
-    private boolean centreChanged;
+    @Title(value = "Centre Dirty", desc = "Indicates whether successful saving of this entity actually changed centre configuration or it is New (aka default, link or inherited).")
+    private boolean centreDirty;
     
     @Observable
-    public CentreColumnWidthConfigUpdater setCentreChanged(final boolean centreChanged) {
-        this.centreChanged = centreChanged;
+    public CentreColumnWidthConfigUpdater setCentreDirty(final boolean centreDirty) {
+        this.centreDirty = centreDirty;
         return this;
     }
     
-    public boolean isCentreChanged() {
-        return centreChanged;
+    public boolean isCentreDirty() {
+        return centreDirty;
     }
     
     @Observable

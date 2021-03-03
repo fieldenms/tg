@@ -33,6 +33,7 @@ import ua.com.fielden.platform.web.centre.CentreConfigNewAction;
 import ua.com.fielden.platform.web.centre.CentreConfigNewActionProducer;
 import ua.com.fielden.platform.web.centre.CentreConfigSaveAction;
 import ua.com.fielden.platform.web.centre.CentreConfigSaveActionProducer;
+import ua.com.fielden.platform.web.centre.CentreConfigShareAction;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterProducer;
 import ua.com.fielden.platform.web.centre.OverrideCentreConfig;
@@ -52,6 +53,7 @@ import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 public class CentreConfigurationWebUiConfig {
     public final EntityMaster<CentreConfigUpdater> centreConfigUpdater;
     public final EntityMaster<CentreColumnWidthConfigUpdater> centreColumnWidthConfigUpdater;
+    public final EntityMaster<CentreConfigShareAction> centreConfigShareActionMaster;
     public final EntityMaster<CentreConfigNewAction> centreConfigNewActionMaster;
     public final EntityMaster<CentreConfigDuplicateAction> centreConfigDuplicateActionMaster;
     public final EntityMaster<CentreConfigLoadAction> centreConfigLoadActionMaster;
@@ -65,6 +67,7 @@ public class CentreConfigurationWebUiConfig {
                 "['padding:20px', 'height: 100%', 'box-sizing: border-box', ['flex', ['flex']], [['flex', 'padding-right:20px'], ['flex', 'padding-right:20px'], ['flex']]]",
                 "['padding:20px', 'height: 100%', 'box-sizing: border-box', ['flex', ['flex']], [], [], []]");
         centreColumnWidthConfigUpdater = createCentreColumnWidthConfigUpdater(injector);
+        centreConfigShareActionMaster = createCentreConfigShareActionMaster(injector);
         centreConfigNewActionMaster = createCentreConfigNewActionMaster(injector);
         centreConfigDuplicateActionMaster = createCentreConfigDuplicateActionMaster(injector);
         centreConfigLoadActionMaster = createCentreConfigLoadActionMaster(injector, "['padding:20px', 'height: 100%', 'box-sizing: border-box', ['flex', ['flex']]]");
@@ -127,7 +130,7 @@ public class CentreConfigurationWebUiConfig {
                                     + "        return self.retrieve().then(function () { self.run(undefined, true); });\n"
                                     + "    } else {\n"
                                     + "        self.$.egi.adjustColumnsVisibility(functionalEntity.get('chosenIds').map(column => column === 'this' ? '' : column));\n"
-                                    + "        self._centreChanged = functionalEntity.get('centreChanged');\n"
+                                    + "        self.$.selection_criteria._centreDirty = functionalEntity.get('centreDirty');\n"
                                     + "    }\n"
                                     + ""))
                         .icon("av:sort-by-alpha")
@@ -180,7 +183,7 @@ public class CentreConfigurationWebUiConfig {
             .setLayoutFor(DESKTOP, empty(), layout)
             .setLayoutFor(TABLET, empty(), layout)
             .setLayoutFor(MOBILE, empty(), layout)
-            .withDimensions(mkDim(400, 260))
+            .withDimensions(mkDim(400, 261))
             .done();
     }
     /**
@@ -218,6 +221,15 @@ public class CentreConfigurationWebUiConfig {
             .withDimensions(mkDim("'30%'", "'50%'"))
             .done();
         return new EntityMaster<>(CentreConfigLoadAction.class, CentreConfigLoadActionProducer.class, masterConfig, injector);
+    }
+
+    /**
+     * Creates no-UI entity master for {@link CentreConfigShareAction}.
+     *
+     * @return
+     */
+    private static EntityMaster<CentreConfigShareAction> createCentreConfigShareActionMaster(final Injector injector) {
+        return new EntityMaster<>(CentreConfigShareAction.class, CentreConfigShareActionProducer.class, null, injector);
     }
 
     /**
