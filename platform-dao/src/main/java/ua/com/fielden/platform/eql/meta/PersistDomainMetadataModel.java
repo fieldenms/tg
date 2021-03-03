@@ -113,8 +113,7 @@ public class PersistDomainMetadataModel {
                     if (!entityTypes.contains(pmd.javaType) && !result.containsKey(pmd.javaType)) {
                         id = id + 1;
                         final List<EqlPropertyMetadata> subItems = pmd.subitems().stream().filter(si -> si.column != null).collect(toList());
-                        final int subitemsCount = subItems.size();
-                        final int propsCount = subitemsCount != 0 && !(Money.class.equals(pmd.javaType) && subitemsCount == 1) ? subitemsCount : 0;
+                        final int propsCount = !subItems.isEmpty() && !(Money.class.equals(pmd.javaType) && subItems.size() == 1) ? subItems.size() : 0;
                         final Pair<String, String> subTypeTitleAndDesc = isUnionEntityType(pmd.javaType) ? getEntityTitleAndDesc((Class<? extends AbstractUnionEntity>) pmd.javaType) : null;
                         final String title = subTypeTitleAndDesc != null ? subTypeTitleAndDesc.getKey() : pmd.javaType.getSimpleName();
                         final String titleDesc = subTypeTitleAndDesc != null ? subTypeTitleAndDesc.getValue() : pmd.javaType.getSimpleName();
@@ -133,19 +132,7 @@ public class PersistDomainMetadataModel {
         long id = typesMap.size();
         for (final DomainTypeData entityType : typesMap.values().stream().filter(t -> t.entity).collect(Collectors.toSet())) {
                 int position = 0;
-                for (final EqlPropertyMetadata propMd : entityType.props) {
-
-                    final Map<String, Integer> keyMembersIndices = new HashMap<>();
-                    int i = 0;
-                    for (final T2<String, Class<?>> element : entityType.getKeyMembersIndices()) {
-                        i = i + 1;
-                        keyMembersIndices.put(element._1, i);
-                    }
-
-                    if (keyMembersIndices.isEmpty()) {
-                        keyMembersIndices.put("key", 0);
-                    }
-                    
+                for (final EqlPropertyMetadata propMd : entityType.getProps()) {
                     id = id + 1;
                     position = position + 1;
                     final String prelTitle = getTitleAndDesc(propMd.getName(), entityType.type).getKey();
@@ -155,14 +142,14 @@ public class PersistDomainMetadataModel {
                             null, //
                             typesMap.get(propMd.javaType).id, //
                             (isEmpty(prelTitle) && ID.equals(propMd.getName()) ? "ID" : prelTitle), //
-                            keyMembersIndices.get(propMd.getName()), //
+                            entityType.getKeyMemberIndex(propMd.getName()), //
                             propMd.required, //
                             (propMd.column != null ? propMd.column.name
                                     : (propMd.subitems().size() == 1 ? (propMd.subitems().get(0).column != null ? propMd.subitems().get(0).column.name : null) : null)), //
                             position));
 
                     if (propMd.subitems().size() > 1) {
-                        long holderId = id;
+                        final long holderId = id;
                         int subItemPosition = 0;
                         for (final EqlPropertyMetadata subProp : propMd.subitems().stream().filter(el -> el.column != null).collect(toList())) {
                             id = id + 1;
@@ -274,10 +261,10 @@ public class PersistDomainMetadataModel {
         private final String dbTable;
         private final String entityTypeDesc;
         private final int propsCount;
-        private final List<T2<String, Class<?>>> keyMembersIndices = new ArrayList<>();
+        private final Map<String, Integer> keyMembersIndices = new HashMap<>();
         private final List<EqlPropertyMetadata> props = new ArrayList<>();
         
-        public DomainTypeData(final Class<?> type, final long id, final String key, final String desc, final boolean entity, final String dbTable, final String entityTypeDesc, final int propsCount, final List<T2<String, Class<?>>> keyMembersIndices, final List<EqlPropertyMetadata> props) {
+        public DomainTypeData(final Class<?> type, final long id, final String key, final String desc, final boolean entity, final String dbTable, final String entityTypeDesc, final int propsCount, final List<T2<String, Class<?>>> keyMembers, final List<EqlPropertyMetadata> props) {
             this.type = type;
             this.id = id;
             this.key = key;
@@ -286,12 +273,21 @@ public class PersistDomainMetadataModel {
             this.dbTable = dbTable;
             this.entityTypeDesc = entityTypeDesc;
             this.propsCount = propsCount;
-            this.keyMembersIndices.addAll(keyMembersIndices);
             this.props.addAll(props);
+            
+            int i = 0;
+            for (final T2<String, Class<?>> element : keyMembers) {
+                i = i + 1;
+                keyMembersIndices.put(element._1, i);
+            }
+
+            if (keyMembersIndices.isEmpty()) {
+                keyMembersIndices.put("key", 0);
+            }
         }
         
-        public List<T2<String, Class<?>>> getKeyMembersIndices() {
-            return unmodifiableList(keyMembersIndices);
+        public Integer getKeyMemberIndex(final String keyMember) {
+            return keyMembersIndices.get(keyMember);
         }
         
         public List<EqlPropertyMetadata> getProps() {

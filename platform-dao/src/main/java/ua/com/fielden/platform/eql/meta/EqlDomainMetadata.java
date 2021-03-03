@@ -205,8 +205,6 @@ public class EqlDomainMetadata {
                 return of(new EqlPropertyMetadata.Builder(ID, Long.class, H_LONG).expression(expr().prop(KEY).model()).build());
             } else {
                 return empty();
-                //return new EqlPropertyMetadata.Builder(ID, Long.class, H_LONG).build(); //return null;
-                
             }
         default:
             return empty();
@@ -367,14 +365,6 @@ public class EqlDomainMetadata {
         final Builder resultInProgress = new EqlPropertyMetadata.Builder(propName, propType, hibType);
 
         resultInProgress.required(isRequiredByDefinition(propField, entityType));    
-        
-//        if (calculated != null) { // calc prop on PE/SE
-//            
-//        } else if (mapTo == null || entityType is union) { // non-calc prop on SE
-//            
-//        } else { // non-calc prop on PE
-//            
-//        }
         
         if (mapTo != null && !isSyntheticEntityType(entityType) && calculated == null /* 2 last conditions are to overcome incorrect metadata combinations*/) {
             final String columnName = getColumnName(propName, mapTo, parentPrefix);
