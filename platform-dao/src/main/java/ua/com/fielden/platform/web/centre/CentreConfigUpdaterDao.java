@@ -18,7 +18,7 @@ import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 /**
  * DAO implementation for companion object {@link ICentreConfigUpdater}.
  *
- * @author Developers
+ * @author TG Team
  *
  */
 @EntityType(CentreConfigUpdater.class)
@@ -52,8 +52,8 @@ public class CentreConfigUpdaterDao extends CommonEntityDao<CentreConfigUpdater>
         // in case where sorting or pageCapacity has been changed from previous value, we need to trigger running from client-side using 'triggerRerun' property
         actionToSave.setTriggerRerun(actionToSave.getProperty("pageCapacity").isChangedFromOriginal() || actionToSave.getProperty("sortingVals").isChangedFromOriginal());
         if (!actionToSave.isTriggerRerun()) {
-            // in case where neither sorting nor pageCapacity has changed from previous value (and re-running will not occur), we need to send 'centreChanged' parameter and bind it to SAVE / DISCARD buttons disablement
-            actionToSave.setCentreChanged(criteriaEntityBeingUpdated.isCentreChanged());
+            // in case where neither sorting nor pageCapacity has changed from previous value (and re-running will not occur), we need to send 'centreDirty' parameter and bind it to SAVE button disablement
+            actionToSave.setCentreDirty(criteriaEntityBeingUpdated.isCentreDirty());
         }
 
         // we need to be able to continue 'change pageCapacity/sort/order/visibility' activities after successful save -- all essential properties should be reset to reflect 'newly applied' 'pageCapacity/sort/order/visibility' inside original values

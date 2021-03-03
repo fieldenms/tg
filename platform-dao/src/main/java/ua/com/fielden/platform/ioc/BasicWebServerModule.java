@@ -119,10 +119,12 @@ import ua.com.fielden.platform.ui.config.controller.MainMenuItemDao;
 import ua.com.fielden.platform.web.centre.CentreConfigDeleteActionDao;
 import ua.com.fielden.platform.web.centre.CentreConfigDuplicateActionDao;
 import ua.com.fielden.platform.web.centre.CentreConfigNewActionDao;
+import ua.com.fielden.platform.web.centre.CentreConfigShareActionDao;
 import ua.com.fielden.platform.web.centre.CustomisableColumnDao;
 import ua.com.fielden.platform.web.centre.ICentreConfigDeleteAction;
 import ua.com.fielden.platform.web.centre.ICentreConfigDuplicateAction;
 import ua.com.fielden.platform.web.centre.ICentreConfigNewAction;
+import ua.com.fielden.platform.web.centre.ICentreConfigShareAction;
 import ua.com.fielden.platform.web.centre.ICustomisableColumn;
 import ua.com.fielden.platform.web.centre.ILoadableCentreConfig;
 import ua.com.fielden.platform.web.centre.IOverrideCentreConfig;
@@ -260,6 +262,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(ISecurityMatrixSaveAction.class).to(SecurityMatrixSaveActionDao.class);
 
         bind(ICustomisableColumn.class).to(CustomisableColumnDao.class);
+        bind(ICentreConfigShareAction.class).to(CentreConfigShareActionDao.class);
         bind(ICentreConfigNewAction.class).to(CentreConfigNewActionDao.class);
         bind(ICentreConfigDuplicateAction.class).to(CentreConfigDuplicateActionDao.class);
         bind(ICentreConfigDeleteAction.class).to(CentreConfigDeleteActionDao.class);

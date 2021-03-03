@@ -15,6 +15,7 @@ import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.okCan
 import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.yesNo;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.editAction;
+import static ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfigBuilder.multiAction;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.multi;
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.single;
@@ -35,6 +36,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.function.Function;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -1797,7 +1799,28 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .also()
                 .addEditableProp("bigDecimalProp")
                     .minWidth(68);
-
+                    
+        final Function<String, EntityActionConfig> createDummyAction = colour -> action(TgDummyAction.class)
+            .withContext(context().withSelectedEntities().build())
+            .icon("accessibility")
+            .withStyle("color: " + colour)
+            .shortDesc("Dummy")
+            .longDesc("Dummy action, simply prints its result into console.")
+            .build();
+        final Function<String, EntityActionConfig> createFunctionalAction3 = colour -> action(TgFunctionalEntityWithCentreContext.class).
+            withContext(context().withSelectedEntities().build()).
+            icon("assignment-turned-in").
+            withStyle("color: " + colour).
+            shortDesc("Function 3").
+            longDesc("Functional context-dependent action 3 (TgFunctionalEntityWithCentreContext)").
+            build();
+        final Function<String, EntityActionConfig> createFunctionalAction4 = colour -> action(TgFunctionalEntityWithCentreContext.class).
+            withContext(context().withSelectionCrit().withSelectedEntities().build()).
+            icon("attachment").
+            withStyle("color: " + colour).
+            shortDesc("Function 4").
+            longDesc("Functional context-dependent action 4 (TgFunctionalEntityWithCentreContext)").
+            build();
         final IAlsoSecondaryAction<TgPersistentEntityWithProperties> beforeRenderingCustomiserConfiguration = (withCalculatedAndCustomProperties ?
                             beforeSummaryConfForBigDecimalProp
                                 .withSummary("max_of_dec", "MAX(bigDecimalProp)", "Max of decimal:Maximum of big decimal property")
@@ -1862,8 +1885,12 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //                .addProp(mkProp("Custom Prop", "Custom property with String type", String.class))
                 //                .also()
                 //                .addProp(mkProp("Custom Prop 2", "Custom property 2 with concrete value", "OK2"))
-
-                .addPrimaryAction(EDIT_ACTION.mkAction(TgPersistentEntityWithProperties.class))
+                .addPrimaryAction(multiAction(PrimaryActionSelector.class)
+                    .addAction(EDIT_ACTION.mkActionWithIcon(TgPersistentEntityWithProperties.class, "editor:mode-edit", of("color:green")))
+                    .addAction(EDIT_ACTION.mkActionWithIcon(TgPersistentEntityWithProperties.class, "editor:mode-edit", of("color:orange")))
+                    .addAction(EDIT_ACTION.mkActionWithIcon(TgPersistentEntityWithProperties.class, "editor:mode-edit", of("color:red")))
+                    .build()
+                )
 //                .addPrimaryAction(action(EntityEditAction.class).withContext(context().withCurrentEntity().withSelectionCrit().build())
 //                        .icon("editor:mode-edit")
 //                        .withStyle("color: green")
@@ -1887,34 +1914,27 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         EntityActionConfig.createMasterInDialogInvocationActionConfig()
                 ).also()*/
                 .addSecondaryAction(
-                        action(TgDummyAction.class)
-                                .withContext(context().withSelectedEntities().build())
-                                .postActionSuccess(new PostActionSuccess(""
-                                        + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
-                                        ))
-                                .icon("accessibility")
-                                .withStyle("color: red")
-                                .shortDesc("Dummy")
-                                .longDesc("Dummy action, simply prints its result into console.")
-                                .build()
+                    multiAction(PrimaryActionSelector.class)
+                    .addAction(createDummyAction.apply("green"))
+                    .addAction(createDummyAction.apply("orange"))
+                    .addAction(createDummyAction.apply("red"))
+                    .build()
                 )
                 .also()
                 .addSecondaryAction(
-                        action(TgFunctionalEntityWithCentreContext.class).
-                                withContext(context().withSelectedEntities().build()).
-                                icon("assignment-turned-in").
-                                shortDesc("Function 3").
-                                longDesc("Functional context-dependent action 3 (TgFunctionalEntityWithCentreContext)").
-                                build()
+                    multiAction(PrimaryActionSelector.class)
+                    .addAction(createFunctionalAction3.apply("orange"))
+                    .addAction(createFunctionalAction3.apply("red"))
+                    .addAction(createFunctionalAction3.apply("green"))
+                    .build()
                 )
                 .also()
                 .addSecondaryAction(
-                        action(TgFunctionalEntityWithCentreContext.class).
-                                withContext(context().withSelectionCrit().withSelectedEntities().build()).
-                                icon("attachment").
-                                shortDesc("Function 4").
-                                longDesc("Functional context-dependent action 4 (TgFunctionalEntityWithCentreContext)").
-                                build()
+                    multiAction(PrimaryActionSelector.class)
+                    .addAction(createFunctionalAction4.apply("red"))
+                    .addAction(createFunctionalAction4.apply("green"))
+                    .addAction(createFunctionalAction4.apply("orange"))
+                    .build()
                 );
                 final IQueryEnhancerSetter<TgPersistentEntityWithProperties> beforeEnhancerConfiguration = (withCalculatedAndCustomProperties ? beforeRenderingCustomiserConfiguration.setCustomPropsValueAssignmentHandler(CustomPropsAssignmentHandler.class) : beforeRenderingCustomiserConfiguration)
                 .setRenderingCustomiser(TestRenderingCustomiser.class);
@@ -1925,7 +1945,6 @@ public class WebUiConfig extends AbstractWebUiConfig {
         } else {
             afterQueryEnhancerConf = beforeEnhancerConfiguration;//.setQueryEnhancer(TgPersistentEntityWithPropertiesQueryEnhancer.class, context().withCurrentEntity().build());
         }
-
 
         final ISummaryCardLayout<TgPersistentEntityWithProperties> scl = afterQueryEnhancerConf.setFetchProvider(EntityUtils.fetch(TgPersistentEntityWithProperties.class).with("status"))
                 .setSummaryCardLayoutFor(Device.DESKTOP, Optional.empty(), "['width:350px', [['flex', 'select:property=kount'], ['flex', 'select:property=sum_of_int']],[['flex', 'select:property=max_of_dec'],['flex', 'select:property=min_of_dec']], [['flex', 'select:property=sum_of_dec']]]")
