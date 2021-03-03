@@ -46,8 +46,8 @@ public class DomainExplorerInsertionPointMaster implements IMaster<DomainExplore
                 .attr("previous-modified-properties-holder", "[[_previousModifiedPropertiesHolder]]")
                 .attr("property-name", "domainFilter")
                 .attr("validation-callback", "[[doNotValidate]]")
-                .attr("prop-title", "Type to search domain by title")
-                .attr("prop-desc", "Finds types or properties those matched the text")
+                .attr("prop-title", "Type to find domain type or property by title")
+                .attr("prop-desc", "Finds domain types or properties those matched the text")
                 .attr("current-state", "[[currentState]]")
                 .add(searchItemsText, prevButton, nextButton);
 
@@ -108,7 +108,7 @@ public class DomainExplorerInsertionPointMaster implements IMaster<DomainExplore
                 + "    this._toastGreeting().isCritical = false;\n"
                 + "    this._toastGreeting().show();\n"
                 + "}.bind(self);\n"
-                +"//Locks/Unlocks tg-reference-hierarchy's lock layer during insertion point activation\n"
+                +"//Locks/Unlocks tg-domain-explorer's lock layer during insertion point action activation\n"
                 + "self.disableViewForDescendants = function () {\n"
                 + "    TgEntityBinderBehavior.disableViewForDescendants.call(this);\n"
                 + "    self._showDataLoadingPromt('Loading domain...');\n"
@@ -117,7 +117,7 @@ public class DomainExplorerInsertionPointMaster implements IMaster<DomainExplore
                 + "    TgEntityBinderBehavior.enableViewForDescendants.call(this);\n"
                 + "    self._showDataLoadedPromt('Loading completed successfully');\n"
                 + "}.bind(self);\n"
-                + "//Need for security marix editors binding.\n"
+                + "//Is Needed to sent data to server.\n"
                 + "self._isNecessaryForConversion = function (propertyName) { \n"
                 + "    return ['domainTypeName', 'loadedHierarchy', 'domainFilter', 'domainTypeHolderId', 'domainPropertyHolderId'].indexOf(propertyName) >= 0; \n"
                 + "}; \n"

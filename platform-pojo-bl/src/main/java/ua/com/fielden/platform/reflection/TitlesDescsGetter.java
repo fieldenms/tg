@@ -171,8 +171,8 @@ public class TitlesDescsGetter {
     }
 
     /**
-     * If <code>dotNotationExp</code> refers to an entity-typed property of <code>propOwnerType</code> then a pair of title and description of of the entity-type is returned.
-     * Otherwise, it returns title and description based on property name that is split by camel case character and capitalized first word.
+     * If <code>dotNotationExp</code> refers to an entity-typed property of <code>propOwnerType</code> then a pair of title and description of the entity-type is returned.
+     * Otherwise, it builds title and description from property name splitting it by camel case character and capitalizing the first word.
      *
      * @param dotNotationExp
      * @param propOwnerType
