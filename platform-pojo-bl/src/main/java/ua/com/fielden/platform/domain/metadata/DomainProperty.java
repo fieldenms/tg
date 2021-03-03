@@ -15,7 +15,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 
 @KeyType(DynamicEntityKey.class)
 @KeyTitle("Type full name")
-@CompanionObject(IDomainProperty.class)
+@CompanionObject(DomainPropertyCo.class)
 @MapEntityTo
 public class DomainProperty extends AbstractEntity<DynamicEntityKey> {
     @IsProperty

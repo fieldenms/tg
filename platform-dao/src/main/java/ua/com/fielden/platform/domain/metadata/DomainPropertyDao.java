@@ -12,7 +12,7 @@ import ua.com.fielden.platform.entity.query.IFilter;
  * @author TG Team
  */
 @EntityType(DomainProperty.class)
-public class DomainPropertyDao extends CommonEntityDao<DomainProperty> implements IDomainProperty {
+public class DomainPropertyDao extends CommonEntityDao<DomainProperty> implements DomainPropertyCo {
 
     @Inject
     protected DomainPropertyDao(final IFilter filter) {

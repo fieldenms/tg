@@ -32,8 +32,8 @@ import ua.com.fielden.platform.domain.metadata.DomainPropertyDao;
 import ua.com.fielden.platform.domain.metadata.DomainPropertyHolderCo;
 import ua.com.fielden.platform.domain.metadata.DomainPropertyHolderDao;
 import ua.com.fielden.platform.domain.metadata.DomainTypeDao;
-import ua.com.fielden.platform.domain.metadata.IDomainProperty;
-import ua.com.fielden.platform.domain.metadata.IDomainType;
+import ua.com.fielden.platform.domain.metadata.DomainPropertyCo;
+import ua.com.fielden.platform.domain.metadata.DomainTypeCo;
 import ua.com.fielden.platform.entity.EntityDeleteActionDao;
 import ua.com.fielden.platform.entity.EntityEditActionDao;
 import ua.com.fielden.platform.entity.EntityNavigationActionDao;
@@ -286,8 +286,8 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(IAcknowledgeWarnings.class).to(AcknowledgeWarningsDao.class);
         bind(IPropertyWarning.class).to(PropertyWarningDao.class);
 
-        bind(IDomainType.class).to(DomainTypeDao.class);
-        bind(IDomainProperty.class).to(DomainPropertyDao.class);
+        bind(DomainTypeCo.class).to(DomainTypeDao.class);
+        bind(DomainPropertyCo.class).to(DomainPropertyDao.class);
         bind(DomainPropertyHolderCo.class).to(DomainPropertyHolderDao.class);
         bind(DomainExplorerCo.class).to(DomainExplorerDao.class);
         bind(DomainExplorerInsertionPointCo.class).to(DomainExplorerInsertionPointDao.class);

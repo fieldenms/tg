@@ -8,6 +8,6 @@ import ua.com.fielden.platform.dao.IEntityDao;
  * @author TG Team
  * 
  */
-public interface IDomainType extends IEntityDao<DomainType> {
+public interface DomainTypeCo extends IEntityDao<DomainType> {
 
 }
