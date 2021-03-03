@@ -22,7 +22,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.dao.exceptions.DbException;
@@ -106,9 +105,9 @@ public class PersistDomainMetadataModel {
                 id = id + 1;
                 final Pair<String, String> typeTitleAndDesc = getEntityTitleAndDesc(entityType);
                 final List<EqlPropertyMetadata> propsMd = entityMd.props().stream().filter(pm -> !pm.name.equals(VERSION) && !pm.isVirtualKey()).collect(toList());
-                final DomainTypeData dtd = new DomainTypeData(entityType, id, entityType.getName(), typeTitleAndDesc.getKey(), true, entityMd.typeInfo.tableName, typeTitleAndDesc.getValue(), propsMd.size(), entityMd.typeInfo.compositeKeyMembers, propsMd);
-                result.put(entityType, dtd);
+                result.put(entityType, new DomainTypeData(entityType, id, entityType.getName(), typeTitleAndDesc.getKey(), true, entityMd.typeInfo.tableName, typeTitleAndDesc.getValue(), propsMd.size(), entityMd.typeInfo.compositeKeyMembers, propsMd));
                 
+                // collecting primitive, union and custom user types from props
                 for (final EqlPropertyMetadata pmd : propsMd) {
                     if (!entityTypes.contains(pmd.javaType) && !result.containsKey(pmd.javaType)) {
                         id = id + 1;
@@ -130,7 +129,7 @@ public class PersistDomainMetadataModel {
         final List<DomainPropertyData> result = new ArrayList<>();
 
         long id = typesMap.size();
-        for (final DomainTypeData entityType : typesMap.values().stream().filter(t -> t.entity).collect(toSet())) {
+        for (final DomainTypeData entityType : typesMap.values().stream().filter(t -> t.isEntity).collect(toSet())) {
                 int position = 0;
                 for (final EqlPropertyMetadata propMd : entityType.getProps()) {
                     id = id + 1;
@@ -183,7 +182,7 @@ public class PersistDomainMetadataModel {
                         pst.setString(3, propType.desc);
                         pst.setString(4, propType.dbTable);
                         pst.setString(5, propType.entityTypeDesc);
-                        pst.setString(6, propType.entity ? "Y" : "N");
+                        setBooleanParameter(6, propType.isEntity, pst);
                         pst.setInt(7, propType.propsCount);
                         pst.setInt(8, 0);
                         pst.addBatch();
@@ -212,11 +211,11 @@ public class PersistDomainMetadataModel {
                         pst.setLong(1, propType.id);
                         pst.setString(2, propType.name);
                         pst.setString(3, propType.title);
-                        setNullableLongParameter(pst, propType.holderAsDomainType, 4);
-                        setNullableLongParameter(pst, propType.holderAsDomainProperty, 5);
+                        setNullableLongParameter(4, propType.holderAsDomainType, pst);
+                        setNullableLongParameter(5, propType.holderAsDomainProperty, pst);
                         pst.setLong(6, propType.domainType);
-                        setNullableIntegerParameter(pst, propType.keyIndex, 7);
-                        pst.setString(8, propType.required ? "Y" : "N");
+                        setNullableIntegerParameter(7, propType.keyIndex, pst);
+                        setBooleanParameter(8, propType.required, pst);
                         pst.setString(9, propType.dbColumn);
                         pst.setInt(10, propType.position);
                         pst.setInt(11, 0);
@@ -236,7 +235,7 @@ public class PersistDomainMetadataModel {
         });
     }
     
-    private static void setNullableIntegerParameter(final PreparedStatement pst, final Integer paramValue, final int paramIndex) throws SQLException {
+    private static void setNullableIntegerParameter(final int paramIndex, final Integer paramValue, final PreparedStatement pst) throws SQLException {
         if (paramValue != null) {
             pst.setInt(paramIndex, paramValue);
         } else {
@@ -244,12 +243,16 @@ public class PersistDomainMetadataModel {
         }
     }
     
-    private static void setNullableLongParameter(final PreparedStatement pst, final Long paramValue, final int paramIndex) throws SQLException {
+    private static void setNullableLongParameter(final int paramIndex, final Long paramValue, final PreparedStatement pst) throws SQLException {
         if (paramValue != null) {
             pst.setLong(paramIndex, paramValue);
         } else {
             pst.setNull(paramIndex, -5);
         }
+    }
+    
+    private static void setBooleanParameter(final int paramIndex, final boolean paramValue, final PreparedStatement pst) throws SQLException {
+        pst.setString(paramIndex, paramValue ? "Y" : "N");
     }
 
     private static class DomainTypeData {
@@ -257,19 +260,19 @@ public class PersistDomainMetadataModel {
         private final long id;
         private final String key;
         private final String desc;
-        private final boolean entity;
+        private final boolean isEntity;
         private final String dbTable;
         private final String entityTypeDesc;
         private final int propsCount;
         private final Map<String, Integer> keyMembersIndices = new HashMap<>();
         private final List<EqlPropertyMetadata> props = new ArrayList<>();
         
-        public DomainTypeData(final Class<?> type, final long id, final String key, final String desc, final boolean entity, final String dbTable, final String entityTypeDesc, final int propsCount, final List<T2<String, Class<?>>> keyMembers, final List<EqlPropertyMetadata> props) {
+        public DomainTypeData(final Class<?> type, final long id, final String key, final String desc, final boolean isEntity, final String dbTable, final String entityTypeDesc, final int propsCount, final List<T2<String, Class<?>>> keyMembers, final List<EqlPropertyMetadata> props) {
             this.type = type;
             this.id = id;
             this.key = key;
             this.desc = desc;
-            this.entity = entity;
+            this.isEntity = isEntity;
             this.dbTable = dbTable;
             this.entityTypeDesc = entityTypeDesc;
             this.propsCount = propsCount;
