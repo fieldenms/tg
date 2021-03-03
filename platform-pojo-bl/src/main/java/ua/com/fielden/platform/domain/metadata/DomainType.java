@@ -14,7 +14,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 
 @KeyType(String.class)
 @KeyTitle("Type full name")
-@DescTitle("Description")
+@DescTitle("Type title")
 @DescRequired
 @CompanionObject(DomainTypeCo.class)
 @MapEntityTo

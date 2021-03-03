@@ -39,12 +39,25 @@ import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.Pair;
 
+/**
+ * Performs instant (re-)persistance of the Domain Metadata Model entities from an actual TG-Java domain.   
+ * 
+ * @author TG Team 
+ *
+ */
 public class PersistDomainMetadataModel {
     final static String DOMAINTYPE_INSERT_STMT = "INSERT INTO DOMAINTYPE_ VALUES(?,?,?,?,?,?,?,?);";
     final static String DOMAINPROPERTY_INSERT_STMT = "INSERT INTO DOMAINPROPERTY_ VALUES(?,?,?,?,?,?,?,?,?,?,?);";
     final static String EXISTING_DATA_DELETE_STMT = "DELETE FROM DOMAINPROPERTY_; DELETE FROM DOMAINTYPE_;";
     final static List<Class<? extends AbstractEntity<?>>> platformTypesOfInterest = asList(Attachment.class, User.class, UserRole.class, UserAndRoleAssociation.class, SecurityRoleAssociation.class);
 
+    /**
+     * Synchronises persistent model of Domain Explorer entities with actual Domain java classes. 
+     * 
+     * @param entityTypes - domain entities to be included into metadata model entities data.
+     * @param domainMetadata
+     * @param trEx
+     */
     public static void persist( //
             final List<Class<? extends AbstractEntity<?>>> entityTypes, //
             final EqlDomainMetadata domainMetadata,

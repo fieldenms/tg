@@ -5,7 +5,6 @@ import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
@@ -14,13 +13,12 @@ import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
 
 @KeyType(DynamicEntityKey.class)
-@KeyTitle("Type full name")
 @CompanionObject(DomainPropertyCo.class)
 @MapEntityTo
 public class DomainProperty extends AbstractEntity<DynamicEntityKey> {
     @IsProperty
     @MapTo
-    @Title(value = "name", desc = "Desc")
+    @Title(value = "Property name", desc = "Desc")
     @CompositeKeyMember(1)
     private String name;
 
