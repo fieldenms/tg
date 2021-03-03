@@ -126,8 +126,8 @@ public class SmtpEmailSender {
 
     private Session newEmailSession() {
         final Properties props = new Properties();
-        final String username = System.getProperty("mail.smtp.username", System.getenv("mail.smtp.username"));
-        final String password = System.getProperty("mail.smtp.password", System.getenv("mail.smtp.password"));
+        final String username = System.getProperty("email.smtp.username", System.getenv("email.smtp.username"));
+        final String password = System.getProperty("email.smtp.password", System.getenv("email.smtp.password"));
         final Authenticator auth;
         if (!StringUtils.isEmpty(username) &&
             !StringUtils.isEmpty(password)) {
@@ -541,7 +541,7 @@ public class SmtpEmailSender {
     }
 
     public static void main(final String[] args) {
-        final SmtpEmailSender sender = new SmtpEmailSender(System.getProperty("mail.smtp"));
+        final SmtpEmailSender sender = new SmtpEmailSender(System.getProperty("email.smtp"));
         final Path path1 = Paths.get(".classpath");
         final Path path2 = Paths.get(".project");
         final Path path3 = Paths.get("desktop-script.sh");
