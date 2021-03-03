@@ -31,7 +31,7 @@ public class DomainType extends AbstractEntity<String> {
     
     @IsProperty
     @MapTo
-    @Title(value = "Is Entity?", desc = "Desc")
+    @Title(value = "Is Entity?", desc = "True for persistent and synthetic entities; false for union entities and other types.")
     private boolean entity;
 
     @IsProperty

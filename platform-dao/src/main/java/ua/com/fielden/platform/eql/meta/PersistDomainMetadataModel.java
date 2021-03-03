@@ -147,7 +147,8 @@ public class PersistDomainMetadataModel {
                                     : (propMd.subitems().size() == 1 ? (propMd.subitems().get(0).column != null ? propMd.subitems().get(0).column.name : null) : null)), //
                             position));
 
-                    if (propMd.subitems().size() > 1) {
+                    // adding subproperties of union type properties 
+                    if (propMd.subitems().size() > 1) { //skipping cases of SimpleMoney with single subproperty
                         final long holderId = id;
                         int subItemPosition = 0;
                         for (final EqlPropertyMetadata subProp : propMd.subitems().stream().filter(el -> el.column != null).collect(toList())) {

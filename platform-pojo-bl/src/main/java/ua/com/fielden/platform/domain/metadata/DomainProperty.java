@@ -40,7 +40,7 @@ public class DomainProperty extends AbstractEntity<DynamicEntityKey> {
 
     @IsProperty
     @MapTo
-    @Title(value = "Key Index", desc = "Desc")
+    @Title(value = "Key Index", desc = "Usual prop -- null, Plain key prop -- 0, Member prop of composite key -- 1 .. n")
     private Integer keyIndex;
 
     @IsProperty
