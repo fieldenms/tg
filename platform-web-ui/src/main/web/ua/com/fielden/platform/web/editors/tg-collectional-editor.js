@@ -131,6 +131,13 @@ const additionalTemplate = html`
         .secondary {
             font-size: 8pt;
         }
+        .shared {
+            text-align: right;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+        }
         .inherited-primary {
             font-weight: bolder;
         }
@@ -174,7 +181,7 @@ const customInputTemplate = html`
                             <div class$="[[_computedHeaderClass(item)]]" inner-h-t-m-l="[[_calcItemTextHighlighted(item, headerPropertyName, _phraseForSearchingCommited)]]"></div>
                             <div class$="[[_computedDescriptionClass(item)]]" inner-h-t-m-l="[[_calcItemTextHighlighted(item, descriptionPropertyName, _phraseForSearchingCommited)]]"></div>
                         </div>
-                        <div inner-h-t-m-l="[[_calcSharedByText(item)]]" hidden$="[[_sharedByTextHidden(item)]]"></div>
+                        <div class="primary shared" inner-h-t-m-l="[[_calcSharedByText(item)]]" hidden$="[[_sharedByTextHidden(item)]]"></div>
                         <div class$="[[_computeSortingClass(item)]]" hidden$="[[_sortingIconHidden(_forReview, item)]]">
                             <iron-icon icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_computeSortingIconStyle(item.sorting)]]" on-tap="_changeOrdering"></iron-icon>
                             <span class="ordering-number self-center">[[_calculateOrder(item.sortingNumber)]]</span>
@@ -581,7 +588,7 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
     }
     
     _sharedByTextHidden (item) {
-        return typeof item.sharedByMessage === 'undefined' && typeof item.orphanedSharingMessage === 'undefined';
+        return !item.sharedByMessage && !item.orphanedSharingMessage
     }
     
     _sortingIconHidden (_forReview, item) {
