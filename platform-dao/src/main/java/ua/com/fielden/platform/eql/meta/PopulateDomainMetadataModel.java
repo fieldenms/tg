@@ -21,17 +21,18 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
-import com.google.inject.Guice;
-
-import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
+import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.dao.exceptions.DbException;
 import ua.com.fielden.platform.dao.session.TransactionalExecution;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModification;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
+import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
+import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
+import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.tuples.T2;
 
@@ -41,30 +42,20 @@ public class PopulateDomainMetadataModel {
     final static String EXISTING_DATA_DELETE_STMT = "DELETE FROM DOMAINPROPERTY_; DELETE FROM DOMAINTYPE_;";
 
     public static void populate( //
-            final IApplicationDomainProvider applicationDomainProvider, //
             final List<Class<? extends AbstractEntity<?>>> entityTypes, //
-            final TransactionalExecution trEx, //
-            final Map<Class, Class> hibTypesDefaults, //
-            final DbVersion dbVersion) {
+            final EqlDomainMetadata domainMetadata,
+            final TransactionalExecution trEx) {
         
-        clearExistingMetadata(trEx);
+        emptyExistingMetadata(trEx);
         
-        final Map<Class<?>, Class<?>> htd = new HashMap<>();
-        for (final Entry<Class, Class> el : hibTypesDefaults.entrySet()) {
-            htd.put(el.getKey(), el.getValue());
-        }
-
-        final EqlDomainMetadata domainMd = new EqlDomainMetadata(//
-                htd, //
-                Guice.createInjector(new HibernateUserTypesModule()), //
-                applicationDomainProvider.entityTypes(), dbVersion);
-
         final Set<Class<?>> propTypes = new HashSet<>();
         final Map<Class<?>, String> tableNamesMap = new HashMap<>();
         final Map<Class<?>, Integer> propsCountMap = new HashMap<>();
+        
+        final List<Class<? extends AbstractEntity<?>>> domainTypes = enhanceTypesList(entityTypes);
 
-        for (final Class<? extends AbstractEntity<?>> entityType : entityTypes) {
-            final EqlEntityMetadata entityMd = domainMd.entityPropsMetadata().get(entityType);
+        for (final Class<? extends AbstractEntity<?>> entityType : domainTypes) {
+            final EqlEntityMetadata entityMd = domainMetadata.entityPropsMetadata().get(entityType);
             if (entityMd != null) {
                 propTypes.add(entityMd.typeInfo.entityType);
                 if (entityMd.typeInfo.category == PERSISTED) {
@@ -126,8 +117,8 @@ public class PopulateDomainMetadataModel {
 
         final List<DomainPropertyData> dpd = new ArrayList<>();
 
-        for (final Class<?> et : entityTypes) {
-            final EqlEntityMetadata em = domainMd.entityPropsMetadata().get(et);
+        for (final Class<?> et : domainTypes) {
+            final EqlEntityMetadata em = domainMetadata.entityPropsMetadata().get(et);
 
             if (em != null) {
                 int position = 0;
@@ -183,12 +174,29 @@ public class PopulateDomainMetadataModel {
         populateDomainProperties(dpd, trEx);
     }
 
-    private static void clearExistingMetadata(final TransactionalExecution trEx) {
+    private static final List<Class<? extends AbstractEntity<?>>> enhanceTypesList(final List<Class<? extends AbstractEntity<?>>> entityTypes) {
+        final List<Class<? extends AbstractEntity<?>>> domainTypes = entityTypes.stream().filter(type -> shouldInclude(type)).collect(toList());
+        domainTypes.add(User.class);
+        domainTypes.add(UserRole.class);
+        domainTypes.add(UserAndRoleAssociation.class);
+        domainTypes.add(Attachment.class);
+        domainTypes.add(SecurityRoleAssociation.class);
+        return domainTypes;
+    }
+    
+    private static boolean shouldInclude(final Class<? extends AbstractEntity<?>> type) {
+        return !(isUnionEntityType(type)
+                || AbstractFunctionalEntityWithCentreContext.class.isAssignableFrom(type) // need to exclude them as some are persistent
+                || AbstractFunctionalEntityForCollectionModification.class.isAssignableFrom(type) // need to exclude them as some are persistent
+                );
+    }
+    
+    private static void emptyExistingMetadata(final TransactionalExecution trEx) {
         trEx.exec(conn -> {
             try (final Statement st = conn.createStatement()) {
                 st.execute(EXISTING_DATA_DELETE_STMT);
             } catch (final SQLException ex) {
-                throw new DbException(format("Could not delete"), ex);
+                throw new DbException(format("Failed to empty existing metadata."), ex);
             }
         });
     }
@@ -217,7 +225,6 @@ public class PopulateDomainMetadataModel {
                         } else {
                             pst.setNull(7, 4);
                         }
-
                         pst.setString(8, propType.required ? "Y" : "N");
                         pst.setString(9, propType.dbColumn);
                         pst.setInt(10, propType.position);
@@ -238,7 +245,7 @@ public class PopulateDomainMetadataModel {
         });
 
     }
-
+    
     private static class DomainPropertyData {
         private final int id;
         private final String name;
