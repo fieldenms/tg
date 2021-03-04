@@ -477,7 +477,7 @@ const TgEntityMasterBehaviorImpl = {
                     actionModel.postActionSuccess = function (functionalEntity) {
                         action.success = true;
                         console.log('postActionSuccess: ' + actionDesc, functionalEntity);
-                        const saveButton = self.querySelector("tg-action[role='save']");
+                        const saveButton = queryElements(self, "tg-action[role='save']");
                         self.save(functionalEntity, continuationProperty)
                             .then(
                                 createEntityActionThenCallback(self.centreUuid, 'save', postal, null, saveButton ? saveButton.closeAfterExecution : true),
