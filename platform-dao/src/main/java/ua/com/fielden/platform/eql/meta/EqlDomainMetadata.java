@@ -155,7 +155,7 @@ public class EqlDomainMetadata {
         final String propName = propField.getName();
         final Class<?> propType = propField.getType();
         
-        if (isPersistedEntityType(propType) || isUnionEntityType(propType) || (isEntityType(propType) && isSyntheticEntityType((Class<? extends AbstractEntity<?>>)propType))) {
+        if (isPersistedEntityType(propType) || isUnionEntityType(propType) || isSyntheticEntityType(propType)) {
             return H_LONG;
         }
 

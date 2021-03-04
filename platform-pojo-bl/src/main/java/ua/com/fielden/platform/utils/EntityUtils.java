@@ -682,8 +682,8 @@ public class EntityUtils {
      * @param type
      * @return
      */
-    public static boolean isSyntheticEntityType(final Class<? extends AbstractEntity<?>> type) {
-        if (type == null) {
+    public static boolean isSyntheticEntityType(final Class<?> type) {
+        if (!isEntityType(type)) {
             return false;
         } else {
             try {
