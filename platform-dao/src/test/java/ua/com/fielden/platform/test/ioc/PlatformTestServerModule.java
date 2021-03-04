@@ -139,26 +139,27 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bind(ITgPerson.class).to(TgPersonDao.class);
         bind(ITgAuthoriser.class).to(TgAuthoriserDao.class);
         bind(ITgOriginator.class).to(TgOriginatorDao.class);
+        bind(ITgDateTestEntity.class).to(TgDateTestEntityDao.class);
 
         bind(ITgMakeCount.class).to(TgMakeCountDao.class);
         bind(ITgAverageFuelUsage.class).to(TgAverageFuelUsageDao.class);
         bind(ITeAverageFuelUsage.class).to(TeAverageFuelUsageDao.class);
         bind(ITgVehicleFuelUsage.class).to(TgVehicleFuelUsageDao.class);
         bind(ITgEntityWithComplexSummaries.class).to(TgEntityWithComplexSummariesDao.class);
-        
+
         bind(ITgAuthorship.class).to(TgAuthorshipDao.class);
         bind(ITgAuthorRoyalty.class).to(TgAuthorRoyaltyDao.class);
         bind(ITgEntityWithLoopedCalcProps.class).to(TgEntityWithLoopedCalcPropsDao.class);
         bind(ITgPublishedYearly.class).to(TgPublishedYearlyDao.class);
-        
+
 
         bind(ICompositeEntity.class).to(CompositeEntityDao.class);
         bind(ICompositeEntityKey.class).to(CompositeEntityKeyDao.class);
         bind(IComplexKeyEntity.class).to(ComplexKeyEntityDao.class);
-        
+
         bind(new TypeLiteral<IEntityDao<EntityWithMoney>>() {
         }).to(EntityWithMoneyDao.class);
-        
+
         bind(ITgCollectionalSerialisationParent.class).to(TgCollectionalSerialisationParentDao.class);
         bind(ITgCollectionalSerialisationChild.class).to(TgCollectionalSerialisationChildDao.class);
         bind(ITgCentreDiffSerialisation.class).to(TgCentreDiffSerialisationDao.class);
