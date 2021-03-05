@@ -76,7 +76,7 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
                 final ChartSeries<T> s = series.get(seriesIndex);
                 final EntityActionConfig config = s.getAction();
                 this.actions.add(config);
-                if (config != null && !config.isNoAction()) {
+                if (config != null) {
                     final FunctionalActionElement el = FunctionalActionElement.newPropertyActionForMaster(config, deckIndex, s.getPropertyName());
                     importPaths.add(el.importPath());
                     container.add(el.render().clazz("chart-action").attr("hidden", true).attr("action-index", seriesIndex).attr("deck-index", deckIndex));
