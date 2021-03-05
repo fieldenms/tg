@@ -44,6 +44,7 @@ public class MasterInfoProvider {
             return webUiConfig.configApp().getOpenMasterAction(type).get().map(entityActionConfig -> {
                 final FunctionalActionElement funcElem = new FunctionalActionElement(entityActionConfig, 0, FunctionalActionKind.PRIMARY_RESULT_SET);
                 final DomElement actionElement = funcElem.render();
+                final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(type).getKey();
                 final MasterInfo  info = new MasterInfo();
                 info.setKey(actionElement.getAttr("element-name").value.toString());
                 info.setDesc(actionElement.getAttr("component-uri").value.toString());
@@ -55,6 +56,7 @@ public class MasterInfoProvider {
                 info.setRequireMasterEntity(actionElement.getAttr("require-master-entity").value.toString());
                 info.setEntityType(entityActionConfig.functionalEntity.get().getName());
                 info.setRelativePropertyName(relativePropertyName);
+                info.setEntityTypeTitle(entityTitle);
                 entityActionConfig.prefDimForView.ifPresent(prefDim -> {
                     info.setWidth(prefDim.width);
                     info.setHeight(prefDim.height);
@@ -84,15 +86,16 @@ public class MasterInfoProvider {
             info.setEntityType(type.getName());
             info.setEntityType(EntityEditAction.class.getName());
             info.setRelativePropertyName(relativePropertyName);
+            info.setEntityTypeTitle(entityTitle);
             return info;
         }).orElseGet(tryOtherMasters(type, relativePropertyName));
     }
-    
+
     /**
      * Tries to determine a master for {@code type} in case it is a synthetic type based on some entity that may have a master (e.g. the case of ReWorkActivity extending WorkActivity).
      * If that fails, it tries to check if {@code type} is perhaps an entity with a single composite key member of an entity type that may have a master (e.g. the case of Manager with a single key member of type Person).
      * If none of the above yields anything, the constructed supplier returns {@code null}.
-     * 
+     *
      * @param type
      * @param relativePropertyName
      * @return
