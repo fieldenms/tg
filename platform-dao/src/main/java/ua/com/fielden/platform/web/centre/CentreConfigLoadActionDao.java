@@ -2,7 +2,12 @@ package ua.com.fielden.platform.web.centre;
 
 import static java.util.Optional.of;
 import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.web.centre.CentreConfigUtils.findLoadableConfig;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.getCustomObject;
+import static ua.com.fielden.platform.web.centre.CentreConfigUtils.inherited;
+import static ua.com.fielden.platform.web.centre.CentreConfigUtils.inheritedFromBase;
+
+import java.util.Optional;
 
 import com.google.inject.Inject;
 
@@ -43,18 +48,25 @@ public class CentreConfigLoadActionDao extends CommonEntityDao<CentreConfigLoadA
         
         // need to check whether configuration being loaded is inherited
         final String saveAsNameToLoad = entity.getChosenIds().iterator().next();
-        entity.getCentreConfigurations().stream()
+        final Optional<String> actualSaveAsName = entity.getCentreConfigurations().stream()
             .filter(centreConfig -> saveAsNameToLoad.equals(centreConfig.getKey()))
             .findAny()
-            .ifPresent(centreConfig -> {
-                if (centreConfig.isInherited()) {
-                    // if configuration being loaded is inherited we need to update it from base user changes
-                    selectionCrit.updateInheritedCentre(saveAsNameToLoad);
+            .flatMap(centreConfig -> {
+                final Optional<LoadableCentreConfig> loadableConfig = findLoadableConfig(of(saveAsNameToLoad), selectionCrit); // this will also throw early failure in case where configuration was deleted
+                if (inherited(loadableConfig).isPresent()) {
+                    if (inheritedFromBase(loadableConfig).isPresent()) {
+                        // if configuration being loaded is inherited from base we need to update it from upstream changes
+                        selectionCrit.updateInheritedFromBaseCentre(saveAsNameToLoad);
+                    } else {
+                        // if configuration being loaded is inherited from shared we need to update it from upstream changes
+                        return selectionCrit.updateInheritedFromSharedCentre(saveAsNameToLoad, centreConfig.getConfig().getConfigUuid());
+                    }
                 }
+                return of(saveAsNameToLoad);
             });
         // configuration being loaded need to become preferred
-        selectionCrit.makePreferredConfig(of(saveAsNameToLoad));
-        entity.setCustomObject(getCustomObject(selectionCrit, selectionCrit.createCriteriaValidationPrototype(of(saveAsNameToLoad)), of(saveAsNameToLoad)));
+        selectionCrit.makePreferredConfig(actualSaveAsName);
+        entity.setCustomObject(getCustomObject(selectionCrit, selectionCrit.createCriteriaValidationPrototype(actualSaveAsName), actualSaveAsName, of(selectionCrit.centreConfigUuid(actualSaveAsName))));
         return super.save(entity);
     }
     

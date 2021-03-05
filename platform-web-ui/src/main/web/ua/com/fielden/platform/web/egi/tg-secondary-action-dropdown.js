@@ -55,6 +55,11 @@ Polymer({
             observer: "_currentEntityChanged"
         },
 
+        currentIndices: {
+            type: Array,
+            observer: "_currentIndicesChanged"
+        },
+
         isSingle: {
             type: Boolean,
             readOnly: true,
@@ -83,8 +88,9 @@ Polymer({
         this._setSecondaryActions(actions);
     },
 
-    open: function(currentEntity, currentAction) {
+    open: function(currentEntity, currentIndices, currentAction) {
         this.currentEntity = currentEntity;
+        this.currentIndices = currentIndices;
         this.$.dropdown.positionTarget = currentAction;
         this.$.dropdown.open();
     },
@@ -93,12 +99,16 @@ Polymer({
         this.$.actions_selector.assignedNodes({flatten: true}).forEach( item => item.currentEntity = newValue);
     },
 
+    _currentIndicesChanged: function (newValue) {
+        this.$.actions_selector.assignedNodes({flatten: true}).forEach((item, index) => item.currentIndex = newValue[index]);
+    },
+
     _closeDropdown: function () {
         this.$.dropdown.close();
     },
 
     _dropdownOpened: function () {
-        this.$.actions_selector.assignedNodes({flatten: true}).forEach( item => item._updateSpinnerIfNeeded());
+        this.$.actions_selector.assignedNodes({flatten: true}).forEach( item => item.actions.forEach(action => action._updateSpinnerIfNeeded()));
     },
 
     _dropdownClosed: function() {

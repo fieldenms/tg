@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.centre;
 
 import static java.lang.String.format;
 import static java.util.Optional.empty;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isCritOnlySingle;
@@ -104,6 +105,9 @@ import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.SummaryPropDef;
 import ua.com.fielden.platform.web.centre.api.ICentre;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
+import ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfig;
+import ua.com.fielden.platform.web.centre.api.actions.multi.FunctionalMultiActionElement;
+import ua.com.fielden.platform.web.centre.api.actions.multi.IEntityMultiActionSelector;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssigner;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.MultiCritBooleanValueMnemonic;
@@ -186,18 +190,21 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private static final String EGI_FUNCTIONAL_ACTION_DOM = "<!--@functional_actions-->";
     private static final String EGI_PRIMARY_ACTION_DOM = "<!--@primary_action-->";
     private static final String EGI_SECONDARY_ACTIONS_DOM = "<!--@secondary_actions-->";
-    //Fron actions
+    // Front actions
     private static final String FRONT_ACTIONS_DOM = "<!--@custom-front-actions-->";
     private static final String FRONT_ACTIONS = "//generatedFrontActionObjects";
-    //Toolbar related
+    // Share actions
+    private static final String SHARE_ACTIONS_DOM = "<!--@custom-share-actions-->";
+    private static final String SHARE_ACTIONS = "//generatedShareActionObjects";
+    // Toolbar related
     private static final String TOOLBAR_DOM = "<!--@toolbar-->";
     private static final String TOOLBAR_JS = "//toolbarGeneratedFunction";
     private static final String TOOLBAR_STYLES = "/*toolbarStyles*/";
-    //Selection criteria related
+    // Selection criteria related
     private static final String QUERY_ENHANCER_CONFIG = "@queryEnhancerContextConfig";
     private static final String CRITERIA_DOM = "<!--@criteria_editors-->";
     private static final String SELECTION_CRITERIA_LAYOUT_CONFIG = "//@layoutConfig";
-    //Insertion points
+    // Insertion points
     private static final String INSERTION_POINT_ACTIONS = "//generatedInsertionPointActions";
     private static final String INSERTION_POINT_ACTIONS_DOM = "<!--@insertion_point_actions-->";
     private static final String LEFT_INSERTION_POINT_DOM = "<!--@left_insertion_points-->";
@@ -220,7 +227,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private Optional<JsCode> customCode = Optional.empty();
     private Optional<JsCode> customCodeOnAttach = Optional.empty();
 
-    private final IUserProvider userProvider;
     private final IDomainTreeEnhancerCache domainTreeEnhancerCache;
     private final IWebUiConfig webUiConfig;
     private final IEntityCentreConfig eccCompanion;
@@ -249,7 +255,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         this.companionFinder = this.injector.getInstance(ICompanionObjectFinder.class);
         this.postCentreCreated = postCentreCreated;
 
-        userProvider = injector.getInstance(IUserProvider.class);
         domainTreeEnhancerCache = injector.getInstance(IDomainTreeEnhancerCache.class);
         webUiConfig = injector.getInstance(IWebUiConfig.class);
         eccCompanion = companionFinder.find(ua.com.fielden.platform.ui.config.EntityCentreConfig.class);
@@ -411,12 +416,12 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 }
             }
         }
-        
+
         cdtmae.getSecondTick().setPageCapacity(dslDefaultConfig.getPageCapacity());
         cdtmae.getSecondTick().setMaxPageCapacity(dslDefaultConfig.getMaxPageCapacity());
         cdtmae.getSecondTick().setVisibleRowsCount(dslDefaultConfig.getVisibleRowsCount());
         cdtmae.getSecondTick().setNumberOfHeaderLines(dslDefaultConfig.getNumberOfHeaderLines());
-        
+
         return postCentreCreated == null ? cdtmae : postCentreCreated.apply(cdtmae);
     }
 
@@ -817,6 +822,26 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         }
     }
 
+    /**
+     * Creates and returns instance of multi-action selector in case of primary multi-action specified in Centre DSL.
+     * Returns empty {@link Optional} otherwise.
+     */
+    public Optional<? extends IEntityMultiActionSelector> createPrimaryActionSelector() {
+        return dslDefaultConfig
+            .getResultSetPrimaryEntityAction()
+            .map(multiActionConfig -> injector.getInstance(multiActionConfig.actionSelectorClass()));
+    }
+
+    /**
+     * Creates instances of multi-action selectors in case of secondary multi-actions (or single actions) specified in Centre DSL.
+     * Returns empty {@link List} if there were no secondary multi-actions (or single actions) specified in Centre DSL.
+     */
+    public List<? extends IEntityMultiActionSelector> createSecondaryActionSelectors() {
+        return dslDefaultConfig
+            .getResultSetSecondaryEntityActions()
+            .stream().map(config -> injector.getInstance(config.actionSelectorClass())).collect(toList());
+    }
+
     public Optional<IDynamicColumnBuilder<T>> getDynamicColumnBuilderFor(final ResultSetProp<T> resProp) {
         return resProp.dynamicColBuilderType.map(clazz -> injector.getInstance(clazz));
     }
@@ -837,7 +862,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         if (user == null) {
             return createUserUnspecificDefaultCentre(dslDefaultConfig, injector.getInstance(EntityFactory.class), postCentreCreated);
         } else {
-            return updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, empty(), DESKTOP, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+            return updateCentre(user, miType, FRESH_CENTRE_NAME, empty(), DESKTOP, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
         }
     }
 
@@ -985,23 +1010,23 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
         logger.debug("Initiating primary actions...");
         //////////////////// Primary result-set action ////////////////////
-        final Optional<EntityActionConfig> resultSetPrimaryEntityAction = this.dslDefaultConfig.getResultSetPrimaryEntityAction();
+        final Optional<EntityMultiActionConfig> resultSetPrimaryEntityAction = this.dslDefaultConfig.getResultSetPrimaryEntityAction();
         final DomContainer primaryActionDom = new DomContainer();
         final StringBuilder primaryActionObject = new StringBuilder();
 
-        if (resultSetPrimaryEntityAction.isPresent() && !resultSetPrimaryEntityAction.get().isNoAction()) {
-            final FunctionalActionElement el = new FunctionalActionElement(resultSetPrimaryEntityAction.get(), 0, FunctionalActionKind.PRIMARY_RESULT_SET);
+        if (resultSetPrimaryEntityAction.isPresent()) {
+            final FunctionalMultiActionElement el = new FunctionalMultiActionElement(resultSetPrimaryEntityAction.get(), 0, FunctionalActionKind.PRIMARY_RESULT_SET);
 
             importPaths.add(el.importPath());
-            primaryActionDom.add(el.render().attr("slot", "primary-action").clazz("primary-action").attr("hidden", null));
-            primaryActionObject.append(prefix + createActionObject(el));
+            primaryActionDom.add(el.render().attr("slot", "primary-action").attr("hidden", null));
+            primaryActionObject.append(prefix + el.createActionObject(importPaths));
         }
         ////////////////////Primary result-set action [END] //////////////
 
         logger.debug("Initiating front actions...");
-        //////////////////// front action ////////////////////
+        //////////////////// front actions ////////////////////
         final StringBuilder frontActionsObjects = new StringBuilder();
-        final DomContainer frontActionsDom = new DomContainer();
+        final DomElement frontActionsDom = new DomElement("div").attr("selectable-elements-container", null).attr("slot", "custom-front-action").clazz("first-group");
 
         final List<EntityActionConfig> frontActions = this.dslDefaultConfig.getFrontActions();
         for (int actionIndex = 0; actionIndex < frontActions.size(); actionIndex++) {
@@ -1010,25 +1035,36 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             frontActionsDom.add(actionElement.render());
             frontActionsObjects.append(prefix + createActionObject(actionElement));
         }
-        ////////////////////front action (END)////////////////////
+        //////////////////// front actions (END) ////////////////////
+
+        logger.debug("Initiating share actions...");
+        //////////////////// share actions ////////////////////
+        final StringBuilder shareActionsObjects = new StringBuilder();
+        final DomContainer shareActionsDom = new DomContainer();
+
+        final List<EntityActionConfig> shareActions = webUiConfig.centreConfigShareActions();
+        for (int actionIndex = 0; actionIndex < shareActions.size(); actionIndex++) {
+            final FunctionalActionElement actionElement = new FunctionalActionElement(shareActions.get(actionIndex), actionIndex, FunctionalActionKind.SHARE);
+            importPaths.add(actionElement.importPath());
+            shareActionsDom.add(actionElement.render());
+            shareActionsObjects.append(prefix + createActionObject(actionElement));
+        }
+        //////////////////// share actions (END) ////////////////////
 
         logger.debug("Initiating secondary actions...");
 
-        final List<FunctionalActionElement> secondaryActionElements = new ArrayList<>();
-        final Optional<List<EntityActionConfig>> resultSetSecondaryEntityActions = this.dslDefaultConfig.getResultSetSecondaryEntityActions();
-        if (resultSetSecondaryEntityActions.isPresent()) {
-            for (int i = 0; i < resultSetSecondaryEntityActions.get().size(); i++) {
-                final FunctionalActionElement el = new FunctionalActionElement(resultSetSecondaryEntityActions.get().get(i), i, FunctionalActionKind.SECONDARY_RESULT_SET);
-                secondaryActionElements.add(el);
-            }
-        }
-
         final DomContainer secondaryActionsDom = new DomContainer();
         final StringBuilder secondaryActionsObjects = new StringBuilder();
-        for (final FunctionalActionElement el : secondaryActionElements) {
-            importPaths.add(el.importPath());
-            secondaryActionsDom.add(el.render().attr("slot", "secondary-action").clazz("secondary-action"));
-            secondaryActionsObjects.append(prefix + createActionObject(el));
+        final List<EntityMultiActionConfig> resultSetSecondaryEntityActions = this.dslDefaultConfig.getResultSetSecondaryEntityActions();
+        if (!resultSetSecondaryEntityActions.isEmpty()) {
+            int numberOfAction = 0;
+            for (final EntityMultiActionConfig multiActionConfig: resultSetSecondaryEntityActions) {
+                final FunctionalMultiActionElement el = new FunctionalMultiActionElement(multiActionConfig, numberOfAction, FunctionalActionKind.SECONDARY_RESULT_SET);
+                importPaths.add(el.importPath());
+                secondaryActionsDom.add(el.render().attr("slot", "secondary-action"));
+                secondaryActionsObjects.append(prefix + el.createActionObject(importPaths));
+                numberOfAction += multiActionConfig.actions().size();
+            }
         }
 
         logger.debug("Initiating insertion point actions...");
@@ -1088,6 +1124,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         }
         ///////////////////////////////////////
         final String frontActionString = frontActionsObjects.toString();
+        final String shareActionsString = shareActionsObjects.toString();
         final String funcActionString = functionalActionsObjects.toString();
         final String secondaryActionString = secondaryActionsObjects.toString();
         final String insertionPointActionsString = insertionPointActionsObjects.toString();
@@ -1130,6 +1167,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace(EGI_EDITORS, egiEditors.toString()).
                 replace(FRONT_ACTIONS_DOM, frontActionsDom.toString()).
                 replace(FRONT_ACTIONS, frontActionString.length() > prefixLength ? frontActionString.substring(prefixLength): frontActionString).
+                replace(SHARE_ACTIONS_DOM, shareActionsDom.toString()).
+                replace(SHARE_ACTIONS, shareActionsString.length() > prefixLength ? shareActionsString.substring(prefixLength): shareActionsString).
                 replace(EGI_ACTIONS, funcActionString.length() > prefixLength ? funcActionString.substring(prefixLength) : funcActionString).
                 replace(EGI_SECONDARY_ACTIONS, secondaryActionString.length() > prefixLength ? secondaryActionString.substring(prefixLength) : secondaryActionString).
                 replace(INSERTION_POINT_ACTIONS, insertionPointActionsString.length() > prefixLength ? insertionPointActionsString.substring(prefixLength)

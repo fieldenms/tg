@@ -19,6 +19,7 @@ import '/resources/polymer/@polymer/neon-animation/animations/slide-from-bottom-
 import '/resources/polymer/@polymer/neon-animation/animations/slide-up-animation.js';
 import '/resources/polymer/@polymer/neon-animation/animations/slide-down-animation.js';
 
+import { TgReflector } from '/app/tg-reflector.js';
 import '/resources/components/tg-menu-search-input.js';
 import '/resources/views/tg-menu-item-view.js';
 import '/resources/components/tg-sublistbox.js'
@@ -167,7 +168,7 @@ const template = html`
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <app-drawer-layout id="drawerPanel" fullbleed force-narrow>
 
-        <app-drawer disable-swipe="[[!mobile]]" slot="drawer">
+        <app-drawer disable-swipe="[[!mobile]]" slot="drawer" on-app-drawer-transitioned="_appDrawerTransitioned">
             <div id="menuToolBar" class="tool-bar layout horizontal center">
                 <div class="flex">[[menuItem.key]]</div>
             </div>
@@ -213,11 +214,11 @@ const template = html`
                 <div class="menu-item-view" page-name="_"></div>
                 <template is="dom-repeat" items="[[menuItem.menu]]" as="firstLevelItem">
                     <template is="dom-if" if="[[!_isMenuPresent(firstLevelItem.menu)]]">
-                        <tg-menu-item-view class="menu-item-view" page-name$="[[_calcItemPath(firstLevelItem)]]" menu-item="[[firstLevelItem]]" submodule-id="[[_calcSubmoduleId(firstLevelItem)]]" module-id="[[menuItem.key]]" selected-module="[[selectedModule]]" submodule="[[submodule]]"></tg-menu-item-view>
+                        <tg-menu-item-view class="menu-item-view" page-name$="[[_calcItemPath(firstLevelItem)]]" menu-item="[[firstLevelItem]]" submodule-id="[[_calcSubmoduleId(firstLevelItem)]]" module-id="[[menuItem.key]]" selected-module="[[selectedModule]]"></tg-menu-item-view>
                     </template>
                     <template is="dom-if" if="[[_isMenuPresent(firstLevelItem.menu)]]">
                         <template is="dom-repeat" items="[[firstLevelItem.menu]]">
-                            <tg-menu-item-view class="menu-item-view" page-name$="[[_calcItemPath(firstLevelItem, item)]]" tooltip-text$="[[item.desc]]" menu-item="[[item]]" submodule-id="[[_calcSubmoduleId(firstLevelItem, item)]]" module-id="[[menuItem.key]]" selected-module="[[selectedModule]]" submodule="[[submodule]]"></tg-menu-item-view>
+                            <tg-menu-item-view class="menu-item-view" page-name$="[[_calcItemPath(firstLevelItem, item)]]" tooltip-text$="[[item.desc]]" menu-item="[[item]]" submodule-id="[[_calcSubmoduleId(firstLevelItem, item)]]" module-id="[[menuItem.key]]" selected-module="[[selectedModule]]"></tg-menu-item-view>
                         </template>
                     </template>
                 </template>
@@ -232,17 +233,20 @@ function findMenuItem (itemName, menuItem) {
     });
 };
 function findNestedMenuItem (itemPath, menuItem) {
-    var pathIndex;
-    var path = itemPath.split('/');
-    var currentItem = menuItem;
+    let pathIndex;
+    let path = itemPath.split('/');
+    let currentItem = menuItem;
+    let lastNonEmptyItem = menuItem;
 
     for (pathIndex = 0;
         (pathIndex < path.length) && !!currentItem; pathIndex++) {
+        lastNonEmptyItem = currentItem;
         currentItem = findMenuItem(path[pathIndex], currentItem);
     }
     return {
-        menuItem: currentItem,
-        path: path.slice(0, pathIndex).join('/')
+        menuItem: itemPath === '_' ? undefined : (currentItem || lastNonEmptyItem),
+        path: path.slice(0, currentItem ? pathIndex : pathIndex - 1).join('/'),
+        unknownSubpath: path.slice(currentItem ? pathIndex : pathIndex - 1).join('/')
     };
 };
 
@@ -259,7 +263,7 @@ Polymer({
         menu: Array,
         menuItem: Object,
         selectedModule: String,
-        submodule: {
+        selectedSubmodule: {
             type: String,
             notify: true
         },
@@ -294,12 +298,17 @@ Polymer({
     ],
 
     observers: [
-        '_updatePage(menuItem, submodule)'
+        '_updatePage(menuItem, selectedSubmodule)'
     ],
     
     listeners: {
         'tg-save-as-name-changed': '_updateSaveAsName',
-        'tg-save-as-desc-changed': '_updateSaveAsDesc'
+        'tg-save-as-desc-changed': '_updateSaveAsDesc',
+        'tg-config-uuid-changed': '_updateConfigUuid'
+    },
+    
+    created: function () {
+        this._reflector = new TgReflector();
     },
     
     ready: function () {
@@ -520,21 +529,26 @@ Polymer({
         return encodeURIComponent(groupItem.key) + (item ? "/" + encodeURIComponent(item.key) : '');
     },
 
-    _updatePage(menuItem, submodule) {
+    _updatePage(menuItem, selectedSubmodule) {
         if (!allDefined(arguments)) {
             return;
         }
-        const submodulePart = submodule.substring(1).split("?")[0];
         if (menuItem.key === decodeURIComponent(this.selectedModule)) {
-            this._selectMenu(submodulePart);
-            this._selectPage(submodulePart);
+            const parts = selectedSubmodule.substring(1).split('?');
+            const selectedSubmodulePart = parts[0];
+            this._selectMenu(selectedSubmodulePart);
+            this._selectPage(selectedSubmodulePart, parts[1]);
         }
     },
 
-    _selectPage: function (pagePath) {
-        var menuPath = findNestedMenuItem(pagePath, this.menuItem);
+    _selectPage: function (pagePath, paramsStr) {
+        const menuPath = findNestedMenuItem(pagePath, this.menuItem);
         if (menuPath.menuItem && !this._isMenuPresent(menuPath.menuItem.menu)) {
             this.set("_selectedPage", menuPath.path);
+            const currMenuItemView = this.shadowRoot.querySelector(`tg-menu-item-view[page-name="${this._selectedPage}"]`); // find active tg-menu-item-view
+            if (currMenuItemView && currMenuItemView.menuItem.view && currMenuItemView._isCentre(currMenuItemView.menuItem)) { // if it is present and contains centre
+                currMenuItemView._retrieveCentreWithParams(paramsStr, menuPath.unknownSubpath); // initiate retrieval
+            }
         }
     },
 
@@ -548,13 +562,15 @@ Polymer({
             pathParts = path.split('/');
             topMenu = this.shadowRoot.querySelector("tg-sublistbox[name='" + pathParts[0] + "']");
             previousTopMenu = this.$.menu.selected && this.shadowRoot.querySelector("tg-sublistbox[name='" + this.$.menu.selected + "']");
-            submenu = this.shadowRoot.querySelector("paper-sublist[name='" + pathParts[0] + "']");
+            submenu = this.shadowRoot.querySelector("paper-listbox[name='" + pathParts[0] + "']");
             if (this.$.menu.selected !== pathParts[0]) {
                 if (previousTopMenu) {
                     previousTopMenu.close();
                 }
                 this.$.menu.select(pathParts[0]);
-                topMenu.open();
+                if (topMenu) {
+                    topMenu.open();
+                }
                 if (submenu) {
                     submenu.select(path);
                 }
@@ -579,11 +595,11 @@ Polymer({
         this.$.drawerPanel.drawer.toggle();
     },
     
-    _saveAsNamesAndDescs: function () {
-        if (!this.saveAsNamesAndDescs) {
-            this.saveAsNamesAndDescs = {};
+    _centreConfigInfo: function () {
+        if (!this.centreConfigInfo) {
+            this.centreConfigInfo = {};
         }
-        return this.saveAsNamesAndDescs;
+        return this.centreConfigInfo;
     },
     
     _calcSelectedPageTitle: function (page, saveAsName) {
@@ -615,13 +631,21 @@ Polymer({
      * The listener that listens the menu item activation on tap.
      */
     _itemActivated: function (e, detail) {
-        this.submodule = "/" + detail.selected
+        this._updateSelectedModuleWith(detail.selected);
+    },
+
+    /**
+     * Updates URI 'selectedSubmodule' part with 'selectedPage' including 'configUuid' sub-part if 'selectedPage' has been loaded before and had that sub-part.
+     */
+    _updateSelectedModuleWith: function (selectedPage) {
+        const uuidPart = this._centreConfigInfo() && this._centreConfigInfo()[selectedPage] && this._centreConfigInfo()[selectedPage].configUuid; // configUuid of previously loaded centre configuration (selectedPage), if any
+        this.selectedSubmodule = '/' + selectedPage + (uuidPart ? '/' + uuidPart : '');
     },
 
     _selectedPageChanged: function (newValue, oldValue) {
-        if (this._saveAsNamesAndDescs()[newValue]) {
-            this.saveAsName = this._saveAsNamesAndDescs()[newValue].saveAsName;
-            this.saveAsDesc = this._saveAsNamesAndDescs()[newValue].saveAsDesc;
+        if (this._centreConfigInfo()[newValue]) {
+            this.saveAsName = this._centreConfigInfo()[newValue].saveAsName;
+            this.saveAsDesc = this._centreConfigInfo()[newValue].saveAsDesc;
         } else {
             this.saveAsName = '';
             this.saveAsDesc = '';
@@ -641,9 +665,7 @@ Polymer({
             const viewToLoad = detail.toPage;
             if (viewToLoad) {
                 if (!viewToLoad.wasLoaded()) {
-                    viewToLoad.load(decodeURIComponent(this.submodule.substring(1)).split("?")[1]);
-                    const currentState = window.history.state;
-                    window.history.replaceState(currentState, "", window.location.href.split("?")[0]);
+                    viewToLoad.load(decodeURIComponent(this.selectedSubmodule.substring(1)).split("?")[1]);
                 } else {
                     viewToLoad.focusLoadedView();
                 }
@@ -668,26 +690,47 @@ Polymer({
      * Updates saveAsName from its 'change' event. It controls the title change.
      */
     _updateSaveAsName: function (event) {
-        this._initSaveAsNamesAndDescsEntry();
-        this._saveAsNamesAndDescs()[this._selectedPage].saveAsName = event.detail;
-        this.saveAsName = event.detail;
+        this._initCentreConfigInfoEntry();
+        const saveAsNameForDisplay = this._reflector.LINK_CONFIG_TITLE !== event.detail ? event.detail : '';
+        this._centreConfigInfo()[this._selectedPage].saveAsName = saveAsNameForDisplay;
+        this.saveAsName = saveAsNameForDisplay;
     },
     
     /**
      * Updates saveAsDesc from its 'change' event. It controls the tooltip change of configuration title.
      */
     _updateSaveAsDesc: function (event) {
-        this._initSaveAsNamesAndDescsEntry();
-        this._saveAsNamesAndDescs()[this._selectedPage].saveAsDesc = event.detail;
+        this._initCentreConfigInfoEntry();
+        this._centreConfigInfo()[this._selectedPage].saveAsDesc = event.detail;
         this.saveAsDesc = event.detail;
     },
     
     /**
-     * Initialises current entry of 'saveAs' object (name and desc) if not present.
+     * Updates configUuid from its 'change' event. It controls URI change (uuid part).
      */
-    _initSaveAsNamesAndDescsEntry: function () {
-        if (!this._saveAsNamesAndDescs()[this._selectedPage]) {
-            this._saveAsNamesAndDescs()[this._selectedPage] = {};
+    _updateConfigUuid: function (event) {
+        this._initCentreConfigInfoEntry();
+        this._centreConfigInfo()[this._selectedPage].configUuid = event.detail;
+    },
+    
+    /**
+     * Initialises current entry of centre configuration object (name, desc and configUuid) if not present.
+     */
+    _initCentreConfigInfoEntry: function () {
+        if (!this._centreConfigInfo()[this._selectedPage]) {
+            this._centreConfigInfo()[this._selectedPage] = {};
+        }
+    },
+    
+    /**
+     * Event listener on completion of drawer transition.
+     * It handles drawer closing to adjust browser address bar's URI to conform to loaded centre (if it was loaded before).
+     */
+    _appDrawerTransitioned: function (event) {
+        if (event.target && !event.target.opened) { // if drawer has just been fully closed ...
+            if (this.selectedSubmodule && !this.selectedSubmodule.startsWith('/' + this._selectedPage)) { // ... look for situation where selectedSubmodule (URI part) does not conform to selected page; this is the case, for example, if some centre was loaded (in module X), then went to main menu, then tapped on module X tile, and then tapped outside the module menu
+                this._updateSelectedModuleWith(this._selectedPage); // ... and then load new URI conforming to previously loaded page (in most cases, centre)
+            }
         }
     }
 });

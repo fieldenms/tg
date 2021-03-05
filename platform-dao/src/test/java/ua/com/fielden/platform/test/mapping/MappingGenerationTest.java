@@ -16,7 +16,7 @@ import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 public class MappingGenerationTest {
     @Test
     public void dump_mapping_for_type_wity_byte_array_property() {
-        final List<Class<? extends AbstractEntity<?>>> domainTypes = new ArrayList<Class<? extends AbstractEntity<?>>>();
+        final List<Class<? extends AbstractEntity<?>>> domainTypes = new ArrayList<>();
         domainTypes.add(EntityCentreConfig.class);
         final DomainMetadata mg = new DomainMetadata(null, null, domainTypes, DbVersion.H2);
         final String tgModelMapping = new HibernateMappingsGenerator().generateMappings(mg);
@@ -27,6 +27,7 @@ public class MappingGenerationTest {
                 + "	</id>\n" + "	<version name=\"version\" type=\"org.hibernate.type.LongType\" access=\"field\" insert=\"false\">\n"
                 + "		<column name=\"_VERSION\" default=\"0\" />\n" + "	</version>\n"
                 + "	<property name=\"configBody\" column=\"BODY\" type=\"org.hibernate.type.BinaryType\" length=\"1073741824\"/>\n"
+                + "	<property name=\"configUuid\" column=\"CONFIGUUID_\" type=\"org.hibernate.type.StringType\"/>\n"
                 + "	<property name=\"desc\" column=\"DESC_\" type=\"org.hibernate.type.StringType\"/>\n"
                 + "	<many-to-one name=\"menuItem\" class=\"ua.com.fielden.platform.ui.config.MainMenuItem\" column=\"ID_MAIN_MENU\"/>\n"
                 + "	<many-to-one name=\"owner\" class=\"ua.com.fielden.platform.security.user.User\" column=\"ID_CRAFT\"/>\n"

@@ -5,7 +5,6 @@ import static java.lang.String.format;
 import static java.util.Locale.getDefault;
 import static java.util.regex.Pattern.quote;
 import static org.apache.commons.lang.StringUtils.isEmpty;
-import static org.apache.commons.lang.StringUtils.uncapitalize;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
@@ -84,7 +83,6 @@ import ua.com.fielden.platform.utils.MiscUtilities;
 public class EntityResourceUtils {
     private static final String CONFLICT_WARNING = "This property has recently been changed by another user.";
     public static final String CENTRE_CONFIG_CONFLICT_WARNING = "Configuration with this title already exists.";
-    public static final String CENTRE_CONFIG_CONFLICT_ERROR = "Base " + uncapitalize(CENTRE_CONFIG_CONFLICT_WARNING);
     private static final String RESOLVE_CONFLICT_INSTRUCTION = "Please either edit the value back to [%s] to resolve the conflict or cancel all of your changes.";
     /**
      * Used to indicate the start of 'not found mock' serialisation sequence.

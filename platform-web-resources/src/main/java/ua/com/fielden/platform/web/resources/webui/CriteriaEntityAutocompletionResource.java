@@ -44,6 +44,7 @@ import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.EntityCentre;
+import ua.com.fielden.platform.web.centre.ICentreConfigSharingModel;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -67,6 +68,7 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
     private final IWebUiConfig webUiConfig;
     private final IUserProvider userProvider;
     private final EntityFactory entityFactory;
+    private final ICentreConfigSharingModel sharingModel;
 
     private final Logger logger = LogManager.getLogger(getClass());
 
@@ -84,6 +86,7 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
             final EntityCentre<T> centre,
             final RestServerUtil restUtil,
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
+            final ICentreConfigSharingModel sharingModel,
             final Context context,
             final Request request,
             final Response response) {
@@ -101,6 +104,7 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
         this.userProvider = userProvider;
         this.entityFactory = entityFactory;
         this.domainTreeEnhancerCache = domainTreeEnhancerCache;
+        this.sharingModel = sharingModel;
     }
 
     /**
@@ -127,15 +131,15 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
                 criteriaEntity = null;
                 final M enhancedCentreEntityQueryCriteria = createCriteriaValidationPrototype(
                     miType, saveAsName,
-                    updateCentre(user, userProvider, miType, FRESH_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder),
+                    updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder),
                     companionFinder, critGenerator, 0L, 
-                    user, userProvider,
+                    user,
                     device(),
-                    domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion
+                    domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel
                 );
                 criteriaType = (Class<M>) enhancedCentreEntityQueryCriteria.getClass();
             } else {
-                criteriaEntity = (M) createCriteriaEntityWithoutConflicts(modifHolder, companionFinder, critGenerator, miType, saveAsName, user, userProvider, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+                criteriaEntity = (M) createCriteriaEntityWithoutConflicts(modifHolder, companionFinder, critGenerator, miType, saveAsName, user, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
                 criteriaType = (Class<M>) criteriaEntity.getClass();
             }
 
@@ -160,7 +164,6 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
                 webUiConfig,
                 companionFinder,
                 user,
-                userProvider,
                 critGenerator,
                 entityFactory,
                 centreContextHolder,
@@ -171,7 +174,8 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
                 domainTreeEnhancerCache,
                 eccCompanion,
                 mmiCompanion,
-                userCompanion
+                userCompanion,
+                sharingModel
             );
             if (context.isPresent()) {
                 // logger.debug("context for prop [" + criterionPropertyName + "] = " + context);
