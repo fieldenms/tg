@@ -51,6 +51,7 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Abstr
     private final IDomainTreeEnhancerCache domainTreeEnhancerCache;
     private final IWebUiConfig webUiConfig;
     private final IUserProvider userProvider;
+    private final ICentreConfigSharingModel sharingModel;
     private final Logger logger = LogManager.getLogger(getClass());
 
     public EntityValidationResource(
