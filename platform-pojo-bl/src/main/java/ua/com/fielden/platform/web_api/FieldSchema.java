@@ -160,7 +160,7 @@ public class FieldSchema {
     /**
      * Default maximum number of entities returned in a single root field of a {@code Query}.
      */
-    static final int DEFAULT_PAGE_CAPACITY = 1000;
+    static final int DEFAULT_PAGE_CAPACITY = 25;
     static final GraphQLArgument PAGE_CAPACITY_ARGUMENT = newArgument()
         .name(PAGE_CAPACITY)
         .description(format("Positive number to limit maximum number of entities returned. Numbers <= 0 will be ignored. %s by default.", DEFAULT_PAGE_CAPACITY))
