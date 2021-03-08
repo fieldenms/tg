@@ -3,7 +3,8 @@ package ua.com.fielden.platform.ioc;
 import java.util.Map;
 import java.util.Properties;
 
-import com.google.inject.Scopes;
+import com.google.inject.Singleton;
+import com.google.inject.Stage;
 import com.google.inject.name.Names;
 
 import ua.com.fielden.platform.attachment.AttachmentDao;
@@ -17,6 +18,7 @@ import ua.com.fielden.platform.attachment.IAttachmentsUploadAction;
 import ua.com.fielden.platform.basic.config.ApplicationSettings;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
+import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaGenerator;
 import ua.com.fielden.platform.dao.GeneratedEntityDao;
@@ -135,6 +137,9 @@ import ua.com.fielden.platform.web_api.IWebApi;
  * more;
  * <li>Provides application main menu configuration related DAO bindings.
  * </ul>
+ * <p>
+ * Instantiation of singletons occurs in accordance with <a href="https://github.com/google/guice/wiki/Scopes#eager-singletons">Guice Eager Singletons</a>,
+ * where values of {@link Workflows} are mapped to {@link Stage}.
  *
  * @author TG Team
  *
@@ -197,12 +202,12 @@ public class BasicWebServerModule extends CommonFactoryModule {
         final boolean webApiPresent = Boolean.valueOf(props.getProperty("web.api"));
         bindConstant().annotatedWith(Names.named("web.api")).to(webApiPresent);
 
-        bind(IApplicationSettings.class).to(ApplicationSettings.class).in(Scopes.SINGLETON);
+        bind(IApplicationSettings.class).to(ApplicationSettings.class).in(Singleton.class);
         bind(IApplicationDomainProvider.class).toInstance(applicationDomainProvider);
-        bind(ISecurityTokenProvider.class).to(SecurityTokenProvider.class).in(Scopes.SINGLETON);
+        bind(ISecurityTokenProvider.class).to(SecurityTokenProvider.class).in(Singleton.class);
         // serialisation related binding
-        bind(ISerialisationClassProvider.class).to(serialisationClassProviderType).in(Scopes.SINGLETON); // FleetSerialisationClassProvider.class
-        bind(ISerialiser.class).to(Serialiser.class).in(Scopes.SINGLETON); //
+        bind(ISerialisationClassProvider.class).to(serialisationClassProviderType).in(Singleton.class);
+        bind(ISerialiser.class).to(Serialiser.class).in(Singleton.class);
 
         // bind DAO and any other implementations of the required application controllers
         bind(IFilter.class).to(automaticDataFilterType); // UserDrivenFilter.class
@@ -231,7 +236,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(IEntityLocatorConfig.class).to(EntityLocatorConfigDao.class);
         bind(IEntityCentreConfig.class).to(EntityCentreConfigDao.class);
         bind(IEntityCentreAnalysisConfig.class).to(EntityCentreAnalysisConfigDao.class);
-        bind(ICriteriaGenerator.class).to(CriteriaGenerator.class).in(Scopes.SINGLETON);
+        bind(ICriteriaGenerator.class).to(CriteriaGenerator.class).in(Singleton.class);
         bind(IGeneratedEntityController.class).to(GeneratedEntityDao.class);
 
         // bind entity manipulation controller
@@ -279,7 +284,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
 
         // bind value matcher factory to support autocompleters
         // TODO is this binding really needed for the server side???
-        bind(IValueMatcherFactory.class).to(ValueMatcherFactory.class).in(Scopes.SINGLETON);
+        bind(IValueMatcherFactory.class).to(ValueMatcherFactory.class).in(Singleton.class);
 
         // warnings acknowledgement binding
         bind(IAcknowledgeWarnings.class).to(AcknowledgeWarningsDao.class);
@@ -287,7 +292,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
         
         if (webApiPresent) { // in case where Web API has been turned-on in application.properties ...
             // ... bind Web API to platform-dao GraphQL-based implementation
-            bind(IWebApi.class).to(GraphQLService.class).in(Scopes.SINGLETON);
+            bind(IWebApi.class).to(GraphQLService.class).in(Singleton.class);
         }
     }
 
