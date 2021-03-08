@@ -28,6 +28,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.IAuthorisationModel;
+import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.utils.IDates;
@@ -46,6 +47,7 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
     private final IDates dates;
     private final IAuthorisationModel authorisation;
     private final String securityTokensPackageName;
+    private final ISecurityTokenProvider securityTokenProvider;
     
     /**
      * Creates {@link RootEntityFetcher} for concrete {@code entityType}.
@@ -55,13 +57,21 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
      * @param dates
      * @param authorisation
      * @param securityTokensPackageName
+     * @param securityTokenProvider
      */
-    public RootEntityFetcher(final Class<T> entityType, final ICompanionObjectFinder coFinder, final IDates dates, final IAuthorisationModel authorisation, final String securityTokensPackageName) {
+    public RootEntityFetcher(
+            final Class<T> entityType,
+            final ICompanionObjectFinder coFinder,
+            final IDates dates,
+            final IAuthorisationModel authorisation,
+            final String securityTokensPackageName,
+            final ISecurityTokenProvider securityTokenProvider) {
         this.entityType = entityType;
         this.coFinder = coFinder;
         this.dates = dates;
         this.authorisation = authorisation;
         this.securityTokensPackageName = securityTokensPackageName;
+        this.securityTokenProvider = securityTokenProvider;
     }
     
     /**
@@ -71,7 +81,7 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
      */
     @Override
     public DataFetcherResult<List<T>> get(final DataFetchingEnvironment environment) {
-        authoriseReading(entityType.getSimpleName(), READ, securityTokensPackageName, authorisation).ifFailure(Result::throwRuntime);
+        authoriseReading(entityType.getSimpleName(), READ, securityTokensPackageName, authorisation, securityTokenProvider).ifFailure(Result::throwRuntime);
         final T3<String, List<GraphQLArgument>, List<Argument>> rootArguments = rootPropAndArguments(environment.getGraphQLSchema(), environment.getField());
         final T2<Optional<String>, QueryExecutionModel<T, EntityResultQueryModel<T>>> warningAndModel = generateQueryModelFrom(
             environment.getField(),

@@ -82,9 +82,10 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
         return Collections.unmodifiableSortedSet(topLevelSecurityTokenNodes);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public Optional<Class<? extends ISecurityToken>> getTokenByName(final String tokenClassName) {
-        return Optional.ofNullable(tokenClassesByName.get(tokenClassName));
+    public <T extends ISecurityToken> Optional<Class<T>> getTokenByName(final String tokenClassName) {
+        return Optional.ofNullable((Class<T>) tokenClassesByName.get(tokenClassName));
     }
 
     private SortedSet<SecurityTokenNode> buildTokenNodes(final Set<Class<? extends ISecurityToken>> allTokens) {

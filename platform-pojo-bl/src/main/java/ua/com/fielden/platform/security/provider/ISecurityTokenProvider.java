@@ -20,7 +20,7 @@ public interface ISecurityTokenProvider {
      *
      * @return
      */
-    Optional<Class<? extends ISecurityToken>> getTokenByName(final String tokenClassName);
+    <T extends ISecurityToken> Optional<Class<T>> getTokenByName(final String tokenClassName);
     
     /**
      * Returns top level of security token nodes, suitable for building of Security Matrix.
