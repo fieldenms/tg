@@ -79,6 +79,7 @@ import ua.com.fielden.platform.security.dao.SecurityRoleAssociationDao;
 import ua.com.fielden.platform.security.dao.UserAndRoleAssociationDao;
 import ua.com.fielden.platform.security.dao.UserRoleDao;
 import ua.com.fielden.platform.security.provider.ISecurityTokenController;
+import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.provider.SecurityTokenController;
 import ua.com.fielden.platform.security.provider.SecurityTokenInfoDao;
 import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
@@ -198,6 +199,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
 
         bind(IApplicationSettings.class).to(ApplicationSettings.class).in(Scopes.SINGLETON);
         bind(IApplicationDomainProvider.class).toInstance(applicationDomainProvider);
+        bind(ISecurityTokenProvider.class).to(SecurityTokenProvider.class).in(Scopes.SINGLETON);
         // serialisation related binding
         bind(ISerialisationClassProvider.class).to(serialisationClassProviderType).in(Scopes.SINGLETON); // FleetSerialisationClassProvider.class
         bind(ISerialiser.class).to(Serialiser.class).in(Scopes.SINGLETON); //
