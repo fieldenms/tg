@@ -102,7 +102,7 @@ Polymer({
     },
 
     isEntityRendered: function (index) {
-        this.$.treeList._isIndexRendered(index)
+        return this.$.treeList._isIndexRendered(index);
     },
 
     _isSelected: function (selectedEntity, entity) {
