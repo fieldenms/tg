@@ -26,9 +26,8 @@ const template = html`
         }
     </style>
     <tg-tree-table id="tokenTree" model="[[entities]]">
-        <tg-property-column slot='hierarchy-column' property="[[hierarchyColumn.property]]" type="[[hierarchyColumn.type]]" width="[[hierarchyColumn.width]]" min-width="[[hierarchyColumn.minWidth]]" grow-factor="[[hierarchyColumn.growFactor]]" column-title="[[hierarchyColumn.columnTitle]]" column-desc="[[hierarchyColumn.columnDesc]]"></tg-property-column>
         <template is="dom-repeat" items="[[columns]]">
-            <tg-property-column slot='regular-column' property="[[item.property]]" type="[[item.type]]" width="[[item.width]]" min-width="[[item.minWidth]]" grow-factor="[[item.growFactor]]" column-title="[[item.columnTitle]]" column-desc="[[item.columnDesc]]" content-builder="[[_getCheckBox]]"></tg-property-column>
+            <tg-property-column slot$="[[item.slot]]" property="[[item.property]]" type="[[item.type]]" width="[[item.width]]" min-width="[[item.minWidth]]" grow-factor="[[item.growFactor]]" column-title="[[item.columnTitle]]" column-desc="[[item.columnDesc]]" content-builder="[[_getCheckBox]]"></tg-property-column>
         </template>
     </tg-tree-table>`;
 
@@ -42,7 +41,6 @@ Polymer({
             type: Array,
             observer: "_entitiesChanged"
         },
-        hierarchyColumn: Object,
         columns: Array,
     },
 

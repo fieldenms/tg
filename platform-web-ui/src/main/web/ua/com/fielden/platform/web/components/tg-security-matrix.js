@@ -70,7 +70,7 @@ const template = html`
             <div class="filter-panel">
                 <slot name="filter-element"></slot>
             </div>
-            <tg-security-tree-table id="securityMatrix" entities="[[entities]]" hierarchy-column="[[hierarchyColumn]]" columns="[[columns]]"></tg-security-tree-table>
+            <tg-security-tree-table id="securityMatrix" entities="[[entities]]" columns="[[columns]]"></tg-security-tree-table>
             <div id="actionPanel">
                 <slot name="reload-action"></slot>
                 <tg-action id="cancelButton" enabled-states='[[_actions.REFRESH.enabledStates]]' short-desc='CANCEL' long-desc='Cancels all changes after save' current-state='EDIT' shortcut='ctrl+r meta+r' role='refresh' action='[[_resetSecurityMatrix]]' post-action='{{_postResetSecurityMatrix}}' post-action-error='{{_postResetSecurityMatrixError}}' style="margin:10px;"></tg-action>
@@ -358,7 +358,6 @@ Polymer({
             type: Object,
             observer: "_entityChanged"
         },
-        hierarchyColumn: Object,
         columns: Array,
         entities: Array,
         /**
@@ -440,7 +439,9 @@ Polymer({
     _entityChanged: function (newBindingEntity) {
         const newEntity = newBindingEntity ? newBindingEntity['@@origin'] : null;
         if (newEntity && newEntity.calculated) {
-            this.hierarchyColumn = {
+            const columnList = [];
+            columnList.push({
+                slot: "hierarchy-column",
                 property: "key",
                 visible: true,
                 type: "String",
@@ -450,10 +451,10 @@ Polymer({
                 columnTitle: "Security Tokens",
                 columnDesc: "Security Tokens Hierarchy",
                 check: this.check,
-            };
-            const columnList = [];
+            });
             newEntity.get("userRoles").forEach(role => {
                 columnList.push({
+                    slot: "regular-column",
                     property: replaceWhitespacesWithUnderscore(role.get("key")),
                     visible: true,
                     type: "Boolean",
