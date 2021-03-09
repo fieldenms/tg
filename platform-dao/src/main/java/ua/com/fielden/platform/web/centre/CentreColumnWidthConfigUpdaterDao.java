@@ -1,13 +1,11 @@
 package ua.com.fielden.platform.web.centre;
 
 import java.util.HashMap;
-import java.util.function.Consumer;
 
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.IFilter;
@@ -17,7 +15,7 @@ import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 /**
  * DAO implementation for companion object {@link ICentreColumnWidthConfigUpdater}.
  *
- * @author Developers
+ * @author TG Team
  *
  */
 @EntityType(CentreColumnWidthConfigUpdater.class)
@@ -49,7 +47,7 @@ public class CentreColumnWidthConfigUpdaterDao extends CommonEntityDao<CentreCol
         );
         
         action.setColumnParameters(new HashMap<>());
-        action.setCentreChanged(criteriaEntityBeingUpdated.isCentreChanged()); // centre will be changed after this action; changes can be discarded using DISCARD button on selection criteria
+        action.setCentreDirty(criteriaEntityBeingUpdated.isCentreDirty()); // centre will be changed after this action; changes can be discarded using DISCARD button on selection criteria
         return super.save(action);
     }
 }

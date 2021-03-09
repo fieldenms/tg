@@ -354,7 +354,11 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         } catch (final IOException ex) {
             throw new IllegalStateException(ex);
         }
-
+        
+        final User _demo2 = co$(User.class).save(new_(User.class, "DEMO2").setBasedOnUser(su).setEmail("DEMO2@demoapp.com").setActive(true));
+        final User demo2 = coUser.resetPasswd(_demo2, _demo2.getKey()).getKey();
+        save(new_composite(UserAndRoleAssociation.class, demo2, admin));
+        
         try {
             final IApplicationSettings settings = config.getInstance(IApplicationSettings.class);
             final SecurityTokenProvider provider = new SecurityTokenProvider(settings.pathToSecurityTokens(), settings.securityTokensPackageName()); //  IDomainDrivenTestCaseConfiguration.hbc.getProperty("tokens.path"), IDomainDrivenTestCaseConfiguration.hbc.getProperty("tokens.package")

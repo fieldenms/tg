@@ -24,8 +24,9 @@ public abstract class AbstractConfiguration<KEY extends Comparable<KEY>> extends
     }
 
     @Observable
-    public void setConfigBody(final byte[] configBody) {
+    public AbstractConfiguration<KEY> setConfigBody(final byte[] configBody) {
         this.configBody = configBody;
+        return this;
     }
 
 }

@@ -54,6 +54,7 @@ import ua.com.fielden.platform.web.centre.CentreConfigEditAction;
 import ua.com.fielden.platform.web.centre.CentreConfigLoadAction;
 import ua.com.fielden.platform.web.centre.CentreConfigNewAction;
 import ua.com.fielden.platform.web.centre.CentreConfigSaveAction;
+import ua.com.fielden.platform.web.centre.CentreConfigShareAction;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
 import ua.com.fielden.platform.web.centre.CustomisableColumn;
 import ua.com.fielden.platform.web.centre.LoadableCentreConfig;
@@ -90,7 +91,7 @@ public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCa
         try {
 
             final Configuration cfg = new Configuration();
-            final List<Class<? extends AbstractEntity<?>>> domainTypes = new ArrayList<Class<? extends AbstractEntity<?>>>();
+            final List<Class<? extends AbstractEntity<?>>> domainTypes = new ArrayList<>();
             domainTypes.add(User.class);
             domainTypes.add(UserSecret.class);
             domainTypes.add(UserRolesUpdater.class);
@@ -101,6 +102,7 @@ public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCa
             domainTypes.add(CustomisableColumn.class);
             domainTypes.add(CentreColumnWidthConfigUpdater.class);
             
+            domainTypes.add(CentreConfigShareAction.class);
             domainTypes.add(CentreConfigNewAction.class);
             domainTypes.add(CentreConfigDuplicateAction.class);
             domainTypes.add(CentreConfigLoadAction.class);
