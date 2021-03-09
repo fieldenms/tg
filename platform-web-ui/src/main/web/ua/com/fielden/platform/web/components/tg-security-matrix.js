@@ -92,7 +92,7 @@ class SecurityMatrixEntity extends EntityStub {
         });
         this.$afterCheckCallback = afterCheckCallback;
         this.$state = {};
-        this.title = securityTokenEntity.get("title");
+        this.key = securityTokenEntity.get("title");
         this.desc = securityTokenEntity.get("desc");
         if (parent) {
             this.parent = parent;
@@ -109,13 +109,13 @@ class SecurityMatrixEntity extends EntityStub {
             this.roleIdMap[roleKey] = role.get("id");
             this.idRoleMap[role.get("id")] = roleKey;
             this[roleKey] = false;
-            if (!this.hasChildren()) {
+            if (!this.hasChildren) {
                 this.$state[roleKey] = "UNCHECKED";
             } else {
                 this.$state[roleKey] = calculateState(this.children.map(child => child.$state[roleKey]));
             }
         });
-        if (!this.hasChildren()) {
+        if (!this.hasChildren) {
             const availTokenList = tokenRoleMap[securityTokenEntity.get("key")];
             if (availTokenList) {
                 availTokenList.forEach(roleId => {
@@ -134,7 +134,7 @@ class SecurityMatrixEntity extends EntityStub {
     }
     
     set(property, value) {
-        if (!this.hasChildren()) {
+        if (!this.hasChildren) {
             const oldValue = this.get(property);
             super.set(property, value);
             this.$state[property] = value ? "CHECKED" : "UNCHECKED"
@@ -155,7 +155,7 @@ class SecurityMatrixEntity extends EntityStub {
         if (!visible) {
             return this.$state[property];
         } else {
-            if (this.hasChildren()) {
+            if (this.hasChildren) {
                 return calculateState(this.children.filter(child => child.$visible).map(child => child.getState(property, visible)));
             } else {
                 if (property === "_token") {
@@ -168,7 +168,7 @@ class SecurityMatrixEntity extends EntityStub {
     }
 
     getAssociationsToSave(objToSave) {
-        if (this.hasChildren()) {
+        if (this.hasChildren) {
             this.children.forEach(child => child.getAssociationsToSave(objToSave));
         } else {
             objToSave[this.get("id")] = this._newAssociations.slice();
@@ -176,7 +176,7 @@ class SecurityMatrixEntity extends EntityStub {
     }
 
     getAssociationsToRemove(objToSave) {
-        if (this.hasChildren()) {
+        if (this.hasChildren) {
             this.children.forEach(child => child.getAssociationsToRemove(objToSave));
         } else {
             objToSave[this.get("id")] = this._removedAssociations.slice();
@@ -184,12 +184,12 @@ class SecurityMatrixEntity extends EntityStub {
     }
 
     isChanged() {
-        return (this.hasChildren() && this.children.some(child => child.isChanged())) || this._isChanged();
+        return (this.hasChildren && this.children.some(child => child.isChanged())) || this._isChanged();
     }
 
     reset() {
         const roleTouched = {};
-        if (this.hasChildren()) {
+        if (this.hasChildren) {
             this.children.forEach(child => {
                 Object.assign(roleTouched, child.reset());
             });
@@ -213,7 +213,7 @@ class SecurityMatrixEntity extends EntityStub {
     }
 
     clearCurrentState() {
-        if (this.hasChildren()) {
+        if (this.hasChildren) {
             this.children.forEach(child => child.clearCurrentState());
         } else {
             this._newAssociations = [];
@@ -221,7 +221,7 @@ class SecurityMatrixEntity extends EntityStub {
         }
     }
     
-    hasChildren() {
+    get hasChildren() {
         return this.children && this.children.length > 0;
     }
 
@@ -255,7 +255,7 @@ class SecurityMatrixEntity extends EntityStub {
     }
 
     _checkWithoutParent(property, value) {
-        if (this.hasChildren()) {
+        if (this.hasChildren) {
             this.children.forEach(child => {
                 if (child.$visible && this._isPropertyVisible(property)) {
                     child._checkWithoutParent(property, value);
@@ -295,7 +295,7 @@ class SecurityMatrixEntity extends EntityStub {
         if ("_token" === property) {
             this.$state._token = calculateState(Object.keys(this.roleIdMap).map(roleKey => this.getState(roleKey)));
         } else {
-            if (this.hasChildren()) {
+            if (this.hasChildren) {
                 this.$state[property] = calculateState(this.children.map(child => child.getState(property)));
             } else {
                 this.$state[property] = value ? "CHECKED" : "UNCHECKED";
