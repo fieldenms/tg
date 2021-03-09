@@ -20,6 +20,10 @@ const template = html`
             @apply --layout-vertical;
             @apply --layout-relative;
         }
+        tg-tree-table {
+            min-height: 0;
+            @apply --layout-flex;
+        }
     </style>
     <tg-tree-table id="tokenTree" model="[[entities]]">
         <tg-property-column slot='hierarchy-column' property="[[hierarchyColumn.property]]" type="[[hierarchyColumn.type]]" width="[[hierarchyColumn.width]]" min-width="[[hierarchyColumn.minWidth]]" grow-factor="[[hierarchyColumn.growFactor]]" column-title="[[hierarchyColumn.columnTitle]]" column-desc="[[hierarchyColumn.columnDesc]]"></tg-property-column>

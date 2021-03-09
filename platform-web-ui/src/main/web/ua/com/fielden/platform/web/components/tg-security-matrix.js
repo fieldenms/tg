@@ -441,10 +441,8 @@ Polymer({
         const newEntity = newBindingEntity ? newBindingEntity['@@origin'] : null;
         if (newEntity && newEntity.calculated) {
             this.hierarchyColumn = {
-                property: "title",
+                property: "key",
                 visible: true,
-                childrenProperty: "children",
-                parentProperty: "parent",
                 type: "String",
                 width: 200,
                 minWidth: 200,
