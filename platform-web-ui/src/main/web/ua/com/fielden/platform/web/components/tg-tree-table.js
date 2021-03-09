@@ -10,6 +10,7 @@ import { flush } from "/resources/polymer/@polymer/polymer/lib/utils/flush.js";
 import { TgTreeListBehavior } from '/resources/components/tg-tree-list-behavior.js';
 import { TgEgiDataRetrievalBehavior } from '/resources/egi/tg-egi-data-retrieval-behavior.js';
 import { tearDownEvent, getRelativePos } from '/resources/reflection/tg-polymer-utils.js';
+import { FlattenedNodesObserver } from '/resources/polymer/@polymer/polymer/lib/utils/flattened-nodes-observer.js';
 
 
 const template = html`
@@ -260,6 +261,15 @@ function calculateColumnWidthExcept (columnIndex, columnElements, columnLength) 
     return columnWidth;
 };
 
+function removeColumn (column, fromColumns) {
+    const index = fromColumns.indexOf(column);
+    if (index >= 0) {
+        fromColumns.splice(index, 1);
+        return true;
+    }
+    return false;
+};
+
 class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRetrievalBehavior], PolymerElement) {
 
     static get template() { 
@@ -291,8 +301,23 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRetrieval
     ready () {
         super.ready();
         
-        this.hierarchyColumn = this.$.hierarchy_column_slot.assignedNodes({flatten: true})[0];
-        this.regularColumns = this.$.regular_column_slot.assignedNodes({flatten: true});
+        //Observe hierarchy column DOM changes
+        new FlattenedNodesObserver(this.$.hierarchy_column_slot, (info) => {
+            this.hierarchyColumn = info.addedNodes[0];
+        });
+        //Observe regular column DOM changes
+        new FlattenedNodesObserver(this.$.regular_column_slot, (info) => {
+            const newColumns = (this.regularColumns && this.regularColumns.slice()) || [];
+            info.addedNodes.forEach(node => {
+                if (node.nodeType === Node.ELEMENT_NODE) {
+                    newColumns.push(node);
+                }
+            });
+            info.removedNodes.forEach(node => {
+                removeColumn(node, newColumns);
+            });
+            this.regularColumns = newColumns;
+        });
         this._lastTreeTableVisibleIndex = this._lastTreeTableVisibleIndex.bind(this.$.treeList);
         this.$.treeList.scrollToIndex = this._scrollToIndexAndCorrect();
     }
