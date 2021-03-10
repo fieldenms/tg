@@ -63,6 +63,7 @@ const generateChildrenModel = function (children, parentEntity, additionalInfoCb
             selected: false,
             over: false
         };
+        parent.entity.__model = parent;
         if (child.hasChildren) {
             if (child.children && child.children.length > 0) {
                 parent.children = generateChildrenModel(child.children, parent, additionalInfoCb);
@@ -76,7 +77,7 @@ const generateChildrenModel = function (children, parentEntity, additionalInfoCb
             return entity;
         });
         return parent;
-    })
+    });
 };
 
 
@@ -130,7 +131,7 @@ const wasLoaded = function (entity) {
 };
 
 const generateLoadingIndicator = function (parent) {
-    return {
+    const loaderIndicator = {
         entity: {
             key: "Loading data...",
             hasChildren: false,
@@ -144,6 +145,8 @@ const generateLoadingIndicator = function (parent) {
         selected: false,
         over: false
     };
+    loaderIndicator.entity.__model = loaderIndicator;
+    return loaderIndicator;
 };
 
 const refreshTree = function () {

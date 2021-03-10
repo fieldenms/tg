@@ -3,6 +3,8 @@ import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
 import '/resources/polymer/@polymer/iron-icons/av-icons.js';
 import '/resources/polymer/@polymer/iron-list/iron-list.js';
 
+import '/resources/components/tg-tree-table-content.js';
+
 import { mixinBehaviors } from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
 import { html, PolymerElement } from '/resources/polymer/@polymer/polymer/polymer-element.js';
 import { flush } from "/resources/polymer/@polymer/polymer/lib/utils/flush.js";
@@ -233,12 +235,12 @@ const template = html`
                             <div class="table-cell sticky-container stick-left z-index-1" selected$="[[entity.selected]]" over$="[[entity.over]]" style$="[[_calcColumnStyle(hierarchyColumn, hierarchyColumn.width, hierarchyColumn.growFactor, 'true')]]">
                                 <div class="flexible-horizontal-container" style$="[[itemStyle(entity)]]">
                                     <iron-icon class="expand-button" icon="av:play-arrow" style="flex-grow:0;flex-shrink:0;" invisible$="[[!entity.entity.hasChildren]]" collapsed$="[[!entity.opened]]" on-tap="_toggle"></iron-icon>
-                                    <div class="truncate flexible-horizontal-container part-to-highlight" highlighted$="[[entity.highlight]]" tooltip-text$="[[_getTooltip(entity, hierarchyColumn)]]" inner-h-t-m-l="[[_getBindedTreeTableValue(entity, hierarchyColumn)]]"></div>
+                                    <tg-tree-table-content class="truncate flexible-horizontal-container part-to-highlight" entity="[[entity]]" column="[[hierarchyColumn]]" highlighted$="[[entity.highlight]]" tooltip-text$="[[_getTooltip(entity, hierarchyColumn)]]" inner-h-t-m-l="[[_getBindedTreeTableValue(entity, hierarchyColumn)]]"></tg-tree-table-content>
                                 </div>
                             </div>
                             <template is="dom-repeat" items="[[regularColumns]]" as="column">
                                 <div class="table-cell" selected$="[[entity.selected]]" over$="[[entity.over]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'false')]]" highlighted$="[[entity.highlight]]" tooltip-text$="[[_getTooltip(entity, column)]]">
-                                    <div class="truncate" inner-h-t-m-l="[[_getBindedTreeTableValue(entity, column)]]"></div>
+                                    <tg-tree-table-content class="truncate" entity="[[entity]]" column="[[column]]" inner-h-t-m-l="[[_getBindedTreeTableValue(entity, column)]]"></tg-tree-table-content>
                                 </div>
                             </template>
                         </div>
