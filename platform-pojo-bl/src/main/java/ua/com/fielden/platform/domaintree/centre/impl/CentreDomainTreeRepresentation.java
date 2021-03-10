@@ -4,6 +4,7 @@ import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
+import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -70,7 +71,7 @@ public class CentreDomainTreeRepresentation extends AbstractDomainTreeRepresenta
         final Class<?> keyType = determinePropertyType(root, KEY);
         final List<Pair<String, Ordering>> pairs = new ArrayList<>();
         if (!isEntityType(keyType) && !DynamicEntityKey.class.isAssignableFrom(keyType)) {
-            pairs.add(new Pair<>("", ASCENDING));
+            pairs.add(pair("", ASCENDING));
         }
         return pairs;
     }

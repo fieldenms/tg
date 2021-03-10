@@ -1,11 +1,13 @@
 package ua.com.fielden.platform.web_api;
 
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.security.tokens.Template.READ_MODEL;
 import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseReading;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -27,10 +29,10 @@ import ua.com.fielden.platform.security.tokens.Template;
  */
 public class FieldVisibility implements GraphqlFieldVisibility {
     private final IAuthorisationModel authorisation;
-    private final Set<Class<? extends AbstractEntity<?>>> domainTypes;
+    private final Map<String, Class<? extends AbstractEntity<?>>> domainTypes;
     private final String securityTokensPackageName;
     private final ISecurityTokenProvider securityTokenProvider;
-    
+
     /**
      * Creates {@link FieldVisibility} instance to be used as a singleton for the whole {@link GraphQLSchema}.
      * 
@@ -41,15 +43,15 @@ public class FieldVisibility implements GraphqlFieldVisibility {
      */
     public FieldVisibility(final IAuthorisationModel authorisation, final Set<Class<? extends AbstractEntity<?>>> domainTypes, final String securityTokensPackageName, final ISecurityTokenProvider securityTokenProvider) {
         this.authorisation = authorisation;
-        this.domainTypes = domainTypes;
+        this.domainTypes = domainTypes.stream().collect(toMap(type -> type.getSimpleName(), type -> type));
         this.securityTokensPackageName = securityTokensPackageName;
         this.securityTokenProvider = securityTokenProvider;
     }
-    
+
     @Override
     public List<GraphQLFieldDefinition> getFieldDefinitions(final GraphQLFieldsContainer fieldsContainer) {
         final String simpleName = fieldsContainer.getName();
-        if (domainTypes.stream().anyMatch(domainType -> domainType.getSimpleName().equals(simpleName))) { // only consider containers that represent TG domain types (more specifically only those domain types that are used for Query root fields)
+        if (domainTypes.containsKey(simpleName)) { // only consider containers that represent TG domain types (more specifically only those domain types that are used for Query root fields)
             if (!authoriseReading(simpleName, READ_MODEL, securityTokensPackageName, authorisation, securityTokenProvider).isSuccessful()) {
                 return fieldsContainer.getFieldDefinitions().stream()
                     .filter(def -> ID.equals(def.getName())) // at least one field should be accessible (ID was chosen for that purpose); otherwise the type does not conform to GraphQL spec (and validations in GraphiQL editor become broken)
@@ -58,7 +60,7 @@ public class FieldVisibility implements GraphqlFieldVisibility {
         }
         return fieldsContainer.getFieldDefinitions();
     }
-    
+
     @Override
     public GraphQLFieldDefinition getFieldDefinition(final GraphQLFieldsContainer fieldsContainer, final String fieldName) {
         return getFieldDefinitions(fieldsContainer).stream()
@@ -66,5 +68,5 @@ public class FieldVisibility implements GraphqlFieldVisibility {
             .findAny()
             .orElse(null);
     }
-    
+
 }
