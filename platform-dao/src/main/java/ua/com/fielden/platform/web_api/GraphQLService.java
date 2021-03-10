@@ -47,7 +47,9 @@ import org.apache.log4j.Logger;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import graphql.ExecutionInput;
 import graphql.GraphQL;
+import graphql.analysis.MaxQueryDepthInstrumentation;
 import graphql.schema.GraphQLCodeRegistry;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLList;
@@ -70,6 +72,7 @@ import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.web_api.exceptions.WebApiException;
 
 /**
  * Represents GraphQL-based implementation of TG Web API using library <a href="https://github.com/graphql-java/graphql-java">graphql-java</a>.
@@ -81,7 +84,8 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public class GraphQLService implements IWebApi {
     private final Logger logger = Logger.getLogger(getClass());
-    private final GraphQL graphQL;
+    private final GraphQLSchema schema;
+    private final Integer maxQueryDepth;
     
     /**
      * Creates GraphQLService instance based on {@code applicationDomainProvider} which contains all entity types.
@@ -89,6 +93,7 @@ public class GraphQLService implements IWebApi {
      * We start by building dictionary of all our custom GraphQL types from existing domain entity types.
      * Then we create GraphQL type for quering (aka GraphQL {@code query}) and assign it to the schema.
      *
+     * @param maxQueryDepth -- the maximum depth of GraphQL query that are permitted to be executed.
      * @param applicationDomainProvider
      * @param coFinder
      * @param dates
@@ -98,6 +103,7 @@ public class GraphQLService implements IWebApi {
      */
     @Inject
     public GraphQLService(
+        final @Named("web.api.maxQueryDepth") Integer maxQueryDepth,
         final IApplicationDomainProvider applicationDomainProvider,
         final ICompanionObjectFinder coFinder,
         final IDates dates,
@@ -107,6 +113,11 @@ public class GraphQLService implements IWebApi {
     ) {
         try {
             logger.info("GraphQL Web API...");
+            if (maxQueryDepth == null || maxQueryDepth.compareTo(0) < 0) {
+                throw new WebApiException("GraphQL max query depth must be specified and cannot be negative.");
+            }
+            this.maxQueryDepth = maxQueryDepth;
+            logger.info("\tmaxQueryDepth = " + maxQueryDepth);
             final GraphQLCodeRegistry.Builder codeRegistryBuilder = newCodeRegistry();
             logger.info("\tBuilding dictionary...");
             final Predicate<Class<? extends AbstractEntity<?>>> toInclude = type -> isSyntheticEntityType(type) || isPersistedEntityType(type); // this includes persistent with activatable nature, synthetic based on persistent; this does not include union, functional and any other entities
@@ -121,13 +132,11 @@ public class GraphQLService implements IWebApi {
             logger.info("\tBuilding field visibility...");
             codeRegistryBuilder.fieldVisibility(new FieldVisibility(authorisation, domainTypes, securityTokensPackageName, securityTokenProvider));
             logger.info("\tBuilding schema...");
-            final GraphQLSchema schema = newSchema()
+            schema = newSchema()
                 .codeRegistry(codeRegistryBuilder.build())
                 .query(queryType)
                 .additionalTypes(new LinkedHashSet<>(dictionary.values()))
                 .build();
-            logger.info("\tBuilding service...");
-            graphQL = newGraphQL(schema).build();
             logger.info("GraphQL Web API...done");
         } catch (final Throwable t) {
             logger.error("GraphQL Web API error.", t);
@@ -156,13 +165,16 @@ public class GraphQLService implements IWebApi {
      */
     @Override
     public Map<String, Object> execute(final Map<String, Object> input) {
-        return graphQL.execute(newExecutionInput()
-            .query(query(input))
-            .operationName(operationName(input).orElse(null))
-            .variables(variables(input))
-        ).toSpecification();
+        return newGraphQL(schema)
+               .instrumentation(new MaxQueryDepthInstrumentation(maxQueryDepth)).build()
+               .execute(
+                       newExecutionInput()
+                       .query(query(input))
+                       .operationName(operationName(input).orElse(null))
+                       .variables(variables(input)))
+               .toSpecification();
     }
-    
+
     /**
      * Creates map of GraphQL dictionary (aka GraphQL "additional types") and corresponding entity types.
      * <p>

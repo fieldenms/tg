@@ -226,7 +226,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
         }
         final List<Field> keys = getKeyMembers(type);
         properties.removeAll(keys); // remove composite key members if any
-        
+
         // now let's ensure that that key related properties and desc are first in the list of properties
         final List<Field> fieldsAndKeys = new ArrayList<>();
         fieldsAndKeys.addAll(keys);

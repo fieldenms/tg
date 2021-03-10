@@ -5,6 +5,7 @@ import java.util.Properties;
 
 import com.google.inject.Singleton;
 import com.google.inject.Stage;
+import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 
 import ua.com.fielden.platform.attachment.AttachmentDao;
@@ -201,6 +202,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bindConstant().annotatedWith(Names.named("independent.time.zone")).to(Boolean.valueOf(props.getProperty("independent.time.zone")));
         final boolean webApiPresent = Boolean.valueOf(props.getProperty("web.api"));
         bindConstant().annotatedWith(Names.named("web.api")).to(webApiPresent);
+        bindConstant().annotatedWith(Names.named("web.api.maxQueryDepth")).to(Integer.valueOf(props.getProperty("web.api.maxQueryDepth", "13")));
 
         bind(IApplicationSettings.class).to(ApplicationSettings.class).in(Singleton.class);
         bind(IApplicationDomainProvider.class).toInstance(applicationDomainProvider);
