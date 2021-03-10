@@ -4,6 +4,7 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 
 import '/resources/components/tg-tree-table.js';
 import '/resources/egi/tg-property-column.js';
+import '/resources/components/security-tree-table/tg-security-checkbox.js';
 
 
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
@@ -27,7 +28,7 @@ const template = html`
     </style>
     <tg-tree-table id="tokenTree" model="[[entities]]">
         <template is="dom-repeat" items="[[columns]]">
-            <tg-property-column slot$="[[item.slot]]" property="[[item.property]]" type="[[item.type]]" width="[[item.width]]" min-width="[[item.minWidth]]" grow-factor="[[item.growFactor]]" column-title="[[item.columnTitle]]" column-desc="[[item.columnDesc]]" content-builder="[[_getCheckBox]]"></tg-property-column>
+            <tg-property-column slot$="[[item.slot]]" property="[[item.property]]" type="[[item.type]]" width="[[item.width]]" min-width="[[item.minWidth]]" grow-factor="[[item.growFactor]]" column-title="[[item.columnTitle]]" column-desc="[[item.columnDesc]]" content-builder="[[_buildContent]]"></tg-property-column>
         </template>
     </tg-tree-table>`;
 
@@ -44,6 +45,12 @@ Polymer({
         columns: Array,
     },
 
+    ready: function () {
+        this._buildContent = this._buildContent.bind(this);
+        this._buildHierarchyColumnContent = this._buildHierarchyColumnContent.bind(this);
+        this._buildSecurityColumnContent = this._buildSecurityColumnContent.bind(this);
+    },
+
     /**
      * invokes resize event listener on asynch.
      */
@@ -55,9 +62,7 @@ Polymer({
 
     //////////////////////////Security token filtering related functions//////////////////////////////
     filterTokens: function (text) {
-        if (this.treeModel) {
-            this.$.tokenTree.filter();
-        }
+        this.$.tokenTree.filter(text);
     },
 
     //////////////////////////User role filtering related functions//////////////////////////////
@@ -80,7 +85,20 @@ Polymer({
     },
 
     ////////////////////////////Content builders//////////////////////////////
-    _getCheckBox: function (entity, column) {
+    _buildContent: function (entity, column) {
+        if (column.slot === 'hierarchy-column') {
+            return this._buildHierarchyColumnContent(entity, column);
+        } else if (column.slot === 'regular-column') {
+            return this._buildSecurityColumnContent(entity, column);
+        }
+    },
 
+    _buildHierarchyColumnContent: function (entity, column) {
+        const value = entity.entity.get(column.property);
+        return "<tg-security-checkbox></tg-security-checkbox><span>" + value + "</span";
+    },
+
+    _buildSecurityColumnContent: function (entity, column) {
+        return "<tg-security-checkbox></tg-security-checkbox>";
     }
 });

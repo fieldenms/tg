@@ -85,7 +85,6 @@ class SecurityMatrixEntity extends EntityStub {
 
     constructor(securityTokenEntity, userRoles, tokenRoleMap, columnList, afterCheckCallback, parent) {
         super(securityTokenEntity.get("key"));
-        this.$visible = true;
         this.$columnListMap = {};
         columnList.forEach(column => {
             this.$columnListMap[column.property] = column;
@@ -156,7 +155,7 @@ class SecurityMatrixEntity extends EntityStub {
             return this.$state[property];
         } else {
             if (this.hasChildren) {
-                return calculateState(this.children.filter(child => child.$visible).map(child => child.getState(property, visible)));
+                return calculateState(this.children.filter(child => child.__model.visible).map(child => child.getState(property, visible)));
             } else {
                 if (property === "_token") {
                     return calculateState(Object.keys(this.roleIdMap).filter(roleKey => visible ? this._isPropertyVisible(roleKey) : true).map(roleKey => this.getState(roleKey)));
@@ -235,7 +234,7 @@ class SecurityMatrixEntity extends EntityStub {
     }
 
     _check(property, value) {
-        if (this.$visible && this._isPropertyVisible(property)) {
+        if (this.__model.visible && this._isPropertyVisible(property)) {
             this._checkWithoutParent(property, value);
             this._checkColumnParent(property, value);
             this.$afterCheckCallback();
@@ -257,7 +256,7 @@ class SecurityMatrixEntity extends EntityStub {
     _checkWithoutParent(property, value) {
         if (this.hasChildren) {
             this.children.forEach(child => {
-                if (child.$visible && this._isPropertyVisible(property)) {
+                if (child.__model.visible && this._isPropertyVisible(property)) {
                     child._checkWithoutParent(property, value);
                 }
             });
@@ -317,12 +316,6 @@ const updateAssociations = function (value, newAssociations, removedAssociations
         newAssociations.push(value);
     }
 }
-const removeValueFrom = function (value, list) {
-    const indexToRemove = list.indexOf(value);
-    if (indexToRemove >= 0) {
-        list.splice(indexToRemove, 1);
-    }
-};
 const calculateState = function (states) {
     if (states.length > 0 && states.every(state => state === "CHECKED")) {
         return "CHECKED";
@@ -331,12 +324,6 @@ const calculateState = function (states) {
     }
     return "SEMICHECKED";
 };
-const calculateNextState = function (state, prevState) {
-    if (!prevState) {
-        return state;
-    }
-    return calculateState([prevState, state]);
-}
 const replaceWhitespacesWithUnderscore = function (str) {
     return str.replace(/\s+/gi, "_");
 };
@@ -467,7 +454,7 @@ Polymer({
                 });
             });
             this.columns = columnList;
-            this.entities = newEntity.get("tokens").map(token => new SecurityMatrixEntity(token, newEntity.get("userRoles"), newEntity.get("tokenRoleMap"), columnList, this._toggleButtonStates));
+            this.entities = newEntity.get("tokens").map(token => new SecurityMatrixEntity(token, newEntity.get("userRoles"), newEntity.get("tokenRoleMap"), columnList.slice().splice(0, 1), this._toggleButtonStates));
             this._toggleButtonStates();
         }
     },
