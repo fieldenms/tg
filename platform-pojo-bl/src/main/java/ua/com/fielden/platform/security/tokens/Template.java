@@ -13,8 +13,8 @@ public enum Template {
     SAVE ("%s_CanSave_Token", "%s Can Save", "Authorises saving of new or modified data."),
     DELETE ("%s_CanDelete_Token", "%s Can Delete", "Authorises deletion of data."),
     MODIFY ("%s_CanModify_%s_Token", "%s Can Modify property [%s]", "Authorises modification of the specified property."),
-    READ ("%s_CanRead_Token", "%s Can Read", "Authorises reading of data (%s)."),
-    READ_MODEL ("%s_CanReadModel_Token", "%s Can Read Model", "Authorises reading of data model (%s)."),
+    READ ("%s_CanRead_Token", "%s Can Read", "Authorises reading of data."),
+    READ_MODEL ("%s_CanReadModel_Token", "%s Can Read Model", "Authorises reading of data model."),
     EXECUTE ("%s_CanExecute_Token", "%s Can Execute", "Authorises action execution."),
     MASTER_OPEN ("%s_CanOpen_Token", "%s Can Open", "Authorises opening of a compound master."),
     MASTER_MENU_ITEM_ACCESS ("%s_CanAccess_Token", "%s Can Access", "Authorises access to a menu item of a compound master.");
@@ -40,4 +40,5 @@ public enum Template {
         this.forTitle = forTitle;
         this.forDesc = forDesc;
     }
+
 }
