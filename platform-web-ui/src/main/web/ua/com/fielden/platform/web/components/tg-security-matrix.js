@@ -127,7 +127,6 @@ class SecurityMatrixEntity extends EntityStub {
             this.$state._token = calculateState(this.children.map(child => child.$state._token));
         }
         //Initiate
-        this._tokenRoleAssociationHandler = {};
         this._newAssociations = [];
         this._removedAssociations = [];
     }
@@ -144,9 +143,7 @@ class SecurityMatrixEntity extends EntityStub {
                     updateAssociations(this.roleIdMap[property], this._removedAssociations, this._newAssociations);
                 }
             }
-            if (typeof this._tokenRoleAssociationHandler[property] === "function") {
-                this._tokenRoleAssociationHandler[property](value, this.getState(property));
-            }
+            updateViewFor(this, property, value, this.getState(property));
         }
     }
     
@@ -300,14 +297,22 @@ class SecurityMatrixEntity extends EntityStub {
                 this.$state[property] = value ? "CHECKED" : "UNCHECKED";
             }
         }
-        if (typeof this._tokenRoleAssociationHandler[property] === "function") {
-            const newAllState = this.getState(property);
-            const newVisibleState = this.getState(property, true);
-            const newValue  = newAllState === "SEMICHECKED" ? (newVisibleState === "SEMICHECKED" ? !value : newVisibleState === "CHECKED") : newAllState === "CHECKED";
-            this._tokenRoleAssociationHandler[property](newValue, newAllState);
-        }
+        
+        const newAllState = this.getState(property);
+        const newVisibleState = this.getState(property, true);
+        const newValue  = newAllState === "SEMICHECKED" ? (newVisibleState === "SEMICHECKED" ? !value : newVisibleState === "CHECKED") : newAllState === "CHECKED";
+        updateViewFor(this, property, newValue, newAllState);
     }
 };
+
+const updateViewFor = function (entity, property, newState, newAllState) {
+    if (entity.__model.checkBoxes$ && entity.__model.checkBoxes$[property]) {
+        entity.__model.checkBoxes$[property].forEach(checkbox => {
+            checkbox._setState(newState, newAllState);
+        });
+    }
+}
+
 const updateAssociations = function (value, newAssociations, removedAssociations) {
     const roleIndex = removedAssociations.indexOf(value);
     if (roleIndex >= 0) {

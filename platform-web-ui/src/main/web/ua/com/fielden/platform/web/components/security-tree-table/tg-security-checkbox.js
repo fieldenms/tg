@@ -29,22 +29,7 @@ class TgSecurityCheckbox extends PolymerElement {
     static get observers() {
         return [
           '_dataChanged(entity, column)'
-        ]
-      }
-
-    ready () {
-        super.ready();
-
-        this.column = this.parentElement.column;
-        this.entity = this.parentElement.entity;
-
-        this.parentElement.addEventListener("tg-tree-table-content-entity-changed", (e) => {
-            this.entity = e.detail;
-        });
-
-        this.parentElement.addEventListener("tg-tree-table-column-entity-changed", (e) => {
-            this.column = e.detail;
-        });
+        ];
     }
 
     _dataChanged (entity, column) {
@@ -53,9 +38,6 @@ class TgSecurityCheckbox extends PolymerElement {
         }
         const state = this.entity.entity.getState(this.propertyName);
         this._setState(state === "CHECKED", state);
-        this.entity.entity._tokenRoleAssociationHandler[this.propertyName] = (value, state) => {
-            this._setState(value, state);
-        };
     }
 
     get propertyName () {
@@ -73,7 +55,7 @@ class TgSecurityCheckbox extends PolymerElement {
     _stateChanged (e) {
         if (this.entity && this.column) {
             const target = e.target || e.srcElement;
-            this.column.check(this.entity, this.propertyName, target.checked);
+            this.column.check(this.entity.entity, this.propertyName, target.checked);
         }
     }
 }

@@ -28,7 +28,7 @@ const template = html`
     </style>
     <tg-tree-table id="tokenTree" model="[[entities]]">
         <template is="dom-repeat" items="[[columns]]">
-            <tg-property-column slot$="[[item.slot]]" property="[[item.property]]" type="[[item.type]]" width="[[item.width]]" min-width="[[item.minWidth]]" grow-factor="[[item.growFactor]]" column-title="[[item.columnTitle]]" column-desc="[[item.columnDesc]]" content-builder="[[_buildContent]]"></tg-property-column>
+            <tg-property-column slot$="[[item.slot]]" property="[[item.property]]" type="[[item.type]]" width="[[item.width]]" min-width="[[item.minWidth]]" grow-factor="[[item.growFactor]]" column-title="[[item.columnTitle]]" column-desc="[[item.columnDesc]]" element-provider="[[_buildTreeElement]]" check="[[item.check]]"></tg-property-column>
         </template>
     </tg-tree-table>`;
 
@@ -46,9 +46,7 @@ Polymer({
     },
 
     ready: function () {
-        this._buildContent = this._buildContent.bind(this);
-        this._buildHierarchyColumnContent = this._buildHierarchyColumnContent.bind(this);
-        this._buildSecurityColumnContent = this._buildSecurityColumnContent.bind(this);
+        this._buildTreeElement = this._buildTreeElement.bind(this);
     },
 
     /**
@@ -85,20 +83,45 @@ Polymer({
     },
 
     ////////////////////////////Content builders//////////////////////////////
-    _buildContent: function (entity, column) {
+    _buildTreeElement: function (parent, entity, column) {
         if (column.slot === 'hierarchy-column') {
-            return this._buildHierarchyColumnContent(entity, column);
+            this._buildHierarchyColumnElements(parent, entity, column);
         } else if (column.slot === 'regular-column') {
-            return this._buildSecurityColumnContent(entity, column);
+            this._buildSecurityColumnElements(parent, entity, column);
         }
     },
 
-    _buildHierarchyColumnContent: function (entity, column) {
+    _buildHierarchyColumnElements: function (parent, entity, column) {
         const value = entity.entity.get(column.property);
-        return "<tg-security-checkbox></tg-security-checkbox><span>" + value + "</span";
+        const text = document.createElement("span");
+        text.innerHTML = value;
+        parent.appendChild(this._getCheckobx(entity, column, "_token"));
+        parent.appendChild(text);
     },
 
-    _buildSecurityColumnContent: function (entity, column) {
-        return "<tg-security-checkbox></tg-security-checkbox>";
+    _getCheckobx: function (entity, column, propName) {
+        if (!entity.checkBoxes$) {
+            entity.checkBoxes$ = {};
+        }
+        if (!entity.checkBoxes$[propName]) {
+            entity.checkBoxes$[propName] = [];
+        }
+        let freeCheckbox = entity.checkBoxes$[propName].find(checkbox => checkbox.parentElement === null);
+        if (!freeCheckbox) {
+            freeCheckbox = this._createCheckbox(entity, column);
+            entity.checkBoxes$[propName].push(freeCheckbox);
+        }
+        return freeCheckbox;
+    },
+
+    _createCheckbox: function (entity, column) {
+        const checkbox = document.createElement('tg-security-checkbox');
+        checkbox.entity = entity;
+        checkbox.column = column;
+        return checkbox;
+    },
+
+    _buildSecurityColumnElements: function (parent, entity, column) {
+        parent.appendChild(this._getCheckobx(entity, column, column.property));
     }
 });
