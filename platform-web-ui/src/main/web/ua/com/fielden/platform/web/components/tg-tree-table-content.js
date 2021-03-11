@@ -1,9 +1,14 @@
+import { allDefined } from '/resources/reflection/tg-polymer-utils.js';
+import { TgEgiDataRetrievalBehavior } from '/resources/egi/tg-egi-data-retrieval-behavior.js';
+import { _removeAllLightDOMChildrenFrom } from '/resources/reflection/tg-polymer-utils.js';
+
 import { html, PolymerElement } from '/resources/polymer/@polymer/polymer/polymer-element.js';
+import { mixinBehaviors } from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
 
 const template = html`
     <slot></slot>`; 
 
-class TgTreeTableContent extends PolymerElement {
+class TgTreeTableContent extends mixinBehaviors([TgEgiDataRetrievalBehavior], PolymerElement) {
 
     static get template() { 
         return template;
@@ -12,14 +17,37 @@ class TgTreeTableContent extends PolymerElement {
     static get properties() {
         return {
             column: {
-                type: Object,
-                observer: "_columnChanged"
+                type: Object
             },
             entity: {
-                type: Object,
-                observer: "_entityChanged"
+                type: Object
             }
         };
+    }
+
+    static get observers() {
+        return [
+          '_dataChanged(entity, column)'
+        ];
+    }
+
+    _dataChanged (entity, column) {
+        _removeAllLightDOMChildrenFrom(this);
+        if (!allDefined(arguments)) {
+            this.innerHtml = "";
+        } else if (entity.loaderIndicator) {
+            if (column.getAttribute("slot") === 'hierarchy-column') {
+                this.innerHtml = entity.entity.key;
+            } else {
+                this.innerHtml = "";
+            }
+        } else if (column.elementProvider) {
+            column.elementProvider(this, entity, column);
+        } else if (column.contentBuilder) {
+            this.innerHtml = column.contentBuilder(entity, column);
+        } else {
+            this.innerHtml = this.getBindedValue(entity.entity, column);
+        }
     }
 
     ready () {
