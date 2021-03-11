@@ -439,7 +439,7 @@ Polymer({
                 type: "String",
                 width: 200,
                 minWidth: 200,
-                growFactor: 1,
+                growFactor: 0,//should be 1
                 columnTitle: "Security Tokens",
                 columnDesc: "Security Tokens Hierarchy",
                 check: this.check,
@@ -459,7 +459,7 @@ Polymer({
                 });
             });
             this.columns = columnList;
-            this.entities = newEntity.get("tokens").map(token => new SecurityMatrixEntity(token, newEntity.get("userRoles"), newEntity.get("tokenRoleMap"), columnList.slice().splice(0, 1), this._toggleButtonStates));
+            this.entities = newEntity.get("tokens").map(token => new SecurityMatrixEntity(token, newEntity.get("userRoles"), newEntity.get("tokenRoleMap"), columnList.slice().splice(1), this._toggleButtonStates));
             this._toggleButtonStates();
         }
     },

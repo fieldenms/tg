@@ -28,7 +28,7 @@ const template = html`
     </style>
     <tg-tree-table id="tokenTree" model="[[entities]]">
         <template is="dom-repeat" items="[[columns]]">
-            <tg-property-column slot$="[[item.slot]]" property="[[item.property]]" type="[[item.type]]" width="[[item.width]]" min-width="[[item.minWidth]]" grow-factor="[[item.growFactor]]" column-title="[[item.columnTitle]]" column-desc="[[item.columnDesc]]" element-provider="[[_buildTreeElement]]" check="[[item.check]]"></tg-property-column>
+            <tg-property-column slot$="[[item.slot]]" property="[[item.property]]" type="[[item.type]]" visible="[[item.visible]]" width="[[item.width]]" min-width="[[item.minWidth]]" grow-factor="[[item.growFactor]]" column-title="[[item.columnTitle]]" column-desc="[[item.columnDesc]]" element-provider="[[_buildTreeElement]]" check="[[item.check]]"></tg-property-column>
         </template>
     </tg-tree-table>`;
 
@@ -66,11 +66,13 @@ Polymer({
     //////////////////////////User role filtering related functions//////////////////////////////
     filterRoles: function (text) {
         if (this.columns) {
-            this.columns.forEach((column, index) => {
+            this.columns.filter(column => column.slot === "regular-column").forEach((column, index) => {
                 if (column.columnTitle.toLowerCase().search(text.toLowerCase()) >= 0) {
-                    this.set("columns." + index + ".visible", true);
+                    this.$.tokenTree.set("regularColumns." + index + ".visible", true);
+                    column.visible = true;
                 } else {
-                    this.set("columns." + index + ".visible", false);
+                    this.$.tokenTree.set("regularColumns." + index + ".visible", false);
+                    column.visible = false;
                 }
             });
             //this._updateTableSizeAsync();
