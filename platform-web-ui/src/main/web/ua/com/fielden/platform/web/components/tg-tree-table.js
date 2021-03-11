@@ -10,7 +10,6 @@ import { html, PolymerElement } from '/resources/polymer/@polymer/polymer/polyme
 import { flush } from "/resources/polymer/@polymer/polymer/lib/utils/flush.js";
 
 import { TgTreeListBehavior } from '/resources/components/tg-tree-list-behavior.js';
-import { TgEgiDataRetrievalBehavior } from '/resources/egi/tg-egi-data-retrieval-behavior.js';
 import { tearDownEvent, getRelativePos } from '/resources/reflection/tg-polymer-utils.js';
 import { FlattenedNodesObserver } from '/resources/polymer/@polymer/polymer/lib/utils/flattened-nodes-observer.js';
 
@@ -235,12 +234,12 @@ const template = html`
                             <div class="table-cell sticky-container stick-left z-index-1" selected$="[[entity.selected]]" over$="[[entity.over]]" style$="[[_calcColumnStyle(hierarchyColumn, hierarchyColumn.width, hierarchyColumn.growFactor, 'true')]]">
                                 <div class="flexible-horizontal-container" style$="[[itemStyle(entity)]]">
                                     <iron-icon class="expand-button" icon="av:play-arrow" style="flex-grow:0;flex-shrink:0;" invisible$="[[!entity.entity.hasChildren]]" collapsed$="[[!entity.opened]]" on-tap="_toggle"></iron-icon>
-                                    <tg-tree-table-content class="truncate flexible-horizontal-container part-to-highlight" entity="[[entity]]" column="[[hierarchyColumn]]" highlighted$="[[entity.highlight]]" tooltip-text$="[[_getTooltip(entity, hierarchyColumn)]]" inner-h-t-m-l="[[_getBindedTreeTableValue(entity, hierarchyColumn)]]"></tg-tree-table-content>
+                                    <tg-tree-table-content class="truncate flexible-horizontal-container part-to-highlight" entity="[[entity]]" column="[[hierarchyColumn]]" highlighted$="[[entity.highlight]]" tooltip-text$="[[_getTooltip(entity, hierarchyColumn)]]"></tg-tree-table-content>
                                 </div>
                             </div>
                             <template is="dom-repeat" items="[[regularColumns]]" as="column">
                                 <div class="table-cell" selected$="[[entity.selected]]" over$="[[entity.over]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'false')]]" highlighted$="[[entity.highlight]]" tooltip-text$="[[_getTooltip(entity, column)]]">
-                                    <tg-tree-table-content class="truncate" entity="[[entity]]" column="[[column]]" inner-h-t-m-l="[[_getBindedTreeTableValue(entity, column)]]"></tg-tree-table-content>
+                                    <tg-tree-table-content class="truncate" entity="[[entity]]" column="[[column]]"></tg-tree-table-content>
                                 </div>
                             </template>
                         </div>
@@ -272,7 +271,7 @@ function removeColumn (column, fromColumns) {
     return false;
 };
 
-class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRetrievalBehavior], PolymerElement) {
+class TgTreeTable extends mixinBehaviors([TgTreeListBehavior], PolymerElement) {
 
     static get template() { 
         return template;
@@ -340,18 +339,6 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRetrieval
     }
 
     /******************************Binding functions those calculate attributes, styles and other stuf************/
-
-    _getBindedTreeTableValue (entity, column) {
-        if (entity.loaderIndicator) {
-            if (column === this.hierarchyColumn) {
-                return entity.entity.key;
-            }
-            return "";
-        } else if (column.contentBuilder) {
-            return column.contentBuilder(entity, column);
-        }
-        return this.getBindedValue(entity.entity, column);
-    }
 
     _getTooltip (entity, column) {
         try {
