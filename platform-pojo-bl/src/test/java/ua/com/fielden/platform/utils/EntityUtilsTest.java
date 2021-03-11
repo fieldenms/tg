@@ -267,6 +267,16 @@ public class EntityUtilsTest {
     }
 
     @Test
+    public void isIntrospectionDenied_returns_true_for_entity_types_annotated_with_DenyIntrospection() {
+        assertTrue(EntityUtils.isIntrospectionDenied(UnionEntity.class));
+    }
+
+    @Test
+    public void isIntrospectionDenied_returns_false_for_entity_types_not_annotated_with_DenyIntrospection() {
+        assertFalse(EntityUtils.isIntrospectionDenied(Entity.class));
+    }
+
+    @Test
     public void coalesce_returns_first_value_if_it_is_non_null() {
         assertEquals("first", coalesce("first", "second"));
     }
