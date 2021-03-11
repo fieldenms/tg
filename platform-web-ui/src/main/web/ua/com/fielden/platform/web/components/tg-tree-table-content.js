@@ -34,19 +34,19 @@ class TgTreeTableContent extends mixinBehaviors([TgEgiDataRetrievalBehavior], Po
     _dataChanged (entity, column) {
         _removeAllLightDOMChildrenFrom(this);
         if (!allDefined(arguments)) {
-            this.innerHtml = "";
+            this.innerHTML = "";
         } else if (entity.loaderIndicator) {
             if (column.getAttribute("slot") === 'hierarchy-column') {
-                this.innerHtml = entity.entity.key;
+                this.innerHTML = entity.entity.key;
             } else {
-                this.innerHtml = "";
+                this.innerHTML = "";
             }
         } else if (column.elementProvider) {
             column.elementProvider(this, entity, column);
         } else if (column.contentBuilder) {
-            this.innerHtml = column.contentBuilder(entity, column);
+            this.innerHTML = column.contentBuilder(entity, column);
         } else {
-            this.innerHtml = this.getBindedValue(entity.entity, column);
+            this.innerHTML = this.getBindedValue(entity.entity, column);
         }
     }
 
