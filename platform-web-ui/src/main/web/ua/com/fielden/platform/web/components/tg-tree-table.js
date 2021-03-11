@@ -216,12 +216,12 @@ const template = html`
     <div id="scrollableContainer" on-scroll="_handleScrollEvent">
         <div id="baseContainer">
             <div id="header" show-top-shadow$="[[_showTopShadow]]" class="table-header-row sticky-container stick-top z-index-1"  on-touchmove="_handleTouchMove">
-                <div class="table-cell sticky-container stick-top-left z-index-2" fixed style$="[[_calcColumnHeaderStyle(hierarchyColumn, hierarchyColumn.width, hierarchyColumn.growFactor, 'true')]]" on-down="_makeTreeTableUnselectable" on-up="_makeTreeTableSelectable" on-track="_changeColumnSize" tooltip-text$="[[hierarchyColumn.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
+                <div class="table-cell sticky-container stick-top-left z-index-2" fixed style$="[[_calcColumnHeaderStyle(hierarchyColumn, hierarchyColumn.visible, hierarchyColumn.width, hierarchyColumn.growFactor, 'true')]]" on-down="_makeTreeTableUnselectable" on-up="_makeTreeTableSelectable" on-track="_changeColumnSize" tooltip-text$="[[hierarchyColumn.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                     <div class="truncate table-header-column-title">[[hierarchyColumn.columnTitle]]</div>
                     <div class="resizing-box"></div>
                 </div>
                 <template is="dom-repeat" items="[[regularColumns]]">
-                    <div class="table-cell" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, 'false')]]" on-down="_makeTreeTableUnselectable" on-up="_makeTreeTableSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
+                    <div class="table-cell" style$="[[_calcColumnHeaderStyle(item, item.visible, item.width, item.growFactor, 'false')]]" on-down="_makeTreeTableUnselectable" on-up="_makeTreeTableSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                         <div class="truncate table-header-column-title">[[item.columnTitle]]</div>
                         <div class="resizing-box"></div>
                     </div>
@@ -231,14 +231,14 @@ const template = html`
                 <iron-list id="treeList" items="[[_entities]]" as="entity" scroll-target="scrollableContainer">
                     <template>
                         <div class="table-data-row" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
-                            <div class="table-cell sticky-container stick-left z-index-1" selected$="[[entity.selected]]" over$="[[entity.over]]" style$="[[_calcColumnStyle(hierarchyColumn, hierarchyColumn.width, hierarchyColumn.growFactor, 'true')]]">
+                            <div class="table-cell sticky-container stick-left z-index-1" selected$="[[entity.selected]]" over$="[[entity.over]]" style$="[[_calcColumnStyle(hierarchyColumn, hierarchyColumn.visible, hierarchyColumn.width, hierarchyColumn.growFactor, 'true')]]">
                                 <div class="flexible-horizontal-container" style$="[[itemStyle(entity)]]">
                                     <iron-icon class="expand-button" icon="av:play-arrow" style="flex-grow:0;flex-shrink:0;" invisible$="[[!entity.entity.hasChildren]]" collapsed$="[[!entity.opened]]" on-tap="_toggle"></iron-icon>
                                     <tg-tree-table-content class="truncate flexible-horizontal-container part-to-highlight" entity="[[entity]]" column="[[hierarchyColumn]]" highlighted$="[[entity.highlight]]" tooltip-text$="[[_getTooltip(entity, hierarchyColumn)]]"></tg-tree-table-content>
                                 </div>
                             </div>
                             <template is="dom-repeat" items="[[regularColumns]]" as="column">
-                                <div class="table-cell" selected$="[[entity.selected]]" over$="[[entity.over]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'false')]]" highlighted$="[[entity.highlight]]" tooltip-text$="[[_getTooltip(entity, column)]]">
+                                <div class="table-cell" selected$="[[entity.selected]]" over$="[[entity.over]]" style$="[[_calcColumnStyle(column, column.visible, column.width, column.growFactor, 'false')]]" highlighted$="[[entity.highlight]]" tooltip-text$="[[_getTooltip(entity, column)]]">
                                     <tg-tree-table-content class="truncate" entity="[[entity]]" column="[[column]]"></tg-tree-table-content>
                                 </div>
                             </template>
@@ -364,21 +364,21 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior], PolymerElement) {
         return "";
     }
 
-    _calcColumnHeaderStyle (item, itemWidth, columnGrowFactor, fixed) {
+    _calcColumnHeaderStyle (item, itemVisible, itemWidth, columnGrowFactor, fixed) {
         let colStyle = "min-width: " + itemWidth + "px;" + "width: " + itemWidth + "px;"
         if (columnGrowFactor === 0 || fixed === 'true') {
             colStyle += "flex-grow: 0;flex-shrink: 0;";
         } else {
             colStyle += "flex-grow: " + columnGrowFactor + ";";
         }
-        if (itemWidth === 0) {
+        if (itemWidth === 0 || !itemVisible) {
             colStyle += "display: none;";
         }
         return colStyle;
     }
 
-    _calcColumnStyle (item, itemWidth, columnGrowFactor, fixed) {
-        let colStyle = this._calcColumnHeaderStyle(item, itemWidth, columnGrowFactor, fixed);
+    _calcColumnStyle (item, itemVisible, itemWidth, columnGrowFactor, fixed) {
+        let colStyle = this._calcColumnHeaderStyle(item, itemVisible, itemWidth, columnGrowFactor, fixed);
         return colStyle;
     }
 
@@ -386,7 +386,6 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior], PolymerElement) {
         const cellPadding = this.getComputedStyleValue('--tree-table-cell-padding').trim() || "0.6rem";
         return "left: " + leftShadowPosition + "px; width: calc(" + width + "px + 2 * " + cellPadding +");";
     }
-
 
     /******************************EventListeners************************/
 
