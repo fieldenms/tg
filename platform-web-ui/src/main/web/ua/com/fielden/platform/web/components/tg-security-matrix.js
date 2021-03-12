@@ -439,7 +439,7 @@ Polymer({
                 type: "String",
                 width: 200,
                 minWidth: 200,
-                growFactor: 0,//should be 1
+                growFactor: 1,
                 columnTitle: "Security Tokens",
                 columnDesc: "Security Tokens Hierarchy",
                 check: this.check,
