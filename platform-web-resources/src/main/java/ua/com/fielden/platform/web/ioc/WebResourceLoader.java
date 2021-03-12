@@ -51,7 +51,6 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
 public class WebResourceLoader implements IWebResourceLoader {
     private final IWebUiConfig webUiConfig;
     private final ISerialiser serialiser;
-    private final TgJackson tgJackson;
     private static final Logger logger = Logger.getLogger(WebResourceLoader.class);
     private final boolean deploymentMode;
     private final boolean vulcanizingMode;
@@ -60,7 +59,6 @@ public class WebResourceLoader implements IWebResourceLoader {
     public WebResourceLoader(final IWebUiConfig webUiConfig, final ISerialiser serialiser) {
         this.webUiConfig = webUiConfig;
         this.serialiser = serialiser;
-        this.tgJackson = (TgJackson) serialiser.getEngine(JACKSON);
         final Workflows workflow = this.webUiConfig.workflow();
         this.deploymentMode = deployment.equals(workflow);
         this.vulcanizingMode = vulcanizing.equals(workflow);
@@ -91,7 +89,7 @@ public class WebResourceLoader implements IWebResourceLoader {
         } else if ("/app/tg-app.js".equalsIgnoreCase(resourceUri)) {
             return ofNullable(webUiConfig.genMainWebUIComponent());
         } else if ("/app/tg-reflector.js".equalsIgnoreCase(resourceUri)) {
-            return getReflectorSource(serialiser, tgJackson);
+            return getReflectorSource(serialiser, (TgJackson) serialiser.getEngine(JACKSON));
         } else if (resourceUri.startsWith("/master_ui")) {
             return ofNullable(getMasterSource(resourceUri.replaceFirst(quote("/master_ui/"), "").replaceFirst(quote(".js"), ""), webUiConfig));
         } else if (resourceUri.startsWith("/centre_ui")) {
