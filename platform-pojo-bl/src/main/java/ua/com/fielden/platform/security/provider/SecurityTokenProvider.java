@@ -5,6 +5,7 @@ import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.isSuperTok
 import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.isTopLevel;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -18,30 +19,44 @@ import com.google.inject.name.Named;
 
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.security.ISecurityToken;
+import ua.com.fielden.platform.security.exceptions.SecurityException;
 import ua.com.fielden.platform.security.tokens.attachment.AttachmentDownload_CanExecute_Token;
 import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanDelete_Token;
+import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanReadModel_Token;
+import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanSave_Token;
+import ua.com.fielden.platform.security.tokens.user.UserAndRoleAssociation_CanReadModel_Token;
+import ua.com.fielden.platform.security.tokens.user.UserAndRoleAssociation_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.user.UserRoleTokensUpdater_CanExecute_Token;
 import ua.com.fielden.platform.security.tokens.user.UserRole_CanDelete_Token;
+import ua.com.fielden.platform.security.tokens.user.UserRole_CanReadModel_Token;
+import ua.com.fielden.platform.security.tokens.user.UserRole_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.user.UserRole_CanSave_Token;
 import ua.com.fielden.platform.security.tokens.user.UserRolesUpdater_CanExecute_Token;
 import ua.com.fielden.platform.security.tokens.user.User_CanDelete_Token;
+import ua.com.fielden.platform.security.tokens.user.User_CanReadModel_Token;
+import ua.com.fielden.platform.security.tokens.user.User_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.user.User_CanSave_Token;
+import ua.com.fielden.platform.utils.CollectionUtil;
 
 /**
- * Searches for all available security tokens in the application based on the provided path and package name. The result is presented as as a tree-like structure containing all
- * tokens with correctly determined association between them.
+ * Searches for all available security tokens in the application based on the provided path and package name.
+ * The result is presented as as a tree-like structure containing all tokens with correctly determined association between them.
+ * <p>
+ * <b>A fundamental assumption:</b> simple class names uniquely identify security tokens and entities!
  * 
  * @author TG Team
  * 
  */
 public class SecurityTokenProvider implements ISecurityTokenProvider {
-    
+    public static final String ERR_DUPLICATE_SECURITY_TOKENS = "Not all security tokens are unique in their simple class name. This is required.";
+
     /** 
      * A map between token classes and their names. 
      * Used as a cache for obtaining class by name. 
      */
-    private final Map<String, Class<? extends ISecurityToken>> tokenClassesByName;
+    private final Map<String, Class<? extends ISecurityToken>> tokenClassesByName = new HashMap<>();
+    private final Map<String, Class<? extends ISecurityToken>> tokenClassesBySimpleName = new HashMap<>();
 
     /**
      * Contains top level security token nodes.
@@ -63,18 +78,31 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
             final @Named("tokens.path") String path,
             final @Named("tokens.package") String packageName
     ) {
+        final Set<Class<? extends ISecurityToken>> platformLevelTokens = CollectionUtil.setOf(
+                User_CanSave_Token.class,
+                User_CanRead_Token.class,
+                User_CanReadModel_Token.class,
+                User_CanDelete_Token.class,
+                UserRole_CanSave_Token.class,
+                UserRole_CanRead_Token.class,
+                UserRole_CanReadModel_Token.class,
+                UserRole_CanDelete_Token.class,
+                UserAndRoleAssociation_CanRead_Token.class,
+                UserAndRoleAssociation_CanReadModel_Token.class,
+                UserRolesUpdater_CanExecute_Token.class,
+                UserRoleTokensUpdater_CanExecute_Token.class,
+                Attachment_CanSave_Token.class,
+                Attachment_CanRead_Token.class,
+                Attachment_CanReadModel_Token.class,
+                Attachment_CanDelete_Token.class,
+                AttachmentDownload_CanExecute_Token.class);
         final Set<Class<? extends ISecurityToken>> allTokens = new HashSet<>(ClassesRetriever.getAllClassesInPackageDerivedFrom(path, packageName, ISecurityToken.class));
-        allTokens.add(User_CanSave_Token.class);
-        allTokens.add(User_CanDelete_Token.class);
-        allTokens.add(UserRole_CanSave_Token.class);
-        allTokens.add(UserRole_CanDelete_Token.class);
-        allTokens.add(UserRolesUpdater_CanExecute_Token.class);
-        allTokens.add(UserRoleTokensUpdater_CanExecute_Token.class);
-        allTokens.add(Attachment_CanSave_Token.class);
-        allTokens.add(Attachment_CanDelete_Token.class);
-        allTokens.add(AttachmentDownload_CanExecute_Token.class);
+        allTokens.addAll(platformLevelTokens);
 
-        tokenClassesByName = allTokens.stream().collect(toMap(t -> t.getName(), t -> t));
+        allTokens.forEach(type -> { tokenClassesByName.put(type.getName(), type); tokenClassesBySimpleName.put(type.getSimpleName(), type); });
+        if (tokenClassesByName.size() != tokenClassesBySimpleName.size()) {
+            throw new SecurityException(ERR_DUPLICATE_SECURITY_TOKENS);
+        }
         topLevelSecurityTokenNodes = buildTokenNodes(allTokens);
     }
 
@@ -82,10 +110,16 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
         return Collections.unmodifiableSortedSet(topLevelSecurityTokenNodes);
     }
 
+    /**
+     * Returns a class representing a security token by its simple or full class name.
+     *
+     * @param tokenClassName -- a simple or a full class name for a security token.
+     */
     @SuppressWarnings("unchecked")
     @Override
     public <T extends ISecurityToken> Optional<Class<T>> getTokenByName(final String tokenClassName) {
-        return Optional.ofNullable((Class<T>) tokenClassesByName.get(tokenClassName));
+        final Class<T> classBySimpleName = (Class<T>) tokenClassesBySimpleName.get(tokenClassName);
+        return Optional.ofNullable(classBySimpleName != null ? classBySimpleName : (Class<T>) tokenClassesByName.get(tokenClassName));
     }
 
     private SortedSet<SecurityTokenNode> buildTokenNodes(final Set<Class<? extends ISecurityToken>> allTokens) {

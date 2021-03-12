@@ -30,7 +30,6 @@ import ua.com.fielden.platform.security.tokens.Template;
 public class FieldVisibility implements GraphqlFieldVisibility {
     private final IAuthorisationModel authorisation;
     private final Map<String, Class<? extends AbstractEntity<?>>> domainTypes;
-    private final String securityTokensPackageName;
     private final ISecurityTokenProvider securityTokenProvider;
 
     /**
@@ -38,13 +37,11 @@ public class FieldVisibility implements GraphqlFieldVisibility {
      * 
      * @param authorisation -- authorisation model for tokens processing
      * @param domainTypes -- a set of TG domain types to be processed for field visibility
-     * @param securityTokensPackageName -- a place where all security tokens are located
      * @param securityTokenProvider -- security token provider, used to get token classes by their string names.
      */
-    public FieldVisibility(final IAuthorisationModel authorisation, final Set<Class<? extends AbstractEntity<?>>> domainTypes, final String securityTokensPackageName, final ISecurityTokenProvider securityTokenProvider) {
+    public FieldVisibility(final IAuthorisationModel authorisation, final Set<Class<? extends AbstractEntity<?>>> domainTypes, final ISecurityTokenProvider securityTokenProvider) {
         this.authorisation = authorisation;
         this.domainTypes = domainTypes.stream().collect(toMap(type -> type.getSimpleName(), type -> type));
-        this.securityTokensPackageName = securityTokensPackageName;
         this.securityTokenProvider = securityTokenProvider;
     }
 
@@ -52,7 +49,7 @@ public class FieldVisibility implements GraphqlFieldVisibility {
     public List<GraphQLFieldDefinition> getFieldDefinitions(final GraphQLFieldsContainer fieldsContainer) {
         final String simpleName = fieldsContainer.getName();
         if (domainTypes.containsKey(simpleName)) { // only consider containers that represent TG domain types (more specifically only those domain types that are used for Query root fields)
-            if (!authoriseReading(simpleName, READ_MODEL, securityTokensPackageName, authorisation, securityTokenProvider).isSuccessful()) {
+            if (!authoriseReading(simpleName, READ_MODEL, authorisation, securityTokenProvider).isSuccessful()) {
                 return fieldsContainer.getFieldDefinitions().stream()
                     .filter(def -> ID.equals(def.getName())) // at least one field should be accessible (ID was chosen for that purpose); otherwise the type does not conform to GraphQL spec (and validations in GraphiQL editor become broken)
                     .collect(toList());
