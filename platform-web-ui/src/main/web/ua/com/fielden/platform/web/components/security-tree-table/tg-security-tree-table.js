@@ -6,6 +6,8 @@ import '/resources/components/tg-tree-table.js';
 import '/resources/egi/tg-property-column.js';
 import '/resources/components/security-tree-table/tg-security-checkbox.js';
 
+import { searchRegExp } from '/resources/editors/tg-highlighter.js';
+
 
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
@@ -18,7 +20,6 @@ const template = html`
             min-height: 0;
             background-color: white;
             border-radius: 2px;
-            --tree-table-header-height: auto;
             @apply --layout-vertical;
             @apply --layout-relative;
         }
@@ -67,8 +68,9 @@ Polymer({
     //////////////////////////User role filtering related functions//////////////////////////////
     filterRoles: function (text) {
         if (this.columns) {
+            const regexToSearch = searchRegExp(text);
             this.columns.filter(column => column.slot === "regular-column").forEach((column, index) => {
-                if (column.columnTitle.toLowerCase().search(text.toLowerCase()) >= 0) {
+                if (column.columnTitle.search(regexToSearch) >= 0) {
                     this.$.tokenTree.set("regularColumns." + index + ".visible", true);
                     column.visible = true;
                 } else {
@@ -76,6 +78,7 @@ Polymer({
                     column.visible = false;
                 }
             });
+            this.$.tokenTree._updateColumnsFlex();
             //this._updateTableSizeAsync();
         }
     },
