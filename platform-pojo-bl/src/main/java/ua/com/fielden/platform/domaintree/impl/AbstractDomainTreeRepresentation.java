@@ -1,11 +1,18 @@
 package ua.com.fielden.platform.domaintree.impl;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
+import static ua.com.fielden.platform.reflection.Finder.findProperties;
+import static ua.com.fielden.platform.reflection.Finder.getFieldByName;
 import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determineClass;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.transform;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
+import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
@@ -197,22 +204,37 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      * @return
      */
     private static List<Field> constructKeysAndProperties(final Class<?> type) {
+        return constructKeysAndProperties(type, false);
+    }
+
+    /**
+     * Forms a list of fields for "type" in order ["key" or key members => ["id" => "version" => ]"desc" (if exists) => other properties in order as declared in domain].
+     *
+     * @param type
+     * @param withIdAndVersion -- {@code true} to include {@link AbstractEntity#ID} and {@link AbstractEntity#VERSION} properties right after keys and before {@link AbstractEntity#DESC}, {@code false} otherwise.
+     * @return
+     */
+    public static List<Field> constructKeysAndProperties(final Class<?> type, final boolean withIdAndVersion) {
         // logger().info("Started constructKeysAndProperties for [" + type.getSimpleName() + "].");
-        final List<Field> properties = Finder.findProperties(type);
+        final List<Field> properties = findProperties(type);
         // let's remove desc and key properties as they will be added separately a couple of lines below
         for (final Iterator<Field> iter = properties.iterator(); iter.hasNext();) {
             final Field prop = iter.next();
-            if (AbstractEntity.KEY.equals(prop.getName()) || AbstractEntity.DESC.equals(prop.getName())) {
+            if (KEY.equals(prop.getName()) || DESC.equals(prop.getName())) {
                 iter.remove();
             }
         }
-        final List<Field> keys = Finder.getKeyMembers(type);
+        final List<Field> keys = getKeyMembers(type);
         properties.removeAll(keys); // remove composite key members if any
 
         // now let's ensure that that key related properties and desc are first in the list of properties
         final List<Field> fieldsAndKeys = new ArrayList<>();
         fieldsAndKeys.addAll(keys);
-        fieldsAndKeys.add(Finder.getFieldByName(type, AbstractEntity.DESC));
+        if (withIdAndVersion) {
+            fieldsAndKeys.add(getFieldByName(type, ID));
+            fieldsAndKeys.add(getFieldByName(type, VERSION));
+        }
+        fieldsAndKeys.add(getFieldByName(type, DESC));
         fieldsAndKeys.addAll(properties);
         // logger().info("Ended constructProperties for [" + type.getSimpleName() + "].");
         return fieldsAndKeys;
@@ -360,8 +382,34 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
         return (isCollection(root, property) && !isShortCollection(root, property)) || isInCollectionHierarchy(root, property);
     }
 
-    @Override
-    public boolean isExcludedImmutably(final Class<?> root, final String property) {
+    /**
+     * Returns the standard {@link #isExcludedImmutably(Class, String)} contract implementation with few relaxations applicable to Web API:
+     * <ul>
+     * <li>1. do not exclude 'key' that have no {@link KeyTitle} assigned</li>
+     * <li>2. include 'key's with different types, not only entity-typed ones</li>
+     * <li>3. include non-{@link IsProperty} properties, e.g. {@link AbstractEntity#ID} or {@link AbstractEntity#VERSION} </li>
+     * </ul>
+     * 
+     * @param root
+     * @param property
+     * @return
+     */
+    public static boolean isExcluded(final Class<?> root, final String property) {
+        return isExcluded(root, property, createSet(), setOf(root), false, false);
+    }
+
+    /**
+     * Main implementation point for {@link #isExcludedImmutably(Class, String)} contract.
+     * 
+     * @param root
+     * @param property
+     * @param manuallyExcludedProperties
+     * @param rootTypes
+     * @param strictKeys -- <code>true</code> to exclude keys without {@link KeyTitle} annotation or non-entity-typed ones, <code>false</code> otherwise
+     * @param strictIsPropertyProps -- <code>true</code> to exclude non-{@link IsProperty} properties, <code>false</code> otherwise
+     * @return
+     */
+    private static boolean isExcluded(final Class<?> root, final String property, final EnhancementSet manuallyExcludedProperties, final Set<Class<?>> rootTypes, final boolean strictKeys, final boolean strictIsPropertyProps) {
         // logger().info("\t\tStarted isExcludedImmutably for property [" + property + "].");
         final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
         // logger().info("\t\t\ttransform.");
@@ -377,11 +425,11 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
         final boolean excl = manuallyExcludedProperties.contains(key(root, property)) || // exclude manually excluded properties
                 Money.class.isAssignableFrom(penultType) || // all properties within type Money should be excluded at this stage
                 !isEntityItself && AbstractEntity.KEY.equals(lastPropertyName) && propertyType == null || // exclude "key" -- no KeyType annotation exists in direct owner of "key"
-                !isEntityItself && AbstractEntity.KEY.equals(lastPropertyName) && !AnnotationReflector.isAnnotationPresentForClass(KeyTitle.class, penultType) || // exclude "key" -- no KeyTitle annotation exists in direct owner of "key"
-                !isEntityItself && AbstractEntity.KEY.equals(lastPropertyName) && !EntityUtils.isEntityType(propertyType) || // exclude "key" -- "key" is not of entity type
+                strictKeys && !isEntityItself && AbstractEntity.KEY.equals(lastPropertyName) && !AnnotationReflector.isAnnotationPresentForClass(KeyTitle.class, penultType) || // exclude "key" -- no KeyTitle annotation exists in direct owner of "key"
+                strictKeys && !isEntityItself && AbstractEntity.KEY.equals(lastPropertyName) && !EntityUtils.isEntityType(propertyType) || // exclude "key" -- "key" is not of entity type
                 !isEntityItself && AbstractEntity.DESC.equals(lastPropertyName) && !EntityDescriptor.hasDesc(penultType) || // exclude "desc" -- no DescTitle annotation exists in direct owner of "desc"
-                !isEntityItself && !AnnotationReflector.isAnnotationPresent(Finder.findFieldByName(root, property), IsProperty.class) || // exclude non-TG properties (not annotated by @IsProperty)
-                isEntityItself && !rootTypes().contains(propertyType) || // exclude entities of non-"root types"
+                strictIsPropertyProps && !isEntityItself && !AnnotationReflector.isAnnotationPresent(Finder.findFieldByName(root, property), IsProperty.class) || // exclude non-TG properties (not annotated by @IsProperty)
+                isEntityItself && !rootTypes.contains(propertyType) || // exclude entities of non-"root types"
                 EntityUtils.isEnum(propertyType) || // exclude enumeration properties / entities
                 EntityUtils.isEntityType(propertyType) && Modifier.isAbstract(propertyType.getModifiers()) || // exclude properties / entities of entity type with 'abstract' modifier
                 EntityUtils.isEntityType(propertyType) && !AnnotationReflector.isAnnotationPresentForClass(KeyType.class, propertyType) || // exclude properties / entities of entity type without KeyType annotation
@@ -395,9 +443,14 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
                 // Perhaps some "hybrid" of both can be used to achieve acceptable performance.
                 // 1. !isEntityItself && Finder.getKeyMembers(penultType).contains(field) && typesInHierarchy(root, property, true).contains(DynamicEntityClassLoader.getOriginalType(propertyType)) || // exclude key parts which type was in hierarchy
                 // 2. !isEntityItself && PropertyTypeDeterminator.isDotNotation(property) && Finder.isOne2Many_or_One2One_association(DynamicEntityClassLoader.getOriginalType(root), penultPropertyName) && lastPropertyName.equals(Finder.findLinkProperty((Class<? extends AbstractEntity<?>>) DynamicEntityClassLoader.getOriginalType(root), penultPropertyName)) || // exclude link properties in one2many and one2one associations
-                !isEntityItself && isExcludedImmutably(root, PropertyTypeDeterminator.isDotNotation(property) ? penultPropertyName : ""); // exclude property if it is an ascender (any level) of already excluded property
+                !isEntityItself && isExcluded(root, PropertyTypeDeterminator.isDotNotation(property) ? penultPropertyName : "", manuallyExcludedProperties, rootTypes, strictKeys, strictIsPropertyProps); // exclude property if it is an ascender (any level) of already excluded property
         // logger().info("\t\tEnded isExcludedImmutably for property [" + property + "].");
         return excl;
+    }
+
+    @Override
+    public boolean isExcludedImmutably(final Class<?> root, final String property) {
+        return isExcluded(root, property, manuallyExcludedProperties, rootTypes(), true, true);
     }
 
     /**
