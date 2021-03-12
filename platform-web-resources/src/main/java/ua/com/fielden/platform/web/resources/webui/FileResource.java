@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import static com.google.common.base.Charsets.UTF_8;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static org.restlet.data.MediaType.ALL;
 import static org.restlet.data.MediaType.IMAGE_PNG;
 import static org.restlet.data.MediaType.IMAGE_SVG;
@@ -11,13 +13,16 @@ import static ua.com.fielden.platform.web.resources.RestServerUtil.encodedRepres
 
 import java.io.ByteArrayInputStream;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.data.MediaType;
+import org.restlet.data.Status;
 import org.restlet.representation.Representation;
+import org.restlet.representation.StringRepresentation;
 import org.restlet.resource.Get;
 
 import ua.com.fielden.platform.utils.IDates;
@@ -59,7 +64,7 @@ public class FileResource extends AbstractWebResource {
         if (IMAGE_PNG.equals(mediaType) || ALL.equals(mediaType)) {
             return createStreamRepresentation(webResourceLoader, resourcePaths, mediaType, getReference().getPath(), getReference().getRemainingPart());
         } else {
-            return createRepresentation(webResourceLoader, mediaType, getReference().getPath(), getReference().getRemainingPart());
+            return createRepresentation(webResourceLoader, mediaType, getReference().getPath(), getReference().getRemainingPart(), of(getResponse()));
         }
     }
     
@@ -99,7 +104,7 @@ public class FileResource extends AbstractWebResource {
             return encodedRepresentation(webResourceLoader.loadStream(filePath), mediaType);
         }, webResourceLoader, mediaType, path, remainingPart);
     }
-    
+
     /**
      * Returns checksum representation for the resource in case where checksum has been requested.
      * Otherwise, creates textual representation for text-like resources. 
@@ -108,13 +113,19 @@ public class FileResource extends AbstractWebResource {
      * @param mediaType
      * @param path
      * @param remainingPart
+     * @param response -- optional response object to set status 404 in case of a missing resource.
      * @return
      */
-    public static Representation createRepresentation(final IWebResourceLoader webResourceLoader, final MediaType mediaType, final String path, final String remainingPart) {
+    public static Representation createRepresentation(final IWebResourceLoader webResourceLoader, final MediaType mediaType, final String path, final String remainingPart, final Optional<Response> response) {
         return returnChecksumRepresentationOr(() -> {
-            final String source = webResourceLoader.loadSource(path);
-            return encodedRepresentation(new ByteArrayInputStream(source.getBytes(UTF_8)), mediaType);
+            final Optional<String> source = webResourceLoader.loadSource(path);
+            return source.map(content -> encodedRepresentation(new ByteArrayInputStream(content.getBytes(UTF_8)), mediaType))
+                    .orElseGet(() -> {response.ifPresent(r -> r.setStatus(Status.CLIENT_ERROR_NOT_FOUND)); return response.isPresent() ? null : new StringRepresentation("Web UI resource is missing");});
         }, webResourceLoader, mediaType, path, remainingPart);
+    }
+
+    public static Representation createRepresentation(final IWebResourceLoader webResourceLoader, final MediaType mediaType, final String path, final String remainingPart) {
+        return createRepresentation(webResourceLoader, mediaType, path, remainingPart, empty());
     }
 
     /**

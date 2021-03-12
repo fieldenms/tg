@@ -37,7 +37,6 @@ import ua.com.fielden.platform.web.factories.webui.MasterTestsComponentResourceF
 import ua.com.fielden.platform.web.factories.webui.SerialisationTestResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.ServiceWorkerResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.TgReflectorComponentResourceFactory;
-import ua.com.fielden.platform.web.factories.webui.WebApiResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.WebClientErrorLoggerResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.WebUiPreferencesResourceFactory;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
@@ -158,9 +157,8 @@ public abstract class AbstractWebUiResources extends Application {
         attachAutocompletionResources(guardedRouter, webApp);
 
         if (injector.getInstance(Key.get(boolean.class, Names.named("web.api")))) { // in case where Web API has been turned-on in application.properties ...
-            // ... register Web API and GraphiQL resources
-            guardedRouter.attach("/api", new WebApiResourceFactory(injector));
-            guardedRouter.attach("/api/graphiql", new GraphiQLResourceFactory(injector));
+            // ... register GraphiQL resources
+            guardedRouter.attach("/graphiql", new GraphiQLResourceFactory(injector));
         }
 
         // register domain specific resources if any
