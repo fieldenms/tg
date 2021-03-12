@@ -47,7 +47,6 @@ import org.apache.log4j.Logger;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
-import graphql.ExecutionInput;
 import graphql.GraphQL;
 import graphql.analysis.MaxQueryDepthInstrumentation;
 import graphql.schema.GraphQLCodeRegistry;
@@ -108,7 +107,6 @@ public class GraphQLService implements IWebApi {
         final ICompanionObjectFinder coFinder,
         final IDates dates,
         final IAuthorisationModel authorisation,
-        final @Named("tokens.package") String securityTokensPackageName,
         final ISecurityTokenProvider securityTokenProvider
     ) {
         try {
@@ -128,9 +126,9 @@ public class GraphQLService implements IWebApi {
             allTypes.addAll(domainTypesOf(applicationDomainProvider, type -> !toInclude.test(type) && type.getSimpleName().endsWith("GroupingProperty"))); // '...GroupingProperty' is the naming pattern for enum-like entities for groupBy criteria
             final Map<Class<? extends AbstractEntity<?>>, GraphQLType> dictionary = createDictionary(allTypes);
             logger.info("\tBuilding query type...");
-            final GraphQLObjectType queryType = createQueryType(domainTypes, coFinder, dates, codeRegistryBuilder, authorisation, securityTokensPackageName, securityTokenProvider);
+            final GraphQLObjectType queryType = createQueryType(domainTypes, coFinder, dates, codeRegistryBuilder, authorisation, securityTokenProvider);
             logger.info("\tBuilding field visibility...");
-            codeRegistryBuilder.fieldVisibility(new FieldVisibility(authorisation, domainTypes, securityTokensPackageName, securityTokenProvider));
+            codeRegistryBuilder.fieldVisibility(new FieldVisibility(authorisation, domainTypes, securityTokenProvider));
             logger.info("\tBuilding schema...");
             schema = newSchema()
                 .codeRegistry(codeRegistryBuilder.build())
@@ -204,7 +202,7 @@ public class GraphQLService implements IWebApi {
      * @param securityTokensPackageName
      * @return
      */
-    private static GraphQLObjectType createQueryType(final Set<Class<? extends AbstractEntity<?>>> dictionary, final ICompanionObjectFinder coFinder, final IDates dates, final GraphQLCodeRegistry.Builder codeRegistryBuilder, final IAuthorisationModel authorisation, final String securityTokensPackageName, final ISecurityTokenProvider securityTokenProvider) {
+    private static GraphQLObjectType createQueryType(final Set<Class<? extends AbstractEntity<?>>> dictionary, final ICompanionObjectFinder coFinder, final IDates dates, final GraphQLCodeRegistry.Builder codeRegistryBuilder, final IAuthorisationModel authorisation, final ISecurityTokenProvider securityTokenProvider) {
         final Builder queryTypeBuilder = newObject().name(QUERY_TYPE_NAME).description("Query following **entities** represented as GraphQL root fields:");
         dictionary.stream().forEach(entityType -> {
             final String simpleTypeName = entityType.getSimpleName();
@@ -218,7 +216,7 @@ public class GraphQLService implements IWebApi {
                 .argument(PAGE_CAPACITY_ARGUMENT)
                 .type(new GraphQLList(new GraphQLTypeReference(simpleTypeName)))
             );
-            codeRegistryBuilder.dataFetcher(coordinates(QUERY_TYPE_NAME, fieldName), new RootEntityFetcher<>((Class<AbstractEntity<?>>) entityType, coFinder, dates, authorisation, securityTokensPackageName, securityTokenProvider));
+            codeRegistryBuilder.dataFetcher(coordinates(QUERY_TYPE_NAME, fieldName), new RootEntityFetcher<>((Class<AbstractEntity<?>>) entityType, coFinder, dates, authorisation, securityTokenProvider));
         });
         return queryTypeBuilder.build();
     }

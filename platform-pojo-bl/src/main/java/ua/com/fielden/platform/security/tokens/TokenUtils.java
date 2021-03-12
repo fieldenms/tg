@@ -25,15 +25,14 @@ public class TokenUtils {
      * 
      * @param entityTypeSimpleName -- simple name of the entity type, reading of which needs authorisation
      * @param readingKind -- {@link Template#READ} or {@link Template#READ_MODEL} kind of reading that needs authorisation
-     * @param securityTokensPackageName -- a place where all security tokens are located
      * @param authorisation -- model executing authorisation checks
      * @param securityTokenProvider -- security token provider, used to get a token class by name.
      * @return
      */
-    public static Result authoriseReading(final String entityTypeSimpleName, final Template readingKind, final String securityTokensPackageName, final IAuthorisationModel authorisation, final ISecurityTokenProvider securityTokenProvider) {
-        return findReadingToken(entityTypeSimpleName, readingKind, securityTokensPackageName, securityTokenProvider)
+    public static Result authoriseReading(final String entityTypeSimpleName, final Template readingKind, final IAuthorisationModel authorisation, final ISecurityTokenProvider securityTokenProvider) {
+        return findReadingToken(entityTypeSimpleName, readingKind, securityTokenProvider)
             .map(Optional::of)
-            .orElseGet(() -> findDefaultReadingToken(readingKind, securityTokensPackageName, securityTokenProvider))
+            .orElseGet(() -> findDefaultReadingToken(readingKind, securityTokenProvider))
             .map(token -> authorisation.authorise(token))
             .orElseGet(() -> failure(format("%s token has not been found for %s.", readingKind, entityTypeSimpleName)));
     }
@@ -43,53 +42,35 @@ public class TokenUtils {
      * 
      * @param entityTypeSimpleName -- simple name of the entity type
      * @param readingKind -- {@link Template#READ} or {@link Template#READ_MODEL} kind of reading
-     * @param securityTokensPackageName -- a place where all security tokens are located
      * @param securityTokenProvider -- security token provider, used to get a token class by name.
      * @return
      */
-    public static <T extends ISecurityToken> Optional<Class<T>> findReadingToken(final String entityTypeSimpleName, final Template readingKind, final String securityTokensPackageName, final ISecurityTokenProvider securityTokenProvider) {
-        return findReadingTokenFor(of(entityTypeSimpleName), readingKind, securityTokensPackageName, securityTokenProvider);
+    public static <T extends ISecurityToken> Optional<Class<T>> findReadingToken(final String entityTypeSimpleName, final Template readingKind, final ISecurityTokenProvider securityTokenProvider) {
+        return findReadingTokenFor(of(entityTypeSimpleName), readingKind, securityTokenProvider);
     }
 
     /**
-     * Finds default reading token, if exists.
+     * Finds the default reading token, if exists.
      * 
      * @param readingKind -- {@link Template#READ} or {@link Template#READ_MODEL} kind of reading
-     * @param securityTokensPackageName -- a place where all security tokens are located
      * @param securityTokenProvider -- security token provider, used to get a token class by name.
      * @return
      */
-    public static <T extends ISecurityToken> Optional<Class<T>> findDefaultReadingToken(final Template readingKind, final String securityTokensPackageName, final ISecurityTokenProvider securityTokenProvider) {
-        return findReadingTokenFor(empty(), readingKind, securityTokensPackageName, securityTokenProvider);
+    public static <T extends ISecurityToken> Optional<Class<T>> findDefaultReadingToken(final Template readingKind, final ISecurityTokenProvider securityTokenProvider) {
+        return findReadingTokenFor(empty(), readingKind, securityTokenProvider);
     }
 
     /**
-     * Finds reading token in packages for 'reading' tokens, if exists.
+     * Finds reading token in packages for READ and READ_MODEL tokens, if exists.
      * 
      * @param templateParamOpt -- optional string param to inject to {@link Template#forClassName()} to form token class name
      * @param readingKind -- {@link Template#READ} or {@link Template#READ_MODEL} kind of reading
      * @param securityTokensPackageName -- a place where all security tokens are located
      * @return
      */
-    private static <T extends ISecurityToken> Optional<Class<T>> findReadingTokenFor(final Optional<String> templateParamOpt, final Template readingKind, final String securityTokensPackageName, final ISecurityTokenProvider securityTokenProvider) {
-        return TokenUtils.<T>findReadingTokenFor(templateParamOpt, readingKind, securityTokensPackageName, ".persistent.", securityTokenProvider)
-            .map(Optional::of)
-            .orElseGet(() -> findReadingTokenFor(templateParamOpt, readingKind, securityTokensPackageName, ".synthetic.", securityTokenProvider));
-    }
-
-    /**
-     * Finds reading token in concrete package, if exists.
-     * 
-     * @param templateParamOpt -- optional string param to inject to {@link Template#forClassName()} to form token class name
-     * @param readingKind -- {@link Template#READ} or {@link Template#READ_MODEL} kind of reading
-     * @param securityTokensPackageName -- a place where all security tokens are located
-     * @param packagePart -- package part to be concatenated to {@code securityTokensPackageName}
-     * @param securityTokenProvider -- security token provider, used to get a token class by name.
-     * @return
-     */
-    private static <T extends ISecurityToken>  Optional<Class<T>> findReadingTokenFor(final Optional<String> templateParamOpt, final Template readingKind, final String securityTokensPackageName, final String packagePart, final ISecurityTokenProvider securityTokenProvider) {
-        final String className = securityTokensPackageName + packagePart + format(readingKind.forClassName(), templateParamOpt.orElse(""));
-        return securityTokenProvider.getTokenByName(className);
+    private static <T extends ISecurityToken>  Optional<Class<T>> findReadingTokenFor(final Optional<String> templateParamOpt, final Template readingKind, final ISecurityTokenProvider securityTokenProvider) {
+        final String simpleClassName = format(readingKind.forClassName(), templateParamOpt.orElse(""));
+        return securityTokenProvider.getTokenByName(simpleClassName);
     }
 
 }
