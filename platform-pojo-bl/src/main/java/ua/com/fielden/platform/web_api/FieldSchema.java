@@ -104,8 +104,10 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class FieldSchema {
+    private FieldSchema() {}
+    
     private static final String SPACE = " ";
-    private static final String NEWLINE = "  \n"; // GraphiQL uses Markdown -- way to achieve new lines
+    public static final String NEWLINE = "  \n"; // GraphiQL uses Markdown -- way to achieve new lines
     private static final String SPACE_SEPARATOR = "," + SPACE;
     private static final String NEWLINE_SEPARATOR = "," + NEWLINE;
     private static final String INDENT_STEP = "&nbsp;&nbsp;&nbsp;&nbsp;";
@@ -154,7 +156,7 @@ public class FieldSchema {
     static final int DEFAULT_PAGE_NUMBER = 0;
     static final GraphQLArgument PAGE_NUMBER_ARGUMENT = newArgument()
             .name(PAGE_NUMBER)
-            .description(format("Non-negative number indicating the 'page' of entities returned. Numbers < 0 will be ignored. %s by default.", DEFAULT_PAGE_NUMBER))
+            .description(format("Non-negative number indicating the 'page' of entities returned. Numbers < 0 is ignored. %s by default.", DEFAULT_PAGE_NUMBER))
             .type(GraphQLInt)
             .build();
     /**
@@ -163,7 +165,7 @@ public class FieldSchema {
     static final int DEFAULT_PAGE_CAPACITY = 25;
     static final GraphQLArgument PAGE_CAPACITY_ARGUMENT = newArgument()
         .name(PAGE_CAPACITY)
-        .description(format("Positive number to limit maximum number of entities returned. Numbers <= 0 will be ignored. %s by default.", DEFAULT_PAGE_CAPACITY))
+        .description(format("Positive number to limit the maximum number of entities returned. Numbers <= 0 is ignored. %s by default.", DEFAULT_PAGE_CAPACITY))
         .type(GraphQLInt)
         .build();
     
@@ -226,9 +228,9 @@ public class FieldSchema {
         return isEmpty(titleAndDesc.getValue()) // no 'desc' -- only 'title' to be shown
             || equalsEx(titleAndDesc.getKey(),             titleAndDesc.getValue()) // 'title' equals to 'desc' -- only 'title' to be shown
             || equalsEx(titleAndDesc.getKey() + " entity", titleAndDesc.getValue()) // [title + ' entity'] equals to 'desc' -- only 'title' to be shown
-            ? title : title + " &ndash; " + titleAndDesc.getValue(); // ['title' en-dash 'desc'] to be shown
+            ? title : title + " \u2013 " + titleAndDesc.getValue(); // ['title' en-dash 'desc'] to be shown
     }
-    
+
     /**
      * A string relevant entity property meta-information to be included into field description.
      * 
