@@ -70,7 +70,8 @@ const template = html`
             font-weight: 400;
             color: #757575;
             background-color: white;
-            height: 3rem;
+            height: auto;
+            min-height: 3rem;
             border-bottom: thin solid #e3e3e3;
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
@@ -83,6 +84,14 @@ const template = html`
         }
         .table-header-column-title {
             @apply --layout-flex;
+        }
+        .table-header-column-title[vertical] {
+            padding: 0.4rem;
+            writing-mode: vertical-lr;
+            transform: rotate(180deg);
+            @apply --layout-vertical;
+            @apply --layout-end-justified;
+            @apply --layout-self-stretch;
         }
         .table-data-row {
             font-size: 1rem;
@@ -218,12 +227,12 @@ const template = html`
         <div id="baseContainer">
             <div id="header" show-top-shadow$="[[_showTopShadow]]" class="table-header-row sticky-container stick-top z-index-1"  on-touchmove="_handleTouchMove">
                 <div class="table-cell sticky-container stick-top-left z-index-2" fixed style$="[[_calcColumnHeaderStyle(hierarchyColumn, hierarchyColumn.visible, hierarchyColumn.width, hierarchyColumn.growFactor)]]" on-down="_makeTreeTableUnselectable" on-up="_makeTreeTableSelectable" on-track="_changeColumnSize" tooltip-text$="[[hierarchyColumn.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
-                    <div class="truncate table-header-column-title">[[hierarchyColumn.columnTitle]]</div>
+                    <div class="truncate table-header-column-title" vertical$="[[hierarchyColumn.vertical]]">[[hierarchyColumn.columnTitle]]</div>
                     <div class="resizing-box"></div>
                 </div>
                 <template is="dom-repeat" items="[[regularColumns]]">
                     <div class="table-cell" style$="[[_calcColumnHeaderStyle(item, item.visible, item.width, item.growFactor)]]" on-down="_makeTreeTableUnselectable" on-up="_makeTreeTableSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
-                        <div class="truncate table-header-column-title">[[item.columnTitle]]</div>
+                        <div class="truncate table-header-column-title" vertical$="[[item.vertical]]">[[item.columnTitle]]</div>
                         <div class="resizing-box"></div>
                     </div>
                 </template>
@@ -475,7 +484,7 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior], PolymerElement) {
             scrollableContainerWidth: this.$.scrollableContainer.clientWidth,
             otherColumnWidth: calculateColumnWidthExcept(isHierarchyColumn ? 0 : (this.hierarchyColumn ? 1 : 0) + e.model.index, columnElements, (this.hierarchyColumn ? 1 : 0) + this.regularColumns.length),
             widthCorrection: e.currentTarget.offsetWidth - e.currentTarget.firstElementChild.offsetWidth,
-            hasAnyFlex: this.regularColumns.some((column, index) => (!e.model || index !== e.model.index) && column.growFactor !== 0)
+            hasAnyFlex: (!isHierarchyColumn && this.hierarchyColumn.growFactor > 0) || this.regularColumns.some((column, index) => (!e.model || index !== e.model.index) && column.growFactor !== 0)
         };
     }
 
@@ -492,13 +501,34 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior], PolymerElement) {
             //Correct width if fixed container has become bigger then scrollabel conatiner
             if (newWidth + this._columnResizingObject.widthCorrection > this.$.scrollableContainer.clientWidth) {
                 newWidth = this.$.scrollableContainer.clientWidth - this._columnResizingObject.widthCorrection;
+            } else if (!this._columnResizingObject.hasAnyFlex) {
+                console.log("should set flex");
+                this._setLastColumnFlex();
             }
 
             if (columnWidth !== newWidth) {
                 this.set("hierarchyColumn.width", newWidth);
+                if (this.hierarchyColumn.growFactor !== 0) {
+                    this.set("hierarchyColumn.growFactor", 0);
+                    const columnParameters = this._columnResizingObject.columnParameters || {};
+                    columnParameters[this.hierarchyColumn.property] = {
+                        growFactor: 0
+                    };
+                    this._columnResizingObject.columnParameters = columnParameters;
+                }
                 this._updateTableSizeAsync();
             }
         }
+    }
+
+    _setLastColumnFlex () {
+        this.set("regularColumns." + (this.regularColumns.length - 1) + ".growFactor", 1);
+        this._columnResizingObject.hasAnyFlex = true;
+        const columnParameters = this._columnResizingObject.columnParameters || {}; // this.$.reflector.newEntity("ua.com.fielden.platform.web.centre.ColumnParameter");
+        columnParameters[this.regularColumns[this.regularColumns.length - 1].property] = {
+            growFactor: 1
+        };
+        this._columnResizingObject.columnParameters = columnParameters;
     }
 
     _trackColumnSize (e) {
@@ -519,17 +549,9 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior], PolymerElement) {
                 console.log("width is less");
                 if (e.model.index === this.regularColumns.length - 1) {
                     newWidth = this.$.scrollableContainer.clientWidth - this._columnResizingObject.otherColumnWidth - this._columnResizingObject.widthCorrection;
-                } else {
-                    if (!this._columnResizingObject.hasAnyFlex) {
-                        console.log("should set flex");
-                        this.set("regularColumns." + (this.regularColumns.length - 1) + ".growFactor", 1);
-                        this._columnResizingObject.hasAnyFlex = true;
-                        const columnParameters = this._columnResizingObject.columnParameters || {}; // this.$.reflector.newEntity("ua.com.fielden.platform.web.centre.ColumnParameter");
-                        columnParameters[this.regularColumns[this.regularColumns.length - 1].property] = {
-                            growFactor: 1
-                        };
-                        this._columnResizingObject.columnParameters = columnParameters;
-                    }
+                } else if (!this._columnResizingObject.hasAnyFlex) {
+                    console.log("should set flex");
+                    this._setLastColumnFlex();
                 }
             }
 
@@ -544,7 +566,7 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior], PolymerElement) {
                     this.set("regularColumns." + e.model.index + ".growFactor", 0);
                     const columnParameters = this._columnResizingObject.columnParameters || {};
                     columnParameters[e.model.item.property] = {
-                        growFactor: 1
+                        growFactor: 0
                     };
                     this._columnResizingObject.columnParameters = columnParameters;
                 }

@@ -12,6 +12,10 @@ export const TgPropertyColumnBehavior = {
         visible: {
             type: Boolean,
             value: true
+        },
+        vertical: {
+            type: Boolean,
+            value: false
         }
     },
 
