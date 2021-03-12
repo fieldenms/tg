@@ -101,6 +101,7 @@ Polymer({
         const value = entity.entity.get(column.property);
         const text = document.createElement("span");
         text.innerHTML = value;
+        text.classList.add("truncate")
         const checkbox = this._getCheckobx(entity, column, "_token");
         checkbox.style.marginLeft = "4px;"
         parent.appendChild(checkbox);
