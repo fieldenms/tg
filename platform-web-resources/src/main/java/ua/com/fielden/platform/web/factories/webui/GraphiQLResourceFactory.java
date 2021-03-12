@@ -8,6 +8,7 @@ import org.restlet.Restlet;
 
 import com.google.inject.Injector;
 
+import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.resources.webui.GraphiQLResource;
 
@@ -29,7 +30,10 @@ public class GraphiQLResourceFactory extends Restlet {
         super.handle(request, response);
         
         if (GET.equals(request.getMethod())) {
-            new GraphiQLResource(injector.getInstance(IWebResourceLoader.class), getContext(), request, response).handle();
+            new GraphiQLResource(
+                    injector.getInstance(IWebResourceLoader.class), 
+                    injector.getInstance(IAuthorisationModel.class),
+                    getContext(), request, response).handle();
         }
     }
     

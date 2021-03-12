@@ -45,6 +45,7 @@ import ua.com.fielden.platform.security.tokens.user.User_CanDelete_Token;
 import ua.com.fielden.platform.security.tokens.user.User_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.user.User_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.user.User_CanSave_Token;
+import ua.com.fielden.platform.security.tokens.web_api.GraphiQL_CanExecute_Token;
 import ua.com.fielden.platform.security.user.SecurityTokenInfo;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
@@ -289,6 +290,7 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
         final UserRole userRole = save(new_(UserRole.class, "ROLE1", "desc").setActive(true));
         
         final SecurityTokenInfo alwaysAccessible = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(AlwaysAccessibleToken.class.getName());
+        final SecurityTokenInfo graphiQL_CanExecute = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(GraphiQL_CanExecute_Token.class.getName());
 
         final SecurityTokenInfo user_CanDelete = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(User_CanDelete_Token.class.getName());
         final SecurityTokenInfo user_CanSave = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(User_CanSave_Token.class.getName());
@@ -326,6 +328,7 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
         final UserRoleTokensUpdater updater = createUpdater(userRole);
         final HashSet<SecurityTokenInfo> expectedTokens = setOf(
             alwaysAccessible,
+            graphiQL_CanExecute,
             user_CanDelete, user_CanSave, user_CanRead, user_CanReadModel,
             userRole_CanDelete, userRole_CanSave, userRole_CanRead, userRole_CanReadModel,
             userRoleAssociation_CanRead, userRoleAssociation_CanReadModel,

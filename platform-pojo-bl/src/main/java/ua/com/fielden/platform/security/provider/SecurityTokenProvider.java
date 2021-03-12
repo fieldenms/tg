@@ -37,6 +37,7 @@ import ua.com.fielden.platform.security.tokens.user.User_CanDelete_Token;
 import ua.com.fielden.platform.security.tokens.user.User_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.user.User_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.user.User_CanSave_Token;
+import ua.com.fielden.platform.security.tokens.web_api.GraphiQL_CanExecute_Token;
 import ua.com.fielden.platform.utils.CollectionUtil;
 
 /**
@@ -95,7 +96,8 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
                 Attachment_CanRead_Token.class,
                 Attachment_CanReadModel_Token.class,
                 Attachment_CanDelete_Token.class,
-                AttachmentDownload_CanExecute_Token.class);
+                AttachmentDownload_CanExecute_Token.class,
+                GraphiQL_CanExecute_Token.class);
         final Set<Class<? extends ISecurityToken>> allTokens = new HashSet<>(ClassesRetriever.getAllClassesInPackageDerivedFrom(path, packageName, ISecurityToken.class));
         allTokens.addAll(platformLevelTokens);
 
