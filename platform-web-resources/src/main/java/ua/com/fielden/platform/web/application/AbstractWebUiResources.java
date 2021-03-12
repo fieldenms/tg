@@ -159,8 +159,8 @@ public abstract class AbstractWebUiResources extends Application {
 
         if (injector.getInstance(Key.get(boolean.class, Names.named("web.api")))) { // in case where Web API has been turned-on in application.properties ...
             // ... register Web API and GraphiQL resources
-            guardedRouter.attach("/api", new WebApiResourceFactory(injector));
-            guardedRouter.attach("/api/graphiql", new GraphiQLResourceFactory(injector));
+            guardedRouter.attach("/api/interactive", new WebApiResourceFactory(injector));
+            guardedRouter.attach("/graphiql", new GraphiQLResourceFactory(injector));
         }
 
         // register domain specific resources if any
