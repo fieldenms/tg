@@ -442,6 +442,7 @@ Polymer({
                 growFactor: 1,
                 columnTitle: "Security Tokens",
                 columnDesc: "Security Tokens Hierarchy",
+                vertical: false,
                 check: this.check,
             });
             newEntity.get("userRoles").forEach(role => {
@@ -455,6 +456,7 @@ Polymer({
                     growFactor: 0,
                     columnTitle: role.get("key"),
                     columnDesc: role.get("desc"),
+                    vertical: true,
                     check: this.check,
                 });
             });

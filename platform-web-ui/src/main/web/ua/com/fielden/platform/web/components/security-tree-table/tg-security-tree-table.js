@@ -18,6 +18,7 @@ const template = html`
             min-height: 0;
             background-color: white;
             border-radius: 2px;
+            --tree-table-header-height: auto;
             @apply --layout-vertical;
             @apply --layout-relative;
         }
@@ -28,7 +29,7 @@ const template = html`
     </style>
     <tg-tree-table id="tokenTree" model="[[entities]]">
         <template is="dom-repeat" items="[[columns]]">
-            <tg-property-column slot$="[[item.slot]]" property="[[item.property]]" type="[[item.type]]" visible="[[item.visible]]" width="[[item.width]]" min-width="[[item.minWidth]]" grow-factor="[[item.growFactor]]" column-title="[[item.columnTitle]]" column-desc="[[item.columnDesc]]" element-provider="[[_buildTreeElement]]" check="[[item.check]]"></tg-property-column>
+            <tg-property-column slot$="[[item.slot]]" property="[[item.property]]" type="[[item.type]]" visible="[[item.visible]]" vertical="[[item.vertical]]" width="[[item.width]]" min-width="[[item.minWidth]]" grow-factor="[[item.growFactor]]" column-title="[[item.columnTitle]]" column-desc="[[item.columnDesc]]" element-provider="[[_buildTreeElement]]" check="[[item.check]]"></tg-property-column>
         </template>
     </tg-tree-table>`;
 
