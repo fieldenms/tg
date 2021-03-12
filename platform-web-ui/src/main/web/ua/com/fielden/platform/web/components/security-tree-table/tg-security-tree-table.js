@@ -28,7 +28,7 @@ const template = html`
             @apply --layout-flex;
         }
     </style>
-    <tg-tree-table id="tokenTree" model="[[entities]]">
+    <tg-tree-table id="tokenTree" model="[[entities]]" display-bottom-shadow>
         <template is="dom-repeat" items="[[columns]]">
             <tg-property-column slot$="[[item.slot]]" property="[[item.property]]" type="[[item.type]]" visible="[[item.visible]]" vertical="[[item.vertical]]" width="[[item.width]]" min-width="[[item.minWidth]]" grow-factor="[[item.growFactor]]" column-title="[[item.columnTitle]]" column-desc="[[item.columnDesc]]" element-provider="[[_buildTreeElement]]" check="[[item.check]]"></tg-property-column>
         </template>
