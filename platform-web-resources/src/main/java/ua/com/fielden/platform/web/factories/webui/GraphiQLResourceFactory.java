@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.factories.webui;
 
 import static org.restlet.data.Method.GET;
+import static org.restlet.data.Method.POST;
 
 import org.restlet.Request;
 import org.restlet.Response;
@@ -9,8 +10,9 @@ import org.restlet.Restlet;
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.security.IAuthorisationModel;
-import ua.com.fielden.platform.web.app.IWebResourceLoader;
+import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.GraphiQLResource;
+import ua.com.fielden.platform.web_api.IWebApi;
 
 /**
  * A factory for GraphiQL resource.
@@ -29,10 +31,11 @@ public class GraphiQLResourceFactory extends Restlet {
     public void handle(final Request request, final Response response) {
         super.handle(request, response);
         
-        if (GET.equals(request.getMethod())) {
+        if (GET == request.getMethod() || POST == request.getMethod()) {
             new GraphiQLResource(
-                    injector.getInstance(IWebResourceLoader.class), 
+                    injector.getInstance(IWebApi.class),
                     injector.getInstance(IAuthorisationModel.class),
+                    injector.getInstance(RestServerUtil.class),
                     getContext(), request, response).handle();
         }
     }

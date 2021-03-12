@@ -11,7 +11,7 @@
         <script crossorigin src="/resources/graphiql/graphiql.min.js"></script>
         <script>
             const graphQLFetcher = graphQLParams =>
-                fetch('/api/interactive', { // this is our Web API entry point for GraphiQL
+                fetch('/graphiql', { // this is our Web API entry point for GraphiQL POST request
                     method: 'post',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(graphQLParams),
