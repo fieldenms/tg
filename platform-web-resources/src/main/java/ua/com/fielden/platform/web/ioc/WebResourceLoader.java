@@ -23,7 +23,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -53,7 +52,6 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
 public class WebResourceLoader implements IWebResourceLoader {
     private final IWebUiConfig webUiConfig;
     private final ISerialiser serialiser;
-    private final TgJackson tgJackson;
     private static final Logger logger = LogManager.getLogger(WebResourceLoader.class);
     private final boolean deploymentMode;
     private final boolean vulcanizingMode;
@@ -62,7 +60,6 @@ public class WebResourceLoader implements IWebResourceLoader {
     public WebResourceLoader(final IWebUiConfig webUiConfig, final ISerialiser serialiser) {
         this.webUiConfig = webUiConfig;
         this.serialiser = serialiser;
-        this.tgJackson = (TgJackson) serialiser.getEngine(JACKSON);
         final Workflows workflow = this.webUiConfig.workflow();
         this.deploymentMode = deployment.equals(workflow);
         this.vulcanizingMode = vulcanizing.equals(workflow);
@@ -70,7 +67,7 @@ public class WebResourceLoader implements IWebResourceLoader {
     }
     
     @Override
-    public String loadSource(final String resourceURI) {
+    public Optional<String> loadSource(final String resourceURI) {
         return getSource(resourceURI);
     }
     
@@ -79,33 +76,33 @@ public class WebResourceLoader implements IWebResourceLoader {
         return ofNullable(getStream(resourceUri)).orElseThrow(() -> new MissingWebResourceException(format("URI is unknown: [%s].", resourceUri)));
     }
     
-    private String getSource(final String resourceUri) {
+    private Optional<String> getSource(final String resourceUri) {
         if ("/app/application-startup-resources.js".equalsIgnoreCase(resourceUri)) {
-            return getApplicationStartupResourcesSource(webUiConfig).orElseThrow(() -> new MissingWebResourceException("Application startup resources are missing."));
+            return getApplicationStartupResourcesSource(webUiConfig);
         } else if ("/app/tg-app-index.html".equalsIgnoreCase(resourceUri)) {
-            return injectServiceWorkerScriptInto(webUiConfig.genAppIndex()).orElseThrow(() -> new MissingWebResourceException("Application index resource is missing."));
+            return injectServiceWorkerScriptInto(webUiConfig.genAppIndex());
         } else if ("/app/logout.html".equalsIgnoreCase(resourceUri)) {
-            return getFileSource("/resources/logout.html", webUiConfig.resourcePaths()).map(src -> StringUtils.replace(src, "@title", "Logout")).orElseThrow(() -> new MissingWebResourceException("Logout resource is missing."));
+            return getFileSource("/resources/logout.html", webUiConfig.resourcePaths());
         } else if ("/app/login-initiate-reset.html".equalsIgnoreCase(resourceUri)) {
-            return getFileSource("/resources/login-initiate-reset.html", webUiConfig.resourcePaths()).map(src -> StringUtils.replace(src, "@title", "Login Reset Request")).orElseThrow(() -> new MissingWebResourceException("Login reset request resource is missing."));
+            return getFileSource("/resources/login-initiate-reset.html", webUiConfig.resourcePaths());
         } else if ("/app/tg-app-config.js".equalsIgnoreCase(resourceUri)) {
-            return ofNullable(webUiConfig.genWebUiPreferences()).orElseThrow(() -> new MissingWebResourceException("Web UI preferences are missing."));
+            return ofNullable(webUiConfig.genWebUiPreferences());
         } else if ("/app/tg-app.js".equalsIgnoreCase(resourceUri)) {
-            return ofNullable(webUiConfig.genMainWebUIComponent()).orElseThrow(() -> new MissingWebResourceException("The main Web UI component is missing."));
+            return ofNullable(webUiConfig.genMainWebUIComponent());
         } else if ("/app/tg-reflector.js".equalsIgnoreCase(resourceUri)) {
-            return getReflectorSource(serialiser, tgJackson).orElseThrow(() -> new MissingWebResourceException("The reflector resource is missing."));
+            return getReflectorSource(serialiser, (TgJackson) serialiser.getEngine(JACKSON));
         } else if (resourceUri.startsWith("/master_ui")) {
-            return getMasterSource(resourceUri.replaceFirst(quote("/master_ui/"), "").replaceFirst(quote(".js"), ""), webUiConfig);
+            return ofNullable(getMasterSource(resourceUri.replaceFirst(quote("/master_ui/"), "").replaceFirst(quote(".js"), ""), webUiConfig));
         } else if (resourceUri.startsWith("/centre_ui")) {
-            return getCentreSource(resourceUri.replaceFirst(quote("/centre_ui/"), "").replaceFirst(quote(".js"), ""), webUiConfig);
+            return ofNullable(getCentreSource(resourceUri.replaceFirst(quote("/centre_ui/"), "").replaceFirst(quote(".js"), ""), webUiConfig));
         } else if (resourceUri.startsWith("/custom_view")) {
-            return getCustomViewSource(resourceUri.replaceFirst("/custom_view/", ""), webUiConfig);
+            return ofNullable(getCustomViewSource(resourceUri.replaceFirst("/custom_view/", ""), webUiConfig));
         } else if (resourceUri.startsWith("/resources/")) {
-            return getFileSource(resourceUri, webUiConfig.resourcePaths()).orElseThrow(() -> new MissingWebResourceException("Web UI resource is missing."));
+            return getFileSource(resourceUri, webUiConfig.resourcePaths());
         } else {
             final String msg = format("URI is unknown: [%s].", resourceUri);
             logger.error(msg);
-            throw new MissingWebResourceException(msg);
+            return empty();
         }
     }
     

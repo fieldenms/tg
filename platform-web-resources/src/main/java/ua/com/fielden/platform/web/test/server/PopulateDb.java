@@ -28,7 +28,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import fielden.test_app.close_leave.TgCloseLeaveExample;
 import ua.com.fielden.platform.algorithm.search.ISearchAlgorithm;
 import ua.com.fielden.platform.algorithm.search.bfs.BreadthFirstSearch;
-import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.devdb_support.DomainDrivenDataPopulation;
 import ua.com.fielden.platform.devdb_support.SecurityTokenAssociator;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -43,20 +42,31 @@ import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependency;
 import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDescriptor;
 import ua.com.fielden.platform.sample.domain.TgEntityWithTimeZoneDates;
 import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
+import ua.com.fielden.platform.sample.domain.TgFuelType;
+import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgGeneratedEntity;
 import ua.com.fielden.platform.sample.domain.TgMachine;
 import ua.com.fielden.platform.sample.domain.TgMessage;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit;
+import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
+import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
+import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
+import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
+import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
 import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgPersistentStatus;
 import ua.com.fielden.platform.sample.domain.TgPerson;
 import ua.com.fielden.platform.sample.domain.TgPolygon;
+import ua.com.fielden.platform.sample.domain.TgVehicle;
+import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
+import ua.com.fielden.platform.sample.domain.TgVehicleMake;
+import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntity;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityChild;
 import ua.com.fielden.platform.security.ISecurityToken;
+import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.provider.SecurityTokenNode;
-import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
@@ -357,10 +367,13 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         final User _demo2 = co$(User.class).save(new_(User.class, "DEMO2").setBasedOnUser(su).setEmail("DEMO2@demoapp.com").setActive(true));
         final User demo2 = coUser.resetPasswd(_demo2, _demo2.getKey()).getKey();
         save(new_composite(UserAndRoleAssociation.class, demo2, admin));
+
+        LOGGER.info("\tPopulating GraphQL data...");
+        populateGraphQlData();
+
         
         try {
-            final IApplicationSettings settings = config.getInstance(IApplicationSettings.class);
-            final SecurityTokenProvider provider = new SecurityTokenProvider(settings.pathToSecurityTokens(), settings.securityTokensPackageName()); //  IDomainDrivenTestCaseConfiguration.hbc.getProperty("tokens.path"), IDomainDrivenTestCaseConfiguration.hbc.getProperty("tokens.package")
+            final ISecurityTokenProvider provider = config.getInstance(ISecurityTokenProvider.class); //  IDomainDrivenTestCaseConfiguration.hbc.getProperty("tokens.path"), IDomainDrivenTestCaseConfiguration.hbc.getProperty("tokens.package")
             final SortedSet<SecurityTokenNode> topNodes = provider.getTopLevelSecurityTokenNodes();
             final SecurityTokenAssociator predicate = new SecurityTokenAssociator(admin, co$(SecurityRoleAssociation.class));
             final ISearchAlgorithm<Class<? extends ISecurityToken>, SecurityTokenNode> alg = new BreadthFirstSearch<>();
@@ -372,6 +385,51 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         } catch (final Exception e) {
             throw new IllegalStateException(e);
         }
+    }
+    
+    private void populateGraphQlData() {
+        final TgFuelType unleadedFuelType = save(new_(TgFuelType.class, "U", "Unleaded"));
+        final TgFuelType petrolFuelType = save(new_(TgFuelType.class, "P", "Petrol"));
+
+        final TgOrgUnit1 orgUnit1 = save(new_(TgOrgUnit1.class, "orgunit1", "desc orgunit1"));
+        final TgOrgUnit2 orgUnit2 = save(new_composite(TgOrgUnit2.class, orgUnit1, "orgunit2"));
+        final TgOrgUnit3 orgUnit3 = save(new_composite(TgOrgUnit3.class, orgUnit2, "orgunit3"));
+        final TgOrgUnit4 orgUnit4 = save(new_composite(TgOrgUnit4.class, orgUnit3, "orgunit4"));
+        final TgOrgUnit5 orgUnit5 = save(new_composite(TgOrgUnit5.class, orgUnit4, "orgunit5").setFuelType(petrolFuelType));
+
+        final TgVehicleMake merc = save(new_(TgVehicleMake.class, "MERC", "Mercedes"));
+        final TgVehicleMake audi = save(new_(TgVehicleMake.class, "AUDI", "Audi"));
+        final TgVehicleMake bmw = save(new_(TgVehicleMake.class, "BMW", "BMW"));
+        save(new_(TgVehicleMake.class, "SUBARO", "Subaro"));
+
+        final TgVehicleModel m316 = save(new_(TgVehicleModel.class, "316", "316").setMake(merc));
+        save(new_(TgVehicleModel.class, "317", "317").setMake(audi));
+        final TgVehicleModel m318 = save(new_(TgVehicleModel.class, "318", "318").setMake(audi));
+        save(new_(TgVehicleModel.class, "319", "319").setMake(bmw));
+        save(new_(TgVehicleModel.class, "320", "320").setMake(bmw));
+        save(new_(TgVehicleModel.class, "321", "321").setMake(bmw));
+        save(new_(TgVehicleModel.class, "322", "322").setMake(bmw));
+
+        final TgVehicle car2 = save(new_(TgVehicle.class, "CAR2", "CAR2 DESC").
+                setInitDate(date("2007-01-01 00:00:00")).
+                setModel(m316).
+                setPrice(new Money("200")).
+                setPurchasePrice(new Money("100")).
+                setActive(false).
+                setLeased(true).
+                setLastMeterReading(new BigDecimal("105")).
+                setStation(orgUnit5));
+        final TgVehicle car1 = save(new_(TgVehicle.class, "CAR1", "CAR1 DESC").
+                setInitDate(date("2001-01-01 00:00:00")).
+                setModel(m318).setPrice(new Money("20")).
+                setPurchasePrice(new Money("10")).
+                setActive(true).
+                setLeased(false).
+                setReplacedBy(car2));
+        save(new_(TgVehicleFinDetails.class, car1).setCapitalWorksNo("CAP_NO1"));
+
+        save(new_composite(TgFuelUsage.class, car2, date("2006-02-09 00:00:00")).setQty(new BigDecimal("100")).setFuelType(unleadedFuelType));
+        save(new_composite(TgFuelUsage.class, car2, date("2008-02-10 00:00:00")).setQty(new BigDecimal("120")).setFuelType(petrolFuelType));
     }
 
     /**

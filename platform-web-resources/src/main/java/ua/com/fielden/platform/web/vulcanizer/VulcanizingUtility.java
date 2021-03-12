@@ -160,7 +160,11 @@ public class VulcanizingUtility {
                 "/resources/login-startup-resources-vulcanized.js",
                 "/resources/icons/tg-icon.png",
                 "/app/login-initiate-reset.html",
-                "/resources/login-initiated-reset.html"
+                "/resources/login-initiated-reset.html",
+                "/resources/graphiql/graphiql.min.css",
+                "/resources/graphiql/react.production.min.js",
+                "/resources/graphiql/react-dom.production.min.js",
+                "/resources/graphiql/graphiql.min.js"
             );
             try {
                 final ObjectMapper objectMapper = new ObjectMapper();
@@ -172,6 +176,9 @@ public class VulcanizingUtility {
             }
             
             LOGGER.info(format("\tGenerated checksums... [%s]", checksums));
+        } catch (final Exception ex) {
+            LOGGER.fatal(ex.getMessage(), ex);
+            throw ex;
         } finally {
             clearObsoleteResources();
         }
@@ -423,7 +430,7 @@ public class VulcanizingUtility {
         final String pathAndName = "/" + dir + "/" + name;
 
         try(final PrintStream ps = new PrintStream("vulcan" + pathAndName)) {
-            ps.println(webResourceLoader.loadSource(pathAndName));
+            ps.println(webResourceLoader.loadSource(pathAndName).orElseThrow(() -> new VulcanisationException("Cound not load " + pathAndName)));
         } catch (final FileNotFoundException ex) {
             final String msg = "Exception occurred while downloading web resources.";
             LOGGER.error(msg, ex);

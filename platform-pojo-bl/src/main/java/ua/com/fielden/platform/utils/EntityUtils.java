@@ -64,6 +64,7 @@ import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.DateOnly;
+import ua.com.fielden.platform.entity.annotation.DenyIntrospection;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -748,6 +749,17 @@ public class EntityUtils {
             logger.error(msg, ex);
             throw new ReflectionException(msg, ex);
         }
+    }
+
+    /**
+     * Determines whether {@code type} has domain introspection denied.
+     * If denied then no information about this type should be exposed outside the internal application logic (i.e. no GraphQL or UI should be able to introspect such entities).
+     *
+     * @param type
+     * @return
+     */
+    public static boolean isIntrospectionDenied(final Class<? extends AbstractEntity<?>> type) {
+        return AnnotationReflector.isAnnotationPresent(type, DenyIntrospection.class);
     }
 
     /**

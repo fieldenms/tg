@@ -11,6 +11,8 @@ import org.restlet.routing.Template;
 import org.restlet.security.Authenticator;
 
 import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.name.Names;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.security.user.IUserProvider;
@@ -28,6 +30,7 @@ import ua.com.fielden.platform.web.factories.webui.EntityAutocompletionResourceF
 import ua.com.fielden.platform.web.factories.webui.EntityResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EntityValidationResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.FileResourceFactory;
+import ua.com.fielden.platform.web.factories.webui.GraphiQLResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.MainWebUiComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.MasterComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.MasterInfoProviderResourceFactory;
@@ -153,6 +156,11 @@ public abstract class AbstractWebUiResources extends Application {
 
         // Registering autocompletion resources:
         attachAutocompletionResources(guardedRouter, webApp);
+
+        if (injector.getInstance(Key.get(boolean.class, Names.named("web.api")))) { // in case where Web API has been turned-on in application.properties ...
+            // ... register GraphiQL resources
+            guardedRouter.attach("/graphiql", new GraphiQLResourceFactory(injector));
+        }
 
         // register domain specific resources if any
         registerDomainWebResources(guardedRouter, webApp);

@@ -7,7 +7,7 @@ import java.util.Properties;
 import org.hibernate.SessionFactory;
 
 import com.google.inject.Injector;
-import com.google.inject.Scopes;
+import com.google.inject.Singleton;
 
 import ua.com.fielden.platform.dao.CommonEntityAggregatesDao;
 import ua.com.fielden.platform.dao.EntityAggregatesDao;
@@ -51,7 +51,7 @@ public class PropertyFactoryModule extends TransactionalModule {
         // bind provider for default entity controller
         bind(ICompanionObjectFinder.class).to(DefaultCompanionObjectFinderImpl.class);
         // bind property factory
-        bind(IMetaPropertyFactory.class).to(DefaultMetaPropertyFactory.class).in(Scopes.SINGLETON);
+        bind(IMetaPropertyFactory.class).to(DefaultMetaPropertyFactory.class).in(Singleton.class);
         // bind entity aggregates DAO
         bind(IEntityAggregatesOperations.class).to(EntityAggregatesDao.class);
         bind(IEntityAggregates.class).to(CommonEntityAggregatesDao.class);

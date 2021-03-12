@@ -8,14 +8,12 @@ import org.junit.runner.RunWith;
 
 import ua.com.fielden.platform.algorithm.search.ISearchAlgorithm;
 import ua.com.fielden.platform.algorithm.search.bfs.BreadthFirstSearch;
-import ua.com.fielden.platform.basic.config.IApplicationSettings;
-import ua.com.fielden.platform.dao.IUserRole;
 import ua.com.fielden.platform.devdb_support.SecurityTokenAssociator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.TgPerson;
 import ua.com.fielden.platform.security.ISecurityToken;
+import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.provider.SecurityTokenNode;
-import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
@@ -76,8 +74,7 @@ public abstract class AbstractDaoTestCase extends AbstractDomainDrivenTestCase {
             save(new_composite(UserAndRoleAssociation.class, testUser, admin));
 
             // provide access to all security tokens for the test role
-            final IApplicationSettings settings = getInstance(IApplicationSettings.class);
-            final SecurityTokenProvider provider = new SecurityTokenProvider(settings.pathToSecurityTokens(), settings.securityTokensPackageName());
+            final ISecurityTokenProvider provider = getInstance(ISecurityTokenProvider.class);
             final SortedSet<SecurityTokenNode> topNodes = provider.getTopLevelSecurityTokenNodes();
             final SecurityTokenAssociator predicate = new SecurityTokenAssociator(admin, co$(SecurityRoleAssociation.class));
             final ISearchAlgorithm<Class<? extends ISecurityToken>, SecurityTokenNode> alg = new BreadthFirstSearch<Class<? extends ISecurityToken>, SecurityTokenNode>();
