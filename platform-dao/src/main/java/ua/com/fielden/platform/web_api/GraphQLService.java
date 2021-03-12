@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web_api;
 
 import static graphql.ExecutionInput.newExecutionInput;
 import static graphql.GraphQL.newGraphQL;
+import static graphql.Scalars.GraphQLBoolean;
 import static graphql.schema.FieldCoordinates.coordinates;
 import static graphql.schema.GraphQLCodeRegistry.newCodeRegistry;
 import static graphql.schema.GraphQLFieldDefinition.newFieldDefinition;
@@ -235,6 +236,11 @@ public class GraphQLService implements IWebApi {
         return queryTypeBuilder.build();
     }
     
+
+    private static final GraphQLFieldDefinition EMPTY_FIELD_FOR_TYPES_WITH_DENIED_INTROSPECTION = newFieldDefinition()
+            .name("Empty")
+            .description("Introspection is denied.")
+            .type(GraphQLBoolean).build();
     /**
      * Creates {@link Optional} GraphQL object type for {@code entityType}d entities querying.
      * <p>
@@ -249,6 +255,7 @@ public class GraphQLService implements IWebApi {
                     .name(entityType.getSimpleName())
                     .description(titleAndDescRepresentation(getEntityTitleAndDesc(entityType)) + FieldSchema.NEWLINE + FieldSchema.NEWLINE + 
                                  FieldSchema.bold("[ Introspection denied ]"))
+                    .field(EMPTY_FIELD_FOR_TYPES_WITH_DENIED_INTROSPECTION) // must have at least one field to make GraphiQL happy
                     .build()));
         }
         final List<GraphQLFieldDefinition> graphQLFieldDefinitions = constructKeysAndProperties(entityType, true).stream()
