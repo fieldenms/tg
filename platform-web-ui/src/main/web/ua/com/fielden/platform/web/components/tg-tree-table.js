@@ -315,6 +315,7 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior], PolymerElement) {
         //Observe hierarchy column DOM changes
         new FlattenedNodesObserver(this.$.hierarchy_column_slot, (info) => {
             this.hierarchyColumn = info.addedNodes[0];
+            this._updateColumnsFlex();
         });
         //Observe regular column DOM changes
         new FlattenedNodesObserver(this.$.regular_column_slot, (info) => {
@@ -328,6 +329,7 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior], PolymerElement) {
                 removeColumn(node, newColumns);
             });
             this.regularColumns = newColumns;
+            this._updateColumnsFlex();
         });
         this._lastTreeTableVisibleIndex = this._lastTreeTableVisibleIndex.bind(this.$.treeList);
         this.$.treeList.scrollToIndex = this._scrollToIndexAndCorrect();
@@ -455,6 +457,20 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior], PolymerElement) {
         document.body.style["cursor"] = "";
     }
 
+    _updateColumnsFlex () {
+        const hasFlexColumn = (this.hierarchyColumn.visible && this.hierarchyColumn.growFactor > 0) 
+                        || this.regularColumns.some(column => {
+                            return column.visible && column.growFactor > 0
+                        });
+        if (!hasFlexColumn) {
+            const idx = this._findLastVisibleColumnIndex();
+            if (idx >=0) {
+                const propToSet = idx === 0 ? "hierarchyColumn.growFactor" : "regularColumns." + (idx - 1) + ".growFactor";
+                this.set(propToSet, 1);
+            }
+        }
+    }
+
     _changeColumnSize (e) {
         tearDownEvent(e);
         switch (e.detail.state) {
@@ -484,7 +500,10 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior], PolymerElement) {
             scrollableContainerWidth: this.$.scrollableContainer.clientWidth,
             otherColumnWidth: calculateColumnWidthExcept(isHierarchyColumn ? 0 : (this.hierarchyColumn ? 1 : 0) + e.model.index, columnElements, (this.hierarchyColumn ? 1 : 0) + this.regularColumns.length),
             widthCorrection: e.currentTarget.offsetWidth - e.currentTarget.firstElementChild.offsetWidth,
-            hasAnyFlex: (!isHierarchyColumn && this.hierarchyColumn.growFactor > 0) || this.regularColumns.some((column, index) => (!e.model || index !== e.model.index) && column.growFactor !== 0)
+            hasAnyFlex: (!isHierarchyColumn && this.hierarchyColumn.visible && this.hierarchyColumn.growFactor > 0) 
+                || this.regularColumns.some((column, index) => {
+                    return (!e.model || index !== e.model.index) && column.visible && column.growFactor !== 0
+                })
         };
     }
 
@@ -499,7 +518,8 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior], PolymerElement) {
             }
 
             //Correct width if fixed container has become bigger then scrollabel conatiner
-            if (newWidth + this._columnResizingObject.widthCorrection > this.$.scrollableContainer.clientWidth) {
+            if (newWidth + this._columnResizingObject.widthCorrection > this.$.scrollableContainer.clientWidth
+                || this._lastVisibleColumn() === this.hierarchyColumn) {
                 newWidth = this.$.scrollableContainer.clientWidth - this._columnResizingObject.widthCorrection;
             } else if (!this._columnResizingObject.hasAnyFlex) {
                 console.log("should set flex");
@@ -522,13 +542,45 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior], PolymerElement) {
     }
 
     _setLastColumnFlex () {
-        this.set("regularColumns." + (this.regularColumns.length - 1) + ".growFactor", 1);
-        this._columnResizingObject.hasAnyFlex = true;
-        const columnParameters = this._columnResizingObject.columnParameters || {}; // this.$.reflector.newEntity("ua.com.fielden.platform.web.centre.ColumnParameter");
-        columnParameters[this.regularColumns[this.regularColumns.length - 1].property] = {
-            growFactor: 1
-        };
-        this._columnResizingObject.columnParameters = columnParameters;
+        const idx = this._findLastVisibleColumnIndex();
+        if (idx >=0) {
+            const lastVisibleColumn = idx === 0 ? this.hierarchyColumn : this.regularColumns[idx - 1];
+            const propToSet = idx === 0 ? "hierarchyColumn.growFactor" : "regularColumns." + (idx - 1) + ".growFactor";
+            this.set(propToSet, 1);
+            this._columnResizingObject.hasAnyFlex = true;
+            const columnParameters = this._columnResizingObject.columnParameters || {}; // this.$.reflector.newEntity("ua.com.fielden.platform.web.centre.ColumnParameter");
+            columnParameters[lastVisibleColumn.property] = {
+                growFactor: 1
+            };
+            this._columnResizingObject.columnParameters = columnParameters;
+        }
+    }
+
+    /**
+     * Returns last visible column.
+     */
+    _lastVisibleColumn () {
+        const idx = this._findLastVisibleColumnIndex();
+        if (idx >= 0) {
+            return idx === 0 ? this.hierarchyColumn : this.regularColumns[idx - 1];
+        }
+        return null;
+    }
+
+    /**
+     * Returns the index of the last visible columns where 0 is the index of hierarchy column and regular columns are equal 
+     * index + 1; 
+     */
+    _findLastVisibleColumnIndex () {
+        const idx = this.regularColumns.slice().reverse().findIndex(column => column.visible);
+        if (idx < 0) {
+            if (this.hierarchyColumn.visible) {
+                return 0;
+            }
+            return idx;
+        }
+        return this.regularColumns.length - idx;
+        
     }
 
     _trackColumnSize (e) {
@@ -547,7 +599,7 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior], PolymerElement) {
             //Correct new width when dragging last column or other column and overall width is less then width of container.
             if (this._columnResizingObject.otherColumnWidth + newWidth + this._columnResizingObject.widthCorrection < this.$.scrollableContainer.clientWidth) {
                 console.log("width is less");
-                if (e.model.index === this.regularColumns.length - 1) {
+                if (e.model.index === this._findLastVisibleColumnIndex() - 1) {
                     newWidth = this.$.scrollableContainer.clientWidth - this._columnResizingObject.otherColumnWidth - this._columnResizingObject.widthCorrection;
                 } else if (!this._columnResizingObject.hasAnyFlex) {
                     console.log("should set flex");
