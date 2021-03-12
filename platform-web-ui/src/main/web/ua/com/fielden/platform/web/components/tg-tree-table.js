@@ -194,6 +194,25 @@ const template = html`
             background: -webkit-linear-gradient(right, rgba(0,0,0,0.4) 0%,rgba(0,0,0,0) 100%); 
             background: linear-gradient(to right, rgba(0,0,0,0.4) 0%,rgba(0,0,0,0) 100%); 
         }
+        .bottom-shadow {
+            position: sticky;
+            position: -webkit-sticky;
+            pointer-events: none;
+            bottom: 0;
+            max-height: 0;
+        }
+        [show-bottom-shadow]:after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: transparent;
+            background: -moz-linear-gradient(top, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0) 100%);
+            background: -webkit-linear-gradient(top, rgba(0,0,0,0.4) 0%,rgba(0,0,0,0) 100%); 
+            background: linear-gradient(to top, rgba(0,0,0,0.4) 0%,rgba(0,0,0,0) 100%); 
+        }
         .sticky-container {
             position: sticky;
             position: -webkit-sticky;
@@ -256,6 +275,7 @@ const template = html`
                     </template>
                 </iron-list>
             </div>
+            <div class="bottom-shadow"show-bottom-shadow$="[[_shouldDisplayBottomShadow(displayBottomShadow, _showBottomShadow)]]"></div>
             <div class="left-shadow" show-left-shadow$="[[_showLeftShadow]]" style$="[[_leftShadowStyle(hierarchyColumn.width, _leftShadowPosition)]]"></div>
             <!-- table lock layer -->
             <div class="lock-layer" lock$="[[lock]]"></div>
@@ -298,6 +318,14 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior], PolymerElement) {
              * Array of columns with information about additional properties that should be displayed along with hierarchy property.
              */
             regularColumns: Array,
+
+            /**
+             * Indicates whether to show bottom shadow or not.
+             */
+            displayBottomShadow: {
+                type: Boolean,
+                value: false
+            },
 
             /**
              * The position of fixed hierarchy column shadow (this should change when scrolling).
@@ -399,6 +427,10 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior], PolymerElement) {
         return "left: " + leftShadowPosition + "px; width: calc(" + width + "px + 2 * " + cellPadding +");";
     }
 
+    _shouldDisplayBottomShadow (displayBottomShadow, _showBottomShadow) {
+        return displayBottomShadow && _showBottomShadow;
+    }
+
     /******************************EventListeners************************/
 
     _mouseRowEnter (event) {
@@ -427,6 +459,7 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior], PolymerElement) {
         this._showLeftShadow = this.$.scrollableContainer.scrollLeft > 0;
         this._leftShadowPosition = this.$.scrollableContainer.scrollLeft;
         this._showTopShadow = this.$.scrollableContainer.scrollTop > 0;
+        this._showBottomShadow = Math.ceil(this.$.scrollableContainer.clientHeight + this.$.scrollableContainer.scrollTop) < this.$.scrollableContainer.scrollHeight;
     }
 
     _handleTouchMove (e) {
