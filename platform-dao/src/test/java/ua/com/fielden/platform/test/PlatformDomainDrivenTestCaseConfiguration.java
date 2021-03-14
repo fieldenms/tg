@@ -48,6 +48,7 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
             props.setProperty("attachments.location", "src/test/resources/attachments");
             props.setProperty("email.smtp", "non-existing-server");
             props.setProperty("email.fromAddress", "platform@fielden.com.au");
+            props.setProperty("web.api", "true");
 
 
             final PlatformTestDomainTypes domainProvider = new PlatformTestDomainTypes();
