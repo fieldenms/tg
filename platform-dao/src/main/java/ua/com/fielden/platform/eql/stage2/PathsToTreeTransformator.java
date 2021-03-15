@@ -90,7 +90,7 @@ public class PathsToTreeTransformator {
         final SortedMap<String, FirstPropInfoAndItsPathes> result = new TreeMap<>();
 
         for (final Entry<String, List<AbstractPropInfo<?>>> propEntry : props.entrySet()) {
-            T2<String, List<AbstractPropInfo<?>>> pp = getFirstPropData(propEntry.getValue());
+            final T2<String, List<AbstractPropInfo<?>>> pp = getFirstPropData(propEntry.getValue());
             FirstPropInfoAndItsPathes existing = result.get(pp._1);
             if (existing == null) {
                 existing = new FirstPropInfoAndItsPathes(pp._2.get(0), pp._1);
