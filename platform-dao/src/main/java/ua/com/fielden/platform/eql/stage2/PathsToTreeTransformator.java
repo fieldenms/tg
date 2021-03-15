@@ -160,7 +160,7 @@ public class PathsToTreeTransformator {
         final String childContextString = childContext.stream().collect(joining("_"));
 
         final Set<String> dependenciesNames = new HashSet<>();
-        final CalcPropResult calcPropResult = processCalcProp(firstPropInfoAndItsPathes.firstPropInfo, sourceForCalcPropResolution, childContextString);
+        final CalcPropResult calcPropResult = processCalcProp(firstPropInfoAndItsPathes.firstPropInfo, sourceForCalcPropResolution, firstPropInfoAndItsPathes.firstPropName/*childContextString*/);
         other.putAll(calcPropResult.internalSources);
         dependenciesNames.addAll(calcPropResult.externalSourceChildren.stream().map(c -> c.name).collect(toSet()));
         result.addAll(calcPropResult.externalSourceChildren);
