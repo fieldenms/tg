@@ -136,8 +136,6 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(TgCompoundEntity.class);
         add(TgCompoundEntityDetail.class);
         add(TgCompoundEntityChild.class);
-        add(TgVehicleFinDetails.class);
-        add(TgVehicleFuelUsage.class);
         add(TgVehicleModel.class);
         add(TeVehicleModel.class);
         add(TgReVehicleModel.class);
