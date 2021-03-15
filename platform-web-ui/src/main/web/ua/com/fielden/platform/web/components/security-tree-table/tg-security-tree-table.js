@@ -79,13 +79,8 @@ Polymer({
                 }
             });
             this.$.tokenTree._updateColumnsFlex();
-            //this._updateTableSizeAsync();
+            this.$.tokenTree._updateTableSizeAsync();
         }
-    },
-
-    ///////////////////Observer related functions//////////////////////////////
-    _entitiesChanged: function (newEntities, oldEntities) {
-        //this._updateTableSizeAsync();
     },
 
     ////////////////////////////Content builders//////////////////////////////

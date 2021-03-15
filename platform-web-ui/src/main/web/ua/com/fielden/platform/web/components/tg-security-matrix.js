@@ -45,6 +45,7 @@ const template = html`
         }
         tg-security-tree-table {
             min-height:0;
+            @apply --layout-flex;
         }
         .filter-panel ::slotted(.filter-element) {
             margin: 0 10px;
@@ -460,6 +461,14 @@ Polymer({
                     check: this.check,
                 });
             });
+            //In order to reset filter state if reload button was pressed.
+            if (this.columns) {
+                this.filterRoles("");
+            }
+            if (this.entities) {
+                this.filterTokens("");
+            }
+            //Set new columns and entities
             this.columns = columnList;
             this.entities = newEntity.get("tokens").map(token => new SecurityMatrixEntity(token, newEntity.get("userRoles"), newEntity.get("tokenRoleMap"), columnList.slice().splice(1), this._toggleButtonStates));
             this._toggleButtonStates();
