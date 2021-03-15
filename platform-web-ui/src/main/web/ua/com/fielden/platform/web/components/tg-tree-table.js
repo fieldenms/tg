@@ -361,10 +361,14 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior], PolymerElement) {
         });
         this._lastTreeTableVisibleIndex = this._lastTreeTableVisibleIndex.bind(this.$.treeList);
         this.$.treeList.scrollToIndex = this._scrollToIndexAndCorrect();
+        this._oldRender = this.$.treeList._render;
+        this.$.treeList._render = this._renderAndUpdate.bind(this);
     }
 
     resizeTree () {
-        this.$.treeList.notifyResize();
+        setTimeout(() =>  {
+            this.$.treeList.notifyResize();
+        }, 1);
     }
 
     isEntityRendered (index) {
@@ -376,6 +380,11 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior], PolymerElement) {
         if (itemIndex >= 0 && (force || (this.$.treeList.firstVisibleIndex >= itemIndex || this._lastTreeTableVisibleIndex(this.$.header) <= itemIndex))) {
             this.$.treeList.scrollToItem(treeItem);
         }
+    }
+
+    _renderAndUpdate () {
+        this._oldRender.bind(this.$.treeList)();
+        this._updateTableSizeAsync();
     }
 
     /******************************Binding functions those calculate attributes, styles and other stuf************/
