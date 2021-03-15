@@ -160,7 +160,7 @@ public class PathsToTreeTransformator {
         final String childContextString = childContext.stream().collect(joining("_"));
 
         final Set<String> dependenciesNames = new HashSet<>();
-        final CalcPropResult calcPropResult = processCalcProp(firstPropInfoAndItsPathes.firstPropInfo, sourceForCalcPropResolution, firstPropInfoAndItsPathes.firstPropName/*childContextString*/);
+        final CalcPropResult calcPropResult = processCalcProp(firstPropInfoAndItsPathes.firstPropInfo.expression, sourceForCalcPropResolution, firstPropInfoAndItsPathes.firstPropName/*childContextString*/);
         other.putAll(calcPropResult.internalSources);
         dependenciesNames.addAll(calcPropResult.externalSourceChildren.stream().map(c -> c.name).collect(toSet()));
         result.addAll(calcPropResult.externalSourceChildren);
@@ -192,9 +192,9 @@ public class PathsToTreeTransformator {
         return t2(result, other); 
     }    
     
-    private CalcPropResult processCalcProp(final AbstractPropInfo<?> propInfo, final IQrySource2<?>  sourceForCalcPropResolution, final String childContext) {
-        if (propInfo.hasExpression()) {
-            final Expression2 expr2 = expressionToS2(sourceForCalcPropResolution, propInfo.expression, childContext);
+    private CalcPropResult processCalcProp(final ExpressionModel calcPropModel, final IQrySource2<?>  sourceForCalcPropResolution, final String childContext) {
+        if (calcPropModel != null) {
+            final Expression2 expr2 = expressionToS2(sourceForCalcPropResolution, calcPropModel, childContext);
             final Map<String, List<Child>> dependenciesResult = transform(expr2.collectProps());
             final List<Child> externalSourceChildren = dependenciesResult.remove(sourceForCalcPropResolution.contextId());
             return new CalcPropResult(expr2, dependenciesResult, externalSourceChildren == null ? emptyList() : externalSourceChildren);
