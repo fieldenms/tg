@@ -229,7 +229,7 @@ export const TgTreeListBehavior = {
         this._lastFilterText = text;
         this._filterSubTree(searchRegExp(text), !!text, this._treeModel, true);
         this.splice("_entities", 0, this._entities.length, ...composeChildren.bind(this)(this._treeModel, true));
-        this.debounce("refreshTree", refreshTree.bind(this));
+        this.async(refreshTree.bind(this), 1);
     },
 
     /**
@@ -242,11 +242,11 @@ export const TgTreeListBehavior = {
         this.splice("_entities", 0, this._entities.length, ...composeChildren.bind(this)(this._treeModel, true));
         this.lastSearchText = text;
         this.currentMatchedItem = null;
-        this.debounce("refreshTree", () => {
+        this.async(() => {
             refreshTree.bind(this)();
             this.currentMatchedItem = this._matchedTreeItems[0];
             this.scrollToItem(this.currentMatchedItem, true);
-        });
+        }, 1);
     },
 
     goToNextMatchedItem: function () {
@@ -280,7 +280,7 @@ export const TgTreeListBehavior = {
                 this.splice("_entities", idx + 1 + topParent.additionalInfoNodes.length, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(topParent, true, true));
             }
         }
-        this.debounce("refreshTree", () => {
+        this.async(() => {
             refreshTree.bind(this)();
             this.scrollToItem(nextMatchedItem, false);
             this.currentMatchedItem = nextMatchedItem;
@@ -306,7 +306,7 @@ export const TgTreeListBehavior = {
             this.expandSubTree(parentItem, refreshLoaded);
             this.notifyPath("_entities." + idx + ".opened", true);
             this.splice("_entities", idx + 1 + parentItem.additionalInfoNodes.length, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(parentItem, true, true));
-            this.debounce("refreshTree", refreshTree.bind(this));
+            this.async(refreshTree.bind(this), 1);
         }
     },
 
@@ -326,7 +326,7 @@ export const TgTreeListBehavior = {
             const numOfItemsToDelete = calculateNumberOfOpenedItems(parentItem);
             parentItem.children.forEach(child => this.collapseSubTree(child));
             this.splice("_entities", idx + 1 + parentItem.additionalInfoNodes.length, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(parentItem, true, false));
-            this.debounce("refreshTree", refreshTree.bind(this));
+            this.async(refreshTree.bind(this), 1);
         }
     },
     
