@@ -127,6 +127,11 @@ public class TeVehicle extends AbstractEntity<String> {
     protected static final ExpressionModel modelMakeKey8_ = expr().prop("modelMake2.key").model();
 
     @IsProperty
+    @Calculated
+    private TeVehicle replacedByTwice;
+    protected static final ExpressionModel replacedByTwice_ = expr().prop("replacedBy.replacedBy").model();
+    
+    @IsProperty
     @MapTo
     private TeVehicleMake make;
 
@@ -273,6 +278,16 @@ public class TeVehicle extends AbstractEntity<String> {
     @Title(value = "Title", desc = "Desc")
     private Money avgRepPrice;
     protected static final ExpressionModel avgRepPrice_ = expr().expr(expr().prop("repPrice").add().prop("repPurchasePrice").model()).div().val(2).model();
+
+    @Observable
+    protected TeVehicle setReplacedByTwice(final TeVehicle replacedByTwice) {
+        this.replacedByTwice = replacedByTwice;
+        return this;
+    }
+
+    public TeVehicle getReplacedByTwice() {
+        return replacedByTwice;
+    }
 
     @Observable
     protected TeVehicle setAvgRepPrice(final Money avgRepPrice) {

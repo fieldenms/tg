@@ -58,6 +58,16 @@ public class TeWorkOrder extends AbstractEntity<String> {
 
     @IsProperty
     @Calculated
+    private TeVehicleMake replacedByMake;
+    protected static final ExpressionModel replacedByMake_ = expr().model(select(TeVehicle.class).where().prop("id").eq().extProp("vehicle.replacedBy").yield().prop("model.make").modelAsEntity(TeVehicleMake.class)).model();
+
+    @IsProperty
+    @Calculated
+    private TeVehicleMake replacedByTwiceMake;
+    protected static final ExpressionModel replacedByTwiceMake_ = expr().model(select(TeVehicle.class).where().prop("id").eq().extProp("vehicle.replacedByTwice").yield().prop("model.make").modelAsEntity(TeVehicleMake.class)).model();
+
+    @IsProperty
+    @Calculated
     private String makeKey2;
     protected static final ExpressionModel makeKey2_ = expr().model(select(TeVehicle.class).where().prop("id").eq().extProp("vehicle").yield().prop("modelMakeKey4").modelAsPrimitive()).model();
 
@@ -319,6 +329,26 @@ public class TeWorkOrder extends AbstractEntity<String> {
 
     public String getMakeKey() {
         return makeKey;
+    }
+
+    @Observable
+    protected TeWorkOrder setReplacedByMake(final TeVehicleMake replacedByMake) {
+        this.replacedByMake = replacedByMake;
+        return this;
+    }
+
+    public TeVehicleMake getReplacedByMake() {
+        return replacedByMake;
+    }
+
+    @Observable
+    protected TeWorkOrder setReplacedByTwiceMake(final TeVehicleMake replacedByTwiceMake) {
+        this.replacedByTwiceMake = replacedByTwiceMake;
+        return this;
+    }
+
+    public TeVehicleMake getReplacedByTwiceMake() {
+        return replacedByTwiceMake;
     }
 
     @Observable
