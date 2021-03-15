@@ -1,11 +1,11 @@
 package ua.com.fielden.platform.eql.stage2;
 
+import static java.util.Arrays.asList;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.keyPaths;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
@@ -20,7 +20,7 @@ public class KeyPropertyExtractor {
         final AbstractPropInfo<?> operandPropLastMember = original.lastPart();
         if (needsExtraction(operandPropLastMember)) {
             final int pathSize = original.getPath().size();
-            final EntityInfo<?> ei = original.getPath().size() == 1 ? original.source.entityInfo() : ((EntityTypePropInfo<?>) original.getPath().get(pathSize - 2)).propEntityInfo;
+            final EntityInfo<?> ei = pathSize == 1 ? original.source.entityInfo() : ((EntityTypePropInfo<?>) original.getPath().get(pathSize - 2)).propEntityInfo;
             final List<String> keyTreeLeaves = keyPaths(ei.javaType());
             final List<EntProp2> result = new ArrayList<>();
             for (final String keyTreeLeaf : keyTreeLeaves) {
@@ -32,7 +32,7 @@ public class KeyPropertyExtractor {
             return result;
         }
         
-        return Arrays.asList(original);
+        return asList(original);
     }
     
     public static boolean needsExtraction(final AbstractPropInfo<?> operandPropLastMember) {

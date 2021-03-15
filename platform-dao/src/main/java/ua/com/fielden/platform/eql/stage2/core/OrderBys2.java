@@ -22,16 +22,16 @@ public class OrderBys2 {
     }
 
     public TransformationResult<OrderBys3> transform(final TransformationContext context, final Yields3 yields) {
-            final List<OrderBy3> transformed = new ArrayList<>();
-            TransformationContext currentContext = context;
-            for (final OrderBy2 orderBy : models) {
-                final TransformationResult<OrderBy3> orderByTr = orderBy.transform(currentContext, yields);
-                transformed.add(orderByTr.item);
-                currentContext = orderByTr.updatedContext;
-            }
-            return new TransformationResult<OrderBys3>(new OrderBys3(transformed), currentContext);
+        final List<OrderBy3> transformed = new ArrayList<>();
+        TransformationContext currentContext = context;
+        for (final OrderBy2 orderBy : models) {
+            final TransformationResult<OrderBy3> orderByTr = orderBy.transform(currentContext, yields);
+            transformed.add(orderByTr.item);
+            currentContext = orderByTr.updatedContext;
+        }
+        return new TransformationResult<OrderBys3>(new OrderBys3(transformed), currentContext);
     }
-    
+
     public Set<EntProp2> collectProps() {
         final Set<EntProp2> result = new HashSet<>();
         for (final OrderBy2 orderBy : models) {
@@ -41,7 +41,7 @@ public class OrderBys2 {
         }
         return result;
     }
-    
+
     public List<OrderBy2> getModels() {
         return Collections.unmodifiableList(models);
     }
@@ -59,13 +59,13 @@ public class OrderBys2 {
         if (this == obj) {
             return true;
         }
-    
+
         if (!(obj instanceof OrderBys2)) {
             return false;
         }
-        
+
         final OrderBys2 other = (OrderBys2) obj;
-        
+
         return Objects.equals(models, other.models);
     }
 }

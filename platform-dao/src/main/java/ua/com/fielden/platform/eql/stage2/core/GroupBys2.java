@@ -22,16 +22,16 @@ public class GroupBys2 {
     }
 
     public TransformationResult<GroupBys3> transform(final TransformationContext context) {
-            final List<GroupBy3> transformed = new ArrayList<>();
-            TransformationContext currentContext = context;
-            for (final GroupBy2 groupBy : groups) {
-                final TransformationResult<GroupBy3> groupByTr = groupBy.transform(currentContext);
-                transformed.add(groupByTr.item);
-                currentContext = groupByTr.updatedContext;
-            }
-            return new TransformationResult<GroupBys3>(new GroupBys3(transformed), currentContext);
+        final List<GroupBy3> transformed = new ArrayList<>();
+        TransformationContext currentContext = context;
+        for (final GroupBy2 groupBy : groups) {
+            final TransformationResult<GroupBy3> groupByTr = groupBy.transform(currentContext);
+            transformed.add(groupByTr.item);
+            currentContext = groupByTr.updatedContext;
+        }
+        return new TransformationResult<GroupBys3>(new GroupBys3(transformed), currentContext);
     }
-    
+
     public Set<EntProp2> collectProps() {
         final Set<EntProp2> result = new HashSet<>();
         for (final GroupBy2 group : groups) {
@@ -39,11 +39,10 @@ public class GroupBys2 {
         }
         return result;
     }
-    
+
     public List<GroupBy2> getGroups() {
         return unmodifiableList(groups);
     }
-    
 
     @Override
     public int hashCode() {
@@ -64,7 +63,7 @@ public class GroupBys2 {
         }
 
         final GroupBys2 other = (GroupBys2) obj;
-        
+
         return Objects.equals(groups, other.groups);
     }
 }
