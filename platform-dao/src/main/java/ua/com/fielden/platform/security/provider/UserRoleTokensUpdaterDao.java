@@ -9,7 +9,6 @@ import java.util.Set;
 
 import com.google.inject.Inject;
 
-import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
@@ -37,26 +36,27 @@ import ua.com.fielden.platform.types.tuples.T2;
 @EntityType(UserRoleTokensUpdater.class)
 public class UserRoleTokensUpdaterDao extends CommonEntityDao<UserRoleTokensUpdater> implements IUserRoleTokensUpdater {
     private final EntityFactory factory;
-    private final IApplicationSettings applicationSettings;
     private final ISecurityTokenNodeTransformation tokenTransformation;
+    private final ISecurityTokenProvider securityTokenProvider;
     
     @Inject
     public UserRoleTokensUpdaterDao(
             final IFilter filter, 
             final EntityFactory factory, 
-            final IApplicationSettings applicationSettings,
-            final ISecurityTokenNodeTransformation tokenTransformation) {
+            final ISecurityTokenNodeTransformation tokenTransformation,
+            final ISecurityTokenProvider securityTokenProvider
+    ) {
         super(filter);
         this.factory = factory;
-        this.applicationSettings = applicationSettings;
         this.tokenTransformation = tokenTransformation;
+        this.securityTokenProvider = securityTokenProvider;
     }
     
     @Override
     @SessionRequired
     @Authorise(UserRole_CanSave_Token.class)
     public UserRoleTokensUpdater save(final UserRoleTokensUpdater action) {
-        final T2<UserRoleTokensUpdater, UserRole> actionAndUserRoleBeingUpdated = validateAction(action, this, String.class, new UserRoleTokensUpdaterController(factory, applicationSettings, co(UserRole.class), co$(UserRoleTokensUpdater.class), tokenTransformation));
+        final T2<UserRoleTokensUpdater, UserRole> actionAndUserRoleBeingUpdated = validateAction(action, this, String.class, new UserRoleTokensUpdaterController(factory, co(UserRole.class), co$(UserRoleTokensUpdater.class), tokenTransformation, securityTokenProvider));
         final UserRoleTokensUpdater actionToSave = actionAndUserRoleBeingUpdated._1;
         
         // after all validations have passed -- the association changes could be saved:
