@@ -140,13 +140,6 @@ const template = html`
         .part-to-highlight[highlighted]  {
             font-weight: bold;
         }
-        .left-shadow {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            pointer-events: none;
-            z-index: 2;
-        }
         .lock-layer {
             z-index: 1;
             opacity: 0.5;
@@ -173,7 +166,7 @@ const template = html`
         [show-left-shadow]:after {
             content: "";
             position: absolute;
-            bottom: 0;
+            bottom: -1px;
             top: 0;
             right: -4px;
             width: 4px;
@@ -214,7 +207,7 @@ const template = html`
     <div id="scrollableContainer" on-scroll="_handleScrollEvent">
         <div id="baseContainer">
             <div id="header" show-top-shadow$="[[_showTopShadow]]" class="table-header-row sticky-container stick-top z-index-1"  on-touchmove="_handleTouchMove">
-                <div class="table-cell sticky-container stick-top-left z-index-2" fixed style$="[[_calcColumnHeaderStyle(hierarchyColumn, hierarchyColumn.width, hierarchyColumn.growFactor, 'true')]]" on-down="_makeTreeTableUnselectable" on-up="_makeTreeTableSelectable" on-track="_changeColumnSize" tooltip-text$="[[hierarchyColumn.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
+                <div class="table-cell sticky-container stick-top-left z-index-2" fixed show-left-shadow$="[[_showLeftShadow]]" style$="[[_calcColumnHeaderStyle(hierarchyColumn, hierarchyColumn.width, hierarchyColumn.growFactor, 'true')]]" on-down="_makeTreeTableUnselectable" on-up="_makeTreeTableSelectable" on-track="_changeColumnSize" tooltip-text$="[[hierarchyColumn.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                     <div class="truncate table-header-column-title">[[hierarchyColumn.columnTitle]]</div>
                     <div class="resizing-box"></div>
                 </div>
@@ -229,7 +222,7 @@ const template = html`
                 <iron-list id="treeList" items="[[_entities]]" as="entity" scroll-target="scrollableContainer">
                     <template>
                         <div class="table-data-row" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
-                            <div class="table-cell sticky-container stick-left z-index-1" selected$="[[entity.selected]]" over$="[[entity.over]]" style$="[[_calcColumnStyle(hierarchyColumn, hierarchyColumn.width, hierarchyColumn.growFactor, 'true')]]">
+                            <div class="table-cell sticky-container stick-left z-index-1" show-left-shadow$="[[_showLeftShadow]]" selected$="[[entity.selected]]" over$="[[entity.over]]" style$="[[_calcColumnStyle(hierarchyColumn, hierarchyColumn.width, hierarchyColumn.growFactor, 'true')]]">
                                 <div class="flexible-horizontal-container" style$="[[itemStyle(entity)]]">
                                     <iron-icon class="expand-button" icon="av:play-arrow" style="flex-grow:0;flex-shrink:0;" invisible$="[[!entity.entity.hasChildren]]" collapsed$="[[!entity.opened]]" on-tap="_toggle"></iron-icon>
                                     <div class="truncate flexible-horizontal-container part-to-highlight" highlighted$="[[entity.highlight]]" tooltip-text$="[[_getTooltip(entity, hierarchyColumn)]]" inner-h-t-m-l="[[_getBindedTreeTableValue(entity, hierarchyColumn)]]"></div>
@@ -244,7 +237,6 @@ const template = html`
                     </template>
                 </iron-list>
             </div>
-            <div class="left-shadow" show-left-shadow$="[[_showLeftShadow]]" style$="[[_leftShadowStyle(hierarchyColumn.width, _leftShadowPosition)]]"></div>
             <!-- table lock layer -->
             <div class="lock-layer" lock$="[[lock]]"></div>
         </div>
@@ -277,14 +269,6 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRetrieval
              * Array of columns with information about additional properties that should be displayed along with hierarchy property.
              */
             regularColumns: Array,
-
-            /**
-             * The position of fixed hierarchy column shadow (this should change when scrolling).
-             */
-            _leftShadowPosition: {
-                type: Number,
-                value: 0
-            }
         };
     }
 
@@ -368,12 +352,6 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRetrieval
         return colStyle;
     }
 
-    _leftShadowStyle (width, leftShadowPosition) {
-        const cellPadding = this.getComputedStyleValue('--tree-table-cell-padding').trim() || "0.6rem";
-        return "left: " + leftShadowPosition + "px; width: calc(" + width + "px + 2 * " + cellPadding +");";
-    }
-
-
     /******************************EventListeners************************/
 
     _mouseRowEnter (event) {
@@ -400,7 +378,6 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRetrieval
 
     _handleScrollEvent () {
         this._showLeftShadow = this.$.scrollableContainer.scrollLeft > 0;
-        this._leftShadowPosition = this.$.scrollableContainer.scrollLeft;
         this._showTopShadow = this.$.scrollableContainer.scrollTop > 0;
     }
 
