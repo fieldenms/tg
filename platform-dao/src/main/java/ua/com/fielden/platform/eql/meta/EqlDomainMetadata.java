@@ -222,12 +222,12 @@ public class EqlDomainMetadata {
             case PERSISTED:
                 return new EqlPropertyMetadata.Builder(KEY, keyType, H_LONG).required().column(id).build();
             case QUERY_BASED:
-                return new EqlPropertyMetadata.Builder(KEY, keyType, H_LONG).notRequired().build();
+                return new EqlPropertyMetadata.Builder(KEY, keyType, H_LONG).required().build();
             default:
                 return null;
             }
         } else if (DynamicEntityKey.class.equals(keyType)) {
-            return new EqlPropertyMetadata.Builder(KEY, String.class, H_STRING).expression(generateCompositeKeyEqlExpression((Class<? extends AbstractEntity<DynamicEntityKey>>) parentInfo.entityType)).build();
+            return new EqlPropertyMetadata.Builder(KEY, String.class, H_STRING).expression(generateCompositeKeyEqlExpression((Class<? extends AbstractEntity<DynamicEntityKey>>) parentInfo.entityType)).required().build();
         } else {
             final Object keyHibType = typeResolver.basic(keyType.getName());
             switch (parentInfo.category) {
@@ -237,7 +237,7 @@ public class EqlDomainMetadata {
                 if (isSyntheticBasedOnPersistentEntityType(parentInfo.entityType)) {
                     return new EqlPropertyMetadata.Builder(KEY, keyType, keyHibType).required().column(key).build();
                 }
-                return new EqlPropertyMetadata.Builder(KEY, keyType, keyHibType).column(key).build();
+                return new EqlPropertyMetadata.Builder(KEY, keyType, keyHibType).required().column(key).build();
             default:
                 return null;
             }
