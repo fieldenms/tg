@@ -279,6 +279,18 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRetrieval
         this.regularColumns = this.$.regular_column_slot.assignedNodes({flatten: true});
         this._lastTreeTableVisibleIndex = this._lastTreeTableVisibleIndex.bind(this.$.treeList);
         this.$.treeList.scrollToIndex = this._scrollToIndexAndCorrect();
+
+        //Initiate observer that will listen when table columns are added to the header and when they change their style.
+        const observer = new MutationObserver(mutations => {
+            this.$.treeList.scrollOffset = this.$.header.offsetHeight;
+        });
+        const config = {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ["style"]
+        };
+        observer.observe(this.$.header, config);
     }
 
     resizeTree () {
