@@ -277,7 +277,8 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRetrieval
         
         this.hierarchyColumn = this.$.hierarchy_column_slot.assignedNodes({flatten: true})[0];
         this.regularColumns = this.$.regular_column_slot.assignedNodes({flatten: true});
-        this._lastTreeTableVisibleIndex = this._lastTreeTableVisibleIndex.bind(this.$.treeList);
+        this.$.treeList._isClientFull = this._isTreeClientFull.bind(this.$.treeList);
+        this._firstTreeTableVisibleIndex = this._firstTreeTableVisibleIndex.bind(this.$.treeList);
         this.$.treeList.scrollToIndex = this._scrollToIndexAndCorrect();
 
         //Initiate observer that will listen when table columns are added to the header and when they change their style.
@@ -303,7 +304,7 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRetrieval
 
     scrollToItem (treeItem, force) {
         const itemIndex = this._entities.indexOf(treeItem);
-        if (itemIndex >= 0 && (force || (this.$.treeList.firstVisibleIndex >= itemIndex || this._lastTreeTableVisibleIndex(this.$.header) <= itemIndex))) {
+        if (itemIndex >= 0 && (force || (this._firstTreeTableVisibleIndex() >= itemIndex || this.$.treeList.lastVisibleIndex <= itemIndex))) {
             this.$.treeList.scrollToItem(treeItem);
         }
     }
@@ -559,6 +560,10 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRetrieval
         return [...this.$.header.querySelectorAll(".table-cell")];
     }
 
+    _isTreeClientFull () {
+        return this._physicalSize >= this._viewportHeight * 2;
+    }
+
     /**
      * This method is a overriden copy of scrollToIndex method in iron-list that was made in order to correct scrolling
      * to item because of sticky table header that was counted when calculating _scrollTargetHeight property.
@@ -593,8 +598,7 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRetrieval
             let currentTopItem = this._physicalStart;
             let currentVirtualItem = this._virtualStart;
             let targetOffsetTop = 0;
-            const hiddenContentSize = this._hiddenContentSize + self.$.header.offsetHeight; // scroll to the item as much as we can. IMPORTANT NOTE: this was adjusted 
-            //by the height of sticky header.
+            const hiddenContentSize = this._hiddenContentSize // scroll to the item as much as we can.
         
             while (currentVirtualItem < idx && targetOffsetTop <= hiddenContentSize) {
                 targetOffsetTop = targetOffsetTop + this._getPhysicalSizeIncrement(currentTopItem);
@@ -606,7 +610,7 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRetrieval
         
             this._positionItems();
         
-            this._resetScrollPosition(this._physicalTop + this._scrollOffset + targetOffsetTop);
+            this._resetScrollPosition(this._physicalTop + targetOffsetTop);
         
             this._increasePoolIfNeeded(0); // clear cached visible index.
         
@@ -616,28 +620,20 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRetrieval
         }.bind(this.$.treeList);
     }
 
-    _lastTreeTableVisibleIndex (header) {
-        let idx = this._lastVisibleIndexVal;
+    _firstTreeTableVisibleIndex () {
+        var physicalOffset = this._physicalTop;
 
-        if (idx == null) {
-            if (this.grid) {
-                idx = Math.min(this._virtualCount, this.firstVisibleIndex + this._estRowsInView * this._itemsPerRow - 1);
-            } else {
-                var physicalOffset = this._physicalTop + this._scrollOffset;
+        return this._iterateItems(function(pidx, vidx) {
+            physicalOffset += this._getPhysicalSizeIncrement(pidx);
 
-                this._iterateItems(function (pidx, vidx) {
-                if (physicalOffset < this._scrollBottom - header.offsetHeight) {
-                    idx = vidx;
-                }
-
-                physicalOffset += this._getPhysicalSizeIncrement(pidx);
-                });
+            if (physicalOffset > this._scrollPosition) {
+            return this.grid ? vidx - (vidx % this._itemsPerRow) : vidx;
             }
-
-            this._lastVisibleIndexVal = idx;
-        }
-
-        return idx;
+            // Handle a partially rendered final row in grid mode
+            if (this.grid && this._virtualCount - 1 === vidx) {
+            return vidx - (vidx % this._itemsPerRow);
+            }
+        }) ||0;
     }
 }
 
