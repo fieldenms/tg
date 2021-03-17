@@ -13,6 +13,7 @@ const template = html`
         :host {
             width: 100%;
             height: 100%;
+            --data-font-size: 0.9rem;
             @apply --layout-horizontal;
             @apply --layout-justified;
         }
@@ -48,12 +49,12 @@ const template = html`
             <slot name="filter-element"></slot>
         </div>
         <tg-tree-table id="domainExplorerTree" class="domain-explorer-tree" model="[[treeModel]]" last-search-text="{{lastSearchText}}" on-current-matched-item-changed="_updateCurrentMatchedItemRelatedData" on-tg-load-subtree="_loadSubtree" on>
-            <tg-hierarchy-column slot='hierarchy-column' property="key" type="String" width="200" min-width="80" grow-factor="1" column-title="Title" column-desc="Domain tpye or property title" content-builder="[[_buildContent]]"></tg-hierarchy-column>
-            <tg-property-column slot='regular-column' property="propertyType.desc" type="String" width="100" min-width="80" grow-factor="1" column-title="Property Type" column-desc="Property type"></tg-property-column>
-            <tg-property-column slot='regular-column' property="desc" type="String" width="100" min-width="80" grow-factor="1" column-title="Description" column-desc="Domain type or property description"></tg-property-column>
-            <tg-property-column slot='regular-column' property="internalName" type="String" width="160" min-width="80" grow-factor="1" column-title="Internal Name" column-desc="Internal domain type or property name" content-builder="[[_buildInternalNameContent]]"></tg-property-column>
-            <tg-property-column slot='regular-column' property="dbSchema" type="String" width="200" min-width="80" grow-factor="1" column-title="DB Schema" column-desc="Table Name" content-builder="[[_buildDbSchemaContent]]"></tg-property-column>
-            <tg-property-column slot='regular-column' property="refTable" type="String" width="160" min-width="80" grow-factor="1" column-title="Ref Table" column-desc="References Table Name"></tg-property-column>
+            <tg-hierarchy-column slot='hierarchy-column' property="key" type="String" width="200" min-width="80" grow-factor="1" column-title="Title" column-desc="Domain entity or property title." content-builder="[[_buildContent]]"></tg-hierarchy-column>
+            <tg-property-column slot='regular-column' property="desc" type="String" width="100" min-width="80" grow-factor="1" column-title="Description" column-desc="Domain entity or property description."></tg-property-column>
+            <tg-property-column slot='regular-column' property="propertyType.desc" type="String" width="100" min-width="80" grow-factor="1" column-title="Property Type" column-desc="Property type."></tg-property-column>
+            <tg-property-column slot='regular-column' property="internalName" type="String" width="160" min-width="80" grow-factor="1" column-title="Internal Name" column-desc="Domain entity or property name at the application level." content-builder="[[_buildInternalNameContent]]"></tg-property-column>
+            <tg-property-column slot='regular-column' property="dbSchema" type="String" width="200" min-width="80" grow-factor="1" column-title="DB Schema" column-desc="Table or column name at the database level. Entities used for reporting, which are based on a query, may not have this information available." content-builder="[[_buildDbSchemaContent]]"></tg-property-column>
+            <tg-property-column slot='regular-column' property="refTable" type="String" width="160" min-width="80" grow-factor="1" column-title="Ref Table" column-desc="A referenced database table name."></tg-property-column>
         </tg-tree-table>
     </div>
     <div class="lock-layer" lock$="[[lock]]"></div>`;
@@ -195,12 +196,17 @@ class TgDomainExplorer extends PolymerElement {
     _buildDbSchemaContent (entity, column) {
         const numOfLevels = calculateNumberOfLevels(entity);
         if (entity.entity.union) {
-            return "[REFER SUBPROPERTIES]"   
+            return "<i>[refer subproperties]</i>"
         }
         if (numOfLevels > 3 || (numOfLevels === 3 && !entity.parent.entity.union)) {
-            return "[JOIN]";
+            return "<i>[join]</i>";
         }
-        return this.$.domainExplorerTree.getBindedValue(entity.entity, column);
+        const value = this.$.domainExplorerTree.getBindedValue(entity.entity, column);
+        // let's represent a DB schema for synthetic (those not based on persistent) entities as [query]
+        if (!value && entity.entity.parent === null) {
+            return "<i>[query]</i>";
+        }
+        return entity.entity.parent === null ? "<span style='font-weight: 500;color: #546e7a'>" + value + "</b>" : value;
     }
 
     _entityChanged (newBindingEntity) {

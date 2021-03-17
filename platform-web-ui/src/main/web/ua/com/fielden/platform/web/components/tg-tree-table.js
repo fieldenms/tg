@@ -82,7 +82,7 @@ const template = html`
             @apply --layout-flex;
         }
         .table-data-row {
-            font-size: 1rem;
+            font-size: var(--data-font-size, 1rem);
             font-weight: 400;
             color: #212121;
             height: 1.5rem;
