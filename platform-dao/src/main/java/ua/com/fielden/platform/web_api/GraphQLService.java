@@ -237,6 +237,9 @@ public class GraphQLService implements IWebApi {
      * @return
      */
     private static Optional<Pair<Class<? extends AbstractEntity<?>>, GraphQLObjectType>> createGraphQLTypeFor(final Class<? extends AbstractEntity<?>> entityType) {
+        if (isExcluded(entityType, "")) { // generic type exclusion logic for root types (exclude abstract entity types, exclude types without KeyType annotation etc. -- see AbstractDomainTreeRepresentation.isExcluded)
+            return empty();
+        }
         final List<GraphQLFieldDefinition> graphQLFieldDefinitions = constructKeysAndProperties(entityType, true).stream()
             .filter(field -> !isExcluded(entityType, reflectionProperty(field.getName())))
             .map(field -> createGraphQLFieldDefinition(entityType, field.getName()))
