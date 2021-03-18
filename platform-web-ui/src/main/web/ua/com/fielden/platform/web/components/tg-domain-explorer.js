@@ -1,6 +1,9 @@
 import '/resources/polymer/@polymer/iron-icon/iron-icon.js';
 import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
 import '/resources/polymer/@polymer/iron-icons/communication-icons.js';
+import '/resources/polymer/@polymer/iron-icons/hardware-icons.js';
+
+import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 
 import '/resources/components/tg-tree-table.js';
 import '/resources/egi/tg-property-column.js';
@@ -19,17 +22,23 @@ const template = html`
         }
 
         .domain-explorer-container {
-            padding: 0 18px;
             @apply --layout-fit;
             @apply --layout-vertical;
         }
 
         .editor-container {
-            padding: 0 4px;
+            padding: 0 22px;
             @apply --layout-vertical;
         }
 
+        .toolbar {
+            padding: 8px 12px 0 12px;
+            @apply --layout-horizontal;
+            @apply --layout-start-justified;
+        }
+
         .domain-explorer-tree {
+            padding: 0 18px;
             min-height: 0;
             @apply --layout-flex;
         }
@@ -43,8 +52,14 @@ const template = html`
         .lock-layer[lock] {
             display: initial;
         }
+        .rotate_-90 {
+            transform: rotate(-90deg);
+        }
     </style>
     <div class="domain-explorer-container">
+        <div class="toolbar">
+            <paper-icon-button class="rotate_-90" icon="hardware:keyboard-tab" on-tap="_collapseAll"></paper-icon-button>
+        </div>
         <div class="editor-container">
             <slot name="filter-element"></slot>
         </div>
@@ -235,6 +250,10 @@ class TgDomainExplorer extends PolymerElement {
         } else {
             this._processEvent(e);
         }
+    }
+
+    _collapseAll (e) {
+        const entities = this.$.domainExplorerTree.collapseAll();
     }
 
     _processEvent (e) {
