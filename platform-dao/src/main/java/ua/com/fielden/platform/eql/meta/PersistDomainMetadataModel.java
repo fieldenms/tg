@@ -20,7 +20,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -49,6 +48,7 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class PersistDomainMetadataModel {
+    final static String CRITERION = "[selection criterion]";
     final static String DOMAINTYPE_INSERT_STMT = "INSERT INTO DOMAINTYPE_ VALUES(?,?,?,?,?,?,?,?);";
     final static String DOMAINPROPERTY_INSERT_STMT = "INSERT INTO DOMAINPROPERTY_ VALUES(?,?,?,?,?,?,?,?,?,?,?);";
     final static String EXISTING_DATA_DELETE_STMT = "DELETE FROM DOMAINPROPERTY_; DELETE FROM DOMAINTYPE_;";
@@ -114,9 +114,9 @@ public class PersistDomainMetadataModel {
                 final String tableName = superType == null ? entityMd.typeInfo.tableName : entitiesMetadataMap.get(superType).typeInfo.tableName;
                 result.put(entityType, new DomainTypeData(entityType, superType, id, entityType.getName(), typeTitleAndDesc.getKey(), true, tableName, typeTitleAndDesc.getValue(), propsMd.size(), entityMd.typeInfo.compositeKeyMembers, propsMd));
                 
-                // collecting primitive, union and custom user types from props
+                // collecting primitive, union,custom user types and pure types (like XXXGroupingProperty) from props
                 for (final EqlPropertyMetadata pmd : propsMd) {
-                    if (!entityTypes.contains(pmd.javaType) && !result.containsKey(pmd.javaType)) {
+                    if ((!entitiesMetadataMap.containsKey(pmd.javaType) || !entityTypes.contains(pmd.javaType)) && !result.containsKey(pmd.javaType)) {
                         id = id + 1;
                         final List<EqlPropertyMetadata> subItems = pmd.subitems().stream().filter(si -> si.column != null).collect(toList());
                         final int propsCount = !subItems.isEmpty() && !(Money.class.equals(pmd.javaType) && subItems.size() == 1) ? subItems.size() : 0;
@@ -137,50 +137,54 @@ public class PersistDomainMetadataModel {
 
         long id = typesMap.size();
         for (final DomainTypeData entityType : typesMap.values().stream().filter(t -> t.isEntity).collect(toSet())) {
-                int position = 0;
-                for (final EqlPropertyMetadata propMd : entityType.getProps().values()) {
-                    id = id + 1;
-                    position = position + 1;
-                    final String prelTitle = getTitleAndDesc(propMd.name, entityType.type).getKey();
-                    
-                    final DomainTypeData superTypeDtd = typesMap.get(entityType.superType);
-                    result.add(new DomainPropertyData(id, //
-                            propMd.name, //
-                            entityType.id, //
-                            null, //
-                            typesMap.get(propMd.javaType).id, //
-                            (isEmpty(prelTitle) && ID.equals(propMd.getName()) ? "ID" : prelTitle), //
-                            entityType.getKeyMemberIndex(propMd.name), //
-                            propMd.required, //
-                            determinePropColumn(entityType.superType == null ? propMd : superTypeDtd.getProps().get(propMd.name) != null ? superTypeDtd.getProps().get(propMd.name) :propMd) , //
-                            position));
+            int position = 0;
+            for (final EqlPropertyMetadata propMd : entityType.getProps().values()) {
+                id = id + 1;
+                position = position + 1;
+                final String prelTitle = getTitleAndDesc(propMd.name, entityType.type).getKey();
 
-                    // adding subproperties of union type properties 
-                    if (propMd.subitems().size() > 1) { //skipping cases of SimpleMoney with single subproperty
-                        final long holderId = id;
-                        int subItemPosition = 0;
-                        for (final EqlPropertyMetadata subProp : propMd.subitems().stream().filter(el -> el.column != null).collect(toList())) {
-                            id = id + 1;
-                            subItemPosition = subItemPosition + 1;
-                            result.add(new DomainPropertyData(id, //
-                                    subProp.getName(), //
-                                    null, //
-                                    holderId, //
-                                    typesMap.get(subProp.javaType).id, //
-                                    getTitleAndDesc(subProp.getName(), propMd.javaType).getKey(), //
-                                    null, //
-                                    false, //
-                                    subProp.column.name, //
-                                    subItemPosition));
-                        }
+                final DomainTypeData superTypeDtd = typesMap.get(entityType.superType);
+                result.add(new DomainPropertyData(id, //
+                        propMd.name, //
+                        entityType.id, //
+                        null, //
+                        typesMap.get(propMd.javaType).id, //
+                        (isEmpty(prelTitle) && ID.equals(propMd.getName()) ? "ID" : prelTitle), //
+                        entityType.getKeyMemberIndex(propMd.name), //
+                        propMd.required, //
+                        determinePropColumn(entityType.superType == null ? propMd
+                                : superTypeDtd.getProps().get(propMd.name) != null ? superTypeDtd.getProps().get(propMd.name) : propMd), //
+                        position));
+
+                // adding subproperties of union type properties 
+                if (propMd.subitems().size() > 1) { //skipping cases of SimpleMoney with single subproperty
+                    final long holderId = id;
+                    int subItemPosition = 0;
+                    for (final EqlPropertyMetadata subProp : propMd.subitems().stream().filter(el -> el.column != null).collect(toList())) {
+                        id = id + 1;
+                        subItemPosition = subItemPosition + 1;
+                        result.add(new DomainPropertyData(id, //
+                                subProp.getName(), //
+                                null, //
+                                holderId, //
+                                typesMap.get(subProp.javaType).id, //
+                                getTitleAndDesc(subProp.getName(), propMd.javaType).getKey(), //
+                                null, //
+                                false, //
+                                subProp.column.name, //
+                                subItemPosition));
                     }
+                }
             }
         }
-        
+
         return result;
     }
     
     private static String determinePropColumn(final EqlPropertyMetadata propMd) {
+        if (propMd.critOnly) {
+            return CRITERION;
+        }
         return (propMd.column != null ? propMd.column.name
                 : (propMd.subitems().size() == 1 ? (propMd.subitems().get(0).column != null ? propMd.subitems().get(0).column.name : null) : null));
     }

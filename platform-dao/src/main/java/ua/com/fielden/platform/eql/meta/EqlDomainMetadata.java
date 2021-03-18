@@ -275,7 +275,7 @@ public class EqlDomainMetadata {
                 result.add(isOne2One_association(parentInfo.entityType, field.getName()) ? getOneToOnePropInfo(field, parentInfo) : getCommonPropInfo(field, parentInfo.entityType, null));
             }
         }
-
+        
         return result;
     }
     
@@ -286,10 +286,10 @@ public class EqlDomainMetadata {
         (
                 isAnnotationPresent(propField, Calculated.class) || 
                 isAnnotationPresent(propField, MapTo.class) ||
+                isAnnotationPresent(propField, CritOnly.class) ||
                 isOne2One_association(parentInfo.entityType, propField.getName()) || 
                 parentInfo.category == QUERY_BASED) &&
         !specialProps.contains(propField.getName()) && 
-        !isAnnotationPresent(propField, CritOnly.class) &&
         !(Collection.class.isAssignableFrom(propField.getType()) && hasLinkProperty(parentInfo.entityType, propField.getName()))).
                 collect(toList());
     }
@@ -355,6 +355,10 @@ public class EqlDomainMetadata {
     }
 
     private EqlPropertyMetadata getCommonPropInfo(final Field propField, final Class<? extends AbstractEntity<?>> entityType, final String parentPrefix) {
+        if (isAnnotationPresent(propField, CritOnly.class)) {
+            return new EqlPropertyMetadata.Builder(propField.getName(), propField.getType(), null).critOnly().required(isRequiredByDefinition(propField, entityType)).build();
+        }
+        
         final String propName = propField.getName();
         final Class<?> propType = propField.getType();
         final Object hibType = getHibernateType(propField);
