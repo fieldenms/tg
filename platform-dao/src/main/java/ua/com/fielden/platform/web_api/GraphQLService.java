@@ -126,6 +126,7 @@ public class GraphQLService implements IWebApi {
                 .sorted((type1, type2) -> type1.getSimpleName().compareTo(type2.getSimpleName()))
                 .collect(toCollection(LinkedHashSet::new));
             final Set<Class<? extends AbstractEntity<?>>> allTypes = new LinkedHashSet<>(domainTypes);
+            // TODO Once "GroupingProperty" entities become synthetic or persistent, the following inclusion should be removed
             allTypes.addAll(domainTypesOf(applicationDomainProvider, type -> !toInclude.test(type) && type.getSimpleName().endsWith("GroupingProperty"))); // '...GroupingProperty' is the naming pattern for enum-like entities for groupBy criteria
             // dictionary must have all the types that are referenced by all types that should support querying
             final Map<Class<? extends AbstractEntity<?>>, GraphQLType> dictionary = createDictionary(allTypes);
@@ -151,7 +152,7 @@ public class GraphQLService implements IWebApi {
     }
     
     /**
-     * Returns all domain types, taken from {@code applicationDomainProvider}, of {@code toInclude} nature with introspection allowed.
+     * Returns all domain types from {@code applicationDomainProvider} that do not have introspection denied and satisfy predicate {@code toInclude}.
      */
     private Set<Class<? extends AbstractEntity<?>>> domainTypesOf(final IApplicationDomainProvider applicationDomainProvider, final Predicate<Class<? extends AbstractEntity<?>>> toInclude) {
         final List<Class<? extends AbstractPersistentEntity<? extends Comparable<?>>>> supportedPlatformTypes = asList(User.class, UserRole.class, UserAndRoleAssociation.class, SecurityRoleAssociation.class, Attachment.class);
