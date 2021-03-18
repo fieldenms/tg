@@ -14,7 +14,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
  */
 @KeyTitle(value = "Property Title", desc = "The property title")
 @DescTitle(value = "Property Description", desc = "The property description")
-public class DomainPropertyTreeEntity extends DomainTreeEntity{
+public class DomainPropertyTreeEntity extends DomainTreeEntity {
 
     @IsProperty
     @Title("Is Key?")
@@ -71,4 +71,5 @@ public class DomainPropertyTreeEntity extends DomainTreeEntity{
     public boolean getIsKey() {
         return isKey;
     }
+
 }

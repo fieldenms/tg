@@ -184,7 +184,7 @@ public class EqlDomainMetadata {
             } else if (hibTypesInjector != null && !Void.class.equals(hibernateUserTypeImplementor)) { // Hibernate type is definitely either IUserTypeInstantiate or ICompositeUserTypeInstantiate
                 return hibTypesInjector.getInstance(hibernateUserTypeImplementor);
             } else {
-                throw new EqlMetadataGenerationException("Persistent annotation doen't provide intended information.");
+                throw new EqlMetadataGenerationException("Persistent annotation doesn't provide intended information.");
             }
         }
     }

@@ -19,7 +19,6 @@ import ua.com.fielden.platform.entity.annotation.Title;
  * @author TG Team
  *
  */
-
 @KeyType(NoKey.class)
 @CompanionObject(DomainExplorerInsertionPointCo.class)
 public class DomainExplorerInsertionPoint extends AbstractFunctionalEntityWithCentreContext<NoKey> {
@@ -47,6 +46,10 @@ public class DomainExplorerInsertionPoint extends AbstractFunctionalEntityWithCe
     @IsProperty
     @Title("Domain Property Holder Id")
     private Long domainPropertyHolderId;
+
+    public DomainExplorerInsertionPoint () {
+        setKey(NoKey.NO_KEY);
+    }
 
     @Observable
     public DomainExplorerInsertionPoint setDomainPropertyHolderId(final Long domainPropertyHolderId) {
@@ -110,7 +113,4 @@ public class DomainExplorerInsertionPoint extends AbstractFunctionalEntityWithCe
         return Collections.unmodifiableList(generatedHierarchy);
     }
 
-    public DomainExplorerInsertionPoint () {
-        setKey(NoKey.NO_KEY);
-    }
 }
