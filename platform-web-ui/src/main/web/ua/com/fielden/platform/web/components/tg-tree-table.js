@@ -424,6 +424,7 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRetrieval
 
     _changeColumnSize (e) {
         tearDownEvent(e);
+        this._cleanUnboundTreeListItems();
         switch (e.detail.state) {
         case 'start':
             this._startColumnResize(e);
@@ -435,6 +436,12 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRetrieval
             this._endColumnResizing(e);
             break;
         }
+    }
+
+    _cleanUnboundTreeListItems () {
+        [...this.$.treeList.querySelectorAll('.table-data-row[style="transform: translate3d(0px, -10000px, 0px);"]')]
+                .filter(node => this.$.treeList._offscreenFocusedItem !== node && this._focusBackfillItem !== node)
+                .forEach( node => this.$.treeList.removeChild(node));
     }
 
     _startColumnResize (e) {
