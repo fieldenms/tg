@@ -63,7 +63,7 @@ const template = html`
     </style>
     <div class="domain-explorer-container">
         <div class="toolbar">
-            <paper-icon-button class="collapse-button" icon="tg-icons:collapseAll" on-tap="_collapseAll"></paper-icon-button>
+            <paper-icon-button class="collapse-button" icon="tg-icons:collapseAll" on-tap="_collapseAll" tooltip-text="Collapse all items"></paper-icon-button>
         </div>
         <div class="editor-container">
             <slot name="filter-element"></slot>
