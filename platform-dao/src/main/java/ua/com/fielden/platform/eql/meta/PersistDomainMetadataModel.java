@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.eql.meta;
 
 import static java.lang.String.format;
-import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.stream.Collectors.toList;
@@ -26,23 +25,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import ua.com.fielden.platform.attachment.Attachment;
+import org.apache.log4j.Logger;
+
+import com.google.common.collect.Iterators;
+
 import ua.com.fielden.platform.dao.exceptions.DbException;
 import ua.com.fielden.platform.dao.session.TransactionalExecution;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModification;
-import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
-import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
-import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
-import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
- * Performs instant (re-)persistance of the Domain Metadata Model entities from an actual TG-Java domain.   
+ * Performs instant (re-)persistence of the Domain Metadata Model entities, generated for an application domain.
  * 
  * @author TG Team 
  *
@@ -52,44 +49,41 @@ public class PersistDomainMetadataModel {
     final static String DOMAINTYPE_INSERT_STMT = "INSERT INTO DOMAINTYPE_ VALUES(?,?,?,?,?,?,?,?);";
     final static String DOMAINPROPERTY_INSERT_STMT = "INSERT INTO DOMAINPROPERTY_ VALUES(?,?,?,?,?,?,?,?,?,?,?);";
     final static String EXISTING_DATA_DELETE_STMT = "DELETE FROM DOMAINPROPERTY_; DELETE FROM DOMAINTYPE_;";
-    final static List<Class<? extends AbstractEntity<?>>> platformTypesOfInterest = asList(Attachment.class, User.class, UserRole.class, UserAndRoleAssociation.class, SecurityRoleAssociation.class);
 
+    private static final Logger LOGGER = Logger.getLogger(PersistDomainMetadataModel.class);
+    
     /**
-     * Synchronises persistent model of Domain Explorer entities with actual Domain java classes. 
+     * Synchronises persistent model of Domain Explorer entities with an actual application domain. 
      * 
      * @param entityTypes - domain entities to be included into metadata model entities data.
      * @param domainMetadata
      * @param trEx
      */
-    public static void persist( //
-            final List<Class<? extends AbstractEntity<?>>> entityTypes, //
+    public static void persist(
+            final List<Class<? extends AbstractEntity<?>>> entityTypes,
             final EqlDomainMetadata domainMetadata,
             final TransactionalExecution trEx) {
-        
-        emptyExistingMetadata(trEx);
-        
-        final Set<Class<? extends AbstractEntity<?>>> adjustedDomainTypes = adjustDomainTypes(entityTypes);
+        LOGGER.info("Starting to save the domain metadata...");
+        try {
+            LOGGER.info("Removing old domain metadata records...");
+            emptyExistingMetadata(trEx);
+            
+            final Set<Class<? extends AbstractEntity<?>>> domainTypesForIntrospection = entityTypes.stream().filter(EntityUtils::isIntrospectionAllowed).collect(toSet());
+            final Map<Class<?>, DomainTypeData> typesMap = generateDomainTypeData(domainTypesForIntrospection, domainMetadata);
 
-        final Map<Class<?>, DomainTypeData> typesMap = generateDomainTypeData(adjustedDomainTypes, domainMetadata);
-        
-        persistDomainTypesData(typesMap.values(), trEx);
-        
-        persistDomainPropsData(generateDomainPropsData(typesMap), trEx);
+            LOGGER.info("Inserting metadata about domain entity types...");
+            persistDomainTypesData(typesMap.values(), trEx, 1000);
+            
+            LOGGER.info("Inserting metadata about domain entity properties...");
+            persistDomainPropsData(generateDomainPropsData(typesMap), trEx, 1000);
+            
+            LOGGER.info("Completed saving of the domain metadata.");
+        } catch (final Exception ex) {
+            LOGGER.fatal("Presisting of the domain metadata did not succeed.", ex);
+            throw ex;
+        }
     }
 
-    private static final Set<Class<? extends AbstractEntity<?>>> adjustDomainTypes(final List<Class<? extends AbstractEntity<?>>> entityTypes) {
-        final Set<Class<? extends AbstractEntity<?>>> domainTypes = entityTypes.stream().filter(type -> shouldInclude(type)).collect(toSet());
-        domainTypes.addAll(platformTypesOfInterest);
-        return domainTypes;
-    }
-    
-    private static boolean shouldInclude(final Class<? extends AbstractEntity<?>> type) {
-        return !(isUnionEntityType(type)
-                || AbstractFunctionalEntityWithCentreContext.class.isAssignableFrom(type) // need to exclude them as some are persistent
-                || AbstractFunctionalEntityForCollectionModification.class.isAssignableFrom(type) // need to exclude them as some are persistent
-                );
-    }
-    
     private static void emptyExistingMetadata(final TransactionalExecution trEx) {
         trEx.exec(conn -> {
             try (final Statement st = conn.createStatement()) {
@@ -189,70 +183,75 @@ public class PersistDomainMetadataModel {
                 : (propMd.subitems().size() == 1 ? (propMd.subitems().get(0).column != null ? propMd.subitems().get(0).column.name : null) : null));
     }
     
-    private static void persistDomainTypesData(final Collection<DomainTypeData> dtd, final TransactionalExecution trEx) {
-        trEx.exec(conn -> {
-            try (final PreparedStatement pst = conn.prepareStatement(DOMAINTYPE_INSERT_STMT)) {
-                // batch insert statements
-                dtd.stream().forEach(propType -> {
-                    try {
-                        pst.setLong(1, propType.id);
-                        pst.setString(2, propType.key);
-                        pst.setString(3, propType.desc);
-                        pst.setString(4, propType.dbTable);
-                        pst.setString(5, propType.entityTypeDesc);
-                        setBooleanParameter(6, propType.isEntity, pst);
-                        pst.setInt(7, propType.propsCount);
-                        pst.setInt(8, 0);
-                        pst.addBatch();
-                    } catch (final SQLException ex) {
-                        final String error = format("Could not create insert for [%s].", propType.key);
-                        throw new DbException(error, ex);
-                    }
-                });
-
-                // execute the batch
-                pst.executeBatch();
-            } catch (final SQLException ex) {
-                final String error = format("Could not batch insert for [%s].", dtd.size());
-                throw new DbException(error, ex);
-            }
-        });   
-    }
-    
-    private static void persistDomainPropsData(final List<DomainPropertyData> dpd, final TransactionalExecution trEx) {
-        trEx.exec(conn -> {
-            try (final PreparedStatement pst = conn.prepareStatement(DOMAINPROPERTY_INSERT_STMT)) {
-                // batch insert statements
-
-                dpd.stream().forEach(propType -> {
-                    try {
-                        pst.setLong(1, propType.id);
-                        pst.setString(2, propType.name);
-                        pst.setString(3, propType.title);
-                        setNullableLongParameter(4, propType.holderAsDomainType, pst);
-                        setNullableLongParameter(5, propType.holderAsDomainProperty, pst);
-                        pst.setLong(6, propType.domainType);
-                        setNullableIntegerParameter(7, propType.keyIndex, pst);
-                        setBooleanParameter(8, propType.required, pst);
-                        pst.setString(9, propType.dbColumn);
-                        pst.setInt(10, propType.position);
-                        pst.setInt(11, 0);
-                        pst.addBatch();
-                    } catch (final SQLException ex) {
-                        final String error = format("Could not create insert for [%s].", propType.name);
-                        throw new DbException(error, ex);
-                    }
-                });
-
-                // execute the batch
-                pst.executeBatch();
-            } catch (final SQLException ex) {
-                final String error = format("Could not batch insert [%s].", dpd.size());
-                throw new DbException(error, ex);
-            }
+    private static void persistDomainTypesData(final Collection<DomainTypeData> dtd, final TransactionalExecution trEx, final int batchSize) {
+        LOGGER.info(format("Inserting domain types -- %s records in total...", dtd.size()));
+        Iterators.partition(dtd.iterator(), batchSize > 0 ? batchSize : 1)
+        .forEachRemaining(batch -> {
+            trEx.exec(conn -> {
+                try (final PreparedStatement pst = conn.prepareStatement(DOMAINTYPE_INSERT_STMT)) {
+                    // batch insert statements
+                    batch.forEach(propType -> {
+                        try {
+                            pst.setLong(1, propType.id);
+                            pst.setString(2, propType.key);
+                            pst.setString(3, propType.desc);
+                            pst.setString(4, propType.dbTable);
+                            pst.setString(5, propType.entityTypeDesc);
+                            setBooleanParameter(6, propType.isEntity, pst);
+                            pst.setInt(7, propType.propsCount);
+                            pst.setInt(8, 0);
+                            pst.addBatch();
+                        } catch (final SQLException ex) {
+                            final String error = format("Could not create insert for [%s].", propType.key);
+                            throw new DbException(error, ex);
+                        }
+                    });
+                    LOGGER.info(format("Inserting domain types, batch of %s records...", batch.size()));
+                    pst.executeBatch();
+                } catch (final SQLException ex) {
+                    throw new DbException("Could not batch insert domain types.", ex);
+                }
+            });
         });
+        LOGGER.info("Completed inserting domain types.");
     }
     
+    private static void persistDomainPropsData(final List<DomainPropertyData> dpd, final TransactionalExecution trEx, final int batchSize) {
+        LOGGER.info(format("Inserting domain properties -- %s records in total...", dpd.size()));
+        // batch insert statements
+        Iterators.partition(dpd.iterator(), batchSize > 0 ? batchSize : 1)
+        .forEachRemaining(batch -> {
+            trEx.exec(conn -> {
+                try (final PreparedStatement pst = conn.prepareStatement(DOMAINPROPERTY_INSERT_STMT)) {
+                    batch.forEach(propType -> {
+                        try {
+                            pst.setLong(1, propType.id);
+                            pst.setString(2, propType.name);
+                            pst.setString(3, propType.title);
+                            setNullableLongParameter(4, propType.holderAsDomainType, pst);
+                            setNullableLongParameter(5, propType.holderAsDomainProperty, pst);
+                            pst.setLong(6, propType.domainType);
+                            setNullableIntegerParameter(7, propType.keyIndex, pst);
+                            setBooleanParameter(8, propType.required, pst);
+                            pst.setString(9, propType.dbColumn);
+                            pst.setInt(10, propType.position);
+                            pst.setInt(11, 0);
+                            pst.addBatch();
+                        } catch (final SQLException ex) {
+                            final String error = format("Could not create insert for [%s].", propType.name);
+                            throw new DbException(error, ex);
+                        }
+                    });
+                    LOGGER.info(format("Inserting domain properties, batch of %s records...", batch.size()));
+                    pst.executeBatch();
+                } catch (final SQLException ex) {
+                    throw new DbException("Could not batch insert domain properties.", ex);
+                }
+            });
+        });
+        LOGGER.info("Completed inserting domain properties.");
+    }
+
     private static void setNullableIntegerParameter(final int paramIndex, final Integer paramValue, final PreparedStatement pst) throws SQLException {
         if (paramValue != null) {
             pst.setInt(paramIndex, paramValue);
@@ -260,7 +259,7 @@ public class PersistDomainMetadataModel {
             pst.setNull(paramIndex, 4);
         }
     }
-    
+
     private static void setNullableLongParameter(final int paramIndex, final Long paramValue, final PreparedStatement pst) throws SQLException {
         if (paramValue != null) {
             pst.setLong(paramIndex, paramValue);
@@ -268,7 +267,7 @@ public class PersistDomainMetadataModel {
             pst.setNull(paramIndex, -5);
         }
     }
-    
+
     private static void setBooleanParameter(final int paramIndex, final boolean paramValue, final PreparedStatement pst) throws SQLException {
         pst.setString(paramIndex, paramValue ? "Y" : "N");
     }
@@ -285,7 +284,7 @@ public class PersistDomainMetadataModel {
         private final int propsCount;
         private final Map<String, Integer> keyMembersIndices = new HashMap<>();
         private final Map<String, EqlPropertyMetadata> props = new LinkedHashMap<>();
-        
+
         public DomainTypeData(final Class<?> type, final Class<?> superType, final long id, final String key, final String desc, final boolean isEntity, final String dbTable, final String entityTypeDesc, final int propsCount, final List<T2<String, Class<?>>> keyMembers, final List<EqlPropertyMetadata> props) {
             this.type = type;
             this.superType = superType;
