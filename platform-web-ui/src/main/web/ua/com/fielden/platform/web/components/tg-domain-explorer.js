@@ -1,13 +1,13 @@
 import '/resources/polymer/@polymer/iron-icon/iron-icon.js';
 import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
 import '/resources/polymer/@polymer/iron-icons/communication-icons.js';
-import '/resources/polymer/@polymer/iron-icons/hardware-icons.js';
 
 import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 
 import '/resources/components/tg-tree-table.js';
 import '/resources/egi/tg-property-column.js';
 import '/resources/egi/tg-hierarchy-column.js';
+import '/resources/images/tg-icons.js';
 
 import {html, PolymerElement} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
@@ -32,9 +32,14 @@ const template = html`
         }
 
         .toolbar {
-            padding: 8px 12px 0 12px;
+            padding: 8px 12px 0 18px;
             @apply --layout-horizontal;
             @apply --layout-start-justified;
+        }
+
+        .collapse-button {
+            width: 28px;
+            height: 28px;
         }
 
         .domain-explorer-tree {
@@ -58,7 +63,7 @@ const template = html`
     </style>
     <div class="domain-explorer-container">
         <div class="toolbar">
-            <paper-icon-button class="rotate_-90" icon="hardware:keyboard-tab" on-tap="_collapseAll"></paper-icon-button>
+            <paper-icon-button class="collapse-button" icon="tg-icons:collapseAll" on-tap="_collapseAll"></paper-icon-button>
         </div>
         <div class="editor-container">
             <slot name="filter-element"></slot>
