@@ -14,6 +14,7 @@ import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.EntityUtils.coalesce;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.utils.EntityUtils.getCollectionalProperties;
+import static ua.com.fielden.platform.utils.EntityUtils.isIntrospectionDenied;
 import static ua.com.fielden.platform.utils.EntityUtils.isNaturalOrderDescending;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
@@ -268,12 +269,12 @@ public class EntityUtilsTest {
 
     @Test
     public void isIntrospectionDenied_returns_true_for_entity_types_annotated_with_DenyIntrospection() {
-        assertTrue(EntityUtils.isIntrospectionDenied(UnionEntity.class));
+        assertTrue(isIntrospectionDenied(UnionEntity.class));
     }
 
     @Test
     public void isIntrospectionDenied_returns_false_for_entity_types_not_annotated_with_DenyIntrospection() {
-        assertFalse(EntityUtils.isIntrospectionDenied(Entity.class));
+        assertFalse(isIntrospectionDenied(Entity.class));
     }
 
     @Test

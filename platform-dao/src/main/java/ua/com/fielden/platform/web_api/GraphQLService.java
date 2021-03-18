@@ -2,7 +2,6 @@ package ua.com.fielden.platform.web_api;
 
 import static graphql.ExecutionInput.newExecutionInput;
 import static graphql.GraphQL.newGraphQL;
-import static graphql.Scalars.GraphQLBoolean;
 import static graphql.schema.FieldCoordinates.coordinates;
 import static graphql.schema.GraphQLCodeRegistry.newCodeRegistry;
 import static graphql.schema.GraphQLFieldDefinition.newFieldDefinition;
@@ -20,7 +19,6 @@ import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresen
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isExcluded;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
-import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isIntrospectionDenied;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
@@ -72,7 +70,6 @@ import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
-import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web_api.exceptions.WebApiException;
@@ -131,16 +128,13 @@ public class GraphQLService implements IWebApi {
             final Set<Class<? extends AbstractEntity<?>>> allTypes = new LinkedHashSet<>(domainTypes);
             allTypes.addAll(domainTypesOf(applicationDomainProvider, type -> !toInclude.test(type) && type.getSimpleName().endsWith("GroupingProperty"))); // '...GroupingProperty' is the naming pattern for enum-like entities for groupBy criteria
             // dictionary must have all the types that are referenced by all types that should support querying
-            // types with introspection denied expose minimum information
             final Map<Class<? extends AbstractEntity<?>>, GraphQLType> dictionary = createDictionary(allTypes);
 
             logger.info("\tBuilding query type...");
-            // let's exclude domain types that have introspection denied from field visibility and query types
-            final LinkedHashSet<Class<? extends AbstractEntity<?>>> domainTypeWithIntrospectionAllowed = domainTypes.stream().filter(type -> !EntityUtils.isIntrospectionDenied(type)).collect(toCollection(LinkedHashSet::new));
-            final GraphQLObjectType queryType = createQueryType(domainTypeWithIntrospectionAllowed, coFinder, dates, codeRegistryBuilder, authorisation, securityTokenProvider);
+            final GraphQLObjectType queryType = createQueryType(domainTypes, coFinder, dates, codeRegistryBuilder, authorisation, securityTokenProvider);
 
             logger.info("\tBuilding field visibility...");
-            codeRegistryBuilder.fieldVisibility(new FieldVisibility(authorisation, domainTypeWithIntrospectionAllowed, securityTokenProvider));
+            codeRegistryBuilder.fieldVisibility(new FieldVisibility(authorisation, domainTypes, securityTokenProvider));
 
             logger.info("\tBuilding schema...");
             schema = newSchema()
@@ -157,15 +151,14 @@ public class GraphQLService implements IWebApi {
     }
     
     /**
-     * Returns all domain types of {@code toInclude} nature.
-     * 
-     * @return
+     * Returns all domain types, taken from {@code applicationDomainProvider}, of {@code toInclude} nature with introspection allowed.
      */
     private Set<Class<? extends AbstractEntity<?>>> domainTypesOf(final IApplicationDomainProvider applicationDomainProvider, final Predicate<Class<? extends AbstractEntity<?>>> toInclude) {
         final List<Class<? extends AbstractPersistentEntity<? extends Comparable<?>>>> supportedPlatformTypes = asList(User.class, UserRole.class, UserAndRoleAssociation.class, SecurityRoleAssociation.class, Attachment.class);
         return applicationDomainProvider.entityTypes().stream()
             .filter(type -> 
                     (supportedPlatformTypes.stream().anyMatch(pType -> pType.isAssignableFrom(type)) || !PlatformDomainTypes.types.contains(type)) // includes supportedPlatformTypes OR non-platform domain types
+                &&  !isIntrospectionDenied(type) // this includes only domain types that don't have @DenyIntrospection annotation
                 &&  toInclude.test(type) )
             .collect(toCollection(LinkedHashSet::new));
     }
@@ -189,7 +182,6 @@ public class GraphQLService implements IWebApi {
 
     /**
      * Creates map of GraphQL dictionary (aka GraphQL "additional types") and corresponding entity types.
-     * Types with introspection denied, are represented only by their title and description.
      * <p>
      * The set of resultant types can be smaller than those derived upon. See {@link #createGraphQLTypeFor(Class)} for more details.
      * 
@@ -236,11 +228,6 @@ public class GraphQLService implements IWebApi {
         return queryTypeBuilder.build();
     }
     
-
-    private static final GraphQLFieldDefinition EMPTY_FIELD_FOR_TYPES_WITH_DENIED_INTROSPECTION = newFieldDefinition()
-            .name("Empty")
-            .description("Introspection is denied.")
-            .type(GraphQLBoolean).build();
     /**
      * Creates {@link Optional} GraphQL object type for {@code entityType}d entities querying.
      * <p>
@@ -250,17 +237,11 @@ public class GraphQLService implements IWebApi {
      * @return
      */
     private static Optional<Pair<Class<? extends AbstractEntity<?>>, GraphQLObjectType>> createGraphQLTypeFor(final Class<? extends AbstractEntity<?>> entityType) {
-        if (isIntrospectionDenied(entityType)) {
-            return of(pair(entityType, newObject()
-                    .name(entityType.getSimpleName())
-                    .description(titleAndDescRepresentation(getEntityTitleAndDesc(entityType)) + FieldSchema.NEWLINE + FieldSchema.NEWLINE + 
-                                 FieldSchema.bold("[ Introspection denied ]"))
-                    .field(EMPTY_FIELD_FOR_TYPES_WITH_DENIED_INTROSPECTION) // must have at least one field to make GraphiQL happy
-                    .build()));
+        if (isExcluded(entityType, "")) { // generic type exclusion logic for root types (exclude abstract entity types, exclude types without KeyType annotation etc. -- see AbstractDomainTreeRepresentation.isExcluded)
+            return empty();
         }
         final List<GraphQLFieldDefinition> graphQLFieldDefinitions = constructKeysAndProperties(entityType, true).stream()
             .filter(field -> !isExcluded(entityType, reflectionProperty(field.getName())))
-            .filter(field -> !isEntityType(field.getType()) || !isIntrospectionDenied((Class<? extends AbstractEntity<?>>) field.getType()))
             .map(field -> createGraphQLFieldDefinition(entityType, field.getName()))
             .flatMap(optField -> optField.map(Stream::of).orElseGet(Stream::empty))
             .collect(toList());
