@@ -6,6 +6,8 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.error.Result.successful;
+import static ua.com.fielden.platform.security.tokens.Template.READ_MODEL;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.util.ArrayList;
@@ -24,6 +26,9 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
+import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.security.IAuthorisationModel;
+import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 
 /**
  * DAO for {@link DomainExplorerInsertionPoint}.
@@ -35,19 +40,26 @@ public class DomainExplorerInsertionPointDao extends CommonEntityDao<DomainExplo
 
     private static final String COULD_NOT_IDENTIFY_HOLDER_TYPE_ERR = "Could not find %s holder type";
 
+    private final IAuthorisationModel authModel;
+    private final ISecurityTokenProvider tokenProvider;
+    
     @Inject
-    protected DomainExplorerInsertionPointDao(final IFilter filter) {
+    protected DomainExplorerInsertionPointDao(final IAuthorisationModel authModel, final ISecurityTokenProvider tokenProvider, final IFilter filter) {
         super(filter);
+        this.authModel = authModel;
+        this.tokenProvider = tokenProvider;
     }
 
     @Override
-        public DomainExplorerInsertionPoint save(final DomainExplorerInsertionPoint entity) {
-            if (entity.getDomainTypeName() == null) {
-                entity.setGeneratedHierarchy(loadTypes(entity));
-            } else {
-                entity.setGeneratedHierarchy(loadProperties(entity));
-            }
-            return super.save(entity);
+    public DomainExplorerInsertionPoint save(final DomainExplorerInsertionPoint entity) {
+        tokenProvider.getTokenByName(format(READ_MODEL.forClassName(), "")).map(authModel::authorise).orElse(successful("Access by default")).ifFailure(Result::throwRuntime);
+
+        if (entity.getDomainTypeName() == null) {
+            entity.setGeneratedHierarchy(loadTypes(entity));
+        } else {
+            entity.setGeneratedHierarchy(loadProperties(entity));
+        }
+        return super.save(entity);
     }
 
     private List<DomainPropertyTreeEntity> loadProperties(final DomainExplorerInsertionPoint entity) {
@@ -61,7 +73,7 @@ public class DomainExplorerInsertionPointDao extends CommonEntityDao<DomainExplo
                 queryModel = partialQueryModel.prop("holder.domainType").eq().val(entity.getDomainTypeHolderId()).model();
             }
             final fetch<DomainProperty> fetch = fetchAll(DomainProperty.class).with("domainType", fetchKeyAndDescOnly(DomainType.class).with("entity").with("dbTable").with("propsCount"));
-            try(final Stream<DomainProperty> stream = co(DomainProperty.class).stream(from(queryModel).with(fetch).with(orderProperies()).model())) {
+            try (final Stream<DomainProperty> stream = co(DomainProperty.class).stream(from(queryModel).with(fetch).with(orderProperies()).model())) {
                 return stream.map(domainProperty -> createDomainProperty(domainProperty)).collect(Collectors.toList());
             }
         } catch (final ClassNotFoundException e) {
@@ -96,7 +108,7 @@ public class DomainExplorerInsertionPointDao extends CommonEntityDao<DomainExplo
     private List<DomainTreeEntity> loadTypes(final DomainExplorerInsertionPoint entity) {
         final EntityResultQueryModel<DomainType> queryModel = select(DomainType.class).where().prop("entity").eq().val(true).model();
         final OrderingModel orderingModel = orderBy().yield("desc").asc().model();
-        try(final Stream<DomainType> stream = co(DomainType.class).stream(from(queryModel).with(orderingModel).model())) {
+        try (final Stream<DomainType> stream = co(DomainType.class).stream(from(queryModel).with(orderingModel).model())) {
             final List<DomainTreeEntity> types = stream.map(domainType -> createDomainType(domainType)).collect(Collectors.toList());
             final Map<Long, List<DomainPropertyTreeEntity>> groupedProperties = loadProperties();
             types.forEach(type -> {
@@ -107,10 +119,9 @@ public class DomainExplorerInsertionPointDao extends CommonEntityDao<DomainExplo
     }
 
     private Map<Long, List<DomainPropertyTreeEntity>> loadProperties() {
-        final EntityResultQueryModel<DomainProperty> queryModel = select(DomainProperty.class).where()
-                .prop("holder.domainType").isNotNull().model();
+        final EntityResultQueryModel<DomainProperty> queryModel = select(DomainProperty.class).where().prop("holder.domainType").isNotNull().model();
         final fetch<DomainProperty> fetch = fetchAll(DomainProperty.class).with("holder").with("domainType", fetchKeyAndDescOnly(DomainType.class).with("entity").with("dbTable"));
-        try(final Stream<DomainProperty> stream = co(DomainProperty.class).stream(from(queryModel).with(fetch).with(orderProperies()).model())) {
+        try (final Stream<DomainProperty> stream = co(DomainProperty.class).stream(from(queryModel).with(fetch).with(orderProperies()).model())) {
             return stream.collect(Collectors.groupingBy(domainProp -> domainProp.getHolder().getDomainType().getId(), Collectors.mapping(domainProperty -> createDomainProperty(domainProperty), Collectors.toList())));
         }
     }
