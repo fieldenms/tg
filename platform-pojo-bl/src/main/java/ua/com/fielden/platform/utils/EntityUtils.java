@@ -748,7 +748,7 @@ public class EntityUtils {
      * @return
      */
     public static boolean isIntrospectionDenied(final Class<? extends AbstractEntity<?>> type) {
-        return AnnotationReflector.isAnnotationPresent(type, DenyIntrospection.class);
+        return isAnnotationPresent(type, DenyIntrospection.class);
     }
 
     /**
