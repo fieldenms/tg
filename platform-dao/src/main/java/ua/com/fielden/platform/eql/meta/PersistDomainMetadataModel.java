@@ -6,6 +6,7 @@ import static java.util.Collections.unmodifiableMap;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isExcluded;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.QUERY_BASED;
@@ -130,9 +131,15 @@ public class PersistDomainMetadataModel {
         final List<DomainPropertyData> result = new ArrayList<>();
 
         long id = typesMap.size();
-        for (final DomainTypeData entityType : typesMap.values().stream().filter(t -> t.isEntity).collect(toSet())) {
+        for (final DomainTypeData entityType : typesMap.values()) {
+            if (!entityType.isEntity) {
+                continue;
+            }
             int position = 0;
             for (final EqlPropertyMetadata propMd : entityType.getProps().values()) {
+                if (isExcluded(entityType.type, propMd.name)) {
+                    continue;
+                }
                 id = id + 1;
                 position = position + 1;
                 final String prelTitle = getTitleAndDesc(propMd.name, entityType.type).getKey();
