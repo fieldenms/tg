@@ -195,16 +195,17 @@ class TgDomainExplorer extends PolymerElement {
 
     _buildDbSchemaContent (entity, column) {
         const numOfLevels = calculateNumberOfLevels(entity);
-        if (entity.entity.union) {
-            return "<i>[refer subproperties]</i>"
-        }
-        if (numOfLevels > 3 || (numOfLevels === 3 && !entity.parent.entity.union)) {
-            return "<i>[join]</i>";
-        }
         const value = this.$.domainExplorerTree.getBindedValue(entity.entity, column);
+        if (entity.entity.union) {
+            return "[refer subproperties]"
+        }
+        // selection criterion takes precedence over [join]
+        if ("[selection criterion]" !== value && (numOfLevels > 3 || (numOfLevels === 3 && !entity.parent.entity.union))) {
+            return "[join]";
+        }
         // let's represent a DB schema for synthetic (those not based on persistent) entities as [query]
         if (!value && entity.entity.parent === null) {
-            return "<i>[query]</i>";
+            return "[query]";
         }
         return entity.entity.parent === null ? "<span style='font-weight: 500;color: #546e7a'>" + value + "</b>" : value;
     }
