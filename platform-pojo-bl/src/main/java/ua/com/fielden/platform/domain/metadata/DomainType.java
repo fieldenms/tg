@@ -2,6 +2,7 @@ package ua.com.fielden.platform.domain.metadata;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
+import ua.com.fielden.platform.entity.annotation.DenyIntrospection;
 import ua.com.fielden.platform.entity.annotation.DescRequired;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -18,15 +19,17 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @DescRequired
 @CompanionObject(DomainTypeCo.class)
 @MapEntityTo
+@DenyIntrospection
 public class DomainType extends AbstractEntity<String> {
+
     @IsProperty
     @MapTo
-    @Title(value = "Table name", desc = "Desc")
+    @Title("Table name")
     private String dbTable;
     
     @IsProperty
     @MapTo
-    @Title(value = "Entity Type Desc", desc = "Desc")
+    @Title("Entity Type Description")
     private String entityTypeDesc;
     
     @IsProperty
@@ -36,7 +39,7 @@ public class DomainType extends AbstractEntity<String> {
 
     @IsProperty
     @MapTo
-    @Title(value = "Props count", desc = "Desc")
+    @Title(value = "Props count", desc = "The number of properties in this type.")
     private int propsCount;
 
     @Observable

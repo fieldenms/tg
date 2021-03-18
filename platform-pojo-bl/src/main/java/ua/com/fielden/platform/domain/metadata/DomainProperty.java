@@ -4,6 +4,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
+import ua.com.fielden.platform.entity.annotation.DenyIntrospection;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
@@ -15,48 +16,50 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @KeyType(DynamicEntityKey.class)
 @CompanionObject(DomainPropertyCo.class)
 @MapEntityTo
+@DenyIntrospection
 public class DomainProperty extends AbstractEntity<DynamicEntityKey> {
+
     @IsProperty
     @MapTo
-    @Title(value = "Property name", desc = "Desc")
+    @Title("Property Name")
     @CompositeKeyMember(1)
     private String name;
 
     @IsProperty
     @MapTo
-    @Title(value = "Holder", desc = "Desc")
+    @Title(value = "Holder", desc = "Indicates a type where this property belongs, which may be an entity type or a component-like type (e.g. a union type).")
     @CompositeKeyMember(2)
     private DomainPropertyHolder holder;
 
     @IsProperty
     @MapTo
-    @Title(value = "Domain type", desc = "Desc")
+    @Title(value = "Domain Type", desc = "An type for this property, which could be an entity type, but one of the primitive types such as Long, Date, etc.")
     private DomainType domainType;
 
     @IsProperty
     @MapTo
-    @Title(value = "Title", desc = "Desc")
+    @Title("Title")
     private String title;
 
     @IsProperty
     @MapTo
-    @Title(value = "Key Index", desc = "Usual prop -- null, Plain key prop -- 0, Member prop of composite key -- 1 .. n")
+    @Title(value = "Key Index", desc = "Indicates is this property belongs to a key. Non-key prop -- null, Non-composite key prop -- 0, Composite key member prop -- 1 .. n")
     private Integer keyIndex;
 
     @IsProperty
     @MapTo
-    @Title(value = "Required?", desc = "Desc")
+    @Title("Required?")
     private boolean required;
 
     @IsProperty
     @MapTo
-    @Title(value = "Db column", desc = "Desc")
+    @Title("DB Column")
     private String dbColumn;
     
     @IsProperty
     @MapTo
     @Required
-    @Title(value = "Position", desc = "Desc")
+    @Title("Position")
     private Integer position;
 
     @Observable
