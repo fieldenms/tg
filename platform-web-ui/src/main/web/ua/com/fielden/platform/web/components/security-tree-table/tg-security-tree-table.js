@@ -3,7 +3,7 @@ import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 
-import '/resources/components/tree-table/tg-tree-table-row.js';
+import '/resources/components/security-tree-table/tg-security-tree-table-row.js';
 
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
@@ -100,7 +100,6 @@ const template = html`
         }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning paper-material-styles"></style>
-    <slot id="column_selector" name="tg-tree-table-property-column" hidden></slot>
     <div id="elementToFocus">
         <div id="baseContainer">
             <!--Scroll Container-->
@@ -118,7 +117,7 @@ const template = html`
                 </div>
                 <!--table body-->
                 <template is="dom-repeat" items="[[treeModel]]" as="treeEntity" index-as="treeEntityIndex">
-                    <tg-tree-table-row entity="[[treeEntity]]" hierarchy-column="[[hierarchyColumn]]" columns="[[columns]]"></tg-tree-table-row>
+                    <tg-security-tree-table-row entity="[[treeEntity]]" hierarchy-column="[[hierarchyColumn]]" columns="[[columns]]"></tg-security-tree-table-row>
                 </template>
                 <!-- Scrollable container goes here -->
             </div>
@@ -143,7 +142,7 @@ const template = html`
 Polymer({
     _template: template,
 
-    is: 'tg-tree-table',
+    is: 'tg-security-tree-table',
 
     behaviors: [IronResizableBehavior],
     
