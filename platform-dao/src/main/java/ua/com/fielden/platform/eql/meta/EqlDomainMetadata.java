@@ -237,7 +237,7 @@ public class EqlDomainMetadata {
                 if (isSyntheticBasedOnPersistentEntityType(parentInfo.entityType)) {
                     return new EqlPropertyMetadata.Builder(KEY, keyType, keyHibType).required().column(key).build();
                 }
-                return new EqlPropertyMetadata.Builder(KEY, keyType, keyHibType).required().column(key).build();
+                return new EqlPropertyMetadata.Builder(KEY, keyType, keyHibType).required().build();
             default:
                 return null;
             }
