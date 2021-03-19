@@ -3,6 +3,8 @@ package ua.com.fielden.platform.entity.query;
 import static java.lang.String.format;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Collections.unmodifiableSet;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
 import java.util.HashMap;
@@ -20,11 +22,11 @@ import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
 public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> implements IRetrievalModel<T> {
 
     protected final fetch<T> originalFetch;
-    private DomainMetadataAnalyser domainMetadataAnalyser;
+    private final DomainMetadataAnalyser domainMetadataAnalyser;
 
     private final Map<String, EntityRetrievalModel<? extends AbstractEntity<?>>> entityProps = new HashMap<>();
-    private final Set<String> primProps = new HashSet<String>();
-    private final Set<String> proxiedProps = new HashSet<String>();
+    private final Set<String> primProps = new HashSet<>();
+    private final Set<String> proxiedProps = new HashSet<>();
 
     public AbstractRetrievalModel(final fetch<T> originalFetch, final DomainMetadataAnalyser domainMetadataAnalyser) {
         this.originalFetch = originalFetch;
@@ -108,6 +110,9 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> implem
                 throw new EqlException(format("Couldn't determine type of property [%s] of entity type [%s]", propName, getEntityType()));
             }
         } else {
+            if (ID.equals(propName) || VERSION.equals(propName)) {
+                return null; // allow only IDs and VERSIONs to have missing PropertyMetadata; this is sometimes useful for pure synthetic entities that yield these props
+            }
             throw new EqlException(format("Trying to fetch entity of type [%s] with non-existing property [%s]", getEntityType(), propName));
         }
     }
