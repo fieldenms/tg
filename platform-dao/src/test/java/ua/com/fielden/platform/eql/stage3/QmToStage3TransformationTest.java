@@ -4,6 +4,7 @@ package ua.com.fielden.platform.eql.stage3;
 import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.query.DbVersion.H2;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.math.BigDecimal;
@@ -28,7 +29,7 @@ import ua.com.fielden.platform.eql.stage3.sources.QrySource3BasedOnSubqueries;
 import ua.com.fielden.platform.eql.stage3.sources.QrySource3BasedOnTable;
 import ua.com.fielden.platform.sample.domain.TeVehicle;
 import ua.com.fielden.platform.sample.domain.TeVehicleModel;
-import ua.com.fielden.platform.sample.domain.TgBogie;
+import ua.com.fielden.platform.sample.domain.TeWorkOrder;
 
 public class QmToStage3TransformationTest extends EqlStage3TestCase {
     
@@ -273,6 +274,17 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         assertEquals(expQry, actQry);
     }
     
+    @Test
+    public void calc_prop_is_correctly_transformed_14() {
+        final ResultQuery3 actQry = qryCountAll(select(TeWorkOrder.class).where().prop("vehicleModel.key").isNotNull());
+        System.out.println(actQry.sql(DbVersion.H2));
+
+        final String wo1 = "1";
+
+        final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
+        final QrySource3BasedOnTable veh = source(VEHICLE, wo, "make_2");
+
+    }
     
     @Test
     public void calc_prop_is_correctly_transformed_08() {
@@ -309,6 +321,18 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
     }
     
     @Test
+    public void calc_prop_is_correctly_transformed_08_sql() {
+        final ResultQuery3 actQry = qryCountAll(select(WORK_ORDER).where().prop("make.key").isNotNull());
+        
+        final ResultQuery3 expQry = qryCountAll(select(WORK_ORDER).as("w").leftJoin(MAKE).as("mk").on().
+                model(
+                select(VEHICLE).as("v").join(MODEL).as("m").on().prop("v.model").eq().prop("m.id").where().prop("v.id").eq().prop("w.vehicle").yield().prop("m.make").modelAsEntity(MAKE)).eq().prop("mk.id").
+                where().prop("mk.key").isNotNull());
+        
+        assertEquals(expQry.sql(H2), actQry.sql(H2));
+    }
+    
+    @Test
     public void calc_prop_is_correctly_transformed_07() {
         final ResultQuery3 actQry = qryCountAll(select(WORK_ORDER).where().prop("make").isNotNull());
         final String wo1 = "1";
@@ -334,6 +358,17 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final ResultQuery3 expQry = qryCountAll(sources, conditions);
         
         assertEquals(expQry, actQry);
+    }
+    
+    @Test
+    public void calc_prop_is_correctly_transformed_07_sql() {
+        final ResultQuery3 actQry = qryCountAll(select(WORK_ORDER).where().prop("make").isNotNull());
+        
+        final ResultQuery3 expQry = qryCountAll(select(WORK_ORDER).where().model(
+                select(VEHICLE).as("v").join(MODEL).as("m").on().prop("v.model").eq().prop("m.id").where().prop("v.id").eq().extProp("vehicle").yield().prop("m.make").modelAsEntity(MAKE)
+                ).isNotNull());
+        
+        assertEquals(expQry.sql(H2), actQry.sql(H2));
     }
 
     @Test
