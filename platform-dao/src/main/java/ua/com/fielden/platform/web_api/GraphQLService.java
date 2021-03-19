@@ -8,7 +8,6 @@ import static graphql.schema.GraphQLFieldDefinition.newFieldDefinition;
 import static graphql.schema.GraphQLObjectType.newObject;
 import static graphql.schema.GraphQLSchema.newSchema;
 import static java.lang.String.format;
-import static java.util.Arrays.asList;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toCollection;
@@ -21,8 +20,6 @@ import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
 import static ua.com.fielden.platform.utils.EntityUtils.isIntrospectionDenied;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web_api.FieldSchema.LIKE_ARGUMENT;
@@ -60,19 +57,13 @@ import graphql.schema.GraphQLObjectType.Builder;
 import graphql.schema.GraphQLSchema;
 import graphql.schema.GraphQLType;
 import graphql.schema.GraphQLTypeReference;
-import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
-import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
-import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
-import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
-import ua.com.fielden.platform.security.user.UserRole;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web_api.exceptions.WebApiException;
@@ -124,12 +115,11 @@ public class GraphQLService implements IWebApi {
             final GraphQLCodeRegistry.Builder codeRegistryBuilder = newCodeRegistry();
 
             logger.info("\tBuilding dictionary...");
-            final Predicate<Class<? extends AbstractEntity<?>>> toInclude = type -> isSyntheticEntityType(type) || isPersistedEntityType(type); // this includes persistent with activatable nature, synthetic based on persistent; this does not include union, functional and any other entities
-            final Set<Class<? extends AbstractEntity<?>>> domainTypes = domainTypesOf(applicationDomainProvider, toInclude).stream()
+            final Set<Class<? extends AbstractEntity<?>>> domainTypes = domainTypesOf(applicationDomainProvider, EntityUtils::isIntrospectionAllowed).stream() // synthetic / persistent without @DenyIntrospection; this includes persistent with activatable nature, synthetic based on persistent; this does not include union, functional and any other entities
                 .sorted((type1, type2) -> type1.getSimpleName().compareTo(type2.getSimpleName()))
                 .collect(toCollection(LinkedHashSet::new));
             final Set<Class<? extends AbstractEntity<?>>> allTypes = new LinkedHashSet<>(domainTypes);
-            allTypes.addAll(domainTypesOf(applicationDomainProvider, type -> !toInclude.test(type) && isUnionEntityType(type)));
+            allTypes.addAll(domainTypesOf(applicationDomainProvider, EntityUtils::isUnionEntityType));
             // dictionary must have all the types that are referenced by all types that should support querying
             final Map<Class<? extends AbstractEntity<?>>, GraphQLType> dictionary = createDictionary(allTypes);
 
@@ -157,11 +147,9 @@ public class GraphQLService implements IWebApi {
      * Returns all domain types from {@code applicationDomainProvider} that do not have introspection denied and satisfy predicate {@code toInclude}.
      */
     private Set<Class<? extends AbstractEntity<?>>> domainTypesOf(final IApplicationDomainProvider applicationDomainProvider, final Predicate<Class<? extends AbstractEntity<?>>> toInclude) {
-        final List<Class<? extends AbstractPersistentEntity<? extends Comparable<?>>>> supportedPlatformTypes = asList(User.class, UserRole.class, UserAndRoleAssociation.class, SecurityRoleAssociation.class, Attachment.class);
         return applicationDomainProvider.entityTypes().stream()
             .filter(type -> 
-                    (supportedPlatformTypes.stream().anyMatch(pType -> pType.isAssignableFrom(type)) || !PlatformDomainTypes.types.contains(type)) // includes supportedPlatformTypes OR non-platform domain types
-                &&  !isIntrospectionDenied(type) // this includes only domain types that don't have @DenyIntrospection annotation
+                    !isIntrospectionDenied(type) // ensure that only entity types that don't have @DenyIntrospection annotation are included
                 &&  toInclude.test(type) )
             .collect(toCollection(LinkedHashSet::new));
     }
