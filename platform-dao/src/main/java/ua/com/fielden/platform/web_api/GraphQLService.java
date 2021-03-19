@@ -129,8 +129,7 @@ public class GraphQLService implements IWebApi {
                 .sorted((type1, type2) -> type1.getSimpleName().compareTo(type2.getSimpleName()))
                 .collect(toCollection(LinkedHashSet::new));
             final Set<Class<? extends AbstractEntity<?>>> allTypes = new LinkedHashSet<>(domainTypes);
-            // TODO Once "GroupingProperty" entities become synthetic or persistent, the following inclusion should be removed
-            allTypes.addAll(domainTypesOf(applicationDomainProvider, type -> !toInclude.test(type) && (isUnionEntityType(type) || type.getSimpleName().endsWith("GroupingProperty")))); // '...GroupingProperty' is the naming pattern for enum-like entities for groupBy criteria
+            allTypes.addAll(domainTypesOf(applicationDomainProvider, type -> !toInclude.test(type) && isUnionEntityType(type)));
             // dictionary must have all the types that are referenced by all types that should support querying
             final Map<Class<? extends AbstractEntity<?>>, GraphQLType> dictionary = createDictionary(allTypes);
 
