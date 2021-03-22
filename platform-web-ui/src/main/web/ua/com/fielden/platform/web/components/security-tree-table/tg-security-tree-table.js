@@ -28,8 +28,8 @@ const template = html`
             @apply --layout-flex;
         }
     </style>
-    <tg-tree-table id="tokenTree" model="[[entities]]" display-bottom-shadow>
-        <template is="dom-repeat" items="[[columns]]">
+    <tg-tree-table id="tokenTree" model="[[entities]]" display-bottom-shadow on-tg-tree-table-column-change="_updateColumnsDimensions">
+        <template is="dom-repeat" items="[[__columns]]">
             <tg-property-column slot$="[[item.slot]]" property="[[item.property]]" type="[[item.type]]" visible="[[item.visible]]" vertical="[[item.vertical]]" width="[[item.width]]" min-width="[[item.minWidth]]" grow-factor="[[item.growFactor]]" column-title="[[item.columnTitle]]" column-desc="[[item.columnDesc]]" element-provider="[[_buildTreeElement]]" check="[[item.check]]"></tg-property-column>
         </template>
     </tg-tree-table>`;
@@ -41,10 +41,14 @@ Polymer({
 
     properties: {
         entities: {
-            type: Array,
-            observer: "_entitiesChanged"
+            type: Array
         },
-        columns: Array,
+        columns: {
+            type: Array,
+            observer: "_columnsChanged"
+        },
+        //Filtered columns those are visible.
+        __columns: Array,
     },
 
     ready: function () {
@@ -70,24 +74,49 @@ Polymer({
         if (this.columns) {
             const regexToSearch = searchRegExp(text);
             this.columns.filter(column => column.slot === "regular-column").forEach((column, index) => {
-                if (column.columnTitle.search(regexToSearch) >= 0) {
-                    this.$.tokenTree.set("regularColumns." + index + ".visible", true);
-                    column.visible = true;
-                } else {
-                    this.$.tokenTree.set("regularColumns." + index + ".visible", false);
-                    column.visible = false;
-                }
+                column.visible = column.columnTitle.search(regexToSearch) >= 0;
             });
-            this.$.tokenTree._updateColumnsFlex();
+            this._columnsChanged(this.columns);
             this.$.tokenTree._updateTableSizeAsync();
         }
     },
 
+    ////////////////////////////Observers/////////////////////////////////////
+    _columnsChanged: function (newValue, oldValue) {
+        if (oldValue) {
+            newValue.forEach(newColumn => {
+                const oldColumn = oldValue.find(column => column.property === newColumn.property);
+                if (oldColumn) {
+                    newColumn.width = oldColumn.width;
+                    newColumn.growFactor = oldColumn.growFactor;
+                }
+            });
+        }
+        this.__columns = newValue.filter(column => column.visible);
+    },
+
+    ///////////////////////////Event listeners////////////////////////////////
+    _updateColumnsDimensions: function (e) {
+        const columnSizes = e.detail;
+        Object.keys(columnSizes).forEach(key => {
+            const value = columnSizes[key];
+            const column = this.columns.find(column => column.property === key);
+            if (column) {
+                if (typeof value.growFactor !== 'undefined'){
+                    column.growFactor = value.growFactor;
+                }
+                if (typeof value.width !== 'undefined'){
+                    column.growFactor = value.width;
+                }
+            }
+        });
+    },
+
     ////////////////////////////Content builders//////////////////////////////
     _buildTreeElement: function (parent, entity, column) {
-        if (column.slot === 'hierarchy-column') {
+        if (column.isHierarchyColumn) {
             this._buildHierarchyColumnElements(parent, entity, column);
-        } else if (column.slot === 'regular-column') {
+        } else {
             this._buildSecurityColumnElements(parent, entity, column);
         }
     },

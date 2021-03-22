@@ -41,7 +41,7 @@ class TgSecurityCheckbox extends PolymerElement {
     }
 
     get propertyName () {
-        if (this.column.getAttribute("slot") === "hierarchy-column") {
+        if (this.column.isHierarchyColumn) {
             return "_token"
         }
         return this.column.property;

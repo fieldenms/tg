@@ -9,10 +9,6 @@ export const TgPropertyColumnBehavior = {
         growFactor: Number,
         columnTitle: String,
         columnDesc: String,
-        visible: {
-            type: Boolean,
-            value: true
-        },
         vertical: {
             type: Boolean,
             value: false

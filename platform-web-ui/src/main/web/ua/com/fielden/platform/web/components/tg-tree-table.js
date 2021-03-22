@@ -11,7 +11,6 @@ import { flush } from "/resources/polymer/@polymer/polymer/lib/utils/flush.js";
 
 import { TgTreeListBehavior } from '/resources/components/tg-tree-list-behavior.js';
 import { tearDownEvent, getRelativePos } from '/resources/reflection/tg-polymer-utils.js';
-import { FlattenedNodesObserver } from '/resources/polymer/@polymer/polymer/lib/utils/flattened-nodes-observer.js';
 
 
 const template = html`
@@ -238,12 +237,12 @@ const template = html`
     <div id="scrollableContainer" on-scroll="_handleScrollEvent">
         <div id="baseContainer">
             <div id="header" show-top-shadow$="[[_showTopShadow]]" class="table-header-row sticky-container stick-top z-index-1"  on-touchmove="_handleTouchMove">
-                <div class="table-cell sticky-container stick-top-left z-index-2" fixed show-left-shadow$="[[_showLeftShadow]]" style$="[[_calcColumnHeaderStyle(hierarchyColumn, hierarchyColumn.visible, hierarchyColumn.width, hierarchyColumn.growFactor)]]" on-down="_makeTreeTableUnselectable" on-up="_makeTreeTableSelectable" on-track="_changeColumnSize" tooltip-text$="[[hierarchyColumn.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
+                <div class="table-cell sticky-container stick-top-left z-index-2" fixed show-left-shadow$="[[_showLeftShadow]]" style$="[[_calcColumnHeaderStyle(hierarchyColumn, hierarchyColumn.width, hierarchyColumn.growFactor)]]" on-down="_makeTreeTableUnselectable" on-up="_makeTreeTableSelectable" on-track="_changeColumnSize" tooltip-text$="[[hierarchyColumn.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                     <div class="truncate table-header-column-title" vertical$="[[hierarchyColumn.vertical]]">[[hierarchyColumn.columnTitle]]</div>
                     <div class="resizing-box"></div>
                 </div>
                 <template is="dom-repeat" items="[[regularColumns]]">
-                    <div class="table-cell" style$="[[_calcColumnHeaderStyle(item, item.visible, item.width, item.growFactor)]]" on-down="_makeTreeTableUnselectable" on-up="_makeTreeTableSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
+                    <div class="table-cell" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor)]]" on-down="_makeTreeTableUnselectable" on-up="_makeTreeTableSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
                         <div class="truncate table-header-column-title" vertical$="[[item.vertical]]">[[item.columnTitle]]</div>
                         <div class="resizing-box"></div>
                     </div>
@@ -253,14 +252,14 @@ const template = html`
                 <iron-list id="treeList" items="[[_entities]]" as="entity" scroll-target="scrollableContainer">
                     <template>
                         <div class="table-data-row" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
-                            <div class="table-cell sticky-container stick-left z-index-1" show-left-shadow$="[[_showLeftShadow]]" selected$="[[entity.selected]]" over$="[[entity.over]]" style$="[[_calcColumnStyle(hierarchyColumn, hierarchyColumn.visible, hierarchyColumn.width, hierarchyColumn.growFactor)]]">
+                            <div class="table-cell sticky-container stick-left z-index-1" show-left-shadow$="[[_showLeftShadow]]" selected$="[[entity.selected]]" over$="[[entity.over]]" style$="[[_calcColumnStyle(hierarchyColumn, hierarchyColumn.width, hierarchyColumn.growFactor)]]">
                                 <div class="flexible-horizontal-container" style$="[[itemStyle(entity)]]">
                                     <iron-icon class="expand-button" icon="av:play-arrow" style="flex-grow:0;flex-shrink:0;" invisible$="[[!entity.entity.hasChildren]]" collapsed$="[[!entity.opened]]" on-tap="_toggle"></iron-icon>
                                     <tg-tree-table-content class="truncate flexible-horizontal-container part-to-highlight" entity="[[entity]]" column="[[hierarchyColumn]]" highlighted$="[[entity.highlight]]" tooltip-text$="[[_getTooltip(entity, hierarchyColumn)]]"></tg-tree-table-content>
                                 </div>
                             </div>
                             <template is="dom-repeat" items="[[regularColumns]]" as="column">
-                                <div class="table-cell" selected$="[[entity.selected]]" over$="[[entity.over]]" style$="[[_calcColumnStyle(column, column.visible, column.width, column.growFactor)]]" highlighted$="[[entity.highlight]]" tooltip-text$="[[_getTooltip(entity, column)]]">
+                                <div class="table-cell" selected$="[[entity.selected]]" over$="[[entity.over]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor)]]" highlighted$="[[entity.highlight]]" tooltip-text$="[[_getTooltip(entity, column)]]">
                                     <tg-tree-table-content class="truncate" entity="[[entity]]" column="[[column]]"></tg-tree-table-content>
                                 </div>
                             </template>
@@ -284,15 +283,6 @@ function calculateColumnWidthExcept (columnIndex, columnElements, columnLength) 
     return columnWidth;
 };
 
-function removeColumn (column, fromColumns) {
-    const index = fromColumns.indexOf(column);
-    if (index >= 0) {
-        fromColumns.splice(index, 1);
-        return true;
-    }
-    return false;
-};
-
 class TgTreeTable extends mixinBehaviors([TgTreeListBehavior], PolymerElement) {
 
     static get template() { 
@@ -309,7 +299,10 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior], PolymerElement) {
             /**
              * Array of columns with information about additional properties that should be displayed along with hierarchy property.
              */
-            regularColumns: Array,
+            regularColumns: {
+                type: Array,
+                value: () => []
+            },
 
             /**
              * Indicates whether to show bottom shadow or not.
@@ -325,24 +318,17 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior], PolymerElement) {
         super.ready();
         
         //Observe hierarchy column DOM changes
-        new FlattenedNodesObserver(this.$.hierarchy_column_slot, (info) => {
-            this.hierarchyColumn = info.addedNodes[0];
+        this.$.hierarchy_column_slot.addEventListener('slotchange', (e) => {
+            this.hierarchyColumn = Object.assign({isHierarchyColumn: true}, this.$.hierarchy_column_slot.assignedNodes()[0]);
             this._updateColumnsFlex();
         });
+
         //Observe regular column DOM changes
-        new FlattenedNodesObserver(this.$.regular_column_slot, (info) => {
-            const newColumns = (this.regularColumns && this.regularColumns.slice()) || [];
-            info.addedNodes.forEach(node => {
-                if (node.nodeType === Node.ELEMENT_NODE) {
-                    newColumns.push(node);
-                }
-            });
-            info.removedNodes.forEach(node => {
-                removeColumn(node, newColumns);
-            });
-            this.regularColumns = newColumns;
+        this.$.regular_column_slot.addEventListener('slotchange', (e) => {
+            this.regularColumns = [...this.$.regular_column_slot.assignedNodes()].map(column => Object.assign({isHierarchyColumn: false}, column));
             this._updateColumnsFlex();
         });
+        
         this.$.treeList._isClientFull = this._isTreeClientFull.bind(this.$.treeList);
         this._firstTreeTableVisibleIndex = this._firstTreeTableVisibleIndex.bind(this.$.treeList);
         this.$.treeList.scrollToIndex = this._scrollToIndexAndCorrect();
@@ -410,21 +396,21 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior], PolymerElement) {
         return "";
     }
 
-    _calcColumnHeaderStyle (item, itemVisible, itemWidth, columnGrowFactor) {
+    _calcColumnHeaderStyle (item, itemWidth, columnGrowFactor) {
         let colStyle = "min-width: " + itemWidth + "px;" + "width: " + itemWidth + "px;"
         if (columnGrowFactor === 0) {
             colStyle += "flex-grow: 0;flex-shrink: 0;";
         } else {
             colStyle += "flex-grow: " + columnGrowFactor + ";";
         }
-        if (itemWidth === 0 || !itemVisible) {
+        if (itemWidth === 0) {
             colStyle += "display: none;";
         }
         return colStyle;
     }
 
-    _calcColumnStyle (item, itemVisible, itemWidth, columnGrowFactor) {
-        let colStyle = this._calcColumnHeaderStyle(item, itemVisible, itemWidth, columnGrowFactor);
+    _calcColumnStyle (item, itemWidth, columnGrowFactor) {
+        let colStyle = this._calcColumnHeaderStyle(item, itemWidth, columnGrowFactor);
         return colStyle;
     }
 
@@ -490,15 +476,16 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior], PolymerElement) {
     }
 
     _updateColumnsFlex () {
-        const hasFlexColumn = (this.hierarchyColumn.visible && this.hierarchyColumn.growFactor > 0) 
-                        || this.regularColumns.some(column => {
-                            return column.visible && column.growFactor > 0
-                        });
+        const hasFlexColumn = this.hierarchyColumn.growFactor > 0 || this.regularColumns.some(column => column.growFactor > 0);
         if (!hasFlexColumn) {
             const idx = this._findLastVisibleColumnIndex();
             if (idx >=0) {
                 const propToSet = idx === 0 ? "hierarchyColumn.growFactor" : "regularColumns." + (idx - 1) + ".growFactor";
                 this.set(propToSet, 1);
+                const paramProp = idx === 0 ? this.hierarchyColumn.property : this.regularColumns[idx - 1].property;
+                const eventDetail = {};
+                eventDetail[paramProp] = {growFactor: 1};
+                this.fire("tg-tree-table-column-change", eventDetail);
             }
         }
     }
@@ -532,9 +519,9 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior], PolymerElement) {
             scrollableContainerWidth: this.$.scrollableContainer.clientWidth,
             otherColumnWidth: calculateColumnWidthExcept(isHierarchyColumn ? 0 : (this.hierarchyColumn ? 1 : 0) + e.model.index, columnElements, (this.hierarchyColumn ? 1 : 0) + this.regularColumns.length),
             widthCorrection: e.currentTarget.offsetWidth - e.currentTarget.firstElementChild.offsetWidth,
-            hasAnyFlex: (!isHierarchyColumn && this.hierarchyColumn.visible && this.hierarchyColumn.growFactor > 0) 
+            hasAnyFlex: (!isHierarchyColumn && this.hierarchyColumn.growFactor > 0) 
                 || this.regularColumns.some((column, index) => {
-                    return (!e.model || index !== e.model.index) && column.visible && column.growFactor !== 0
+                    return (!e.model || index !== e.model.index) && column.growFactor !== 0
                 })
         };
     }
@@ -604,14 +591,14 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior], PolymerElement) {
      * index + 1; 
      */
     _findLastVisibleColumnIndex () {
-        const idx = this.regularColumns.slice().reverse().findIndex(column => column.visible);
-        if (idx < 0) {
-            if (this.hierarchyColumn.visible) {
+        const idx = this.regularColumns && this.regularColumns.length;
+        if (idx === 0) {
+            if (this.hierarchyColumn) {
                 return 0;
             }
-            return idx;
+            return -1;
         }
-        return this.regularColumns.length - idx;
+        return idx;
         
     }
 

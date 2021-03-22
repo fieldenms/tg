@@ -36,7 +36,7 @@ class TgTreeTableContent extends mixinBehaviors([TgEgiDataRetrievalBehavior], Po
         if (!allDefined(arguments)) {
             this.innerHTML = "";
         } else if (entity.loaderIndicator) {
-            if (column.getAttribute("slot") === 'hierarchy-column') {
+            if (column.isHierarchyColumn) {
                 this.innerHTML = entity.entity.key;
             } else {
                 this.innerHTML = "";
