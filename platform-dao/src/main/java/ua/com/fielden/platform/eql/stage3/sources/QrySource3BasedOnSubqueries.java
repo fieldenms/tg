@@ -16,7 +16,7 @@ public class QrySource3BasedOnSubqueries implements IQrySource3 {
     private final List<SourceQuery3> models = new ArrayList<>();
     public final String contextId;
     public final int sqlId;
-    private final Map<String, String> columns = new HashMap<>();
+    private final Map<String, String> columns = new HashMap<>(); //keys can contain strings with dots
     
     public QrySource3BasedOnSubqueries(final List<SourceQuery3> models, final String contextId, final int sqlId) {
         this.models.addAll(models);

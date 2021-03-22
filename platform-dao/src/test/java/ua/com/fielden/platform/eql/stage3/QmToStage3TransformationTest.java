@@ -75,12 +75,12 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final QrySource3BasedOnTable veh1 = source(VEHICLE, orgUnit5, "maxVehPrice.amount_2");
         final IQrySources3 subQrySources1 = sources(veh1); 
         final Conditions3 subQryConditions1 = cond(eq(expr(entityProp("station", veh1, ORG5)), expr(idProp(ou5))));
-        final SubQuery3 expSubQry1 = subqry(subQrySources1, subQryConditions1, yields(new Yield3(new MaxOf3(expr(prop("price.amount", veh1, BigDecimal.class, H_BIG_DECIMAL))), "")), BigDecimal.class);
+        final SubQuery3 expSubQry1 = subqry(subQrySources1, subQryConditions1, yields(new Yield3(new MaxOf3(expr(prop("price.amount", veh1, BigDecimal.class, H_BIG_DECIMAL))), "", nextSqlId(), false, null, null)), BigDecimal.class);
 
         final QrySource3BasedOnTable veh2 = source(VEHICLE, orgUnit5, "maxVehPurchasePrice.amount_3");
         final IQrySources3 subQrySources2 = sources(veh2); 
         final Conditions3 subQryConditions2 = cond(eq(expr(entityProp("station", veh2, ORG5)), expr(idProp(ou5))));
-        final SubQuery3 expSubQry2 = subqry(subQrySources2, subQryConditions2, yields(new Yield3(new MaxOf3(expr(prop("purchasePrice.amount", veh2, BigDecimal.class, H_BIG_DECIMAL))), "")), BigDecimal.class);
+        final SubQuery3 expSubQry2 = subqry(subQrySources2, subQryConditions2, yields(new Yield3(new MaxOf3(expr(prop("purchasePrice.amount", veh2, BigDecimal.class, H_BIG_DECIMAL))), "", nextSqlId(), false, null, null)), BigDecimal.class);
 
         final IQrySources3 sources = sources(ou5);
         final Conditions3 conditions = or(and(or(isNotNull(expr(expSubQry1)), isNotNull(expr(expSubQry2)))));

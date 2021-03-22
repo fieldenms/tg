@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.eql.stage3.core;
 
-import java.util.Objects;
+import static org.apache.commons.lang.StringUtils.isEmpty;
 
-import org.apache.commons.lang.StringUtils;
+import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
@@ -18,14 +18,10 @@ public class Yield3 {
     public Yield3(final ISingleOperand3 operand, final String alias, final int columnId, final boolean isHeader, final Class<?> type, final Object hibType) {
         this.operand = operand;
         this.alias = alias;
-        this.column = StringUtils.isEmpty(alias) || isHeader ? null : "C_" + (columnId == 0 ? alias.replace(".", "_").toUpperCase() + "_" : columnId);
+        this.column = isEmpty(alias) || isHeader ? null : "C_" + columnId;
         this.isHeader = isHeader;
         this.hibType = hibType;
         this.type = type;
-    }
-
-    public Yield3(final ISingleOperand3 operand, final String alias) {
-        this(operand, alias, 0, false, null, null);
     }
 
     public String sql(final DbVersion dbVersion) {

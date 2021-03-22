@@ -11,7 +11,7 @@ import ua.com.fielden.platform.entity.query.model.ExpressionModel;
  *
  */
 public abstract class AbstractPropInfo<T> implements IResolvable<T> {
-    public final String name;
+    public final String name; //shouldn't contain dots
     public final ExpressionModel expression;
     public final Object hibType;
 

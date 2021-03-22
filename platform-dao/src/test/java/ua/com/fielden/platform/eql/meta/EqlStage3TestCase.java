@@ -57,6 +57,12 @@ import ua.com.fielden.platform.persistence.types.DateTimeType;
 
 public class EqlStage3TestCase extends EqlTestCase {
     public static Type dateTimeHibType = new DateTimeType();
+    public static int sqlId = 0;
+    
+    public static int nextSqlId() {
+        sqlId = sqlId + 1;
+        return sqlId;
+    }
 
     
     protected static <T extends AbstractEntity<?>> ResultQuery3 qryCountAll(final ICompoundCondition0<T> unfinishedQry) {
@@ -349,35 +355,35 @@ public class EqlStage3TestCase extends EqlTestCase {
     }
 
     protected static Yield3 yieldCountAll(final String alias) {
-        return new Yield3(new CountAll3(), alias);
+        return new Yield3(new CountAll3(), alias, nextSqlId(), false, null, null);
     }
     
     protected static Yield3 yieldExpr(final String propName, final IQrySource3 source, final String alias) {
-        return new Yield3(expr(prop(propName, source)), alias);
+        return new Yield3(expr(prop(propName, source)), alias, nextSqlId(), false, null, null);
     }
 
     protected static Yield3 yieldEntityExpr(final String propName, final IQrySource3 source, final String alias, final Class<? extends AbstractEntity<?>> propType) {
-        return new Yield3(expr(entityProp(propName, source, propType)), alias, 0, false, propType, H_LONG);
+        return new Yield3(expr(entityProp(propName, source, propType)), alias, nextSqlId(), false, propType, H_LONG);
     }
 
     protected static Yield3 yieldStringExpr(final String propName, final IQrySource3 source, final String alias) {
-        return new Yield3(expr(stringProp(propName, source)), alias, 0,false, String.class, H_STRING);
+        return new Yield3(expr(stringProp(propName, source)), alias, nextSqlId(), false, String.class, H_STRING);
     }
 
     protected static Yield3 yieldIdExpr(final IQrySource3 source, final String alias) {
-        return new Yield3(expr(idProp(source)), alias, 0, false, Long.class, H_LONG);
+        return new Yield3(expr(idProp(source)), alias, nextSqlId(), false, Long.class, H_LONG);
     }
     
     protected static Yield3 yieldPropExpr(final String propName, final IQrySource3 source, final String alias, final Class<?> type, final Type hibType) {
-        return new Yield3(expr(prop(propName, source, type, hibType)), alias, 0, false, type, hibType);
+        return new Yield3(expr(prop(propName, source, type, hibType)), alias, nextSqlId(), false, type, hibType);
     }
 
     protected static Yield3 yieldProp(final String propName, final IQrySource3 source, final String alias) {
-        return new Yield3(prop(propName, source), alias);
+        return new Yield3(prop(propName, source), alias, nextSqlId(), false, null, null);
     }
     
     protected static Yield3 yieldModel(final SubQuery3 model, final String alias) {
-        return new Yield3(model, alias);
+        return new Yield3(model, alias, nextSqlId(), false, null, null);
     }
 
     protected static Yield3 yieldSingleExpr(final String propName, final IQrySource3 source, final Class<? extends AbstractEntity<?>> propType) {
