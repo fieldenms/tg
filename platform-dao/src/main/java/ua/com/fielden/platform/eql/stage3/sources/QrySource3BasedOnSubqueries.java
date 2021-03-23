@@ -45,6 +45,11 @@ public class QrySource3BasedOnSubqueries implements IQrySource3 {
     }
 
     @Override
+    public String toString() {
+        return "QrySource3BasedOnSubqueries of type " + models.get(0).resultType;
+    }
+    
+    @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;

@@ -58,7 +58,7 @@ public class EqlStage2TestCase extends EqlTestCase {
     protected static final Conditions2 emptyConditions2 = new Conditions2(false, emptyList());
     protected static final GroupBys2 emptyGroupBys2 = new GroupBys2(emptyList());
     protected static final OrderBys2 emptyOrderBys2 = new OrderBys2(emptyList());
-    protected static final Yields2 emptyYields2 = new Yields2(emptyList());
+    protected static final Yields2 emptyYields2 = new Yields2(emptyList(), true);
 
     protected static AbstractPropInfo<?> pi(final Class<?> type, final String propName) {
         return DOMAIN_METADATA.lmd.getEntityInfo((Class<? extends AbstractEntity<?>>) type).getProps().get(propName);

@@ -4,9 +4,9 @@ import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.QUERY_BASED;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +28,7 @@ import ua.com.fielden.platform.eql.stage1.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage1.core.Yield1;
 import ua.com.fielden.platform.eql.stage1.operands.SourceQuery1;
 import ua.com.fielden.platform.eql.stage2.core.Yield2;
+import ua.com.fielden.platform.eql.stage2.core.Yields2;
 import ua.com.fielden.platform.eql.stage2.operands.EntProp2;
 import ua.com.fielden.platform.eql.stage2.operands.SourceQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.QrySource2BasedOnSubqueries;
@@ -138,15 +139,19 @@ public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2Ba
     }
     
     private static EntityInfo<?> produceEntityInfo(final EqlDomainMetadata domainInfo, final List<SourceQuery2> models, final Class<? extends AbstractEntity<?>> sourceType) {
-        final Collection<Yield2> yields = models.get(0).yields.getYields();
-        final Map<String, YieldInfoNode> yieldInfoNodes = YieldInfoNodesGenerator.generate(yields);
+        final Yields2 yields = models.get(0).yields;
         
         if (!EntityAggregates.class.equals(sourceType)) {
-            return produceEntityInfoForDefinedEntityType(domainInfo, yieldInfoNodes, sourceType);            
+            if (yields.allGenerated && !isSyntheticEntityType(sourceType)) {
+                return domainInfo.getEntityInfo(sourceType);    
+            } else {
+                final Map<String, YieldInfoNode> yieldInfoNodes = YieldInfoNodesGenerator.generate(yields.getYields());
+                return produceEntityInfoForDefinedEntityType(domainInfo, yieldInfoNodes, sourceType);
+            }
         } else {
             final EntityInfo<EntityAggregates> entityInfo = new EntityInfo<>(EntityAggregates.class, QUERY_BASED);
 
-            for (final Yield2 yield : yields) {
+            for (final Yield2 yield : yields.getYields()) {
 
                 if (yield.operand instanceof EntProp2 /*&& !((EntProp2) yield.operand).isCalculated()*/) {
                     if (!yield.alias.contains(".")) {

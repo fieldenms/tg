@@ -78,7 +78,7 @@ public abstract class AbstractQuery1 {
     }
     
     protected static Yields2 expand(final Yields2 original) {
-        return new Yields2(expand(original.getYields()));
+        return new Yields2(expand(original.getYields()), original.allGenerated);
     }
 
     private static List<Yield2> expand(final Collection<Yield2> original) {

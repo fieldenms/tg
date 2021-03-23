@@ -63,7 +63,7 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableToS2<S
                     enhancedYields.add(new Yield2(new EntProp2(mainSource, listOf(el.getValue())), el.getKey(), false));
                 }
             }
-            return new Yields2(enhancedYields);
+            return new Yields2(enhancedYields, yields.getYields().isEmpty());
         }
         
         final Yield2 firstYield = yields.getYields().iterator().next();

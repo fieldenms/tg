@@ -19,13 +19,19 @@ import ua.com.fielden.platform.eql.stage3.core.Yields3;
 
 public class Yields2 {
     private final SortedMap<String, Yield2> yieldsMap = new TreeMap<String, Yield2>();
+    public final boolean allGenerated;
 
-    public Yields2(final List<Yield2> yields) {
+    public Yields2(final List<Yield2> yields, final boolean allGenerated) {
+        this.allGenerated = allGenerated;
         for (final Yield2 yield : yields) {
             yieldsMap.put(yield.alias, yield);
         }
     }
-    
+
+    public Yields2(final List<Yield2> yields) {
+        this(yields, false);
+    }
+
     public Collection<Yield2> getYields() {
         return unmodifiableCollection(yieldsMap.values());
     }
@@ -58,6 +64,7 @@ public class Yields2 {
         final int prime = 31;
         int result = 1;
         result = prime * result + yieldsMap.hashCode();
+        result = prime * result + (allGenerated ? 1231 : 1237);
         return result;
     }
 
@@ -73,6 +80,6 @@ public class Yields2 {
         
         final Yields2 other = (Yields2) obj;
 
-        return yieldsMap.equals(other.yieldsMap);
+        return yieldsMap.equals(other.yieldsMap) && (allGenerated == other.allGenerated);
     }
 }
