@@ -232,7 +232,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
         }
         
         final EntityRetrievalModel<?> existingFetch = getRetrievalModels().get(propName);
-        final fetch<?> finalFetch = existingFetch != null ? existingFetch.originalFetch.unionWith(fetchModel) : fetchModel;
+        fetch<?> finalFetch = existingFetch != null ? existingFetch.originalFetch.unionWith(fetchModel) : fetchModel;
         addEntityPropFetchModel(propName, new EntityRetrievalModel<>(finalFetch, getDomainMetadataAnalyser()));
     }
     

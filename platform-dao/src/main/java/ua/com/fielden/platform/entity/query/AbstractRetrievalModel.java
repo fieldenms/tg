@@ -22,11 +22,11 @@ import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
 public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> implements IRetrievalModel<T> {
 
     protected final fetch<T> originalFetch;
-    private final DomainMetadataAnalyser domainMetadataAnalyser;
+    private DomainMetadataAnalyser domainMetadataAnalyser;
 
     private final Map<String, EntityRetrievalModel<? extends AbstractEntity<?>>> entityProps = new HashMap<>();
-    private final Set<String> primProps = new HashSet<>();
-    private final Set<String> proxiedProps = new HashSet<>();
+    private final Set<String> primProps = new HashSet<String>();
+    private final Set<String> proxiedProps = new HashSet<String>();
 
     public AbstractRetrievalModel(final fetch<T> originalFetch, final DomainMetadataAnalyser domainMetadataAnalyser) {
         this.originalFetch = originalFetch;
