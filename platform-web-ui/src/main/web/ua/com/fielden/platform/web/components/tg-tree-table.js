@@ -10,6 +10,7 @@ import { html, PolymerElement } from '/resources/polymer/@polymer/polymer/polyme
 import { flush } from "/resources/polymer/@polymer/polymer/lib/utils/flush.js";
 
 import { TgTreeListBehavior } from '/resources/components/tg-tree-list-behavior.js';
+import { TgEgiDataRetrievalBehavior } from '/resources/egi/tg-egi-data-retrieval-behavior.js';
 import { tearDownEvent, getRelativePos } from '/resources/reflection/tg-polymer-utils.js';
 
 
@@ -283,7 +284,7 @@ function calculateColumnWidthExcept (columnIndex, columnElements, columnLength) 
     return columnWidth;
 };
 
-class TgTreeTable extends mixinBehaviors([TgTreeListBehavior], PolymerElement) {
+class TgTreeTable extends mixinBehaviors([TgTreeListBehavior, TgEgiDataRetrievalBehavior], PolymerElement) {
 
     static get template() { 
         return template;
