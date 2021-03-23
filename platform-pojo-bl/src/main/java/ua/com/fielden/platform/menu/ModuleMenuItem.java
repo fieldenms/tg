@@ -25,7 +25,6 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @CompanionObject(IModuleMenuItem.class)
 @DescTitle(value = "Description", desc = "Menu item description")
 public class ModuleMenuItem extends AbstractEntity<String> implements IMenuManager {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty(ModuleMenuItem.class)
     @Title("Submenu")

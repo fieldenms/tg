@@ -22,6 +22,9 @@ import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.PROPERTY_SPLITTER;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+import static ua.com.fielden.platform.utils.EntityUtils.isIntrospectionDenied;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
 import static ua.com.fielden.platform.utils.StreamUtils.takeWhile;
 
 import java.io.Serializable;
@@ -47,6 +50,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -58,6 +62,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
 import ua.com.fielden.platform.companion.IEntityReader;
+import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
@@ -683,8 +688,8 @@ public class EntityUtils {
      * @param type
      * @return
      */
-    public static boolean isSyntheticEntityType(final Class<? extends AbstractEntity<?>> type) {
-        if (type == null) {
+    public static boolean isSyntheticEntityType(final Class<?> type) {
+        if (!isEntityType(type)) {
             return false;
         } else {
             try {
@@ -748,7 +753,18 @@ public class EntityUtils {
      * @return
      */
     public static boolean isIntrospectionDenied(final Class<? extends AbstractEntity<?>> type) {
-        return AnnotationReflector.isAnnotationPresent(type, DenyIntrospection.class);
+        return isAnnotationPresent(type, DenyIntrospection.class);
+    }
+
+    /**
+     * A predicate that expresses the most essential rules for checking if an entity type should permit introspection.
+     * For example, GraphQL and Domain Explorer functionality rely on this predicate to filter out entities that should not be supported for querying and review.
+     *
+     * @param type
+     * @return
+     */
+    public static boolean isIntrospectionAllowed(final Class<? extends AbstractEntity<?>> type) {
+        return !isIntrospectionDenied(type) && (isSyntheticEntityType(type) || isPersistedEntityType(type));
     }
 
     /**

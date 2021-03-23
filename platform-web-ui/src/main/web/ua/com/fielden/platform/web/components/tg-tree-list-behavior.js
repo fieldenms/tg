@@ -321,10 +321,20 @@ export const TgTreeListBehavior = {
         }
     },
 
-    collapseSubTreeView: function(idx, parentItem) {
+    collapseAll: function () {
+        const entities = this._entities.slice().filter(entity => entity.parent === null);
+        entities.forEach(entity => {
+            this.collapseSubTree(entity);
+        });
+        this._entities = this._treeModel.slice();
+    },
+
+    collapseSubTreeView: function(parentItem) {
+        const idx = this._entities.indexOf(parentItem);
         if (parentItem.entity.hasChildren && parentItem.opened) {
             const numOfItemsToDelete = calculateNumberOfOpenedItems(parentItem);
-            parentItem.children.forEach(child => this.collapseSubTree(child));
+            this.collapseSubTree(parentItem);
+            this.notifyPath("_entities." + idx + ".opened", false);
             this.splice("_entities", idx + 1 + parentItem.additionalInfoNodes.length, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(parentItem, true, false));
             this.async(refreshTree.bind(this), 1);
         }

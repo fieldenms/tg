@@ -24,6 +24,7 @@ import ua.com.fielden.platform.sample.domain.TgAuthorship;
 import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgBogieClass;
+import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 import ua.com.fielden.platform.sample.domain.TgCategory;
 import ua.com.fielden.platform.sample.domain.TgCategoryAttachment;
 import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisation;
@@ -108,6 +109,7 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(TgAuthorRoyalty.class);
         add(TgEntityWithLoopedCalcProps.class);
         add(TgBogie.class);
+        add(TgBogieLocation.class);
         add(TgBogieClass.class);
         add(TgWagon.class);
         add(TgWagonSlot.class);

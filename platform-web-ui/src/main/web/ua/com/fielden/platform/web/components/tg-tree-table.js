@@ -93,7 +93,7 @@ const template = html`
             @apply --layout-self-stretch;
         }
         .table-data-row {
-            font-size: 1rem;
+            font-size: var(--data-font-size, 1rem);
             font-weight: 400;
             color: #212121;
             height: 1.5rem;
@@ -492,6 +492,7 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior], PolymerElement) {
 
     _changeColumnSize (e) {
         tearDownEvent(e);
+        this._cleanUnboundTreeListItems();
         switch (e.detail.state) {
         case 'start':
             this._startColumnResize(e);
@@ -503,6 +504,12 @@ class TgTreeTable extends mixinBehaviors([TgTreeListBehavior], PolymerElement) {
             this._endColumnResizing(e);
             break;
         }
+    }
+
+    _cleanUnboundTreeListItems () {
+        [...this.$.treeList.querySelectorAll('.table-data-row[style="transform: translate3d(0px, -10000px, 0px);"]')]
+                .filter(node => this.$.treeList._offscreenFocusedItem !== node && this._focusBackfillItem !== node)
+                .forEach( node => this.$.treeList.removeChild(node));
     }
 
     _startColumnResize (e) {
