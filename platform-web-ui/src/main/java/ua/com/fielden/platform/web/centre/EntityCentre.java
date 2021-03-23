@@ -259,8 +259,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         eccCompanion = companionFinder.find(ua.com.fielden.platform.ui.config.EntityCentreConfig.class);
         mmiCompanion = companionFinder.find(MainMenuItem.class);
         userCompanion = companionFinder.find(User.class);
-        // this is to trigger caching of DomainTreeEnhancers to avoid heavy computations later
-        createDefaultCentre();
     }
 
     /**
