@@ -36,7 +36,7 @@ public class QrySource3BasedOnSubqueries implements IQrySource3 {
 
     @Override
     public String sqlAlias() {
-        return "Q_" + (sqlId == 0 ? contextId : sqlId);
+        return "Q_" + sqlId;
     }
 
     @Override

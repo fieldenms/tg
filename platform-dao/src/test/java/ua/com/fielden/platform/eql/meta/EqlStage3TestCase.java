@@ -97,19 +97,19 @@ public class EqlStage3TestCase extends EqlTestCase {
     }
 
     protected static QrySource3BasedOnTable source(final Class<? extends AbstractEntity<?>> sourceType, final String sourceForContextId) {
-        return new QrySource3BasedOnTable(tables.get(sourceType.getName()), sourceForContextId, 0);
+        return new QrySource3BasedOnTable(tables.get(sourceType.getName()), sourceForContextId, nextSqlId());
     }
 
     protected static QrySource3BasedOnSubqueries source(final String sourceForContextId, final SourceQuery3 ... sourceQueries) {
-        return new QrySource3BasedOnSubqueries(Arrays.asList(sourceQueries), sourceForContextId, 0);
+        return new QrySource3BasedOnSubqueries(Arrays.asList(sourceQueries), sourceForContextId, nextSqlId());
     }
     
     protected static QrySource3BasedOnTable source(final Class<? extends AbstractEntity<?>> sourceType, final String sourceForContextId, final String subcontextId) {
-        return new QrySource3BasedOnTable(tables.get(sourceType.getName()), sourceForContextId + "_" + subcontextId, 0);
+        return new QrySource3BasedOnTable(tables.get(sourceType.getName()), sourceForContextId + "_" + subcontextId, nextSqlId());
     }
 
     protected static QrySource3BasedOnTable source(final Class<? extends AbstractEntity<?>> sourceType, final QrySource3BasedOnTable sourceForContextId, final String subcontextId) {
-        return new QrySource3BasedOnTable(tables.get(sourceType.getName()), sourceForContextId.contextId + "_" + subcontextId, 0);
+        return new QrySource3BasedOnTable(tables.get(sourceType.getName()), sourceForContextId.contextId + "_" + subcontextId, nextSqlId());
     }
     
     protected static Expression3 expr(final ISingleOperand3 op1) {

@@ -23,7 +23,7 @@ public class QrySource3BasedOnTable implements IQrySource3 {
 
     @Override
     public String sqlAlias() {
-        return "T_" + (sqlId == 0 ? contextId : sqlId);
+        return "T_" + sqlId;
     }
 
     @Override
