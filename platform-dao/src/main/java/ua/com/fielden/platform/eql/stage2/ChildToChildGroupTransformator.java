@@ -51,9 +51,9 @@ public class ChildToChildGroupTransformator {
                 dataMap.put(added.mainName, added);
                 existing = added;
             }
-            
+
             if (child.source != null && existing.source == null) {
-                existing.source = child.source;
+                existing.source = child.source; // source from the first child with source is taken as a source for childGroup -- all other children with source should have identical source
             }
             
             if (child.fullPath != null) {

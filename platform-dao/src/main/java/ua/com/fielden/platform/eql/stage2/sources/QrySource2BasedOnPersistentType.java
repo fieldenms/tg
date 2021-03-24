@@ -29,7 +29,7 @@ public class QrySource2BasedOnPersistentType extends AbstractQrySource2 implemen
     public TransformationResult<QrySource3BasedOnTable> transform(final TransformationContext context) {
         final TransformationContext newContext = context.cloneWithNextSqlId();
         final QrySource3BasedOnTable transformedSource = new QrySource3BasedOnTable(newContext.getTable(sourceType().getName()), contextId, newContext.sqlId);
-        return new TransformationResult<QrySource3BasedOnTable>(transformedSource, newContext/*.cloneWithAdded(transformedSource, this)*/);
+        return new TransformationResult<QrySource3BasedOnTable>(transformedSource, newContext);
     }
 
     @Override

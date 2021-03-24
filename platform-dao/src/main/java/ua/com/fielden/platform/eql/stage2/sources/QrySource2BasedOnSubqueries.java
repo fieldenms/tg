@@ -7,7 +7,6 @@ import java.util.Objects;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.EntityInfo;
 import ua.com.fielden.platform.eql.stage2.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.TransformationResult;
@@ -64,12 +63,12 @@ public class QrySource2BasedOnSubqueries extends AbstractQrySource2 implements I
         final int sqlId = currentResolutionContext.sqlId;
         
         for (final SourceQuery2 model : models) {
-            final TransformationResult<SourceQuery3> modelTr = model.transform(currentResolutionContext/*.produceNewOne() // as already invoked as part of EntQuery1.transform(..)*/);
+            final TransformationResult<SourceQuery3> modelTr = model.transform(currentResolutionContext);
             transformedQueries.add(modelTr.item);
             currentResolutionContext = modelTr.updatedContext; // TODO should be just resolutionContext with propsResolutions added from this model transformation   
         }
            
-        final QrySource3BasedOnSubqueries transformedSource = new QrySource3BasedOnSubqueries(transformedQueries, contextId, sqlId);//resolutionContext.getDomainInfo());
+        final QrySource3BasedOnSubqueries transformedSource = new QrySource3BasedOnSubqueries(transformedQueries, contextId, sqlId);
         return new TransformationResult<QrySource3BasedOnSubqueries>(transformedSource, currentResolutionContext);
     }
 
