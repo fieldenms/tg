@@ -21,6 +21,7 @@ import {IronFitBehavior} from '/resources/polymer/@polymer/iron-fit-behavior/iro
 
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
+import { dom } from "/resources/polymer/@polymer/polymer/lib/legacy/polymer.dom.js";
 
 import { TgReflector } from '/app/tg-reflector.js';
 import {TgFocusRestorationBehavior} from '/resources/actions/tg-focus-restoration-behavior.js'
@@ -411,6 +412,11 @@ Polymer({
             type: Array
         },
 
+        /**Other overlays which are descendants of the current dialog, they also should be brought to the front with this dialog*/
+        _childOverlays: {
+            type: Array
+        },
+
         /**
          * Needed to prevent user from dragging dialog out of the window rectangle. Caches window width and height.
          */
@@ -497,6 +503,7 @@ Polymer({
 
         this._parentDialog = null;
         this._childDialogs = [];
+        this._childOverlays = [];
         
         //Set the blocking pane counter equal to 0 so taht no one can't block it twice or event more time
         this._blockingPaneCounter = 0;
@@ -610,6 +617,17 @@ Polymer({
     },
 
     _onCaptureClick: function(event) {
+
+        const path = dom(event).path;
+        const overlayOnPath = this._manager._overlayInPath(path);
+        if (overlayOnPath === this) {
+            this._childOverlays.slice().forEach(childOverlay => {
+                if (overlayOnPath !== childOverlay && !childOverlay.noCancelOnOutsideClick) {
+                    childOverlay.close();
+                }
+            });
+        }
+   
         if (this._manager.currentOverlay() !== this) {
             this._bringToFront();
         }
@@ -637,6 +655,9 @@ Polymer({
 
     _bringToFront: function() {
         this._manager.addOverlay(this);
+        this._childOverlays.forEach(childOverlay => {
+            this._manager.addOverlay(childOverlay);
+        });
         this._childDialogs.forEach(function(childDialog) {
             childDialog._bringToFront();
         });
@@ -1421,12 +1442,18 @@ Polymer({
                 this.refit();
             }.bind(this), 100);
             this._setIsRunning(false);
+        } else { 
+            //Some child overlay was opened and should be added to the list of child overlays in order to be brought to the front when this dialog
+            //will be brought to the front.
+            this._childOverlays.push(e.composedPath()[0]);
         }
     },
 
     _dialogClosed: function(e) {
         var target = e.composedPath()[0];
         if (target === this) {
+            //Clear child overlays as they will be closed with this dialog
+            this._childOverlays = [];
             // if there are current subscriptions they need to be unsubscribed
             // due to dialog being closed
             for (var index = 0; index < this._subscriptions.length; index++) {
@@ -1448,6 +1475,11 @@ Polymer({
 
             if (this._lastAction) {
                 this._lastAction.restoreActionState();
+            }
+        } else {
+            const idx = this._childOverlays.indexOf(target);
+            if (idx >= 0) {
+                this._childOverlays.splice(idx, 1);
             }
         }
     },

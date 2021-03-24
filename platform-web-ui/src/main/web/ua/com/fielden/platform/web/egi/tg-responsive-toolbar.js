@@ -66,7 +66,7 @@ const template = html`
             <paper-icon-button id="expandToolbarButton" tooltip-text="Show other actions." icon="more-vert" on-tap="_showMoreActions" class="invisible"></paper-icon-button>
         </div>
     </div>
-    <iron-dropdown id="dropdown" horizontal-align="right" vertical-offset="8">
+    <iron-dropdown id="dropdown" horizontal-align="right" vertical-offset="8" always-on-top>
         <div id="hiddenToolbar" class="dropdown-content" slot="dropdown-content">
             <div id="specificActionContainer"></div>
             <div id="standartActionContainer"></div>
