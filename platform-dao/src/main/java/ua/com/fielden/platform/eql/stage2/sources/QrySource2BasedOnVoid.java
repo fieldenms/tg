@@ -40,7 +40,7 @@ public class QrySource2BasedOnVoid implements IQrySource2<QrySource3BasedOnVoid>
     }
 
     @Override
-    public String contextId() {
+    public String id() {
         return "";
     }
     

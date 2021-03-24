@@ -109,7 +109,7 @@ public class EqlStage3TestCase extends EqlTestCase {
     }
 
     protected static QrySource3BasedOnTable source(final Class<? extends AbstractEntity<?>> sourceType, final QrySource3BasedOnTable sourceForContextId, final String subcontextId) {
-        return new QrySource3BasedOnTable(tables.get(sourceType.getName()), sourceForContextId.contextId + "_" + subcontextId, nextSqlId());
+        return new QrySource3BasedOnTable(tables.get(sourceType.getName()), sourceForContextId.id + "_" + subcontextId, nextSqlId());
     }
     
     protected static Expression3 expr(final ISingleOperand3 op1) {

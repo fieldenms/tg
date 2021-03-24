@@ -260,16 +260,16 @@ public class EqlStage2TestCase extends EqlTestCase {
         return new EntProp1(name, false);
     }
 
-    protected static QrySource2BasedOnPersistentType source(final String contextId, final Class<? extends AbstractEntity<?>> sourceType, final String alias) {
-        return new QrySource2BasedOnPersistentType(sourceType, DOMAIN_METADATA.lmd.getEntityInfo(sourceType), alias, contextId);
+    protected static QrySource2BasedOnPersistentType source(final String id, final Class<? extends AbstractEntity<?>> sourceType, final String alias) {
+        return new QrySource2BasedOnPersistentType(sourceType, DOMAIN_METADATA.lmd.getEntityInfo(sourceType), alias, id);
     }
 
-    protected static QrySource2BasedOnPersistentType source(final String contextId, final Class<? extends AbstractEntity<?>> sourceType) {
-        return new QrySource2BasedOnPersistentType(sourceType, DOMAIN_METADATA.lmd.getEntityInfo(sourceType), contextId);
+    protected static QrySource2BasedOnPersistentType source(final String id, final Class<? extends AbstractEntity<?>> sourceType) {
+        return new QrySource2BasedOnPersistentType(sourceType, DOMAIN_METADATA.lmd.getEntityInfo(sourceType), id);
     }
     
-    protected static QrySource2BasedOnSubqueries source(final EntityInfo<?> entityInfo, final String contextId, final SourceQuery2 ... queries) {
-        return new QrySource2BasedOnSubqueries(Arrays.asList(queries), null, contextId, entityInfo);
+    protected static QrySource2BasedOnSubqueries source(final EntityInfo<?> entityInfo, final String id, final SourceQuery2 ... queries) {
+        return new QrySource2BasedOnSubqueries(Arrays.asList(queries), null, id, entityInfo);
     }
 
     protected static ResultQuery2 qryCountAll(final QrySources2 sources, final Conditions2 conditions) {

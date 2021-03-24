@@ -49,7 +49,7 @@ public class ChildGroup {
             }
         }
         if (!items.isEmpty()) {
-            sb.append("\n" + currentOffset + "-----------source + items : [" + source.contextId + "]");
+            sb.append("\n" + currentOffset + "-----------source + items : [" + source.id + "]");
             for (final ChildGroup childGroup : items) {
                 sb.append("\n");
                 sb.append(childGroup.toString(currentOffset + offset));

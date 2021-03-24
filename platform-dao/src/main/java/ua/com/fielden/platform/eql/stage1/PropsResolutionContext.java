@@ -14,12 +14,12 @@ import ua.com.fielden.platform.eql.stage3.sources.IQrySource3;
 public class PropsResolutionContext {
     private final List<List<IQrySource2<? extends IQrySource3>>> sources;
     private final EqlDomainMetadata domainInfo;
-    public final String sourceId;
+    public final String sourceIdPrefix; //used for ensuring query sources ids uniqueness within calc-prop expression queries
 
-    public PropsResolutionContext(final EqlDomainMetadata domainInfo, final List<List<IQrySource2<? extends IQrySource3>>> sources, final String sourceId) {
+    public PropsResolutionContext(final EqlDomainMetadata domainInfo, final List<List<IQrySource2<? extends IQrySource3>>> sources, final String sourceIdPrefix) {
         this.domainInfo = domainInfo;
         this.sources = sources;
-        this.sourceId = sourceId;
+        this.sourceIdPrefix = sourceIdPrefix;
     }
 
     public PropsResolutionContext(final EqlDomainMetadata domainInfo) {
@@ -34,21 +34,21 @@ public class PropsResolutionContext {
     }
 
     public PropsResolutionContext produceForCorrelatedSubquery() {
-        return new PropsResolutionContext(domainInfo, buildSourcesStackForNewQuery(sources), sourceId);
+        return new PropsResolutionContext(domainInfo, buildSourcesStackForNewQuery(sources), sourceIdPrefix);
     }
 
     public PropsResolutionContext produceForCorrelatedSourceQuery() {
-        return new PropsResolutionContext(domainInfo, buildSourcesStackForNewQuery(sources.subList(1, sources.size())), sourceId);
+        return new PropsResolutionContext(domainInfo, buildSourcesStackForNewQuery(sources.subList(1, sources.size())), sourceIdPrefix);
     }
     
     public PropsResolutionContext produceForUncorrelatedSourceQuery() {
-        return new PropsResolutionContext(domainInfo, buildSourcesStackForNewQuery(emptyList()), sourceId);
+        return new PropsResolutionContext(domainInfo, buildSourcesStackForNewQuery(emptyList()), sourceIdPrefix);
     }
     
     public PropsResolutionContext cloneWithAdded(final IQrySource2<? extends IQrySource3> transformedSource) {
         final List<List<IQrySource2<? extends IQrySource3>>> newSources = sources.stream().map(el -> new ArrayList<>(el)).collect(toList()); // making deep copy of old list of sources
         newSources.get(0).add(transformedSource); // adding source to current query list of sources
-        return new PropsResolutionContext(domainInfo, newSources, sourceId);
+        return new PropsResolutionContext(domainInfo, newSources, sourceIdPrefix);
     }
 
     public List<List<IQrySource2<? extends IQrySource3>>> getSources() {

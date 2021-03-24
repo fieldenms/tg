@@ -48,7 +48,7 @@ public class TransformationContext {
     }
 
     public List<ChildGroup> getSourceChildren(final IQrySource2<?> source) {
-        final List<ChildGroup> result = tablesAndSourceChildren.getSourceChildren().get(source.contextId());
+        final List<ChildGroup> result = tablesAndSourceChildren.getSourceChildren().get(source.id());
         return result != null ? result : emptyList();
     }
 
@@ -79,7 +79,7 @@ public class TransformationContext {
     
     public T2<IQrySource3, Object> resolve(final IQrySource2<?> source, final String path) {
         
-        final Map<String, T2<IQrySource3, Object>> sourceMap = resolutions.get(source.contextId());
+        final Map<String, T2<IQrySource3, Object>> sourceMap = resolutions.get(source.id());
         if (sourceMap == null) {
             System.out.println(format("CAN'T FIND sourceMap for path [%s] in source [%s].", path, source));
         }
@@ -97,7 +97,7 @@ public class TransformationContext {
     public String toString() {
         final StringBuffer sb = new StringBuffer();
         for (final Entry<String, Map<String, T2<IQrySource3, Object>>> el1 : resolutions.entrySet()) {
-            sb.append(" - Source with contextId [" + el1.getKey() + "]: \n");
+            sb.append(" - Source with id [" + el1.getKey() + "]: \n");
             for (final Entry<String, T2<IQrySource3, Object>> el2 : el1.getValue().entrySet()) {
                 sb.append("\n               [" + el2.getKey() + "] ==> (" + el2.getValue()._1 + " : " + el2.getValue()._2 + ")");
             }

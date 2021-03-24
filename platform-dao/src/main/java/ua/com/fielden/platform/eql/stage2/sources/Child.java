@@ -66,7 +66,7 @@ public class Child {
             sb.append("\n" + currentOffset + "---expr.dependencies : " + dependencies);
         }
         if (!items.isEmpty()) {
-            sb.append("\n" + currentOffset + "------source + items : [" + source.contextId + "]");
+            sb.append("\n" + currentOffset + "------source + items : [" + source.id + "]");
             for (final Child child : items) {
                 sb.append("\n");
                 sb.append(child.toString(currentOffset + offset));

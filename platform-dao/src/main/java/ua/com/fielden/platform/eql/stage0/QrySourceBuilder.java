@@ -73,7 +73,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
     private Pair<TokenCategory, Object> buildResultForQrySourceBasedOnEntityType() {
         final Class<AbstractEntity<?>> resultType = (Class<AbstractEntity<?>>) firstValue();
         if (isPersistedEntityType(resultType)) {
-            return pair(QRY_SOURCE, new QrySource1BasedOnPersistentType(resultType, (String) secondValue(), getQueryBuilder().nextCondtextId()));    
+            return pair(QRY_SOURCE, new QrySource1BasedOnPersistentType(resultType, (String) secondValue(), getQueryBuilder().nextSourceId()));    
         } else if (isSyntheticEntityType(resultType) || isSyntheticBasedOnPersistentEntityType(resultType) || isUnionEntityType(resultType)) {
             return pair(QRY_SOURCE, buildQrySourceBasedOnSyntheticEntityType(resultType, (String) secondValue()));
         } else {
@@ -91,7 +91,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
             queries.add(getQueryBuilder().generateEntQueryAsSyntheticEntityQuery(qryModel, resultType));
         }
 
-        return new QrySource1BasedOnSubqueries(alias, queries, getQueryBuilder().nextCondtextId());
+        return new QrySource1BasedOnSubqueries(alias, queries, getQueryBuilder().nextSourceId());
     }
     
     private Pair<TokenCategory, Object> buildResultForQrySourceBasedOnSubqueries() {
@@ -102,7 +102,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
             queries.add(getQueryBuilder().generateEntQueryAsSourceQuery(qryModel));
         }
 
-        return pair(QRY_SOURCE, new QrySource1BasedOnSubqueries(alias, queries, getQueryBuilder().nextCondtextId()));
+        return pair(QRY_SOURCE, new QrySource1BasedOnSubqueries(alias, queries, getQueryBuilder().nextSourceId()));
     }
 
     @Override

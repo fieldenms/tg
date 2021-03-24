@@ -35,15 +35,15 @@ import ua.com.fielden.platform.eql.stage2.sources.IQrySource2;
 
 public class EqlStage1TestCase extends EqlTestCase {
 
-    static int contextId = 0;
+    static int sourceId = 0;
     
-    protected static int nextId() {
-        contextId = contextId + 1;
-        return contextId;
+    protected static int nextSourceId() {
+        sourceId = sourceId + 1;
+        return sourceId;
     }
 
     protected static void resetId() {
-        contextId = 0;
+        sourceId = 0;
     }
     
     protected static <T extends AbstractEntity<?>> ResultQuery1 resultQry(final EntityResultQueryModel<T> qry) {
@@ -135,11 +135,11 @@ public class EqlStage1TestCase extends EqlTestCase {
     }
 
     protected static QrySource1BasedOnPersistentType source(final Class<? extends AbstractEntity<?>> sourceType, final String alias) {
-        return new QrySource1BasedOnPersistentType(sourceType, alias, nextId());
+        return new QrySource1BasedOnPersistentType(sourceType, alias, nextSourceId());
     }
 
     protected static QrySource1BasedOnPersistentType source(final Class<? extends AbstractEntity<?>> sourceType) {
-        return new QrySource1BasedOnPersistentType(sourceType, null, nextId());
+        return new QrySource1BasedOnPersistentType(sourceType, null, nextSourceId());
     }
 
     protected static QrySources1 sources(final Class<? extends AbstractEntity<?>> sourceType, final String alias) {

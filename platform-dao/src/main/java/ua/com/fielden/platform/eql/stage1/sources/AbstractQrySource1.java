@@ -11,10 +11,10 @@ public abstract class AbstractQrySource1<S2 extends IQrySource2<?>> implements I
      * Business name for query source. Can be also dot.notated, but should stick to property alias naming rules (e.g. no dots in beginning/end).
      */
     protected final String alias;
-    public final int contextId;
+    public final int id;
     
-    public AbstractQrySource1(final String alias, final int contextId) {
-        this.contextId = contextId; // contextId is not taken into consideration in hashCode() and equals(..) methods on purpose -- Stage1 elements have no need to reference uniquely one another.
+    public AbstractQrySource1(final String alias, final int id) {
+        this.id = id; // id is not taken into consideration in hashCode() and equals(..) methods on purpose -- Stage1 elements have no need to reference uniquely one another.
         this.alias = alias;
     }
 
@@ -23,8 +23,8 @@ public abstract class AbstractQrySource1<S2 extends IQrySource2<?>> implements I
         return alias;
     }
     
-    public String getTransformedContextId(final PropsResolutionContext context) {
-        return context.sourceId == null ? Integer.toString(contextId) : context.sourceId + "_" + Integer.toString(contextId);
+    public String transformId(final PropsResolutionContext context) {
+        return context.sourceIdPrefix == null ? Integer.toString(id) : context.sourceIdPrefix + "_" + Integer.toString(id);
     }
 
     @Override

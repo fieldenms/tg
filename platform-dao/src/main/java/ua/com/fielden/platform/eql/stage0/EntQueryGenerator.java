@@ -46,7 +46,6 @@ public class EntQueryGenerator {
     public final String username;
     private final Map<String, Object> paramValues = new HashMap<>();
     public final EqlDomainMetadata domainMetadata;
-    private final int increment = 1;
     
     public EntQueryGenerator(final DbVersion dbVersion, final IFilter filter, final String username, final IDates dates, final Map<String, Object> paramValues, final EqlDomainMetadata domainMetadata) {
         this.dbVersion = dbVersion;
@@ -63,11 +62,11 @@ public class EntQueryGenerator {
         }
     }
     
-    private int contextId = 0;
+    private int sourceId = 0;
     
-    public int nextCondtextId() {
-        contextId = contextId + increment;
-        return contextId;
+    public int nextSourceId() {
+        sourceId = sourceId + 1;
+        return sourceId;
     }
     
     public <T extends AbstractEntity<?>, Q extends QueryModel<T>> ResultQuery1 generateEntQueryAsResultQuery(final QueryModel<T> qm, final OrderingModel orderModel, final IRetrievalModel<T> fetchModel) {

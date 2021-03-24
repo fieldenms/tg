@@ -16,19 +16,19 @@ import ua.com.fielden.platform.eql.stage3.sources.QrySource3BasedOnTable;
 public class QrySource2BasedOnPersistentType extends AbstractQrySource2 implements IQrySource2<QrySource3BasedOnTable> {
     private final Class<? extends AbstractEntity<?>> sourceType;
 
-    public QrySource2BasedOnPersistentType(final Class<? extends AbstractEntity<?>> sourceType, final EntityInfo<?> entityInfo, final String alias, final String contextId) {
-        super(contextId, alias, entityInfo);
+    public QrySource2BasedOnPersistentType(final Class<? extends AbstractEntity<?>> sourceType, final EntityInfo<?> entityInfo, final String alias, final String id) {
+        super(id, alias, entityInfo);
         this.sourceType = sourceType;
     }
 
-    public QrySource2BasedOnPersistentType(final Class<? extends AbstractEntity<?>> sourceType, final EntityInfo<?> entityInfo, final String contextId) {
-        this(sourceType, entityInfo, null, contextId);               
+    public QrySource2BasedOnPersistentType(final Class<? extends AbstractEntity<?>> sourceType, final EntityInfo<?> entityInfo, final String id) {
+        this(sourceType, entityInfo, null, id);               
     }
 
     @Override
     public TransformationResult<QrySource3BasedOnTable> transform(final TransformationContext context) {
         final TransformationContext newContext = context.cloneWithNextSqlId();
-        final QrySource3BasedOnTable transformedSource = new QrySource3BasedOnTable(newContext.getTable(sourceType().getName()), contextId, newContext.sqlId);
+        final QrySource3BasedOnTable transformedSource = new QrySource3BasedOnTable(newContext.getTable(sourceType().getName()), id, newContext.sqlId);
         return new TransformationResult<QrySource3BasedOnTable>(transformedSource, newContext);
     }
 
@@ -44,7 +44,7 @@ public class QrySource2BasedOnPersistentType extends AbstractQrySource2 implemen
 
     @Override
     public String toString() {
-        return format("type = [%s], ID = [%s], alias = [%s]", sourceType.getSimpleName(), contextId, (alias != null ? alias : ""));
+        return format("type = [%s], ID = [%s], alias = [%s]", sourceType.getSimpleName(), id, (alias != null ? alias : ""));
     }
 
     @Override

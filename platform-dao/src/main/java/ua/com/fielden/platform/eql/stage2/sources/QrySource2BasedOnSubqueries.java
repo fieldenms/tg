@@ -18,8 +18,8 @@ import ua.com.fielden.platform.eql.stage3.sources.QrySource3BasedOnSubqueries;
 public class QrySource2BasedOnSubqueries extends AbstractQrySource2 implements IQrySource2<QrySource3BasedOnSubqueries> {
     private final List<SourceQuery2> models = new ArrayList<>();
 
-    public QrySource2BasedOnSubqueries(final List<SourceQuery2> models, final String alias, final String contextId, final EntityInfo<?> entityInfo) {
-        super(contextId, alias, entityInfo);
+    public QrySource2BasedOnSubqueries(final List<SourceQuery2> models, final String alias, final String id, final EntityInfo<?> entityInfo) {
+        super(id, alias, entityInfo);
         this.models.addAll(models);
     }
 
@@ -68,7 +68,7 @@ public class QrySource2BasedOnSubqueries extends AbstractQrySource2 implements I
             currentResolutionContext = modelTr.updatedContext; // TODO should be just resolutionContext with propsResolutions added from this model transformation   
         }
            
-        final QrySource3BasedOnSubqueries transformedSource = new QrySource3BasedOnSubqueries(transformedQueries, contextId, sqlId);
+        final QrySource3BasedOnSubqueries transformedSource = new QrySource3BasedOnSubqueries(transformedQueries, id, sqlId);
         return new TransformationResult<QrySource3BasedOnSubqueries>(transformedSource, currentResolutionContext);
     }
 

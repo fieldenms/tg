@@ -36,8 +36,8 @@ import ua.com.fielden.platform.eql.stage2.sources.QrySource2BasedOnSubqueries;
 public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2BasedOnSubqueries> {
     private final List<SourceQuery1> models = new ArrayList<>();
 
-    public QrySource1BasedOnSubqueries(final String alias, final List<SourceQuery1> models, final int contextId) {
-        super(alias, contextId);
+    public QrySource1BasedOnSubqueries(final String alias, final List<SourceQuery1> models, final int id) {
+        super(alias, id);
         if (models.isEmpty()) {
             throw new IllegalArgumentException("Couldn't produce instance of QueryBasedSource due to zero models passed to constructor!");
         }
@@ -74,7 +74,7 @@ public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2Ba
     @Override
     public QrySource2BasedOnSubqueries transform(final PropsResolutionContext context) {
         final List<SourceQuery2> transformedQueries = models.stream().map(m -> m.transform(context)).collect(toList());
-        return new QrySource2BasedOnSubqueries(transformedQueries, alias, getTransformedContextId(context), produceEntityInfo(context.getDomainInfo(), transformedQueries, sourceType()));
+        return new QrySource2BasedOnSubqueries(transformedQueries, alias, transformId(context), produceEntityInfo(context.getDomainInfo(), transformedQueries, sourceType()));
     }
     
     @Override

@@ -9,8 +9,8 @@ import ua.com.fielden.platform.eql.stage2.sources.QrySource2BasedOnPersistentTyp
 public class QrySource1BasedOnPersistentType extends AbstractQrySource1<QrySource2BasedOnPersistentType> {
     private final Class<? extends AbstractEntity<?>> sourceType;
 
-    public QrySource1BasedOnPersistentType(final Class<? extends AbstractEntity<?>> sourceType, final String alias, final int contextId) {
-        super(alias, contextId);
+    public QrySource1BasedOnPersistentType(final Class<? extends AbstractEntity<?>> sourceType, final String alias, final int id) {
+        super(alias, id);
         this.sourceType = Objects.requireNonNull(sourceType);
     }
 
@@ -21,7 +21,7 @@ public class QrySource1BasedOnPersistentType extends AbstractQrySource1<QrySourc
 
     @Override
     public QrySource2BasedOnPersistentType transform(final PropsResolutionContext context) {
-        return new QrySource2BasedOnPersistentType(sourceType(), context.getDomainInfo().getEntityInfo(sourceType()), alias, getTransformedContextId(context));
+        return new QrySource2BasedOnPersistentType(sourceType(), context.getDomainInfo().getEntityInfo(sourceType()), alias, transformId(context));
     }
 
     @Override

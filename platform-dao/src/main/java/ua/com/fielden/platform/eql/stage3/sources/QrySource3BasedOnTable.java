@@ -7,12 +7,12 @@ import ua.com.fielden.platform.eql.stage3.Table;
 
 public class QrySource3BasedOnTable implements IQrySource3 {
     public final Table table;
-    public final String contextId;
+    public final String id;
     public final int sqlId;
     
-    public QrySource3BasedOnTable(final Table table, final String contextId, final int sqlId) {
+    public QrySource3BasedOnTable(final Table table, final String id, final int sqlId) {
         this.table = table;
-        this.contextId = contextId;
+        this.id = id;
         this.sqlId = sqlId;
     }
 
@@ -41,7 +41,7 @@ public class QrySource3BasedOnTable implements IQrySource3 {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + contextId.hashCode();
+        result = prime * result + id.hashCode();
         result = prime * result + table.hashCode();
         return result;
     }
@@ -58,6 +58,6 @@ public class QrySource3BasedOnTable implements IQrySource3 {
         
         final QrySource3BasedOnTable other = (QrySource3BasedOnTable) obj;
         
-        return Objects.equals(table, other.table) && Objects.equals(contextId, other.contextId);
+        return Objects.equals(table, other.table) && Objects.equals(id, other.id);
     }
 }
