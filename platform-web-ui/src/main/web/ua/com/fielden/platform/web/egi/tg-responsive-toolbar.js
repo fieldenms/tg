@@ -115,6 +115,10 @@ export class TgResponsiveToolbar extends mixinBehaviors([IronResizableBehavior],
 
     ready () {
         super.ready();
+
+        //Make dropdown overlay to skip history action.
+        this.$.dropdown.skipHistoryAction = true;
+
         //Need to create list of all buttons that can be hidden start  from the specific action, those are in the left side of toolbar
         //Keep in mind that actions might be grouped.
         //First element of the list should be empty it indicates the end of list
