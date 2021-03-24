@@ -293,15 +293,9 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         final Set<Class<? extends MiWithConfigurationSupport<?>>> miTypes = getCentres().keySet();
         final int size = miTypes.size();
         logger.info(format("Creating default configurations for %s centres (caching)...", size));
-        int index = 0;
         for (final Class<? extends MiWithConfigurationSupport<?>> miType: miTypes) {
             getDefaultCentre(miType, this);
-            System.out.print(format("%4d", ++index));
-            if (index % 50 == 0) {
-                System.out.println();
-            }
         }
-        System.out.println();
         logger.info(format("Creating default configurations for %s centres (caching)...done", size));
     }
 
