@@ -6,13 +6,13 @@ import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
 import ua.com.fielden.platform.eql.stage3.sources.IQrySource3;
 
-public class EntProp3 implements ISingleOperand3 {
+public class Prop3 implements ISingleOperand3 {
     public final String name;
     public final IQrySource3 source; // can be null for prop headers
     public final Class<?> type;
     public final Object hibType;
 
-    public EntProp3(final String name, final IQrySource3 source, final Class<?> type, final Object hibType) {
+    public Prop3(final String name, final IQrySource3 source, final Class<?> type, final Object hibType) {
         this.name = name;
         this.source = source;
         this.type = type;
@@ -59,11 +59,11 @@ public class EntProp3 implements ISingleOperand3 {
             return true;
         }
         
-        if (!(obj instanceof EntProp3)) {
+        if (!(obj instanceof Prop3)) {
             return false;
         }
         
-        final EntProp3 other = (EntProp3) obj;
+        final Prop3 other = (Prop3) obj;
         
         return Objects.equals(name, other.name) && Objects.equals(source, other.source) && Objects.equals(type, other.type) && Objects.equals(hibType.getClass().getName(), other.hibType.getClass().getName());
     }

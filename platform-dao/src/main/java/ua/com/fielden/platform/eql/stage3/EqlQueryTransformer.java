@@ -21,10 +21,10 @@ import ua.com.fielden.platform.eql.stage3.operands.ResultQuery3;
 public class EqlQueryTransformer {
     public static <E extends AbstractEntity<?>> TransformationResult<ResultQuery3> transform(final QueryExecutionContext executionContext, final QueryProcessingModel<E, ?> qem, final DbVersion dbVersion, final IFilter filter, final String username) {
         final EntQueryGenerator gen = new EntQueryGenerator(dbVersion, filter, username, executionContext.dates(), qem.getParamValues(), executionContext.getDomainMetadata().lmd);
-        final PropsResolutionContext resolutionContext = new PropsResolutionContext(executionContext.getDomainMetadata().lmd);
-        final ResultQuery2 tr = gen.generateEntQueryAsResultQuery(qem.queryModel, qem.orderModel, qem.fetchModel).transform(resolutionContext);
+        final PropsResolutionContext context = new PropsResolutionContext(executionContext.getDomainMetadata().lmd);
+        final ResultQuery2 query2 = gen.generateAsResultQuery(qem.queryModel, qem.orderModel, qem.fetchModel).transform(context);
         final PathsToTreeTransformator p2tt = new PathsToTreeTransformator(executionContext.getDomainMetadata().lmd, gen);
-        final Map<String, List<ChildGroup>> grouped = p2tt.groupChildren(tr.collectProps());
-        return tr.transform(new TransformationContext(new TablesAndSourceChildren(executionContext.getDomainMetadata().lmd.getTables(), grouped)));
+        final Map<String, List<ChildGroup>> childGroupsMap = p2tt.groupChildren(query2.collectProps());
+        return query2.transform(new TransformationContext(new TablesAndSourceChildren(executionContext.getDomainMetadata().lmd.getTables(), childGroupsMap)));
     }
 }

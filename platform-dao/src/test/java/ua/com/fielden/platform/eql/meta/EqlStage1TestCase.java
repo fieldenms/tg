@@ -12,7 +12,7 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.eql.stage1.EntQueryBlocks1;
+import ua.com.fielden.platform.eql.stage1.QueryBlocks1;
 import ua.com.fielden.platform.eql.stage1.conditions.ComparisonTest1;
 import ua.com.fielden.platform.eql.stage1.conditions.CompoundCondition1;
 import ua.com.fielden.platform.eql.stage1.conditions.Conditions1;
@@ -23,7 +23,7 @@ import ua.com.fielden.platform.eql.stage1.core.OrderBys1;
 import ua.com.fielden.platform.eql.stage1.core.Yield1;
 import ua.com.fielden.platform.eql.stage1.core.Yields1;
 import ua.com.fielden.platform.eql.stage1.functions.CountAll1;
-import ua.com.fielden.platform.eql.stage1.operands.EntProp1;
+import ua.com.fielden.platform.eql.stage1.operands.Prop1;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage1.operands.ResultQuery1;
 import ua.com.fielden.platform.eql.stage1.sources.CompoundSource1;
@@ -47,19 +47,19 @@ public class EqlStage1TestCase extends EqlTestCase {
     }
     
     protected static <T extends AbstractEntity<?>> ResultQuery1 resultQry(final EntityResultQueryModel<T> qry) {
-        return qb().generateEntQueryAsResultQuery(qry, null, null);
+        return qb().generateAsResultQuery(qry, null, null);
     }
 
     protected static ResultQuery1 resultQry(final AggregatedResultQueryModel qry) {
-        return qb().generateEntQueryAsResultQuery(qry, null, null);
+        return qb().generateAsResultQuery(qry, null, null);
     }
     
-    protected static EntQueryBlocks1 qb1(final QrySources1 sources, final Conditions1 conditions) {
-        return new EntQueryBlocks1(sources, conditions, new Yields1(emptyList()), new GroupBys1(emptyList()), new OrderBys1(emptyList()), false);
+    protected static QueryBlocks1 qb1(final QrySources1 sources, final Conditions1 conditions) {
+        return new QueryBlocks1(sources, conditions, new Yields1(emptyList()), new GroupBys1(emptyList()), new OrderBys1(emptyList()), false);
     }
 
-    protected static EntQueryBlocks1 qb1(final QrySources1 sources, final Conditions1 conditions, final Yields1 yields) {
-        return new EntQueryBlocks1(sources, conditions, yields, new GroupBys1(emptyList()), new OrderBys1(emptyList()), false);
+    protected static QueryBlocks1 qb1(final QrySources1 sources, final Conditions1 conditions, final Yields1 yields) {
+        return new QueryBlocks1(sources, conditions, yields, new GroupBys1(emptyList()), new OrderBys1(emptyList()), false);
     }
 
     protected static Yields1 yields(final Yield1 ... yields) {
@@ -118,20 +118,20 @@ public class EqlStage1TestCase extends EqlTestCase {
         return new NullTest1(operand, true);
     }
 
-    protected static ComparisonTest1 eq(final EntProp1 op1, final EntProp1 op2) {
+    protected static ComparisonTest1 eq(final Prop1 op1, final Prop1 op2) {
         return new ComparisonTest1(op1, EQ, op2);
     }
     
-    protected static ComparisonTest1 ne(final EntProp1 op1, final EntProp1 op2) {
+    protected static ComparisonTest1 ne(final Prop1 op1, final Prop1 op2) {
         return new ComparisonTest1(op1, NE, op2);
     }
 
-    protected static EntProp1 prop(final String name) {
-        return new EntProp1(name, false);
+    protected static Prop1 prop(final String name) {
+        return new Prop1(name, false);
     }
 
-    protected static EntProp1 extProp(final String name) {
-        return new EntProp1(name, true);
+    protected static Prop1 extProp(final String name) {
+        return new Prop1(name, true);
     }
 
     protected static QrySource1BasedOnPersistentType source(final Class<? extends AbstractEntity<?>> sourceType, final String alias) {

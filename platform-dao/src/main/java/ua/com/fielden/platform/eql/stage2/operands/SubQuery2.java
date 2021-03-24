@@ -5,10 +5,10 @@ import java.util.Objects;
 import org.hibernate.type.LongType;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.eql.stage2.EntQueryBlocks2;
+import ua.com.fielden.platform.eql.stage2.QueryBlocks2;
 import ua.com.fielden.platform.eql.stage2.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.TransformationResult;
-import ua.com.fielden.platform.eql.stage3.EntQueryBlocks3;
+import ua.com.fielden.platform.eql.stage3.QueryBlocks3;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.core.GroupBys3;
 import ua.com.fielden.platform.eql.stage3.core.OrderBys3;
@@ -20,7 +20,7 @@ public class SubQuery2 extends AbstractQuery2 implements ISingleOperand2<SubQuer
 
     public final Object hibType;
 
-    public SubQuery2(final EntQueryBlocks2 queryBlocks, final Class<? extends AbstractEntity<?>> resultType) {
+    public SubQuery2(final QueryBlocks2 queryBlocks, final Class<? extends AbstractEntity<?>> resultType) {
         super(queryBlocks, resultType);
         this.hibType = resultType == null ? yields.getYields().iterator().next().operand.hibType() : LongType.INSTANCE;
     }
@@ -33,7 +33,7 @@ public class SubQuery2 extends AbstractQuery2 implements ISingleOperand2<SubQuer
         final TransformationResult<GroupBys3> groupsTr = groups.transform(yieldsTr.updatedContext);
         final TransformationResult<OrderBys3> orderingsTr = orderings.transform(groupsTr.updatedContext, yieldsTr.item);
 
-        final EntQueryBlocks3 entQueryBlocks = new EntQueryBlocks3(sourcesTr.item, conditionsTr.item, yieldsTr.item, groupsTr.item, orderingsTr.item);
+        final QueryBlocks3 entQueryBlocks = new QueryBlocks3(sourcesTr.item, conditionsTr.item, yieldsTr.item, groupsTr.item, orderingsTr.item);
 
         return new TransformationResult<SubQuery3>(new SubQuery3(entQueryBlocks, resultType), orderingsTr.updatedContext);
     }

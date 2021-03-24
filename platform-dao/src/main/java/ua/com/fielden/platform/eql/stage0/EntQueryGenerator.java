@@ -25,7 +25,7 @@ import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
-import ua.com.fielden.platform.eql.stage1.EntQueryBlocks1;
+import ua.com.fielden.platform.eql.stage1.QueryBlocks1;
 import ua.com.fielden.platform.eql.stage1.conditions.CompoundCondition1;
 import ua.com.fielden.platform.eql.stage1.conditions.Conditions1;
 import ua.com.fielden.platform.eql.stage1.core.OrderBys1;
@@ -69,27 +69,27 @@ public class EntQueryGenerator {
         return sourceId;
     }
     
-    public <T extends AbstractEntity<?>, Q extends QueryModel<T>> ResultQuery1 generateEntQueryAsResultQuery(final QueryModel<T> qm, final OrderingModel orderModel, final IRetrievalModel<T> fetchModel) {
+    public <T extends AbstractEntity<?>, Q extends QueryModel<T>> ResultQuery1 generateAsResultQuery(final QueryModel<T> qm, final OrderingModel orderModel, final IRetrievalModel<T> fetchModel) {
         return new ResultQuery1(parseTokensIntoComponents(qm, orderModel), qm.getResultType(), fetchModel);
     }
 
-    public <T extends AbstractEntity<?>> SourceQuery1 generateEntQueryAsSourceQuery(final QueryModel<T> qryModel) {
-        return generateEntQueryAsSourceQuery(qryModel, qryModel.getResultType(), true);
+    public <T extends AbstractEntity<?>> SourceQuery1 generateAsSourceQuery(final QueryModel<T> qryModel) {
+        return generateAsSourceQuery(qryModel, qryModel.getResultType(), true);
     }
         
-    public <T extends AbstractEntity<?>> SourceQuery1 generateEntQueryAsSyntheticEntityQuery(final QueryModel<T> qryModel, final Class<T> resultType) {
-        return generateEntQueryAsSourceQuery(qryModel, resultType, false);
+    public <T extends AbstractEntity<?>> SourceQuery1 generateAsSyntheticEntityQuery(final QueryModel<T> qryModel, final Class<T> resultType) {
+        return generateAsSourceQuery(qryModel, resultType, false);
     }
     
-    private <T extends AbstractEntity<?>> SourceQuery1 generateEntQueryAsSourceQuery(final QueryModel<T> qryModel, final Class<T> resultType, final boolean isCorrelated) {
+    private <T extends AbstractEntity<?>> SourceQuery1 generateAsSourceQuery(final QueryModel<T> qryModel, final Class<T> resultType, final boolean isCorrelated) {
         return new SourceQuery1(parseTokensIntoComponents(qryModel, null), resultType, isCorrelated);
     }
 
-    public SubQuery1 generateEntQueryAsSubquery(final QueryModel<?> qryModel) {
+    public SubQuery1 generateAsSubquery(final QueryModel<?> qryModel) {
         return new SubQuery1(parseTokensIntoComponents(qryModel, null), qryModel.getResultType());
     }
 
-    private EntQueryBlocks1 parseTokensIntoComponents(final QueryModel<?> qryModel, final OrderingModel orderModel) {
+    private QueryBlocks1 parseTokensIntoComponents(final QueryModel<?> qryModel, final OrderingModel orderModel) {
         final QrySourcesBuilder from = new QrySourcesBuilder(this);
         final ConditionsBuilder where = new ConditionsBuilder(null, this);
         final QryYieldsBuilder select = new QryYieldsBuilder(this);
@@ -128,10 +128,10 @@ public class EntQueryGenerator {
         final QrySources1 fromModel = from.getModel();
         final Conditions1 whereModel = addFilteringCondition(where.getModel(), qryModel.isFilterable(), filter, username, fromModel.main);
 
-        return new EntQueryBlocks1(fromModel, whereModel, select.getModel(), groupBy.getModel(), produceOrderBys(orderModel), qryModel.isYieldAll());
+        return new QueryBlocks1(fromModel, whereModel, select.getModel(), groupBy.getModel(), produceOrderBys(orderModel), qryModel.isYieldAll());
     }
     
-    private Conditions1 addFilteringCondition(final Conditions1 originalConditions, final boolean filterable, final IFilter filter, final String username, final IQrySource1 mainSource) {
+    private Conditions1 addFilteringCondition(final Conditions1 originalConditions, final boolean filterable, final IFilter filter, final String username, final IQrySource1<?> mainSource) {
         if (filterable && filter != null) {
             final ConditionModel filteringCondition = filter.enhance(mainSource.sourceType(), mainSource.getAlias(), username);
             if (filteringCondition != null) {

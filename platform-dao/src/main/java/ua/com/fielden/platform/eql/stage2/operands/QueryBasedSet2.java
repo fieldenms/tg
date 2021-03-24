@@ -22,7 +22,7 @@ public class QueryBasedSet2 implements ISetOperand2<QueryBasedSet3> {
     }
 
     @Override
-    public Set<EntProp2> collectProps() {
+    public Set<Prop2> collectProps() {
         return model.collectProps();
     }
 

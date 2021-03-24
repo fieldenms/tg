@@ -3,24 +3,24 @@ package ua.com.fielden.platform.eql.stage1.operands;
 import java.util.Objects;
 
 import ua.com.fielden.platform.eql.stage1.PropsResolutionContext;
-import ua.com.fielden.platform.eql.stage2.operands.EntValue2;
+import ua.com.fielden.platform.eql.stage2.operands.Value2;
 
-public class EntValue1 implements ISingleOperand1<EntValue2> {
+public class Value1 implements ISingleOperand1<Value2> {
     public final Object value;
     public final boolean ignoreNull;
 
-    public EntValue1(final Object value) {
+    public Value1(final Object value) {
         this(value, false);
     }
 
-    public EntValue1(final Object value, final boolean ignoreNull) {
+    public Value1(final Object value, final boolean ignoreNull) {
         this.value = value;
         this.ignoreNull = ignoreNull;
     }
 
     @Override
-    public EntValue2 transform(final PropsResolutionContext context) {
-        return new EntValue2(value, ignoreNull);
+    public Value2 transform(final PropsResolutionContext context) {
+        return new Value2(value, ignoreNull);
     }
 
     @Override
@@ -38,11 +38,11 @@ public class EntValue1 implements ISingleOperand1<EntValue2> {
             return true;
         }
 
-        if (!(obj instanceof EntValue1)) {
+        if (!(obj instanceof Value1)) {
             return false;
         }
 
-        final EntValue1 other = (EntValue1) obj;
+        final Value1 other = (Value1) obj;
         
         return Objects.equals(value, other.value) && ignoreNull == other.ignoreNull;
     }

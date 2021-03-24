@@ -31,8 +31,8 @@ import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.stage1.functions.CountAll1;
-import ua.com.fielden.platform.eql.stage1.operands.EntProp1;
-import ua.com.fielden.platform.eql.stage1.operands.EntValue1;
+import ua.com.fielden.platform.eql.stage1.operands.Prop1;
+import ua.com.fielden.platform.eql.stage1.operands.Value1;
 import ua.com.fielden.platform.eql.stage1.operands.ISetOperand1;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage1.operands.OperandsBasedSet1;
@@ -306,7 +306,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         case COUNT_ALL:
             return new CountAll1();
         case NOW:
-            return new EntValue1(getParamValue(EntQueryGenerator.NOW)); //new Now1();
+            return new Value1(getParamValue(EntQueryGenerator.NOW)); //new Now1();
 
         default:
             throw new RuntimeException("Unrecognised zero agrument function: " + function);
@@ -316,17 +316,17 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
     protected ISingleOperand1<? extends ISingleOperand2<?>> getModelForSingleOperand(final TokenCategory cat, final Object value) {
         switch (cat) {
         case PROP:
-            return new EntProp1((String) value, false);
+            return new Prop1((String) value, false);
         case EXT_PROP:
-            return new EntProp1((String) value, true);
+            return new Prop1((String) value, true);
         case PARAM:
-            return new EntValue1(getParamValue((String) value));
+            return new Value1(getParamValue((String) value));
         case IPARAM:
-            return new EntValue1(getParamValue((String) value), true);
+            return new Value1(getParamValue((String) value), true);
         case VAL:
-            return new EntValue1(preprocessValue(value));
+            return new Value1(preprocessValue(value));
         case IVAL:
-            return new EntValue1(preprocessValue(value), true);
+            return new Value1(preprocessValue(value), true);
         case ZERO_ARG_FUNCTION:
             return getZeroArgFunctionModel((Functions) value);
         case EXPR:
@@ -335,7 +335,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         case EXPR_TOKENS:
             return (ISingleOperand1<? extends ISingleOperand2<?>>) new StandAloneExpressionBuilder(queryBuilder, (ExpressionModel) value).getResult().getValue();
         case EQUERY_TOKENS:
-            return queryBuilder.generateEntQueryAsSubquery((QueryModel<?>) value);
+            return queryBuilder.generateAsSubquery((QueryModel<?>) value);
         default:
             throw new RuntimeException("Unrecognised token category for SingleOperand: " + cat);
         }
@@ -410,7 +410,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
             singleCat = EXPR_TOKENS;
             break;
         case EQUERY_TOKENS:
-            return new QueryBasedSet1(queryBuilder.generateEntQueryAsSubquery((QueryModel) value));
+            return new QueryBasedSet1(queryBuilder.generateAsSubquery((QueryModel) value));
         default:
             throw new RuntimeException("Unrecognised token category for SingleOperand: " + cat);
         }

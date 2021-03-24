@@ -14,7 +14,7 @@ import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.conditions.ICondition2;
 import ua.com.fielden.platform.eql.stage2.conditions.NullTest2;
-import ua.com.fielden.platform.eql.stage2.operands.EntProp2;
+import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 
 public class NullTest1 implements ICondition1<Conditions2> {
@@ -29,8 +29,8 @@ public class NullTest1 implements ICondition1<Conditions2> {
     @Override
     public Conditions2 transform(final PropsResolutionContext context) {
         final ISingleOperand2<?> transformedOperand = operand.transform(context);
-        if (transformedOperand instanceof EntProp2 && isUnionEntityType(((EntProp2) transformedOperand).type)) {
-            final EntProp2 prop = (EntProp2) transformedOperand;
+        if (transformedOperand instanceof Prop2 && isUnionEntityType(((Prop2) transformedOperand).type)) {
+            final Prop2 prop = (Prop2) transformedOperand;
             final UnionTypePropInfo<?> lastResolutionItem = (UnionTypePropInfo<?>)prop.getPath().get(prop.getPath().size() - 1);
             final List<ICondition2<?>> nullTests = new ArrayList<>();
             
@@ -38,7 +38,7 @@ public class NullTest1 implements ICondition1<Conditions2> {
                 if (!el.hasExpression()) {
                     final List<AbstractPropInfo<?>> subPropPath = new ArrayList<>(prop.getPath());
                     subPropPath.add(el);
-                    nullTests.add(new NullTest2(new EntProp2(prop.source, subPropPath), negated));
+                    nullTests.add(new NullTest2(new Prop2(prop.source, subPropPath), negated));
                 }
             }
             

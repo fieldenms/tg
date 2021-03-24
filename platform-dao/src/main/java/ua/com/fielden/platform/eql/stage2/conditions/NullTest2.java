@@ -5,7 +5,7 @@ import java.util.Set;
 
 import ua.com.fielden.platform.eql.stage2.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.TransformationResult;
-import ua.com.fielden.platform.eql.stage2.operands.EntProp2;
+import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.conditions.NullTest3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
@@ -31,7 +31,7 @@ public class NullTest2 extends AbstractCondition2<NullTest3> {
     }
 
     @Override
-    public Set<EntProp2> collectProps() {
+    public Set<Prop2> collectProps() {
         return operand.collectProps();
     }
     

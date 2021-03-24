@@ -10,7 +10,7 @@ import org.hibernate.type.StringType;
 
 import ua.com.fielden.platform.eql.stage2.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.TransformationResult;
-import ua.com.fielden.platform.eql.stage2.operands.EntProp2;
+import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.functions.Concat3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
@@ -46,8 +46,8 @@ public class Concat2 extends AbstractFunction2<Concat3> {
     }
 
     @Override
-    public Set<EntProp2> collectProps() {
-        final Set<EntProp2> result = new HashSet<>();
+    public Set<Prop2> collectProps() {
+        final Set<Prop2> result = new HashSet<>();
         for (final ISingleOperand2<? extends ISingleOperand3> operand : operands) {
             result.addAll(operand.collectProps());
         }

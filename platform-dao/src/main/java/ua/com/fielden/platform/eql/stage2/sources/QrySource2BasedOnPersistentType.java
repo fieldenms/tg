@@ -10,7 +10,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.EntityInfo;
 import ua.com.fielden.platform.eql.stage2.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.TransformationResult;
-import ua.com.fielden.platform.eql.stage2.operands.EntProp2;
+import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.sources.QrySource3BasedOnTable;
 
 public class QrySource2BasedOnPersistentType extends AbstractQrySource2 implements IQrySource2<QrySource3BasedOnTable> {
@@ -33,7 +33,7 @@ public class QrySource2BasedOnPersistentType extends AbstractQrySource2 implemen
     }
 
     @Override
-    public Set<EntProp2> collectProps() {
+    public Set<Prop2> collectProps() {
         return emptySet();
     } 
     

@@ -3,7 +3,7 @@ package ua.com.fielden.platform.eql.stage3.operands;
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.eql.stage3.EntQueryBlocks3;
+import ua.com.fielden.platform.eql.stage3.QueryBlocks3;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.core.GroupBys3;
 import ua.com.fielden.platform.eql.stage3.core.OrderBys3;
@@ -19,7 +19,7 @@ public abstract class AbstractQuery3 {
     public final OrderBys3 orderings;
     public final Class<?> resultType;
 
-    public AbstractQuery3(final EntQueryBlocks3 queryBlocks, final Class<?> resultType) {
+    public AbstractQuery3(final QueryBlocks3 queryBlocks, final Class<?> resultType) {
         this.sources = queryBlocks.sources;
         this.conditions = queryBlocks.conditions;
         this.yields = queryBlocks.yields;

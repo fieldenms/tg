@@ -25,8 +25,8 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
 import ua.com.fielden.platform.eql.stage1.PropsResolutionContext;
-import ua.com.fielden.platform.eql.stage1.operands.EntProp1;
-import ua.com.fielden.platform.eql.stage2.EntQueryBlocks2;
+import ua.com.fielden.platform.eql.stage1.operands.Prop1;
+import ua.com.fielden.platform.eql.stage2.QueryBlocks2;
 import ua.com.fielden.platform.eql.stage2.conditions.ComparisonTest2;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.conditions.ExistenceTest2;
@@ -38,7 +38,7 @@ import ua.com.fielden.platform.eql.stage2.core.OrderBys2;
 import ua.com.fielden.platform.eql.stage2.core.Yield2;
 import ua.com.fielden.platform.eql.stage2.core.Yields2;
 import ua.com.fielden.platform.eql.stage2.functions.CountAll2;
-import ua.com.fielden.platform.eql.stage2.operands.EntProp2;
+import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.ResultQuery2;
 import ua.com.fielden.platform.eql.stage2.operands.SourceQuery2;
@@ -86,14 +86,14 @@ public class EqlStage2TestCase extends EqlTestCase {
     protected static <T extends AbstractEntity<?>> ResultQuery2 qryCountAll(final ICompoundCondition0<T> unfinishedQry, final Map<String, Object> paramValues) {
         final AggregatedResultQueryModel countQry = unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate();
         final PropsResolutionContext resolutionContext = new PropsResolutionContext(DOMAIN_METADATA.lmd);
-        return qb(paramValues).generateEntQueryAsResultQuery(countQry, null, null).transform(resolutionContext);
+        return qb(paramValues).generateAsResultQuery(countQry, null, null).transform(resolutionContext);
     }
 
     protected static <T extends AbstractEntity<?>> T2<EntQueryGenerator, ResultQuery2> qryCountAll2(final ICompoundCondition0<T> unfinishedQry, final Map<String, Object> paramValues) {
         final AggregatedResultQueryModel countQry = unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate();
         final PropsResolutionContext resolutionContext = new PropsResolutionContext(DOMAIN_METADATA.lmd);
         final EntQueryGenerator qb = qb(paramValues);
-        return t2(qb, qb.generateEntQueryAsResultQuery(countQry, null, null).transform(resolutionContext));
+        return t2(qb, qb.generateAsResultQuery(countQry, null, null).transform(resolutionContext));
     }
 
     protected static <T extends AbstractEntity<?>> ResultQuery2 qry(final EntityResultQueryModel<T> qry) {
@@ -102,36 +102,36 @@ public class EqlStage2TestCase extends EqlTestCase {
 
     protected static <T extends AbstractEntity<?>> ResultQuery2 qry(final EntityResultQueryModel<T> qry, final OrderingModel order) {
         final PropsResolutionContext resolutionContext = new PropsResolutionContext(DOMAIN_METADATA.lmd);
-        return qb().generateEntQueryAsResultQuery(qry, order, new EntityRetrievalModel<T>(EntityQueryUtils.fetch(qry.getResultType()), DOMAIN_METADATA_ANALYSER)).transform(resolutionContext);
+        return qb().generateAsResultQuery(qry, order, new EntityRetrievalModel<T>(EntityQueryUtils.fetch(qry.getResultType()), DOMAIN_METADATA_ANALYSER)).transform(resolutionContext);
     }
 
     protected static ResultQuery2 qry(final AggregatedResultQueryModel qry, final OrderingModel order) {
         final PropsResolutionContext resolutionContext = new PropsResolutionContext(DOMAIN_METADATA.lmd);
-        return qb().generateEntQueryAsResultQuery(qry, order, null).transform(resolutionContext);
+        return qb().generateAsResultQuery(qry, order, null).transform(resolutionContext);
     }
 
     protected static ResultQuery2 qry(final AggregatedResultQueryModel qry) {
         final PropsResolutionContext resolutionContext = new PropsResolutionContext(DOMAIN_METADATA.lmd);
-        return qb().generateEntQueryAsResultQuery(qry, null, null).transform(resolutionContext);
+        return qb().generateAsResultQuery(qry, null, null).transform(resolutionContext);
     }
     
-    protected static EntQueryBlocks2 qb2(final QrySources2 sources, final Conditions2 conditions) {
-        return new EntQueryBlocks2(sources, conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
+    protected static QueryBlocks2 qb2(final QrySources2 sources, final Conditions2 conditions) {
+        return new QueryBlocks2(sources, conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
     }
 
-    protected static EntQueryBlocks2 qb2(final QrySources2 sources, final Conditions2 conditions, final Yields2 yields) {
-        return new EntQueryBlocks2(sources, conditions, yields, emptyGroupBys2, emptyOrderBys2);
+    protected static QueryBlocks2 qb2(final QrySources2 sources, final Conditions2 conditions, final Yields2 yields) {
+        return new QueryBlocks2(sources, conditions, yields, emptyGroupBys2, emptyOrderBys2);
     }
 
-    protected static EntQueryBlocks2 qb2(final QrySources2 sources, final Conditions2 conditions, final Yields2 yields, final OrderBys2 orderBys) {
-        return new EntQueryBlocks2(sources, conditions, yields, emptyGroupBys2, orderBys);
+    protected static QueryBlocks2 qb2(final QrySources2 sources, final Conditions2 conditions, final Yields2 yields, final OrderBys2 orderBys) {
+        return new QueryBlocks2(sources, conditions, yields, emptyGroupBys2, orderBys);
     }
 
     protected static Yields2 yields(final Yield2 ... yields) {
         return new Yields2(asList(yields));
     }
 
-    protected static OrderBy2 orderDesc(final EntProp2 prop) {
+    protected static OrderBy2 orderDesc(final Prop2 prop) {
         return new OrderBy2(prop, true);
     }
 
@@ -139,7 +139,7 @@ public class EqlStage2TestCase extends EqlTestCase {
         return new OrderBy2(yieldName, true);
     }
 
-    protected static OrderBy2 orderAsc(final EntProp2 prop) {
+    protected static OrderBy2 orderAsc(final Prop2 prop) {
         return new OrderBy2(prop, false);
     }
 
@@ -155,12 +155,12 @@ public class EqlStage2TestCase extends EqlTestCase {
         return new Yield2(operand, alias, false);
     }
 
-    protected static EntProp2 prop(final IQrySource2<? extends IQrySource3> source, final AbstractPropInfo<?> ... propInfos) {
-        return new EntProp2(source, asList(propInfos));
+    protected static Prop2 prop(final IQrySource2<? extends IQrySource3> source, final AbstractPropInfo<?> ... propInfos) {
+        return new Prop2(source, asList(propInfos));
     }
 
-    protected static EntProp2 propWithIsId(final IQrySource2<? extends IQrySource3> source, final AbstractPropInfo<?> ... propInfos) {
-        return new EntProp2(source, asList(propInfos), true);
+    protected static Prop2 propWithIsId(final IQrySource2<? extends IQrySource3> source, final AbstractPropInfo<?> ... propInfos) {
+        return new Prop2(source, asList(propInfos), true);
     }
     
     protected static Conditions2 cond(final ICondition2<? extends ICondition3> condition) {
@@ -248,16 +248,16 @@ public class EqlStage2TestCase extends EqlTestCase {
         return new NullTest2(operand, true);
     }
 
-    protected static ComparisonTest2 eq(final EntProp2 op1, final EntProp2 op2) {
+    protected static ComparisonTest2 eq(final Prop2 op1, final Prop2 op2) {
         return new ComparisonTest2(op1, EQ, op2);
     }
     
-    protected static ComparisonTest2 ne(final EntProp2 op1, final EntProp2 op2) {
+    protected static ComparisonTest2 ne(final Prop2 op1, final Prop2 op2) {
         return new ComparisonTest2(op1, NE, op2);
     }
 
-    protected static EntProp1 prop(final String name) {
-        return new EntProp1(name, false);
+    protected static Prop1 prop(final String name) {
+        return new Prop1(name, false);
     }
 
     protected static QrySource2BasedOnPersistentType source(final String id, final Class<? extends AbstractEntity<?>> sourceType, final String alias) {

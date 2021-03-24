@@ -15,33 +15,33 @@ import ua.com.fielden.platform.eql.meta.ComponentTypePropInfo;
 import ua.com.fielden.platform.eql.stage1.PropResolution;
 import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
 import ua.com.fielden.platform.eql.stage1.PropsResolutionContext;
-import ua.com.fielden.platform.eql.stage2.operands.EntProp2;
+import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.sources.IQrySource2;
 import ua.com.fielden.platform.eql.stage3.sources.IQrySource3;
 
-public class EntProp1 implements ISingleOperand1<EntProp2> {
+public class Prop1 implements ISingleOperand1<Prop2> {
     public final String name;
     public final boolean external;
 
-    public EntProp1(final String name, final boolean external) {
+    public Prop1(final String name, final boolean external) {
         this.name = name;
         this.external = external;
     }
 
     @Override
-    public EntProp2 transform(final PropsResolutionContext context) {
+    public Prop2 transform(final PropsResolutionContext context) {
         
         final Iterator<List<IQrySource2<? extends IQrySource3>>> it = context.getSources().iterator();
         if (external) {
             it.next();
         }
 
-        for (; it.hasNext();) {
+        while (it.hasNext()) {
             final List<IQrySource2<? extends IQrySource3>> item = it.next();
             final PropResolution resolution = resolveProp(item, this);
             if (resolution != null) {
                 final boolean shouldBeTreatedAsId = name.endsWith("." + ID) && isEntityType(resolution.lastPart().javaType());
-                return new EntProp2(resolution.source, enhancePath(resolution.getPath()), shouldBeTreatedAsId);
+                return new Prop2(resolution.source, enhancePath(resolution.getPath()), shouldBeTreatedAsId);
             }
         }
 
@@ -59,33 +59,33 @@ public class EntProp1 implements ISingleOperand1<EntProp2> {
         return originalPath;
     }
     
-    public static PropResolution resolvePropAgainstSource(final IQrySource2<? extends IQrySource3> source, final EntProp1 entProp) {
-        final PropResolutionProgress asIsResolution = source.entityInfo().resolve(new PropResolutionProgress(entProp.name));
-        if (source.alias() != null && (entProp.name.startsWith(source.alias() + ".") || entProp.name.equals(source.alias()))) {
-            final String aliaslessPropName = entProp.name.equals(source.alias()) ? ID : entProp.name.substring(source.alias().length() + 1);
+    public static PropResolution resolvePropAgainstSource(final IQrySource2<? extends IQrySource3> source, final Prop1 prop) {
+        final PropResolutionProgress asIsResolution = source.entityInfo().resolve(new PropResolutionProgress(prop.name));
+        if (source.alias() != null && (prop.name.startsWith(source.alias() + ".") || prop.name.equals(source.alias()))) {
+            final String aliaslessPropName = prop.name.equals(source.alias()) ? ID : prop.name.substring(source.alias().length() + 1);
             final PropResolutionProgress aliaslessResolution = source.entityInfo().resolve(new PropResolutionProgress(aliaslessPropName));
             if (aliaslessResolution.isSuccessful()) {
                 if (!asIsResolution.isSuccessful()) {
                     return new PropResolution(source, aliaslessResolution.getResolved());
                 } else {
-                    throw new EqlStage1ProcessingException(format("Ambiguity while resolving prop [%s]. Both [%s] and [%s] are resolvable against the given source.", entProp.name, entProp.name, aliaslessPropName));
+                    throw new EqlStage1ProcessingException(format("Ambiguity while resolving prop [%s]. Both [%s] and [%s] are resolvable against the given source.", prop.name, prop.name, aliaslessPropName));
                 }
             }
         }
         return asIsResolution.isSuccessful() ? new PropResolution(source, asIsResolution.getResolved()) : null;
     }
     
-    private PropResolution resolveProp(final List<IQrySource2<? extends IQrySource3>> sources, final EntProp1 entProp) {
+    private PropResolution resolveProp(final List<IQrySource2<? extends IQrySource3>> sources, final Prop1 prop) {
         final List<PropResolution> result = new ArrayList<>();
         for (final IQrySource2<? extends IQrySource3> source : sources) {
-            final PropResolution resolution = resolvePropAgainstSource(source, entProp);
+            final PropResolution resolution = resolvePropAgainstSource(source, prop);
             if (resolution != null) {
                 result.add(resolution);
             }
         }
 
         if (result.size() > 1) {
-            throw new EqlStage1ProcessingException(format("Ambiguity while resolving prop [%s]", entProp.name));
+            throw new EqlStage1ProcessingException(format("Ambiguity while resolving prop [%s]", prop.name));
         }
 
         return result.size() == 1 ? result.get(0) : null;
@@ -106,11 +106,11 @@ public class EntProp1 implements ISingleOperand1<EntProp2> {
             return true;
         }
 
-        if (!(obj instanceof EntProp1)) {
+        if (!(obj instanceof Prop1)) {
             return false;
         }
         
-        final EntProp1 other = (EntProp1) obj;
+        final Prop1 other = (Prop1) obj;
         
         return Objects.equals(name, other.name) && (external == other.external);
     }

@@ -9,7 +9,7 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.eql.meta.EqlStage2TestCase;
-import ua.com.fielden.platform.eql.stage2.operands.EntProp2;
+import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.ResultQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.QrySource2BasedOnPersistentType;
 
@@ -20,7 +20,7 @@ public class OrderByYieldEnhancementTest extends EqlStage2TestCase {
         final ResultQuery2 actQry = qry(select(MODEL).model(), orderBy().yield("key").desc().model());
         
         final QrySource2BasedOnPersistentType source = source("1", MODEL);
-        final EntProp2 keyProp = prop(source, pi(MODEL, "key"));
+        final Prop2 keyProp = prop(source, pi(MODEL, "key"));
 
         assertEquals(orderBys(orderDesc(keyProp)), actQry.orderings);
     }
@@ -30,8 +30,8 @@ public class OrderByYieldEnhancementTest extends EqlStage2TestCase {
         final ResultQuery2 actQry = qry(select(ORG2).model(), orderBy().yield("key").desc().model());
         
         final QrySource2BasedOnPersistentType source = source("1", ORG2);
-        final EntProp2 key1Prop = prop(source, pi(ORG2, "parent"), pi(ORG1, "key"));
-        final EntProp2 key2Prop = prop(source, pi(ORG2, "name"));
+        final Prop2 key1Prop = prop(source, pi(ORG2, "parent"), pi(ORG1, "key"));
+        final Prop2 key2Prop = prop(source, pi(ORG2, "name"));
         
         assertEquals(orderBys(orderDesc(key1Prop), orderDesc(key2Prop)), actQry.orderings);
     }
@@ -41,8 +41,8 @@ public class OrderByYieldEnhancementTest extends EqlStage2TestCase {
         final ResultQuery2 actQry = qry(select(ORG2).as("o2").model(), orderBy().yield("o2.key").desc().model());
         
         final QrySource2BasedOnPersistentType source = source("1", ORG2, "o2");
-        final EntProp2 key1Prop = prop(source, pi(ORG2, "parent"), pi(ORG1, "key"));
-        final EntProp2 key2Prop = prop(source, pi(ORG2, "name"));
+        final Prop2 key1Prop = prop(source, pi(ORG2, "parent"), pi(ORG1, "key"));
+        final Prop2 key2Prop = prop(source, pi(ORG2, "name"));
         
         assertEquals(orderBys(orderDesc(key1Prop), orderDesc(key2Prop)), actQry.orderings);
     }
@@ -52,7 +52,7 @@ public class OrderByYieldEnhancementTest extends EqlStage2TestCase {
         final ResultQuery2 actQry = qry(select(VEHICLE).model(), orderBy().yield("purchasePrice").desc().model());
         
         final QrySource2BasedOnPersistentType source = source("1", VEHICLE);
-        final EntProp2 prop = prop(source, pi(VEHICLE, "purchasePrice"), pi(VEHICLE, "purchasePrice", "amount"));
+        final Prop2 prop = prop(source, pi(VEHICLE, "purchasePrice"), pi(VEHICLE, "purchasePrice", "amount"));
         
         assertEquals(orderBys(orderDesc(prop)), actQry.orderings);
     }
@@ -62,7 +62,7 @@ public class OrderByYieldEnhancementTest extends EqlStage2TestCase {
         final ResultQuery2 actQry = qry(select(VEHICLE).model(), orderBy().yield("purchasePrice.amount").desc().model());
         
         final QrySource2BasedOnPersistentType source = source("1", VEHICLE);
-        final EntProp2 prop = prop(source, pi(VEHICLE, "purchasePrice"), pi(VEHICLE, "purchasePrice", "amount"));
+        final Prop2 prop = prop(source, pi(VEHICLE, "purchasePrice"), pi(VEHICLE, "purchasePrice", "amount"));
         
         assertEquals(orderBys(orderDesc(prop)), actQry.orderings);
     }
@@ -72,8 +72,8 @@ public class OrderByYieldEnhancementTest extends EqlStage2TestCase {
         final ResultQuery2 actQry = qry(select(VEHICLE).model(), orderBy().yield("lastFuelUsage.key").desc().model());
         
         final QrySource2BasedOnPersistentType source = source("1", VEHICLE);
-        final EntProp2 key1Prop = prop(source, pi(VEHICLE, "lastFuelUsage"), pi(VEHICLE_FUEL_USAGE, "vehicle"), pi(VEHICLE, "key"));
-        final EntProp2 key2Prop = prop(source, pi(VEHICLE, "lastFuelUsage"), pi(VEHICLE_FUEL_USAGE, "date"));
+        final Prop2 key1Prop = prop(source, pi(VEHICLE, "lastFuelUsage"), pi(VEHICLE_FUEL_USAGE, "vehicle"), pi(VEHICLE, "key"));
+        final Prop2 key2Prop = prop(source, pi(VEHICLE, "lastFuelUsage"), pi(VEHICLE_FUEL_USAGE, "date"));
         
         assertEquals(orderBys(orderDesc(key1Prop), orderDesc(key2Prop)), actQry.orderings);
     }
@@ -84,8 +84,8 @@ public class OrderByYieldEnhancementTest extends EqlStage2TestCase {
         
         final QrySource2BasedOnPersistentType source = source("1", VEHICLE);
 
-        final EntProp2 key1Prop2 = prop(source, pi(VEHICLE, "lastFuelUsage"), pi(VEHICLE_FUEL_USAGE, "vehicle"), pi(VEHICLE, "key"));
-        final EntProp2 key2Prop2 = prop(source, pi(VEHICLE, "lastFuelUsage"), pi(VEHICLE_FUEL_USAGE, "date"));
+        final Prop2 key1Prop2 = prop(source, pi(VEHICLE, "lastFuelUsage"), pi(VEHICLE_FUEL_USAGE, "vehicle"), pi(VEHICLE, "key"));
+        final Prop2 key2Prop2 = prop(source, pi(VEHICLE, "lastFuelUsage"), pi(VEHICLE_FUEL_USAGE, "date"));
         
         assertEquals(orderBys(
                 orderAsc(key1Prop2),
@@ -98,8 +98,8 @@ public class OrderByYieldEnhancementTest extends EqlStage2TestCase {
         
         final QrySource2BasedOnPersistentType source = source("1", VEHICLE, "v1");
 
-        final EntProp2 key1Prop1 = prop(source, pi(VEHICLE, "lastFuelUsage"), pi(VEHICLE_FUEL_USAGE, "vehicle"), pi(VEHICLE, "key"));
-        final EntProp2 key2Prop1 = prop(source, pi(VEHICLE, "lastFuelUsage"), pi(VEHICLE_FUEL_USAGE, "date"));
+        final Prop2 key1Prop1 = prop(source, pi(VEHICLE, "lastFuelUsage"), pi(VEHICLE_FUEL_USAGE, "vehicle"), pi(VEHICLE, "key"));
+        final Prop2 key2Prop1 = prop(source, pi(VEHICLE, "lastFuelUsage"), pi(VEHICLE_FUEL_USAGE, "date"));
         
         assertEquals(orderBys(
                 orderDesc(key1Prop1),
@@ -111,8 +111,8 @@ public class OrderByYieldEnhancementTest extends EqlStage2TestCase {
         final ResultQuery2 actQry = qry(select(VEHICLE_FUEL_USAGE).model(), orderBy().yield("vehicle.key").asc().yield("date").desc().model());
         
         final QrySource2BasedOnPersistentType source = source("1", VEHICLE_FUEL_USAGE);
-        final EntProp2 prop1 = prop(source, pi(VEHICLE_FUEL_USAGE, "vehicle"), pi(VEHICLE, "key"));
-        final EntProp2 prop2 = prop(source, pi(VEHICLE_FUEL_USAGE, "date"));
+        final Prop2 prop1 = prop(source, pi(VEHICLE_FUEL_USAGE, "vehicle"), pi(VEHICLE, "key"));
+        final Prop2 prop2 = prop(source, pi(VEHICLE_FUEL_USAGE, "date"));
         
         assertEquals(orderBys(orderAsc(prop1), orderDesc(prop2)), actQry.orderings);
     }
@@ -130,7 +130,7 @@ public class OrderByYieldEnhancementTest extends EqlStage2TestCase {
         
         final QrySource2BasedOnPersistentType source = source("1", VEHICLE);
 
-        final EntProp2 prop = prop(source, pi(VEHICLE, "lastFuelUsageQty"));
+        final Prop2 prop = prop(source, pi(VEHICLE, "lastFuelUsageQty"));
         
         assertEquals(orderBys(orderDesc(prop)), actQry.orderings);
         //assertNotEquals(orderBys(orderDesc(prop)), actQry.orderings);
@@ -141,8 +141,8 @@ public class OrderByYieldEnhancementTest extends EqlStage2TestCase {
         final ResultQuery2 actQry = qry(select(ORG2).yield().prop("key").as("k").modelAsAggregate(), orderBy().yield("k").desc().model());
         
         final QrySource2BasedOnPersistentType source = source("1", ORG2);
-        final EntProp2 key1Prop = prop(source, pi(ORG2, "parent"), pi(ORG1, "key"));
-        final EntProp2 key2Prop = prop(source, pi(ORG2, "name"));
+        final Prop2 key1Prop = prop(source, pi(ORG2, "parent"), pi(ORG1, "key"));
+        final Prop2 key2Prop = prop(source, pi(ORG2, "name"));
         
         assertEquals(orderBys(orderDesc(key1Prop), orderDesc(key2Prop)), actQry.orderings);
     }

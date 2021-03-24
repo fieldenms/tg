@@ -12,7 +12,7 @@ import ua.com.fielden.platform.entity.query.fluent.ITypeCast;
 import ua.com.fielden.platform.eql.stage2.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.conditions.ICondition2;
-import ua.com.fielden.platform.eql.stage2.operands.EntProp2;
+import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.conditions.ICondition3;
 import ua.com.fielden.platform.eql.stage3.functions.CaseWhen3;
@@ -60,8 +60,8 @@ public class CaseWhen2 extends AbstractFunction2<CaseWhen3> {
     }
 
     @Override
-    public Set<EntProp2> collectProps() {
-        final Set<EntProp2> result = new HashSet<>();
+    public Set<Prop2> collectProps() {
+        final Set<Prop2> result = new HashSet<>();
         for (final T2<ICondition2<? extends ICondition3>, ISingleOperand2<? extends ISingleOperand3>> pair : whenThenPairs) {
             result.addAll(pair._1.collectProps());
             result.addAll(pair._2.collectProps());

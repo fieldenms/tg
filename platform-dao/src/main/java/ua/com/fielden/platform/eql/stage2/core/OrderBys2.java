@@ -9,7 +9,7 @@ import java.util.Set;
 
 import ua.com.fielden.platform.eql.stage2.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.TransformationResult;
-import ua.com.fielden.platform.eql.stage2.operands.EntProp2;
+import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.core.OrderBy3;
 import ua.com.fielden.platform.eql.stage3.core.OrderBys3;
 import ua.com.fielden.platform.eql.stage3.core.Yields3;
@@ -32,8 +32,8 @@ public class OrderBys2 {
         return new TransformationResult<OrderBys3>(new OrderBys3(transformed), currentContext);
     }
 
-    public Set<EntProp2> collectProps() {
-        final Set<EntProp2> result = new HashSet<>();
+    public Set<Prop2> collectProps() {
+        final Set<Prop2> result = new HashSet<>();
         for (final OrderBy2 orderBy : models) {
             if (orderBy.operand != null) {
                 result.addAll(orderBy.operand.collectProps());

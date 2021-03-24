@@ -1,11 +1,11 @@
 package ua.com.fielden.platform.eql.stage3.operands;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.eql.stage3.EntQueryBlocks3;
+import ua.com.fielden.platform.eql.stage3.QueryBlocks3;
 
 public class SubQuery3 extends AbstractQuery3 implements ISingleOperand3 {
 
-    public SubQuery3(final EntQueryBlocks3 queryBlocks, final Class<?> resultType) {
+    public SubQuery3(final QueryBlocks3 queryBlocks, final Class<?> resultType) {
         super(queryBlocks, resultType);
     }
 

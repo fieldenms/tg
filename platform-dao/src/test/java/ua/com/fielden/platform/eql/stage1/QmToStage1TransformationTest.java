@@ -7,7 +7,7 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.eql.meta.EqlStage1TestCase;
-import ua.com.fielden.platform.eql.stage1.EntQueryBlocks1;
+import ua.com.fielden.platform.eql.stage1.QueryBlocks1;
 import ua.com.fielden.platform.eql.stage1.conditions.Conditions1;
 import ua.com.fielden.platform.eql.stage1.operands.ResultQuery1;
 import ua.com.fielden.platform.eql.stage1.sources.QrySources1;
@@ -21,7 +21,7 @@ public class QmToStage1TransformationTest extends EqlStage1TestCase {
         
         final QrySources1 sources1 = sources(MODEL);
         final Conditions1 conditions1 = conditions(isNotNull(prop("make.key")));
-        final EntQueryBlocks1 parts1 = qb1(sources1, conditions1);
+        final QueryBlocks1 parts1 = qb1(sources1, conditions1);
         final ResultQuery1 expQry1 = new ResultQuery1(parts1, MODEL, null);
 
         assertEquals(expQry1, resultQry(qry));
@@ -33,7 +33,7 @@ public class QmToStage1TransformationTest extends EqlStage1TestCase {
         
         final QrySources1 sources1 = sources(MODEL);
         final Conditions1 conditions1 = conditions(isNotNull(prop("make")));
-        final EntQueryBlocks1 parts1 = qb1(sources1, conditions1);
+        final QueryBlocks1 parts1 = qb1(sources1, conditions1);
         final ResultQuery1 expQry1 = new ResultQuery1(parts1, MODEL, null);
 
         assertEquals(expQry1, resultQry(qry));

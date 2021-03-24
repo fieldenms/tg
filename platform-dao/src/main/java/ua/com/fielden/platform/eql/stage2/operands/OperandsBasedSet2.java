@@ -32,8 +32,8 @@ public class OperandsBasedSet2 implements ISetOperand2<OperandsBasedSet3> {
     }
 
     @Override
-    public Set<EntProp2> collectProps() {
-        final Set<EntProp2> result = new HashSet<>();
+    public Set<Prop2> collectProps() {
+        final Set<Prop2> result = new HashSet<>();
         for (final ISingleOperand2<? extends ISingleOperand3> operand : operands) {
             result.addAll(operand.collectProps());
         }

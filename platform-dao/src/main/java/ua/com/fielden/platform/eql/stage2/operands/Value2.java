@@ -9,18 +9,18 @@ import org.hibernate.type.TypeResolver;
 
 import ua.com.fielden.platform.eql.stage2.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.TransformationResult;
-import ua.com.fielden.platform.eql.stage3.operands.EntValue3;
+import ua.com.fielden.platform.eql.stage3.operands.Value3;
 
-public class EntValue2 implements ISingleOperand2<EntValue3> {
+public class Value2 implements ISingleOperand2<Value3> {
     private final Object value;
     private final boolean ignoreNull;
     private static TypeResolver tr = new TypeResolver();
 
-    public EntValue2(final Object value) {
+    public Value2(final Object value) {
         this(value, false);
     }
 
-    public EntValue2(final Object value, final boolean ignoreNull) {
+    public Value2(final Object value, final boolean ignoreNull) {
         this.value = value;
         this.ignoreNull = ignoreNull;
     }
@@ -49,17 +49,17 @@ public class EntValue2 implements ISingleOperand2<EntValue3> {
     }
     
     @Override
-    public TransformationResult<EntValue3> transform(final TransformationContext context) {
+    public TransformationResult<Value3> transform(final TransformationContext context) {
         if (needsParameter()) {
-            final EntValue3 transformed = new EntValue3(value, context.getNextParamId());
-            return new TransformationResult<EntValue3>(transformed, context.cloneWithParamValue(transformed.getParamName(), transformed.value));
+            final Value3 transformed = new Value3(value, context.getNextParamId());
+            return new TransformationResult<Value3>(transformed, context.cloneWithParamValue(transformed.getParamName(), transformed.value));
         } else {
-            return new TransformationResult<EntValue3>(new EntValue3(value, 0), context);
+            return new TransformationResult<Value3>(new Value3(value, 0), context);
         }
     }
 
     @Override
-    public Set<EntProp2> collectProps() {
+    public Set<Prop2> collectProps() {
         return emptySet();
     }
 
@@ -78,11 +78,11 @@ public class EntValue2 implements ISingleOperand2<EntValue3> {
             return true;
         }
 
-        if (!(obj instanceof EntValue2)) {
+        if (!(obj instanceof Value2)) {
             return false;
         }
 
-        final EntValue2 other = (EntValue2) obj;
+        final Value2 other = (Value2) obj;
         
         return Objects.equals(value, other.value) && ignoreNull == other.ignoreNull;
     }

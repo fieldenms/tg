@@ -1,10 +1,10 @@
 package ua.com.fielden.platform.eql.stage3.operands;
 
-import ua.com.fielden.platform.eql.stage3.EntQueryBlocks3;
+import ua.com.fielden.platform.eql.stage3.QueryBlocks3;
 
 public class ResultQuery3 extends AbstractQuery3 {
 
-    public ResultQuery3(final EntQueryBlocks3 queryBlocks, final Class<?> resultType) {
+    public ResultQuery3(final QueryBlocks3 queryBlocks, final Class<?> resultType) {
         super(queryBlocks, resultType);
     }
 

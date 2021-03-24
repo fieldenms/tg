@@ -36,8 +36,8 @@ public class Expression2 implements ISingleOperand2<Expression3> {
     }
 
     @Override
-    public Set<EntProp2> collectProps() {
-        final Set<EntProp2> result = new HashSet<>();
+    public Set<Prop2> collectProps() {
+        final Set<Prop2> result = new HashSet<>();
         result.addAll(first.collectProps());
         for (final CompoundSingleOperand2 item : items) {
             result.addAll(item.operand.collectProps());

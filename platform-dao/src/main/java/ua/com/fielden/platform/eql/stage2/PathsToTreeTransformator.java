@@ -29,7 +29,7 @@ import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
 import ua.com.fielden.platform.eql.stage0.StandAloneExpressionBuilder;
 import ua.com.fielden.platform.eql.stage1.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage1.operands.Expression1;
-import ua.com.fielden.platform.eql.stage2.operands.EntProp2;
+import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.Expression2;
 import ua.com.fielden.platform.eql.stage2.sources.Child;
 import ua.com.fielden.platform.eql.stage2.sources.ChildGroup;
@@ -47,7 +47,7 @@ public class PathsToTreeTransformator {
         this.gen = gen;
     }
     
-    public Map<String, List<ChildGroup>> groupChildren(final Set<EntProp2> props) {
+    public Map<String, List<ChildGroup>> groupChildren(final Set<Prop2> props) {
         final Map<String, List<ChildGroup>> result = new HashMap<>();
         for (final Entry<String, List<Child>> el : transform(props).entrySet()) {
             result.put(el.getKey(), convertToGroup(el.getValue()));
@@ -55,7 +55,7 @@ public class PathsToTreeTransformator {
         return result;
     }
     
-    protected final Map<String, List<Child>> transform(final Set<EntProp2> props) {
+    protected final Map<String, List<Child>> transform(final Set<Prop2> props) {
         final Map<String, List<Child>> sourceChildren = new HashMap<>();
 
         for (final SourceAndItsProps sourceProps : groupBySource(props).values()) {
@@ -71,9 +71,9 @@ public class PathsToTreeTransformator {
         return sourceChildren;
     }
 
-    private static final Map<String, SourceAndItsProps> groupBySource(final Set<EntProp2> props) {
+    private static final Map<String, SourceAndItsProps> groupBySource(final Set<Prop2> props) {
         final Map<String, SourceAndItsProps> result = new HashMap<>();
-        for (final EntProp2 prop : props) {
+        for (final Prop2 prop : props) {
             final SourceAndItsProps existing = result.get(prop.source.id());
             if (existing != null) {
                 existing.propPathesByFullNames.put(prop.name, prop.getPath()); // NOTE: for rare cases where two EntProp2 are identical except isId value, replacement can occur, but with identical value of path 

@@ -4,7 +4,7 @@ import java.util.Objects;
 
 import ua.com.fielden.platform.eql.stage2.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.TransformationResult;
-import ua.com.fielden.platform.eql.stage2.operands.EntProp2;
+import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.core.Yield3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
@@ -25,8 +25,8 @@ public class Yield2 {
     }
 
     public TransformationResult<Yield3> transform(final TransformationContext context) {
-        final Object hibType = operand instanceof EntProp2 ? ((EntProp2) operand).hibType : null;
-        final Class<?> type = operand instanceof EntProp2 ? ((EntProp2) operand).type : null;
+        final Object hibType = operand instanceof Prop2 ? ((Prop2) operand).hibType : null;
+        final Class<?> type = operand instanceof Prop2 ? ((Prop2) operand).type : null;
         final TransformationContext newContext = !operand.isHeader() ? context.cloneWithNextSqlId() : context;
         final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(newContext);
         return new TransformationResult<Yield3>(new Yield3(operandTransformationResult.item, alias, operand.isHeader() ? 0 : newContext.sqlId, operand.isHeader(), type, hibType), operandTransformationResult.updatedContext);

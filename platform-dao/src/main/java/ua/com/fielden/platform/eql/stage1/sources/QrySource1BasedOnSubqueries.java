@@ -29,7 +29,7 @@ import ua.com.fielden.platform.eql.stage1.core.Yield1;
 import ua.com.fielden.platform.eql.stage1.operands.SourceQuery1;
 import ua.com.fielden.platform.eql.stage2.core.Yield2;
 import ua.com.fielden.platform.eql.stage2.core.Yields2;
-import ua.com.fielden.platform.eql.stage2.operands.EntProp2;
+import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.SourceQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.QrySource2BasedOnSubqueries;
 
@@ -153,9 +153,9 @@ public class QrySource1BasedOnSubqueries extends AbstractQrySource1<QrySource2Ba
 
             for (final Yield2 yield : yields.getYields()) {
 
-                if (yield.operand instanceof EntProp2 /*&& !((EntProp2) yield.operand).isCalculated()*/) {
+                if (yield.operand instanceof Prop2 /*&& !((EntProp2) yield.operand).isCalculated()*/) {
                     if (!yield.alias.contains(".")) {
-                        entityInfo.addProp(((EntProp2) yield.operand).lastPart().cloneRenamed(yield.alias));    
+                        entityInfo.addProp(((Prop2) yield.operand).lastPart().cloneRenamed(yield.alias));    
                     }
                 } else {
                     entityInfo.addProp(isEntityType(yield.javaType())

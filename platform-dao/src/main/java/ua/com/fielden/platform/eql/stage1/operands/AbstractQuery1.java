@@ -2,7 +2,7 @@ package ua.com.fielden.platform.eql.stage1.operands;
 
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
-import static ua.com.fielden.platform.eql.stage1.operands.EntProp1.enhancePath;
+import static ua.com.fielden.platform.eql.stage1.operands.Prop1.enhancePath;
 import static ua.com.fielden.platform.eql.stage2.KeyPropertyExtractor.extract;
 import static ua.com.fielden.platform.eql.stage2.KeyPropertyExtractor.needsExtraction;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
@@ -18,7 +18,7 @@ import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.meta.ComponentTypePropInfo;
 import ua.com.fielden.platform.eql.meta.UnionTypePropInfo;
-import ua.com.fielden.platform.eql.stage1.EntQueryBlocks1;
+import ua.com.fielden.platform.eql.stage1.QueryBlocks1;
 import ua.com.fielden.platform.eql.stage1.PropResolution;
 import ua.com.fielden.platform.eql.stage1.conditions.Conditions1;
 import ua.com.fielden.platform.eql.stage1.core.GroupBys1;
@@ -31,7 +31,7 @@ import ua.com.fielden.platform.eql.stage2.core.OrderBy2;
 import ua.com.fielden.platform.eql.stage2.core.OrderBys2;
 import ua.com.fielden.platform.eql.stage2.core.Yield2;
 import ua.com.fielden.platform.eql.stage2.core.Yields2;
-import ua.com.fielden.platform.eql.stage2.operands.EntProp2;
+import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.sources.IQrySource2;
 import ua.com.fielden.platform.eql.stage3.sources.IQrySource3;
@@ -46,7 +46,7 @@ public abstract class AbstractQuery1 {
     public final Class<? extends AbstractEntity<?>> resultType;
     public final boolean yieldAll;
 
-    public AbstractQuery1(final EntQueryBlocks1 queryBlocks, final Class<? extends AbstractEntity<?>> resultType) {
+    public AbstractQuery1(final QueryBlocks1 queryBlocks, final Class<? extends AbstractEntity<?>> resultType) {
         this.sources = queryBlocks.sources;
         this.conditions = queryBlocks.conditions;
         this.yields = queryBlocks.yields;
@@ -95,8 +95,8 @@ public abstract class AbstractQuery1 {
         final List<Yield2> expanded = new ArrayList<>();
         expanded.add(original);
         
-        if (original.operand.isHeader() && original.operand instanceof EntProp2){
-            final EntProp2 originalYieldProp = (EntProp2) original.operand;
+        if (original.operand.isHeader() && original.operand instanceof Prop2){
+            final Prop2 originalYieldProp = (Prop2) original.operand;
 
             if (originalYieldProp.lastPart() instanceof UnionTypePropInfo) {
                 for (final Entry<String, AbstractPropInfo<?>> sub : ((UnionTypePropInfo<?>) originalYieldProp.lastPart()).propEntityInfo.getProps().entrySet()) {
@@ -114,10 +114,10 @@ public abstract class AbstractQuery1 {
         return expanded;
     }
     
-    private static List<Yield2> expand(final EntProp2 originalYieldProp, final AbstractPropInfo<?> subProp, final String yieldAlias) {
+    private static List<Yield2> expand(final Prop2 originalYieldProp, final AbstractPropInfo<?> subProp, final String yieldAlias) {
         final List<AbstractPropInfo<?>> expandedPath = new ArrayList<>(originalYieldProp.getPath());
         expandedPath.add(subProp);
-        return expand(new Yield2(new EntProp2(originalYieldProp.source, expandedPath), yieldAlias + "." + subProp.name, false));             
+        return expand(new Yield2(new Prop2(originalYieldProp.source, expandedPath), yieldAlias + "." + subProp.name, false));             
     }
     
     
@@ -125,7 +125,7 @@ public abstract class AbstractQuery1 {
     private static List<OrderBy2> transformForYield(final OrderBy2 original, final Yields2 yields, final IQrySource2<? extends IQrySource3> mainSource) {
         if (yields.getYieldsMap().containsKey(original.yieldName)) {
             final Yield2 yield = yields.getYieldsMap().get(original.yieldName);
-            if (yield.operand instanceof EntProp2 && needsExtraction(((EntProp2) yield.operand).lastPart())) {
+            if (yield.operand instanceof Prop2 && needsExtraction(((Prop2) yield.operand).lastPart())) {
                 return transformForOperand(yield.operand, original.isDesc);
             } else {
                 return asList(original);
@@ -133,10 +133,10 @@ public abstract class AbstractQuery1 {
         } 
         
         if (yields.getYieldsMap().isEmpty()) {
-            final PropResolution propResolution = EntProp1.resolvePropAgainstSource(mainSource, new EntProp1(original.yieldName, false));
+            final PropResolution propResolution = Prop1.resolvePropAgainstSource(mainSource, new Prop1(original.yieldName, false));
             if (propResolution != null) {
                 final List<AbstractPropInfo<?>> path = enhancePath(propResolution.getPath());
-                return transformForOperand(new EntProp2(mainSource, path), original.isDesc);
+                return transformForOperand(new Prop2(mainSource, path), original.isDesc);
             }
         }
         
@@ -144,14 +144,14 @@ public abstract class AbstractQuery1 {
     }
 
     private static List<OrderBy2> transformForOperand(final ISingleOperand2<?> operand, final boolean isDesc) {
-        return operand instanceof EntProp2 ?
-                extract((EntProp2) operand).stream().map(keySubprop -> new OrderBy2(keySubprop, isDesc)).collect(toList()) :
+        return operand instanceof Prop2 ?
+                extract((Prop2) operand).stream().map(keySubprop -> new OrderBy2(keySubprop, isDesc)).collect(toList()) :
                 asList(new OrderBy2(operand, isDesc));
     }
     
     private static List<GroupBy2> enhance(final GroupBy2 original) {
-        return original.operand instanceof EntProp2 ?
-                extract((EntProp2) original.operand).stream().map(keySubprop -> new GroupBy2(keySubprop)).collect(toList()) :
+        return original.operand instanceof Prop2 ?
+                extract((Prop2) original.operand).stream().map(keySubprop -> new GroupBy2(keySubprop)).collect(toList()) :
                 asList(original);
     }
     

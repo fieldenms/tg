@@ -5,7 +5,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.eql.stage2.EntQueryBlocks2;
+import ua.com.fielden.platform.eql.stage2.QueryBlocks2;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.core.GroupBys2;
 import ua.com.fielden.platform.eql.stage2.core.OrderBys2;
@@ -21,7 +21,7 @@ public abstract class AbstractQuery2 {
     public final OrderBys2 orderings;
     public final Class<?> resultType;
 
-    public AbstractQuery2(final EntQueryBlocks2 queryBlocks, final Class<? extends AbstractEntity<?>> resultType) {
+    public AbstractQuery2(final QueryBlocks2 queryBlocks, final Class<? extends AbstractEntity<?>> resultType) {
         this.sources = queryBlocks.sources;
         this.conditions = queryBlocks.conditions;
         this.yields = queryBlocks.yields;
@@ -35,8 +35,8 @@ public abstract class AbstractQuery2 {
         return resultType == null ? yields.getYields().iterator().next().javaType() : resultType;
     }
     
-    public Set<EntProp2> collectProps() {
-        final Set<EntProp2> result = new HashSet<>();
+    public Set<Prop2> collectProps() {
+        final Set<Prop2> result = new HashSet<>();
         result.addAll(sources.collectProps());
         result.addAll(conditions.collectProps());
         result.addAll(yields.collectProps());

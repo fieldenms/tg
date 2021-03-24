@@ -29,7 +29,7 @@ import ua.com.fielden.platform.eql.stage2.PathsToTreeTransformator;
 import ua.com.fielden.platform.eql.stage2.TablesAndSourceChildren;
 import ua.com.fielden.platform.eql.stage2.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.operands.ResultQuery2;
-import ua.com.fielden.platform.eql.stage3.EntQueryBlocks3;
+import ua.com.fielden.platform.eql.stage3.QueryBlocks3;
 import ua.com.fielden.platform.eql.stage3.conditions.ComparisonTest3;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.conditions.ICondition3;
@@ -41,7 +41,7 @@ import ua.com.fielden.platform.eql.stage3.core.OrderBys3;
 import ua.com.fielden.platform.eql.stage3.core.Yield3;
 import ua.com.fielden.platform.eql.stage3.core.Yields3;
 import ua.com.fielden.platform.eql.stage3.functions.CountAll3;
-import ua.com.fielden.platform.eql.stage3.operands.EntProp3;
+import ua.com.fielden.platform.eql.stage3.operands.Prop3;
 import ua.com.fielden.platform.eql.stage3.operands.Expression3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.ResultQuery3;
@@ -70,7 +70,7 @@ public class EqlStage3TestCase extends EqlTestCase {
 
         final PropsResolutionContext resolutionContext = new PropsResolutionContext(metadata());
         final EntQueryGenerator qb = qb();
-        final ResultQuery2 rq2 = qb.generateEntQueryAsResultQuery(countQry, null, null).transform(resolutionContext);
+        final ResultQuery2 rq2 = qb.generateAsResultQuery(countQry, null, null).transform(resolutionContext);
         final PathsToTreeTransformator pathsToTreeTransformator = new PathsToTreeTransformator( metadata(), qb);
         final ua.com.fielden.platform.eql.stage2.TransformationResult<ResultQuery3> s2tr = rq2.transform(new TransformationContext(new TablesAndSourceChildren(tables, pathsToTreeTransformator.groupChildren(rq2.collectProps()))));
         return s2tr.item;
@@ -79,7 +79,7 @@ public class EqlStage3TestCase extends EqlTestCase {
     protected static ResultQuery3 qry(final AggregatedResultQueryModel qry) {
         final PropsResolutionContext resolutionContext = new PropsResolutionContext(metadata());
         final EntQueryGenerator qb = qb();
-        final ResultQuery2 rq2 = qb.generateEntQueryAsResultQuery(qry, null, null).transform(resolutionContext);
+        final ResultQuery2 rq2 = qb.generateAsResultQuery(qry, null, null).transform(resolutionContext);
         final PathsToTreeTransformator pathsToTreeTransformator = new PathsToTreeTransformator( metadata(), qb);
         final ua.com.fielden.platform.eql.stage2.TransformationResult<ResultQuery3> s2tr = rq2.transform(new TransformationContext(new TablesAndSourceChildren(tables, pathsToTreeTransformator.groupChildren(rq2.collectProps()))));
         return s2tr.item;
@@ -90,7 +90,7 @@ public class EqlStage3TestCase extends EqlTestCase {
 
         final PropsResolutionContext resolutionContext = new PropsResolutionContext(metadata());
         final EntQueryGenerator qb = qb(paramValues);
-        final ResultQuery2 rq2 = qb.generateEntQueryAsResultQuery(countQry, null, null).transform(resolutionContext);
+        final ResultQuery2 rq2 = qb.generateAsResultQuery(countQry, null, null).transform(resolutionContext);
         final PathsToTreeTransformator pathsToTreeTransformator = new PathsToTreeTransformator( metadata(), qb);
         final ua.com.fielden.platform.eql.stage2.TransformationResult<ResultQuery3> s2tr = rq2.transform(new TransformationContext(new TablesAndSourceChildren(tables, pathsToTreeTransformator.groupChildren(rq2.collectProps()))));
         return s2tr.item;
@@ -117,29 +117,29 @@ public class EqlStage3TestCase extends EqlTestCase {
     }
 
     protected static ISingleOperand3 prop(final String name, final IQrySource3 source) {
-        return new EntProp3(name, source, null, null);
+        return new Prop3(name, source, null, null);
     }
     
     protected static ISingleOperand3 entityProp(final String name, final IQrySource3 source, final Class<? extends AbstractEntity<?>> entityType) {
-        return new EntProp3(name, source, entityType, LongType.INSTANCE);
+        return new Prop3(name, source, entityType, LongType.INSTANCE);
     }
 
     protected static ISingleOperand3 idProp(final IQrySource3 source) {
-        return new EntProp3(ID, source, Long.class, LongType.INSTANCE);
+        return new Prop3(ID, source, Long.class, LongType.INSTANCE);
     }
 
     
     protected static ISingleOperand3 stringProp(final String name, final IQrySource3 source) {
-        return new EntProp3(name, source, String.class, StringType.INSTANCE);
+        return new Prop3(name, source, String.class, StringType.INSTANCE);
     }
 
     protected static ISingleOperand3 prop(final String name, final IQrySource3 source, final Class<?> type, final Type hibType) {
-        return new EntProp3(name, source, type, hibType);
+        return new Prop3(name, source, type, hibType);
     }
 
     
     protected static ISingleOperand3 dateProp(final String name, final IQrySource3 source) {
-        return new EntProp3(name, source, Date.class, dateTimeHibType);
+        return new Prop3(name, source, Date.class, dateTimeHibType);
     }
     
     protected static ComparisonTest3 eq(final ISingleOperand3 op1, final ISingleOperand3 op2) {
@@ -283,19 +283,19 @@ public class EqlStage3TestCase extends EqlTestCase {
 //    }
 
     protected static SubQuery3 subqry(final IQrySources3 sources, final Yields3 yields, final Class<?> resultType) {
-        return new SubQuery3(new EntQueryBlocks3(sources, new Conditions3(false, emptyList()), yields, groups(), orders()), resultType);
+        return new SubQuery3(new QueryBlocks3(sources, new Conditions3(false, emptyList()), yields, groups(), orders()), resultType);
     }
 
     protected static SubQuery3 subqry(final IQrySources3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType) {
-        return new SubQuery3(new EntQueryBlocks3(sources, conditions, yields, groups(), orders()), resultType);
+        return new SubQuery3(new QueryBlocks3(sources, conditions, yields, groups(), orders()), resultType);
     }
 
     private static ResultQuery3 resultQry(final IQrySources3 sources, final Yields3 yields, final Class<?> resultType) {
-        return new ResultQuery3(new EntQueryBlocks3(sources, new Conditions3(false, emptyList()), yields, groups(), orders()), resultType);
+        return new ResultQuery3(new QueryBlocks3(sources, new Conditions3(false, emptyList()), yields, groups(), orders()), resultType);
     }
 
     private static ResultQuery3 resultQry(final IQrySources3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType) {
-        return new ResultQuery3(new EntQueryBlocks3(sources, conditions, yields, groups(), orders()), resultType);
+        return new ResultQuery3(new QueryBlocks3(sources, conditions, yields, groups(), orders()), resultType);
     }
 
 //    private static EntQuery3 qry(final IQrySources3 sources, final Conditions3 conditions, final Yields3 yields, final QueryCategory queryCategory, final Class<?> resultType) {
@@ -303,7 +303,7 @@ public class EqlStage3TestCase extends EqlTestCase {
 //    }
 
     private static SourceQuery3 sourceQry(final IQrySources3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType) {
-        return new SourceQuery3(new EntQueryBlocks3(sources, conditions, yields, groups(), orders()), resultType);
+        return new SourceQuery3(new QueryBlocks3(sources, conditions, yields, groups(), orders()), resultType);
     }
 
 //    protected static EntQuery3 qry(final IQrySources3 sources, final Class<?> resultType) {

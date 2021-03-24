@@ -15,16 +15,16 @@ import com.google.common.base.Objects;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.IRetrievalModel;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
-import ua.com.fielden.platform.eql.stage1.EntQueryBlocks1;
+import ua.com.fielden.platform.eql.stage1.QueryBlocks1;
 import ua.com.fielden.platform.eql.stage1.ITransformableToS2;
 import ua.com.fielden.platform.eql.stage1.PropsResolutionContext;
-import ua.com.fielden.platform.eql.stage2.EntQueryBlocks2;
+import ua.com.fielden.platform.eql.stage2.QueryBlocks2;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.core.GroupBys2;
 import ua.com.fielden.platform.eql.stage2.core.OrderBys2;
 import ua.com.fielden.platform.eql.stage2.core.Yield2;
 import ua.com.fielden.platform.eql.stage2.core.Yields2;
-import ua.com.fielden.platform.eql.stage2.operands.EntProp2;
+import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.ResultQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.IQrySource2;
 import ua.com.fielden.platform.eql.stage2.sources.QrySources2;
@@ -35,7 +35,7 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToS2<R
     
     public final IRetrievalModel<?> fetchModel;
 
-    public ResultQuery1(final EntQueryBlocks1 queryBlocks, final Class<? extends AbstractEntity<?>> resultType, final IRetrievalModel<?> fetchModel) {
+    public ResultQuery1(final QueryBlocks1 queryBlocks, final Class<? extends AbstractEntity<?>> resultType, final IRetrievalModel<?> fetchModel) {
         super(queryBlocks, requireNonNull(resultType));
         this.fetchModel = fetchModel;
     }
@@ -50,7 +50,7 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToS2<R
         final GroupBys2 groups2 = enhance(groups.transform(enhancedContext));
         final OrderBys2 orderings2 = enhance(orderings.transform(enhancedContext), yields2, sources2.main);
         final Yields2 enhancedYields2 = expand(enhanceYields(yields2, sources2.main));
-        final EntQueryBlocks2 entQueryBlocks = new EntQueryBlocks2(sources2, conditions2, enhancedYields2, groups2, orderings2);
+        final QueryBlocks2 entQueryBlocks = new QueryBlocks2(sources2, conditions2, enhancedYields2, groups2, orderings2);
 
         return new ResultQuery2(entQueryBlocks, resultType);
     }
@@ -59,8 +59,8 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToS2<R
         if (yields.getYields().isEmpty() || yieldAll) {
             final List<Yield2> enhancedYields = new ArrayList<>(yields.getYields());
             for (final Entry<String, AbstractPropInfo<?>> el : mainSource.entityInfo().getProps().entrySet()) {
-                if (fetchModel == null || (/*fetchModel != null && */fetchModel.containsProp(el.getValue().name))) {
-                    enhancedYields.add(new Yield2(new EntProp2(mainSource, listOf(el.getValue())), el.getKey(), false)); 
+                if (fetchModel == null || fetchModel.containsProp(el.getValue().name)) {
+                    enhancedYields.add(new Yield2(new Prop2(mainSource, listOf(el.getValue())), el.getKey(), false)); 
                 }
             }
             return new Yields2(enhancedYields);

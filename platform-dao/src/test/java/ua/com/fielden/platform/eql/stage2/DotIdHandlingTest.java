@@ -7,7 +7,7 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.eql.meta.EqlStage2TestCase;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
-import ua.com.fielden.platform.eql.stage2.operands.EntProp2;
+import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.ResultQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.QrySource2BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage2.sources.QrySources2;
@@ -20,7 +20,7 @@ public class DotIdHandlingTest extends EqlStage2TestCase {
         
         final QrySource2BasedOnPersistentType source = source("1", MODEL);
         final QrySources2 sources = sources(source);
-        final EntProp2 makeProp = propWithIsId(source, pi(MODEL, "make"));
+        final Prop2 makeProp = propWithIsId(source, pi(MODEL, "make"));
         final Conditions2 conditions = cond(isNotNull(makeProp));
         final ResultQuery2 expQry = qryCountAll(sources, conditions);
 
@@ -33,7 +33,7 @@ public class DotIdHandlingTest extends EqlStage2TestCase {
         
         final QrySource2BasedOnPersistentType source = source("1", VEHICLE);
         final QrySources2 sources = sources(source);
-        final EntProp2 makeProp = propWithIsId(source, pi(VEHICLE, "modelMake"));
+        final Prop2 makeProp = propWithIsId(source, pi(VEHICLE, "modelMake"));
         final Conditions2 conditions = cond(isNotNull(makeProp));
         final ResultQuery2 expQry = qryCountAll(sources, conditions);
 

@@ -88,7 +88,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
         models.addAll(parentInfo.unionEntityModels);
         final List<SourceQuery1> queries = new ArrayList<>();
         for (final QueryModel<T> qryModel : models) {
-            queries.add(getQueryBuilder().generateEntQueryAsSyntheticEntityQuery(qryModel, resultType));
+            queries.add(getQueryBuilder().generateAsSyntheticEntityQuery(qryModel, resultType));
         }
 
         return new QrySource1BasedOnSubqueries(alias, queries, getQueryBuilder().nextSourceId());
@@ -99,7 +99,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
         final String alias = secondValue();
         final List<QueryModel<AbstractEntity<?>>> models = firstValue();
         for (final QueryModel<AbstractEntity<?>> qryModel : models) {
-            queries.add(getQueryBuilder().generateEntQueryAsSourceQuery(qryModel));
+            queries.add(getQueryBuilder().generateAsSourceQuery(qryModel));
         }
 
         return pair(QRY_SOURCE, new QrySource1BasedOnSubqueries(alias, queries, getQueryBuilder().nextSourceId()));

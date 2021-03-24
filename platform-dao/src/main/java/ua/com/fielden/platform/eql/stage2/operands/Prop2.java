@@ -14,23 +14,23 @@ import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.stage2.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.sources.IQrySource2;
-import ua.com.fielden.platform.eql.stage3.operands.EntProp3;
+import ua.com.fielden.platform.eql.stage3.operands.Prop3;
 import ua.com.fielden.platform.eql.stage3.operands.Expression3;
 import ua.com.fielden.platform.eql.stage3.sources.IQrySource3;
 import ua.com.fielden.platform.types.tuples.T2;
 
-public class EntProp2 implements ISingleOperand2<Expression3> {
+public class Prop2 implements ISingleOperand2<Expression3> {
     public final IQrySource2<? extends IQrySource3> source;
     private final List<AbstractPropInfo<?>> path;
     public final String name;
     public final Class<?> type;
     public final Object hibType;
 
-    public EntProp2(final IQrySource2<? extends IQrySource3> source, final List<AbstractPropInfo<?>> path) {
+    public Prop2(final IQrySource2<? extends IQrySource3> source, final List<AbstractPropInfo<?>> path) {
         this(source, path, false);
     }
 
-    public EntProp2(final IQrySource2<? extends IQrySource3> source, final List<AbstractPropInfo<?>> path, final boolean shouldBeTreatedAsId) {
+    public Prop2(final IQrySource2<? extends IQrySource3> source, final List<AbstractPropInfo<?>> path, final boolean shouldBeTreatedAsId) {
         this.source = source;
         this.path = path;
         this.name = path.stream().map(k -> k.name).collect(Collectors.joining("."));
@@ -41,7 +41,7 @@ public class EntProp2 implements ISingleOperand2<Expression3> {
     @Override
     public TransformationResult<Expression3> transform(final TransformationContext context) {
         if (isHeader()) { //resolution to column level is not applicable here
-            return new TransformationResult<Expression3>(new Expression3(new EntProp3(lastPart().name, null, type, hibType), emptyList()), context);
+            return new TransformationResult<Expression3>(new Expression3(new Prop3(lastPart().name, null, type, hibType), emptyList()), context);
         }
         
         final T2<IQrySource3, Object> resolution = context.resolve(source, name);
@@ -49,7 +49,7 @@ public class EntProp2 implements ISingleOperand2<Expression3> {
         Expression3 transformedProp;  
         TransformationContext currentContext = context;
         if (resolution._2 instanceof String) {
-            transformedProp = new Expression3(new EntProp3((String) resolution._2, resolution._1, type, hibType), emptyList());
+            transformedProp = new Expression3(new Prop3((String) resolution._2, resolution._1, type, hibType), emptyList());
         } else {
             final TransformationResult<Expression3> tr = ((Expression2) resolution._2).transform(context);
             currentContext = tr.updatedContext;
@@ -59,7 +59,7 @@ public class EntProp2 implements ISingleOperand2<Expression3> {
     }
 
     @Override
-    public Set<EntProp2> collectProps() {
+    public Set<Prop2> collectProps() {
         // header props may happen here as they carry useful type info for yielding purposes, but since they are not going to be resolved to any columns -- will not be included during props collection 
         return isHeader() ? emptySet() : setOf(this);
     }
@@ -106,11 +106,11 @@ public class EntProp2 implements ISingleOperand2<Expression3> {
             return true;
         }
 
-        if (!(obj instanceof EntProp2)) {
+        if (!(obj instanceof Prop2)) {
             return false;
         }
 
-        final EntProp2 other = (EntProp2) obj;
+        final Prop2 other = (Prop2) obj;
 
         return Objects.equals(path, other.path) && Objects.equals(source.id(), other.source.id());
     }

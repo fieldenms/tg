@@ -4,11 +4,11 @@ import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
 
-public class EntValue3 implements ISingleOperand3 {
+public class Value3 implements ISingleOperand3 {
     public final Object value;
     public final int paramId;
 
-    public EntValue3(final Object value, final int paramId) {
+    public Value3(final Object value, final int paramId) {
         this.value = value;
         this.paramId = paramId;
     }
@@ -36,11 +36,11 @@ public class EntValue3 implements ISingleOperand3 {
             return true;
         }
 
-        if (!(obj instanceof EntValue3)) {
+        if (!(obj instanceof Value3)) {
             return false;
         }
         
-        final EntValue3 other = (EntValue3) obj;
+        final Value3 other = (Value3) obj;
         
         return Objects.equals(value, other.value) && paramId == other.paramId;
     }

@@ -17,10 +17,10 @@ import org.hibernate.type.LongType;
 
 import ua.com.fielden.platform.eql.stage2.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.TransformationResult;
-import ua.com.fielden.platform.eql.stage2.operands.EntProp2;
+import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.conditions.ComparisonTest3;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
-import ua.com.fielden.platform.eql.stage3.operands.EntProp3;
+import ua.com.fielden.platform.eql.stage3.operands.Prop3;
 import ua.com.fielden.platform.eql.stage3.operands.Expression3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.sources.IQrySource3;
@@ -60,8 +60,8 @@ public class QrySources2  {
         return new TransformationResult<>(currentSourceTree, currentContext);
     }
     
-    public Set<EntProp2> collectProps() {
-        final Set<EntProp2> result = new HashSet<>(); 
+    public Set<Prop2> collectProps() {
+        final Set<Prop2> result = new HashSet<>(); 
         result.addAll(main.collectProps());
         for (final CompoundSource2 item : compounds) {
             result.addAll(item.source.collectProps());
@@ -102,14 +102,14 @@ public class QrySources2  {
         final ISingleOperand3 lo;
         
         if (child.expr == null) {
-            lo = new EntProp3(child.name, rootSource, child.source.sourceType(), LongType.INSTANCE);
+            lo = new Prop3(child.name, rootSource, child.source.sourceType(), LongType.INSTANCE);
         } else {
             final TransformationResult<Expression3> expTr = child.expr.transform(currentContext);
             lo = expTr.item;
             currentContext = expTr.updatedContext;
         }
         
-        final EntProp3 ro = new EntProp3(ID, addedSource, /*child.source.sourceType()*/Long.class, LongType.INSTANCE);
+        final Prop3 ro = new Prop3(ID, addedSource, /*child.source.sourceType()*/Long.class, LongType.INSTANCE);
         final ComparisonTest3 ct = new ComparisonTest3(lo, EQ, ro);
         final Conditions3 jc = new Conditions3(false, asList(asList(ct)));
         final T2<IQrySources3, TransformationContext> res = attachChildren(addedSource, child.items, currentContext);

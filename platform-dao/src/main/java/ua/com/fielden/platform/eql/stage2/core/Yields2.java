@@ -13,7 +13,7 @@ import java.util.TreeMap;
 
 import ua.com.fielden.platform.eql.stage2.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.TransformationResult;
-import ua.com.fielden.platform.eql.stage2.operands.EntProp2;
+import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.core.Yield3;
 import ua.com.fielden.platform.eql.stage3.core.Yields3;
 
@@ -51,8 +51,8 @@ public class Yields2 {
         return new TransformationResult<Yields3>(new Yields3(yieldsList), currentContext);
     }
     
-    public Set<EntProp2> collectProps() {
-        final Set<EntProp2> result = new HashSet<>();
+    public Set<Prop2> collectProps() {
+        final Set<Prop2> result = new HashSet<>();
         for (final Yield2 yield : yieldsMap.values()) {
             result.addAll(yield.operand.collectProps());
         }

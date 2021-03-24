@@ -20,7 +20,7 @@ import ua.com.fielden.platform.eql.meta.EqlStage2TestCase;
 import ua.com.fielden.platform.eql.meta.PrimTypePropInfo;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.core.Yields2;
-import ua.com.fielden.platform.eql.stage2.operands.EntProp2;
+import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.ResultQuery2;
 import ua.com.fielden.platform.eql.stage2.operands.SourceQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.QrySource2BasedOnPersistentType;
@@ -49,8 +49,8 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         
         final QrySource2BasedOnPersistentType vehSource = source("1", VEHICLE);
         final QrySources2 vehSources = sources(vehSource);
-        final EntProp2 vehModelProp = prop(vehSource, pi(VEHICLE, "model"));
-        final EntProp2 modelIdProp = prop(modelSource, pi(MODEL, "id"));
+        final Prop2 vehModelProp = prop(vehSource, pi(VEHICLE, "model"));
+        final Prop2 modelIdProp = prop(modelSource, pi(MODEL, "id"));
         final Conditions2 vehConditions = cond(eq(vehModelProp, modelIdProp));
         final Yields2 vehYields = yields(yieldCountAll("qty"));
 
@@ -80,12 +80,12 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final ResultQuery2 actQry = qry(qry);
         
         final QrySource2BasedOnPersistentType modelSource = source("4", MODEL);
-        final EntProp2 modelIdProp = prop(modelSource, pi(MODEL, "id"));
+        final Prop2 modelIdProp = prop(modelSource, pi(MODEL, "id"));
         
         final QrySource2BasedOnPersistentType vehSource1 = source("1", VEHICLE);
         final QrySources2 vehSources1 = sources(vehSource1);
-        final EntProp2 vehModelProp1 = prop(vehSource1, pi(VEHICLE, "model"));
-        final EntProp2 vehIdProp1 = prop(vehSource1, pi(VEHICLE, "id"));
+        final Prop2 vehModelProp1 = prop(vehSource1, pi(VEHICLE, "model"));
+        final Prop2 vehIdProp1 = prop(vehSource1, pi(VEHICLE, "id"));
         final Conditions2 vehConditions1 = or(and(isNotNull(vehIdProp1), eq(vehModelProp1, modelIdProp)));
         final Yields2 vehYields1 = yields(yieldCountAll("qty"));
 
@@ -93,8 +93,8 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
 
         final QrySource2BasedOnPersistentType vehSource2 = source("2", VEHICLE);
         final QrySources2 vehSources2 = sources(vehSource2);
-        final EntProp2 vehModelProp2 = prop(vehSource2, pi(VEHICLE, "model"));
-        final EntProp2 vehIdProp2 = prop(vehSource2, pi(VEHICLE, "id"));
+        final Prop2 vehModelProp2 = prop(vehSource2, pi(VEHICLE, "model"));
+        final Prop2 vehIdProp2 = prop(vehSource2, pi(VEHICLE, "id"));
         final Conditions2 vehConditions2 = or(and(isNull(vehIdProp2), eq(vehModelProp2, modelIdProp)));
         final Yields2 vehYields2 = yields(yieldCountAll("qty"));
 
@@ -120,7 +120,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         
         final QrySource2BasedOnPersistentType source = source("1", MODEL);
         final QrySources2 sources = sources(source);
-        final EntProp2 makeProp = prop(source, pi(MODEL, "make"));
+        final Prop2 makeProp = prop(source, pi(MODEL, "make"));
         final Conditions2 conditions = cond(isNotNull(makeProp));
         final ResultQuery2 expQry = qryCountAll(sources, conditions);
 
@@ -133,7 +133,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         
         final QrySource2BasedOnPersistentType source = source("1", MODEL);
         final QrySources2 sources = sources(source);
-        final EntProp2 makeProp = prop(source, pi(MODEL, "make"), pi(MAKE, "key"));
+        final Prop2 makeProp = prop(source, pi(MODEL, "make"), pi(MAKE, "key"));
         final Conditions2 conditions = cond(isNotNull(makeProp));
         final ResultQuery2 expQry = qryCountAll(sources, conditions);
 
@@ -146,10 +146,10 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
 
         final QrySource2BasedOnPersistentType source = source("1", VEHICLE);
         final QrySources2 sources = sources(source);
-        final EntProp2 initDate = prop(source, pi(VEHICLE, "initDate"));
-        final EntProp2 station_name = prop(source, pi(VEHICLE, "station"), pi(ORG5, "name"));
-        final EntProp2 station_parent_name = prop(source, pi(VEHICLE, "station"), pi(ORG5, "parent"), pi(ORG4, "name"));
-        final EntProp2 replacedBy_initDate = prop(source, pi(VEHICLE, "replacedBy"), pi(VEHICLE, "initDate"));
+        final Prop2 initDate = prop(source, pi(VEHICLE, "initDate"));
+        final Prop2 station_name = prop(source, pi(VEHICLE, "station"), pi(ORG5, "name"));
+        final Prop2 station_parent_name = prop(source, pi(VEHICLE, "station"), pi(ORG5, "parent"), pi(ORG4, "name"));
+        final Prop2 replacedBy_initDate = prop(source, pi(VEHICLE, "replacedBy"), pi(VEHICLE, "initDate"));
         
         final Conditions2 conditions = or(and(or(
                 isNotNull(initDate), 
@@ -168,10 +168,10 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         
         final QrySource2BasedOnPersistentType source = source("1", VEHICLE, "v");
         final QrySources2 sources = sources(source);
-        final EntProp2 initDate = prop(source, pi(VEHICLE, "initDate"));
-        final EntProp2 station_name = prop(source, pi(VEHICLE, "station"), pi(ORG5, "name"));
-        final EntProp2 station_parent_name = prop(source, pi(VEHICLE, "station"), pi(ORG5, "parent"), pi(ORG4, "name"));
-        final EntProp2 replacedBy_initDate = prop(source, pi(VEHICLE, "replacedBy"), pi(VEHICLE, "initDate"));
+        final Prop2 initDate = prop(source, pi(VEHICLE, "initDate"));
+        final Prop2 station_name = prop(source, pi(VEHICLE, "station"), pi(ORG5, "name"));
+        final Prop2 station_parent_name = prop(source, pi(VEHICLE, "station"), pi(ORG5, "parent"), pi(ORG4, "name"));
+        final Prop2 replacedBy_initDate = prop(source, pi(VEHICLE, "replacedBy"), pi(VEHICLE, "initDate"));
         
         final Conditions2 conditions = or(and(or(
                 isNotNull(initDate), 
@@ -190,10 +190,10 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         
         final QrySource2BasedOnPersistentType source = source("1", VEHICLE, "v");
         final QrySources2 sources = sources(source);
-        final EntProp2 initDate = prop(source, pi(VEHICLE, "initDate"));
-        final EntProp2 station_name = prop(source, pi(VEHICLE, "station"), pi(ORG5, "name"));
-        final EntProp2 station_parent_name = prop(source, pi(VEHICLE, "station"), pi(ORG5, "parent"), pi(ORG4, "name"));
-        final EntProp2 replacedBy_initDate = prop(source, pi(VEHICLE, "replacedBy"), pi(VEHICLE, "initDate"));
+        final Prop2 initDate = prop(source, pi(VEHICLE, "initDate"));
+        final Prop2 station_name = prop(source, pi(VEHICLE, "station"), pi(ORG5, "name"));
+        final Prop2 station_parent_name = prop(source, pi(VEHICLE, "station"), pi(ORG5, "parent"), pi(ORG4, "name"));
+        final Prop2 replacedBy_initDate = prop(source, pi(VEHICLE, "replacedBy"), pi(VEHICLE, "initDate"));
         
         final Conditions2 conditions = or(and(or(
                 isNotNull(initDate), 
@@ -214,10 +214,10 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final QrySource2BasedOnPersistentType source = source("1", VEHICLE, "v");
         final QrySource2BasedOnPersistentType source2 = source("2", VEHICLE, "rv");
         final QrySources2 sources = sources(source, ij(source2, or(eq(prop(source, pi(VEHICLE, "replacedBy")), prop(source2, pi(VEHICLE, "id"))))));
-        final EntProp2 initDate = prop(source, pi(VEHICLE, "initDate"));
-        final EntProp2 station_name = prop(source2, pi(VEHICLE, "station"), pi(ORG5, "name"));
-        final EntProp2 station_parent_name = prop(source, pi(VEHICLE, "station"), pi(ORG5, "parent"), pi(ORG4, "name"));
-        final EntProp2 replacedBy_initDate = prop(source2, pi(VEHICLE, "replacedBy"), pi(VEHICLE, "initDate"));
+        final Prop2 initDate = prop(source, pi(VEHICLE, "initDate"));
+        final Prop2 station_name = prop(source2, pi(VEHICLE, "station"), pi(ORG5, "name"));
+        final Prop2 station_parent_name = prop(source, pi(VEHICLE, "station"), pi(ORG5, "parent"), pi(ORG4, "name"));
+        final Prop2 replacedBy_initDate = prop(source2, pi(VEHICLE, "replacedBy"), pi(VEHICLE, "initDate"));
         
         final Conditions2 conditions = or(and(or(
                 isNotNull(initDate), 

@@ -10,7 +10,7 @@ import java.util.Set;
 
 import ua.com.fielden.platform.eql.stage2.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.TransformationResult;
-import ua.com.fielden.platform.eql.stage2.operands.EntProp2;
+import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.core.GroupBy3;
 import ua.com.fielden.platform.eql.stage3.core.GroupBys3;
 
@@ -32,8 +32,8 @@ public class GroupBys2 {
         return new TransformationResult<GroupBys3>(new GroupBys3(transformed), currentContext);
     }
 
-    public Set<EntProp2> collectProps() {
-        final Set<EntProp2> result = new HashSet<>();
+    public Set<Prop2> collectProps() {
+        final Set<Prop2> result = new HashSet<>();
         for (final GroupBy2 group : groups) {
             result.addAll(group.operand.collectProps());
         }
