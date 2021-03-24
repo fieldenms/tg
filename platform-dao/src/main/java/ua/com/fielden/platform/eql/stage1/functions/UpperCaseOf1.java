@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.functions;
 
-import ua.com.fielden.platform.eql.stage1.PropsResolutionContext;
+import ua.com.fielden.platform.eql.stage1.TransformationContext;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.functions.UpperCaseOf2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
@@ -11,7 +11,7 @@ public class UpperCaseOf1 extends SingleOperandFunction1<UpperCaseOf2> {
     }
 
     @Override
-    public UpperCaseOf2 transform(final PropsResolutionContext context) {
+    public UpperCaseOf2 transform(final TransformationContext context) {
         return new UpperCaseOf2(operand.transform(context));
     }
     

@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import ua.com.fielden.platform.eql.stage1.PropsResolutionContext;
+import ua.com.fielden.platform.eql.stage1.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.conditions.ICondition2;
 
@@ -59,7 +59,7 @@ public class Conditions1 implements ICondition1<Conditions2> {
     }
 
     @Override
-    public Conditions2 transform(final PropsResolutionContext context) {
+    public Conditions2 transform(final TransformationContext context) {
         final List<List<ICondition1<? extends ICondition2<?>>>> dnfs = formDnf();
         final List<List<? extends ICondition2<?>>> transformed = new ArrayList<>();
         for (final List<ICondition1<? extends ICondition2<?>>> andGroup : dnfs) {
@@ -77,7 +77,7 @@ public class Conditions1 implements ICondition1<Conditions2> {
         
 //        final List<List<? extends ICondition2>> transformed = formDnf().stream()
 //                .map(andGroup -> 
-//                                  andGroup.stream().map(cond -> cond.transform(resolutionContext))
+//                                  andGroup.stream().map(cond -> cond.transform(context))
 //                                                   .filter(cond -> !cond.ignore())
 //                                                   .collect(toList())
 //                    )

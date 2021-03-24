@@ -27,7 +27,7 @@ import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.meta.UnionTypePropInfo;
 import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
 import ua.com.fielden.platform.eql.stage0.StandAloneExpressionBuilder;
-import ua.com.fielden.platform.eql.stage1.PropsResolutionContext;
+import ua.com.fielden.platform.eql.stage1.TransformationContext;
 import ua.com.fielden.platform.eql.stage1.operands.Expression1;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.Expression2;
@@ -222,7 +222,7 @@ public class PathsToTreeTransformator {
             final ExpressionModel expressionModel, // 
             final String context) {
         final String sourceId = sourceForCalcPropResolution.id() + "_" + context;
-        final PropsResolutionContext prc = new PropsResolutionContext(domainInfo, asList(asList(sourceForCalcPropResolution)), sourceId);
+        final TransformationContext prc = new TransformationContext(domainInfo, asList(asList(sourceForCalcPropResolution)), sourceId);
         final Expression1 exp = (Expression1) (new StandAloneExpressionBuilder(gen, expressionModel)).getResult().getValue();
         return exp.transform(prc);
     }

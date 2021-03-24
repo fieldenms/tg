@@ -2,7 +2,7 @@ package ua.com.fielden.platform.eql.stage1.operands;
 
 import java.util.Objects;
 
-import ua.com.fielden.platform.eql.stage1.PropsResolutionContext;
+import ua.com.fielden.platform.eql.stage1.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.operands.Value2;
 
 public class Value1 implements ISingleOperand1<Value2> {
@@ -19,7 +19,7 @@ public class Value1 implements ISingleOperand1<Value2> {
     }
 
     @Override
-    public Value2 transform(final PropsResolutionContext context) {
+    public Value2 transform(final TransformationContext context) {
         return new Value2(value, ignoreNull);
     }
 

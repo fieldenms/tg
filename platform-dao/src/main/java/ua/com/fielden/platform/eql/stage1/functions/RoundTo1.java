@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.functions;
 
-import ua.com.fielden.platform.eql.stage1.PropsResolutionContext;
+import ua.com.fielden.platform.eql.stage1.TransformationContext;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.functions.RoundTo2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
@@ -13,7 +13,7 @@ public class RoundTo1 extends TwoOperandsFunction1<RoundTo2> {
     }
 
     @Override
-    public RoundTo2 transform(final PropsResolutionContext context) {
+    public RoundTo2 transform(final TransformationContext context) {
         return new RoundTo2(operand1.transform(context), operand2.transform(context));
     }
     

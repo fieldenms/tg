@@ -3,7 +3,7 @@ package ua.com.fielden.platform.eql.stage1.conditions;
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.fluent.LikeOptions;
-import ua.com.fielden.platform.eql.stage1.PropsResolutionContext;
+import ua.com.fielden.platform.eql.stage1.TransformationContext;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.conditions.LikeTest2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
@@ -20,7 +20,7 @@ public class LikeTest1 implements ICondition1<LikeTest2> {
     }
 
     @Override
-    public LikeTest2 transform(final PropsResolutionContext context) {
+    public LikeTest2 transform(final TransformationContext context) {
         return new LikeTest2(leftOperand.transform(context), rightOperand.transform(context), options);
     }
 

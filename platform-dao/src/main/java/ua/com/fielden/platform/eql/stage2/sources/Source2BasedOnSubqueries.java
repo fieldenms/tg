@@ -59,17 +59,17 @@ public class Source2BasedOnSubqueries extends AbstractSource2 implements ISource
     public TransformationResult<Source3BasedOnSubqueries> transform(final TransformationContext context) {
         
         final List<SourceQuery3> transformedQueries = new ArrayList<>();
-        TransformationContext currentResolutionContext = context.cloneWithNextSqlId();
-        final int sqlId = currentResolutionContext.sqlId;
+        TransformationContext currentContext = context.cloneWithNextSqlId();
+        final int sqlId = currentContext.sqlId;
         
         for (final SourceQuery2 model : models) {
-            final TransformationResult<SourceQuery3> modelTr = model.transform(currentResolutionContext);
+            final TransformationResult<SourceQuery3> modelTr = model.transform(currentContext);
             transformedQueries.add(modelTr.item);
-            currentResolutionContext = modelTr.updatedContext; // TODO should be just resolutionContext with propsResolutions added from this model transformation   
+            currentContext = modelTr.updatedContext; // TODO should be just resolutionContext with propsResolutions added from this model transformation   
         }
            
         final Source3BasedOnSubqueries transformedSource = new Source3BasedOnSubqueries(transformedQueries, id, sqlId);
-        return new TransformationResult<Source3BasedOnSubqueries>(transformedSource, currentResolutionContext);
+        return new TransformationResult<Source3BasedOnSubqueries>(transformedSource, currentContext);
     }
 
     @Override

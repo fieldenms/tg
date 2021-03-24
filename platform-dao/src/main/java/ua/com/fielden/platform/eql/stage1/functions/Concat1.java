@@ -5,7 +5,7 @@ import static java.util.stream.Collectors.toList;
 import java.util.List;
 import java.util.Objects;
 
-import ua.com.fielden.platform.eql.stage1.PropsResolutionContext;
+import ua.com.fielden.platform.eql.stage1.TransformationContext;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.functions.Concat2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
@@ -19,7 +19,7 @@ public class Concat1 extends AbstractFunction1<Concat2> {
     }
 
     @Override
-    public Concat2 transform(final PropsResolutionContext context) {
+    public Concat2 transform(final TransformationContext context) {
         return new Concat2(operands.stream().map(el -> el.transform(context)).collect(toList()));
     }
 

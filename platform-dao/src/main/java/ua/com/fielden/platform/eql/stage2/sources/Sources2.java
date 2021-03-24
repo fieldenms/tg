@@ -20,15 +20,14 @@ import ua.com.fielden.platform.eql.stage2.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.conditions.ComparisonTest3;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
-import ua.com.fielden.platform.eql.stage3.operands.Prop3;
 import ua.com.fielden.platform.eql.stage3.operands.Expression3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import ua.com.fielden.platform.eql.stage3.operands.Prop3;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.eql.stage3.sources.ISources3;
 import ua.com.fielden.platform.eql.stage3.sources.MultipleNodesSources3;
-import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnTable;
 import ua.com.fielden.platform.eql.stage3.sources.SingleNodeSources3;
-import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnTable;
 
 public class Sources2  {
     public final ISource2<? extends ISource3> main;
@@ -42,16 +41,16 @@ public class Sources2  {
     public TransformationResult<ISources3> transform(final TransformationContext context) {
         final TransformationResult<? extends ISource3> mainTr = main.transform(context);    
         TransformationContext currentContext = mainTr.updatedContext;
-        final T2<ISources3, TransformationContext> mainEnhancement = enhance(main, mainTr.item, currentContext);
-        ISources3 currentSourceTree = mainEnhancement._1;
-        currentContext = mainEnhancement._2;
+        final TransformationResult<ISources3> mainEnhancement = enhance(main, mainTr.item, currentContext);
+        ISources3 currentSourceTree = mainEnhancement.item;
+        currentContext = mainEnhancement.updatedContext;
         
         for (final CompoundSource2 compoundSource : compounds) {
             final TransformationResult<? extends ISource3> compoundSourceTr = compoundSource.source.transform(currentContext);
             currentContext = compoundSourceTr.updatedContext;
-            final T2<ISources3, TransformationContext> compoundEnhancement = enhance(compoundSource.source, compoundSourceTr.item, currentContext);
-            final ISources3 coumpoundSourceTree = compoundEnhancement._1;
-            currentContext = compoundEnhancement._2;
+            final TransformationResult<ISources3> compoundEnhancement = enhance(compoundSource.source, compoundSourceTr.item, currentContext);
+            final ISources3 coumpoundSourceTree = compoundEnhancement.item;
+            currentContext = compoundEnhancement.updatedContext;
             final TransformationResult<Conditions3> compConditionsTr = compoundSource.joinConditions.transform(currentContext);
             currentSourceTree = new MultipleNodesSources3(currentSourceTree, coumpoundSourceTree, compoundSource.joinType, compConditionsTr.item);
             currentContext = compConditionsTr.updatedContext;
@@ -70,11 +69,11 @@ public class Sources2  {
         return result;
     }
     
-    private static T2<ISources3, TransformationContext> enhance(final ISource2<?> source2, final ISource3 source, final TransformationContext context) {
+    private static TransformationResult<ISources3> enhance(final ISource2<?> source2, final ISource3 source, final TransformationContext context) {
         return attachChildren(source, context.getSourceChildren(source2), context);
     }
     
-    private static T2<ISources3, TransformationContext> attachChildren(final ISource3 source, final List<ChildGroup> children, final TransformationContext context) {
+    private static TransformationResult<ISources3> attachChildren(final ISource3 source, final List<ChildGroup> children, final TransformationContext context) {
         ISources3 currMainSources = new SingleNodeSources3(source);
         TransformationContext currentContext = context;
         
@@ -84,16 +83,16 @@ public class Sources2  {
             }
 
             if (!fc.items.isEmpty()) {
-                final T2<ISources3, TransformationContext> res = attachChild(currMainSources, source, fc, currentContext);
-                currMainSources = res._1;
-                currentContext = res._2;
+                final TransformationResult<ISources3> res = attachChild(currMainSources, source, fc, currentContext);
+                currMainSources = res.item;
+                currentContext = res.updatedContext;
             }
         }
 
-        return t2(currMainSources, currentContext);
+        return new TransformationResult<>(currMainSources, currentContext);
     }
     
-    private static T2<ISources3, TransformationContext> attachChild(final ISources3 mainSources, final ISource3 rootSource, final ChildGroup child, final TransformationContext context) {
+    private static TransformationResult<ISources3> attachChild(final ISources3 mainSources, final ISource3 rootSource, final ChildGroup child, final TransformationContext context) {
         TransformationContext currentContext = context;
         final TransformationResult<Source3BasedOnTable> tr = child.source.transform(currentContext);
         final Source3BasedOnTable addedSource = tr.item;
@@ -112,8 +111,8 @@ public class Sources2  {
         final Prop3 ro = new Prop3(ID, addedSource, /*child.source.sourceType()*/Long.class, LongType.INSTANCE);
         final ComparisonTest3 ct = new ComparisonTest3(lo, EQ, ro);
         final Conditions3 jc = new Conditions3(false, asList(asList(ct)));
-        final T2<ISources3, TransformationContext> res = attachChildren(addedSource, child.items, currentContext);
-        return t2(new MultipleNodesSources3(mainSources, res._1, (child.required ? IJ : LJ), jc), res._2);
+        final TransformationResult<ISources3> res = attachChildren(addedSource, child.items, currentContext);
+        return new TransformationResult<>(new MultipleNodesSources3(mainSources, res.item, (child.required ? IJ : LJ), jc), res.updatedContext);
     }
     
     @Override

@@ -1,16 +1,14 @@
 package ua.com.fielden.platform.eql.stage1.sources;
 
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import ua.com.fielden.platform.eql.stage1.PropsResolutionContext;
+import ua.com.fielden.platform.eql.stage1.TransformationContext;
+import ua.com.fielden.platform.eql.stage1.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.sources.CompoundSource2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage2.sources.Sources2;
-import ua.com.fielden.platform.types.tuples.T2;
 
 public class Sources1  {
     public final ISource1<? extends ISource2<?>> main;
@@ -21,17 +19,17 @@ public class Sources1  {
         this.compounds = compounds;
     }
 
-    public T2<Sources2, PropsResolutionContext> transform(final PropsResolutionContext context) {
-        final ISource2<?> mainTransformationResult = main.transform(context);    
-        PropsResolutionContext currentContext = context.cloneWithAdded(mainTransformationResult);
+    public TransformationResult<Sources2> transform(final TransformationContext context) {
+        final ISource2<?> mainTransformed = main.transform(context);    
+        TransformationContext currentContext = context.cloneWithAdded(mainTransformed);
 
         final List<CompoundSource2> transformed = new ArrayList<>();
         for (final CompoundSource1 compoundSource : compounds) {
-            final T2<CompoundSource2, PropsResolutionContext> compoundSourceTransformationResult = compoundSource.transform(currentContext);
-            transformed.add(compoundSourceTransformationResult._1);
-            currentContext = compoundSourceTransformationResult._2;
+            final TransformationResult<CompoundSource2> compoundSourceTransformationResult = compoundSource.transform(currentContext);
+            transformed.add(compoundSourceTransformationResult.item);
+            currentContext = compoundSourceTransformationResult.updatedContext;
         }
-        return t2(new Sources2(mainTransformationResult, transformed), currentContext);
+        return new TransformationResult<>(new Sources2(mainTransformed, transformed), currentContext);
     }
 
     @Override

@@ -24,7 +24,7 @@ import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
-import ua.com.fielden.platform.eql.stage1.PropsResolutionContext;
+import ua.com.fielden.platform.eql.stage1.TransformationContext;
 import ua.com.fielden.platform.eql.stage1.operands.Prop1;
 import ua.com.fielden.platform.eql.stage2.QueryBlocks2;
 import ua.com.fielden.platform.eql.stage2.conditions.ComparisonTest2;
@@ -85,15 +85,15 @@ public class EqlStage2TestCase extends EqlTestCase {
 
     protected static <T extends AbstractEntity<?>> ResultQuery2 qryCountAll(final ICompoundCondition0<T> unfinishedQry, final Map<String, Object> paramValues) {
         final AggregatedResultQueryModel countQry = unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate();
-        final PropsResolutionContext resolutionContext = new PropsResolutionContext(DOMAIN_METADATA.lmd);
-        return qb(paramValues).generateAsResultQuery(countQry, null, null).transform(resolutionContext);
+        final TransformationContext context = new TransformationContext(DOMAIN_METADATA.lmd);
+        return qb(paramValues).generateAsResultQuery(countQry, null, null).transform(context);
     }
 
     protected static <T extends AbstractEntity<?>> T2<EntQueryGenerator, ResultQuery2> qryCountAll2(final ICompoundCondition0<T> unfinishedQry, final Map<String, Object> paramValues) {
         final AggregatedResultQueryModel countQry = unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate();
-        final PropsResolutionContext resolutionContext = new PropsResolutionContext(DOMAIN_METADATA.lmd);
+        final TransformationContext context = new TransformationContext(DOMAIN_METADATA.lmd);
         final EntQueryGenerator qb = qb(paramValues);
-        return t2(qb, qb.generateAsResultQuery(countQry, null, null).transform(resolutionContext));
+        return t2(qb, qb.generateAsResultQuery(countQry, null, null).transform(context));
     }
 
     protected static <T extends AbstractEntity<?>> ResultQuery2 qry(final EntityResultQueryModel<T> qry) {
@@ -101,18 +101,18 @@ public class EqlStage2TestCase extends EqlTestCase {
     }
 
     protected static <T extends AbstractEntity<?>> ResultQuery2 qry(final EntityResultQueryModel<T> qry, final OrderingModel order) {
-        final PropsResolutionContext resolutionContext = new PropsResolutionContext(DOMAIN_METADATA.lmd);
-        return qb().generateAsResultQuery(qry, order, new EntityRetrievalModel<T>(EntityQueryUtils.fetch(qry.getResultType()), DOMAIN_METADATA_ANALYSER)).transform(resolutionContext);
+        final TransformationContext context = new TransformationContext(DOMAIN_METADATA.lmd);
+        return qb().generateAsResultQuery(qry, order, new EntityRetrievalModel<T>(EntityQueryUtils.fetch(qry.getResultType()), DOMAIN_METADATA_ANALYSER)).transform(context);
     }
 
     protected static ResultQuery2 qry(final AggregatedResultQueryModel qry, final OrderingModel order) {
-        final PropsResolutionContext resolutionContext = new PropsResolutionContext(DOMAIN_METADATA.lmd);
-        return qb().generateAsResultQuery(qry, order, null).transform(resolutionContext);
+        final TransformationContext context = new TransformationContext(DOMAIN_METADATA.lmd);
+        return qb().generateAsResultQuery(qry, order, null).transform(context);
     }
 
     protected static ResultQuery2 qry(final AggregatedResultQueryModel qry) {
-        final PropsResolutionContext resolutionContext = new PropsResolutionContext(DOMAIN_METADATA.lmd);
-        return qb().generateAsResultQuery(qry, null, null).transform(resolutionContext);
+        final TransformationContext context = new TransformationContext(DOMAIN_METADATA.lmd);
+        return qb().generateAsResultQuery(qry, null, null).transform(context);
     }
     
     protected static QueryBlocks2 qb2(final Sources2 sources, final Conditions2 conditions) {

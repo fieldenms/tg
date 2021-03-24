@@ -4,20 +4,20 @@ import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.eql.stage1.TransformationContext;
 import ua.com.fielden.platform.eql.stage1.QueryBlocks1;
-import ua.com.fielden.platform.eql.stage1.PropsResolutionContext;
+import ua.com.fielden.platform.eql.stage1.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.QueryBlocks2;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.etc.GroupBys2;
 import ua.com.fielden.platform.eql.stage2.etc.OrderBys2;
 import ua.com.fielden.platform.eql.stage2.etc.Yield2;
 import ua.com.fielden.platform.eql.stage2.etc.Yields2;
-import ua.com.fielden.platform.eql.stage2.operands.Prop2;
-import ua.com.fielden.platform.eql.stage2.operands.Value2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.SubQuery2;
+import ua.com.fielden.platform.eql.stage2.operands.Value2;
 import ua.com.fielden.platform.eql.stage2.sources.Sources2;
-import ua.com.fielden.platform.types.tuples.T2;
 
 public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuery2> {
 
@@ -26,11 +26,11 @@ public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuer
     }
 
     @Override
-    public SubQuery2 transform(final PropsResolutionContext context) {
-        final PropsResolutionContext localResolutionContext = context.produceForCorrelatedSubquery();
-        final T2<Sources2,PropsResolutionContext> sourcesTr = sources.transform(localResolutionContext);
-        final PropsResolutionContext enhancedContext = sourcesTr._2; 
-        final Sources2 sources2 = sourcesTr._1;
+    public SubQuery2 transform(final TransformationContext context) {
+        final TransformationContext localContext = context.produceForCorrelatedSubquery();
+        final TransformationResult<Sources2> sourcesTr = sources.transform(localContext);
+        final TransformationContext enhancedContext = sourcesTr.updatedContext; 
+        final Sources2 sources2 = sourcesTr.item;
         final Conditions2 conditions2 = conditions.transform(enhancedContext);
         final Yields2 yields2 = yields.transform(enhancedContext);
         final GroupBys2 groups2 = enhance(groups.transform(enhancedContext));

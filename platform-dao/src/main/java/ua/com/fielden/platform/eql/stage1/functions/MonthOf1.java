@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.functions;
 
-import ua.com.fielden.platform.eql.stage1.PropsResolutionContext;
+import ua.com.fielden.platform.eql.stage1.TransformationContext;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.functions.MonthOf2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
@@ -12,7 +12,7 @@ public class MonthOf1 extends SingleOperandFunction1<MonthOf2> {
     }
 
     @Override
-    public MonthOf2 transform(final PropsResolutionContext context) {
+    public MonthOf2 transform(final TransformationContext context) {
         return new MonthOf2(operand.transform(context));
     }
 

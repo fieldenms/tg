@@ -12,9 +12,10 @@ import java.util.Map.Entry;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
-import ua.com.fielden.platform.eql.stage1.QueryBlocks1;
 import ua.com.fielden.platform.eql.stage1.ITransformableToS2;
-import ua.com.fielden.platform.eql.stage1.PropsResolutionContext;
+import ua.com.fielden.platform.eql.stage1.TransformationContext;
+import ua.com.fielden.platform.eql.stage1.QueryBlocks1;
+import ua.com.fielden.platform.eql.stage1.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.QueryBlocks2;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.etc.GroupBys2;
@@ -26,7 +27,6 @@ import ua.com.fielden.platform.eql.stage2.operands.SourceQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage2.sources.Sources2;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
-import ua.com.fielden.platform.types.tuples.T2;
 
 public class SourceQuery1 extends AbstractQuery1 implements ITransformableToS2<SourceQuery2> {
     
@@ -41,11 +41,11 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableToS2<S
     }
 
     @Override
-    public SourceQuery2 transform(final PropsResolutionContext context) {
-        final PropsResolutionContext localResolutionContext = isCorrelated ? context.produceForCorrelatedSourceQuery() : context.produceForUncorrelatedSourceQuery();
-        final T2<Sources2,PropsResolutionContext> sourcesTr = sources.transform(localResolutionContext);
-        final PropsResolutionContext enhancedContext = sourcesTr._2; 
-        final Sources2 sources2 = sourcesTr._1;
+    public SourceQuery2 transform(final TransformationContext context) {
+        final TransformationContext localContext = isCorrelated ? context.produceForCorrelatedSourceQuery() : context.produceForUncorrelatedSourceQuery();
+        final TransformationResult<Sources2> sourcesTr = sources.transform(localContext);
+        final TransformationContext enhancedContext = sourcesTr.updatedContext; 
+        final Sources2 sources2 = sourcesTr.item;
         final Conditions2 conditions2 = conditions.transform(enhancedContext);
         final Yields2 yields2 = yields.transform(enhancedContext);
         final GroupBys2 groups2 = enhance(groups.transform(enhancedContext));

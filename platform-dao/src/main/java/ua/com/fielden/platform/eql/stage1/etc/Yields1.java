@@ -11,7 +11,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
-import ua.com.fielden.platform.eql.stage1.PropsResolutionContext;
+import ua.com.fielden.platform.eql.stage1.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.etc.Yields2;
 
 public class Yields1 {
@@ -23,7 +23,7 @@ public class Yields1 {
         }
     }
     
-    public Yields2 transform(final PropsResolutionContext context) {
+    public Yields2 transform(final TransformationContext context) {
         return new Yields2(yieldsMap.values().stream().map(el -> el.transform(context)).collect(toList()));
     }
 

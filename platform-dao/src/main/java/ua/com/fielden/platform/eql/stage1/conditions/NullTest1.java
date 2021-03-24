@@ -9,7 +9,7 @@ import java.util.Objects;
 
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.meta.UnionTypePropInfo;
-import ua.com.fielden.platform.eql.stage1.PropsResolutionContext;
+import ua.com.fielden.platform.eql.stage1.TransformationContext;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.conditions.ICondition2;
@@ -27,7 +27,7 @@ public class NullTest1 implements ICondition1<Conditions2> {
     }
 
     @Override
-    public Conditions2 transform(final PropsResolutionContext context) {
+    public Conditions2 transform(final TransformationContext context) {
         final ISingleOperand2<?> transformedOperand = operand.transform(context);
         if (transformedOperand instanceof Prop2 && isUnionEntityType(((Prop2) transformedOperand).type)) {
             final Prop2 prop = (Prop2) transformedOperand;

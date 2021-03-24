@@ -2,7 +2,7 @@ package ua.com.fielden.platform.eql.stage1.sources;
 
 import java.util.Objects;
 
-import ua.com.fielden.platform.eql.stage1.PropsResolutionContext;
+import ua.com.fielden.platform.eql.stage1.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 
 public abstract class AbstractSource1<S2 extends ISource2<?>> implements ISource1<S2> {
@@ -23,7 +23,7 @@ public abstract class AbstractSource1<S2 extends ISource2<?>> implements ISource
         return alias;
     }
     
-    public String transformId(final PropsResolutionContext context) {
+    public String transformId(final TransformationContext context) {
         return context.sourceIdPrefix == null ? Integer.toString(id) : context.sourceIdPrefix + "_" + Integer.toString(id);
     }
 

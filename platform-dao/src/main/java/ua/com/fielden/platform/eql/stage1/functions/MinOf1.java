@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.functions;
 
-import ua.com.fielden.platform.eql.stage1.PropsResolutionContext;
+import ua.com.fielden.platform.eql.stage1.TransformationContext;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.functions.MinOf2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
@@ -12,7 +12,7 @@ public class MinOf1 extends SingleOperandFunction1<MinOf2> {
     }
 
     @Override
-    public MinOf2 transform(final PropsResolutionContext context) {
+    public MinOf2 transform(final TransformationContext context) {
         return new MinOf2(operand.transform(context));
     }
     

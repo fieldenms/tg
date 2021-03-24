@@ -5,7 +5,7 @@ import static java.util.stream.Collectors.toList;
 import java.util.List;
 import java.util.Objects;
 
-import ua.com.fielden.platform.eql.stage1.PropsResolutionContext;
+import ua.com.fielden.platform.eql.stage1.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.etc.GroupBys2;
 
 public class GroupBys1 {
@@ -15,7 +15,7 @@ public class GroupBys1 {
         this.groups = groups;
     }
 
-    public GroupBys2 transform(final PropsResolutionContext context) {
+    public GroupBys2 transform(final TransformationContext context) {
         return new GroupBys2(groups.stream().map(el -> el.transform(context)).collect(toList()));
     }
 

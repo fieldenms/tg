@@ -2,7 +2,7 @@ package ua.com.fielden.platform.eql.stage1.operands;
 
 import java.util.Objects;
 
-import ua.com.fielden.platform.eql.stage1.PropsResolutionContext;
+import ua.com.fielden.platform.eql.stage1.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.operands.QueryBasedSet2;
 
 public class QueryBasedSet1 implements ISetOperand1<QueryBasedSet2> {
@@ -13,7 +13,7 @@ public class QueryBasedSet1 implements ISetOperand1<QueryBasedSet2> {
     }
 
     @Override
-    public QueryBasedSet2 transform(final PropsResolutionContext context) {
+    public QueryBasedSet2 transform(final TransformationContext context) {
         return new QueryBasedSet2(model.transform(context));
     }
 

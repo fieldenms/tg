@@ -24,7 +24,6 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
-import ua.com.fielden.platform.eql.stage1.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.PathsToTreeTransformator;
 import ua.com.fielden.platform.eql.stage2.TablesAndSourceChildren;
 import ua.com.fielden.platform.eql.stage2.TransformationContext;
@@ -68,18 +67,18 @@ public class EqlStage3TestCase extends EqlTestCase {
     protected static <T extends AbstractEntity<?>> ResultQuery3 qryCountAll(final ICompoundCondition0<T> unfinishedQry) {
         final AggregatedResultQueryModel countQry = unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate();
 
-        final PropsResolutionContext resolutionContext = new PropsResolutionContext(metadata());
+        final ua.com.fielden.platform.eql.stage1.TransformationContext context = new ua.com.fielden.platform.eql.stage1.TransformationContext(metadata());
         final EntQueryGenerator qb = qb();
-        final ResultQuery2 rq2 = qb.generateAsResultQuery(countQry, null, null).transform(resolutionContext);
+        final ResultQuery2 rq2 = qb.generateAsResultQuery(countQry, null, null).transform(context);
         final PathsToTreeTransformator pathsToTreeTransformator = new PathsToTreeTransformator( metadata(), qb);
         final ua.com.fielden.platform.eql.stage2.TransformationResult<ResultQuery3> s2tr = rq2.transform(new TransformationContext(new TablesAndSourceChildren(tables, pathsToTreeTransformator.groupChildren(rq2.collectProps()))));
         return s2tr.item;
     }
     
     protected static ResultQuery3 qry(final AggregatedResultQueryModel qry) {
-        final PropsResolutionContext resolutionContext = new PropsResolutionContext(metadata());
+        final ua.com.fielden.platform.eql.stage1.TransformationContext context = new ua.com.fielden.platform.eql.stage1.TransformationContext(metadata());
         final EntQueryGenerator qb = qb();
-        final ResultQuery2 rq2 = qb.generateAsResultQuery(qry, null, null).transform(resolutionContext);
+        final ResultQuery2 rq2 = qb.generateAsResultQuery(qry, null, null).transform(context);
         final PathsToTreeTransformator pathsToTreeTransformator = new PathsToTreeTransformator( metadata(), qb);
         final ua.com.fielden.platform.eql.stage2.TransformationResult<ResultQuery3> s2tr = rq2.transform(new TransformationContext(new TablesAndSourceChildren(tables, pathsToTreeTransformator.groupChildren(rq2.collectProps()))));
         return s2tr.item;
@@ -88,9 +87,9 @@ public class EqlStage3TestCase extends EqlTestCase {
     protected static <T extends AbstractEntity<?>> ResultQuery3 qryCountAll(final ICompoundCondition0<T> unfinishedQry, final Map<String, Object> paramValues) {
         final AggregatedResultQueryModel countQry = unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate();
 
-        final PropsResolutionContext resolutionContext = new PropsResolutionContext(metadata());
+        final ua.com.fielden.platform.eql.stage1.TransformationContext context = new ua.com.fielden.platform.eql.stage1.TransformationContext(metadata());
         final EntQueryGenerator qb = qb(paramValues);
-        final ResultQuery2 rq2 = qb.generateAsResultQuery(countQry, null, null).transform(resolutionContext);
+        final ResultQuery2 rq2 = qb.generateAsResultQuery(countQry, null, null).transform(context);
         final PathsToTreeTransformator pathsToTreeTransformator = new PathsToTreeTransformator( metadata(), qb);
         final ua.com.fielden.platform.eql.stage2.TransformationResult<ResultQuery3> s2tr = rq2.transform(new TransformationContext(new TablesAndSourceChildren(tables, pathsToTreeTransformator.groupChildren(rq2.collectProps()))));
         return s2tr.item;
