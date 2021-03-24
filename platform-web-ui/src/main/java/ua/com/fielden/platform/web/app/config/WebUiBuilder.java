@@ -170,7 +170,7 @@ public class WebUiBuilder implements IWebUiBuilder {
             if (centreOptional.get() != centre) {
                 throw new WebUiBuilderException(format("The centre configuration for type [%s] has been already registered.", centre.getMenuItemType().getSimpleName()));
             } else {
-                logger.info(format("\tThere is a try to register exactly the same centre configuration instance for type [%s], that has been already registered.", centre.getMenuItemType().getSimpleName()));
+                logger.debug(format("\tThere is a try to register exactly the same centre configuration instance for type [%s], that has been already registered.", centre.getMenuItemType().getSimpleName()));
                 return this;
             }
         } else {
