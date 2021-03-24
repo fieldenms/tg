@@ -4,15 +4,15 @@ import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
-import ua.com.fielden.platform.eql.stage3.sources.IQrySource3;
+import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 
 public class Prop3 implements ISingleOperand3 {
     public final String name;
-    public final IQrySource3 source; // can be null for prop headers
+    public final ISource3 source; // can be null for prop headers
     public final Class<?> type;
     public final Object hibType;
 
-    public Prop3(final String name, final IQrySource3 source, final Class<?> type, final Object hibType) {
+    public Prop3(final String name, final ISource3 source, final Class<?> type, final Object hibType) {
         this.name = name;
         this.source = source;
         this.type = type;

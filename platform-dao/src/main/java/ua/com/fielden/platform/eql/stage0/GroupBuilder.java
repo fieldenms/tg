@@ -3,7 +3,7 @@ package ua.com.fielden.platform.eql.stage0;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.QRY_GROUP;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
-import ua.com.fielden.platform.eql.stage1.core.GroupBy1;
+import ua.com.fielden.platform.eql.stage1.etc.GroupBy1;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.utils.Pair;
 

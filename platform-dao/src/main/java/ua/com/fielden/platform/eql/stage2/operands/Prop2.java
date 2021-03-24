@@ -13,24 +13,24 @@ import java.util.stream.Collectors;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.stage2.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.TransformationResult;
-import ua.com.fielden.platform.eql.stage2.sources.IQrySource2;
+import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage3.operands.Prop3;
 import ua.com.fielden.platform.eql.stage3.operands.Expression3;
-import ua.com.fielden.platform.eql.stage3.sources.IQrySource3;
+import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.types.tuples.T2;
 
 public class Prop2 implements ISingleOperand2<Expression3> {
-    public final IQrySource2<? extends IQrySource3> source;
+    public final ISource2<? extends ISource3> source;
     private final List<AbstractPropInfo<?>> path;
     public final String name;
     public final Class<?> type;
     public final Object hibType;
 
-    public Prop2(final IQrySource2<? extends IQrySource3> source, final List<AbstractPropInfo<?>> path) {
+    public Prop2(final ISource2<? extends ISource3> source, final List<AbstractPropInfo<?>> path) {
         this(source, path, false);
     }
 
-    public Prop2(final IQrySource2<? extends IQrySource3> source, final List<AbstractPropInfo<?>> path, final boolean shouldBeTreatedAsId) {
+    public Prop2(final ISource2<? extends ISource3> source, final List<AbstractPropInfo<?>> path, final boolean shouldBeTreatedAsId) {
         this.source = source;
         this.path = path;
         this.name = path.stream().map(k -> k.name).collect(Collectors.joining("."));
@@ -44,7 +44,7 @@ public class Prop2 implements ISingleOperand2<Expression3> {
             return new TransformationResult<Expression3>(new Expression3(new Prop3(lastPart().name, null, type, hibType), emptyList()), context);
         }
         
-        final T2<IQrySource3, Object> resolution = context.resolve(source, name);
+        final T2<ISource3, Object> resolution = context.resolve(source, name);
 
         Expression3 transformedProp;  
         TransformationContext currentContext = context;

@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.eql.stage0;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
-import ua.com.fielden.platform.eql.stage1.core.Yield1;
+import ua.com.fielden.platform.eql.stage1.etc.Yield1;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.utils.Pair;
 

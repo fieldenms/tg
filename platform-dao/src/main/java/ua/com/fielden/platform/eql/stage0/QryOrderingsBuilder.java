@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
-import ua.com.fielden.platform.eql.stage1.core.OrderBy1;
-import ua.com.fielden.platform.eql.stage1.core.OrderBys1;
+import ua.com.fielden.platform.eql.stage1.etc.OrderBy1;
+import ua.com.fielden.platform.eql.stage1.etc.OrderBys1;
 import ua.com.fielden.platform.utils.Pair;
 
 public class QryOrderingsBuilder extends AbstractTokensBuilder {

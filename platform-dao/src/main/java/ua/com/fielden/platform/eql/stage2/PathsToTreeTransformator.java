@@ -33,8 +33,8 @@ import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.Expression2;
 import ua.com.fielden.platform.eql.stage2.sources.Child;
 import ua.com.fielden.platform.eql.stage2.sources.ChildGroup;
-import ua.com.fielden.platform.eql.stage2.sources.IQrySource2;
-import ua.com.fielden.platform.eql.stage2.sources.QrySource2BasedOnPersistentType;
+import ua.com.fielden.platform.eql.stage2.sources.ISource2;
+import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnPersistentType;
 import ua.com.fielden.platform.types.tuples.T2;
 
 public class PathsToTreeTransformator {
@@ -123,7 +123,7 @@ public class PathsToTreeTransformator {
     }
     
     private T2<List<Child>, Map<String, List<Child>>> generateQrySourceChildren( //
-            final IQrySource2<?> sourceForCalcPropResolution, // 
+            final ISource2<?> sourceForCalcPropResolution, // 
             final String explicitSourceId, //
             final Map<String, List<AbstractPropInfo<?>>> props, //long name + path
             final List<String> context //           
@@ -148,7 +148,7 @@ public class PathsToTreeTransformator {
     }
     
     private T2<List<Child>, Map<String, List<Child>>> generateChild( //
-            final IQrySource2<?> sourceForCalcPropResolution, //  
+            final ISource2<?> sourceForCalcPropResolution, //  
             final String explicitSourceId, //
             final FirstPropInfoAndItsPathes firstPropInfoAndItsPathes,
             final List<String> childContext //
@@ -176,7 +176,7 @@ public class PathsToTreeTransformator {
         } else {
             final EntityTypePropInfo<?> propInfo = (EntityTypePropInfo<?>) firstPropInfoAndItsPathes.firstPropInfo;
 
-            final QrySource2BasedOnPersistentType implicitSource = new QrySource2BasedOnPersistentType(propInfo.javaType(), propInfo.propEntityInfo, explicitSourceId + "_" + childContextString); 
+            final Source2BasedOnPersistentType implicitSource = new Source2BasedOnPersistentType(propInfo.javaType(), propInfo.propEntityInfo, explicitSourceId + "_" + childContextString); 
             
             final T2<List<Child>, Map<String, List<Child>>> genRes = generateQrySourceChildren(
                     implicitSource, 
@@ -192,7 +192,7 @@ public class PathsToTreeTransformator {
         return t2(result, other); 
     }    
     
-    private CalcPropResult processCalcProp(final ExpressionModel calcPropModel, final IQrySource2<?>  sourceForCalcPropResolution, final String childContext) {
+    private CalcPropResult processCalcProp(final ExpressionModel calcPropModel, final ISource2<?>  sourceForCalcPropResolution, final String childContext) {
         if (calcPropModel != null) {
             final Expression2 expr2 = expressionToS2(sourceForCalcPropResolution, calcPropModel, childContext);
             final Map<String, List<Child>> dependenciesResult = transform(expr2.collectProps());
@@ -218,7 +218,7 @@ public class PathsToTreeTransformator {
     }
     
     private Expression2 expressionToS2( //
-            final IQrySource2<?> sourceForCalcPropResolution, //
+            final ISource2<?> sourceForCalcPropResolution, //
             final ExpressionModel expressionModel, // 
             final String context) {
         final String sourceId = sourceForCalcPropResolution.id() + "_" + context;
@@ -240,10 +240,10 @@ public class PathsToTreeTransformator {
     }
     
     private static class SourceAndItsProps {
-        private final IQrySource2<?> source;
+        private final ISource2<?> source;
         private final Map<String, List<AbstractPropInfo<?>>> propPathesByFullNames;
 
-        public SourceAndItsProps(final IQrySource2<?> source, final Map<String, List<AbstractPropInfo<?>>> propPathesByFullNames) {
+        public SourceAndItsProps(final ISource2<?> source, final Map<String, List<AbstractPropInfo<?>>> propPathesByFullNames) {
             this.source = source;
             this.propPathesByFullNames = propPathesByFullNames;
         }

@@ -11,7 +11,7 @@ import ua.com.fielden.platform.eql.stage2.operands.Expression2;
 public class Child {
     public final String name;
     
-    public final QrySource2BasedOnPersistentType source;
+    public final Source2BasedOnPersistentType source;
     public final boolean required;
     private final List<Child> items;
     
@@ -25,7 +25,7 @@ public class Child {
             final List<Child> items, //
             final String fullPath, //
             final boolean required, //
-            final QrySource2BasedOnPersistentType source, //
+            final Source2BasedOnPersistentType source, //
             final Expression2 expr, //
             final String explicitSourceId, //
             final Set<String> dependencies) {

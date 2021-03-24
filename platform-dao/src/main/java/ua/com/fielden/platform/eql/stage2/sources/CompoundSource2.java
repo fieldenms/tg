@@ -6,11 +6,11 @@ import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 
 public class CompoundSource2 {
-    public final IQrySource2<?> source;
+    public final ISource2<?> source;
     public final JoinType joinType;
     public final Conditions2 joinConditions;
 
-    public CompoundSource2(final IQrySource2<?> source, final JoinType joinType, final Conditions2 joinConditions) {
+    public CompoundSource2(final ISource2<?> source, final JoinType joinType, final Conditions2 joinConditions) {
         this.source = source;
         this.joinType = joinType;
         this.joinConditions = joinConditions;

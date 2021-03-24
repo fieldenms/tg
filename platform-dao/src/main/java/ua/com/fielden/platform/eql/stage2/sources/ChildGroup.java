@@ -10,7 +10,7 @@ import java.util.Objects;
 
 public class ChildGroup {
     final String name;
-    final QrySource2BasedOnPersistentType source;
+    final Source2BasedOnPersistentType source;
     final boolean required;
     final List<ChildGroup> items;
     
@@ -18,7 +18,7 @@ public class ChildGroup {
     
     final Expression2 expr;
     
-    public ChildGroup(final String name, final List<ChildGroup> items, final Map<String, String> paths, final boolean required, final QrySource2BasedOnPersistentType source, final Expression2 expr) {
+    public ChildGroup(final String name, final List<ChildGroup> items, final Map<String, String> paths, final boolean required, final Source2BasedOnPersistentType source, final Expression2 expr) {
         this.name = name;
         this.items = items;
         this.required = required;

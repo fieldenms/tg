@@ -7,11 +7,11 @@ import ua.com.fielden.platform.eql.stage2.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.TransformationResult;
 import ua.com.fielden.platform.eql.stage3.QueryBlocks3;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
-import ua.com.fielden.platform.eql.stage3.core.GroupBys3;
-import ua.com.fielden.platform.eql.stage3.core.OrderBys3;
-import ua.com.fielden.platform.eql.stage3.core.Yields3;
+import ua.com.fielden.platform.eql.stage3.etc.GroupBys3;
+import ua.com.fielden.platform.eql.stage3.etc.OrderBys3;
+import ua.com.fielden.platform.eql.stage3.etc.Yields3;
 import ua.com.fielden.platform.eql.stage3.operands.SourceQuery3;
-import ua.com.fielden.platform.eql.stage3.sources.IQrySources3;
+import ua.com.fielden.platform.eql.stage3.sources.ISources3;
 
 public class SourceQuery2 extends AbstractQuery2 implements ITransformableToS3<SourceQuery3> {
 
@@ -21,7 +21,7 @@ public class SourceQuery2 extends AbstractQuery2 implements ITransformableToS3<S
 
     @Override
     public TransformationResult<SourceQuery3> transform(final TransformationContext context) {
-        final TransformationResult<IQrySources3> sourcesTr = sources.transform(context);
+        final TransformationResult<ISources3> sourcesTr = sources.transform(context);
         final TransformationResult<Conditions3> conditionsTr = conditions.transform(sourcesTr.updatedContext);
         final TransformationResult<Yields3> yieldsTr = yields.transform(conditionsTr.updatedContext);
         final TransformationResult<GroupBys3> groupsTr = groups.transform(yieldsTr.updatedContext);

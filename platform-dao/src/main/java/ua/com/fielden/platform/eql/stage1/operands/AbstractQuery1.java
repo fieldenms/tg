@@ -21,24 +21,24 @@ import ua.com.fielden.platform.eql.meta.UnionTypePropInfo;
 import ua.com.fielden.platform.eql.stage1.QueryBlocks1;
 import ua.com.fielden.platform.eql.stage1.PropResolution;
 import ua.com.fielden.platform.eql.stage1.conditions.Conditions1;
-import ua.com.fielden.platform.eql.stage1.core.GroupBys1;
-import ua.com.fielden.platform.eql.stage1.core.OrderBys1;
-import ua.com.fielden.platform.eql.stage1.core.Yields1;
-import ua.com.fielden.platform.eql.stage1.sources.QrySources1;
-import ua.com.fielden.platform.eql.stage2.core.GroupBy2;
-import ua.com.fielden.platform.eql.stage2.core.GroupBys2;
-import ua.com.fielden.platform.eql.stage2.core.OrderBy2;
-import ua.com.fielden.platform.eql.stage2.core.OrderBys2;
-import ua.com.fielden.platform.eql.stage2.core.Yield2;
-import ua.com.fielden.platform.eql.stage2.core.Yields2;
+import ua.com.fielden.platform.eql.stage1.etc.GroupBys1;
+import ua.com.fielden.platform.eql.stage1.etc.OrderBys1;
+import ua.com.fielden.platform.eql.stage1.etc.Yields1;
+import ua.com.fielden.platform.eql.stage1.sources.Sources1;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
+import ua.com.fielden.platform.eql.stage2.etc.GroupBy2;
+import ua.com.fielden.platform.eql.stage2.etc.GroupBys2;
+import ua.com.fielden.platform.eql.stage2.etc.OrderBy2;
+import ua.com.fielden.platform.eql.stage2.etc.OrderBys2;
+import ua.com.fielden.platform.eql.stage2.etc.Yield2;
+import ua.com.fielden.platform.eql.stage2.etc.Yields2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
-import ua.com.fielden.platform.eql.stage2.sources.IQrySource2;
-import ua.com.fielden.platform.eql.stage3.sources.IQrySource3;
+import ua.com.fielden.platform.eql.stage2.sources.ISource2;
+import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 
 public abstract class AbstractQuery1 {
 
-    public final QrySources1 sources;
+    public final Sources1 sources;
     public final Conditions1 conditions;
     public final Yields1 yields;
     public final GroupBys1 groups;
@@ -66,7 +66,7 @@ public abstract class AbstractQuery1 {
         return new GroupBys2(enhanced);
     }
     
-    protected static OrderBys2 enhance(final OrderBys2 orderBys, final Yields2 yields, final IQrySource2<? extends IQrySource3> mainSource) {
+    protected static OrderBys2 enhance(final OrderBys2 orderBys, final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
         final List<OrderBy2> enhanced = new ArrayList<>();
         
         for (final OrderBy2 original : orderBys.getModels()) {
@@ -122,7 +122,7 @@ public abstract class AbstractQuery1 {
     
     
     
-    private static List<OrderBy2> transformForYield(final OrderBy2 original, final Yields2 yields, final IQrySource2<? extends IQrySource3> mainSource) {
+    private static List<OrderBy2> transformForYield(final OrderBy2 original, final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
         if (yields.getYieldsMap().containsKey(original.yieldName)) {
             final Yield2 yield = yields.getYieldsMap().get(original.yieldName);
             if (yield.operand instanceof Prop2 && needsExtraction(((Prop2) yield.operand).lastPart())) {

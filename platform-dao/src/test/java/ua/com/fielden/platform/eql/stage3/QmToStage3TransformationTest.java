@@ -17,16 +17,16 @@ import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.eql.meta.EqlStage3TestCase;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
-import ua.com.fielden.platform.eql.stage3.core.Yield3;
-import ua.com.fielden.platform.eql.stage3.core.Yields3;
+import ua.com.fielden.platform.eql.stage3.etc.Yield3;
+import ua.com.fielden.platform.eql.stage3.etc.Yields3;
 import ua.com.fielden.platform.eql.stage3.functions.MaxOf3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.ResultQuery3;
 import ua.com.fielden.platform.eql.stage3.operands.SourceQuery3;
 import ua.com.fielden.platform.eql.stage3.operands.SubQuery3;
-import ua.com.fielden.platform.eql.stage3.sources.IQrySources3;
-import ua.com.fielden.platform.eql.stage3.sources.QrySource3BasedOnSubqueries;
-import ua.com.fielden.platform.eql.stage3.sources.QrySource3BasedOnTable;
+import ua.com.fielden.platform.eql.stage3.sources.ISources3;
+import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnSubqueries;
+import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnTable;
 import ua.com.fielden.platform.sample.domain.TeVehicle;
 import ua.com.fielden.platform.sample.domain.TeVehicleModel;
 import ua.com.fielden.platform.sample.domain.TeWorkOrder;
@@ -38,7 +38,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final ResultQuery3 actQry = qryCountAll(select(MODEL).where().prop("make.id").isNotNull());
         final String model1 = "1";
         
-        final QrySource3BasedOnTable model = source(MODEL, model1);
+        final Source3BasedOnTable model = source(MODEL, model1);
         final Conditions3 conditions = or(isNotNull(expr(prop("make", model, LONG, H_LONG))));
         final ResultQuery3 expQry = qryCountAll(sources(model), conditions);
         
@@ -50,10 +50,10 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final ResultQuery3 actQry = qryCountAll(select(VEHICLE).where().prop("modelMake.id").isNotNull());
         final String veh1 = "1";
         
-        final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
-        final QrySource3BasedOnTable model = source(MODEL, veh1, "model");
+        final Source3BasedOnTable veh = source(VEHICLE, veh1);
+        final Source3BasedOnTable model = source(MODEL, veh1, "model");
         
-        final IQrySources3 sources = 
+        final ISources3 sources = 
                 ij(
                         veh,
                         model,
@@ -70,19 +70,19 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final ResultQuery3 actQry = qryCountAll(select(ORG5).where().anyOfProps("maxVehPrice", "maxVehPurchasePrice").isNotNull());
         final String orgUnit5 = "1";
         
-        final QrySource3BasedOnTable ou5 = source(ORG5, orgUnit5);
+        final Source3BasedOnTable ou5 = source(ORG5, orgUnit5);
 
-        final QrySource3BasedOnTable veh1 = source(VEHICLE, orgUnit5, "maxVehPrice.amount_2");
-        final IQrySources3 subQrySources1 = sources(veh1); 
+        final Source3BasedOnTable veh1 = source(VEHICLE, orgUnit5, "maxVehPrice.amount_2");
+        final ISources3 subQrySources1 = sources(veh1); 
         final Conditions3 subQryConditions1 = cond(eq(expr(entityProp("station", veh1, ORG5)), expr(idProp(ou5))));
         final SubQuery3 expSubQry1 = subqry(subQrySources1, subQryConditions1, yields(new Yield3(new MaxOf3(expr(prop("price.amount", veh1, BigDecimal.class, H_BIG_DECIMAL))), "", nextSqlId(), false, null, null)), BigDecimal.class);
 
-        final QrySource3BasedOnTable veh2 = source(VEHICLE, orgUnit5, "maxVehPurchasePrice.amount_3");
-        final IQrySources3 subQrySources2 = sources(veh2); 
+        final Source3BasedOnTable veh2 = source(VEHICLE, orgUnit5, "maxVehPurchasePrice.amount_3");
+        final ISources3 subQrySources2 = sources(veh2); 
         final Conditions3 subQryConditions2 = cond(eq(expr(entityProp("station", veh2, ORG5)), expr(idProp(ou5))));
         final SubQuery3 expSubQry2 = subqry(subQrySources2, subQryConditions2, yields(new Yield3(new MaxOf3(expr(prop("purchasePrice.amount", veh2, BigDecimal.class, H_BIG_DECIMAL))), "", nextSqlId(), false, null, null)), BigDecimal.class);
 
-        final IQrySources3 sources = sources(ou5);
+        final ISources3 sources = sources(ou5);
         final Conditions3 conditions = or(and(or(isNotNull(expr(expSubQry1)), isNotNull(expr(expSubQry2)))));
         final ResultQuery3 expQry = qryCountAll(sources, conditions);
         assertEquals(expQry, actQry);
@@ -97,7 +97,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         
         final ResultQuery3 actQry = qry(qry);
         
-        final QrySource3BasedOnTable source = source(MODEL, "1");
+        final Source3BasedOnTable source = source(MODEL, "1");
         
         final Yield3 modelYield = yieldIdExpr(source, "model");
         final Yield3 makeYield = yieldPropExpr("make", source, "make", MAKE, H_LONG);
@@ -115,10 +115,10 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
 
         final ResultQuery3 actQry = qry(qry);
         
-        final QrySource3BasedOnTable modelSource = source(MODEL, "3");
+        final Source3BasedOnTable modelSource = source(MODEL, "3");
         
-        final QrySource3BasedOnTable vehSource = source(VEHICLE, "1");
-        final IQrySources3 vehSources = sources(vehSource);
+        final Source3BasedOnTable vehSource = source(VEHICLE, "1");
+        final ISources3 vehSources = sources(vehSource);
         final ISingleOperand3 vehModelProp = entityProp("model", vehSource, MODEL);
         final ISingleOperand3 modelIdProp = idProp(modelSource);
         final Conditions3 vehConditions = or(eq(expr(vehModelProp), expr(modelIdProp)));
@@ -126,8 +126,8 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
 
         final SourceQuery3 vehSourceSubQry = srcqry(vehSources, vehConditions, vehYields);
         
-        final QrySource3BasedOnSubqueries qtyQrySource = source("2", vehSourceSubQry);
-        final IQrySources3 qtyQrySources = sources(qtyQrySource);
+        final Source3BasedOnSubqueries qtyQrySource = source("2", vehSourceSubQry);
+        final ISources3 qtyQrySources = sources(qtyQrySource);
         final Yields3 qtyQryYields = yields(yieldPropExpr("qty", qtyQrySource, "", Integer.class, H_INTEGER));
         
         final Yields3 modelQryYields = yields(yieldModel(subqry(qtyQrySources, qtyQryYields, Integer.class), "qty"));
@@ -140,11 +140,11 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
     public void calc_prop_is_correctly_transformed_10() {
         final ResultQuery3 actQry = qryCountAll(select(WORK_ORDER).where().anyOfProps("vehicle.modelMakeKey", "vehicle.model.make.key").isNotNull());
         final String wo1 = "1";
-        final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
-        final QrySource3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
-        final QrySource3BasedOnTable model = source(MODEL, wo1, "vehicle_model");
-        final QrySource3BasedOnTable make = source(MAKE, wo1, "vehicle_model_make");
-        final IQrySources3 sources = 
+        final Source3BasedOnTable wo = source(WORK_ORDER, wo1);
+        final Source3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
+        final Source3BasedOnTable model = source(MODEL, wo1, "vehicle_model");
+        final Source3BasedOnTable make = source(MAKE, wo1, "vehicle_model_make");
+        final ISources3 sources = 
                 lj(
                         wo,
                         ij(
@@ -168,11 +168,11 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
     public void calc_prop_is_correctly_transformed_11() {
         final ResultQuery3 actQry = qryCountAll(select(WORK_ORDER).where().anyOfProps("vehicle.modelMakeKey", "vehicle.modelMakeKeyDuplicate").isNotNull());
         final String wo1 = "1";
-        final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
-        final QrySource3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
-        final QrySource3BasedOnTable model = source(MODEL, wo1, "vehicle_model");
-        final QrySource3BasedOnTable make = source(MAKE, wo1, "vehicle_model_make");
-        final IQrySources3 sources = 
+        final Source3BasedOnTable wo = source(WORK_ORDER, wo1);
+        final Source3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
+        final Source3BasedOnTable model = source(MODEL, wo1, "vehicle_model");
+        final Source3BasedOnTable make = source(MAKE, wo1, "vehicle_model_make");
+        final ISources3 sources = 
                 lj(
                         wo,
                         ij(
@@ -198,11 +198,11 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final ResultQuery3 actQry = qryCountAll(select(WORK_ORDER).where().anyOfProps("vehicle.modelKey", "vehicle.model.key").isNotNull());
         final String wo1 = "1";
         
-        final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
-        final QrySource3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
-        final QrySource3BasedOnTable model = source(MODEL, wo1, "vehicle_model");
+        final Source3BasedOnTable wo = source(WORK_ORDER, wo1);
+        final Source3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
+        final Source3BasedOnTable model = source(MODEL, wo1, "vehicle_model");
         
-        final IQrySources3 sources = 
+        final ISources3 sources = 
                 lj(
                         wo,
                         ij(
@@ -226,11 +226,11 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
 
         final ResultQuery3 actQry = qryCountAll(select(WORK_ORDER).where().anyOfProps("vehicle.modelMakeKey6").isNotNull());
         final String wo1 = "1";
-        final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
-        final QrySource3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
-        final QrySource3BasedOnTable model = source(MODEL, wo1, "vehicleModel");
+        final Source3BasedOnTable wo = source(WORK_ORDER, wo1);
+        final Source3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
+        final Source3BasedOnTable model = source(MODEL, wo1, "vehicleModel");
         
-        final IQrySources3 sources = 
+        final ISources3 sources = 
                 lj(
                         lj(
                                 wo, 
@@ -255,11 +255,11 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final ResultQuery3 actQry = qryCountAll(select(WORK_ORDER).where().anyOfProps("makeKey2").isNotNull());
         final String wo1 = "1";
         
-        final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
-        final QrySource3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
-        final QrySource3BasedOnTable model = source(MODEL, wo1, "vehicleModel");
+        final Source3BasedOnTable wo = source(WORK_ORDER, wo1);
+        final Source3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
+        final Source3BasedOnTable model = source(MODEL, wo1, "vehicleModel");
         
-        final IQrySources3 sources = 
+        final ISources3 sources = 
                 lj(
                         lj(
                                 wo, 
@@ -281,8 +281,8 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
 
         final String wo1 = "1";
 
-        final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
-        final QrySource3BasedOnTable veh = source(VEHICLE, wo, "make_2");
+        final Source3BasedOnTable wo = source(WORK_ORDER, wo1);
+        final Source3BasedOnTable veh = source(VEHICLE, wo, "make_2");
 
     }
     
@@ -291,13 +291,13 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final ResultQuery3 actQry = qryCountAll(select(WORK_ORDER).where().prop("make.key").isNotNull());
         final String wo1 = "1";
 
-        final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
+        final Source3BasedOnTable wo = source(WORK_ORDER, wo1);
 
-        final QrySource3BasedOnTable veh = source(VEHICLE, wo, "make_2");
-        final QrySource3BasedOnTable model = source(MODEL, veh, "model");
-        final QrySource3BasedOnTable make = source(MAKE, wo1, "make");
+        final Source3BasedOnTable veh = source(VEHICLE, wo, "make_2");
+        final Source3BasedOnTable model = source(MODEL, veh, "model");
+        final Source3BasedOnTable make = source(MAKE, wo1, "make");
         
-        final IQrySources3 subQrySources = 
+        final ISources3 subQrySources = 
                 ij(
                         veh,  
                         model, 
@@ -308,7 +308,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         
         final SubQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleExpr("make", model, MAKE)), MAKE);
 
-        final IQrySources3 sources = 
+        final ISources3 sources = 
                 lj(
                         wo,
                         make,
@@ -337,12 +337,12 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final ResultQuery3 actQry = qryCountAll(select(WORK_ORDER).where().prop("make").isNotNull());
         final String wo1 = "1";
 
-        final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
+        final Source3BasedOnTable wo = source(WORK_ORDER, wo1);
 
-        final QrySource3BasedOnTable veh = source(VEHICLE, wo, "make_2");
-        final QrySource3BasedOnTable model = source(MODEL, veh, "model");
+        final Source3BasedOnTable veh = source(VEHICLE, wo, "make_2");
+        final Source3BasedOnTable model = source(MODEL, veh, "model");
         
-        final IQrySources3 subQrySources = 
+        final ISources3 subQrySources = 
                 ij(
                         veh,  
                         model, 
@@ -353,7 +353,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         
         final SubQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleExpr("make", model, MAKE)), MAKE);
 
-        final IQrySources3 sources = sources(wo);
+        final ISources3 sources = sources(wo);
         final Conditions3 conditions = or(isNotNull(expr(expSubQry)));
         final ResultQuery3 expQry = qryCountAll(sources, conditions);
         
@@ -376,13 +376,13 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final ResultQuery3 actQry = qryCountAll(select(WORK_ORDER).where().prop("makeKey").isNotNull());
         final String wo1 = "1";
         
-        final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
+        final Source3BasedOnTable wo = source(WORK_ORDER, wo1);
 
-        final QrySource3BasedOnTable veh = source(VEHICLE, wo1, "makeKey_2");
-        final QrySource3BasedOnTable model = source(MODEL, veh, "model");
-        final QrySource3BasedOnTable make = source(MAKE, veh, "model_make");
+        final Source3BasedOnTable veh = source(VEHICLE, wo1, "makeKey_2");
+        final Source3BasedOnTable model = source(MODEL, veh, "model");
+        final Source3BasedOnTable make = source(MAKE, veh, "model_make");
         
-        final IQrySources3 subQrySources = 
+        final ISources3 subQrySources = 
                 ij(
                         veh,  
                         ij(
@@ -397,7 +397,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         
         final SubQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleStringExpr(KEY, make)), String.class);
 
-        final IQrySources3 sources = sources(wo);
+        final ISources3 sources = sources(wo);
         final Conditions3 conditions = or(isNotNull(expr(expSubQry)));
         final ResultQuery3 expQry = qryCountAll(sources, conditions);
         
@@ -410,11 +410,11 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final ResultQuery3 actQry = qryCountAll(select(WORK_ORDER).where().prop("vehicleModel.key").isNotNull());
         final String wo1 = "1";
         
-        final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
-        final QrySource3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
-        final QrySource3BasedOnTable model = source(MODEL, wo1, "vehicleModel");
+        final Source3BasedOnTable wo = source(WORK_ORDER, wo1);
+        final Source3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
+        final Source3BasedOnTable model = source(MODEL, wo1, "vehicleModel");
         
-        final IQrySources3 sources = 
+        final ISources3 sources = 
                 lj(
                         lj(
                                 wo, 
@@ -436,12 +436,12 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final ResultQuery3 actQry = qryCountAll(select(WORK_ORDER).where().prop("vehicleModel.makeKey").isNotNull());
         final String wo1 = "1";
         
-        final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
-        final QrySource3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
-        final QrySource3BasedOnTable model = source(MODEL, wo1, "vehicleModel");
-        final QrySource3BasedOnTable make = source(MAKE, wo1, "vehicleModel_make");
+        final Source3BasedOnTable wo = source(WORK_ORDER, wo1);
+        final Source3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
+        final Source3BasedOnTable model = source(MODEL, wo1, "vehicleModel");
+        final Source3BasedOnTable make = source(MAKE, wo1, "vehicleModel_make");
         
-        final IQrySources3 sources = 
+        final ISources3 sources = 
                 lj(
                         lj(
                                 wo,
@@ -468,12 +468,12 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final ResultQuery3 actQry = qryCountAll(select(WORK_ORDER).where().prop("vehicle.modelMakeKey2").isNotNull());
         final String wo1 = "1";
         
-        final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
-        final QrySource3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
-        final QrySource3BasedOnTable model = source(MODEL, wo1, "vehicle_model");
-        final QrySource3BasedOnTable make = source(MAKE, wo1, "vehicle_model_make");
+        final Source3BasedOnTable wo = source(WORK_ORDER, wo1);
+        final Source3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
+        final Source3BasedOnTable model = source(MODEL, wo1, "vehicle_model");
+        final Source3BasedOnTable make = source(MAKE, wo1, "vehicle_model_make");
         
-        final IQrySources3 sources = 
+        final ISources3 sources = 
                 lj(
                         wo,
                         ij(
@@ -498,12 +498,12 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final ResultQuery3 actQry = qryCountAll(select(WORK_ORDER).where().prop("vehicle.modelMakeKey").isNotNull());
         final String wo1 = "1";
         
-        final QrySource3BasedOnTable wo = source(WORK_ORDER, wo1);
-        final QrySource3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
-        final QrySource3BasedOnTable model = source(MODEL, wo1, "vehicle_model");
-        final QrySource3BasedOnTable make = source(MAKE, wo1, "vehicle_model_make");
+        final Source3BasedOnTable wo = source(WORK_ORDER, wo1);
+        final Source3BasedOnTable veh = source(VEHICLE, wo1, "vehicle");
+        final Source3BasedOnTable model = source(MODEL, wo1, "vehicle_model");
+        final Source3BasedOnTable make = source(MAKE, wo1, "vehicle_model_make");
         
-        final IQrySources3 sources = 
+        final ISources3 sources = 
                 lj(
                         wo,
                         ij(
@@ -528,12 +528,12 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final ResultQuery3 actQry = qryCountAll(select(VEHICLE).where().anyOfProps("modelMakeKey2", "make.key", "model.make.key").isNotNull());
         final String veh1 = "1";
         
-        final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
-        final QrySource3BasedOnTable model = source(MODEL, veh1, "model");
-        final QrySource3BasedOnTable makeA = source(MAKE, veh1, "make");
-        final QrySource3BasedOnTable make = source(MAKE, veh1, "model_make");
+        final Source3BasedOnTable veh = source(VEHICLE, veh1);
+        final Source3BasedOnTable model = source(MODEL, veh1, "model");
+        final Source3BasedOnTable makeA = source(MAKE, veh1, "make");
+        final Source3BasedOnTable make = source(MAKE, veh1, "model_make");
         
-        final IQrySources3 sources =
+        final ISources3 sources =
                 lj(
                         ij(
                                 veh,
@@ -558,12 +558,12 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final ResultQuery3 actQry = qryCountAll(select(VEHICLE).where().anyOfProps("modelMakeKey2", "make.key").isNotNull());
         final String veh1 = "1";
         
-        final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
-        final QrySource3BasedOnTable model = source(MODEL, veh1, "model");
-        final QrySource3BasedOnTable makeA = source(MAKE, veh1, "make");
-        final QrySource3BasedOnTable make = source(MAKE, veh1, "model_make");
+        final Source3BasedOnTable veh = source(VEHICLE, veh1);
+        final Source3BasedOnTable model = source(MODEL, veh1, "model");
+        final Source3BasedOnTable makeA = source(MAKE, veh1, "make");
+        final Source3BasedOnTable make = source(MAKE, veh1, "model_make");
         
-        final IQrySources3 sources =
+        final ISources3 sources =
                 lj(
                         ij(
                                 veh,
@@ -588,12 +588,12 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final ResultQuery3 actQry = qryCountAll(select(VEHICLE).where().anyOfProps("model.make.key", "make.key").isNotNull());
         final String veh1 = "1";
         
-        final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
-        final QrySource3BasedOnTable model = source(MODEL, veh1, "model");
-        final QrySource3BasedOnTable make = source(MAKE, veh1, "model_make");
-        final QrySource3BasedOnTable makeA = source(MAKE, veh1, "make");
+        final Source3BasedOnTable veh = source(VEHICLE, veh1);
+        final Source3BasedOnTable model = source(MODEL, veh1, "model");
+        final Source3BasedOnTable make = source(MAKE, veh1, "model_make");
+        final Source3BasedOnTable makeA = source(MAKE, veh1, "make");
         
-        final IQrySources3 sources = 
+        final ISources3 sources = 
                 lj(
                         ij(
                                 veh,
@@ -619,11 +619,11 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final ResultQuery3 actQry = qryCountAll(select(VEHICLE).where().anyOfProps("modelMakeKey2", "model.make.key").isNotNull());
         final String veh1 = "1";
         
-        final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
-        final QrySource3BasedOnTable model = source(MODEL, veh1, "model");
-        final QrySource3BasedOnTable make = source(MAKE, veh1, "model_make");
+        final Source3BasedOnTable veh = source(VEHICLE, veh1);
+        final Source3BasedOnTable model = source(MODEL, veh1, "model");
+        final Source3BasedOnTable make = source(MAKE, veh1, "model_make");
         
-        final IQrySources3 sources =
+        final ISources3 sources =
                 ij(
                         veh,
                         ij(
@@ -644,11 +644,11 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final ResultQuery3 actQry = qryCountAll(select(VEHICLE).where().anyOfProps("modelMakeKey", "modelMakeDesc").isNotNull());
         final String veh1 = "1";
         
-        final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
-        final QrySource3BasedOnTable model = source(MODEL, veh1, "model");
-        final QrySource3BasedOnTable make = source(MAKE, veh1, "model_make");
+        final Source3BasedOnTable veh = source(VEHICLE, veh1);
+        final Source3BasedOnTable model = source(MODEL, veh1, "model");
+        final Source3BasedOnTable make = source(MAKE, veh1, "model_make");
         
-        final IQrySources3 sources = 
+        final ISources3 sources = 
                 ij(
                         veh,
                         ij(
@@ -669,10 +669,10 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final ResultQuery3 actQry = qryCountAll(select(VEHICLE).where().anyOfProps("modelKey", "modelDesc").isNotNull());
         final String veh1 = "1";
         
-        final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
-        final QrySource3BasedOnTable model = source(MODEL, veh1, "model");
+        final Source3BasedOnTable veh = source(VEHICLE, veh1);
+        final Source3BasedOnTable model = source(MODEL, veh1, "model");
         
-        final IQrySources3 sources = 
+        final ISources3 sources = 
                 ij(
                         veh,
                         model,
@@ -689,11 +689,11 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final ResultQuery3 actQry = qryCountAll(select(VEHICLE).where().prop("modelMakeKey").isNotNull());
         final String veh1 = "1";
         
-        final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
-        final QrySource3BasedOnTable model = source(MODEL, veh1, "model");
-        final QrySource3BasedOnTable make = source(MAKE, veh1, "model_make");
+        final Source3BasedOnTable veh = source(VEHICLE, veh1);
+        final Source3BasedOnTable model = source(MODEL, veh1, "model");
+        final Source3BasedOnTable make = source(MAKE, veh1, "model_make");
         
-        final IQrySources3 sources = 
+        final ISources3 sources = 
                 ij(
                         veh,
                         ij(
@@ -715,19 +715,19 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final ResultQuery3 actQry = qryCountAll(select(MODEL).where().anyOfProps("makeKey", "makeKey2", "make.key").isNotNull());
         final String model1 = "1";
         
-        final QrySource3BasedOnTable model = source(MODEL, model1);
-        final QrySource3BasedOnTable make = source(MAKE, model1, "make");
+        final Source3BasedOnTable model = source(MODEL, model1);
+        final Source3BasedOnTable make = source(MAKE, model1, "make");
         
-        final QrySource3BasedOnTable subQryMake = source(MAKE, model1, "makeKey2_2");
+        final Source3BasedOnTable subQryMake = source(MAKE, model1, "makeKey2_2");
         
-        final IQrySources3 subQrySources = sources(subQryMake);
+        final ISources3 subQrySources = sources(subQryMake);
         
         final Conditions3 subQryConditions = cond(eq(expr(idProp(subQryMake)), expr(entityProp("make", model, MAKE))));
         
         final SubQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleStringExpr(KEY, subQryMake)), String.class);
 
         
-        final IQrySources3 sources = 
+        final ISources3 sources = 
                 ij(
                         model,
                         make,
@@ -744,19 +744,19 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final ResultQuery3 actQry = qryCountAll(select(MODEL).where().anyOfProps("makeKey", "makeKey2").isNotNull());
         final String model1 = "1";
         
-        final QrySource3BasedOnTable model = source(MODEL, model1);
-        final QrySource3BasedOnTable make = source(MAKE, model1, "make");
+        final Source3BasedOnTable model = source(MODEL, model1);
+        final Source3BasedOnTable make = source(MAKE, model1, "make");
         
-        final QrySource3BasedOnTable subQryMake = source(MAKE, model1, "makeKey2_2");
+        final Source3BasedOnTable subQryMake = source(MAKE, model1, "makeKey2_2");
         
-        final IQrySources3 subQrySources = sources(subQryMake);
+        final ISources3 subQrySources = sources(subQryMake);
         
         final Conditions3 subQryConditions = cond(eq(expr(idProp(subQryMake)), expr(entityProp("make", model, MAKE))));
         
         final SubQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleStringExpr(KEY, subQryMake)), String.class);
 
         
-        final IQrySources3 sources = 
+        final ISources3 sources = 
                 ij(
                         model,
                         make,
@@ -773,10 +773,10 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final ResultQuery3 actQry = qryCountAll(select(MODEL).where().anyOfProps("makeKey", "make.key").isNotNull());
         final String model1 = "1";
         
-        final QrySource3BasedOnTable model = source(MODEL, model1);
-        final QrySource3BasedOnTable make = source(MAKE, model1, "make");
+        final Source3BasedOnTable model = source(MODEL, model1);
+        final Source3BasedOnTable make = source(MAKE, model1, "make");
         
-        final IQrySources3 sources = 
+        final ISources3 sources = 
                 ij(
                         model,
                         make,
@@ -793,17 +793,17 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final ResultQuery3 actQry = qryCountAll(select(MODEL).where().prop("makeKey2").isNotNull());
         final String model1 = "1";
 
-        final QrySource3BasedOnTable model = source(MODEL, model1);
+        final Source3BasedOnTable model = source(MODEL, model1);
 
-        final QrySource3BasedOnTable subQryMake = source(MAKE, model1, "makeKey2_2");
+        final Source3BasedOnTable subQryMake = source(MAKE, model1, "makeKey2_2");
         
-        final IQrySources3 subQrySources = sources(subQryMake);
+        final ISources3 subQrySources = sources(subQryMake);
         
         final Conditions3 subQryConditions = cond(eq(expr(idProp(subQryMake)), expr(entityProp("make", model, MAKE))));
         
         final SubQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleStringExpr(KEY, subQryMake)), String.class);
 
-        final IQrySources3 sources = sources(model);
+        final ISources3 sources = sources(model);
         final Conditions3 conditions = or(isNotNull(expr(expSubQry)));
         final ResultQuery3 expQry = qryCountAll(sources, conditions);
         
@@ -815,10 +815,10 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final ResultQuery3 actQry = qryCountAll(select(MODEL).where().prop("makeKey").isNotNull());
         final String model1 = "1";
         
-        final QrySource3BasedOnTable model = source(MODEL, model1);
-        final QrySource3BasedOnTable make = source(MAKE, model1, "make");
+        final Source3BasedOnTable model = source(MODEL, model1);
+        final Source3BasedOnTable make = source(MAKE, model1, "make");
         
-        final IQrySources3 sources = 
+        final ISources3 sources = 
                 ij(
                         model,
                         make,
@@ -835,10 +835,10 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final ResultQuery3 actQry = qryCountAll(select(VEHICLE).where().anyOfProps(KEY, "replacedBy.key").isNotNull());
         final String veh1 = "1"; 
         
-        final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
-        final QrySource3BasedOnTable repVeh = source(VEHICLE, veh1, "replacedBy");
+        final Source3BasedOnTable veh = source(VEHICLE, veh1);
+        final Source3BasedOnTable repVeh = source(VEHICLE, veh1, "replacedBy");
         
-        final IQrySources3 sources = 
+        final ISources3 sources = 
                 lj(
                         veh,
                         repVeh,
@@ -855,12 +855,12 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final ResultQuery3 actQry = qryCountAll(select(VEHICLE).where().anyOfProps("initDate", "station.name", "station.parent.name", "replacedBy.initDate").isNotNull());
         final String veh1 = "1";
         
-        final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
-        final QrySource3BasedOnTable repVeh = source(VEHICLE, veh1, "replacedBy");
-        final QrySource3BasedOnTable org5 = source(ORG5, veh1, "station");
-        final QrySource3BasedOnTable org4 = source(ORG4, veh1, "station_parent");
+        final Source3BasedOnTable veh = source(VEHICLE, veh1);
+        final Source3BasedOnTable repVeh = source(VEHICLE, veh1, "replacedBy");
+        final Source3BasedOnTable org5 = source(ORG5, veh1, "station");
+        final Source3BasedOnTable org4 = source(ORG4, veh1, "station_parent");
         
-        final IQrySources3 sources = 
+        final ISources3 sources = 
                 lj(
                         lj(
                                 veh,
@@ -886,11 +886,11 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final String veh1 = "1";
         final String ou5e1 = "2";
         
-        final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
-        final QrySource3BasedOnTable repVeh = source(VEHICLE, veh1, "replacedBy");
-        final QrySource3BasedOnTable ou5e = source(ORG5, ou5e1);
+        final Source3BasedOnTable veh = source(VEHICLE, veh1);
+        final Source3BasedOnTable repVeh = source(VEHICLE, veh1, "replacedBy");
+        final Source3BasedOnTable ou5e = source(ORG5, ou5e1);
 
-        final IQrySources3 sources = 
+        final ISources3 sources = 
                 ij(
                         lj(
                                 veh,
@@ -913,14 +913,14 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final String veh1 = "1";
         final String ou5e1 = "2";
 
-        final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
-        final QrySource3BasedOnTable repVeh = source(VEHICLE, veh1, "replacedBy");
-        final QrySource3BasedOnTable ou5e = source(ORG5, ou5e1);
-        final QrySource3BasedOnTable ou5eou4 = source(ORG4, ou5e1, "parent");
-        final QrySource3BasedOnTable ou5 = source(ORG5, veh1, "station");
-        final QrySource3BasedOnTable ou4 = source(ORG4, veh1, "station_parent");
+        final Source3BasedOnTable veh = source(VEHICLE, veh1);
+        final Source3BasedOnTable repVeh = source(VEHICLE, veh1, "replacedBy");
+        final Source3BasedOnTable ou5e = source(ORG5, ou5e1);
+        final Source3BasedOnTable ou5eou4 = source(ORG4, ou5e1, "parent");
+        final Source3BasedOnTable ou5 = source(ORG5, veh1, "station");
+        final Source3BasedOnTable ou4 = source(ORG4, veh1, "station_parent");
 
-        final IQrySources3 sources = 
+        final ISources3 sources = 
                 ij(
                         lj(
                                 lj(
@@ -962,15 +962,15 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final String veh1 = "1";
         final String ou2e1 = "2";
         
-        final QrySource3BasedOnTable veh = source(VEHICLE, veh1);
-        final QrySource3BasedOnTable repVeh = source(VEHICLE, veh1, "replacedBy");
-        final QrySource3BasedOnTable ou5 = source(ORG5, veh1, "station");
-        final QrySource3BasedOnTable ou4 = source(ORG4, veh1, "station_parent");
-        final QrySource3BasedOnTable ou3 = source(ORG3, veh1, "station_parent_parent");
-        final QrySource3BasedOnTable ou2e = source(ORG2, ou2e1);
-        final QrySource3BasedOnTable ou2eou1 = source(ORG1, ou2e1, "parent");
+        final Source3BasedOnTable veh = source(VEHICLE, veh1);
+        final Source3BasedOnTable repVeh = source(VEHICLE, veh1, "replacedBy");
+        final Source3BasedOnTable ou5 = source(ORG5, veh1, "station");
+        final Source3BasedOnTable ou4 = source(ORG4, veh1, "station_parent");
+        final Source3BasedOnTable ou3 = source(ORG3, veh1, "station_parent_parent");
+        final Source3BasedOnTable ou2e = source(ORG2, ou2e1);
+        final Source3BasedOnTable ou2eou1 = source(ORG1, ou2e1, "parent");
 
-        final IQrySources3 sources = 
+        final ISources3 sources = 
                 ij(
                         lj(
                                 lj(

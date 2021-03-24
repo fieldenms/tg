@@ -16,8 +16,8 @@ import ua.com.fielden.platform.eql.stage1.PropResolution;
 import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
 import ua.com.fielden.platform.eql.stage1.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
-import ua.com.fielden.platform.eql.stage2.sources.IQrySource2;
-import ua.com.fielden.platform.eql.stage3.sources.IQrySource3;
+import ua.com.fielden.platform.eql.stage2.sources.ISource2;
+import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 
 public class Prop1 implements ISingleOperand1<Prop2> {
     public final String name;
@@ -31,13 +31,13 @@ public class Prop1 implements ISingleOperand1<Prop2> {
     @Override
     public Prop2 transform(final PropsResolutionContext context) {
         
-        final Iterator<List<IQrySource2<? extends IQrySource3>>> it = context.getSources().iterator();
+        final Iterator<List<ISource2<? extends ISource3>>> it = context.getSources().iterator();
         if (external) {
             it.next();
         }
 
         while (it.hasNext()) {
-            final List<IQrySource2<? extends IQrySource3>> item = it.next();
+            final List<ISource2<? extends ISource3>> item = it.next();
             final PropResolution resolution = resolveProp(item, this);
             if (resolution != null) {
                 final boolean shouldBeTreatedAsId = name.endsWith("." + ID) && isEntityType(resolution.lastPart().javaType());
@@ -59,7 +59,7 @@ public class Prop1 implements ISingleOperand1<Prop2> {
         return originalPath;
     }
     
-    public static PropResolution resolvePropAgainstSource(final IQrySource2<? extends IQrySource3> source, final Prop1 prop) {
+    public static PropResolution resolvePropAgainstSource(final ISource2<? extends ISource3> source, final Prop1 prop) {
         final PropResolutionProgress asIsResolution = source.entityInfo().resolve(new PropResolutionProgress(prop.name));
         if (source.alias() != null && (prop.name.startsWith(source.alias() + ".") || prop.name.equals(source.alias()))) {
             final String aliaslessPropName = prop.name.equals(source.alias()) ? ID : prop.name.substring(source.alias().length() + 1);
@@ -75,9 +75,9 @@ public class Prop1 implements ISingleOperand1<Prop2> {
         return asIsResolution.isSuccessful() ? new PropResolution(source, asIsResolution.getResolved()) : null;
     }
     
-    private PropResolution resolveProp(final List<IQrySource2<? extends IQrySource3>> sources, final Prop1 prop) {
+    private PropResolution resolveProp(final List<ISource2<? extends ISource3>> sources, final Prop1 prop) {
         final List<PropResolution> result = new ArrayList<>();
-        for (final IQrySource2<? extends IQrySource3> source : sources) {
+        for (final ISource2<? extends ISource3> source : sources) {
             final PropResolution resolution = resolvePropAgainstSource(source, prop);
             if (resolution != null) {
                 result.add(resolution);

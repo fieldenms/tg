@@ -7,9 +7,9 @@ import java.util.List;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.stage1.sources.CompoundSource1;
-import ua.com.fielden.platform.eql.stage1.sources.IQrySource1;
-import ua.com.fielden.platform.eql.stage1.sources.QrySources1;
-import ua.com.fielden.platform.eql.stage2.sources.IQrySource2;
+import ua.com.fielden.platform.eql.stage1.sources.ISource1;
+import ua.com.fielden.platform.eql.stage1.sources.Sources1;
+import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.utils.Pair;
 
 public class QrySourcesBuilder extends AbstractTokensBuilder {
@@ -42,18 +42,18 @@ public class QrySourcesBuilder extends AbstractTokensBuilder {
         return getChild() == null;
     }
 
-    public QrySources1 getModel() {
+    public Sources1 getModel() {
         if (getChild() != null) {
             finaliseChild();
         }
         final Iterator<Pair<TokenCategory, Object>> iterator = getTokens().iterator();
-        final IQrySource1<? extends IQrySource2<?>> mainSource = (IQrySource1<? extends IQrySource2<?>>) iterator.next().getValue();
+        final ISource1<? extends ISource2<?>> mainSource = (ISource1<? extends ISource2<?>>) iterator.next().getValue();
         final List<CompoundSource1> otherSources = new ArrayList<>();
         for (; iterator.hasNext();) {
             final CompoundSource1 subsequentSource = (CompoundSource1) iterator.next().getValue();
             otherSources.add(subsequentSource);
         }
-        return mainSource != null ? new QrySources1(mainSource, otherSources) : null;
+        return mainSource != null ? new Sources1(mainSource, otherSources) : null;
 
     }
 

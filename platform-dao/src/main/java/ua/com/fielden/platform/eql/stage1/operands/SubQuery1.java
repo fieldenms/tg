@@ -8,15 +8,15 @@ import ua.com.fielden.platform.eql.stage1.QueryBlocks1;
 import ua.com.fielden.platform.eql.stage1.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.QueryBlocks2;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
-import ua.com.fielden.platform.eql.stage2.core.GroupBys2;
-import ua.com.fielden.platform.eql.stage2.core.OrderBys2;
-import ua.com.fielden.platform.eql.stage2.core.Yield2;
-import ua.com.fielden.platform.eql.stage2.core.Yields2;
+import ua.com.fielden.platform.eql.stage2.etc.GroupBys2;
+import ua.com.fielden.platform.eql.stage2.etc.OrderBys2;
+import ua.com.fielden.platform.eql.stage2.etc.Yield2;
+import ua.com.fielden.platform.eql.stage2.etc.Yields2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.Value2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.SubQuery2;
-import ua.com.fielden.platform.eql.stage2.sources.QrySources2;
+import ua.com.fielden.platform.eql.stage2.sources.Sources2;
 import ua.com.fielden.platform.types.tuples.T2;
 
 public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuery2> {
@@ -28,9 +28,9 @@ public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuer
     @Override
     public SubQuery2 transform(final PropsResolutionContext context) {
         final PropsResolutionContext localResolutionContext = context.produceForCorrelatedSubquery();
-        final T2<QrySources2,PropsResolutionContext> sourcesTr = sources.transform(localResolutionContext);
+        final T2<Sources2,PropsResolutionContext> sourcesTr = sources.transform(localResolutionContext);
         final PropsResolutionContext enhancedContext = sourcesTr._2; 
-        final QrySources2 sources2 = sourcesTr._1;
+        final Sources2 sources2 = sourcesTr._1;
         final Conditions2 conditions2 = conditions.transform(enhancedContext);
         final Yields2 yields2 = yields.transform(enhancedContext);
         final GroupBys2 groups2 = enhance(groups.transform(enhancedContext));
@@ -41,7 +41,7 @@ public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuer
         return new SubQuery2(entQueryBlocks, resultType);
     }
 
-    private Yields2 enhanceYields(final Yields2 yields, final QrySources2 sources2) {
+    private Yields2 enhanceYields(final Yields2 yields, final Sources2 sources2) {
         if (yields.getYields().isEmpty()) {
             final ISingleOperand2<?> yieldedOperand = sources2.main.entityInfo().getProps().containsKey(ID) ?
                     new Prop2(sources2.main, listOf(sources2.main.entityInfo().getProps().get(ID))) : new Value2(0);

@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import ua.com.fielden.platform.eql.stage2.core.Yield2;
+import ua.com.fielden.platform.eql.stage2.etc.Yield2;
 import ua.com.fielden.platform.types.tuples.T2;
 
 public class YieldInfoNodesGenerator {

@@ -7,14 +7,14 @@ import java.util.Set;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage2.QueryBlocks2;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
-import ua.com.fielden.platform.eql.stage2.core.GroupBys2;
-import ua.com.fielden.platform.eql.stage2.core.OrderBys2;
-import ua.com.fielden.platform.eql.stage2.core.Yields2;
-import ua.com.fielden.platform.eql.stage2.sources.QrySources2;
+import ua.com.fielden.platform.eql.stage2.etc.GroupBys2;
+import ua.com.fielden.platform.eql.stage2.etc.OrderBys2;
+import ua.com.fielden.platform.eql.stage2.etc.Yields2;
+import ua.com.fielden.platform.eql.stage2.sources.Sources2;
 
 public abstract class AbstractQuery2 {
 
-    public final QrySources2 sources;
+    public final Sources2 sources;
     public final Conditions2 conditions;
     public final Yields2 yields;
     public final GroupBys2 groups;

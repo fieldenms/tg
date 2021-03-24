@@ -8,15 +8,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
-import ua.com.fielden.platform.eql.stage2.sources.IQrySource2;
-import ua.com.fielden.platform.eql.stage3.sources.IQrySource3;
+import ua.com.fielden.platform.eql.stage2.sources.ISource2;
+import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 
 public class PropsResolutionContext {
-    private final List<List<IQrySource2<? extends IQrySource3>>> sources;
+    private final List<List<ISource2<? extends ISource3>>> sources;
     private final EqlDomainMetadata domainInfo;
     public final String sourceIdPrefix; //used for ensuring query sources ids uniqueness within calc-prop expression queries
 
-    public PropsResolutionContext(final EqlDomainMetadata domainInfo, final List<List<IQrySource2<? extends IQrySource3>>> sources, final String sourceIdPrefix) {
+    public PropsResolutionContext(final EqlDomainMetadata domainInfo, final List<List<ISource2<? extends ISource3>>> sources, final String sourceIdPrefix) {
         this.domainInfo = domainInfo;
         this.sources = sources;
         this.sourceIdPrefix = sourceIdPrefix;
@@ -26,8 +26,8 @@ public class PropsResolutionContext {
         this(domainInfo, buildSourcesStackForNewQuery(emptyList()), null);
     }
     
-    private static List<List<IQrySource2<? extends IQrySource3>>> buildSourcesStackForNewQuery(final List<List<IQrySource2<? extends IQrySource3>>> existingSources) {
-        final List<List<IQrySource2<? extends IQrySource3>>> srcs = new ArrayList<>();
+    private static List<List<ISource2<? extends ISource3>>> buildSourcesStackForNewQuery(final List<List<ISource2<? extends ISource3>>> existingSources) {
+        final List<List<ISource2<? extends ISource3>>> srcs = new ArrayList<>();
         srcs.add(new ArrayList<>());
         srcs.addAll(existingSources);
         return srcs;
@@ -45,13 +45,13 @@ public class PropsResolutionContext {
         return new PropsResolutionContext(domainInfo, buildSourcesStackForNewQuery(emptyList()), sourceIdPrefix);
     }
     
-    public PropsResolutionContext cloneWithAdded(final IQrySource2<? extends IQrySource3> transformedSource) {
-        final List<List<IQrySource2<? extends IQrySource3>>> newSources = sources.stream().map(el -> new ArrayList<>(el)).collect(toList()); // making deep copy of old list of sources
+    public PropsResolutionContext cloneWithAdded(final ISource2<? extends ISource3> transformedSource) {
+        final List<List<ISource2<? extends ISource3>>> newSources = sources.stream().map(el -> new ArrayList<>(el)).collect(toList()); // making deep copy of old list of sources
         newSources.get(0).add(transformedSource); // adding source to current query list of sources
         return new PropsResolutionContext(domainInfo, newSources, sourceIdPrefix);
     }
 
-    public List<List<IQrySource2<? extends IQrySource3>>> getSources() {
+    public List<List<ISource2<? extends ISource3>>> getSources() {
         return unmodifiableList(sources);
     }
 

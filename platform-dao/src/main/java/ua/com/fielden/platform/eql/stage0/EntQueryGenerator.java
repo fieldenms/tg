@@ -28,12 +28,12 @@ import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.stage1.QueryBlocks1;
 import ua.com.fielden.platform.eql.stage1.conditions.CompoundCondition1;
 import ua.com.fielden.platform.eql.stage1.conditions.Conditions1;
-import ua.com.fielden.platform.eql.stage1.core.OrderBys1;
+import ua.com.fielden.platform.eql.stage1.etc.OrderBys1;
 import ua.com.fielden.platform.eql.stage1.operands.ResultQuery1;
 import ua.com.fielden.platform.eql.stage1.operands.SourceQuery1;
 import ua.com.fielden.platform.eql.stage1.operands.SubQuery1;
-import ua.com.fielden.platform.eql.stage1.sources.IQrySource1;
-import ua.com.fielden.platform.eql.stage1.sources.QrySources1;
+import ua.com.fielden.platform.eql.stage1.sources.ISource1;
+import ua.com.fielden.platform.eql.stage1.sources.Sources1;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -125,13 +125,13 @@ public class EntQueryGenerator {
             }
         }
 
-        final QrySources1 fromModel = from.getModel();
+        final Sources1 fromModel = from.getModel();
         final Conditions1 whereModel = addFilteringCondition(where.getModel(), qryModel.isFilterable(), filter, username, fromModel.main);
 
         return new QueryBlocks1(fromModel, whereModel, select.getModel(), groupBy.getModel(), produceOrderBys(orderModel), qryModel.isYieldAll());
     }
     
-    private Conditions1 addFilteringCondition(final Conditions1 originalConditions, final boolean filterable, final IFilter filter, final String username, final IQrySource1<?> mainSource) {
+    private Conditions1 addFilteringCondition(final Conditions1 originalConditions, final boolean filterable, final IFilter filter, final String username, final ISource1<?> mainSource) {
         if (filterable && filter != null) {
             final ConditionModel filteringCondition = filter.enhance(mainSource.sourceType(), mainSource.getAlias(), username);
             if (filteringCondition != null) {

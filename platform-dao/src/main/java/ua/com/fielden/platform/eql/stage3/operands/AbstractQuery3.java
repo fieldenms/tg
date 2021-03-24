@@ -5,14 +5,14 @@ import java.util.Objects;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.stage3.QueryBlocks3;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
-import ua.com.fielden.platform.eql.stage3.core.GroupBys3;
-import ua.com.fielden.platform.eql.stage3.core.OrderBys3;
-import ua.com.fielden.platform.eql.stage3.core.Yields3;
-import ua.com.fielden.platform.eql.stage3.sources.IQrySources3;
+import ua.com.fielden.platform.eql.stage3.etc.GroupBys3;
+import ua.com.fielden.platform.eql.stage3.etc.OrderBys3;
+import ua.com.fielden.platform.eql.stage3.etc.Yields3;
+import ua.com.fielden.platform.eql.stage3.sources.ISources3;
 
 public abstract class AbstractQuery3 {
 
-    public final IQrySources3 sources;
+    public final ISources3 sources;
     public final Conditions3 conditions;
     public final Yields3 yields;
     public final GroupBys3 groups;

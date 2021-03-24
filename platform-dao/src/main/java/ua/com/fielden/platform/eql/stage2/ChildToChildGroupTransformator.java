@@ -13,7 +13,7 @@ import java.util.Map.Entry;
 import ua.com.fielden.platform.eql.stage2.operands.Expression2;
 import ua.com.fielden.platform.eql.stage2.sources.Child;
 import ua.com.fielden.platform.eql.stage2.sources.ChildGroup;
-import ua.com.fielden.platform.eql.stage2.sources.QrySource2BasedOnPersistentType;
+import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnPersistentType;
 
 import java.util.Set;
 
@@ -98,7 +98,7 @@ public class ChildToChildGroupTransformator {
     
     private static class DataForChildGroup {
         private final String mainName;
-        private QrySource2BasedOnPersistentType source;
+        private Source2BasedOnPersistentType source;
         private final boolean required;
         
         private final List<Child> items = new ArrayList<>();

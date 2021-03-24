@@ -17,15 +17,15 @@ import ua.com.fielden.platform.eql.stage1.ITransformableToS2;
 import ua.com.fielden.platform.eql.stage1.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.QueryBlocks2;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
-import ua.com.fielden.platform.eql.stage2.core.GroupBys2;
-import ua.com.fielden.platform.eql.stage2.core.OrderBys2;
-import ua.com.fielden.platform.eql.stage2.core.Yield2;
-import ua.com.fielden.platform.eql.stage2.core.Yields2;
+import ua.com.fielden.platform.eql.stage2.etc.GroupBys2;
+import ua.com.fielden.platform.eql.stage2.etc.OrderBys2;
+import ua.com.fielden.platform.eql.stage2.etc.Yield2;
+import ua.com.fielden.platform.eql.stage2.etc.Yields2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.SourceQuery2;
-import ua.com.fielden.platform.eql.stage2.sources.IQrySource2;
-import ua.com.fielden.platform.eql.stage2.sources.QrySources2;
-import ua.com.fielden.platform.eql.stage3.sources.IQrySource3;
+import ua.com.fielden.platform.eql.stage2.sources.ISource2;
+import ua.com.fielden.platform.eql.stage2.sources.Sources2;
+import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.types.tuples.T2;
 
 public class SourceQuery1 extends AbstractQuery1 implements ITransformableToS2<SourceQuery2> {
@@ -43,9 +43,9 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableToS2<S
     @Override
     public SourceQuery2 transform(final PropsResolutionContext context) {
         final PropsResolutionContext localResolutionContext = isCorrelated ? context.produceForCorrelatedSourceQuery() : context.produceForUncorrelatedSourceQuery();
-        final T2<QrySources2,PropsResolutionContext> sourcesTr = sources.transform(localResolutionContext);
+        final T2<Sources2,PropsResolutionContext> sourcesTr = sources.transform(localResolutionContext);
         final PropsResolutionContext enhancedContext = sourcesTr._2; 
-        final QrySources2 sources2 = sourcesTr._1;
+        final Sources2 sources2 = sourcesTr._1;
         final Conditions2 conditions2 = conditions.transform(enhancedContext);
         final Yields2 yields2 = yields.transform(enhancedContext);
         final GroupBys2 groups2 = enhance(groups.transform(enhancedContext));
@@ -55,7 +55,7 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableToS2<S
         return new SourceQuery2(entQueryBlocks, resultType);
     }
 
-    private Yields2 enhanceYields(final Yields2 yields, final IQrySource2<? extends IQrySource3> mainSource) {
+    private Yields2 enhanceYields(final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
         if (yields.getYields().isEmpty() || yieldAll) {
             final List<Yield2> enhancedYields = new ArrayList<>(yields.getYields());
             for (final Entry<String, AbstractPropInfo<?>> el : mainSource.entityInfo().getProps().entrySet()) {

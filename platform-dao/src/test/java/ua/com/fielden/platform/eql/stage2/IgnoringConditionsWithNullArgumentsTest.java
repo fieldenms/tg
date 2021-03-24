@@ -10,8 +10,8 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.eql.meta.EqlStage2TestCase;
 import ua.com.fielden.platform.eql.stage2.operands.ResultQuery2;
-import ua.com.fielden.platform.eql.stage2.sources.QrySource2BasedOnPersistentType;
-import ua.com.fielden.platform.eql.stage2.sources.QrySources2;
+import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnPersistentType;
+import ua.com.fielden.platform.eql.stage2.sources.Sources2;
 
 public class IgnoringConditionsWithNullArgumentsTest extends EqlStage2TestCase {
 
@@ -20,9 +20,9 @@ public class IgnoringConditionsWithNullArgumentsTest extends EqlStage2TestCase {
         final ResultQuery2 actQry = qryCountAll(select(MODEL).where().prop(KEY).eq().iVal(null));
         final String model1 = "1";
 
-        final QrySource2BasedOnPersistentType model = source(model1, MODEL);
+        final Source2BasedOnPersistentType model = source(model1, MODEL);
 
-        final QrySources2 sources = sources(model);
+        final Sources2 sources = sources(model);
         final ResultQuery2 expQry = qryCountAll(sources);
         
         assertEquals(expQry, actQry);
@@ -36,9 +36,9 @@ public class IgnoringConditionsWithNullArgumentsTest extends EqlStage2TestCase {
         final ResultQuery2 actQry = qryCountAll(select(MODEL).where().prop(KEY).eq().iParam("keyValue"), paramValues);
         final String model1 = "1";
 
-        final QrySource2BasedOnPersistentType model = source(model1, MODEL);
+        final Source2BasedOnPersistentType model = source(model1, MODEL);
 
-        final QrySources2 sources = sources(model);
+        final Sources2 sources = sources(model);
         final ResultQuery2 expQry = qryCountAll(sources);
         
         assertEquals(expQry, actQry);

@@ -10,18 +10,18 @@ import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.eql.meta.EntityInfo;
 import ua.com.fielden.platform.eql.meta.EqlStage2TestCase;
-import ua.com.fielden.platform.eql.stage2.core.Yields2;
+import ua.com.fielden.platform.eql.stage2.etc.Yields2;
 import ua.com.fielden.platform.eql.stage2.operands.ResultQuery2;
 import ua.com.fielden.platform.eql.stage2.operands.SourceQuery2;
-import ua.com.fielden.platform.eql.stage2.sources.QrySource2BasedOnPersistentType;
-import ua.com.fielden.platform.eql.stage2.sources.QrySource2BasedOnSubqueries;
+import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnPersistentType;
+import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnSubqueries;
 
 public class ResultQueryYieldExpandTest extends EqlStage2TestCase {
 
     @Test
     public void explicit_yield_of_union_type_property_from_type_based_source_is_properly_expanded() {
         final ResultQuery2 actQry = qry(select(BOGIE).where().prop("key").eq().val("BOGIE1").yield().prop("location").as("l").modelAsAggregate());
-        final QrySource2BasedOnPersistentType bogie = source("1", BOGIE);
+        final Source2BasedOnPersistentType bogie = source("1", BOGIE);
         final Yields2 yields = yields(
                 yield(prop(bogie, pi(BOGIE, "location")), "l"),
                 yield(prop(bogie, pi(BOGIE, "location"), pi(BOGIE, "location", "wagonSlot")), "l.wagonSlot"),
@@ -35,7 +35,7 @@ public class ResultQueryYieldExpandTest extends EqlStage2TestCase {
         final AggregatedResultQueryModel srcQry = select(BOGIE).yield().prop("location").as("l").modelAsAggregate();
         final ResultQuery2 actResultQry = qry(select(srcQry).yield().prop("l").as("loc").modelAsAggregate());
 
-        final QrySource2BasedOnPersistentType bogie = source("1", BOGIE);
+        final Source2BasedOnPersistentType bogie = source("1", BOGIE);
         final Yields2 yields = yields(
                 yield(prop(bogie, pi(BOGIE, "location")), "l"),
                 yield(prop(bogie, pi(BOGIE, "location"), pi(BOGIE, "location", "wagonSlot")), "l.wagonSlot"),
@@ -47,7 +47,7 @@ public class ResultQueryYieldExpandTest extends EqlStage2TestCase {
         final EntityInfo<EntityAggregates> entityInfo = new EntityInfo<>(EntityAggregates.class, QUERY_BASED);
         entityInfo.addProp(pi(BOGIE, "location").cloneRenamed("l"));
         
-        final QrySource2BasedOnSubqueries resultQrySource = source(entityInfo, "2", srcQry2);
+        final Source2BasedOnSubqueries resultQrySource = source(entityInfo, "2", srcQry2);
 
         final Yields2 resultQryYields = yields(
                 yield(prop(resultQrySource, pi(BOGIE, "location").cloneRenamed("l")), "loc"),
