@@ -117,7 +117,7 @@ public class WebUiBuilder implements IWebUiBuilder {
             if (masterOptional.get() != master) {
                 throw new WebUiBuilderException(format("The master configuration for type [%s] has been already registered.", master.getEntityType().getSimpleName()));
             } else {
-                logger.info(format("\tThere is a try to register exactly the same master configuration instance for type [%s], that has been already registered.", master.getEntityType().getSimpleName()));
+                logger.debug(format("\tThere is a try to register exactly the same master configuration instance for type [%s], that has been already registered.", master.getEntityType().getSimpleName()));
                 return this;
             }
         } else {
