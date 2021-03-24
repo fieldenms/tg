@@ -1,10 +1,12 @@
-package ua.com.fielden.platform.eql.stage0;
+package ua.com.fielden.platform.eql.stage0.functions;
 
+import ua.com.fielden.platform.eql.stage0.AbstractTokensBuilder;
+import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
 import ua.com.fielden.platform.eql.stage1.functions.LowerCaseOf1;
 
 public class LowerCaseOfBuilder extends OneArgumentFunctionBuilder {
 
-    protected LowerCaseOfBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder) {
+    public LowerCaseOfBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder) {
         super(parent, queryBuilder);
     }
 

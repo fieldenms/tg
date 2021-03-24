@@ -1,10 +1,12 @@
-package ua.com.fielden.platform.eql.stage0;
+package ua.com.fielden.platform.eql.stage0.functions;
 
+import ua.com.fielden.platform.eql.stage0.AbstractTokensBuilder;
+import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
 import ua.com.fielden.platform.eql.stage1.functions.YearOf1;
 
 public class YearOfBuilder extends OneArgumentFunctionBuilder {
 
-    protected YearOfBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder) {
+    public YearOfBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder) {
         super(parent, queryBuilder);
     }
 

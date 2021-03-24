@@ -1,8 +1,10 @@
-package ua.com.fielden.platform.eql.stage0;
+package ua.com.fielden.platform.eql.stage0.functions;
 
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.FUNCTION_MODEL;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
+import ua.com.fielden.platform.eql.stage0.AbstractTokensBuilder;
+import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
 import ua.com.fielden.platform.utils.Pair;
 
 abstract class OneArgumentFunctionBuilder extends AbstractTokensBuilder {

@@ -5,7 +5,7 @@ import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.stage1.PropsResolutionContext;
 import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnVoid;
 
-public class Source1BasedOnVoid  implements ISource1<Source2BasedOnVoid> {
+public class Source1BasedOnVoid implements ISource1<Source2BasedOnVoid> {
 
     @Override
     public Class<? extends AbstractEntity<?>> sourceType() {

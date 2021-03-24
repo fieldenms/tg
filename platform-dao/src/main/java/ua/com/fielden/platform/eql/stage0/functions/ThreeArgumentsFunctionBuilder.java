@@ -1,19 +1,21 @@
-package ua.com.fielden.platform.eql.stage0;
+package ua.com.fielden.platform.eql.stage0.functions;
 
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.FUNCTION_MODEL;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
+import ua.com.fielden.platform.eql.stage0.AbstractTokensBuilder;
+import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
 import ua.com.fielden.platform.utils.Pair;
 
-abstract class TwoArgumentsFunctionBuilder extends AbstractTokensBuilder {
+abstract class ThreeArgumentsFunctionBuilder extends AbstractTokensBuilder {
 
-    protected TwoArgumentsFunctionBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder) {
+    protected ThreeArgumentsFunctionBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder) {
         super(parent, queryBuilder);
     }
 
     @Override
     public boolean isClosing() {
-        return getSize() == 2;
+        return getSize() == 3;
     }
 
     abstract Object getModel();

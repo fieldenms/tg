@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
 import ua.com.fielden.platform.eql.meta.DomainMetadataUtils;
 import ua.com.fielden.platform.eql.stage2.sources.ChildGroup;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
@@ -81,13 +82,13 @@ public class TransformationContext {
         
         final Map<String, T2<ISource3, Object>> sourceMap = resolutions.get(source.id());
         if (sourceMap == null) {
-            System.out.println(format("CAN'T FIND sourceMap for path [%s] in source [%s].", path, source));
+            throw new EqlStage3ProcessingException(format("Can't find sourceMap for path [%s] in source [%s].", path, source));
         }
 
         final T2<ISource3, Object> result = sourceMap.get(path);
 
         if (result == null) {
-            System.out.println(format("CAN'T FIND path [%s] in source [%s].", path, source));
+            throw new EqlStage3ProcessingException(format("Can't find path [%s] in source [%s].", path, source));
         }
 
         return result;

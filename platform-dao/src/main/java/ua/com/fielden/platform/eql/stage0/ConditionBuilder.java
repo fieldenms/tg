@@ -84,7 +84,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
         mutlipleOperands.addAll(mutlipleAnyOperands);
     }
 
-    protected ConditionBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder) {
+    public ConditionBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder) {
         super(parent, queryBuilder);
     }
 

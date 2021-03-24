@@ -1,10 +1,12 @@
-package ua.com.fielden.platform.eql.stage0;
+package ua.com.fielden.platform.eql.stage0.functions;
 
+import ua.com.fielden.platform.eql.stage0.AbstractTokensBuilder;
+import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
 import ua.com.fielden.platform.eql.stage1.functions.DayOf1;
 
 public class DayOfBuilder extends OneArgumentFunctionBuilder {
 
-    protected DayOfBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder) {
+    public DayOfBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder) {
         super(parent, queryBuilder);
     }
 

@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.eql.stage0;
+package ua.com.fielden.platform.eql.stage0.functions;
 
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.END_FUNCTION;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.FUNCTION_MODEL;
@@ -8,6 +8,8 @@ import java.util.Iterator;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
+import ua.com.fielden.platform.eql.stage0.AbstractTokensBuilder;
+import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
 import ua.com.fielden.platform.eql.stage1.functions.Concat1;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
@@ -15,7 +17,7 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class ConcatFunctionBuilder extends AbstractTokensBuilder {
 
-    protected ConcatFunctionBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder) {
+    public ConcatFunctionBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder) {
         super(parent, queryBuilder);
     }
 

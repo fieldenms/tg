@@ -41,7 +41,7 @@ public class Source2BasedOnVoid implements ISource2<Source3BasedOnVoid> {
 
     @Override
     public String id() {
-        return "";
+        return ""; // should be implemented due to its usage in equals() and hashCode() implementations in other ISource2 classes
     }
     
     @Override

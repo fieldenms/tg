@@ -1,10 +1,12 @@
-package ua.com.fielden.platform.eql.stage0;
+package ua.com.fielden.platform.eql.stage0.functions;
 
+import ua.com.fielden.platform.eql.stage0.AbstractTokensBuilder;
+import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
 import ua.com.fielden.platform.eql.stage1.functions.SecondOf1;
 
 public class SecondOfBuilder extends OneArgumentFunctionBuilder {
 
-    protected SecondOfBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder) {
+    public SecondOfBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder) {
         super(parent, queryBuilder);
     }
 
