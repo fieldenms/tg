@@ -1416,14 +1416,16 @@ Polymer({
         // a more appropriate place for refitting is post entity binding
         // however, entity binding might not occure due to, for example, user authorisation restriction
         // that is why there is a need to perfrom refitting here as well as on entity binding
-        this.async(function() {
-            this.refit();
-        }.bind(this), 100);
-        this._setIsRunning(false);
+        if (e.composedPath()[0] === this) {
+            this.async(function() {
+                this.refit();
+            }.bind(this), 100);
+            this._setIsRunning(false);
+        }
     },
 
     _dialogClosed: function(e) {
-        var target = e.target || e.srcElement;
+        var target = e.composedPath()[0];
         if (target === this) {
             // if there are current subscriptions they need to be unsubscribed
             // due to dialog being closed
