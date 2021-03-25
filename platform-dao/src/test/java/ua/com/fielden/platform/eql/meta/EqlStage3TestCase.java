@@ -358,23 +358,23 @@ public class EqlStage3TestCase extends EqlTestCase {
     }
     
     protected static Yield3 yieldExpr(final String propName, final ISource3 source, final String alias) {
-        return new Yield3(expr(prop(propName, source)), alias, nextSqlId(), false, null, null);
+        return new Yield3(prop(propName, source), alias, nextSqlId(), false, null, null);
     }
 
     protected static Yield3 yieldEntityExpr(final String propName, final ISource3 source, final String alias, final Class<? extends AbstractEntity<?>> propType) {
-        return new Yield3(expr(entityProp(propName, source, propType)), alias, nextSqlId(), false, propType, H_LONG);
+        return new Yield3(entityProp(propName, source, propType), alias, nextSqlId(), false, propType, H_LONG);
     }
 
     protected static Yield3 yieldStringExpr(final String propName, final ISource3 source, final String alias) {
-        return new Yield3(expr(stringProp(propName, source)), alias, nextSqlId(), false, String.class, H_STRING);
+        return new Yield3(stringProp(propName, source), alias, nextSqlId(), false, String.class, H_STRING);
     }
 
     protected static Yield3 yieldIdExpr(final ISource3 source, final String alias) {
-        return new Yield3(expr(idProp(source)), alias, nextSqlId(), false, Long.class, H_LONG);
+        return new Yield3(idProp(source), alias, nextSqlId(), false, Long.class, H_LONG);
     }
     
     protected static Yield3 yieldPropExpr(final String propName, final ISource3 source, final String alias, final Class<?> type, final Type hibType) {
-        return new Yield3(expr(prop(propName, source, type, hibType)), alias, nextSqlId(), false, type, hibType);
+        return new Yield3(prop(propName, source, type, hibType), alias, nextSqlId(), false, type, hibType);
     }
 
     protected static Yield3 yieldProp(final String propName, final ISource3 source, final String alias) {

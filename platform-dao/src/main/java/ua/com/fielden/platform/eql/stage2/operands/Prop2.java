@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.eql.stage2.operands;
 
-import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableList;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
@@ -14,12 +13,13 @@ import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.stage2.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
-import ua.com.fielden.platform.eql.stage3.operands.Prop3;
 import ua.com.fielden.platform.eql.stage3.operands.Expression3;
+import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import ua.com.fielden.platform.eql.stage3.operands.Prop3;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.types.tuples.T2;
 
-public class Prop2 implements ISingleOperand2<Expression3> {
+public class Prop2 implements ISingleOperand2<ISingleOperand3> {
     public final ISource2<? extends ISource3> source;
     private final List<AbstractPropInfo<?>> path;
     public final String name;
@@ -39,23 +39,19 @@ public class Prop2 implements ISingleOperand2<Expression3> {
     }
 
     @Override
-    public TransformationResult<Expression3> transform(final TransformationContext context) {
+    public TransformationResult<ISingleOperand3> transform(final TransformationContext context) {
         if (isHeader()) { //resolution to column level is not applicable here
-            return new TransformationResult<Expression3>(new Expression3(new Prop3(lastPart().name, null, type, hibType), emptyList()), context);
+            return new TransformationResult<>(new Prop3(lastPart().name, null, type, hibType), context);
         }
         
         final T2<ISource3, Object> resolution = context.resolve(source, name);
 
-        Expression3 transformedProp;  
-        TransformationContext currentContext = context;
         if (resolution._2 instanceof String) {
-            transformedProp = new Expression3(new Prop3((String) resolution._2, resolution._1, type, hibType), emptyList());
+            return new TransformationResult<>(new Prop3((String) resolution._2, resolution._1, type, hibType), context);
         } else {
             final TransformationResult<Expression3> tr = ((Expression2) resolution._2).transform(context);
-            currentContext = tr.updatedContext;
-            transformedProp = tr.item;
+            return new TransformationResult<>(tr.item, tr.updatedContext);
         }
-        return new TransformationResult<Expression3>(transformedProp, currentContext);
     }
 
     @Override
