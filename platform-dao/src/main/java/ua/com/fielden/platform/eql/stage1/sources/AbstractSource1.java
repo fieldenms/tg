@@ -12,7 +12,7 @@ public abstract class AbstractSource1<S2 extends ISource2<?>> implements ISource
      */
     protected final String alias;
     public final int id;
-    
+
     public AbstractSource1(final String alias, final int id) {
         this.id = id; // id is not taken into consideration in hashCode() and equals(..) methods on purpose -- Stage1 elements have no need to reference uniquely one another.
         this.alias = alias;
@@ -22,7 +22,7 @@ public abstract class AbstractSource1<S2 extends ISource2<?>> implements ISource
     public String getAlias() {
         return alias;
     }
-    
+
     public String transformId(final TransformationContext context) {
         return context.sourceIdPrefix == null ? Integer.toString(id) : context.sourceIdPrefix + "_" + Integer.toString(id);
     }
@@ -44,9 +44,9 @@ public abstract class AbstractSource1<S2 extends ISource2<?>> implements ISource
         if (!(obj instanceof AbstractSource1)) {
             return false;
         }
-        
+
         final AbstractSource1<?> other = (AbstractSource1<?>) obj;
-        
+
         return Objects.equals(alias, other.alias);
     }
 }

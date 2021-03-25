@@ -111,7 +111,7 @@ public class Prop1 implements ISingleOperand1<Prop2> {
         }
         
         final Prop1 other = (Prop1) obj;
-        
+
         return Objects.equals(name, other.name) && (external == other.external);
     }
 }

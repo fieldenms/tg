@@ -18,7 +18,7 @@ public class OperandsBasedSet1 implements ISetOperand1<OperandsBasedSet2> {
 
     @Override
     public OperandsBasedSet2 transform(final TransformationContext context) {
-       return new OperandsBasedSet2(operands.stream().map(el -> el.transform(context)).collect(toList()));
+        return new OperandsBasedSet2(operands.stream().map(el -> el.transform(context)).collect(toList()));
     }
 
     @Override
@@ -38,9 +38,9 @@ public class OperandsBasedSet1 implements ISetOperand1<OperandsBasedSet2> {
         if (!(obj instanceof OperandsBasedSet1)) {
             return false;
         }
-        
+
         final OperandsBasedSet1 other = (OperandsBasedSet1) obj;
-        
+
         return Objects.equals(operands, other.operands);
     }
 }

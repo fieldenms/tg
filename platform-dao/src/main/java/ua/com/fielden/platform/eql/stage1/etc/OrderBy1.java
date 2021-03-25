@@ -23,7 +23,7 @@ public class OrderBy1 {
         this.isDesc = isDesc;
         this.yieldName = yieldName;
     }
-    
+
     public OrderBy2 transform(final TransformationContext context) {
         return operand != null ? new OrderBy2(operand.transform(context), isDesc) : new OrderBy2(yieldName, isDesc);
     }

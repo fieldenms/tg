@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.stage1.conditions;
 
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.util.ArrayList;
@@ -14,8 +15,8 @@ import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.conditions.ICondition2;
 import ua.com.fielden.platform.eql.stage2.conditions.NullTest2;
-import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 
 public class NullTest1 implements ICondition1<Conditions2> {
     private final ISingleOperand1<? extends ISingleOperand2<?>> operand;
@@ -31,28 +32,25 @@ public class NullTest1 implements ICondition1<Conditions2> {
         final ISingleOperand2<?> transformedOperand = operand.transform(context);
         if (transformedOperand instanceof Prop2 && isUnionEntityType(((Prop2) transformedOperand).type)) {
             final Prop2 prop = (Prop2) transformedOperand;
-            final UnionTypePropInfo<?> lastResolutionItem = (UnionTypePropInfo<?>)prop.getPath().get(prop.getPath().size() - 1);
+            final UnionTypePropInfo<?> lastResolutionItem = (UnionTypePropInfo<?>) prop.getPath().get(prop.getPath().size() - 1);
             final List<ICondition2<?>> nullTests = new ArrayList<>();
-            
-            for (final AbstractPropInfo<?> el: lastResolutionItem.propEntityInfo.getProps().values()) {
-                if (!el.hasExpression()) {
+
+            for (final AbstractPropInfo<?> propInfo : lastResolutionItem.propEntityInfo.getProps().values()) {
+                if (!propInfo.hasExpression()) {
                     final List<AbstractPropInfo<?>> subPropPath = new ArrayList<>(prop.getPath());
-                    subPropPath.add(el);
+                    subPropPath.add(propInfo);
                     nullTests.add(new NullTest2(new Prop2(prop.source, subPropPath), negated));
                 }
             }
-            
+
             if (negated) {
-                final List<List<? extends ICondition2<?>>> negatedNullTests = new ArrayList<>();
-                for (final ICondition2<?> nt : nullTests) {
-                    negatedNullTests.add(asList(nt));
-                }
+                final List<List<? extends ICondition2<?>>> negatedNullTests = nullTests.stream().map(nullTest -> asList(nullTest)).collect(toList());
                 return new Conditions2(false, negatedNullTests);
             } else {
                 return new Conditions2(false, asList(nullTests));
             }
         }
-        
+
         return new Conditions2(false, asList(asList(new NullTest2(transformedOperand, negated))));
     }
 
@@ -74,9 +72,9 @@ public class NullTest1 implements ICondition1<Conditions2> {
         if (!(obj instanceof NullTest1)) {
             return false;
         }
-        
+
         final NullTest1 other = (NullTest1) obj;
-        
+
         return Objects.equals(negated, other.negated) && Objects.equals(operand, other.operand);
     }
 }

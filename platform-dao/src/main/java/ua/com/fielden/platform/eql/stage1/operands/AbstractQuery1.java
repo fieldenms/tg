@@ -12,20 +12,20 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.meta.ComponentTypePropInfo;
 import ua.com.fielden.platform.eql.meta.UnionTypePropInfo;
-import ua.com.fielden.platform.eql.stage1.QueryBlocks1;
 import ua.com.fielden.platform.eql.stage1.PropResolution;
+import ua.com.fielden.platform.eql.stage1.QueryBlocks1;
 import ua.com.fielden.platform.eql.stage1.conditions.Conditions1;
 import ua.com.fielden.platform.eql.stage1.etc.GroupBys1;
 import ua.com.fielden.platform.eql.stage1.etc.OrderBys1;
 import ua.com.fielden.platform.eql.stage1.etc.Yields1;
 import ua.com.fielden.platform.eql.stage1.sources.Sources1;
-import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.etc.GroupBy2;
 import ua.com.fielden.platform.eql.stage2.etc.GroupBys2;
 import ua.com.fielden.platform.eql.stage2.etc.OrderBy2;
@@ -33,6 +33,7 @@ import ua.com.fielden.platform.eql.stage2.etc.OrderBys2;
 import ua.com.fielden.platform.eql.stage2.etc.Yield2;
 import ua.com.fielden.platform.eql.stage2.etc.Yields2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 
@@ -57,12 +58,7 @@ public abstract class AbstractQuery1 {
     }
 
     protected static GroupBys2 enhance(final GroupBys2 groupBys) {
-        final List<GroupBy2> enhanced = new ArrayList<>();
-        
-        for (final GroupBy2 original : groupBys.getGroups()) {
-            enhanced.addAll(enhance(original));
-        }
-
+        final List<GroupBy2> enhanced = groupBys.getGroups().stream().map(group -> enhance(group)).flatMap(List::stream).collect(Collectors.toList());
         return new GroupBys2(enhanced);
     }
     
@@ -120,8 +116,6 @@ public abstract class AbstractQuery1 {
         return expand(new Yield2(new Prop2(originalYieldProp.source, expandedPath), yieldAlias + "." + subProp.name, false));             
     }
     
-    
-    
     private static List<OrderBy2> transformForYield(final OrderBy2 original, final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
         if (yields.getYieldsMap().containsKey(original.yieldName)) {
             final Yield2 yield = yields.getYieldsMap().get(original.yieldName);
@@ -144,17 +138,17 @@ public abstract class AbstractQuery1 {
     }
 
     private static List<OrderBy2> transformForOperand(final ISingleOperand2<?> operand, final boolean isDesc) {
-        return operand instanceof Prop2 ?
-                extract((Prop2) operand).stream().map(keySubprop -> new OrderBy2(keySubprop, isDesc)).collect(toList()) :
+        return operand instanceof Prop2 ? //
+                extract((Prop2) operand).stream().map(keySubprop -> new OrderBy2(keySubprop, isDesc)).collect(toList()) : //
                 asList(new OrderBy2(operand, isDesc));
     }
     
     private static List<GroupBy2> enhance(final GroupBy2 original) {
-        return original.operand instanceof Prop2 ?
-                extract((Prop2) original.operand).stream().map(keySubprop -> new GroupBy2(keySubprop)).collect(toList()) :
+        return original.operand instanceof Prop2 ? //
+                extract((Prop2) original.operand).stream().map(keySubprop -> new GroupBy2(keySubprop)).collect(toList()) : //
                 asList(original);
     }
-    
+
     @Override
     public int hashCode() {
         final int prime = 31;

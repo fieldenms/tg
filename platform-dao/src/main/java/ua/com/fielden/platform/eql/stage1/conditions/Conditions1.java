@@ -5,6 +5,7 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.eql.stage1.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
@@ -60,29 +61,14 @@ public class Conditions1 implements ICondition1<Conditions2> {
 
     @Override
     public Conditions2 transform(final TransformationContext context) {
-        final List<List<ICondition1<? extends ICondition2<?>>>> dnfs = formDnf();
-        final List<List<? extends ICondition2<?>>> transformed = new ArrayList<>();
-        for (final List<ICondition1<? extends ICondition2<?>>> andGroup : dnfs) {
-            final List<ICondition2<?>> transformedAndGroup = new ArrayList<>(); 
-            for (final ICondition1<? extends ICondition2<?>> andGroupCondition : andGroup) {
-                final ICondition2<?> andGroupConditionTransformed = andGroupCondition.transform(context);
-                if (!andGroupConditionTransformed.ignore()) {
-                    transformedAndGroup.add(andGroupConditionTransformed);
-                }
-            }
-            if (!transformedAndGroup.isEmpty()) {
-                transformed.add(transformedAndGroup);
-            }
-        }
-        
-//        final List<List<? extends ICondition2>> transformed = formDnf().stream()
-//                .map(andGroup -> 
-//                                  andGroup.stream().map(cond -> cond.transform(context))
-//                                                   .filter(cond -> !cond.ignore())
-//                                                   .collect(toList())
-//                    )
-//                .filter(andGroup -> !andGroup.isEmpty())
-//                .collect(toList());
+        final List<List<? extends ICondition2<?>>> transformed = formDnf().stream()
+                .map(andGroup -> 
+                                  andGroup.stream().map(andGroupCondition -> andGroupCondition.transform(context))
+                                                   .filter(andGroupConditionTransformed -> !andGroupConditionTransformed.ignore())
+                                                   .collect(Collectors.toList())
+                    )
+                .filter(transformedAndGroup -> !transformedAndGroup.isEmpty())
+                .collect(Collectors.toList());
         
         return new Conditions2(negated, transformed);
     }

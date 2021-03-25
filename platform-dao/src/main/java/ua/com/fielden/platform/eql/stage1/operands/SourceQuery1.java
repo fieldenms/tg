@@ -29,12 +29,12 @@ import ua.com.fielden.platform.eql.stage2.sources.Sources2;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 
 public class SourceQuery1 extends AbstractQuery1 implements ITransformableToS2<SourceQuery2> {
-    
+
     /**
      * All simple queries as source queries are accessible for correlation. Source queries derived from synthetic entities can't be correlated.
      */
     public final boolean isCorrelated;
-    
+
     public SourceQuery1(final QueryBlocks1 queryBlocks, final Class<? extends AbstractEntity<?>> resultType, final boolean isCorrelated) {
         super(queryBlocks, requireNonNull(resultType));
         this.isCorrelated = isCorrelated;
@@ -44,7 +44,7 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableToS2<S
     public SourceQuery2 transform(final TransformationContext context) {
         final TransformationContext localContext = isCorrelated ? context.produceForCorrelatedSourceQuery() : context.produceForUncorrelatedSourceQuery();
         final TransformationResult<Sources2> sourcesTr = sources.transform(localContext);
-        final TransformationContext enhancedContext = sourcesTr.updatedContext; 
+        final TransformationContext enhancedContext = sourcesTr.updatedContext;
         final Sources2 sources2 = sourcesTr.item;
         final Conditions2 conditions2 = conditions.transform(enhancedContext);
         final Yields2 yields2 = yields.transform(enhancedContext);
@@ -65,12 +65,12 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableToS2<S
             }
             return new Yields2(enhancedYields, yields.getYields().isEmpty());
         }
-        
+
         final Yield2 firstYield = yields.getYields().iterator().next();
         if (yields.getYields().size() == 1 && !yieldAll && isEmpty(firstYield.alias) && isPersistedEntityType(resultType)) {
             return new Yields2(listOf(new Yield2(firstYield.operand, ID, firstYield.hasRequiredHint)));
         }
-        
+
         return yields;
     }
 

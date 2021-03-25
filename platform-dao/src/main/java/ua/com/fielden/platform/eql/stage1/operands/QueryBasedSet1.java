@@ -44,7 +44,7 @@ public class QueryBasedSet1 implements ISetOperand1<QueryBasedSet2> {
         } else if (!model.equals(other.model)) {
             return false;
         }
-        
+
         return Objects.equals(model, other.model);
     }
 }

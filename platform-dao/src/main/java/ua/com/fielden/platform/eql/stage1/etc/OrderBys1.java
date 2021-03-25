@@ -36,9 +36,9 @@ public class OrderBys1 {
         if (!(obj instanceof OrderBys1)) {
             return false;
         }
-        
+
         final OrderBys1 other = (OrderBys1) obj;
-        
+
         return Objects.equals(models, other.models);
     }
 }
