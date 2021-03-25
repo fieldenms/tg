@@ -43,7 +43,7 @@ public class Value1 implements ISingleOperand1<Value2> {
         }
 
         final Value1 other = (Value1) obj;
-        
+
         return Objects.equals(value, other.value) && ignoreNull == other.ignoreNull;
     }
 }

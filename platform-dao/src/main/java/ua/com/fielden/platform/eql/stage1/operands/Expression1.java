@@ -43,7 +43,7 @@ public class Expression1 implements ISingleOperand1<Expression2> {
             return false;
         }
         final Expression1 other = (Expression1) obj;
-        
+
         return Objects.equals(first, other.first) && Objects.equals(items, other.items);
     }
 }

@@ -13,7 +13,7 @@ import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.conditions.ICondition3;
 
 public class Conditions2 extends AbstractCondition2<Conditions3> {
-    private final List<List<? extends ICondition2>> allConditionsAsDnf = new ArrayList<>();
+    private final List<List<? extends ICondition2<?>>> allConditionsAsDnf = new ArrayList<>();
     private final boolean negated;
 
     public Conditions2(final boolean negated, final List<List<? extends ICondition2<?>>> allConditions) {
@@ -31,7 +31,7 @@ public class Conditions2 extends AbstractCondition2<Conditions3> {
         final List<List<? extends ICondition3>> result = new ArrayList<>();
         TransformationContext currentContext = context;
         
-        for (final List<? extends ICondition2> andGroup : allConditionsAsDnf) {
+        for (final List<? extends ICondition2<?>> andGroup : allConditionsAsDnf) {
             final List<ICondition3> transformedAndGroup = new ArrayList<>(); 
             for (final ICondition2<? extends ICondition3> andGroupCondition : andGroup) {
                 final TransformationResult<? extends ICondition3> andGroupConditionTr = andGroupCondition.transform(currentContext);
@@ -56,8 +56,8 @@ public class Conditions2 extends AbstractCondition2<Conditions3> {
     @Override
     public Set<Prop2> collectProps() {
         final Set<Prop2> result = new HashSet<>();
-        for (final List<? extends ICondition2> list : allConditionsAsDnf) {
-            for (final ICondition2 cond : list) {
+        for (final List<? extends ICondition2<?>> list : allConditionsAsDnf) {
+            for (final ICondition2<?> cond : list) {
                 result.addAll(cond.collectProps());
             }
         }

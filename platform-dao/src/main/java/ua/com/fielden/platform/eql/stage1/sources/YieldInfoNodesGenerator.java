@@ -50,7 +50,8 @@ public class YieldInfoNodesGenerator {
 
         for (final Entry<String, List<T2<List<String>, T2<Class<?>, Object>>>> yieldTree : yieldsTreeData.entrySet()) {
             final T2<Class<?>, Object> yieldWithoutSubprops = yieldsWithoutSubprops.get(yieldTree.getKey());
-            result.put(yieldTree.getKey(), new YieldInfoNode(yieldTree.getKey(), yieldWithoutSubprops == null ? null : yieldWithoutSubprops._1, yieldWithoutSubprops == null ? null : yieldWithoutSubprops._2, yieldTree.getValue().isEmpty() ? emptyMap() : group(yieldTree.getValue())));
+            result.put(yieldTree.getKey(), new YieldInfoNode(yieldTree.getKey(), yieldWithoutSubprops == null ? null : yieldWithoutSubprops._1, yieldWithoutSubprops == null ? null
+                    : yieldWithoutSubprops._2, yieldTree.getValue().isEmpty() ? emptyMap() : group(yieldTree.getValue())));
         }
 
         return result;

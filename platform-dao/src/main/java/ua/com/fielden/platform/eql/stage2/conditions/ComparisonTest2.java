@@ -62,11 +62,11 @@ public class ComparisonTest2 extends AbstractCondition2<ComparisonTest3> {
         if (!(obj instanceof ComparisonTest2)) {
             return false;
         }
-        
+
         final ComparisonTest2 other = (ComparisonTest2) obj;
-        
+
         return Objects.equals(leftOperand, other.leftOperand) &&
                 Objects.equals(rightOperand, other.rightOperand) &&
                 Objects.equals(operator, other.operator);
-   }
+    }
 }

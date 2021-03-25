@@ -47,7 +47,7 @@ public class CompoundSource1 {
         if (!(obj instanceof CompoundSource1)) {
             return false;
         }
-        
+
         final CompoundSource1 other = (CompoundSource1) obj;
 
         return Objects.equals(joinConditions, other.joinConditions) && Objects.equals(joinType, other.joinType) && Objects.equals(source, other.source);

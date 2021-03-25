@@ -32,7 +32,7 @@ import ua.com.fielden.platform.eql.stage2.sources.Sources2;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 
 public class ResultQuery1 extends AbstractQuery1 implements ITransformableToS2<ResultQuery2> {
-    
+
     public final IRetrievalModel<?> fetchModel;
 
     public ResultQuery1(final QueryBlocks1 queryBlocks, final Class<? extends AbstractEntity<?>> resultType, final IRetrievalModel<?> fetchModel) {
@@ -60,7 +60,7 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToS2<R
             final List<Yield2> enhancedYields = new ArrayList<>(yields.getYields());
             for (final Entry<String, AbstractPropInfo<?>> el : mainSource.entityInfo().getProps().entrySet()) {
                 if (fetchModel == null || fetchModel.containsProp(el.getValue().name)) {
-                    enhancedYields.add(new Yield2(new Prop2(mainSource, listOf(el.getValue())), el.getKey(), false)); 
+                    enhancedYields.add(new Yield2(new Prop2(mainSource, listOf(el.getValue())), el.getKey(), false));
                 }
             }
             return new Yields2(enhancedYields);
@@ -73,7 +73,7 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToS2<R
 
         return yields;
     }
-    
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -81,7 +81,7 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToS2<R
         result = prime * result + ((fetchModel == null) ? 0 : fetchModel.hashCode());
         return prime * result + ResultQuery1.class.getName().hashCode();
     }
-    
+
     @Override
     public boolean equals(final Object obj) {
         return this == obj || super.equals(obj) && obj instanceof ResultQuery1 && Objects.equal(fetchModel, ((ResultQuery1) obj).fetchModel);

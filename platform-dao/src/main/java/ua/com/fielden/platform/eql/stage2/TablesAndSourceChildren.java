@@ -12,7 +12,7 @@ import ua.com.fielden.platform.eql.stage3.Table;
 public class TablesAndSourceChildren {
     private final Map<String, Table> tables = new HashMap<>();
     private final Map<String, List<ChildGroup>> sourceChildren = new HashMap<>();
-    
+
     public TablesAndSourceChildren(final Map<String, Table> tables, final Map<String, List<ChildGroup>> sourceChildren) {
         this.tables.putAll(tables);
         this.sourceChildren.putAll(sourceChildren);

@@ -10,7 +10,7 @@ import ua.com.fielden.platform.eql.stage2.sources.CompoundSource2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage2.sources.Sources2;
 
-public class Sources1  {
+public class Sources1 {
     public final ISource1<? extends ISource2<?>> main;
     private final List<CompoundSource1> compounds;
 
@@ -20,7 +20,7 @@ public class Sources1  {
     }
 
     public TransformationResult<Sources2> transform(final TransformationContext context) {
-        final ISource2<?> mainTransformed = main.transform(context);    
+        final ISource2<?> mainTransformed = main.transform(context);
         TransformationContext currentContext = context.cloneWithAdded(mainTransformed);
 
         final List<CompoundSource2> transformed = new ArrayList<>();
@@ -50,9 +50,9 @@ public class Sources1  {
         if (!(obj instanceof Sources1)) {
             return false;
         }
-        
+
         final Sources1 other = (Sources1) obj;
-        
+
         return Objects.equals(main, other.main) &&
                 Objects.equals(compounds, other.compounds);
     }

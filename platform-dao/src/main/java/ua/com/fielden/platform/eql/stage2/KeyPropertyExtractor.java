@@ -15,7 +15,7 @@ import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 
 public class KeyPropertyExtractor {
-    
+
     public static List<Prop2> extract(final Prop2 original) {
         final AbstractPropInfo<?> operandPropLastMember = original.lastPart();
         if (needsExtraction(operandPropLastMember)) {
@@ -31,11 +31,11 @@ public class KeyPropertyExtractor {
             }
             return result;
         }
-        
+
         return asList(original);
     }
-    
+
     public static boolean needsExtraction(final AbstractPropInfo<?> operandPropLastMember) {
-        return KEY.equals(operandPropLastMember.name) && (operandPropLastMember.hasExpression()/*composite*/ ||  isEntityType(operandPropLastMember.javaType())/*1-2-1*/);
+        return KEY.equals(operandPropLastMember.name) && (operandPropLastMember.hasExpression()/*composite*/ || isEntityType(operandPropLastMember.javaType())/*1-2-1*/);
     }
 }

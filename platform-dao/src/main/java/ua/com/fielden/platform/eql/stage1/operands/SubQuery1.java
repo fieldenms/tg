@@ -29,7 +29,7 @@ public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuer
     public SubQuery2 transform(final TransformationContext context) {
         final TransformationContext localContext = context.produceForCorrelatedSubquery();
         final TransformationResult<Sources2> sourcesTr = sources.transform(localContext);
-        final TransformationContext enhancedContext = sourcesTr.updatedContext; 
+        final TransformationContext enhancedContext = sourcesTr.updatedContext;
         final Sources2 sources2 = sourcesTr.item;
         final Conditions2 conditions2 = conditions.transform(enhancedContext);
         final Yields2 yields2 = yields.transform(enhancedContext);
@@ -43,9 +43,10 @@ public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuer
 
     private Yields2 enhanceYields(final Yields2 yields, final Sources2 sources2) {
         if (yields.getYields().isEmpty()) {
-            final ISingleOperand2<?> yieldedOperand = sources2.main.entityInfo().getProps().containsKey(ID) ?
-                    new Prop2(sources2.main, listOf(sources2.main.entityInfo().getProps().get(ID))) : new Value2(0);
-                return new Yields2(listOf(new Yield2(yieldedOperand, "", false)));
+            final ISingleOperand2<?> yieldedOperand = sources2.main.entityInfo().getProps().containsKey(ID)
+                    ? new Prop2(sources2.main, listOf(sources2.main.entityInfo().getProps().get(ID)))
+                    : new Value2(0);
+            return new Yields2(listOf(new Yield2(yieldedOperand, "", false)));
         }
         return yields;
     }

@@ -8,7 +8,7 @@ public class YieldInfoNode {
     public final Class<?> javaType;
     public final Object hibType;
     private final Map<String, YieldInfoNode> items = new HashMap<>();
-    
+
     public YieldInfoNode(final String name, final Class<?> javaType, final Object hibType, final Map<String, YieldInfoNode> items) {
         this.name = name;
         this.javaType = javaType;
