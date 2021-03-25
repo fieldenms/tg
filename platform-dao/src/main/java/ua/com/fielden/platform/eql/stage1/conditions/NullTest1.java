@@ -18,7 +18,7 @@ import ua.com.fielden.platform.eql.stage2.conditions.NullTest2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 
-public class NullTest1 implements ICondition1<Conditions2> {
+public class NullTest1 implements ICondition1<ICondition2<?>> {
     private final ISingleOperand1<? extends ISingleOperand2<?>> operand;
     private final boolean negated;
 
@@ -28,7 +28,7 @@ public class NullTest1 implements ICondition1<Conditions2> {
     }
 
     @Override
-    public Conditions2 transform(final TransformationContext context) {
+    public ICondition2<?> transform(final TransformationContext context) {
         final ISingleOperand2<?> transformedOperand = operand.transform(context);
         if (transformedOperand instanceof Prop2 && isUnionEntityType(((Prop2) transformedOperand).type)) {
             final Prop2 prop = (Prop2) transformedOperand;
@@ -51,7 +51,7 @@ public class NullTest1 implements ICondition1<Conditions2> {
             }
         }
 
-        return new Conditions2(false, asList(asList(new NullTest2(transformedOperand, negated))));
+        return new NullTest2(transformedOperand, negated);
     }
 
     @Override

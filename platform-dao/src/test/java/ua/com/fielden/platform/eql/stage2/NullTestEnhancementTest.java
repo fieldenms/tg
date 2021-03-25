@@ -16,7 +16,7 @@ public class NullTestEnhancementTest extends EqlStage2TestCase {
     public void is_null_condition_is_correctly_transformed_for_union_property() {
         final ResultQuery2 actQry = qryCountAll(select(BOGIE).where().prop("location").isNull());
         final Source2BasedOnPersistentType bogie = source("1", BOGIE);
-        final Conditions2 conditions = or(and(or(and(isNull_(prop(bogie, pi(BOGIE, "location"), pi(BOGIE, "location", "wagonSlot"))), isNull_(prop(bogie, pi(BOGIE, "location"), pi(BOGIE, "location", "workshop")))))));
+        final Conditions2 conditions = or(and(or(and(isNull(prop(bogie, pi(BOGIE, "location"), pi(BOGIE, "location", "wagonSlot"))), isNull(prop(bogie, pi(BOGIE, "location"), pi(BOGIE, "location", "workshop")))))));
         assertEquals(conditions, actQry.conditions);
     }
     
@@ -24,7 +24,7 @@ public class NullTestEnhancementTest extends EqlStage2TestCase {
     public void is_not_null_condition_is_correctly_transformed_for_union_property() {
         final ResultQuery2 actQry = qryCountAll(select(BOGIE).where().prop("location").isNotNull());
         final Source2BasedOnPersistentType bogie = source("1", BOGIE);
-        final Conditions2 conditions = or(and(or(and(isNotNull_(prop(bogie, pi(BOGIE, "location"), pi(BOGIE, "location", "wagonSlot")))), and(isNotNull_(prop(bogie, pi(BOGIE, "location"), pi(BOGIE, "location", "workshop")))))));
+        final Conditions2 conditions = or(and(or(and(isNotNull(prop(bogie, pi(BOGIE, "location"), pi(BOGIE, "location", "wagonSlot")))), and(isNotNull(prop(bogie, pi(BOGIE, "location"), pi(BOGIE, "location", "workshop")))))));
         assertEquals(conditions, actQry.conditions);
     }
 }

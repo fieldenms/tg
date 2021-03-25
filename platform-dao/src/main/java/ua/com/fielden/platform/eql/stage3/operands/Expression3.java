@@ -20,10 +20,6 @@ public class Expression3 implements ISingleOperand3 {
         this.items = items;
     }
 
-    public Expression3(final ISingleOperand3 first) {
-        this(first, emptyList());
-    }
-    
     @Override
     public Class<?> type() {
         // TODO EQL

@@ -114,7 +114,7 @@ public class EqlStage2TestCase extends EqlTestCase {
         final TransformationContext context = new TransformationContext(DOMAIN_METADATA.lmd);
         return qb().generateAsResultQuery(qry, null, null).transform(context);
     }
-    
+
     protected static QueryBlocks2 qb2(final Sources2 sources, final Conditions2 conditions) {
         return new QueryBlocks2(sources, conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
     }
@@ -127,7 +127,7 @@ public class EqlStage2TestCase extends EqlTestCase {
         return new QueryBlocks2(sources, conditions, yields, emptyGroupBys2, orderBys);
     }
 
-    protected static Yields2 yields(final Yield2 ... yields) {
+    protected static Yields2 yields(final Yield2... yields) {
         return new Yields2(asList(yields));
     }
 
@@ -143,38 +143,38 @@ public class EqlStage2TestCase extends EqlTestCase {
         return new OrderBy2(prop, false);
     }
 
-    protected static OrderBys2 orderBys(final OrderBy2 ... orderBys) {
+    protected static OrderBys2 orderBys(final OrderBy2... orderBys) {
         return new OrderBys2(asList(orderBys));
     }
 
     protected static Yield2 yieldCountAll(final String alias) {
         return new Yield2(new CountAll2(), alias, false);
     }
-    
+
     protected static Yield2 yield(final ISingleOperand2<? extends ISingleOperand3> operand, final String alias) {
         return new Yield2(operand, alias, false);
     }
 
-    protected static Prop2 prop(final ISource2<? extends ISource3> source, final AbstractPropInfo<?> ... propInfos) {
+    protected static Prop2 prop(final ISource2<? extends ISource3> source, final AbstractPropInfo<?>... propInfos) {
         return new Prop2(source, asList(propInfos));
     }
 
-    protected static Prop2 propWithIsId(final ISource2<? extends ISource3> source, final AbstractPropInfo<?> ... propInfos) {
+    protected static Prop2 propWithIsId(final ISource2<? extends ISource3> source, final AbstractPropInfo<?>... propInfos) {
         return new Prop2(source, asList(propInfos), true);
     }
-    
+
     protected static Conditions2 cond(final ICondition2<? extends ICondition3> condition) {
         return new Conditions2(false, asList(asList(condition)));
     }
-    
-//    protected static Conditions1 conditions(final ICondition1<?> firstCondition, final CompoundCondition1... otherConditions) {
-//        return new Conditions1(false, firstCondition, asList(otherConditions));
-//    }
-//
-//    protected static Conditions1 conditions(final ICondition1<?> firstCondition) {
-//        return new Conditions1(false, firstCondition, emptyList());
-//    }
-    
+
+    //    protected static Conditions1 conditions(final ICondition1<?> firstCondition, final CompoundCondition1... otherConditions) {
+    //        return new Conditions1(false, firstCondition, asList(otherConditions));
+    //    }
+    //
+    //    protected static Conditions1 conditions(final ICondition1<?> firstCondition) {
+    //        return new Conditions1(false, firstCondition, emptyList());
+    //    }
+
     protected static Sources2 sources(final ISource2<? extends ISource3> main) {
         return new Sources2(main, emptyList());
     }
@@ -191,27 +191,27 @@ public class EqlStage2TestCase extends EqlTestCase {
         return new CompoundSource2(source, IJ, conditions);
     }
 
-//    protected static CompoundSource1 lj(final IQrySource1<? extends IQrySource2<?>> source, final ICondition1<?> firstCondition) {
-//        return new CompoundSource1(source, LJ, conditions(firstCondition));
-//    }
-//
-//    protected static CompoundSource1 ij(final IQrySource1<? extends IQrySource2<?>> source, final ICondition1<?> firstCondition) {
-//        return new CompoundSource1(source, IJ, conditions(firstCondition));
-//    }
-//    
-//    protected static CompoundCondition1 and(final ICondition1<?> condition) {
-//        return new CompoundCondition1(AND, condition);
-//    }
-//
-//    protected static CompoundCondition1 or(final ICondition1<?> condition) {
-//        return new CompoundCondition1(OR, condition);
-//    }
+    //    protected static CompoundSource1 lj(final IQrySource1<? extends IQrySource2<?>> source, final ICondition1<?> firstCondition) {
+    //        return new CompoundSource1(source, LJ, conditions(firstCondition));
+    //    }
+    //
+    //    protected static CompoundSource1 ij(final IQrySource1<? extends IQrySource2<?>> source, final ICondition1<?> firstCondition) {
+    //        return new CompoundSource1(source, IJ, conditions(firstCondition));
+    //    }
+    //    
+    //    protected static CompoundCondition1 and(final ICondition1<?> condition) {
+    //        return new CompoundCondition1(AND, condition);
+    //    }
+    //
+    //    protected static CompoundCondition1 or(final ICondition1<?> condition) {
+    //        return new CompoundCondition1(OR, condition);
+    //    }
 
-    protected static List<? extends ICondition2<?>> and(final ICondition2<?> ... conditions) {
+    protected static List<? extends ICondition2<?>> and(final ICondition2<?>... conditions) {
         return asList(conditions);
     }
 
-    protected static Conditions2 or(final ICondition2<?> ... conditions) {
+    protected static Conditions2 or(final ICondition2<?>... conditions) {
         final List<List<? extends ICondition2<?>>> list = new ArrayList<>();
         for (final ICondition2<?> cond : conditions) {
             list.add(and(cond));
@@ -220,10 +220,10 @@ public class EqlStage2TestCase extends EqlTestCase {
     }
 
     @SafeVarargs
-    protected static Conditions2 or(final List<? extends ICondition2<?>> ... conditions) {
+    protected static Conditions2 or(final List<? extends ICondition2<?>>... conditions) {
         return new Conditions2(false, asList(conditions));
     }
-    
+
     protected static ExistenceTest2 exists(final Sources2 sources, final Conditions2 conditions, final Yields2 yields, final Class<? extends AbstractEntity<?>> resultType) {
         return new ExistenceTest2(false, subqry(sources, conditions, yields, resultType));
     }
@@ -232,26 +232,18 @@ public class EqlStage2TestCase extends EqlTestCase {
         return new ExistenceTest2(true, subqry(sources, conditions, yields, resultType));
     }
 
-    protected static Conditions2 isNull(final ISingleOperand2<? extends ISingleOperand3> operand) {
-        return cond(new NullTest2(operand, false));
-    }
-
-    protected static NullTest2 isNull_(final ISingleOperand2<? extends ISingleOperand3> operand) {
+    protected static NullTest2 isNull(final ISingleOperand2<? extends ISingleOperand3> operand) {
         return new NullTest2(operand, false);
     }
-    
-    protected static Conditions2 isNotNull(final ISingleOperand2<? extends ISingleOperand3> operand) {
-        return cond(new NullTest2(operand, true));
-    }
 
-    protected static NullTest2 isNotNull_(final ISingleOperand2<? extends ISingleOperand3> operand) {
+    protected static NullTest2 isNotNull(final ISingleOperand2<? extends ISingleOperand3> operand) {
         return new NullTest2(operand, true);
     }
 
     protected static ComparisonTest2 eq(final Prop2 op1, final Prop2 op2) {
         return new ComparisonTest2(op1, EQ, op2);
     }
-    
+
     protected static ComparisonTest2 ne(final Prop2 op1, final Prop2 op2) {
         return new ComparisonTest2(op1, NE, op2);
     }
@@ -267,8 +259,8 @@ public class EqlStage2TestCase extends EqlTestCase {
     protected static Source2BasedOnPersistentType source(final String id, final Class<? extends AbstractEntity<?>> sourceType) {
         return new Source2BasedOnPersistentType(sourceType, DOMAIN_METADATA.lmd.getEntityInfo(sourceType), id);
     }
-    
-    protected static Source2BasedOnSubqueries source(final EntityInfo<?> entityInfo, final String id, final SourceQuery2 ... queries) {
+
+    protected static Source2BasedOnSubqueries source(final EntityInfo<?> entityInfo, final String id, final SourceQuery2... queries) {
         return new Source2BasedOnSubqueries(Arrays.asList(queries), null, id, entityInfo);
     }
 
@@ -288,11 +280,11 @@ public class EqlStage2TestCase extends EqlTestCase {
         return new SourceQuery2(qb2(sources, emptyConditions2, yields), EntityAggregates.class);
     }
 
-    protected static ResultQuery2 qry(final Sources2 sources, final Yields2 yields , final Class<? extends AbstractEntity<?>> resultType) {
+    protected static ResultQuery2 qry(final Sources2 sources, final Yields2 yields, final Class<? extends AbstractEntity<?>> resultType) {
         return new ResultQuery2(qb2(sources, emptyConditions2, yields), resultType);
     }
 
-    protected static ResultQuery2 qry(final Sources2 sources, final Yields2 yields , final OrderBys2 orderBys, final Class<? extends AbstractEntity<?>> resultType) {
+    protected static ResultQuery2 qry(final Sources2 sources, final Yields2 yields, final OrderBys2 orderBys, final Class<? extends AbstractEntity<?>> resultType) {
         return new ResultQuery2(qb2(sources, emptyConditions2, yields, orderBys), resultType);
     }
 
@@ -307,9 +299,8 @@ public class EqlStage2TestCase extends EqlTestCase {
     protected static SubQuery2 subqry(final Sources2 sources, final Conditions2 conditions, final Yields2 yields, final Class<? extends AbstractEntity<?>> resultType) {
         return new SubQuery2(qb2(sources, conditions, yields), resultType);
     }
-    
+
     protected static SubQuery2 subqry(final Sources2 sources, final Yields2 yields) {
         return new SubQuery2(qb2(sources, emptyConditions2, yields), null);
     }
-
 }
