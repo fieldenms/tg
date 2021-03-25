@@ -104,7 +104,7 @@ public class Sources2  {
             lo = new Prop3(child.name, rootSource, child.source.sourceType(), LongType.INSTANCE);
         } else {
             final TransformationResult<Expression3> expTr = child.expr.transform(currentContext);
-            lo = expTr.item;
+            lo = expTr.item.isSingle() ? expTr.item.first : expTr.item;
             currentContext = expTr.updatedContext;
         }
         

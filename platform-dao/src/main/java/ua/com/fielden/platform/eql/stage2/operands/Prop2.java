@@ -49,8 +49,12 @@ public class Prop2 implements ISingleOperand2<ISingleOperand3> {
         if (resolution._2 instanceof String) {
             return new TransformationResult<>(new Prop3((String) resolution._2, resolution._1, type, hibType), context);
         } else {
-            final TransformationResult<Expression3> tr = ((Expression2) resolution._2).transform(context);
-            return new TransformationResult<>(tr.item, tr.updatedContext);
+            final TransformationResult<Expression3> exprTr = ((Expression2) resolution._2).transform(context);
+            if (exprTr.item.isSingle()) {
+                return new TransformationResult<>(exprTr.item.first, exprTr.updatedContext);
+            } else {
+                return new TransformationResult<>(exprTr.item, exprTr.updatedContext);
+            }
         }
     }
 
