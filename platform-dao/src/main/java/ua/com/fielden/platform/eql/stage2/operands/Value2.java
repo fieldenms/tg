@@ -51,7 +51,7 @@ public class Value2 implements ISingleOperand2<Value3> {
     @Override
     public TransformationResult<Value3> transform(final TransformationContext context) {
         if (needsParameter()) {
-            final Value3 transformed = new Value3(value, context.getNextParamId());
+            final Value3 transformed = new Value3(value, context.paramId);
             return new TransformationResult<Value3>(transformed, context.cloneWithParamValue(transformed.getParamName(), transformed.value));
         } else {
             return new TransformationResult<Value3>(new Value3(value, 0), context);

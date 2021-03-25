@@ -24,24 +24,22 @@ public class TransformationContext {
     private final Map<String, Map<String, T2<ISource3, Object>>> resolutions = new HashMap<>();
     private final Map<String, Object> paramValues = new HashMap<>();
     public final int sqlId;
+    public final int paramId; //incremented after usage as part of the `cloneWithParamValue(..)` method
 
     public TransformationContext(final TablesAndSourceChildren tablesAndSourceChildren) {
-        this(tablesAndSourceChildren, emptyMap(), emptyMap(), 0);
+        this(tablesAndSourceChildren, emptyMap(), emptyMap(), 0, 1);
     }
 
-    private TransformationContext(final TablesAndSourceChildren tablesAndSourceChildren, final Map<String, Map<String, T2<ISource3, Object>>> resolutions, final Map<String, Object> paramValues, final int sqlId) {
+    private TransformationContext(final TablesAndSourceChildren tablesAndSourceChildren, final Map<String, Map<String, T2<ISource3, Object>>> resolutions, final Map<String, Object> paramValues, final int sqlId, final int paramId) {
         this.tablesAndSourceChildren = tablesAndSourceChildren;
         this.resolutions.putAll(resolutions);
         this.paramValues.putAll(paramValues);
         this.sqlId = sqlId;
+        this.paramId = paramId;
     }
 
     public Table getTable(final String sourceFullClassName) {
         return tablesAndSourceChildren.getTables().get(DomainMetadataUtils.getOriginalEntityTypeFullName(sourceFullClassName));
-    }
-
-    public int getNextParamId() {
-        return paramValues.size() + 1;
     }
 
     public Map<String, Object> getParamValues() {
@@ -54,11 +52,11 @@ public class TransformationContext {
     }
 
     public TransformationContext cloneWithNextSqlId() {
-        return new TransformationContext(tablesAndSourceChildren, resolutions, paramValues, sqlId + 1);
+        return new TransformationContext(tablesAndSourceChildren, resolutions, paramValues, sqlId + 1, paramId);
     }
 
     public TransformationContext cloneWithResolutions(final T2<String, String> sr1, final T2<ISource3, Object> sr2) {
-        final TransformationContext result = new TransformationContext(tablesAndSourceChildren, resolutions, paramValues, sqlId);
+        final TransformationContext result = new TransformationContext(tablesAndSourceChildren, resolutions, paramValues, sqlId, paramId);
 
         final Map<String, T2<ISource3, Object>> existing = result.resolutions.get(sr1._2);
         if (existing != null) {
@@ -73,7 +71,7 @@ public class TransformationContext {
     }
 
     public TransformationContext cloneWithParamValue(final String paramName, final Object paramValue) {
-        final TransformationContext result = new TransformationContext(tablesAndSourceChildren, resolutions, paramValues, sqlId);
+        final TransformationContext result = new TransformationContext(tablesAndSourceChildren, resolutions, paramValues, sqlId, paramId + 1);
         result.paramValues.put(paramName, paramValue);
         return result;
     }
