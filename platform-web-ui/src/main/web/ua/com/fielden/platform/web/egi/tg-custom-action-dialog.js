@@ -96,6 +96,7 @@ const template = html`
         }
         #menuToggler,#backButton {
             color: white;
+            @apply --layout-flex-none;
         }
         .title-bar-button {
             color: var(--paper-grey-100);
