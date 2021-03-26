@@ -15,7 +15,6 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.ISecurityRoleAssociation;
@@ -24,24 +23,23 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.security.provider.ISecurityTokenNodeTransformation;
+import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.provider.SecurityTokenNode;
-import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
 
 @EntityType(SecurityMatrixInsertionPoint.class)
 public class SecurityMatrixInsertionPointDao extends CommonEntityDao<SecurityMatrixInsertionPoint> implements ISecurityMatrixInsertionPoint {
 
-    private final SecurityTokenProvider tokenProvider;
+    private final ISecurityTokenProvider tokenProvider;
     private final ISecurityTokenNodeTransformation tokenTransformation;
 
     @Inject
     public SecurityMatrixInsertionPointDao(final IFilter filter,
-            @Named("tokens.path") final String tokenPath,
-            @Named("tokens.package") final String tokenPackage,
-            final ISecurityTokenNodeTransformation tokenTransformation) {
+            final ISecurityTokenNodeTransformation tokenTransformation,
+            final ISecurityTokenProvider securityTokenProvider) {
         super(filter);
-        this.tokenProvider = new SecurityTokenProvider(tokenPath, tokenPackage);
+        this.tokenProvider = securityTokenProvider;
         this.tokenTransformation = tokenTransformation;
     }
 
@@ -72,4 +70,5 @@ public class SecurityMatrixInsertionPointDao extends CommonEntityDao<SecurityMat
                      .setDesc(tokenNode.getLongDesc());
         return tokenTreeNode;
     }
+
 }

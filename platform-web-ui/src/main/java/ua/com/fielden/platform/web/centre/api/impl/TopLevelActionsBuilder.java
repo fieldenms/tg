@@ -15,6 +15,7 @@ import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.crit.ISelectionCritKindSelector;
 import ua.com.fielden.platform.web.centre.api.resultset.IDynamicColumnBuilder;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1bCheckbox;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cToolbar;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1dScroll;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1eDraggable;
@@ -186,5 +187,10 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> implements ICentreTopL
     @Override
     public IResultSetBuilder1iVisibleRowsCount<T> wrapHeader(final int headerLineNumber) {
         return new ResultSetBuilder<>(builder).wrapHeader(headerLineNumber);
+    }
+
+    @Override
+    public IResultSetBuilder1bCheckbox<T> hideEgi() {
+        return new ResultSetBuilder<>(builder).hideEgi();
     }
 }

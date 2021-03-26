@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.utils;
 
 import static java.math.RoundingMode.HALF_EVEN;
+import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -14,6 +15,7 @@ import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.EntityUtils.coalesce;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.utils.EntityUtils.getCollectionalProperties;
+import static ua.com.fielden.platform.utils.EntityUtils.isIntrospectionDenied;
 import static ua.com.fielden.platform.utils.EntityUtils.isNaturalOrderDescending;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
@@ -29,6 +31,7 @@ import java.math.MathContext;
 import java.math.RoundingMode;
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -42,13 +45,18 @@ import org.junit.Test;
 
 import com.google.inject.Injector;
 
+import ua.com.fielden.platform.attachment.Attachment;
+import ua.com.fielden.platform.domain.PlatformDomainTypes;
+import ua.com.fielden.platform.domain.metadata.DomainExplorer;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.ChildEntity;
 import ua.com.fielden.platform.entity.Entity;
 import ua.com.fielden.platform.entity.EntityExt;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.keygen.KeyNumber;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
@@ -60,8 +68,10 @@ import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
 import ua.com.fielden.platform.sample.domain.TgReVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.UnionEntity;
+import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
+import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
@@ -264,6 +274,16 @@ public class EntityUtilsTest {
         assertTrue(equalsEx(new BigDecimal("0.00"), BigDecimal.ZERO));
         assertTrue(equalsEx(new BigDecimal("42.00").setScale(1, HALF_EVEN), new BigDecimal("42.01").setScale(1, HALF_EVEN)));
         assertFalse(equalsEx(new BigDecimal("42.00"), new BigDecimal("42.01")));
+    }
+
+    @Test
+    public void isIntrospectionDenied_returns_true_for_entity_types_annotated_with_DenyIntrospection() {
+        assertTrue(isIntrospectionDenied(UnionEntity.class));
+    }
+
+    @Test
+    public void isIntrospectionDenied_returns_false_for_entity_types_not_annotated_with_DenyIntrospection() {
+        assertFalse(isIntrospectionDenied(Entity.class));
     }
 
     @Test
@@ -519,7 +539,7 @@ public class EntityUtilsTest {
         final List<AbstractEntity<?>> someAndNull = listOf(factory.newEntity(Entity.class).setKey("E1"), null, factory.newEntity(Entity.class).setKey("E3"));
         assertEquals("[E1, null, E3]", EntityUtils.toString(someAndNull));
     }
-    
+
     @Test
     public void toString_converts_sets_to_CSV_in_square_brackets() {
         assertEquals("[]", EntityUtils.toString(linkedSetOf()));
@@ -532,6 +552,13 @@ public class EntityUtilsTest {
 
         final Set<AbstractEntity<?>> someAndNull = linkedSetOf(factory.newEntity(Entity.class).setKey("E1"), null, factory.newEntity(Entity.class).setKey("E3"));
         assertEquals("[E1, null, E3]", EntityUtils.toString(someAndNull));
+    }
+
+    @Test
+    public void only_a_specific_subset_of_platform_level_entities_have_introspection_allowed() {
+        final LinkedHashSet<Class<? extends AbstractEntity<?>>> expected = linkedSetOf(Attachment.class, DomainExplorer.class, KeyNumber.class, User.class, UserRole.class, UserAndRoleAssociation.class, SecurityRoleAssociation.class);
+        final LinkedHashSet<Class<? extends AbstractEntity<?>>> filtered = PlatformDomainTypes.types.stream().filter(EntityUtils::isIntrospectionAllowed).collect(toCollection(LinkedHashSet::new));
+        assertEquals(expected, filtered);
     }
 
 }

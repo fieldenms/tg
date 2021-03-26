@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.security.provider;
 
-import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.isSuperTokenOf;
 import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.isTopLevel;
 import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.longDesc;
 import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.shortDesc;
@@ -134,7 +133,8 @@ public class SecurityTokenNode implements Comparable<SecurityTokenNode>, ITreeNo
 
     @Override
     public int compareTo(final SecurityTokenNode anotherToken) {
-        return shortDesc.compareTo(anotherToken.shortDesc);
+        final int comparedByShortDesc = shortDesc.compareTo(anotherToken.shortDesc);
+        return comparedByShortDesc == 0 ? getToken().getName().compareTo(anotherToken.getToken().getName()) : comparedByShortDesc;
     }
 
     @Override

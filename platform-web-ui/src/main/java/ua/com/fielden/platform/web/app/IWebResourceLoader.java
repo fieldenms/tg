@@ -22,7 +22,7 @@ public interface IWebResourceLoader {
      *
      * @return
      */
-    String loadSource(final String resourceUri);
+    Optional<String> loadSource(final String resourceUri);
     
     /**
      * Loads input stream for the resource identified with {@code resourceUri}.

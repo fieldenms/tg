@@ -4,6 +4,7 @@ import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
+import ua.com.fielden.platform.entity.annotation.DenyIntrospection;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
@@ -23,9 +24,8 @@ import ua.com.fielden.platform.security.user.User;
 @KeyType(DynamicEntityKey.class)
 @CompanionObject(IWebMenuItemInvisibility.class)
 @MapEntityTo
+@DenyIntrospection
 public class WebMenuItemInvisibility extends AbstractPersistentEntity<DynamicEntityKey> {
-
-    private static final long serialVersionUID = 1L;
 
     @IsProperty
     @CompositeKeyMember(1)
