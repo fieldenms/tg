@@ -1,22 +1,24 @@
 package ua.com.fielden.platform.eql.stage2.sources;
 
+import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.unmodifiableMap;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 
 import ua.com.fielden.platform.eql.stage2.operands.Expression2;
 
-import java.util.Objects;
-
 public class ChildGroup {
-    final String name;
-    final Source2BasedOnPersistentType source;
-    final boolean required;
-    final List<ChildGroup> items;
+    public final String name;
+    public final Source2BasedOnPersistentType source;
+    public final boolean required;
+    private final List<ChildGroup> items;
     
-    final Map<String, String> paths;
+    private final Map<String, String> paths; //prop ExplicitSourceId by its full path
     
-    final Expression2 expr;
+    public final Expression2 expr;
     
     public ChildGroup(final String name, final List<ChildGroup> items, final Map<String, String> paths, final boolean required, final Source2BasedOnPersistentType source, final Expression2 expr) {
         this.name = name;
@@ -32,6 +34,15 @@ public class ChildGroup {
 //                !items.isEmpty() && source != null & (paths.isEmpty() || !paths.isEmpty()) && (expr == null || expr != null)
 //                );
     }
+    
+    public Map<String, String> paths() {
+        return unmodifiableMap(paths);
+    }
+
+    public List<ChildGroup> items() {
+        return unmodifiableList(items);
+    }
+
     
     @Override
     public String toString() {
@@ -58,6 +69,7 @@ public class ChildGroup {
         
         return sb.toString();
     }
+    
     
     @Override
     public int hashCode() {

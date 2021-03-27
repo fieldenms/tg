@@ -5,11 +5,9 @@ import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.IJ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.LJ;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 
@@ -39,50 +37,32 @@ public class Sources2  {
     }
 
     public TransformationResult<ISources3> transform(final TransformationContext context) {
-        final TransformationResult<? extends ISource3> mainTr = main.transform(context);    
-        TransformationContext currentContext = mainTr.updatedContext;
-        final TransformationResult<ISources3> mainEnhancement = enhance(main, mainTr.item, currentContext);
+        final TransformationResult<ISources3> mainEnhancement = transform(main, context);
         ISources3 currentSourceTree = mainEnhancement.item;
-        currentContext = mainEnhancement.updatedContext;
+        TransformationContext currentContext = mainEnhancement.updatedContext;
         
         for (final CompoundSource2 compoundSource : compounds) {
-            final TransformationResult<? extends ISource3> compoundSourceTr = compoundSource.source.transform(currentContext);
-            currentContext = compoundSourceTr.updatedContext;
-            final TransformationResult<ISources3> compoundEnhancement = enhance(compoundSource.source, compoundSourceTr.item, currentContext);
-            final ISources3 coumpoundSourceTree = compoundEnhancement.item;
+            final TransformationResult<ISources3> compoundEnhancement = transform(compoundSource.source, currentContext);
             currentContext = compoundEnhancement.updatedContext;
-            final TransformationResult<Conditions3> compConditionsTr = compoundSource.joinConditions.transform(currentContext);
-            currentSourceTree = new MultipleNodesSources3(currentSourceTree, coumpoundSourceTree, compoundSource.joinType, compConditionsTr.item);
-            currentContext = compConditionsTr.updatedContext;
+            final TransformationResult<Conditions3> compoundConditionsTr = compoundSource.joinConditions.transform(currentContext);
+            currentSourceTree = new MultipleNodesSources3(currentSourceTree, compoundEnhancement.item, compoundSource.joinType, compoundConditionsTr.item);
+            currentContext = compoundConditionsTr.updatedContext;
         }
         
         return new TransformationResult<>(currentSourceTree, currentContext);
     }
-    
-    public Set<Prop2> collectProps() {
-        final Set<Prop2> result = new HashSet<>(); 
-        result.addAll(main.collectProps());
-        for (final CompoundSource2 item : compounds) {
-            result.addAll(item.source.collectProps());
-            result.addAll(item.joinConditions.collectProps());
-        }
-        return result;
+
+    private TransformationResult<ISources3> transform(final ISource2<?> explicitSource, final TransformationContext context) {
+        final TransformationResult<? extends ISource3> explicitSourceTr = explicitSource.transform(context);    
+        return attachChildren(explicitSourceTr.item, context.getSourceChildren(explicitSource.id()), explicitSourceTr.updatedContext);
     }
-    
-    private static TransformationResult<ISources3> enhance(final ISource2<?> source2, final ISource3 source, final TransformationContext context) {
-        return attachChildren(source, context.getSourceChildren(source2), context);
-    }
-    
+
     private static TransformationResult<ISources3> attachChildren(final ISource3 source, final List<ChildGroup> children, final TransformationContext context) {
         ISources3 currMainSources = new SingleNodeSources3(source);
-        TransformationContext currentContext = context;
+        TransformationContext currentContext = children.isEmpty() ? context : context.cloneWithResolutions(source, children);
         
         for (final ChildGroup fc : children) {
-            for (final Entry<String, String> el : fc.paths.entrySet()) {
-                currentContext = currentContext.cloneWithResolutions(t2(el.getKey(), el.getValue()), t2(source, fc.expr == null ? fc.name : fc.expr));
-            }
-
-            if (!fc.items.isEmpty()) {
+            if (fc.source != null) {
                 final TransformationResult<ISources3> res = attachChild(currMainSources, source, fc, currentContext);
                 currMainSources = res.item;
                 currentContext = res.updatedContext;
@@ -93,10 +73,9 @@ public class Sources2  {
     }
     
     private static TransformationResult<ISources3> attachChild(final ISources3 mainSources, final ISource3 rootSource, final ChildGroup child, final TransformationContext context) {
-        TransformationContext currentContext = context;
-        final TransformationResult<Source3BasedOnTable> tr = child.source.transform(currentContext);
+        final TransformationResult<Source3BasedOnTable> tr = child.source.transform(context);
         final Source3BasedOnTable addedSource = tr.item;
-        currentContext = tr.updatedContext; 
+        TransformationContext currentContext = tr.updatedContext; 
 
         final ISingleOperand3 lo;
         
@@ -111,8 +90,18 @@ public class Sources2  {
         final Prop3 ro = new Prop3(ID, addedSource, /*child.source.sourceType()*/Long.class, LongType.INSTANCE);
         final ComparisonTest3 ct = new ComparisonTest3(lo, EQ, ro);
         final Conditions3 jc = new Conditions3(false, asList(asList(ct)));
-        final TransformationResult<ISources3> res = attachChildren(addedSource, child.items, currentContext);
+        final TransformationResult<ISources3> res = attachChildren(addedSource, child.items(), currentContext);
         return new TransformationResult<>(new MultipleNodesSources3(mainSources, res.item, (child.required ? IJ : LJ), jc), res.updatedContext);
+    }
+
+    public Set<Prop2> collectProps() {
+        final Set<Prop2> result = new HashSet<>(); 
+        result.addAll(main.collectProps());
+        for (final CompoundSource2 item : compounds) {
+            result.addAll(item.source.collectProps());
+            result.addAll(item.joinConditions.collectProps());
+        }
+        return result;
     }
     
     @Override

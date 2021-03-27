@@ -44,17 +44,13 @@ public class Prop2 implements ISingleOperand2<ISingleOperand3> {
             return new TransformationResult<>(new Prop3(lastPart().name, null, type, hibType), context);
         }
         
-        final T2<ISource3, Object> resolution = context.resolve(source, name);
+        final T2<ISource3, Object> resolution = context.resolve(source.id(), name);
 
         if (resolution._2 instanceof String) {
             return new TransformationResult<>(new Prop3((String) resolution._2, resolution._1, type, hibType), context);
         } else {
             final TransformationResult<Expression3> exprTr = ((Expression2) resolution._2).transform(context);
-            if (exprTr.item.isSingle()) {
-                return new TransformationResult<>(exprTr.item.first, exprTr.updatedContext);
-            } else {
-                return new TransformationResult<>(exprTr.item, exprTr.updatedContext);
-            }
+            return new TransformationResult<>(exprTr.item.isSingle() ? exprTr.item.first : exprTr.item, exprTr.updatedContext);
         }
     }
 
