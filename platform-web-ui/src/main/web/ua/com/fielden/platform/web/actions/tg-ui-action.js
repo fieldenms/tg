@@ -781,10 +781,7 @@ Polymer({
                 }
             });
             if (masterInfo.relativePropertyName) {
-                const oldCurrentEntity = this.currentEntity.bind(this);
-                this.currentEntity = function () {
-                    return oldCurrentEntity().get(masterInfo.relativePropertyName);
-                }
+                this.chosenProperty += (this.chosenProperty ? "." : "") + masterInfo.relativePropertyName;
             }
             this.requireSelectionCriteria = masterInfo.requireSelectionCriteria;
             this.requireSelectedEntities = masterInfo.requireSelectedEntities;
