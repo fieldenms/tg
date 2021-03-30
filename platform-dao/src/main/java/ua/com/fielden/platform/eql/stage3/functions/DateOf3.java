@@ -32,7 +32,7 @@ public class DateOf3 extends SingleOperandFunction3 {
         case MSSQL:
             return format("DATEADD(dd, DATEDIFF(dd, 0, %s), 0)", operand.sql(dbVersion));
         case POSTGRESQL:
-            return format("DATE_TRUNC('day', %s)", operand.sql(dbVersion));
+            return format("DATE_TRUNC('day', cast (%s as timestamp))", operand.sql(dbVersion));
         default:
             return super.sql(dbVersion);
         }    
