@@ -1433,25 +1433,26 @@ Polymer({
         }.bind(this), 50);
     },
 
-    _dialogOpened: function(e, detail, source) {
+    _dialogOpened: function (e) {
         // the following refit does not always result in proper dialog centering due to the fact that UI is still being constructed at the time of opening
         // a more appropriate place for refitting is post entity binding
         // however, entity binding might not occure due to, for example, user authorisation restriction
         // that is why there is a need to perfrom refitting here as well as on entity binding
-        if (e.composedPath()[0] === this) {
+        const target = e.composedPath()[0];
+        if (target === this) {
             this.async(function() {
                 this.refit();
             }.bind(this), 100);
             this._setIsRunning(false);
         } else { 
-            //Some child overlay was opened and should be added to the list of child overlays in order to be brought to the front when this dialog
-            //will be brought to the front.
-            this._childOverlays.push(e.composedPath()[0]);
+            // Some child overlay was opened and should be added to the list of child overlays in order to be brought to the front when this dialog
+            //  will be brought to the front.
+            this._childOverlays.push(target);
         }
     },
 
-    _dialogClosed: function(e) {
-        var target = e.composedPath()[0];
+    _dialogClosed: function (e) {
+        const target = e.composedPath()[0];
         if (target === this) {
             //Clear child overlays as they will be closed with this dialog
             this._childOverlays = [];
