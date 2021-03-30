@@ -94,7 +94,7 @@ public class HibernateConfigurationFactory {
         
         idOnlyProxiedEntityTypeCache = new IdOnlyProxiedEntityTypeCache(domainMetadata);
 
-        final String generatedMappings = domainMetadata.eql2 ? new HibernateMappingsGenerator().generateMappings(domainMetadata) : ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator.generateMappings(domainMetadata.lmd);
+        final String generatedMappings = domainMetadata.eql2 ? new HibernateMappingsGenerator().generateMappings(domainMetadata) : ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator.generateMappings(domainMetadata.eqlDomainMetadata);
 
         try {
             cfg.addInputStream(new ByteArrayInputStream(generatedMappings.getBytes("UTF8")));

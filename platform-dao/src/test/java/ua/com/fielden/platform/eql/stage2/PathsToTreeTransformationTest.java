@@ -44,7 +44,7 @@ public class PathsToTreeTransformationTest extends EqlStage2TestCase {
                 //qryCountAll2(select(VEHICLE).where().anyOfProps("initDate", "station.name", "station.parent.name", "replacedBy.initDate").isNotNull());
         final ResultQuery2 actQry = res._2;
         
-        final PathsToTreeTransformator p2tt = new PathsToTreeTransformator(DOMAIN_METADATA.lmd, res._1);
+        final PathsToTreeTransformator p2tt = new PathsToTreeTransformator(DOMAIN_METADATA.eqlDomainMetadata, res._1);
         Map<String, List<Child>> children = p2tt.transform(actQry.collectProps());
         for (Entry<String, List<Child>> el : children.entrySet()) {
             System.out.println("\n<<< QrySource: " + el.getKey());

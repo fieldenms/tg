@@ -20,6 +20,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.metadata.EntityCategory;
 import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
+import ua.com.fielden.platform.eql.meta.EqlEntityMetadata;
 import ua.com.fielden.platform.eql.meta.EqlPropertyMetadata;
 import ua.com.fielden.platform.eql.meta.PropColumn;
 import ua.com.fielden.platform.types.tuples.T3;
@@ -43,11 +44,11 @@ public class HibernateMappingsGenerator {
         sb.append("\"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd\">\n");
         sb.append("<hibernate-mapping default-access=\"field\">\n");
 
-        for (final T3<Class<? extends AbstractEntity<?>>, EntityCategory, SortedMap<String, EqlPropertyMetadata>> entry : domainMetadata.getEntityPropsMetadata().values()) {
-            if (entry._2 == PERSISTED) {
-                final String typeName = entry._1.getName();
+        for (final EqlEntityMetadata entry : domainMetadata.entityPropsMetadata().values()) {
+            if (entry.typeInfo.category == PERSISTED) {
+                final String typeName = entry.typeInfo.entityType.getName();
                 try {
-                    sb.append(generateEntityClassMapping(entry._1, domainMetadata.getTables().get(typeName).name, entry._3, domainMetadata.dbVersion));
+                    sb.append(generateEntityClassMapping(entry.typeInfo.entityType, domainMetadata.getTables().get(typeName).name, entry.props(), domainMetadata.dbVersion));
                 } catch (final Exception e) {
                     e.printStackTrace();
                     throw new RuntimeException("Couldn't generate mapping for " + typeName + " due to: " + e.getMessage());
@@ -139,25 +140,25 @@ public class HibernateMappingsGenerator {
      * @return
      * @throws Exception
      */
-    private static <ET extends AbstractEntity<?>> String generateEntityClassMapping(final Class<? extends AbstractEntity<?>> type, final String tableName, final SortedMap<String, EqlPropertyMetadata> propsMetadata, final DbVersion dbVersion) throws Exception {
+    private static <ET extends AbstractEntity<?>> String generateEntityClassMapping(final Class<? extends AbstractEntity<?>> type, final String tableName, final List<EqlPropertyMetadata> propsMetadata, final DbVersion dbVersion) throws Exception {
         final StringBuffer sb = new StringBuffer();
         sb.append("<class name=\"" + type.getName() + "\" table=\"" + tableName + "\">\n");
 
-        final EqlPropertyMetadata id = propsMetadata.get(ID);
+        final EqlPropertyMetadata id = propsMetadata.stream().filter(e -> ID.equals(e.name)).findAny().get();
         if (isOneToOne(type)) {
             sb.append(generateOneToOneEntityIdMapping(id.getName(), id.column.name, id.hibType.getClass().getName()));
         } else {
             sb.append(generateEntityIdMapping(id.getName(), id.column.name, id.hibType.getClass().getName(), dbVersion));    
         }
-        final EqlPropertyMetadata version = propsMetadata.get(VERSION);
+        final EqlPropertyMetadata version = propsMetadata.stream().filter(e -> VERSION.equals(e.name)).findAny().get();
         sb.append(generateEntityVersionMapping(version.getName(), version.column.name, version.hibType.getClass().getName()));
 
-        final EqlPropertyMetadata keyProp = propsMetadata.get(KEY);
+        final EqlPropertyMetadata keyProp = propsMetadata.stream().filter(e -> KEY.equals(e.name)).findAny().get();
         if (keyProp.column != null) {
             sb.append(generatePropertyMappingFromPropertyMetadata(keyProp));
         }
 
-        for (final EqlPropertyMetadata ppi : propsMetadata.values()) {
+        for (final EqlPropertyMetadata ppi : propsMetadata) {
             if (ppi.expressionModel == null && !specialProps.contains(ppi.getName()) && (ppi.column != null || ppi.subitems().stream().anyMatch(e -> e.column != null))) {
                 sb.append(generatePropertyMappingFromPropertyMetadata(ppi));
             }

@@ -109,7 +109,7 @@ public class EqlTestCase {
                 H2);
         DOMAIN_METADATA_ANALYSER = new DomainMetadataAnalyser(DOMAIN_METADATA);
         try {
-            tables.putAll(DOMAIN_METADATA.lmd.getTables());
+            tables.putAll(DOMAIN_METADATA.eqlDomainMetadata.getTables());
         } catch (final Exception e) {
             e.printStackTrace();
         }
@@ -124,10 +124,10 @@ public class EqlTestCase {
     }
     
     protected static final EntQueryGenerator qb(final IFilter filter, final String username, final IDates dates, final Map<String, Object> paramValues) {
-        return new EntQueryGenerator(H2, filter, username, dates, paramValues, DOMAIN_METADATA.lmd);
+        return new EntQueryGenerator(H2, filter, username, dates, paramValues, DOMAIN_METADATA.eqlDomainMetadata);
     }
     
     protected static final EqlDomainMetadata metadata() {
-        return DOMAIN_METADATA.lmd;
+        return DOMAIN_METADATA.eqlDomainMetadata;
     }
 }
