@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.meta;
 
 import static java.util.Collections.unmodifiableList;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +13,8 @@ public class EqlPropertyMetadata {
     public final String name;
     public final Class<?> javaType;
     public final Object hibType;
-    public final Boolean required;
+    public final boolean required;
+    public final boolean critOnly;
 
     public final PropColumn column;
     private final List<EqlPropertyMetadata> subitems;
@@ -23,6 +25,7 @@ public class EqlPropertyMetadata {
         javaType = Objects.requireNonNull(builder.javaType);
         hibType = builder.hibType;
         required = builder.required;
+        critOnly = builder.critOnly;
         column = builder.column;
         subitems = builder.subitems;
         expressionModel = builder.expressionModel;
@@ -31,11 +34,15 @@ public class EqlPropertyMetadata {
     public List<EqlPropertyMetadata> subitems() {
         return unmodifiableList(subitems);
     }
-
-
+    
     public String getName() {
         return name;
     }
+
+    public boolean isVirtualKey() {
+        return KEY.equals(name) && expressionModel != null;
+    }
+    
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -44,6 +51,7 @@ public class EqlPropertyMetadata {
         result = prime * result + javaType.hashCode();
         result = prime * result + ((hibType == null) ? 0 : hibType.hashCode());
         result = prime * result + (required ? 0 : (required ? 1231 : 1237));
+        result = prime * result + (critOnly ? 0 : (critOnly ? 1231 : 1237));
         result = prime * result + ((column == null) ? 0 : column.hashCode());
         result = prime * result + ((expressionModel == null) ? 0 : expressionModel.hashCode());
         result = prime * result + subitems.hashCode();
@@ -66,6 +74,7 @@ public class EqlPropertyMetadata {
                 Objects.equals(javaType, other.javaType) &&
                 Objects.equals(hibType, other.hibType) && 
                 Objects.equals(required, other.required) && 
+                Objects.equals(critOnly, other.critOnly) &&
                 Objects.equals(expressionModel, other.expressionModel) &&
                 Objects.equals(subitems, other.subitems) &&
                 Objects.equals(column, other.column);
@@ -75,7 +84,8 @@ public class EqlPropertyMetadata {
         private final String name;
         private final Class<?> javaType;
         private Object hibType;
-        private Boolean required;
+        private boolean required;
+        private boolean critOnly = false;
 
         
         private PropColumn column;
@@ -97,6 +107,11 @@ public class EqlPropertyMetadata {
             return this;
         }
         
+        public Builder critOnly() {
+            critOnly = true;
+            return this;
+        }
+
         public Builder required(final boolean isRequired) {
             required = isRequired;
             return this;
