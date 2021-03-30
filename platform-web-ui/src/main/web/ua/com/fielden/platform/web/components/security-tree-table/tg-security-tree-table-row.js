@@ -3,8 +3,8 @@ import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 
-import '/resources/components/tree-table/tg-hierarchy-tree-table-cell.js';
-import '/resources/components/tree-table/tg-tree-table-regular-cell.js';
+import '/resources/components/security-tree-table/tg-hierarchy-tree-table-cell.js';
+import '/resources/components/security-tree-table/tg-security-tree-table-regular-cell.js';
 
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
@@ -52,13 +52,13 @@ const template = html`
     <div class="tree-table-data-row" over$="[[entity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
         <tg-hierarchy-tree-table-cell class="table-data-cell" column-type="hierarchy" column="[[hierarchyColumn]]" entity="[[entity]]" highlighted="[[entity.highlighted]]" collapsed="{{entity.collapsed}}"></tg-hierarchy-tree-table-cell>
         <template is="dom-repeat" items="[[columns]]" as="column">
-            <tg-tree-table-regular-cell class="table-data-cell" column-type="regular" hidden$="[[!column.visible]]" column="[[column]]" entity="[[entity.entity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor)]]"></tg-tree-table-regular-cell>
+            <tg-security-tree-table-regular-cell class="table-data-cell" column-type="regular" hidden$="[[!column.visible]]" column="[[column]]" entity="[[entity.entity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor)]]"></tg-security-tree-table-regular-cell>
         </template>
     </div>
     <template is="dom-if" if="[[_isChildrenVisible(entity.children, entity.collapsed)]]">
         <div>
             <template is="dom-repeat" items="[[entity.children]]" as="treeEntity">
-                <tg-tree-table-row entity="[[treeEntity]]" hierarchy-column="[[hierarchyColumn]]" columns="[[columns]]"></tg-tree-table-row>
+                <tg-security-tree-table-row entity="[[treeEntity]]" hierarchy-column="[[hierarchyColumn]]" columns="[[columns]]"></tg-security-tree-table-row>
             </template>
         </div>
     </template>`;
@@ -66,7 +66,7 @@ const template = html`
 Polymer({
     _template: template,
 
-    is: 'tg-tree-table-row',
+    is: 'tg-security-tree-table-row',
 
     properties: {
         hierarchyColumn: Object,

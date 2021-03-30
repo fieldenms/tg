@@ -27,6 +27,16 @@ import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.dao.ISecurityRoleAssociation;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociation;
 import ua.com.fielden.platform.dao.IUserRole;
+import ua.com.fielden.platform.domain.metadata.DomainExplorerCo;
+import ua.com.fielden.platform.domain.metadata.DomainExplorerDao;
+import ua.com.fielden.platform.domain.metadata.DomainExplorerInsertionPointCo;
+import ua.com.fielden.platform.domain.metadata.DomainExplorerInsertionPointDao;
+import ua.com.fielden.platform.domain.metadata.DomainPropertyDao;
+import ua.com.fielden.platform.domain.metadata.DomainPropertyHolderCo;
+import ua.com.fielden.platform.domain.metadata.DomainPropertyHolderDao;
+import ua.com.fielden.platform.domain.metadata.DomainTypeDao;
+import ua.com.fielden.platform.domain.metadata.DomainPropertyCo;
+import ua.com.fielden.platform.domain.metadata.DomainTypeCo;
 import ua.com.fielden.platform.entity.EntityDeleteActionDao;
 import ua.com.fielden.platform.entity.EntityEditActionDao;
 import ua.com.fielden.platform.entity.EntityNavigationActionDao;
@@ -296,6 +306,12 @@ public class BasicWebServerModule extends CommonFactoryModule {
             // ... bind Web API to platform-dao GraphQL-based implementation
             bind(IWebApi.class).to(GraphQLService.class).in(Singleton.class);
         }
+
+        bind(DomainTypeCo.class).to(DomainTypeDao.class);
+        bind(DomainPropertyCo.class).to(DomainPropertyDao.class);
+        bind(DomainPropertyHolderCo.class).to(DomainPropertyHolderDao.class);
+        bind(DomainExplorerCo.class).to(DomainExplorerDao.class);
+        bind(DomainExplorerInsertionPointCo.class).to(DomainExplorerInsertionPointDao.class);
     }
 
     public Properties getProps() {

@@ -8,6 +8,7 @@ import java.util.List;
 import ua.com.fielden.platform.algorithm.search.ITreeNode;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
+import ua.com.fielden.platform.entity.annotation.DenyIntrospection;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
@@ -36,6 +37,7 @@ import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
 @DescTitle("Description")
 @CompanionObject(IMainMenuItem.class)
 @MapEntityTo("MAIN_MENU")
+@DenyIntrospection
 public class MainMenuItem extends AbstractEntity<String> implements ITreeNode<MainMenuItem> {
 
     @IsProperty

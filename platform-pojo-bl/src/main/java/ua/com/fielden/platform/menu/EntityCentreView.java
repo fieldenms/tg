@@ -15,7 +15,6 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @KeyTitle(value = "Key", desc = "Some key description")
 @CompanionObject(IEntityCentreView.class)
 public class EntityCentreView extends AbstractView {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty
     @Title(value = "UUID", desc = "UUID")

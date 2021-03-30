@@ -91,7 +91,7 @@ import ua.com.fielden.platform.utils.StreamUtils;
 
 public class DomainMetadata {
     private static final Logger LOGGER = Logger.getLogger(DomainMetadata.class);
-    public final EqlDomainMetadata lmd;
+    public final EqlDomainMetadata eqlDomainMetadata;
     
     private static final TypeResolver typeResolver = new TypeResolver();
     private static final Type H_LONG = typeResolver.basic("long");
@@ -154,7 +154,9 @@ public class DomainMetadata {
             id = new PropertyColumn("TG_ID");
             version = new PropertyColumn("TG_VERSION");
         }
-
+        
+        final Map<Class<?>, Class<?>> htd = new HashMap<>(); 
+        
         // carry on with other stuff
         if (hibTypesDefaults != null) {
             for (final Entry<Class, Class> el : hibTypesDefaults.entrySet()) {
@@ -162,6 +164,7 @@ public class DomainMetadata {
             }
 
             for (final Entry<Class, Class> entry : hibTypesDefaults.entrySet()) {
+                htd.put(entry.getKey(), entry.getValue());
                 try {
                     this.hibTypesDefaults.put(entry.getKey(), entry.getValue().newInstance());
                 } catch (final Exception e) {
@@ -174,7 +177,7 @@ public class DomainMetadata {
 
         this.hibTypesInjector = hibTypesInjector;
         
-        this.lmd = new EqlDomainMetadata(htd, hibTypesInjector, entityTypes, dbVersion);
+        this.eqlDomainMetadata = new EqlDomainMetadata(htd, hibTypesInjector, entityTypes, dbVersion);
 
         // the following operations are a bit heave and benefit from parallel processing
         entityTypes.parallelStream().forEach(entityType -> {

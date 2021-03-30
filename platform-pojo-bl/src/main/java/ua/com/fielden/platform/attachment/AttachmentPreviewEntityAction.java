@@ -37,4 +37,5 @@ public class AttachmentPreviewEntityAction extends AbstractFunctionalEntityWithC
     protected AttachmentPreviewEntityAction() {
         setKey(NO_KEY);
     }
+
 }

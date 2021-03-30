@@ -268,6 +268,7 @@ public class EqlDomainMetadata {
             
             restOfPropsFields.stream().filter(p -> DESC.equals(p.getName())).findAny().ifPresent(desc -> result.add(getCommonPropInfo(desc, parentInfo.entityType, null)));
             
+
             if (PERSISTED == parentInfo.category || QUERY_BASED == parentInfo.category && EntityUtils.isPersistedEntityType(parentInfo.entityType.getSuperclass())) {
                 result.add(generateVersionPropertyMetadata(parentInfo));
             }
