@@ -1455,6 +1455,7 @@ Polymer({
         const target = e.composedPath()[0];
         if (target === this) {
             //Clear child overlays as they will be closed with this dialog
+            this._childOverlays.slice().forEach(childOverlay => childOverlay.close());
             this._childOverlays = [];
             // if there are current subscriptions they need to be unsubscribed
             // due to dialog being closed
