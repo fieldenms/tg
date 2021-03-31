@@ -165,7 +165,12 @@ public class VulcanizingUtility {
                 "/resources/graphiql/graphiql.min.css",
                 "/resources/graphiql/react.production.min.js",
                 "/resources/graphiql/react-dom.production.min.js",
-                "/resources/graphiql/graphiql.min.js"
+                "/resources/graphiql/graphiql.min.js",
+                "/resources/graphiql/images/lint-mark-error.png",
+                "/resources/graphiql/images/lint-mark-warning.png",
+                "/resources/graphiql/images/lint-marker-multiple.png",
+                "/resources/graphiql/images/lint-message-error.png",
+                "/resources/graphiql/images/lint-message-warning.png"
             );
             try {
                 final ObjectMapper objectMapper = new ObjectMapper();
