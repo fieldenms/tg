@@ -114,6 +114,11 @@ public interface IWebUiConfig extends IMenuRetriever {
     void initConfiguration();
 
     /**
+     * Iterates through all registered {@link EntityCentre}s and creates default configurations for each one.
+     */
+    void createDefaultConfigurationsForAllCentres();
+
+    /**
      * Clears all centre, master and menu configurations that were initialised before.
      */
     void clearConfiguration();

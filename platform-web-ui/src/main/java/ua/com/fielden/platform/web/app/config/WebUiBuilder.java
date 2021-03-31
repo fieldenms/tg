@@ -115,9 +115,9 @@ public class WebUiBuilder implements IWebUiBuilder {
         final Optional<EntityMaster<T>> masterOptional = getMaster(master.getEntityType());
         if (masterOptional.isPresent()) {
             if (masterOptional.get() != master) {
-                throw new WebUiBuilderException(String.format("The master configuration for type [%s] has been already registered.", master.getEntityType().getSimpleName()));
+                throw new WebUiBuilderException(format("The master configuration for type [%s] has been already registered.", master.getEntityType().getSimpleName()));
             } else {
-                logger.info(String.format("There is a try to register exactly the same master configuration instance for type [%s], that has been already registered.", master.getEntityType().getSimpleName()));
+                logger.debug(format("\tThere is a try to register exactly the same master configuration instance for type [%s], that has been already registered.", master.getEntityType().getSimpleName()));
                 return this;
             }
         } else {
@@ -168,9 +168,9 @@ public class WebUiBuilder implements IWebUiBuilder {
         final Optional<EntityCentre<?>> centreOptional = getCentre(centre.getMenuItemType());
         if (centreOptional.isPresent()) {
             if (centreOptional.get() != centre) {
-                throw new WebUiBuilderException(String.format("The centre configuration for type [%s] has been already registered.", centre.getMenuItemType().getSimpleName()));
+                throw new WebUiBuilderException(format("The centre configuration for type [%s] has been already registered.", centre.getMenuItemType().getSimpleName()));
             } else {
-                logger.info(format("There is a try to register exactly the same centre configuration instance for type [%s], that has been already registered.", centre.getMenuItemType().getSimpleName()));
+                logger.debug(format("\tThere is a try to register exactly the same centre configuration instance for type [%s], that has been already registered.", centre.getMenuItemType().getSimpleName()));
                 return this;
             }
         } else {
