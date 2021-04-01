@@ -82,7 +82,6 @@ Polymer({
     behaviors: [ TgFocusRestorationBehavior ],
 
     ready: function () {
-        this.$.dropdown.skipHistoryAction = true;
         const actions = this.$.actions_selector.assignedNodes({flatten: true});
         this._setIsSingle(actions.length === 1);
         this._setIsPresent(actions.length > 0);
