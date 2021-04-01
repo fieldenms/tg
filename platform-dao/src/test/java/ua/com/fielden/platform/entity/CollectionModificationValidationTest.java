@@ -26,6 +26,8 @@ import ua.com.fielden.platform.security.tokens.compound_master_menu.TgCompoundEn
 import ua.com.fielden.platform.security.tokens.compound_master_menu.TgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem_CanAccess_Token;
 import ua.com.fielden.platform.security.tokens.compound_master_menu.TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem_CanAccess_Token;
 import ua.com.fielden.platform.security.tokens.open_compound_master.OpenTgCompoundEntityMasterAction_CanOpen_Token;
+import ua.com.fielden.platform.security.tokens.persistent.KeyNumber_CanReadModel_Token;
+import ua.com.fielden.platform.security.tokens.persistent.KeyNumber_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.persistent.TgCompoundEntityChild_CanDelete_Token;
 import ua.com.fielden.platform.security.tokens.persistent.TgCompoundEntityChild_CanSave_Token;
 import ua.com.fielden.platform.security.tokens.persistent.TgCompoundEntityDetail_CanSave_Token;
@@ -33,6 +35,8 @@ import ua.com.fielden.platform.security.tokens.persistent.TgCompoundEntity_CanDe
 import ua.com.fielden.platform.security.tokens.persistent.TgCompoundEntity_CanSave_Token;
 import ua.com.fielden.platform.security.tokens.persistent._CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.persistent._CanRead_Token;
+import ua.com.fielden.platform.security.tokens.synthetic.DomainExplorer_CanReadModel_Token;
+import ua.com.fielden.platform.security.tokens.synthetic.DomainExplorer_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.user.UserAndRoleAssociation_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.user.UserAndRoleAssociation_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.user.UserRoleTokensUpdater_CanExecute_Token;
@@ -290,7 +294,11 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
         final UserRole userRole = save(new_(UserRole.class, "ROLE1", "desc").setActive(true));
         
         final SecurityTokenInfo alwaysAccessible = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(AlwaysAccessibleToken.class.getName());
+        final SecurityTokenInfo domainExplorer_CanRead = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(DomainExplorer_CanRead_Token.class.getName());
+        final SecurityTokenInfo domainExplorer_CanReadModel = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(DomainExplorer_CanReadModel_Token.class.getName());
         final SecurityTokenInfo graphiQL_CanExecute = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(GraphiQL_CanExecute_Token.class.getName());
+        final SecurityTokenInfo keyNumber_CanRead = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(KeyNumber_CanRead_Token.class.getName());
+        final SecurityTokenInfo keyNumber_CanReadModel = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(KeyNumber_CanReadModel_Token.class.getName());
 
         final SecurityTokenInfo user_CanDelete = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(User_CanDelete_Token.class.getName());
         final SecurityTokenInfo user_CanSave = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(User_CanSave_Token.class.getName());
@@ -328,7 +336,9 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
         final UserRoleTokensUpdater updater = createUpdater(userRole);
         final HashSet<SecurityTokenInfo> expectedTokens = setOf(
             alwaysAccessible,
+            domainExplorer_CanRead, domainExplorer_CanReadModel,
             graphiQL_CanExecute,
+            keyNumber_CanRead, keyNumber_CanReadModel,
             user_CanDelete, user_CanSave, user_CanRead, user_CanReadModel,
             userRole_CanDelete, userRole_CanSave, userRole_CanRead, userRole_CanReadModel,
             userRoleAssociation_CanRead, userRoleAssociation_CanReadModel,
