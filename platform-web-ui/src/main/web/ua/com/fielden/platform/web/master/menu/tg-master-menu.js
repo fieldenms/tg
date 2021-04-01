@@ -544,6 +544,8 @@ Polymer({
     },
 
     _appDrawerTransitioned: function () {
+        // need to notify tg-master-menu's content about possible resizing after drawer transition ended;
+        // this should facilitate proper resizing of, e.g., 'tg-responsive-toolbar' containing in embedded centre
         this.notifyResize();
     },
 

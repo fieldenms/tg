@@ -94,9 +94,9 @@ const template = html`
             height: 1.5em;
             margin: 0 5px
         }
-        #menuToggler,#backButton {
+        #menuToggler, #backButton {
             color: white;
-            @apply --layout-flex-none;
+            @apply --layout-flex-none; /* this is to avoid squashing of these buttons during dialog resizing */
         }
         .title-bar-button {
             color: var(--paper-grey-100);
@@ -413,7 +413,10 @@ Polymer({
             type: Array
         },
 
-        /**Other overlays which are descendants of the current dialog, they also should be brought to the front with this dialog*/
+        /**
+         * Other overlays, which are descendants of the current dialog.
+         * When dialog is bringing to front / closing, they also should be brought to the front / closed with parent.
+         */
         _childOverlays: {
             type: Array
         },
@@ -617,18 +620,18 @@ Polymer({
         tearDownEvent(e);
     },
 
-    _onCaptureClick: function(event) {
-
+    _onCaptureClick: function (event) {
+        // (inspired by iron-overlay-manager._onCaptureClick): close all child overlays (without noCancelOnOutsideClick) when started tapping on this dialog
         const path = dom(event).path;
         const overlayOnPath = this._manager._overlayInPath(path);
         if (overlayOnPath === this) {
             this._childOverlays.slice().forEach(childOverlay => {
-                if (overlayOnPath !== childOverlay && !childOverlay.noCancelOnOutsideClick) {
+                if (!childOverlay.noCancelOnOutsideClick) {
                     childOverlay.close();
                 }
             });
         }
-   
+        // bring current dialog to front if it is not in front already
         if (this._manager.currentOverlay() !== this) {
             this._bringToFront();
         }
@@ -655,12 +658,12 @@ Polymer({
     },
 
     _bringToFront: function() {
-        this._manager.addOverlay(this);
+        this._manager.addOverlay(this); // dialog itself should be brought to front first ...
         this._childOverlays.forEach(childOverlay => {
-            this._manager.addOverlay(childOverlay);
+            this._manager.addOverlay(childOverlay); // ... then all child overlays (autocompleter, secondary action dropdowns etc.) ...
         });
         this._childDialogs.forEach(function(childDialog) {
-            childDialog._bringToFront();
+            childDialog._bringToFront(); // ... and finally all child dialogs
         });
     },
 
@@ -1445,8 +1448,7 @@ Polymer({
             }.bind(this), 100);
             this._setIsRunning(false);
         } else { 
-            // Some child overlay was opened and should be added to the list of child overlays in order to be brought to the front when this dialog
-            //  will be brought to the front.
+            // some child overlay was opened and should be added to the list of child overlays in order to be brought to the front when this dialog will be brought to the front
             this._childOverlays.push(target);
         }
     },
@@ -1454,8 +1456,9 @@ Polymer({
     _dialogClosed: function (e) {
         const target = e.composedPath()[0];
         if (target === this) {
-            //Clear child overlays as they will be closed with this dialog
+            // close all child overlays
             this._childOverlays.slice().forEach(childOverlay => childOverlay.close());
+            // clear child overlays cache
             this._childOverlays = [];
             // if there are current subscriptions they need to be unsubscribed
             // due to dialog being closed
@@ -1482,6 +1485,7 @@ Polymer({
         } else {
             const idx = this._childOverlays.indexOf(target);
             if (idx >= 0) {
+                // clear child overlay from cache if it has already been closed
                 this._childOverlays.splice(idx, 1);
             }
         }
