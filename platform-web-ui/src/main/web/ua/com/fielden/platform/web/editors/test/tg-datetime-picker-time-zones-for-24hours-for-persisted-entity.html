@@ -76,7 +76,10 @@
 	    });
         
         suite('UTC property value approximates from', function() {
-            let master, reflector;
+            let master, reflector, guess;
+
+            suiteSetup(() => {guess = moment.tz.guess; moment.tz.guess = (force) => 'Australia/Melbourne'; moment.tz.setDefault('Australia/Melbourne');});
+            suiteTeardown(() => {moment.tz.guess = guess; moment.tz.setDefault();});
 
             setup(function() {
                 master = fixture('MasterFixture');
@@ -101,9 +104,9 @@
                 //  "Australia/Queensland", "Australia/South", "Australia/Sydney", "Australia/Tasmania", "Australia/Victoria", "Australia/West", "Australia/Yancowinna"]
                 
                 const neededTimeZones = ['Australia/Brisbane', 'Australia/Canberra', 'Australia/Hobart', 'Australia/Melbourne', 'Australia/Sydney'];
-                const guessedTimeZone = moment.tz.guess();
-                if (neededTimeZones.indexOf(guessedTimeZone) === -1) {
-                    throw new Error('This test should be invoked in following timezones: ' + neededTimeZones + '; your timezone is ' + guessedTimeZone + '.');
+                const currentTimeZone = moment().tz();
+                if (neededTimeZones.indexOf(currentTimeZone) === -1) {
+                    throw new Error('This test should be invoked in following timezones: ' + neededTimeZones + '; your timezone is ' + currentTimeZone + '.');
                 }
                 
                 const ed = master.$.editor_4_dateProp;
@@ -198,20 +201,24 @@
                 correctlyApproximates(done, '9/9/7 9:5 : 34  .  567  ', '2007-09-09 09:05:34.567', '09/09/2007 19:05:34.567');
             });
             
-            test('[05:15] to local [16:15] previous day', function(done) {
-                const todayDate = moment().tz('UTC').startOf("day").hour(16).minute(15);
-                correctlyApproximates(done, todayDate.format('HH:mm'), todayDate.format('YYYY-MM-DD HH:mm'), todayDate.local().format('DD/MM/YYYY HH:mm'), todayDate.valueOf());
+            test('[05:15] to local [16:15] in current day', function(done) {
+                const todayDate = moment.tz('UTC').startOf("day").hour(5).minute(15);
+                const currentTimeZone = moment().tz();
+                correctlyApproximates(done, todayDate.format('HH:mm'), todayDate.format('YYYY-MM-DD HH:mm'), todayDate.tz(currentTimeZone).format('DD/MM/YYYY HH:mm'), todayDate.valueOf());
             });
             
             test('[t] to todays date with time set to start of the day', function(done) {
                 const todayDate = moment.tz('UTC').startOf("day");
-                console.warn(todayDate);
-                correctlyApproximates(done, 't', todayDate.format('YYYY-MM-DD HH:mm'), todayDate.local().format('DD/MM/YYYY HH:mm'), todayDate.valueOf());
+                const currentTimeZone = moment().tz();
+                correctlyApproximates(done, 't', todayDate.format('YYYY-MM-DD HH:mm'), todayDate.tz(currentTimeZone).format('DD/MM/YYYY HH:mm'), todayDate.valueOf());
             });
         });
         
         suite('LOCAL property value approximates from', function() {
-            let master, reflector;
+            let master, reflector, guess;
+
+            suiteSetup(() => {guess = moment.tz.guess; moment.tz.guess = (force) => 'Australia/Melbourne'; moment.tz.setDefault('Australia/Melbourne');});
+            suiteTeardown(() => {moment.tz.guess = guess; moment.tz.setDefault();});
 
             setup(function() {
                 master = fixture('MasterFixture');
@@ -221,9 +228,9 @@
 
             const correctlyApproximatesFromLocal = function (done, targetEditingValueInLocal, approximatedEditingValueInLocal, approximatedEditingValueInUtc, concreteAcceptedMillis) {
                 const neededTimeZones = ['Australia/Brisbane', 'Australia/Canberra', 'Australia/Hobart', 'Australia/Melbourne', 'Australia/Sydney'];
-                const guessedTimeZone = moment.tz.guess();
-                if (neededTimeZones.indexOf(guessedTimeZone) === -1) {
-                    throw new Error('This test should be invoked in following timezones: ' + neededTimeZones + '; your timezone is ' + guessedTimeZone + '.');
+                const currentTimeZone = moment().tz();
+                if (neededTimeZones.indexOf(currentTimeZone) === -1) {
+                    throw new Error('This test should be invoked in following timezones: ' + neededTimeZones + '; your timezone is ' + currentTimeZone + '.');
                 }
                 
                 const ed = master.$.editor_4_dateProp;

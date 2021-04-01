@@ -497,7 +497,7 @@ export class TgDatetimePicker extends TgEditor {
                 return tryingMoment;
             } else {
                 formats.shift(); // first element is removed
-                return this._tryFormats(stringValue, formats);
+                return this._tryTimePortionFormats(stringValue, formats);
             }
         }
     }
