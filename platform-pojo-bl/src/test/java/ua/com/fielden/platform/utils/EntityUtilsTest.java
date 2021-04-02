@@ -367,7 +367,6 @@ public class EntityUtilsTest {
     }
 
     @Test
-    //TODO
     public void traversing_valid_property_path_ending_with_non_entity_typed_property_produces_a_stream_of_prop_value_pairs_with_last_one_skipped() {
         final Entity entity1 = factory.newEntity(Entity.class);
         entity1.setKey("E1");
