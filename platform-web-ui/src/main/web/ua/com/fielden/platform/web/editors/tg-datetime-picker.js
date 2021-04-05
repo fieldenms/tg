@@ -173,11 +173,7 @@ export class TgDatetimePicker extends TgEditor {
                         'h:ma',
                         'H:m',
                         'ha',
-                        'H',
-                        'T', //Means today,
-                        't', //Means today
-                        'N',  //Means now
-                        'n' //Means now
+                        'H'
                     ];
                 }
             },
@@ -386,11 +382,6 @@ export class TgDatetimePicker extends TgEditor {
                 if (aproximated !== undefined) {
                     return aproximated;
                 }
-            } else if (this._isLiteral(dateEditingValue)) {
-                this._validMoment = this._tryLiterals(dateEditingValue);
-                if (this._validMoment !== null) {
-                    return this.convertToString(this._validMoment.valueOf());
-                }
             } else if (this.timeZone === 'UTC' && dateEditingValue.indexOf('-') >= 0) { //As the last resort try utc formatting
                 this._validMoment = this._tryUTCFormats(dateEditingValue);
                 if (this._validMoment !== null) {
@@ -399,11 +390,19 @@ export class TgDatetimePicker extends TgEditor {
             } else {
                 const value = dateEditingValue.replace(new RegExp(' ', 'g'), '').trim();
                 if (value) {
-                    this._validMoment = this._tryTimePortionFormats(value, this._timePortionFormats.slice() /* the copy is made  */);
-                    if (this._validMoment !== null) {
-                        return this.convertToString(this._validMoment.valueOf());
+                    if (this._isLiteral(value)) {
+                        this._validMoment = this._tryLiterals(value);
+                        if (this._validMoment !== null) {
+                            return this.convertToString(this._validMoment.valueOf());
+                        }
+                    } else {
+                        this._validMoment = this._tryTimePortionFormats(value, this._timePortionFormats.slice() /* the copy is made  */);
+                        if (this._validMoment !== null) {
+                            return this.convertToString(this._validMoment.valueOf());
+                        }
                     }
                 }
+                return value;
             }
         }
         return dateEditingValue;
