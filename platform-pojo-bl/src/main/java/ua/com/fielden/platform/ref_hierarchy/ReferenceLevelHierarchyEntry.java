@@ -13,7 +13,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 public class ReferenceLevelHierarchyEntry extends ReferencedByLevelHierarchyEntry {
 
     @IsProperty
-    @Title(value = "Property title", desc = "Desc")
+    @Title("Property title")
     private String propertyTitle;
 
     @Observable

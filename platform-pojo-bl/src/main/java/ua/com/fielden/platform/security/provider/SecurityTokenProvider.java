@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.security.provider;
 
-import static java.util.stream.Collectors.toMap;
 import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.isSuperTokenOf;
 import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.isTopLevel;
 
@@ -25,6 +24,10 @@ import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanDelete_T
 import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanSave_Token;
+import ua.com.fielden.platform.security.tokens.persistent.KeyNumber_CanReadModel_Token;
+import ua.com.fielden.platform.security.tokens.persistent.KeyNumber_CanRead_Token;
+import ua.com.fielden.platform.security.tokens.synthetic.DomainExplorer_CanReadModel_Token;
+import ua.com.fielden.platform.security.tokens.synthetic.DomainExplorer_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.user.UserAndRoleAssociation_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.user.UserAndRoleAssociation_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.user.UserRoleTokensUpdater_CanExecute_Token;
@@ -97,6 +100,10 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
                 Attachment_CanReadModel_Token.class,
                 Attachment_CanDelete_Token.class,
                 AttachmentDownload_CanExecute_Token.class,
+                DomainExplorer_CanRead_Token.class,
+                DomainExplorer_CanReadModel_Token.class,
+                KeyNumber_CanRead_Token.class,
+                KeyNumber_CanReadModel_Token.class,
                 GraphiQL_CanExecute_Token.class);
         final Set<Class<? extends ISecurityToken>> allTokens = new HashSet<>(ClassesRetriever.getAllClassesInPackageDerivedFrom(path, packageName, ISecurityToken.class));
         allTokens.addAll(platformLevelTokens);
@@ -108,6 +115,7 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
         topLevelSecurityTokenNodes = buildTokenNodes(allTokens);
     }
 
+    @Override
     public SortedSet<SecurityTokenNode> getTopLevelSecurityTokenNodes() {
         return Collections.unmodifiableSortedSet(topLevelSecurityTokenNodes);
     }

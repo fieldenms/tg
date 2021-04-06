@@ -21,7 +21,6 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @KeyTitle("Save menu item key")
 @CompanionObject(IMenuSaveAction.class)
 public class MenuSaveAction extends AbstractFunctionalEntityWithCentreContext<String> {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty(String.class)
     @Title(value = "Visible menu items", desc = "Menu items that should become visible")

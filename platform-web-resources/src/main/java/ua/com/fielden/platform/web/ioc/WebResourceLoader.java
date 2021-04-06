@@ -23,6 +23,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -82,9 +83,9 @@ public class WebResourceLoader implements IWebResourceLoader {
         } else if ("/app/tg-app-index.html".equalsIgnoreCase(resourceUri)) {
             return injectServiceWorkerScriptInto(webUiConfig.genAppIndex());
         } else if ("/app/logout.html".equalsIgnoreCase(resourceUri)) {
-            return getFileSource("/resources/logout.html", webUiConfig.resourcePaths());
+            return getFileSource("/resources/logout.html", webUiConfig.resourcePaths()).map(src -> StringUtils.replace(src, "@title", "Logout"));
         } else if ("/app/login-initiate-reset.html".equalsIgnoreCase(resourceUri)) {
-            return getFileSource("/resources/login-initiate-reset.html", webUiConfig.resourcePaths());
+            return getFileSource("/resources/login-initiate-reset.html", webUiConfig.resourcePaths()).map(src -> StringUtils.replace(src, "@title", "Login Reset Request"));
         } else if ("/app/tg-app-config.js".equalsIgnoreCase(resourceUri)) {
             return ofNullable(webUiConfig.genWebUiPreferences());
         } else if ("/app/tg-app.js".equalsIgnoreCase(resourceUri)) {

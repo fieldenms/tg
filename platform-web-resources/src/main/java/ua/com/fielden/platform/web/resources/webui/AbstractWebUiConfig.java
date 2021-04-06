@@ -1,10 +1,12 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.utils.ResourceLoader.getStream;
 import static ua.com.fielden.platform.web.action.CentreConfigShareActionProducer.createPostAction;
 import static ua.com.fielden.platform.web.action.CentreConfigShareActionProducer.createPreAction;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.getDefaultCentre;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.resources.webui.FileResource.generateFileName;
@@ -17,6 +19,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -284,6 +287,17 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
             .withNoParentCentreRefresh()
             .build()
         );
+    }
+
+    @Override
+    public void createDefaultConfigurationsForAllCentres() {
+        final Set<Class<? extends MiWithConfigurationSupport<?>>> miTypes = getCentres().keySet();
+        final int size = miTypes.size();
+        logger.info(format("Creating default configurations for %s centres (caching)...", size));
+        for (final Class<? extends MiWithConfigurationSupport<?>> miType: miTypes) {
+            getDefaultCentre(miType, this);
+        }
+        logger.info(format("Creating default configurations for %s centres (caching)...done", size));
     }
 
 }

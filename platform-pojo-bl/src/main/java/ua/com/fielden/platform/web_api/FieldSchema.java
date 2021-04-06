@@ -33,6 +33,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isCollectional;
 import static ua.com.fielden.platform.utils.EntityUtils.isDate;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
+import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 import static ua.com.fielden.platform.web_api.TgScalars.GraphQLColour;
 import static ua.com.fielden.platform.web_api.TgScalars.GraphQLDate;
 import static ua.com.fielden.platform.web_api.TgScalars.GraphQLHyperlink;
@@ -534,9 +535,10 @@ public class FieldSchema {
             return of(t2(GraphQLColour, asList(ORDER_ARGUMENT)));
         } else if (AbstractView.class == propertyType
             || PropertyDescriptor.class == propertyType
-            || AbstractUnionEntity.class.isAssignableFrom(propertyType) // not supported yet
             || isAbstract(propertyType.getModifiers())) { // be careful with boolean.class because it has abstract modifier
             return empty();
+        } else if (isUnionEntityType(propertyType)) {
+            return of(t2(new GraphQLTypeReference(propertyType.getSimpleName()), asList()));
         } else if (isEntityType(propertyType)) {
             return of(t2(new GraphQLTypeReference(propertyType.getSimpleName()), asList(LIKE_ARGUMENT, ORDER_ARGUMENT)));
         } else {

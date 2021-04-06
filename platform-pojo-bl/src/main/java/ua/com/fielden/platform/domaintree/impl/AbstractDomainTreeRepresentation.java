@@ -6,6 +6,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
+import static ua.com.fielden.platform.entity.AbstractEntity.isStrictModelVerification;
 import static ua.com.fielden.platform.reflection.Finder.findProperties;
 import static ua.com.fielden.platform.reflection.Finder.getFieldByName;
 import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
@@ -434,8 +435,9 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
                 EntityUtils.isEnum(propertyType) || // exclude enumeration properties / entities
                 EntityUtils.isEntityType(propertyType) && Modifier.isAbstract(propertyType.getModifiers()) || // exclude properties / entities of entity type with 'abstract' modifier
                 EntityUtils.isEntityType(propertyType) && !AnnotationReflector.isAnnotationPresentForClass(KeyType.class, propertyType) || // exclude properties / entities of entity type without KeyType annotation
+                EntityUtils.isEntityType(propertyType) && EntityUtils.isIntrospectionDenied((Class<? extends AbstractEntity<?>>) propertyType) || // exclude properties / entities of entity type with DenyIntrospection annotation
                 !isEntityItself && AnnotationReflector.isPropertyAnnotationPresent(Invisible.class, penultType, lastPropertyName) || // exclude invisible properties
-                !isEntityItself && AnnotationReflector.isPropertyAnnotationPresent(Ignore.class, penultType, lastPropertyName) || // exclude invisible properties
+                !isEntityItself && AnnotationReflector.isPropertyAnnotationPresent(Ignore.class, penultType, lastPropertyName) || // exclude ignored properties
                 // The logic below (determining whether property represents link property) is important to maintain the integrity of domain trees.
                 // However, it also causes performance bottlenecks when invoking multiple times (findLinkProperty, getOriginalValue, etc.).
                 // In current Web UI logic, that uses centre domain trees, the following logic does not add any significant value.
@@ -705,10 +707,10 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
         // The check below is important to maintain the integrity of domain trees.
         // However, it also causes performance bottlenecks when invoking multiple times.
         // In current Web UI logic, that uses centre domain trees, this check does not add any significant value due to other checks implemented as part of Centre DSL.
-        // Reintroducing of this check may be significant when management of domain trees from UI will be implemented.
-        // if (dtr.isExcludedImmutably(root, property)) {
-        //     throw new DomainTreeException(message);
-        // }
+        // This check is currently performed only in STRICT_MODEL_VERIFICATION mode (and thus skipped in deployment mode).
+        if (isStrictModelVerification() && dtr.isExcludedImmutably(root, property)) {
+            throw new DomainTreeException(message);
+        }
     }
 
     /**
