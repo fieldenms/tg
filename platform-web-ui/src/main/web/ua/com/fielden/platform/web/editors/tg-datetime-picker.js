@@ -125,31 +125,40 @@ export class TgDatetimePicker extends TgEditor {
                 value: function () {
                     return [
                         'L LTS',
+                        'L h:m:ss.SSSa',
                         'D/M/YYYY h:m:ss.SSSa',
                         'D/M/YY h:m:ss.SSSa',
                         'D/M/Y h:m:ss.SSSa',
+                        'L H:m:ss.SSS',
                         'D/M/YYYY H:m:ss.SSS',
                         'D/M/YY H:m:ss.SSS',
                         'D/M/Y H:m:ss.SSS',
                         'L LT',
+                        'L hmma',
                         'D/M/YYYY hmma',
                         'D/M/YY hmma',
                         'D/M/Y hmma',
+                        'L Hmm',
                         'D/M/YYYY Hmm',
                         'D/M/YY Hmm',
                         'D/M/Y Hmm',
+                        'L h:ma',
                         'D/M/YYYY h:ma',
                         'D/M/YY h:ma',
                         'D/M/Y h:ma',
+                        'L H:m',
                         'D/M/YYYY H:m',
                         'D/M/YY H:m',
                         'D/M/Y H:m',
+                        'L ha',
                         'D/M/YYYY ha',
                         'D/M/YY ha',
                         'D/M/Y ha',
+                        'L H',
                         'D/M/YYYY H',
                         'D/M/YY H',
                         'D/M/Y H',
+                        'L',
                         'D/M/YYYY',
                         'D/M/YY',
                         'D/M/Y'
@@ -470,7 +479,7 @@ export class TgDatetimePicker extends TgEditor {
                 if (['D/M/Y H:m:ss.SSS', 'D/M/Y h:m:ss.SSSa', 'D/M/Y hmma', 'D/M/Y Hmm', 'D/M/Y h:ma', 'D/M/Y H:m', 'D/M/Y ha', 'D/M/Y H', 'D/M/Y'].indexOf(firstFormat) !== -1) {
                     tryingMoment = _momentTz(this._convertToDoubleDigitYear(stringValue), firstFormat.replace('D/M/Y', 'D/M/YY'), true, this.timeZone);
                 }
-                if (['D/M/YYYY', 'D/M/YY', 'D/M/Y'].indexOf(firstFormat) !== -1 && this.timePortionToBecomeEndOfDay === true) {
+                if (['L', 'D/M/YYYY', 'D/M/YY', 'D/M/Y'].indexOf(firstFormat) !== -1 && this.timePortionToBecomeEndOfDay === true) {
                     tryingMoment.add(1, 'days').subtract(1, 'milliseconds');
                 }
                 return tryingMoment;
