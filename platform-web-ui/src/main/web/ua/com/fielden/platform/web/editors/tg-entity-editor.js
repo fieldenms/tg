@@ -122,6 +122,14 @@ export class TgEntityEditor extends TgEditor {
            result: {
                type: Object
            },
+
+           /**
+            * Action to open master on title click
+            */
+           openMasterAction: {
+               type: Object,
+               value: null
+           },
    
            _searchQuery: {
                type: String,
@@ -406,6 +414,16 @@ export class TgEntityEditor extends TgEditor {
             const container = this.decorator();
             return [container.getBoundingClientRect(), container.offsetHeight];
         }.bind(this);
+    }
+
+    _labelTap (e) {
+        if (this.openMasterAction && this.entity !== null) {
+            const entityValue = this.reflector().tg_getFullValue(this.entity, this.propertyName);
+            if (entityValue !== null && !Array.isArray(entityValue)) {
+                this.openMasterAction.currentEntity = () => entityValue;
+                this.openMasterAction._run();       
+            }
+        }
     }
 
     /**
