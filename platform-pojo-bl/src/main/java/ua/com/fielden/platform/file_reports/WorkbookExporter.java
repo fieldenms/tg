@@ -3,6 +3,7 @@ package ua.com.fielden.platform.file_reports;
 import static java.lang.Math.min;
 import static java.lang.Math.round;
 import static org.apache.commons.lang.StringUtils.join;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -10,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -19,22 +21,23 @@ import java.util.stream.Stream;
 import java.util.zip.Deflater;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.poi.hssf.usermodel.HSSFCell;
-import org.apache.poi.hssf.usermodel.HSSFCellStyle;
-import org.apache.poi.hssf.usermodel.HSSFFont;
-import org.apache.poi.hssf.usermodel.HSSFRow;
-import org.apache.poi.hssf.usermodel.HSSFSheet;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.SpreadsheetVersion;
+import org.apache.poi.ss.usermodel.BorderStyle;
+import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CreationHelper;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.xssf.streaming.SXSSFSheet;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.joda.time.DateTime;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity_centre.review.criteria.DynamicColumnForExport;
 import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.serialisation.xstream.GZipOutputStreamEx;
+import ua.com.fielden.platform.serialisation.GZipOutputStreamEx;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
-import ua.com.fielden.platform.utils.Pair;
 
 /**
  * A set of utility methods for exporting data into MS Excel.
@@ -45,91 +48,114 @@ import ua.com.fielden.platform.utils.Pair;
 public class WorkbookExporter {
 
     private static final int MAX_COLUMN_WIDTH = 255 * 256;
-    private static final int MAX_ROWS = SpreadsheetVersion.EXCEL97.getLastRowIndex();
+    private static final String DEFAULT_SHEET_TITLE = "Exported data";
+    private static final int SXSSF_WINDOW_SIZE = 1000;
 
     private WorkbookExporter() {}
-    
-    public static <M extends AbstractEntity<?>> HSSFWorkbook export(final Stream<M> entities, final String[] propertyNames, final String[] propertyTitles) {
-        final List<Pair<String, String>> propNamesAndTitles = new ArrayList<>();
+
+    public static <M extends AbstractEntity<?>> SXSSFWorkbook export(final Stream<M> entities, final String[] propertyNames, final String[] propertyTitles, final List<List<DynamicColumnForExport>> dynamicProperties) {
+        final List<T2<String, String>> propNamesAndTitles = new ArrayList<>();
 
         for (int index = 0; index < propertyNames.length && index < propertyTitles.length; index++) {
-            propNamesAndTitles.add(new Pair<String, String>(propertyNames[index], propertyTitles[index]));
+            propNamesAndTitles.add(t2(propertyNames[index], propertyTitles[index]));
         }
-        final DataForWorkbookSheet<M> dataForWorkbookSheet = new DataForWorkbookSheet<>("Exported data", entities, propNamesAndTitles);
+
+        // add property names and titles for dynamic properties
+        final Map<String, DynamicColumnForExport> collectionalProps = new LinkedHashMap<>();
+        dynamicProperties.forEach(listOfProps -> {
+            listOfProps.forEach(prop -> {
+                propNamesAndTitles.add(t2(prop.getGroupPropValue(), prop.getTitle()));
+                collectionalProps.put(prop.getGroupPropValue(), prop);
+            });
+        });
+
+        final DataForWorkbookSheet<M> dataForWorkbookSheet = new DataForWorkbookSheet<>(DEFAULT_SHEET_TITLE, entities, propNamesAndTitles, collectionalProps);
         final List<DataForWorkbookSheet<? extends AbstractEntity<?>>> sheetsData = new ArrayList<>();
         sheetsData.add(dataForWorkbookSheet);
         return export(sheetsData);
     }
 
-    public static byte[] convertToGZipByteArray(final HSSFWorkbook workbook) throws IOException {
-        final ByteArrayOutputStream oStream = new ByteArrayOutputStream();
-        final GZipOutputStreamEx zOut = new GZipOutputStreamEx(oStream, Deflater.BEST_COMPRESSION);
-        workbook.write(zOut);
-        zOut.flush();
-        zOut.close();
-        oStream.flush();
-        oStream.close();
-        return oStream.toByteArray();
+    public static <M extends AbstractEntity<?>> SXSSFWorkbook export(final Stream<M> entities, final String[] propertyNames, final String[] propertyTitles) {
+        final List<T2<String, String>> propNamesAndTitles = new ArrayList<>();
+        for (int index = 0; index < propertyNames.length && index < propertyTitles.length; index++) {
+            propNamesAndTitles.add(t2(propertyNames[index], propertyTitles[index]));
+        }
+
+        final DataForWorkbookSheet<M> dataForWorkbookSheet = new DataForWorkbookSheet<>(DEFAULT_SHEET_TITLE, entities, propNamesAndTitles, new LinkedHashMap<>());
+        final List<DataForWorkbookSheet<? extends AbstractEntity<?>>> sheetsData = new ArrayList<>();
+        sheetsData.add(dataForWorkbookSheet);
+        return export(sheetsData);
     }
 
-    public static byte[] convertToByteArray(final HSSFWorkbook workbook) throws IOException {
-        final ByteArrayOutputStream oStream = new ByteArrayOutputStream();
-        workbook.write(oStream);
-        oStream.flush();
-        oStream.close();
-        return oStream.toByteArray();
+    /**
+     * Converts {@code workbook} to a byte array of a zipped output. Disposes {@code workbook} to remove temporary files SXSSF creates to hold the data.
+     *
+     * @param workbook
+     * @return
+     * @throws IOException
+     */
+    public static byte[] convertToGZipByteArray(final SXSSFWorkbook workbook) throws IOException {
+        try (final ByteArrayOutputStream oStream = new ByteArrayOutputStream();
+             final GZipOutputStreamEx zOut = new GZipOutputStreamEx(oStream, Deflater.BEST_COMPRESSION)
+        ) {
+            workbook.write(zOut);
+            zOut.flush();
+            oStream.flush();
+            return oStream.toByteArray();
+        } finally {
+            workbook.dispose();
+        }
     }
 
-    public static HSSFWorkbook export(final List<DataForWorkbookSheet<? extends AbstractEntity<?>>> sheetsData) {
-        final HSSFWorkbook wb = new HSSFWorkbook();
+    /**
+     * Converts {@code workbook} to a byte array. Disposes {@code workbook} to remove temporary files SXSSF creates to hold the data.
+     *
+     * @param workbook
+     * @return
+     * @throws IOException
+     */
+    public static byte[] convertToByteArray(final SXSSFWorkbook workbook) throws IOException {
+        try (final ByteArrayOutputStream oStream = new ByteArrayOutputStream()) {
+            workbook.write(oStream);
+            oStream.flush();
+            return oStream.toByteArray();
+        } finally {
+            workbook.dispose();
+        }
+    }
+
+    public static SXSSFWorkbook export(final List<DataForWorkbookSheet<? extends AbstractEntity<?>>> sheetsData) {
+        final SXSSFWorkbook wb = new SXSSFWorkbook(SXSSF_WINDOW_SIZE);
         for (final DataForWorkbookSheet<? extends AbstractEntity<?>> sheetData : sheetsData) {
             addSheetWithData(wb, sheetData);
         }
         return wb;
     }
 
-    private static <M extends AbstractEntity<?>> void addSheetWithData(final HSSFWorkbook wb, final DataForWorkbookSheet<M> sheetData) {
-        final HSSFSheet sheet = wb.createSheet(sheetData.getSheetTitle());
+    private static <M extends AbstractEntity<?>> void addSheetWithData(final SXSSFWorkbook wb, final DataForWorkbookSheet<M> sheetData) {
+        final SXSSFSheet sheet = wb.createSheet(sheetData.getSheetTitle());
         // Create a header row.
-        final HSSFRow headerRow = sheet.createRow(0);
+        final Row headerRow = sheet.createRow(0);
         // Create a new font and alter it
-        final HSSFFont font = wb.createFont();
+        final Font font = wb.createFont();
         font.setFontHeightInPoints((short) 11);
         font.setFontName("Courier New");
-        font.setBoldweight((short) 1000);
+        font.setBold(true);
         // Fonts are set into a style so create a new one to use
-        final HSSFCellStyle headerCellStyle = wb.createCellStyle();
+        final CellStyle headerCellStyle = wb.createCellStyle();
         headerCellStyle.setFont(font);
-        headerCellStyle.setBorderBottom(HSSFCellStyle.BORDER_THIN);
+        headerCellStyle.setBorderBottom(BorderStyle.THIN);
         headerCellStyle.setWrapText(true);
-        final HSSFCellStyle headerInnerCellStyle = wb.createCellStyle();
+        final CellStyle headerInnerCellStyle = wb.createCellStyle();
         headerInnerCellStyle.setFont(font);
-        headerInnerCellStyle.setBorderBottom(HSSFCellStyle.BORDER_THIN);
-        headerInnerCellStyle.setBorderRight(HSSFCellStyle.BORDER_HAIR);
+        headerInnerCellStyle.setBorderBottom(BorderStyle.THIN);
+        headerInnerCellStyle.setBorderRight(BorderStyle.HAIR);
         headerInnerCellStyle.setWrapText(true);
         // Create cells and put column names there
         for (int index = 0; index < sheetData.getPropTitles().size(); index++) {
-            final HSSFCell cell = headerRow.createCell(index);
+            final Cell cell = headerRow.createCell(index);
             cell.setCellValue(sheetData.getPropTitles().get(index));
             cell.setCellStyle(index < sheetData.getPropTitles().size() - 1 ? headerInnerCellStyle : headerCellStyle);
-        }
-
-        final CellStyle dateCellStyle = wb.createCellStyle();
-        final CreationHelper createHelper = wb.getCreationHelper();
-        dateCellStyle.setDataFormat(createHelper.createDataFormat().getFormat("dd/mm/yyyy hh:mm"));
-
-        // let's make cell style to handle borders
-        final Map<String, String> shortCollectionalProps = new HashMap<>();
-        final HSSFCellStyle dataCellStyle = wb.createCellStyle();
-        dataCellStyle.setBorderRight(HSSFCellStyle.BORDER_HAIR);
-        final AtomicInteger index = new AtomicInteger(0);
-        sheetData.getEntities().limit(MAX_ROWS).forEach(entity -> addRow(index, entity, sheetData, sheet, dateCellStyle, shortCollectionalProps, dataCellStyle));
-
-        // adjusting columns widths
-        for (int propIndex = 0; propIndex < sheetData.getPropNames().size(); propIndex++) {
-            sheet.autoSizeColumn(propIndex);
-            final int newSize = (int) min(round(sheet.getColumnWidth(propIndex) * 1.05), MAX_COLUMN_WIDTH);
-            sheet.setColumnWidth(propIndex, newSize);
         }
 
         // tripling first row height
@@ -137,21 +163,39 @@ public class WorkbookExporter {
 
         // freezing first row
         sheet.createFreezePane(0, 1);
+
+        final CellStyle dateCellStyle = wb.createCellStyle();
+        final CreationHelper createHelper = wb.getCreationHelper();
+        dateCellStyle.setDataFormat(createHelper.createDataFormat().getFormat("dd/mm/yyyy hh:mm"));
+
+        // let's make cell style to handle borders
+        final Map<String, String> shortCollectionalProps = new HashMap<>();
+        final CellStyle dataCellStyle = wb.createCellStyle();
+        dataCellStyle.setBorderRight(BorderStyle.HAIR);
+        final AtomicInteger index = new AtomicInteger(0);
+        sheetData.getEntities().forEach(entity -> addRow(index, entity, sheetData, sheet, dateCellStyle, shortCollectionalProps, dataCellStyle));
+
+        // adjusting columns widths
+        for (int propIndex = 0; propIndex < sheetData.getPropNames().size(); propIndex++) {
+            sheet.trackColumnForAutoSizing(propIndex);
+            sheet.autoSizeColumn(propIndex);
+            final int newSize = (int) min(round(sheet.getColumnWidth(propIndex) * 1.05), MAX_COLUMN_WIDTH);
+            sheet.setColumnWidth(propIndex, newSize);
+        }
     }
 
-    private static <M extends AbstractEntity<?>> void addRow(final AtomicInteger index, M entity, final DataForWorkbookSheet<M> sheetData, final HSSFSheet sheet, final CellStyle dateCellStyle, final Map<String, String> shortCollectionalProps, final HSSFCellStyle dataCellStyle) {
-        final HSSFRow row = sheet.createRow(index.incrementAndGet()); // new row starting with 1
+    private static <M extends AbstractEntity<?>> void addRow(final AtomicInteger index, final M entity, final DataForWorkbookSheet<M> sheetData, final Sheet sheet, final CellStyle dateCellStyle, final Map<String, String> shortCollectionalProps, final CellStyle dataCellStyle) {
+        final Row row = sheet.createRow(index.incrementAndGet()); // new row starting with 1
         // iterate through values in the current table row and populate the sheet row
         for (int propIndex = 0; propIndex < sheetData.getPropNames().size(); propIndex++) {
-            final HSSFCell cell = row.createCell(propIndex); // create new cell
+            final Cell cell = row.createCell(propIndex); // create new cell
             if (propIndex < sheetData.getPropNames().size() - 1) { // the last column should not have right border
                 cell.setCellStyle(dataCellStyle);
             }
             final String propertyName = sheetData.getPropNames().get(propIndex);
-            final Object value = StringUtils.isEmpty(propertyName) ? entity : entity.get(propertyName); // get the value
+            final Object value = StringUtils.isEmpty(propertyName) ? entity : sheetData.getValue(entity, propertyName); // get the value
             // need to try to do the best job with types
             if (shortCollectionalProps.containsKey(propertyName)) {
-                cell.setCellType(HSSFCell.CELL_TYPE_STRING);
                 cell.setCellValue(join(createShortColection((Collection<AbstractEntity<?>>) value, shortCollectionalProps.get(propertyName)), ", "));
             } else if (value instanceof Date) {
                 cell.setCellValue((Date) value);
@@ -160,15 +204,12 @@ public class WorkbookExporter {
                 cell.setCellValue(((DateTime) value).toDate());
                 cell.setCellStyle(dateCellStyle);
             } else if (value instanceof Number) {
-                cell.setCellType(HSSFCell.CELL_TYPE_NUMERIC);
                 cell.setCellValue(((Number) value).doubleValue());
             } else if (value instanceof Boolean) {
-                cell.setCellType(HSSFCell.CELL_TYPE_BOOLEAN);
                 cell.setCellValue((Boolean) value);
-            } else if (value == null) { // if null then leave call blank
-                cell.setCellType(HSSFCell.CELL_TYPE_BLANK);
+            } else if (value == null) { // if null then leave the cell blank
+                cell.setBlank();
             } else { // otherwise treat value as String
-                cell.setCellType(HSSFCell.CELL_TYPE_STRING);
                 if (EntityUtils.isCollectional(value.getClass())) {
                     final Optional<String> keyToInclude = findKeyToExclude((Collection<?>) value);
                     if (keyToInclude.isPresent()) {

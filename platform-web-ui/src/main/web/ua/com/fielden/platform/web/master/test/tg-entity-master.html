@@ -122,11 +122,11 @@
 		    });
 		    
 		    test('works for new persisted entity', function(done) {
-		    	master.entityId = '7';
+		    	master.entityId = '5';
 		    	
 	            master.postRetrieved = function(entity, bindingEntity, customObject) {
 	                assert.strictEqual(entity.type().fullClassName(), 'ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties', 'The type of entity response is not correct.');
-	                assert.strictEqual(entity.get('id'), 7, 'The id of entity response is not correct.');
+	                assert.strictEqual(entity.get('id'), 5, 'The id of entity response is not correct.');
 	                assert.strictEqual(entity.version, 0, 'The version of entity response is not correct.');
 
 	                // properties:
@@ -170,7 +170,7 @@
 		    });
 		
 		    test('works for property', function(done) {
-		    	master.entityId = '7';
+		    	master.entityId = '5';
 		    	
 	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
 	                // value ok?
@@ -182,7 +182,7 @@
 
 	                // value validationresult?
 	                assert.ok(validatedEntity.prop('integerProp').validationResult(), 'Instance meta-prop should have non-empty (unsuccessful) validation result.');
-	                assert.strictEqual(validatedEntity.prop('integerProp').validationResult().message, 'Value \'10000\' is greater than the maximum limit of 9999.', 'Property has incorrect validation result message.');
+	                assert.strictEqual(validatedEntity.prop('integerProp').validationResult().message, 'Value should be less or equal to 9999.', 'Property has incorrect validation result message.');
 
 	                // binding value ok?
 	                assert.ok(bindingEntity.get('integerProp'), 'Binding property should be initialised.');
@@ -216,7 +216,7 @@
 		    });
 		    
 		    test('works for integer property', function (done) {
-		    	master.entityId = '7';
+		    	master.entityId = '5';
 		    	
 	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
 	                // value ok?
@@ -261,7 +261,7 @@
 		    });
 		    
 		    test('works for bigDecimal property', function (done) {
-		    	master.entityId = '11';
+		    	master.entityId = '9';
 		    	
 	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
 	                // value ok?
@@ -306,7 +306,7 @@
 		    });
 		    
 		    test('works for boolean property', function (done) {
-		    	master.entityId = '13';
+		    	master.entityId = '11';
 		    	
 	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
 	                // value ok?
@@ -349,7 +349,7 @@
 		    });
 		    
 		    test('works for date property', function (done) {
-		    	master.entityId = '14';
+		    	master.entityId = '12';
 		    	
 	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
 	                // value ok?
@@ -394,7 +394,7 @@
 		    });
 		    
 		    test('works for entity property', function (done) {
-		    	master.entityId = '8';
+		    	master.entityId = '6';
 		    	
 	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
 	                // value ok?
@@ -442,7 +442,7 @@
 		    });
 		    
 		    test('works for money property', function (done) {
-		    	master.entityId = '10';
+		    	master.entityId = '8';
 		    	// TODO at this stage whatever currency is used for setting into binding entity (to be saved), retrieval from database 
 		    	//      will return money instances with the currency, that is currently used in your OS.
 		    	// Please, adjust the currency to be the same as in your OS to make this test happy.
@@ -499,7 +499,7 @@
 		    });
 		    
 		    test('works for string property', function (done) {
-		    	master.entityId = '12';
+		    	master.entityId = '10';
 		    	
 	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
 	                // value ok?
@@ -544,7 +544,7 @@
 		    });
 		    
 		    test('works for uppercased property editor', function (done) {
-		    	master.entityId = '12';
+		    	master.entityId = '10';
 		        const edProperty = master.$.editor_4_stringProp;
 		    	
 	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
@@ -622,7 +622,7 @@
 		    });
 		    
 		    test('works for any property into missing value', function (done) {
-		    	master.entityId = '14';
+		    	master.entityId = '12';
 		    	
 	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
 	                // value ok?
@@ -665,7 +665,7 @@
 		    });
 		    
 		    test('works for any property simultaneously', function (done) {
-		    	master.entityId = '12';
+		    	master.entityId = '10';
 		    	
 	            let postValidatedCount = 0;
 
@@ -983,7 +983,7 @@
                 };
                 
                 master.postSaved = function (potentiallySavedOrNewEntity, bindingEntity) {
-                    assert.isNotNull(potentiallySavedOrNewEntity.get('id'), 'Entity id should be not null.');
+                    assert.isNull(potentiallySavedOrNewEntity.get('id'), 'Entity id should be null for new entity with failed save attempt.');
                     assert.strictEqual(potentiallySavedOrNewEntity.version, 0, 'Entity version should be the same.');
                     
                     assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccured(), 'Entity\'s exceptionOccured should exist.');
@@ -1324,6 +1324,26 @@
                         }
                     };
                     master.processShortcut(event, ['tg-action']);
+                });
+            });
+            
+            test('setEditorValue4Property method works', function (done) {
+                master.postValidated = function (validatedEntity, bindingEntity, customObject) {
+                    done();
+                };
+                master.retrieve().then(function () {
+                    const funcEntity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties');
+                    funcEntity.stringProp = 'TEST';
+                    master.setEditorValue4Property('key', funcEntity, 'stringProp');
+                });
+            });
+            
+            test('setEditorValue4PropertyFromConcreteValue method works', function (done) {
+                master.postValidated = function (validatedEntity, bindingEntity, customObject) {
+                    done();
+                };
+                master.retrieve().then(function () {
+                    master.setEditorValue4PropertyFromConcreteValue('key', 'TEST');
                 });
             });
             

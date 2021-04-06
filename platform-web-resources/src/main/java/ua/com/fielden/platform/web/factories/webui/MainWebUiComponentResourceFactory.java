@@ -5,17 +5,20 @@ import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
 
-import ua.com.fielden.platform.web.app.ISourceController;
+import ua.com.fielden.platform.utils.IDates;
+import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.webui.MainWebUiComponentResource;
 
 public class MainWebUiComponentResourceFactory extends Restlet {
-    private final ISourceController sourceController;
+    private final IWebResourceLoader webResourceLoader;
     private final IDeviceProvider deviceProvider;
+    private final IDates dates;
 
-    public MainWebUiComponentResourceFactory(final ISourceController sourceController, final IDeviceProvider deviceProvider) {
-        this.sourceController = sourceController;
+    public MainWebUiComponentResourceFactory(final IWebResourceLoader webResourceLoader, final IDeviceProvider deviceProvider, final IDates dates) {
+        this.webResourceLoader = webResourceLoader;
         this.deviceProvider = deviceProvider;
+        this.dates = dates;
     }
 
     @Override
@@ -23,7 +26,7 @@ public class MainWebUiComponentResourceFactory extends Restlet {
         super.handle(request, response);
 
         if (Method.GET.equals(request.getMethod())) {
-            new MainWebUiComponentResource(sourceController, deviceProvider, getContext(), request, response).handle();
+            new MainWebUiComponentResource(webResourceLoader, deviceProvider, dates, getContext(), request, response).handle();
         }
     }
 

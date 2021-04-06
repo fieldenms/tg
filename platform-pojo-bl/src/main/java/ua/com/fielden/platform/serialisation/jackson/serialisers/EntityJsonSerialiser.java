@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.serialisation.jackson.serialisers;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.reflection.Reflector.extractValidationLimits;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getValidationResult;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isChangedFromOriginalDefault;
@@ -57,6 +58,7 @@ import ua.com.fielden.platform.utils.Pair;
  * @param <T>
  */
 public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerializer<T> {
+    private static final long serialVersionUID = 1L;
 
     public static final String ERR_RESTRICTED_TYPE_SERIALISATION_DUE_TO_PROP_TYPE = "Type [%s] containst property [%s] that is not permitted for serialisation.";
 
@@ -130,21 +132,23 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
             }
             
             final boolean uninstrumented = !PropertyTypeDeterminator.isInstrumented(entity.getClass());
-            if (uninstrumented) {
-                generator.writeFieldName("@uninstrumented");
+            if (!uninstrumented) {
+                generator.writeFieldName("@_i");
                 generator.writeObject(null);
             }
 
-            // serialise id
-            generator.writeFieldName(AbstractEntity.ID);
-            generator.writeObject(getIdSafely(entity));
-
-            // serialise version -- should never be null
-            generator.writeFieldName(AbstractEntity.VERSION);
-            if (Reflector.isPropertyProxied(entity, AbstractEntity.VERSION)) {
-                generator.writeObject(Long.valueOf(0L));
-            } else {
-                generator.writeObject(entity.getVersion());
+            if (!context.excludeIdAndVersion()) {
+                // serialise id
+                generator.writeFieldName(AbstractEntity.ID);
+                generator.writeObject(getIdSafely(entity));
+                
+                // serialise version -- should never be null
+                generator.writeFieldName(VERSION);
+                if (Reflector.isPropertyProxied(entity, VERSION)) {
+                    generator.writeObject(Long.valueOf(0L));
+                } else {
+                    generator.writeObject(entity.getVersion());
+                }
             }
             
             // serialise all the properties relying on the fact that property sequence is consistent with order of fields in the class declaration

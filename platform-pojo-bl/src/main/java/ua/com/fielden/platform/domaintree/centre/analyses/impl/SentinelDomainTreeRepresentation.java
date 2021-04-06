@@ -1,15 +1,12 @@
 package ua.com.fielden.platform.domaintree.centre.analyses.impl;
 
-import java.nio.ByteBuffer;
 import java.util.Set;
 
 import ua.com.fielden.platform.domaintree.centre.analyses.ISentinelDomainTreeRepresentation;
-import ua.com.fielden.platform.domaintree.impl.EnhancementLinkedRootsSet;
-import ua.com.fielden.platform.domaintree.impl.EnhancementSet;
 import ua.com.fielden.platform.entity.annotation.Calculated;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -28,18 +25,18 @@ public class SentinelDomainTreeRepresentation extends AnalysisDomainTreeRepresen
     /**
      * A <i>representation</i> constructor for the first time instantiation.
      * 
-     * @param serialiser
+     * @param entityFactory
      * @param rootTypes
      */
-    public SentinelDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-        this(serialiser, rootTypes, createSet(), new SentinelAddToDistributionTickRepresentation(), new SentinelAddToAggregationTickRepresentation());
+    public SentinelDomainTreeRepresentation(final EntityFactory entityFactory, final Set<Class<?>> rootTypes) {
+        this(entityFactory, rootTypes, createSet(), new SentinelAddToDistributionTickRepresentation(), new SentinelAddToAggregationTickRepresentation());
     }
 
     /**
      * A <i>representation</i> constructor. Initialises also children references on itself.
      */
-    protected SentinelDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final SentinelAddToDistributionTickRepresentation firstTick, final SentinelAddToAggregationTickRepresentation secondTick) {
-        super(serialiser, rootTypes, excludedProperties, firstTick, secondTick);
+    protected SentinelDomainTreeRepresentation(final EntityFactory entityFactory, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final SentinelAddToDistributionTickRepresentation firstTick, final SentinelAddToAggregationTickRepresentation secondTick) {
+        super(entityFactory, rootTypes, excludedProperties, firstTick, secondTick);
     }
 
     @Override
@@ -110,24 +107,4 @@ public class SentinelDomainTreeRepresentation extends AnalysisDomainTreeRepresen
         }
     }
 
-    /**
-     * A specific Kryo serialiser for {@link SentinelDomainTreeRepresentation}.
-     * 
-     * @author TG Team
-     * 
-     */
-    public static class SentinelDomainTreeRepresentationSerialiser extends AbstractDomainTreeRepresentationSerialiser<SentinelDomainTreeRepresentation> {
-        public SentinelDomainTreeRepresentationSerialiser(final ISerialiser serialiser) {
-            super(serialiser);
-        }
-
-        @Override
-        public SentinelDomainTreeRepresentation read(final ByteBuffer buffer) {
-            final EnhancementLinkedRootsSet rootTypes = readValue(buffer, EnhancementLinkedRootsSet.class);
-            final EnhancementSet excludedProperties = readValue(buffer, EnhancementSet.class);
-            final SentinelAddToDistributionTickRepresentation firstTick = readValue(buffer, SentinelAddToDistributionTickRepresentation.class);
-            final SentinelAddToAggregationTickRepresentation secondTick = readValue(buffer, SentinelAddToAggregationTickRepresentation.class);
-            return new SentinelDomainTreeRepresentation(serialiser(), rootTypes, excludedProperties, firstTick, secondTick);
-        }
-    }
 }

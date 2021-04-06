@@ -63,15 +63,15 @@
             test('generation occurs during simple run', function (done) {
                 const old_postRun = centre._postRun;
                 
-                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {
-                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder);
+                centre._postRun = function (criteriaEntity, newBindingEntity, result) {
+                    old_postRun(criteriaEntity, newBindingEntity, result);
                     
-                    assert.strictEqual(resultEntities.length, 0, 'The count of resultant entities for the centre should be 0 (empty criteria). Page capacity is 30 for this centre.');
+                    assert.strictEqual(result.resultEntities.length, 0, 'The count of resultant entities for the centre should be 0 (empty criteria). Page capacity is 30 for this centre.');
                     
-                    centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {
-                        old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder);
+                    centre._postRun = function (criteriaEntity, newBindingEntity, result) {
+                        old_postRun(criteriaEntity, newBindingEntity, result);
                         
-                        assert.strictEqual(resultEntities.length, 10, 'The count of resultant entities for the centre should be 10 (DEMO single criterion). Page capacity is 30 for this centre.');
+                        assert.strictEqual(result.resultEntities.length, 10, 'The count of resultant entities for the centre should be 10 (DEMO single criterion). Page capacity is 30 for this centre.');
                         
                         centre._postRun = old_postRun;
                         done();
@@ -94,15 +94,15 @@
             test('generation does not occur during sorting run', function (done) {
                 const old_postRun = centre._postRun;
                 
-                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {
-                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder);
+                centre._postRun = function (criteriaEntity, newBindingEntity, result) {
+                    old_postRun(criteriaEntity, newBindingEntity, result);
                     
-                    assert.strictEqual(resultEntities.length, 0, 'The count of resultant entities for the centre should be 0 (empty criteria). Page capacity is 30 for this centre.');
+                    assert.strictEqual(result.resultEntities.length, 0, 'The count of resultant entities for the centre should be 0 (empty criteria). Page capacity is 30 for this centre.');
                     
-                    centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {
-                        old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder);
+                    centre._postRun = function (criteriaEntity, newBindingEntity, result) {
+                        old_postRun(criteriaEntity, newBindingEntity, result);
                         
-                        assert.strictEqual(resultEntities.length, 0, 'The count of resultant entities for the centre should be 0 (DEMO single criterion) after sorting. Page capacity is 30 for this centre.');
+                        assert.strictEqual(result.resultEntities.length, 0, 'The count of resultant entities for the centre should be 0 (DEMO single criterion) after sorting. Page capacity is 30 for this centre.');
                         
                         centre._postRun = old_postRun;
                         done();
@@ -125,15 +125,15 @@
             test('generation does not occur during page refresh', function (done) {
                 const old_postRun = centre._postRun;
                 
-                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {
-                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder);
+                centre._postRun = function (criteriaEntity, newBindingEntity, result) {
+                    old_postRun(criteriaEntity, newBindingEntity, result);
                     
-                    assert.strictEqual(resultEntities.length, 0, 'The count of resultant entities for the centre should be 0 (empty criteria). Page capacity is 30 for this centre.');
+                    assert.strictEqual(result.resultEntities.length, 0, 'The count of resultant entities for the centre should be 0 (empty criteria). Page capacity is 30 for this centre.');
                     
-                    centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {
-                        old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder);
+                    centre._postRun = function (criteriaEntity, newBindingEntity, result) {
+                        old_postRun(criteriaEntity, newBindingEntity, result);
                         
-                        assert.strictEqual(resultEntities.length, 0, 'The count of resultant entities for the centre should be 0 (DEMO single criterion) after page refresh. Page capacity is 30 for this centre.');
+                        assert.strictEqual(result.resultEntities.length, 0, 'The count of resultant entities for the centre should be 0 (DEMO single criterion) after page refresh. Page capacity is 30 for this centre.');
                         
                         centre._postRun = old_postRun;
                         done();
@@ -156,16 +156,16 @@
             test('generation does not occur during next page', function (done) {
                 const old_postRun = centre._postRun;
                 
-                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {
-                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder);
+                centre._postRun = function (criteriaEntity, newBindingEntity, result) {
+                    old_postRun(criteriaEntity, newBindingEntity, result);
                     
-                    assert.strictEqual(resultEntities.length, 30, 'The count of resultant entities for the centre should be 30 (triple A*,B*,C* multi criterion). Page capacity is 30 for this centre.');
+                    assert.strictEqual(result.resultEntities.length, 30, 'The count of resultant entities for the centre should be 30 (triple A*,B*,C* multi criterion). Page capacity is 30 for this centre.');
                     assert.strictEqual(centre.retrievedTotals.get('total_count_'), 45, 'The count of all entities for the centre should be 45 (triple A*,B*,C* multi criterion). Page capacity is 30 for this centre.');
                     
-                    centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {
-                        old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder);
+                    centre._postRun = function (criteriaEntity, newBindingEntity, result) {
+                        old_postRun(criteriaEntity, newBindingEntity, result);
                         
-                        assert.strictEqual(resultEntities.length, 15, 'The count of resultant entities for the centre should be 15 (DEMO single criterion) after next page. Page capacity is 30 for this centre.');
+                        assert.strictEqual(result.resultEntities.length, 15, 'The count of resultant entities for the centre should be 15 (DEMO single criterion) after next page. Page capacity is 30 for this centre.');
                         assert.strictEqual(centre.retrievedTotals.get('total_count_'), 45, 'The count of all entities for the centre should be 45 (DEMO single criterion) after next page. Page capacity is 30 for this centre.');
                         
                         centre._postRun = old_postRun;
@@ -189,8 +189,8 @@
             test('first run generation does not occur in case of generator exception', function (done) {
                 const old_postRun = centre._postRun;
                 
-                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {
-                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder);
+                centre._postRun = function (criteriaEntity, newBindingEntity, result) {
+                    old_postRun(criteriaEntity, newBindingEntity, result);
                     
                     assert.ok(criteriaEntity, 'Criteria entity should arrive from the server.');
                     assert.strictEqual(criteriaEntity.isValid(), true, 'Criteria entity should be valid.');
@@ -200,7 +200,7 @@
                     centre.async(function () {
                         assert.strictEqual(centre._selectedView, 0, 'The view should not be switched to EGI result-set.');
                         assert.strictEqual(centre._viewerDisabled, true, 'The viewer button should remain disabled after unsuccessful generation (first RUN).');
-                        assert.strictEqual(centre._runnerDisabled, false, 'The runner button should remain enabled after unsuccessful generation (first RUN).');
+                        assert.strictEqual(centre._buttonDisabled, false, 'The runner button should remain enabled after unsuccessful generation (first RUN).');
                         
                         done();
                     }, 200);
@@ -218,16 +218,16 @@
             test('consequent generation exceptions does not alter previous centre results and ability to interact with them', function (done) {
                 const old_postRun = centre._postRun;
                 
-                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {
-                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder);
+                centre._postRun = function (criteriaEntity, newBindingEntity, result) {
+                    old_postRun(criteriaEntity, newBindingEntity, result);
                     
-                    assert.strictEqual(resultEntities.length, 25, 'The count of resultant entities for the centre should be 25 after generation.');
+                    assert.strictEqual(result.resultEntities.length, 25, 'The count of resultant entities for the centre should be 25 after generation.');
                     
                     // go to selection criteria
                     centre._activateSelectionCriteriaView();
                     
-                    centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {
-                        old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder);
+                    centre._postRun = function (criteriaEntity, newBindingEntity, result) {
+                        old_postRun(criteriaEntity, newBindingEntity, result);
 
                         assert.ok(criteriaEntity, 'Criteria entity should arrive from the server.');
                         assert.strictEqual(criteriaEntity.isValid(), true, 'Criteria entity should be valid.');
@@ -237,23 +237,23 @@
                         centre.async(function () {
                             assert.strictEqual(centre._selectedView, 0, 'The view should not be switched to EGI result-set.');
                             assert.strictEqual(centre._viewerDisabled, false, 'The viewer button should remain enabled after unsuccessful generation (RUN after any successful RUN).');
-                            assert.strictEqual(centre._runnerDisabled, false, 'The runner button should remain enabled after unsuccessful generation (RUN after any successful RUN).');
+                            assert.strictEqual(centre._buttonDisabled, false, 'The runner button should remain enabled after unsuccessful generation (RUN after any successful RUN).');
                             assert.ok(centre.$.selection_criteria.staleCriteriaMessage, 'Criteria should be stale.');
                             
                             let firstTime = false;
                             
-                            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {
-                                old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder);
+                            centre._postRun = function (criteriaEntity, newBindingEntity, result) {
+                                old_postRun(criteriaEntity, newBindingEntity, result);
                                 
-                                assert.strictEqual(resultEntities.length, 25, 'The count of resultant entities for the centre should remain 25 after page refresh.');
+                                assert.strictEqual(result.resultEntities.length, 25, 'The count of resultant entities for the centre should remain 25 after page refresh.');
                                 
                                 // master opening and saving of its entity should perform well after generation exception on previous centre results
                                 if (firstTime === false) {
-                                    assert.strictEqual(resultEntities.length, 25, 'The count of resultant entities for the centre should be 25.');
-                                    const entity = resultEntities[0];
+                                    assert.strictEqual(result.resultEntities.length, 25, 'The count of resultant entities for the centre should be 25.');
+                                    const entity = result.resultEntities[0];
                                     
-                                    const editAction = centre.$.egi.$.primary_action_selector.assignedNodes()[0];
-                                    editAction.currentEntity = entity;
+                                    const editAction = centre.$.egi.$.primary_action_selector.assignedNodes()[0].actions[0];
+                                    editAction.currentEntity = () => entity;
                                     const value = editAction._run();
                                     
                                     editAction.postActionSuccess = function (potentiallySavedOrNewEntity) {
@@ -288,7 +288,7 @@
                                     
                                     firstTime = true;
                                 } else {
-                                    assert.strictEqual(resultEntities.length, 25, 'The count of refreshed entities for the centre should be 25.');
+                                    assert.strictEqual(result.resultEntities.length, 25, 'The count of refreshed entities for the centre should be 25.');
                                 }
                             }
                             

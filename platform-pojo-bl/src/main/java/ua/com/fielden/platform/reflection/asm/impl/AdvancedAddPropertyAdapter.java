@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
+import static org.apache.commons.lang3.RegExUtils.replaceAll;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.nextTypeName;
 
 import java.lang.annotation.Annotation;
@@ -48,6 +49,8 @@ public class AdvancedAddPropertyAdapter extends ClassVisitor implements Opcodes 
      */
     private String owner;
     private String enhancedName;
+    private Pattern patternQuotedOwner;
+    private String quotedEnhancedName;
 
     public AdvancedAddPropertyAdapter(final ClassVisitor cv, final Map<String, NewProperty> propertiesToAdd) {
         super(Opcodes.ASM5, cv);
@@ -62,7 +65,10 @@ public class AdvancedAddPropertyAdapter extends ClassVisitor implements Opcodes 
     @Override
     public void visit(final int version, final int access, final String name, final String signature, final String superName, final String[] interfaces) {
         owner = name;
+        patternQuotedOwner = Pattern.compile(Pattern.quote(owner + ";"));
         enhancedName = nextTypeName(name);
+        quotedEnhancedName = Matcher.quoteReplacement(enhancedName + ";");
+
         super.visit(version, access, enhancedName, signature, superName, interfaces);
     }
 
@@ -249,13 +255,11 @@ public class AdvancedAddPropertyAdapter extends ClassVisitor implements Opcodes 
      * Changes all the occurrences of <code>owner<code> with <code>enhancedName</code>.
      */
     private String fix(String signature) {
-
         if (signature != null) {
             if (signature.indexOf(owner + ";") != -1) {
-                signature = signature.replaceAll(Pattern.quote(owner + ";"), Matcher.quoteReplacement(enhancedName + ";"));
+                signature = replaceAll(signature, patternQuotedOwner, quotedEnhancedName);
             }
         }
-
         return signature;
     }
 

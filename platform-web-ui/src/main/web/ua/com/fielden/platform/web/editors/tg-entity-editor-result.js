@@ -57,12 +57,7 @@ const template = html`
             color: var(--paper-blue-50);
         }
 
-        .key-value {
-            font-size: small;
-            min-width: 100px;
-        }
-
-        paper-item:not(.iron-selected) span.key-value-highlighted {
+        paper-item:not(.iron-selected) span.value-highlighted {
             background-color: #ffff46;
         }
 
@@ -80,10 +75,8 @@ const template = html`
         }
 
         .additional-prop {
-            @apply --layout-horizontal;
             font-size: x-small;
             min-width: 150px;
-            white-space: normal;
             padding-left: 1em;
             padding-top: 0.5em;
             line-height: 15px;
@@ -225,7 +218,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
             },
 
             /**
-             * tap event handler for list of founded items (this event handler may accept tapped item if the list is sisngle selection).
+             * Tap event handler for list of found items (this event handler may accept tapped item if the list is single selection).
              */
             selectionListTap: {
                 type: Function
@@ -339,8 +332,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
      * Obtains a value of the specified by name property for the passed in entity.
      */
     _propValueByName (entity, propName) {
-        const propValue = this.reflector.convert(entity.get(propName));
-        return (propValue === null ? '' : propValue) + '';
+        return this.reflector.tg_toString(entity.get(propName), entity.type(), propName);
     }
 
     /**
@@ -370,7 +362,15 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                 // add key value with highlighting of matching parts
                 const descProp = 'desc';
                 const withDesc = this.additionalProperties.hasOwnProperty(descProp);
-                html = html + this._addHighlightedKeyProp(v, withDesc, searchQuery);
+                html = html + this._addHighlightedProp(
+                    true,
+                    searchQuery,
+                    '',
+                    '',
+                    v.key,
+                    () => this._propValueByName(v, 'desc'),
+                    withDesc === true
+                );
 
                 // add values for additional properties with highlighting of matching parts if required
                 for (let propName in this.additionalProperties) {
@@ -378,7 +378,15 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                     if (propName !== descProp && this.additionalProperties.hasOwnProperty(propName)) {
                         // should highlight?
                         const highlight = this.additionalProperties[propName];
-                        html = html + this._addHighlightedPropByName(v, propName, highlight, searchQuery);
+                        html = html + this._addHighlightedProp(
+                            highlight,
+                            searchQuery,
+                            'class="additional-prop" ',
+                            '<span class="prop-name"><span>' + this._propTitleByName(v, propName) + '</span>:</span>',
+                            this._propValueByName(v, propName),
+                            () => this._propValueByName(v, propName + '.desc'),
+                            this.reflector.isEntity(v.get(propName)) && typeof v.get(propName)['desc'] !== 'undefined'
+                        );
                     }
                 }
 
@@ -392,82 +400,47 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
         }.bind(this));
     }
 
-    _addHighlightedKeyProp (v, withDesc, searchQuery) {
-        let html = '<div style="white-space: nowrap">';
-
-        // let's first handle the key
-        let parts = matchedParts(v.key, searchQuery);
-        if (parts.length === 0) {
-            html = html + v.key;
-        } else {
-            for (let index = 0; index < parts.length; index++) {
-                const part = parts[index];
-                if (part.matched === true) {
-                    // addition style-scope and this.is (element name) styles is required to enformse custom style processing
-                    html = html +
-                        '<span class="key-value key-value-highlighted">' +
-                        part.part + '</span>';
-                } else {
-                    html = html + part.part;
-                }
-            }
-        }
-
-        if (withDesc === true) {
-            let propValueAsString = this._propValueByName(v, 'desc');
-            if (propValueAsString && propValueAsString !== 'null' && propValueAsString !== '') {
-                html = html + '<span style="color:#737373"> &ndash; <i>';
-                parts = matchedParts(propValueAsString, searchQuery);
-                if (parts.length === 0) {
-                    html = html + propValueAsString;
-                } else {
-                    for (let index = 0; index < parts.length; index++) {
-                        const part = parts[index];
-                        if (part.matched) {
-                            // addition style-scope and this.is (element name) styles is required to enformse custom style processing
-                            html = html + '<span class="key-value-highlighted">' + part.part + '</span>';
-                        } else {
-                            html = html + part.part;
-                        }
-                    }
-                }
-
-                html = html + '</i></span>';
+    /**
+     * Adds highlighted representation of property in form of '[prepender]key - desc'.
+     * 
+     * @param highlight - indicates whether the property should highlight its parts according to search query
+     * @param searchQuery - string representing the pattern to search values in autocompleter
+     * @param wrappingDivAttrs - string to define additional attributes for whole representation of property
+     * @param prependingDom - string to define additional DOM prepending to 'key - desc' part
+     * @param mainStringValue - value of key in 'key - desc' part of representation
+     * @param secondaryStringValue - function to compute value of desc in 'key - desc' part of representation
+     * @param secondaryStringValueRequired - parameter indicating whether desc in 'key - desc' part of representation is required
+     */
+    _addHighlightedProp (highlight, searchQuery, wrappingDivAttrs, prependingDom, mainStringValue, secondaryStringValue, secondaryStringValueRequired) {
+        let html = '<div ' + wrappingDivAttrs + 'style="white-space: nowrap;">' +
+            prependingDom +
+            this._highlightedValue(highlight, mainStringValue, searchQuery);
+        if (secondaryStringValueRequired) {
+            const propDesc = secondaryStringValue();
+            if (propDesc && propDesc !== 'null' && propDesc !== '') {
+                html = html + '<span style="color:#737373"> &ndash; <i>' +
+                    this._highlightedValue(highlight, propDesc, searchQuery) +
+                    '</i></span>';
             }
         }
         return html + '</div>';
     }
 
-    _addHighlightedPropByName (v, propName, highlight, searchQuery) {
-        var html = '<div class="additional-prop">';
-        // add prop title
-        html = html + '<span class="prop-name"><span>' + this._propTitleByName(v, propName) + '</span>:</span>';
-
-
-        // add prop value
-        const propValueAsString = this._propValueByName(v, propName);
+    /**
+     * Creates DOM representation of 'propValueAsString' highlighting matching parts using 'searchQuery' pattern (if 'highlight' is true).
+     */
+    _highlightedValue (highlight, propValueAsString, searchQuery) {
         if (highlight === false) {
-            html = html + propValueAsString;
+            return propValueAsString;
         } else {
-            // matched parts should be in a separate div
-            html = html + '<div style="white-space: nowrap;">';
-            let parts = matchedParts(propValueAsString, searchQuery);
-            for (let index = 0; index < parts.length; index++) {
-                let part = parts[index];
-                if (part.matched) {
-                    // addition style-scope and this.is (element name) styles is required to enformse custom style processing
-                    html = html +
-                        '<span class="key-value-highlighted">' + part.part + '</span>';
-                } else {
-                    html = html + part.part;
-                }
+            const parts = matchedParts(propValueAsString, searchQuery);
+            if (parts.length === 0) {
+                return propValueAsString;
+            } else {
+                return parts.reduce((html, part) => html + (part.matched === true ? '<span class="value-highlighted">' + part.part + '</span>' : part.part), '');
             }
-            html = html + '</div>';
         }
-
-        return html + '</div>';
     }
-
 
     /*********************************************************
      ****************** SELECTION HANDLERS *******************

@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.centre;
 
+import static java.util.Optional.empty;
 import static ua.com.fielden.platform.error.Result.failure;
 
 import java.util.LinkedHashSet;
@@ -42,7 +43,7 @@ public class CentreConfigLoadActionProducer extends AbstractFunctionalEntityForC
             entity.setCentreContextHolder(selectionCrit().centreContextHolder());
             
             // provide loadable configurations into the action
-            entity.setCentreConfigurations(new LinkedHashSet<>(selectionCrit().loadableCentreConfigs()));
+            entity.setCentreConfigurations(new LinkedHashSet<>(selectionCrit().loadableCentreConfigs().apply(empty())));
             
             if (entity.getCentreConfigurations().isEmpty()) {
                 throw failure(ERR_NO_CONFIGURATIONS_TO_LOAD);

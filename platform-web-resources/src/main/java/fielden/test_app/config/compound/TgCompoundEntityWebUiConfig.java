@@ -120,7 +120,7 @@ public class TgCompoundEntityWebUiConfig {
         final EntityActionConfig standardSortAction = CentreConfigActions.CUSTOMISE_COLUMNS_ACTION.mkAction();
 
         final EntityCentreConfig<TgCompoundEntity> ecc = EntityCentreBuilder.centreFor(TgCompoundEntity.class)
-                //.runAutomatically()
+                .runAutomatically()
                 .addFrontAction(newTgCompoundEntityAction).also()
                 .addFrontAction(locator)
                 .addTopAction(newTgCompoundEntityAction).also()

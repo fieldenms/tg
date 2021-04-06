@@ -91,7 +91,8 @@ Polymer({
 
     listeners: {
         'data-loaded-and-focused': '_handleDataLoaded',
-        'tg-error-happened': '_handleError'
+        'tg-error-happened': '_handleError',
+        'tg-view-loaded': '_handleViewLoaded'
     },
 
     ready: function () {
@@ -110,7 +111,7 @@ Polymer({
     _getElement: function (customAction) {
         const self = this;
         if (self._element) {
-            return Promise.resolve(self._element);
+            return Promise.resolve(this.loadDom());
         } else {
             self.$.elementLoader.import = customAction.componentUri;
             self.$.elementLoader.elementName = customAction.elementName;
@@ -120,19 +121,19 @@ Polymer({
     },
 
     focusView: function () {
-        if (this.activated === true && this._element && this._element.focusView) {
+        if (this.activated === true && this._element && this.wasLoaded() && this._element.focusView) {
             this._element.focusView();
         }
     },
 
     focusNextView: function (e) {
-        if (this.activated === true && this._element && this._element.focusNextView) {
+        if (this.activated === true && this._element && this.wasLoaded() && this._element.focusNextView) {
             this._element.focusNextView(e);
         }
     },
 
     focusPreviousView: function (e) {
-        if (this.activated === true && this._element && this._element.focusNextView) {
+        if (this.activated === true && this._element && this.wasLoaded() && this._element.focusNextView) {
             this._element.focusPreviousView(e);
         }
     },
@@ -159,9 +160,6 @@ Polymer({
                     self.activated = true;
                     self._element = element;
 
-                    if (self._element && typeof self._element.addOwnKeyBindings === 'function') {
-                        self._element.addOwnKeyBindings();
-                    }
 
                     var promise = customAction._onExecuted(null, element, null);
                     if (promise) {
@@ -190,6 +188,29 @@ Polymer({
         }
     },
 
+    wasLoaded: function() {
+        return this.$.elementLoader.wasLoaded && this._element.wasLoaded();
+    },
+
+    offloadDom: function () {
+        if (this.wasLoaded()) {
+            this._resetBlockingState();
+            this.$.elementLoader.offloadDom();
+        }
+    },
+
+    loadDom: function () {
+        return this.$.elementLoader.loadDom();
+    },
+
+    _handleViewLoaded: function () {
+        if (!this.offsetParent) { // offloads children from menu item section only if it is not visible
+            this.offloadDom();
+        } else if (this._element && typeof this._element.addOwnKeyBindings === 'function') {
+            this._element.addOwnKeyBindings();
+        }
+    },
+
     _handleDataLoaded: function () {
         this._hideBlockingPane();
     },
@@ -198,6 +219,7 @@ Polymer({
         if (this._blockingPaneCounter > 0) {
             this._errorMsg = e.detail;
             tearDownEvent(e);
+            this.fire('data-loaded-and-focused', null, { node: this.parentNode }); // propagate event further above to indicate that loading ended (dialog should hide its blocking pane)
         }
     },
 

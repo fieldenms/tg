@@ -49,7 +49,7 @@ public class UserSessionEstablishmentTestCase extends AbstractDaoTestCase {
         final SessionParams params = getInstance(SessionParams.class);
 
         assertEquals(params.crypto.calculateRFC2104HMAC(session.getAuthenticator().get().token, params.hashingKey), session.getAuthenticator().get().hash);
-        assertEquals(constants.now().plusMinutes(60 * 24 * 3), session.getAuthenticator().get().getExpiryTime());
+        assertEquals(constants.now().plusMinutes(60 * 24 * 3), session.getAuthenticator().get().getExpiryTime().get());
     }
 
     @Test
@@ -71,7 +71,7 @@ public class UserSessionEstablishmentTestCase extends AbstractDaoTestCase {
         final SessionParams params = getInstance(SessionParams.class);
 
         assertEquals(params.crypto.calculateRFC2104HMAC(session.getAuthenticator().get().token, params.hashingKey), session.getAuthenticator().get().hash);
-        assertEquals(constants.now().plusMinutes(5), session.getAuthenticator().get().getExpiryTime());
+        assertEquals(constants.now().plusMinutes(5), session.getAuthenticator().get().getExpiryTime().get());
     }
 
     @Test

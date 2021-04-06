@@ -6,13 +6,13 @@ import java.util.LinkedHashSet;
 
 import com.google.inject.Inject;
 
-import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModificationProducer;
 import ua.com.fielden.platform.entity.ICollectionModificationController;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.security.provider.ISecurityTokenNodeTransformation;
+import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.tokens.user.UserRoleTokensUpdater_CanExecute_Token;
 
 /**
@@ -29,10 +29,10 @@ public class UserRoleTokensUpdaterProducer extends AbstractFunctionalEntityForCo
     public UserRoleTokensUpdaterProducer(
             final EntityFactory factory, 
             final ICompanionObjectFinder companionFinder, 
-            final IApplicationSettings applicationSettings,
-            final ISecurityTokenNodeTransformation tokenTransformation) {
+            final ISecurityTokenNodeTransformation tokenTransformation,
+            final ISecurityTokenProvider securityTokenProvider) {
         super(factory, UserRoleTokensUpdater.class, companionFinder);
-        this.controller = new UserRoleTokensUpdaterController(factory, applicationSettings, co(UserRole.class), co$(UserRoleTokensUpdater.class), tokenTransformation);
+        this.controller = new UserRoleTokensUpdaterController(factory, co(UserRole.class), co$(UserRoleTokensUpdater.class), tokenTransformation, securityTokenProvider);
     }
     
     @Override

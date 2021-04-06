@@ -1,18 +1,15 @@
 package ua.com.fielden.platform.domaintree.centre.analyses.impl;
 
-import java.nio.ByteBuffer;
 import java.util.Set;
 
 import ua.com.fielden.platform.domaintree.centre.analyses.ILifecycleDomainTreeRepresentation;
-import ua.com.fielden.platform.domaintree.impl.EnhancementLinkedRootsSet;
-import ua.com.fielden.platform.domaintree.impl.EnhancementSet;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.Monitoring;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel.GroupingPeriods;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -28,18 +25,18 @@ public class LifecycleDomainTreeRepresentation extends AbstractAnalysisDomainTre
     /**
      * A <i>representation</i> constructor for the first time instantiation.
      * 
-     * @param serialiser
+     * @param entityFactory
      * @param rootTypes
      */
-    public LifecycleDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
-        this(serialiser, rootTypes, createSet(), new LifecycleAddToDistributionTickRepresentation(), new LifecycleAddToCategoriesTickRepresentation());
+    public LifecycleDomainTreeRepresentation(final EntityFactory entityFactory, final Set<Class<?>> rootTypes) {
+        this(entityFactory, rootTypes, createSet(), new LifecycleAddToDistributionTickRepresentation(), new LifecycleAddToCategoriesTickRepresentation());
     }
 
     /**
      * A <i>representation</i> constructor. Initialises also children references on itself.
      */
-    protected LifecycleDomainTreeRepresentation(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final LifecycleAddToDistributionTickRepresentation firstTick, final LifecycleAddToCategoriesTickRepresentation secondTick) {
-        super(serialiser, rootTypes, excludedProperties, firstTick, secondTick);
+    protected LifecycleDomainTreeRepresentation(final EntityFactory entityFactory, final Set<Class<?>> rootTypes, final Set<Pair<Class<?>, String>> excludedProperties, final LifecycleAddToDistributionTickRepresentation firstTick, final LifecycleAddToCategoriesTickRepresentation secondTick) {
+        super(entityFactory, rootTypes, excludedProperties, firstTick, secondTick);
     }
 
     @Override
@@ -151,24 +148,4 @@ public class LifecycleDomainTreeRepresentation extends AbstractAnalysisDomainTre
     public void provideMetaStateForLifecycleAnalysesDatePeriodProperties() {
     }
 
-    /**
-     * A specific Kryo serialiser for {@link LifecycleDomainTreeRepresentation}.
-     * 
-     * @author TG Team
-     * 
-     */
-    public static class LifecycleDomainTreeRepresentationSerialiser extends AbstractDomainTreeRepresentationSerialiser<LifecycleDomainTreeRepresentation> {
-        public LifecycleDomainTreeRepresentationSerialiser(final ISerialiser serialiser) {
-            super(serialiser);
-        }
-
-        @Override
-        public LifecycleDomainTreeRepresentation read(final ByteBuffer buffer) {
-            final EnhancementLinkedRootsSet rootTypes = readValue(buffer, EnhancementLinkedRootsSet.class);
-            final EnhancementSet excludedProperties = readValue(buffer, EnhancementSet.class);
-            final LifecycleAddToDistributionTickRepresentation firstTick = readValue(buffer, LifecycleAddToDistributionTickRepresentation.class);
-            final LifecycleAddToCategoriesTickRepresentation secondTick = readValue(buffer, LifecycleAddToCategoriesTickRepresentation.class);
-            return new LifecycleDomainTreeRepresentation(serialiser(), rootTypes, excludedProperties, firstTick, secondTick);
-        }
-    }
 }

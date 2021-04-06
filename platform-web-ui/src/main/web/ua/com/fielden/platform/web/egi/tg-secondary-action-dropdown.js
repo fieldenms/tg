@@ -40,11 +40,24 @@ Polymer({
         /**
          * The 'currentEntity' should contain the entity that was clicked (result-set actions)
          * or the entity on which primary / secondary action was chosen. In case when no of the above cases
-         * is invoking (for e.g. as in topLevel actions) -- 'currentEntity' should be empty.
+         * is invoking (for e.g. as in topLevel actions) -- 'currentEntity' should be empty or can be specified in some other way
+         * (via preAction for example).
          */
         currentEntity: {
-            type: Object,
+            type: Function,
+            value: function () {
+                return () => null;
+            },
+            /**
+             * This current entity observer is still needed even thou currentEntity is a function. It simplifies choosen entity management logic.
+             * Current entity function changes every time after another secondary action is pressed.
+             */
             observer: "_currentEntityChanged"
+        },
+
+        currentIndices: {
+            type: Array,
+            observer: "_currentIndicesChanged"
         },
 
         isSingle: {
@@ -75,8 +88,9 @@ Polymer({
         this._setSecondaryActions(actions);
     },
 
-    open: function(currentEntity, currentAction) {
+    open: function(currentEntity, currentIndices, currentAction) {
         this.currentEntity = currentEntity;
+        this.currentIndices = currentIndices;
         this.$.dropdown.positionTarget = currentAction;
         this.$.dropdown.open();
     },
@@ -85,12 +99,16 @@ Polymer({
         this.$.actions_selector.assignedNodes({flatten: true}).forEach( item => item.currentEntity = newValue);
     },
 
+    _currentIndicesChanged: function (newValue) {
+        this.$.actions_selector.assignedNodes({flatten: true}).forEach((item, index) => item.currentIndex = newValue[index]);
+    },
+
     _closeDropdown: function () {
         this.$.dropdown.close();
     },
 
     _dropdownOpened: function () {
-        this.$.actions_selector.assignedNodes({flatten: true}).forEach( item => item._updateSpinnerIfNeeded());
+        this.$.actions_selector.assignedNodes({flatten: true}).forEach( item => item.actions.forEach(action => action._updateSpinnerIfNeeded()));
     },
 
     _dropdownClosed: function() {

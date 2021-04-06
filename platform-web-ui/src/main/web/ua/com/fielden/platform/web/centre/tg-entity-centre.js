@@ -13,13 +13,14 @@ import '/resources/centre/tg-centre-result-view.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import { tearDownEvent, getRelativePos, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
 import '/resources/actions/tg-ui-action.js';
+import { TgElementSelectorBehavior, queryElements} from '/resources/components/tg-element-selector-behavior.js';
+import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 
 import '/resources/polymer/@polymer/iron-pages/iron-pages.js';
 import '/resources/polymer/@polymer/iron-ajax/iron-ajax.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
-import { TgElementSelectorBehavior, queryElements} from '/resources/components/tg-element-selector-behavior.js';
 
 const template = html`
     <style>
@@ -124,31 +125,35 @@ const template = html`
             /* Internet Explorer/Edge */
             user-select: none;
             /* Non-prefixed version, currently
-                                  supported by Chrome and Opera */
+               supported by Chrome and Opera */
+        }
+        tg-centre-result-view {
+            position: relative;
         }
     </style>
     <style include="paper-material-styles iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <tg-serialiser id="serialiser"></tg-serialiser>
 
-    <iron-ajax id="ajaxDiscarder" url="[[_url]]" method="PUT" handle-as="json" on-response="_processDiscarderResponse" on-error="_processDiscarderError"></iron-ajax>
+    <iron-ajax id="ajaxDiscarder" headers="[[_headers]]" url="[[_url]]" method="PUT" handle-as="json" on-response="_processDiscarderResponse" reject-with-request on-error="_processDiscarderError"></iron-ajax>
 
     <tg-confirmation-dialog id="confirmationDialog"></tg-confirmation-dialog>
 
     <iron-pages id="views" selected="[[_selectedView]]" on-iron-select="_pageSelectionChanged">
         <div class="fit layout vertical">
             <div class="paper-material selection-material layout vertical" elevation="1">
-                <tg-selection-view id="selectionView" _show-dialog="[[_showDialog]]" save-as-name="{{saveAsName}}" _create-context-holder="[[_createContextHolder]]" uuid="[[uuid]]" _confirm="[[_confirm]]" _create-action-object="[[_createActionObject]]">
+                <tg-selection-view id="selectionView" _show-dialog="[[_showDialog]]" save-as-name="{{saveAsName}}" _create-context-holder="[[_createContextHolder]]" uuid="[[uuid]]" _confirm="[[_confirm]]" _create-action-object="[[_createActionObject]]" _button-disabled="[[_buttonDisabled]]">
                     <slot name="custom-front-action" slot="custom-front-action"></slot>
+                    <slot name="custom-share-action" slot="custom-share-action"></slot>
                     <slot name="custom-selection-criteria" slot="custom-selection-criteria"></slot>
                     <tg-ui-action slot="left-selection-criteria-button" id="saveAction" shortcut="ctrl+s" ui-role='BUTTON' short-desc='Save' long-desc='Save configuration, Ctrl&nbsp+&nbsps'
                                     component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigSaveAction' element-name='tg-CentreConfigSaveAction-master' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]'
                                     attrs='[[bottomActions.0.attrs]]' pre-action='[[bottomActions.0.preAction]]' post-action-success='[[bottomActions.0.postActionSuccess]]' post-action-error='[[bottomActions.0.postActionError]]'
                                     require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false'
-                                    disabled='[[_saverDisabled]]' style$='[[_computeSaveButtonStyle(_saverDisabled)]]'></tg-ui-action>
-                    <paper-button slot="left-selection-criteria-button" id="discarder" raised shortcut="ctrl+r" roll="button" on-tap="discardAsync" disabled$="[[_discarderDisabled]]" tooltip-text="Discard the latest changes to selection criteria, which effectively returns configuration to the last saved state, Ctrl&nbsp+&nbspr">Discard</paper-button>
+                                    disabled='[[_computeSaveButtonDisabled(_buttonDisabled, _centreDirtyOrEdited)]]' style$='[[_computeSaveButtonStyle(_buttonDisabled, _centreDirtyOrEdited)]]'></tg-ui-action>
+                    <paper-button slot="left-selection-criteria-button" id="discarder" raised shortcut="ctrl+r" roll="button" on-tap="discardAsync" disabled$="[[_buttonDisabled]]" tooltip-text="Discards/refreshes the latest changes to selection criteria, which effectively returns configuration to the last saved state, Ctrl&nbsp+&nbspr">Discard</paper-button>
                     <paper-button slot="right-selection-criteria-button" id="view" raised shortcut="ctrl+e" roll="button" on-tap="_activateResultSetView" disabled$="[[_viewerDisabled]]" tooltip-text="Show result view, Ctrl&nbsp+&nbspe">View</paper-button>
-                    <paper-button slot="right-selection-criteria-button" id="runner" raised shortcut="f5" roll="button" on-tap="runAsync" style="margin-right: 0px;" disabled$="[[_runnerDisabled]]" tooltip-text="Execute entity centre and show result, F5">
-                        <paper-spinner id="spinner" active="[[_runnerDisabled]]" class="blue" style="visibility: 'hidden'" alt="in progress">
+                    <paper-button slot="right-selection-criteria-button" id="runner" raised shortcut="f5" roll="button" on-tap="runAsync" style="margin-right: 0px;" disabled$="[[_buttonDisabled]]" tooltip-text="Execute entity centre and show result, F5">
+                        <paper-spinner id="spinner" active="[[_buttonDisabled]]" class="blue" style="visibility: 'hidden'" alt="in progress">
                         </paper-spinner>
                         <span>Run</span>
                     </paper-button>
@@ -164,9 +169,9 @@ const template = html`
                 <div class="arrow-right" tooltip-text="Expand to default width" on-tap="_expandLeftInsertionPoint"></div>
             </div>
             <div id="centreInsertionPointContainer" class="insertion-point-slot layout vertical flex" style="min-width:0">
-                <slot name="top-insertion-point"></slot>
+                <slot id="topInsertionPointContent" name="top-insertion-point"></slot>
                 <slot id="customEgiSlot" name="custom-egi"></slot>
-                <slot id="bottomInsertionPointSlot" name="bottom-insertion-point"></slot>
+                <slot id="bottomInsertionPointContent" name="bottom-insertion-point"></slot>
             </div>
             <div id="rightSplitter" class="splitter" hidden$="[[!rightInsertionPointPresent]]" on-down="_makeCentreUnselectable" on-up="_makeCentreSelectable" on-track="_changeRightInsertionPointSize">
                 <div class="arrow-left" tooltip-text="Expand to default width" on-tap="_expandRightInsertionPoint"></div>
@@ -211,9 +216,8 @@ Polymer({
         },
         _processDiscarderResponse: Function,
         _processDiscarderError: Function,
-        _saverDisabled: Boolean,
-        _discarderDisabled: Boolean,
-        _runnerDisabled: Boolean,
+        _buttonDisabled: Boolean,
+        _centreDirtyOrEdited: Boolean,
         _viewerDisabled: Boolean,
         discard: Function,
         run: Function,
@@ -229,7 +233,26 @@ Polymer({
             type: String,
             observer: '_staleCriteriaMessageChanged'
         },
-        _confirm: Function
+        _confirm: Function,
+        
+        /**
+         * Additional headers for every 'iron-ajax' client-side requests. These only contain 
+         * our custom 'Time-Zone' header that indicates real time-zone for the client application.
+         * The time-zone then is to be assigned to threadlocal 'IDates.timeZone' to be able
+         * to compute 'Now' moment properly.
+         */
+        _headers: {
+            type: String,
+            value: _timeZoneHeader
+        },
+        /**
+         * Indicates whether some action on centre (run, save, discard, New, Load etc.) is currently in progress.
+         */
+        _actionInProgress: {
+            type: Boolean,
+            value: false,
+            notify: true
+        }
     },
 
     behaviors: [ IronResizableBehavior, TgFocusRestorationBehavior, TgElementSelectorBehavior ],
@@ -251,6 +274,13 @@ Polymer({
         self._createActionObject = function (entityType, createPreActionPromise) {
             return {
                 preAction: function (action) {
+                    if (!action.oldIsActionInProgressChanged) {
+                        action.oldIsActionInProgressChanged = action.isActionInProgressChanged.bind(action);
+                        action.isActionInProgressChanged = (newValue, oldValue) => {
+                            action.oldIsActionInProgressChanged(newValue, oldValue);
+                            self._actionInProgress = newValue; // enhance action's observer for isActionInProgress to set _actionInProgress to whole centre which controls disablement of all other buttons
+                        };
+                    }
                     action.modifyFunctionalEntity = function (bindingEntity, master, action) {
                         // bind custom object (if it is not empty) after every retrieval
                         self._bindCentreInfo(master._currEntity.get('customObject'));
@@ -444,6 +474,7 @@ Polymer({
             }
             this.focusSelectedView();
             tearDownEvent(event);
+            (this._selectedView === 0 ? this.$.selectionView: this.$.centreResultContainer).fire("tg-centre-page-was-selected");
         }
     },
 
@@ -481,13 +512,15 @@ Polymer({
             }
         } else if (!isMobileApp() && this._selectedView === 1) {
             const egi = this.$.customEgiSlot.assignedNodes({ flatten: true })[0];
-            const elementToFocus = this._getVisibleFocusableElementIn(egi);
-            // Element to focus is present only for grid representation of EGI. The card representation doesn't support focusing.
-            if (elementToFocus) {
-                elementToFocus.focus();
-                this.$.views.scrollTop = 0; // scrolls EGI to the top when changing selectionCrit -> EGI views or going to this centre from another centre / module
-            } else {
-                egi.keyEventTarget.focus();
+            if (!egi.isEditing()) {
+                const elementToFocus = this._getVisibleFocusableElementIn(egi);
+                // Element to focus is present only for grid representation of EGI. The card representation doesn't support focusing.
+                if (elementToFocus) {
+                    elementToFocus.focus();
+                    this.$.views.scrollTop = 0; // scrolls EGI to the top when changing selectionCrit -> EGI views or going to this centre from another centre / module
+                } else {
+                    egi.keyEventTarget.focus();
+                }
             }
         }
     },
@@ -532,7 +565,17 @@ Polymer({
         return this.$.confirmationDialog.showConfirmationDialog(message, buttons);
     },
 
-    _computeSaveButtonStyle: function (_saverDisabled) {
-        return 'width:70px;margin-right:8px;' + (_saverDisabled ? 'cursor:initial' : '');
+    /**
+     * SAVE button is disabled like any other button (DISCARD, RUN, Share, New ... Delete) or where (centre is not dirty (aka changed or default, link or inherited) and its editors not being edited). 
+     */
+    _computeSaveButtonDisabled: function (_buttonDisabled, _centreDirtyOrEdited) {
+        return _buttonDisabled || !_centreDirtyOrEdited;
+    },
+
+    /**
+     * SAVE button styles, that include standard non-hand cursor if disabled.
+     */
+    _computeSaveButtonStyle: function (_buttonDisabled, _centreDirtyOrEdited) {
+        return 'width:70px; margin-right:8px; ' + (this._computeSaveButtonDisabled(_buttonDisabled, _centreDirtyOrEdited) ? 'cursor:initial' : '');
     }
 });

@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.factories.webui;
 
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+
 import java.util.Optional;
 
 import org.restlet.Request;
@@ -21,8 +22,10 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.EntityCentre;
+import ua.com.fielden.platform.web.centre.ICentreConfigSharingModel;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.CriteriaEntityAutocompletionResource;
@@ -46,6 +49,8 @@ public class EntityAutocompletionResourceFactory extends Restlet {
     private final ICompanionObjectFinder companionFinder;
     private final IUserProvider userProvider;
     private final IDeviceProvider deviceProvider;
+    private final IDates dates;
+    private final ICentreConfigSharingModel sharingModel;
     
     /**
      * Instantiates a factory for entity autocompletion resources (for centres and masters).
@@ -62,6 +67,8 @@ public class EntityAutocompletionResourceFactory extends Restlet {
         this.companionFinder = injector.getInstance(ICompanionObjectFinder.class);
         this.userProvider = injector.getInstance(IUserProvider.class);
         this.deviceProvider = injector.getInstance(IDeviceProvider.class);
+        this.dates = injector.getInstance(IDates.class);
+        this.sharingModel = injector.getInstance(ICentreConfigSharingModel.class);
     }
 
     @Override
@@ -87,6 +94,7 @@ public class EntityAutocompletionResourceFactory extends Restlet {
                         companionFinder,
                         userProvider,
                         deviceProvider,
+                        dates,
                         critGenerator, 
                         factory, 
                         miType,
@@ -95,6 +103,7 @@ public class EntityAutocompletionResourceFactory extends Restlet {
                         centre,
                         restUtil,
                         domainTreeEnhancerCache,
+                        sharingModel,
                         getContext(),
                         request,
                         response //
@@ -120,6 +129,8 @@ public class EntityAutocompletionResourceFactory extends Restlet {
                         companionFinder,
                         restUtil,
                         deviceProvider,
+                        dates,
+                        master,
                         getContext(),
                         request,
                         response //

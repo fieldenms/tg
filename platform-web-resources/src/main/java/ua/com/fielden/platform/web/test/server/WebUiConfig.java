@@ -14,6 +14,8 @@ import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MAST
 import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.okCancel;
 import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.yesNo;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
+import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.editAction;
+import static ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfigBuilder.multiAction;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.multi;
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.single;
@@ -34,6 +36,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.function.Function;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -158,6 +161,7 @@ import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.layout.api.impl.FlexLayoutConfig;
 import ua.com.fielden.platform.web.layout.api.impl.LayoutComposer;
 import ua.com.fielden.platform.web.minijs.JsCode;
+import ua.com.fielden.platform.web.ref_hierarchy.ReferenceHierarchyWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.AbstractWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.SecurityMatrixWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.UserRoleWebUiConfig;
@@ -194,7 +198,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
     private final String envWatermarkCss;
 
     public WebUiConfig(final Properties props) {
-        super("TG Test and Demo Application", Workflows.valueOf(props.getProperty("workflow")), new String[0]);
+        super("TG Test and Demo Application", Workflows.valueOf(props.getProperty("workflow")), new String[0], Boolean.valueOf(props.getProperty("independent.time.zone")));
         if (StringUtils.isEmpty(props.getProperty("web.domain")) || StringUtils.isEmpty(props.getProperty("web.path"))) {
             throw new IllegalArgumentException("Both the domain name and application binding path should be specified.");
         }
@@ -981,6 +985,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 /*  */.addMenuItem("Entity Centre 2").description("Entity centre description").centre(entityCentre2).done()
                 /*  */.addMenuItem("Entity Centre 3").description("Entity centre description").centre(entityCentre3).done()
                 /*  */.addMenuItem("Entity Centre 4").description("Entity centre description").centre(entityCentre4).done()
+                /*  */.addMenuItem("Compound Entity Centre").description("Centre for compound entity.").centre(tgCompoundEntityWebUiConfig.centre).done()
                 /*  */.addMenuItem("Criteria Validation / Defining").description("Criteria Validation / Defining").centre(entityCentre5).done()
                 /*  */.addMenuItem("Collectional Serialisation Test").description("Collectional Serialisation Test description").centre(collectionalSerialisationTestCentre).done()
                 /*  */.addMenuItem("Third view").description("Third view description").view(null).done().done()
@@ -1394,6 +1399,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         longDesc("Start coninuous creatio of entities").
                         withNoParentCentreRefresh().
                         build())
+                .addGroupAction(ReferenceHierarchyWebUiConfig.mkAction())
                 .endTopActionsGroup().also().beginTopActionsGroup("group 2");
 
 
@@ -1591,7 +1597,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                   "['center-justified', 'start', mr, mr, mr, mr, mr, mrLast]," +
                                   "['center-justified', 'start', mr, mr, mr, mr, mr, mrLast]" +
                                   "]")
-                                  .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
+                                  .replace("mrLast", centreMrLast).replace("mr", centreMr)
                   )
                   .setLayoutFor(Device.TABLET, Optional.empty(),
                           ("[['center-justified', 'start', mr, mrLast]," +
@@ -1612,7 +1618,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                   "['center-justified', 'start', mr, mrLast]," +
                                   "['center-justified', 'start', mr, mrLast]," +
                                   "['center-justified', 'start', mr, mrLast]]")
-                                  .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
+                                  .replace("mrLast", centreMrLast).replace("mr", centreMr)
                   )
                   .setLayoutFor(Device.MOBILE, Optional.empty(),
                           ("[['center-justified', mrLast]," +
@@ -1653,7 +1659,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                   "['center-justified', 'start', mrLast]," +
                                   "['center-justified', 'start', mrLast]," +
                                   "['center-justified', 'start', mrLast]]")
-                                  .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
+                                  .replace("mrLast", centreMrLast).replace("mr", centreMr)
                   );
         } else {
             layoutConfig = afterAddCritConf
@@ -1666,7 +1672,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 "['center-justified', 'start', mr, mr, mrLast]," +
                                 "['center-justified', 'start', mrLast]" +
                                 "]")
-                                .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
+                                .replace("mrLast", centreMrLast).replace("mr", centreMr)
                 )
                 .setLayoutFor(Device.TABLET, Optional.empty(),
                         ("[['center-justified', 'start', mr, mrLast]," +
@@ -1676,7 +1682,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 "['center-justified', 'start', mr, mrLast]," +
                                 "['center-justified', 'start', mr, mrLast]," +
                                 "['center-justified', 'start', mr, mrLast]]")
-                                .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
+                                .replace("mrLast", centreMrLast).replace("mr", centreMr)
                 )
                 .setLayoutFor(Device.MOBILE, Optional.empty(),
                         ("[['center-justified', mrLast]," +
@@ -1695,7 +1701,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 "['center-justified', 'start', mrLast]," +
                                 "['center-justified', 'start', mrLast]," +
                                 "['center-justified', 'start', mrLast]]")
-                                .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
+                                .replace("mrLast", centreMrLast).replace("mr", centreMr)
                 );
         }
                 //.hideCheckboxes()
@@ -1710,8 +1716,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //.draggable()
                 .setPageCapacity(20)
                 //.setHeight("100%")
-                .setVisibleRowsCount(10)
-                //.fitToHeight()
+                //.setVisibleRowsCount(10)
+                .fitToHeight()
                 .addProp("this")
                     .order(2).asc()
                     .width(60);
@@ -1724,20 +1730,25 @@ public class WebUiConfig extends AbstractWebUiConfig {
         }
 
         IResultSetBuilder2Properties<TgPersistentEntityWithProperties> beforeAddProp = afterSummary.
-                withAction(EDIT_ACTION.mkAction(TgPersistentEntityWithProperties.class))
+                withAction(editAction().withContext(context().withCurrentEntity().withSelectionCrit().build())
+                        //.preAction(new EntityNavigationPreAction("Cool entity"))
+                        .icon("editor:mode-edit")
+                        .withStyle("color: green")
+                        .shortDesc("Edit entity")
+                        .longDesc("Opens master for editing this entity")
+                        .withNoParentCentreRefresh()
+                        .build())
                 .also()
-                .addProp("desc").
-                        order(1).asc().
-                        minWidth(200).
-                        withAction(action(TgFunctionalEntityWithCentreContext.class).
-                        withContext(context().withSelectedEntities().build()).
-                        icon("assignment-turned-in").
-                        shortDesc("Function 5").
-                        longDesc("Functional context-dependent action 5 (TgFunctionalEntityWithCentreContext)").
-                        build())
-
+                .addEditableProp("desc")
+                    .withAction(
+                        action(TgPersistentEntityWithProperties.class)
+                        .withContext(context().withCurrentEntity().build())
+                        .shortDesc("Edit (simple master)")
+                        .longDesc("Opens TgPersistentEntityWithProperties master for editing. No wrapping master (e.g. EntityEditAction / EntityNavigationMaster) is used around it.")
+                        .withNoParentCentreRefresh()
+                        .build()
+                    )
                 .also();
-
                 if (withCalculatedAndCustomProperties) {
                 beforeAddProp = beforeAddProp.addProp(mkProp("DR", "Defect Radio", String.class)).width(26).
                         withAction(action(TgStatusActivationFunctionalEntity.class).
@@ -1780,15 +1791,36 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         build())
                         .also();
                 }
-                final IWithSummary<TgPersistentEntityWithProperties> beforeSummaryConf = beforeAddProp.addProp("integerProp")
+                final IWithSummary<TgPersistentEntityWithProperties> beforeSummaryConf = beforeAddProp.addEditableProp("integerProp")
                     .minWidth(42)
                     .withTooltip("desc");
 
                     final IWithTooltip<TgPersistentEntityWithProperties> beforeSummaryConfForBigDecimalProp = (withCalculatedAndCustomProperties ? beforeSummaryConf.withSummary("sum_of_int", "SUM(integerProp)", "Sum of int. prop:Sum of integer property") : beforeSummaryConf)
                 .also()
-                .addProp("bigDecimalProp")
+                .addEditableProp("bigDecimalProp")
                     .minWidth(68);
-
+                    
+        final Function<String, EntityActionConfig> createDummyAction = colour -> action(TgDummyAction.class)
+            .withContext(context().withSelectedEntities().build())
+            .icon("accessibility")
+            .withStyle("color: " + colour)
+            .shortDesc("Dummy")
+            .longDesc("Dummy action, simply prints its result into console.")
+            .build();
+        final Function<String, EntityActionConfig> createFunctionalAction3 = colour -> action(TgFunctionalEntityWithCentreContext.class).
+            withContext(context().withSelectedEntities().build()).
+            icon("assignment-turned-in").
+            withStyle("color: " + colour).
+            shortDesc("Function 3").
+            longDesc("Functional context-dependent action 3 (TgFunctionalEntityWithCentreContext)").
+            build();
+        final Function<String, EntityActionConfig> createFunctionalAction4 = colour -> action(TgFunctionalEntityWithCentreContext.class).
+            withContext(context().withSelectionCrit().withSelectedEntities().build()).
+            icon("attachment").
+            withStyle("color: " + colour).
+            shortDesc("Function 4").
+            longDesc("Functional context-dependent action 4 (TgFunctionalEntityWithCentreContext)").
+            build();
         final IAlsoSecondaryAction<TgPersistentEntityWithProperties> beforeRenderingCustomiserConfiguration = (withCalculatedAndCustomProperties ?
                             beforeSummaryConfForBigDecimalProp
                                 .withSummary("max_of_dec", "MAX(bigDecimalProp)", "Max of decimal:Maximum of big decimal property")
@@ -1796,18 +1828,26 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 .withSummary("sum_of_dec", "sum(bigDecimalProp)", "Sum of decimal:Sum of big decimal property") :
                                 beforeSummaryConfForBigDecimalProp)
                 .also()
-                .addProp("entityProp").minWidth(40)
+                .addEditableProp("entityProp").asAutocompleter().withMatcher(ContextMatcher.class).minWidth(40)
+                    .withAction(editAction().withContext(context().withCurrentEntity().withSelectionCrit().build())
+                        //.preAction(new EntityNavigationPreAction("Cool entity"))
+                        .icon("editor:mode-edit")
+                        .withStyle("color: green")
+                        .shortDesc("Edit entity")
+                        .longDesc("Opens master for editing this entity")
+                        .withNoParentCentreRefresh()
+                        .build())
                 .also()
-                .addProp("booleanProp").minWidth(49)
+                .addEditableProp("booleanProp").minWidth(49)
                 .also()
-                .addProp("dateProp").minWidth(130)
+                .addEditableProp("dateProp").minWidth(130)
                 .also()
                 .addProp("compositeProp").minWidth(110)
                 .also()
                 .addProp("stringProp").minWidth(50).also()
-                .addProp("colourProp").width(40).also()
+                .addEditableProp("colourProp").width(40).also()
                 .addProp("numberOfAttachments").width(100).also()
-                .addProp("hyperlinkProp").minWidth(500)
+                .addEditableProp("hyperlinkProp").minWidth(500)
                 //                .setCollapsedCardLayoutFor(Device.DESKTOP, Optional.empty(),
                 //                        "["
                 //                                + "[['flex', 'select:property=this'],       ['flex', 'select:property=desc'],        ['flex', 'select:property=integerProp'], ['flex', 'select:property=bigDecimalProp']],"
@@ -1845,14 +1885,19 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //                .addProp(mkProp("Custom Prop", "Custom property with String type", String.class))
                 //                .also()
                 //                .addProp(mkProp("Custom Prop 2", "Custom property 2 with concrete value", "OK2"))
-
-                        .addPrimaryAction(action(EntityEditAction.class).withContext(context().withCurrentEntity().withSelectionCrit().build())
-                                .icon("editor:mode-edit")
-                                .withStyle("color: green")
-                                .shortDesc("Edit entity")
-                                .longDesc("Opens master for editing this entity")
-                                .withNoParentCentreRefresh()
-                                .build())
+                .addPrimaryAction(multiAction(PrimaryActionSelector.class)
+                    .addAction(EDIT_ACTION.mkActionWithIcon(TgPersistentEntityWithProperties.class, "editor:mode-edit", of("color:green")))
+                    .addAction(EDIT_ACTION.mkActionWithIcon(TgPersistentEntityWithProperties.class, "editor:mode-edit", of("color:orange")))
+                    .addAction(EDIT_ACTION.mkActionWithIcon(TgPersistentEntityWithProperties.class, "editor:mode-edit", of("color:red")))
+                    .build()
+                )
+//                .addPrimaryAction(action(EntityEditAction.class).withContext(context().withCurrentEntity().withSelectionCrit().build())
+//                        .icon("editor:mode-edit")
+//                        .withStyle("color: green")
+//                        .shortDesc("Edit entity")
+//                        .longDesc("Opens master for editing this entity")
+//                        .withNoParentCentreRefresh()
+//                        .build())
                 //                .addPrimaryAction(
                 //                        EntityActionConfig.createMasterInvocationActionConfig()
                 //EntityActionConfig.createMasterInDialogInvocationActionConfig()
@@ -1869,34 +1914,27 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         EntityActionConfig.createMasterInDialogInvocationActionConfig()
                 ).also()*/
                 .addSecondaryAction(
-                        action(TgDummyAction.class)
-                                .withContext(context().withSelectedEntities().build())
-                                .postActionSuccess(new PostActionSuccess(""
-                                        + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
-                                        ))
-                                .icon("accessibility")
-                                .withStyle("color: red")
-                                .shortDesc("Dummy")
-                                .longDesc("Dummy action, simply prints its result into console.")
-                                .build()
+                    multiAction(PrimaryActionSelector.class)
+                    .addAction(createDummyAction.apply("green"))
+                    .addAction(createDummyAction.apply("orange"))
+                    .addAction(createDummyAction.apply("red"))
+                    .build()
                 )
                 .also()
                 .addSecondaryAction(
-                        action(TgFunctionalEntityWithCentreContext.class).
-                                withContext(context().withSelectedEntities().build()).
-                                icon("assignment-turned-in").
-                                shortDesc("Function 3").
-                                longDesc("Functional context-dependent action 3 (TgFunctionalEntityWithCentreContext)").
-                                build()
+                    multiAction(PrimaryActionSelector.class)
+                    .addAction(createFunctionalAction3.apply("orange"))
+                    .addAction(createFunctionalAction3.apply("red"))
+                    .addAction(createFunctionalAction3.apply("green"))
+                    .build()
                 )
                 .also()
                 .addSecondaryAction(
-                        action(TgFunctionalEntityWithCentreContext.class).
-                                withContext(context().withSelectionCrit().withSelectedEntities().build()).
-                                icon("attachment").
-                                shortDesc("Function 4").
-                                longDesc("Functional context-dependent action 4 (TgFunctionalEntityWithCentreContext)").
-                                build()
+                    multiAction(PrimaryActionSelector.class)
+                    .addAction(createFunctionalAction4.apply("red"))
+                    .addAction(createFunctionalAction4.apply("green"))
+                    .addAction(createFunctionalAction4.apply("orange"))
+                    .build()
                 );
                 final IQueryEnhancerSetter<TgPersistentEntityWithProperties> beforeEnhancerConfiguration = (withCalculatedAndCustomProperties ? beforeRenderingCustomiserConfiguration.setCustomPropsValueAssignmentHandler(CustomPropsAssignmentHandler.class) : beforeRenderingCustomiserConfiguration)
                 .setRenderingCustomiser(TestRenderingCustomiser.class);
@@ -1907,7 +1945,6 @@ public class WebUiConfig extends AbstractWebUiConfig {
         } else {
             afterQueryEnhancerConf = beforeEnhancerConfiguration;//.setQueryEnhancer(TgPersistentEntityWithPropertiesQueryEnhancer.class, context().withCurrentEntity().build());
         }
-
 
         final ISummaryCardLayout<TgPersistentEntityWithProperties> scl = afterQueryEnhancerConf.setFetchProvider(EntityUtils.fetch(TgPersistentEntityWithProperties.class).with("status"))
                 .setSummaryCardLayoutFor(Device.DESKTOP, Optional.empty(), "['width:350px', [['flex', 'select:property=kount'], ['flex', 'select:property=sum_of_int']],[['flex', 'select:property=max_of_dec'],['flex', 'select:property=min_of_dec']], [['flex', 'select:property=sum_of_dec']]]")

@@ -1,6 +1,6 @@
 /**
- * The `tg-multi-criterion-config` contains just the DOM part of all non-single `tg-criterion`s -- 
- * 'Missing value' and 'Not' editors.
+ * The `tg-range-criterion-config` contains just the DOM part of all non-single `tg-criterion`s -- 
+ * 'Exclude From' and 'Exclude To' checkboxes.
  */
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';

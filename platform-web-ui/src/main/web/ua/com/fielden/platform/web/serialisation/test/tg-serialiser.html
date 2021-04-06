@@ -10,14 +10,11 @@
     <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
     <script src="/resources/filesaver/FileSaver.min.js"></script>
     <script src="/resources/polymer/wct-browser-legacy/browser.js"></script>
-  
-    <link rel="import" href="/resources/polymer/iron-ajax/iron-ajax.html">
-    <link rel="import" href="/resources/serialisation/tg-serialiser.html">
 </head>
 
 <body>
-    <iron-ajax id="entities_retriever" url="/test/serialisation" handle-as="json"></iron-ajax>
-    <iron-ajax id="entities_sender" url="/test/serialisation" method="POST" handle-as="json"></iron-ajax>
+    <iron-ajax id="entities_retriever" url="/test/serialisation" handle-as="json" reject-with-request></iron-ajax>
+    <iron-ajax id="entities_sender" url="/test/serialisation" method="POST" handle-as="json" reject-with-request></iron-ajax>
 
 	<tg-serialiser id="serialiser"></tg-serialiser>
 
@@ -25,6 +22,7 @@
 
         import '/resources/polymer/@polymer/iron-ajax/iron-ajax.js';
         import '/resources/serialisation/tg-serialiser.js';
+        import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 
 		suite('serialisation', function() {
 		    var serialiser, reflector;
@@ -112,16 +110,18 @@
             	restoredObj = serialiser.deserialise(serialiser.serialise(objToSerialise));
             	assert.deepEqual(restoredObj, objToSerialise, "object after serialisation-deserialisation process is not equal to ");
             	done();
-		    });
-		    
-		    test('works for client-server-client circle', function (done) {
-		    	console.warn('client-server-client start');
-	            var entityRetriever = document.querySelector('#entities_retriever');
-	            var entitySender = document.querySelector('#entities_sender');
-	            var serialiser = document.querySelector('#serialiser');
-	            var onError = function(e, detail, sender) {
-	            	console.warn('client-server-client error with done!');
-	            	assert.fail(null, null, "The error has happened.");
+            });
+            
+            test('works for client-server-client circle', function (done) {
+                console.warn('client-server-client start');
+                const entityRetriever = document.querySelector('#entities_retriever');
+                entityRetriever.headers = _timeZoneHeader();
+                const entitySender = document.querySelector('#entities_sender');
+                entitySender.headers = _timeZoneHeader();
+                const serialiser = document.querySelector('#serialiser');
+                var onError = function(e, detail, sender) {
+                	console.warn('client-server-client error with done!');
+                	assert.fail(null, null, "The error has happened.");
                 	done();
                 };
                 var find = function(entities, simpleTypeName) {

@@ -24,7 +24,7 @@ public class QryGroupsBuilder extends AbstractTokensBuilder {
         if (getChild() != null && getSize() == 0) {
             throw new RuntimeException("Unable to produce result - unfinished model state!");
         }
-        final List<GroupBy> groups = new ArrayList<GroupBy>();
+        final List<GroupBy> groups = new ArrayList<>();
         for (final Pair<TokenCategory, Object> pair : getTokens()) {
             groups.add((GroupBy) pair.getValue());
         }

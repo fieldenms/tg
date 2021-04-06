@@ -2,6 +2,8 @@ package ua.com.fielden.platform.web.centre.api.actions.impl;
 
 import org.apache.commons.lang.StringUtils;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.web.PrefDim;
@@ -28,8 +30,6 @@ import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.compound.Compound;
 
-import com.google.inject.Injector;
-
 public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntityActionBuilder<T>, IEntityActionBuilder0<T>, IEntityActionBuilder0WithViews<T>, IEntityActionBuilder1<T>, IEntityActionBuilder2<T>, IEntityActionBuilder3<T>, IEntityActionBuilder4<T>, IEntityActionBuilder4IconStyle<T>, IEntityActionBuilder5<T>, IEntityActionBuilder6<T>, IEntityActionBuilder7<T> {
     private Injector injector;
     private IWebUiBuilder builder;
@@ -44,7 +44,6 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
     private IPostAction successPostAction;
     private IPostAction errorPostAction;
     private PrefDim prefDimForView;
-    private boolean returnNoAction;
     private boolean shouldRefreshParentCentreAfterSave = true;
 
     /**
@@ -64,19 +63,19 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
      * @return
      */
     public static <T extends AbstractEntity<?>> IEntityActionBuilder0WithViews<T> action(final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity, final Injector injector, final IWebUiBuilder builder) {
-        final EntityActionBuilder<T> actionBuilder = new EntityActionBuilder<T>();
+        final EntityActionBuilder<T> actionBuilder = new EntityActionBuilder<>();
         actionBuilder.injector = injector;
         actionBuilder.builder = builder;
         return actionBuilder.addAction(functionalEntity);
     }
 
     /**
-     * Constructs entity action configuration that indicates the need to remove the default action if any.
+     * Starting point to entity edit action configuration.
      *
      * @return
      */
-    public static <T extends AbstractFunctionalEntityWithCentreContext<?>> IEntityActionBuilder7a<T> actionOff() {
-        return new EntityActionBuilder<T>().noAction();
+    public static <T extends AbstractEntity<?>> IEntityActionBuilder0<T> editAction() {
+        return new EntityActionBuilder<>();
     }
 
     private EntityActionBuilder() {
@@ -84,23 +83,19 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
 
     @Override
     public EntityActionConfig build() {
-        if (returnNoAction) {
-            return EntityActionConfig.createNoActionConfig();
-        } else {
-            return EntityActionConfig.createActionConfig(
-                    functionalEntity,
-                    context,
-                    icon,
-                    iconStyle,
-                    shortDesc,
-                    longDesc,
-                    shortcut,
-                    preAciton,
-                    successPostAction,
-                    errorPostAction,
-                    prefDimForView,
-                    shouldRefreshParentCentreAfterSave);
-        }
+        return EntityActionConfig.createActionConfig(
+            functionalEntity,
+            context,
+            icon,
+            iconStyle,
+            shortDesc,
+            longDesc,
+            shortcut,
+            preAciton,
+            successPostAction,
+            errorPostAction,
+            prefDimForView,
+            shouldRefreshParentCentreAfterSave);
     }
 
     @Override
@@ -196,12 +191,6 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
         }
 
         this.shortcut = shortcut;
-        return this;
-    }
-
-    @Override
-    public IEntityActionBuilder7a<T> noAction() {
-        this.returnNoAction = true;
         return this;
     }
 

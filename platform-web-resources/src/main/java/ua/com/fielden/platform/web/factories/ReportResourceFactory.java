@@ -13,6 +13,7 @@ import ua.com.fielden.platform.file_reports.IReportDaoFactory;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.ReportResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -32,6 +33,7 @@ public class ReportResourceFactory extends Restlet {
     private final Injector injector;
     private final IUserProvider userProvider;
     private final IDeviceProvider deviceProvider;
+    private final IDates dates;
 
     @Inject
     public ReportResourceFactory(final IReportDaoFactory reportFactory, final RestServerUtil serverUtil, final Injector injector) {
@@ -40,6 +42,7 @@ public class ReportResourceFactory extends Restlet {
         this.injector = injector;
         this.userProvider = injector.getInstance(IUserProvider.class);
         this.deviceProvider = injector.getInstance(IDeviceProvider.class);
+        this.dates = injector.getInstance(IDates.class);
     }
 
     @Override
@@ -53,7 +56,7 @@ public class ReportResourceFactory extends Restlet {
             final String username = (String) request.getAttributes().get("username");
             userProvider.setUsername(username, coUser);
 
-            new ReportResource(reportDaoFactory.createReportDao(), restServerUtil, deviceProvider, getContext(), request, response).handle();
+            new ReportResource(reportDaoFactory.createReportDao(), restServerUtil, deviceProvider, dates, getContext(), request, response).handle();
         }
     }
 

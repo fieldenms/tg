@@ -3,7 +3,6 @@ package ua.com.fielden.platform.utils;
 import java.util.Date;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeConstants;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
@@ -21,20 +20,16 @@ public final class StringConverter {
 
     private static final DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
 
-    public static final Date toDate(final String dateTime) {
-        return formatter.parseDateTime(dateTime).toDate();
+    public static final Date toDate(final String dateTime, final IDates dates) {
+        return toDateTime(dateTime, dates).toDate();
     }
 
-    public static final DateTime toDateTime(final String dateTime) {
-        return formatter.parseDateTime(dateTime);
+    public static final DateTime toDateTime(final String dateTime, final IDates dates) {
+        return formatter.withZone(dates.timeZone()).parseDateTime(dateTime);
     }
 
     public static final String toDayOfWeek(final DateTime dateTime) {
         return dateTime.dayOfWeek().getAsText();
-    }
-
-    public static final String toDayOfWeek(final Date dateTime) {
-        return toDayOfWeek(new DateTime(dateTime));
     }
 
     /**
@@ -51,7 +46,4 @@ public final class StringConverter {
         return new Money(amount);
     }
 
-    public static void main(final String[] args) {
-        System.out.println(toDayOfWeek(DateTimeConstants.SATURDAY));
-    }
 }

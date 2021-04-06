@@ -45,7 +45,7 @@ public class AbstractDomainTreeManagerTest extends AbstractDomainTreeTest {
     }
 
     protected static Object createDtm_for_AbstractDomainTreeManagerTest() {
-        return new DomainTreeManager1(serialiser(), createRootTypes_for_AbstractDomainTreeManagerTest());
+        return new DomainTreeManager1(factory(), createRootTypes_for_AbstractDomainTreeManagerTest());
     }
 
     protected static Object createIrrelevantDtm_for_AbstractDomainTreeManagerTest() {
@@ -53,7 +53,7 @@ public class AbstractDomainTreeManagerTest extends AbstractDomainTreeTest {
     }
 
     protected static Set<Class<?>> createRootTypes_for_AbstractDomainTreeManagerTest() {
-        final Set<Class<?>> rootTypes = new HashSet<Class<?>>(createRootTypes_for_AbstractDomainTreeTest());
+        final Set<Class<?>> rootTypes = new HashSet<>(createRootTypes_for_AbstractDomainTreeTest());
         return rootTypes;
     }
 
@@ -294,10 +294,6 @@ public class AbstractDomainTreeManagerTest extends AbstractDomainTreeTest {
 
         // next -- lightweight operation -- no loading will be performed
         assertEquals("The checked properties are incorrect.", Arrays.asList("mutablyCheckedProp", "checkedManuallyProp", "entityProp.mutablyCheckedProp", "entityProp.checkedManuallyProp", "entityProp.entityProp.mutablyCheckedProp", "entityProp.entityProp.checkedManuallyProp", "collection.mutablyCheckedProp", "collection.checkedManuallyProp", "entityProp.collection.mutablyCheckedProp", "entityProp.collection.checkedManuallyProp", "entityProp.collection.slaveEntityProp.mutablyCheckedProp", "entityProp.collection.slaveEntityProp.checkedManuallyProp").toString(), dtm().getFirstTick().checkedProperties(MasterEntity.class).toString());
-        // serialise and deserialise and then check the order of "checked properties"
-        final byte[] array = serialiser().serialise(dtm());
-        final IDomainTreeManager copy = serialiser().deserialise(array, IDomainTreeManager.class);
-        assertEquals("The checked properties are incorrect.", Arrays.asList("mutablyCheckedProp", "checkedManuallyProp", "entityProp.mutablyCheckedProp", "entityProp.checkedManuallyProp", "entityProp.entityProp.mutablyCheckedProp", "entityProp.entityProp.checkedManuallyProp", "collection.mutablyCheckedProp", "collection.checkedManuallyProp", "entityProp.collection.mutablyCheckedProp", "entityProp.collection.checkedManuallyProp", "entityProp.collection.slaveEntityProp.mutablyCheckedProp", "entityProp.collection.slaveEntityProp.checkedManuallyProp").toString(), copy.getFirstTick().checkedProperties(MasterEntity.class).toString());
         // simple lightweight example
         assertEquals("The checked properties are incorrect.", Collections.emptyList(), dtm().getFirstTick().checkedProperties(MasterEntityForIncludedPropertiesLogic.class));
     }
@@ -316,12 +312,6 @@ public class AbstractDomainTreeManagerTest extends AbstractDomainTreeTest {
 
         // next -- lightweight operation -- no loading will be performed
         assertEquals("The checked properties are incorrect.", Arrays.asList("mutablyCheckedProp", "checkedManuallyProp", "entityProp.checkedManuallyProp", "entityProp.entityProp.mutablyCheckedProp", "entityProp.entityProp.checkedManuallyProp", "collection.mutablyCheckedProp", "collection.checkedManuallyProp", "entityProp.collection.mutablyCheckedProp", "entityProp.collection.checkedManuallyProp", "entityProp.collection.slaveEntityProp.mutablyCheckedProp", "entityProp.collection.slaveEntityProp.checkedManuallyProp", "integerProp").toString(), dtm().getFirstTick().checkedProperties(MasterEntity.class).toString());
-
-        // serialise and deserialise and then check the order of "checked properties"
-        final byte[] array = serialiser().serialise(dtm());
-        final IDomainTreeManager copy = serialiser().deserialise(array, IDomainTreeManager.class);
-
-        assertEquals("The checked properties are incorrect.", Arrays.asList("mutablyCheckedProp", "checkedManuallyProp", "entityProp.checkedManuallyProp", "entityProp.entityProp.mutablyCheckedProp", "entityProp.entityProp.checkedManuallyProp", "collection.mutablyCheckedProp", "collection.checkedManuallyProp", "entityProp.collection.mutablyCheckedProp", "entityProp.collection.checkedManuallyProp", "entityProp.collection.slaveEntityProp.mutablyCheckedProp", "entityProp.collection.slaveEntityProp.checkedManuallyProp", "integerProp").toString(), copy.getFirstTick().checkedProperties(MasterEntity.class).toString());
     }
 
     @Test
@@ -343,11 +333,6 @@ public class AbstractDomainTreeManagerTest extends AbstractDomainTreeTest {
         assertEquals("The checked properties are incorrect.", Arrays.asList("entityProp.mutablyCheckedProp", "checkedManuallyProp", "entityProp.entityProp.mutablyCheckedProp", "mutablyCheckedProp", "entityProp.checkedManuallyProp", "entityProp.entityProp.checkedManuallyProp", "collection.mutablyCheckedProp", "collection.checkedManuallyProp", "entityProp.collection.mutablyCheckedProp", "entityProp.collection.checkedManuallyProp", "entityProp.collection.slaveEntityProp.mutablyCheckedProp", "entityProp.collection.slaveEntityProp.checkedManuallyProp").toString(), dtm().getFirstTick().checkedProperties(MasterEntity.class).toString());
         dtm().getFirstTick().swap(MasterEntity.class, "mutablyCheckedProp", "entityProp.checkedManuallyProp");
         assertEquals("The checked properties are incorrect.", Arrays.asList("entityProp.mutablyCheckedProp", "checkedManuallyProp", "entityProp.entityProp.mutablyCheckedProp", "entityProp.checkedManuallyProp", "mutablyCheckedProp", "entityProp.entityProp.checkedManuallyProp", "collection.mutablyCheckedProp", "collection.checkedManuallyProp", "entityProp.collection.mutablyCheckedProp", "entityProp.collection.checkedManuallyProp", "entityProp.collection.slaveEntityProp.mutablyCheckedProp", "entityProp.collection.slaveEntityProp.checkedManuallyProp").toString(), dtm().getFirstTick().checkedProperties(MasterEntity.class).toString());
-
-        // serialise and deserialise and then check the order of "checked properties"
-        final byte[] array = serialiser().serialise(dtm());
-        final IDomainTreeManager copy = serialiser().deserialise(array, IDomainTreeManager.class);
-        assertEquals("The checked properties are incorrect.", Arrays.asList("entityProp.mutablyCheckedProp", "checkedManuallyProp", "entityProp.entityProp.mutablyCheckedProp", "entityProp.checkedManuallyProp", "mutablyCheckedProp", "entityProp.entityProp.checkedManuallyProp", "collection.mutablyCheckedProp", "collection.checkedManuallyProp", "entityProp.collection.mutablyCheckedProp", "entityProp.collection.checkedManuallyProp", "entityProp.collection.slaveEntityProp.mutablyCheckedProp", "entityProp.collection.slaveEntityProp.checkedManuallyProp").toString(), copy.getFirstTick().checkedProperties(MasterEntity.class).toString());
     }
 
     @Test

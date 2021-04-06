@@ -37,12 +37,12 @@
                 const old_postRun = centre._postRun;
                 let deleteAction, newAction, testingPhase, keyEditor, descEditor;
 
-                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {
-                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder); 
+                centre._postRun = function (criteriaEntity, newBindingEntity, result) {
+                    old_postRun(criteriaEntity, newBindingEntity, result); 
 
                     if (testingPhase === 'zero') {
                         //First clear previous result for testing purposes
-                        if (resultEntities.length > 0) {
+                        if (result.resultEntities.length > 0) {
                             centre.$.egi.egiModel.forEach(entity => entity.selected = true);
                             deleteAction._run();
                             return;
@@ -50,10 +50,10 @@
                         testingPhase = 'first';
                         newAction._run();
                     } else if (testingPhase === 'second') {
-                        assert.strictEqual(resultEntities.length, 1, "The number of refreshed entities is incorrect should be 1 but wass: " + resultEntities.length + ".");
+                        assert.strictEqual(result.resultEntities.length, 1, "The number of refreshed entities is incorrect should be 1 but wass: " + result.resultEntities.length + ".");
                         newAction._run();
                     } else if (testingPhase === 'third') {
-                        assert.strictEqual(resultEntities.length, 2, "The number of refreshed entities is incorrect should be 2 but wass: " + resultEntities.length + ".");
+                        assert.strictEqual(result.resultEntities.length, 2, "The number of refreshed entities is incorrect should be 2 but wass: " + result.resultEntities.length + ".");
                         const entities = centre.$.egi.egiModel;
                         for (let index = 0; index < entities.length; index++) {
                             entities[index].selected = true;
@@ -61,7 +61,7 @@
                         testingPhase = 'finish';
                         deleteAction._run();
                     } else if (testingPhase === 'finish') {
-                        assert.strictEqual(resultEntities.length, 0, "The number of refreshed entities is incorrect should be 0 but wass: " + resultEntities.length + ".");
+                        assert.strictEqual(result.resultEntities.length, 0, "The number of refreshed entities is incorrect should be 0 but wass: " + result.resultEntities.length + ".");
                         centre._postRun = old_postRun;
                         done();
                     }

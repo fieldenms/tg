@@ -1,13 +1,12 @@
 package ua.com.fielden.platform.web.utils;
 
+import static java.lang.Class.forName;
 import static java.lang.String.format;
 import static java.util.Locale.getDefault;
 import static java.util.regex.Pattern.quote;
 import static org.apache.commons.lang.StringUtils.isEmpty;
-import static org.apache.commons.lang.StringUtils.uncapitalize;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY_NOT_ASSIGNED;
 import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -83,7 +82,6 @@ import ua.com.fielden.platform.utils.MiscUtilities;
 public class EntityResourceUtils {
     private static final String CONFLICT_WARNING = "This property has recently been changed by another user.";
     public static final String CENTRE_CONFIG_CONFLICT_WARNING = "Configuration with this title already exists.";
-    public static final String CENTRE_CONFIG_CONFLICT_ERROR = "Base " + uncapitalize(CENTRE_CONFIG_CONFLICT_WARNING);
     private static final String RESOLVE_CONFLICT_INSTRUCTION = "Please either edit the value back to [%s] to resolve the conflict or cancel all of your changes.";
     /**
      * Used to indicate the start of 'not found mock' serialisation sequence.
@@ -604,7 +602,7 @@ public class EntityResourceUtils {
                 if (reflectedValueId.isPresent()) {
                     logger.debug(format("ID-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s] reflectedValue [%s].", type.getSimpleName(), propertyName, entityPropertyType.getSimpleName(), reflectedValueId.get(), reflectedValue));
                     // regardless of whether entityPropertyType is composite or not, the entity should be retrieved by non-empty reflectedValueId that has been arrived from the client application
-                    return propertyCompanion.findById(reflectedValueId.get(), fetch);
+                    return propertyCompanion.findById(true, reflectedValueId.get(), fetch);
                 } else {
                     return findAndFetchBy(reflectedValueAsString, entityPropertyType, fetch, propertyCompanion);
                 }
@@ -630,6 +628,9 @@ public class EntityResourceUtils {
         } else if (EntityUtils.isString(propertyType)) {
             return reflectedValue;
         } else if (Integer.class.isAssignableFrom(propertyType)) {
+            if (reflectedValue instanceof Long || reflectedValue instanceof BigInteger) {
+                throw new IllegalStateException("Too big.");
+            }
             return reflectedValue;
         } else if (EntityUtils.isBoolean(propertyType)) {
             return reflectedValue;
@@ -683,6 +684,12 @@ public class EntityResourceUtils {
             return linkValue == null ? null : new Hyperlink(linkValue);
         } else if (Long.class.isAssignableFrom(propertyType)) {
             return extractLongValueFrom(reflectedValue);
+        } else if (Class.class.isAssignableFrom(propertyType)) {
+            try {
+                return forName((String) reflectedValue); // full class names for already registered server-side Class'es are supported
+            } catch (final Exception ex) {
+                throw new EntityResourceUtilsException(format("Conversion to [%s@%s] from reflected value [%s] of type [%s] failed.", propertyName, type.getSimpleName(), reflectedValue, propertyType.getSimpleName()), ex);
+            }
         } else {
             throw new UnsupportedOperationException(format("Unsupported conversion to [%s@%s] from reflected value [%s] of type [%s].", propertyName, type.getSimpleName(), reflectedValue, propertyType.getSimpleName()));
         }
@@ -703,13 +710,12 @@ public class EntityResourceUtils {
         if (isCompositeEntity(entityType)) {
             //logger.debug(format("KEY-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s] reflectedValue [%s].", type.getSimpleName(), propertyName, entityPropertyType.getSimpleName(), reflectedValueId, reflectedValue));
             final String compositeKeyAsString = MiscUtilities.prepare(prepSearchStringForCompositeKey(entityType, searchString));
-            final EntityResultQueryModel<AbstractEntity<?>> model = select(entityType).where().prop(KEY).iLike().val(compositeKeyAsString).model();
-            final fetch<AbstractEntity<?>> fetchModel = fetch;
-            final QueryExecutionModel<AbstractEntity<?>, EntityResultQueryModel<AbstractEntity<?>>> qem = from(model).with(fetchModel).model();
+            final EntityResultQueryModel<AbstractEntity<?>> model = select(entityType).where().prop(KEY).iLike().val(compositeKeyAsString).model().setFilterable(true);
+            final QueryExecutionModel<AbstractEntity<?>, EntityResultQueryModel<AbstractEntity<?>>> qem = from(model).with(fetch).model();
             try {
                 final AbstractEntity<?> converted = companion.getEntity(qem);
                 
-                return orElseFindByKey(converted, companion, fetchModel, compositeKeyAsString);
+                return orElseFindByKey(converted, companion, fetch, compositeKeyAsString);
             } catch (final UnexpectedNumberOfReturnedEntities e) {
                 return null;
             }
@@ -724,7 +730,7 @@ public class EntityResourceUtils {
             } else {
                 key = keys[0];
             }
-            return companion.findByKeyAndFetch(fetch, key);
+            return companion.findByKeyAndFetch(true, fetch, key);
         }
     }
 
@@ -743,7 +749,7 @@ public class EntityResourceUtils {
     private static AbstractEntity<?> orElseFindByKey(final AbstractEntity<?> converted, final IEntityDao<AbstractEntity<?>> propertyCompanion, final fetch<AbstractEntity<?>> fetchModel, final String compositeKeyAsString) {
         if (converted == null) {
             try {
-                return propertyCompanion.findByKeyAndFetch(fetchModel, compositeKeyAsString);
+                return propertyCompanion.findByKeyAndFetch(true, fetchModel, compositeKeyAsString);
             } catch (final Exception ex) {
                 // we can safely ignore any exceptions in this case
             }

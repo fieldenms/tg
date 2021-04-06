@@ -43,7 +43,7 @@ public class TopLevelEntityDaoStub implements ITopLevelEntity {
     }
 
     @Override
-    public TopLevelEntity findById(final Long id, final fetch<TopLevelEntity> fetchModel) {
+    public TopLevelEntity findById(final boolean filtered, final Long id, final fetch<TopLevelEntity> fetchModel) {
         return null;
     }
 
@@ -58,17 +58,7 @@ public class TopLevelEntityDaoStub implements ITopLevelEntity {
     }
 
     @Override
-    public TopLevelEntity findByKeyAndFetch(final fetch<TopLevelEntity> fetchModel, final Object... keyValues) {
-        return null;
-    }
-
-    @Override
-    public IPage<TopLevelEntity> firstPage(final int pageCapacity) {
-        return null;
-    }
-
-    @Override
-    public IPage<TopLevelEntity> getPage(final int pageNo, final int pageCapacity) {
+    public TopLevelEntity findByKeyAndFetch(final boolean filtered, final fetch<TopLevelEntity> fetchModel, final Object... keyValues) {
         return null;
     }
 
@@ -166,19 +156,19 @@ public class TopLevelEntityDaoStub implements ITopLevelEntity {
     }
 
     @Override
-    public Stream<TopLevelEntity> stream(QueryExecutionModel<TopLevelEntity, ?> qem, int fetchSize) {
+    public Stream<TopLevelEntity> stream(final QueryExecutionModel<TopLevelEntity, ?> qem, final int fetchSize) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public Stream<TopLevelEntity> stream(QueryExecutionModel<TopLevelEntity, ?> qem) {
+    public Stream<TopLevelEntity> stream(final QueryExecutionModel<TopLevelEntity, ?> qem) {
         // TODO Auto-generated method stub
         return null;
     }
 
 	@Override
-	public boolean exists(EntityResultQueryModel<TopLevelEntity> model, Map<String, Object> paramValues) {
+	public boolean exists(final EntityResultQueryModel<TopLevelEntity> model, final Map<String, Object> paramValues) {
 		// TODO Auto-generated method stub
 		return false;
 	}

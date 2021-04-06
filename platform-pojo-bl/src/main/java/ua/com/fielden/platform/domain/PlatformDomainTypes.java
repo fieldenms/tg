@@ -7,6 +7,12 @@ import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.attachment.AttachmentPreviewEntityAction;
 import ua.com.fielden.platform.attachment.AttachmentUploader;
 import ua.com.fielden.platform.attachment.AttachmentsUploadAction;
+import ua.com.fielden.platform.domain.metadata.DomainExplorer;
+import ua.com.fielden.platform.domain.metadata.DomainExplorerInsertionPoint;
+import ua.com.fielden.platform.domain.metadata.DomainProperty;
+import ua.com.fielden.platform.domain.metadata.DomainPropertyTreeEntity;
+import ua.com.fielden.platform.domain.metadata.DomainTreeEntity;
+import ua.com.fielden.platform.domain.metadata.DomainType;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.EntityDeleteAction;
 import ua.com.fielden.platform.entity.EntityEditAction;
@@ -22,6 +28,8 @@ import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarnings;
 import ua.com.fielden.platform.entity.functional.master.PropertyWarning;
 import ua.com.fielden.platform.keygen.KeyNumber;
+import ua.com.fielden.platform.master.MasterInfo;
+import ua.com.fielden.platform.menu.Action;
 import ua.com.fielden.platform.menu.CustomView;
 import ua.com.fielden.platform.menu.EntityCentreView;
 import ua.com.fielden.platform.menu.EntityMasterView;
@@ -34,6 +42,11 @@ import ua.com.fielden.platform.menu.WebMenuItemInvisibility;
 import ua.com.fielden.platform.migration.MigrationError;
 import ua.com.fielden.platform.migration.MigrationHistory;
 import ua.com.fielden.platform.migration.MigrationRun;
+import ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchy;
+import ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchyEntry;
+import ua.com.fielden.platform.ref_hierarchy.ReferenceLevelHierarchyEntry;
+import ua.com.fielden.platform.ref_hierarchy.ReferencedByLevelHierarchyEntry;
+import ua.com.fielden.platform.ref_hierarchy.TypeLevelHierarchyEntry;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.SecurityTokenInfo;
@@ -55,13 +68,14 @@ import ua.com.fielden.platform.web.centre.CentreConfigEditAction;
 import ua.com.fielden.platform.web.centre.CentreConfigLoadAction;
 import ua.com.fielden.platform.web.centre.CentreConfigNewAction;
 import ua.com.fielden.platform.web.centre.CentreConfigSaveAction;
+import ua.com.fielden.platform.web.centre.CentreConfigShareAction;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
 import ua.com.fielden.platform.web.centre.CustomisableColumn;
 import ua.com.fielden.platform.web.centre.LoadableCentreConfig;
 import ua.com.fielden.platform.web.centre.OverrideCentreConfig;
 
 public class PlatformDomainTypes {
-    public static final List<Class<? extends AbstractEntity<?>>> types = new ArrayList<Class<? extends AbstractEntity<?>>>();
+    public static final List<Class<? extends AbstractEntity<?>>> types = new ArrayList<>();
 
     static {
         types.add(MainMenuItem.class);
@@ -76,6 +90,7 @@ public class PlatformDomainTypes {
         types.add(CustomisableColumn.class);
         types.add(CentreColumnWidthConfigUpdater.class);
 
+        types.add(CentreConfigShareAction.class);
         types.add(CentreConfigNewAction.class);
         types.add(CentreConfigDuplicateAction.class);
         types.add(CentreConfigLoadAction.class);
@@ -121,6 +136,18 @@ public class PlatformDomainTypes {
         types.add(EntityNavigationAction.class);
         types.add(AttachmentPreviewEntityAction.class);
         types.add(BarCodeLocator.class);
-
+        types.add(MasterInfo.class);
+        types.add(ReferenceHierarchy.class);
+        types.add(ReferenceHierarchyEntry.class);
+        types.add(TypeLevelHierarchyEntry.class);
+        types.add(ReferencedByLevelHierarchyEntry.class);
+        types.add(ReferenceLevelHierarchyEntry.class);
+        types.add(Action.class);
+        types.add(DomainType.class);
+        types.add(DomainProperty.class);
+        types.add(DomainExplorer.class);
+        types.add(DomainExplorerInsertionPoint.class);
+        types.add(DomainTreeEntity.class);
+        types.add(DomainPropertyTreeEntity.class);
     }
 }

@@ -25,6 +25,7 @@ import '/resources/polymer/@polymer/neon-animation/animations/fade-in-animation.
 import '/resources/polymer/@polymer/neon-animation/animations/fade-out-animation.js';
 import '/resources/centre/tg-entity-centre-styles.js';
 import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
+import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
 
 const customStyle = html`
     <custom-style>
@@ -78,6 +79,9 @@ const customStyle = html`
                 top: 44px;
                 right: 0;
             }
+            #insertionPointContent #loadableContent {
+                z-index:0;
+            }
         </style>
     </custom-style>
 `;
@@ -87,7 +91,7 @@ document.head.appendChild(customStyle.content);
 const template = html`
     <style>
         :host {
-            @apply --layout-self-stretch;
+            @apply --layout-vertical;
             overflow: auto;
         }
         .truncate {
@@ -125,11 +129,16 @@ const template = html`
         .paper-material {
             background: white;
             border-radius: 2px;
-            margin: 10px;
+        }
+        #loadableContent {
+            z-index:0;
+        }
+        [flexible] {
+            flex-grow: 1;
         }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning tg-entity-centre-styles paper-material-styles"></style>
-    <div id="pm" hidden$="[[detachedView]]" class="paper-material layout vertical" elevation="1">
+    <div id="pm" hidden$="[[detachedView]]" class="paper-material layout vertical" elevation="1" flexible$="[[flexible]]">
         <div hidden>
             <slot name="insertion-point-child" id="custom_actions_content"></slot>
         </div>
@@ -161,6 +170,25 @@ Polymer({
     ],
 
     properties: {
+        /**
+         * Indicates whether insertion point fits all visible are or not.
+         */
+        flexible: {
+            type: Boolean,
+            value: false,
+            observer: "_flexibilityChanged"
+        },
+        
+        /**
+         * Indicates whether to hide margins around insertion point.
+         * This is typically needed for the case where there is only one flexible insertion point and EGI is hidden.
+         */
+        hideMargins: {
+            type: Boolean,
+            value: false,
+            observer: "_hideMarginsChanged"
+        },
+        
         activated: {
             type: Boolean,
             value: false
@@ -244,7 +272,8 @@ Polymer({
         },
 
         contextRetriever: {
-            type: Function
+            type: Function,
+            observer: "_updateElementWithContextRetriever"
         },
 
         _element: {
@@ -386,6 +415,30 @@ Polymer({
         }
     },
 
+    _updateElementWithContextRetriever: function (newValue, oldValue) {
+        if (this._element) {
+            this._element.contextRetriever = newValue;
+        }
+    },
+
+    _flexibilityChanged: function (newValue, oldValue) {
+        if (newValue) {
+            this.style["flex-grow"] = "1";
+            this.parentElement.style["flex-grow"] = "1";
+        } else {
+            this.style.removeProperty("flex-grow");
+            this.parentElement.style.removeProperty("flex-grow");
+        }
+    },
+
+    _hideMarginsChanged: function (newValue, oldValue) {
+        if (newValue) {
+            this.$.pm.style.removeProperty("margin");
+        } else {
+            this.$.pm.style["margin"] = "10px";
+        }
+    },
+
     /**
      * customAction -- an action that was actioned by user and may require showing a diglog (e.g. with master)
      */
@@ -405,6 +458,7 @@ Polymer({
                     self._element = element;
                     self._element.selectionCriteriaEntity = self.selectionCriteriaEntity;
                     self._element.isCentreRunning = self.isCentreRunning;
+                    self._element.contextRetriever = self.contextRetriever;
                     self._element.addEventListener('retrieved-entities-changed', function (ev) {
                         self.retrievedEntities = this.retrievedEntities;
                     });
@@ -439,11 +493,12 @@ Polymer({
                     console.error(error);
                     self.$.toaster.text = 'There was an error displaying view ' + customAction.elementName;
                     self.$.toaster.hasMore = true;
-                    self.$.toaster.msgText = 'There was an error displaying the view.<br><br> \
-                                                      <b>Error cause:</b><br>' + error.message;
+                    self.$.toaster.msgText = `There was an error displaying the view.<br><br>` +
+                                              `<b>Error cause:</b><br>${error.message}`;
                     self.$.toaster.showProgress = false;
                     self.$.toaster.isCritical = true;
                     self.$.toaster.show();
+                    throw new UnreportableError(error);
                 });
         }
     },

@@ -210,7 +210,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
 
     @Override
     public Pair<TokenCategory, Object> getResult() {
-        return new Pair<TokenCategory, Object>(CONDITION, getResultantCondition());
+        return new Pair<>(CONDITION, getResultantCondition());
     }
 
     private ICondition getPlainQuantifiedTest() {

@@ -10,6 +10,7 @@ import '/resources/components/tg-scrollable-component.js';
 import '/resources/components/tg-confirmation-dialog.js';
 import '/resources/validation/tg-entity-validator.js';
 import '/resources/binding/tg-entity-binder.js';
+import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 
 const template = html`
     <style>
@@ -39,17 +40,21 @@ const template = html`
         process-error="[[_processError]]">
     </tg-entity-validator>
     <iron-ajax id="ajaxRetriever"
+        headers="[[_headers]]"
         url="[[_url]]"
         method="PUT"
         handle-as="json"
         on-response="_processRetrieverResponse"
+        reject-with-request
         on-error="_processRetrieverError">
     </iron-ajax>
     <iron-ajax id="ajaxSaver"
+        headers="[[_headers]]"
         url="[[_url]]"
         method="POST"
         handle-as="json"
         on-response="_processSaverResponse"
+        reject-with-request
         on-error="_processSaverError"
         loading="{{_saverLoading}}">
     </iron-ajax>
@@ -105,6 +110,17 @@ Polymer({
         _url: {
             type: String,
             computed: '_computeUrl(entityType, entityId)'
+        },
+        
+        /**
+         * Additional headers for every 'iron-ajax' client-side requests. These only contain 
+         * our custom 'Time-Zone' header that indicates real time-zone for the client application.
+         * The time-zone then is to be assigned to threadlocal 'IDates.timeZone' to be able
+         * to compute 'Now' moment properly.
+         */
+        _headers: {
+            type: String,
+            value: _timeZoneHeader
         }
     },
 
@@ -132,7 +148,7 @@ Polymer({
     },
 
     _masterLoaded: function (_bodyLoaded, _actionBarLoaded) {
-        this.fire('tg-entity-master-content-loaded', this);
+        _bodyLoaded && _actionBarLoaded && this.fire('tg-entity-master-content-loaded', this);
     },
 
     /**

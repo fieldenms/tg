@@ -113,23 +113,25 @@ const TgChartDeckerTemplateBehaviorImpl = {
         if (typeof entity.get(property) === 'number') {
             if (type === 'BigDecimal') {
                 const metaProp = this._reflector().getEntityTypeProp(entity, property);
-                return this._reflector().formatDecimal(value, this.appConfig.locale, metaProp && metaProp.scale(), metaProp && metaProp.trailingZeros());
+                return this._reflector().tg_formatDecimal(value, this.appConfig.locale, metaProp && metaProp.scale(), metaProp && metaProp.trailingZeros());
             } else {
-                return this._reflector().formatNumber(value, this.appConfig.locale);
+                return this._reflector().tg_formatInteger(value, this.appConfig.locale);
             }
         } else if (type === 'Money') {
             const metaProp = this._reflector().getEntityTypeProp(entity, property);
-            return this._reflector().formatMoney(value, this.appConfig.locale, metaProp && metaProp.scale(), metaProp && metaProp.trailingZeros());
+            return this._reflector().tg_formatMoney(value, this.appConfig.locale, metaProp && metaProp.scale(), metaProp && metaProp.trailingZeros());
         }
     },
 
-    _tooltip: function (entity, groupProperty, valuePropertyName, propertyType, valuePropTitle, deckIndex, actionIndex) {
+    _tooltip: function (entity, groupProperty, groupDescProp, valuePropertyName, propertyType, valuePropTitle, deckIndex, actionIndex) {
         const valueTooltip = this._getValue(entity, valuePropertyName, propertyType);
         const groupTooltip = typeof groupProperty === 'function' ? groupProperty(entity) : entity.get(groupProperty);
+        const groupDescTooltip = typeof groupDescProp === 'function' ? groupDescProp(entity) : entity.get(groupDescProp);
         const action = this.actions.find(a => a.getAttribute("deck-index") === deckIndex + "" && a.getAttribute("action-index") === actionIndex + "");
         const actionTooltip = action ? generateActionTooltip(action) : "";
         let tooltip = valueTooltip ? "<b>" + valueTooltip + "</b>" : "";
         tooltip += (groupTooltip && tooltip && "<br>") + groupTooltip;
+        tooltip += (groupDescTooltip && tooltip && "<br>") + groupDescTooltip;
         tooltip += (valuePropTitle && tooltip && "<br>") + valuePropTitle;
         tooltip += (actionTooltip && tooltip && "<br><br>") + actionTooltip;
         return tooltip;
@@ -139,7 +141,7 @@ const TgChartDeckerTemplateBehaviorImpl = {
         return function (entity, idx) {
             const action = this.actions.find(a => a.getAttribute("deck-index") === deckIndex + "" && a.getAttribute("action-index") === idx + "");
             if (action) {
-                action.currentEntity = entity;
+                action.currentEntity = () => entity;
                 action._run();
             }
         }.bind(this);

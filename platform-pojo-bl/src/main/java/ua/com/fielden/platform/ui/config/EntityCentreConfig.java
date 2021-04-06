@@ -3,6 +3,7 @@ package ua.com.fielden.platform.ui.config;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
+import ua.com.fielden.platform.entity.annotation.DenyIntrospection;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
@@ -42,6 +43,7 @@ import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 @CompanionObject(IEntityCentreConfig.class)
 @MapEntityTo("ENTITY_CENTRE_CONFIG")
 @DescTitle("Description")
+@DenyIntrospection
 public class EntityCentreConfig extends AbstractConfiguration<DynamicEntityKey> {
 
     @IsProperty
@@ -71,6 +73,21 @@ public class EntityCentreConfig extends AbstractConfiguration<DynamicEntityKey> 
     @Title(value = "Is preferred?", desc = "Indicates whether this configuration is preferred over the others on the same menu item")
     @MapTo
     private boolean preferred = false;
+
+    @IsProperty
+    @MapTo
+    @Title(value = "Config UUID", desc = "UUID of centre configuration [represented by this EntityCentreConfig instance] for the user that created it (SAVED or FRESH surrogate kind) or other users with which it was shared / based-on (FRESH surrogate kind only).")
+    private String configUuid;
+
+    @Observable
+    public EntityCentreConfig setConfigUuid(final String configUuid) {
+        this.configUuid = configUuid;
+        return this;
+    }
+
+    public String getConfigUuid() {
+        return configUuid;
+    }
 
     public boolean isPreferred() {
         return preferred;
@@ -120,6 +137,12 @@ public class EntityCentreConfig extends AbstractConfiguration<DynamicEntityKey> 
     public EntityCentreConfig setTitle(final String title) {
         this.title = title;
         return this;
+    }
+
+    @Override
+    @Observable
+    public EntityCentreConfig setConfigBody(final byte[] configBody) {
+        return (EntityCentreConfig) super.setConfigBody(configBody);
     }
 
 }

@@ -34,6 +34,16 @@ const value = (obj, data, value) => {
     }
 };
 
+const copyMatrix = function(from, to) {
+    to.a = from.a;
+    to.b = from.b;
+    to.c = from.c;
+    to.d = from.d;
+    to.e = from.e;
+    to.f = from.f;
+    return to;
+}
+
 /**
  * Fires the select event for provided entity and select parameter.
  */
@@ -184,7 +194,7 @@ class BarChart {
                 this._barContainer.attr("transform", "translate(0, " + this._currentTransform.y + ")scale(1, " + this._currentTransform.k + ")");
                 this._unscale();
             });
-        this._chartArea.call(this._zoom).on("dblclick.zoom", null);
+        this._chartArea.call(this._zoom).on("dblclick.zoom", null).on("wheel", function() { d3.event.altKey && d3.event.preventDefault(); });
     }
 
     repaint(resetState) {
@@ -226,13 +236,14 @@ class BarChart {
         this._chartLabel.call(this._setChartLabelData.bind(this));
         this._xAxisLabel.call(this._setXAxisLabelData.bind(this));
         this._yAxisLabel.call(this._setYAxisLabelData.bind(this));
+
         // Update bars.
         this._drawBars();
         //update lines
         this._drawLines();
         //update markers after bars
         this._drawBarLabels();
-        //Update zoom behavior 
+        //Update zoom behavior
         this._zoom.translateExtent([[0, 0], [0, this._actualHeight]])
             .extent([[0, 0], [0, this._actualHeight]]);
         //Unscale nodes
@@ -618,7 +629,6 @@ class BarChart {
                 newData.push({data: elem, idx: -1});
             }
         });
-        
         const updateSelection = self._markerContainer.selectAll(".marker").data(newData);
         const insertSelection = updateSelection.enter();
         const removeSelection = updateSelection.exit();
@@ -635,17 +645,9 @@ class BarChart {
         const self = this;
         const markerGroup = selection.append("g")
             .attr("class", "marker");
-        markerGroup.append("rect").attr("class", "mark-rect");
         markerGroup.append("text").attr("class", "mark-text").style("text-anchor", "middle");
         //Observing style and class changes
         markerGroup.each(function () {
-            const group = d3.select(this);
-            const observer = new MutationObserver(mutations => self._updateMarkerPosition(group.select(".mark-rect"), group.select(".mark-text")));
-            observer.observe(this, {
-                attributes: true,
-                subtree: true,
-                attributeFilter: ["class", "style"]
-            });
             //Add to unsclable node in order to prevent zooming
             self._elemToUnscale.push(this);
         });
@@ -663,7 +665,6 @@ class BarChart {
             return "translate(" + translateX + ", " + (this._ys(newY) + increment) + ")";
         }).attr("selected", d => this._isEntityGroupSelected(d) ? "" : null);
         selection.each(function (d) {
-            let rect = d3.select(this).select(".mark-rect");
             let text = d3.select(this).select(".mark-text").style("alignment-baseline", d => {
                 const newY = self._calculateNewMarkerY(d);
                 if (newY < 0) {
@@ -671,8 +672,7 @@ class BarChart {
                 }
                 return "auto";
             }).text(d => self._options.barLabel(d.data, d.idx));
-            d3.select(this).style("display", !!text.text() ? "auto" : "none");
-            self._updateMarkerPosition(rect, text);
+            d3.select(this).style("display", !!text.text() ? "initial" : "none");
         });
     }
     
@@ -700,17 +700,6 @@ class BarChart {
             newY = newYValues.filter(predicate).reduce((a, b) => a + b, 0);
         }
         return newY;
-    }
-
-    _updateMarkerPosition(rect, text) {
-        if (!!text.text()) {
-            let textBox = text.node().getBBox();
-            if (textBox.width !== 0 && textBox.height !== 0) {
-                rect.attr("x", textBox.x - 5).attr("y", textBox.y - 1).attr("width", textBox.width + 10).attr("height", textBox.height + 2);
-            } else {
-                setTimeout(() => this._updateMarkerPosition(rect, text), 100);
-            }
-        }
     }
 
     _isEntitySelected(entity) {
@@ -772,8 +761,9 @@ class BarChart {
 
     _unscale() {
         const elementsToRemove = [];
+        const m = this._chartArea.node().getTransformToElement(this._markerContainer.node());
         this._elemToUnscale.forEach(el => {
-            const elementToRemove = this._unscaleElement(el);
+            const elementToRemove = this._unscaleElement(el, m);
             if (elementToRemove) {
                 elementsToRemove.push(el);
             }
@@ -786,7 +776,7 @@ class BarChart {
         });
     }
 
-    _unscaleElement(el) {
+    _unscaleElement(el, m) {
         const dataValue = this._calculateNewMarkerY(d3.select(el).datum());
         const translationFromTopOfBar = dataValue < 0 ? -10 : 10;
         if (el.parentElement) {
@@ -799,10 +789,10 @@ class BarChart {
             } else {
                 xf = el.transform.baseVal[1];
             }
-            let m = this._chartArea.node().getTransformToElement(el.parentNode);
-            m.e = 0; // Ignore (preserve) any translations done up to this point
-            m.f = translationFromTopOfBar * (1 - m.d);
-            xf.setMatrix(m);
+            const copyM = copyMatrix(m, this._chartArea.node().ownerSVGElement.createSVGMatrix());
+            copyM.e = 0; // Ignore (preserve) any translations done up to this point
+            copyM.f = translationFromTopOfBar * (1 - m.d);
+            xf.setMatrix(copyM);
         } else {
             return el;
         }

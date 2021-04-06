@@ -165,8 +165,8 @@ Polymer({
 
     selectNext: function () {
         var selector = this.$.selector;
-        if (isNaN(selector.selected)) {
-            this.selectFirstVisisble();
+        if (!this.getSelectedMenuItemPath()) {
+            this.selectFirstVisible();
         } else {
             selector.selectNext();
         }
@@ -175,15 +175,15 @@ Polymer({
 
     selectPrev: function () {
         var selector = this.$.selector;
-        if (isNaN(selector.selected)) {
-            this.selectLastVisisble();
+        if (!this.getSelectedMenuItemPath()) {
+            this.selectLastVisible();
         } else {
             selector.selectPrevious();
         }
         this._scrollToSelected();
     },
 
-    selectFirstVisisble: function () {
+    selectFirstVisible: function () {
         var selector = this.$.selector;
         var menuItems = this.shadowRoot.querySelectorAll(".menu-item");
         var menuItem, itemIndex;
@@ -197,7 +197,7 @@ Polymer({
         selector.select(0);
     },
 
-    selectLastVisisble: function () {
+    selectLastVisible: function () {
         var selector = this.$.selector;
         var menuItems = this.shadowRoot.querySelectorAll(".menu-item");
         var menuItem, itemIndex;
@@ -212,16 +212,16 @@ Polymer({
     },
 
     clearSelection: function () {
-        var selector = this.$.selector;
+        const selector = this.$.selector;
         //The call for clear method on _selection object 
         selector._selection.clear()
-        selector.selected = NaN;
+        selector.select();
     },
 
     getSelectedMenuItemPath: function () {
-        var selector = this.$.selector;
-        if (!isNaN(selector.selected)) {
-            return this._getMenuItemPath(this._filteredMenu[selector.selected]);
+        const menuItem = this._filteredMenu[this.$.selector.selected];
+        if (menuItem) {
+            return this._getMenuItemPath(menuItem);
         }
         return "";
     },
@@ -233,10 +233,6 @@ Polymer({
             menuItem = menuItem.parent;
         }
         return menuItemPath;
-    },
-
-    isSelected: function () {
-        return !isNaN(this.$.selector.selected);
     },
 
     /* Iron reseze event listener for correct resizing and positioning of an open result overlay. */
@@ -317,10 +313,8 @@ Polymer({
     },
 
     _scrollToSelected: function () {
-        var selector = this.$.selector;
-        var menuItem;
-        if (!isNaN(selector.selected)) {
-            menuItem = this.shadowRoot.querySelectorAll(".menu-item")[selector.selected];
+        const menuItem = this.shadowRoot.querySelectorAll(".menu-item")[this.$.selector.selected];
+        if (menuItem) {
             if (menuItem.offsetTop + menuItem.offsetHeight < this.scrollTop || menuItem.offsetTop > this.scrollTop + this.clientHeight ||
                 menuItem.offsetTop < this.scrollTop || menuItem.offsetTop + menuItem.offsetHeight > this.scrollTop + this.clientHeight) {
                 if (menuItem.offsetTop < this.scrollTop) {

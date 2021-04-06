@@ -7,6 +7,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
+import ua.com.fielden.platform.entity.annotation.DenyIntrospection;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
@@ -28,6 +29,7 @@ import ua.com.fielden.platform.security.user.User;
 @KeyType(DynamicEntityKey.class)
 @CompanionObject(IUserSession.class)
 @MapEntityTo
+@DenyIntrospection
 public class UserSession extends AbstractEntity<DynamicEntityKey> {
 
     @IsProperty

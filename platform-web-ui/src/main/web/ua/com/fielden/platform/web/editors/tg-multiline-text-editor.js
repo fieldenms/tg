@@ -3,8 +3,6 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/resources/polymer/@polymer/iron-autogrow-textarea/iron-autogrow-textarea.js';
 
 import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
-import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
-
 import { TgEditor,  createEditorTemplate} from '/resources/editors/tg-editor.js';
 
 const additionalTemplate = html`
@@ -135,13 +133,17 @@ export class TgMultilineTextEditor extends TgEditor {
         const suffix = this.decorator().$$(".suffix");
         suffix.style.alignSelf = "flex-start";
         this.decoratedInput().textarea.addEventListener("change", this._onChange);
+        this.decoratedInput().textarea.style.cursor = "text";
     }
-    
-    /**
-     * Converts the value into string representation (which is used in edititing / comm values).
-     */
-    convertToString (value) {
-        return value === null ? "" : "" + value;
+
+    _disabledChanged (newValue, oldValue) {
+        super._disabledChanged(newValue, oldValue);
+        if (newValue) {
+            this.$.input.textarea.setAttribute('disabled', newValue);
+        } else {
+            this.$.input.textarea.removeAttribute('disabled');
+        }
+        
     }
 
     /**

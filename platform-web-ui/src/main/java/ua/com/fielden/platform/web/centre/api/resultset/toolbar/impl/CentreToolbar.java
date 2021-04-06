@@ -83,7 +83,8 @@ public class CentreToolbar implements IToolbarConfig {
                         .attr("disabled$", "[[canNotPrev(pageNumber, isRunning)]]")
                         .attr("tooltip-text", "Previous page, Ctrl&nbsp+&nbsp<span style=\"font-size:18px;font-weight:bold\">&#8592</span>"))
                 .add(new DomElement("span")
-                        .clazz("standart-action")
+                        .clazz("standart-action pagintaion-text")
+                        .style("white-space:nowrap")
                         .attr("slot", slot)
                         .add(new InnerTextElement("[[currPageFeedback(pageNumberUpdated, pageCountUpdated)]]")))
                 .add(new DomElement("paper-icon-button")
@@ -118,7 +119,7 @@ public class CentreToolbar implements IToolbarConfig {
                 .attr("slot", "standart-action")
                 .attr("shortcut", "f5")
                 .attr("icon", "refresh")
-                .attr("on-tap", "currentPage")
+                .attr("on-tap", "currentPageTap")
                 .attr("disabled$", "[[canNotCurrent(pageNumber, pageCount, isRunning)]]")
                 .attr("tooltip-text", "Refresh, F5");
     }

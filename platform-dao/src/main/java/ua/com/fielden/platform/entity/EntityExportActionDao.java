@@ -29,7 +29,7 @@ import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 @EntityType(EntityExportAction.class)
 public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> implements IEntityExportAction {
     private final ICriteriaEntityRestorer criteriaEntityRestorer;
-    
+
     @Inject
     public EntityExportActionDao(final IFilter filter, final ICriteriaEntityRestorer criteriaEntityRestorer) {
         super(filter);
@@ -42,7 +42,7 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
         entity.setExportAll(true);
         return entity;
     }
-    
+
     @Override
     @SessionRequired
     public EntityExportAction save(final EntityExportAction entity) {
@@ -53,9 +53,9 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
         }
         // Otherwise continue data exporting.
         final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit = criteriaEntityRestorer.restoreCriteriaEntity(entity.getCentreContextHolder());
-        
-        entity.setFileName(String.format("export-of-%s.xls", selectionCrit.getEntityClass().getSimpleName()));
-        entity.setMime("application/vnd.ms-excel");
+
+        entity.setFileName(String.format("export-of-%s.xlsx", selectionCrit.getEntityClass().getSimpleName()));
+        entity.setMime("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         final Map<String, Object> adhocParams = new LinkedHashMap<>();
         final Stream<AbstractEntity<?>> entities;
         if (entity.isExportAll()) {
@@ -74,7 +74,7 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
         }
         try {
             final Pair<String[], String[]> propAndTitles = selectionCrit.generatePropTitlesToExport();
-            entity.setData(WorkbookExporter.convertToByteArray(WorkbookExporter.export(entities, propAndTitles.getKey(), propAndTitles.getValue())));
+            entity.setData(WorkbookExporter.convertToByteArray(WorkbookExporter.export(entities, propAndTitles.getKey(), propAndTitles.getValue(), selectionCrit.getDynamicProperties())));
         } catch (final IOException e) {
             throw failure("An exception occurred during the data export.", e);
         } finally {

@@ -7,16 +7,17 @@ import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
 
 import '/resources/polymer/@polymer/paper-checkbox/paper-checkbox.js';
 import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
-import "/resources/polymer/@polymer/paper-styles/shadow.js";
+import '/resources/polymer/@polymer/paper-styles/shadow.js';
 import '/resources/polymer/@polymer/paper-progress/paper-progress.js';
 import '/resources/polymer/@polymer/paper-styles/color.js';
 
 import '/resources/images/tg-icons.js';
 
-import '/resources/actions/tg-ui-action.js';
+import '/resources/egi/tg-egi-multi-action.js';
 import '/resources/egi/tg-secondary-action-button.js';
 import '/resources/egi/tg-secondary-action-dropdown.js';
 import '/resources/egi/tg-egi-cell.js';
+import '/resources/egi/tg-responsive-toolbar.js';
 
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
@@ -29,12 +30,19 @@ import { TgElementSelectorBehavior } from '/resources/components/tg-element-sele
 import { TgDragFromBehavior } from '/resources/components/tg-drag-from-behavior.js';
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
-import { tearDownEvent, getRelativePos, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
+import { getFirstEntityValue, tearDownEvent, getRelativePos, isMobileApp} from '/resources/reflection/tg-polymer-utils.js';
 
 const template = html`
     <style>
         :host {
             @apply --layout-vertical;
+        }
+        :host([fit-to-height]) {
+            position: absolute;
+            top:0;
+            bottom:0;
+            right: 0;
+            left: 0;
         }
         .grid-container {
             z-index: 0;
@@ -43,25 +51,25 @@ const template = html`
             @apply --layout-vertical;
             @apply --layout-relative;
             @apply --shadow-elevation-2dp;
+            @apply --tg-grid-container;
         }
         .grid-container[fit-to-height] {
-            @apply --layout-flex;
+            max-height: 100%;
         }
-        .grid-toolbar {
-            z-index: 1;
-            position: relative;
+        tg-responsive-toolbar {
             flex-grow: 0;
             flex-shrink: 0;
-            @apply --layout-horizontal;
-            @apply --layout-wrap;
+            z-index: 1;
+            position: relative;
         }
-        .grid-toolbar[show-top-shadow]:after {
+        tg-responsive-toolbar[show-top-shadow]:after {
             content: "";
             position: absolute;
             bottom: -4px;
             left: 0;
             right: 0;
             height:4px;
+            background: transparent;
             background: -moz-linear-gradient(bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0) 100%); 
             background: -webkit-linear-gradient(bottom, rgba(0,0,0,0.4) 0%,rgba(0,0,0,0) 100%); 
             background: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%,rgba(0,0,0,0) 100%);
@@ -79,31 +87,25 @@ const template = html`
         paper-progress.processing {
             --paper-progress-active-color: var(--paper-orange-500);
         }
-        .grid-toolbar-content {
-            @apply --layout-horizontal;
-            @apply --layout-center;
-        }
-        .grid-toolbar-content ::slotted(*) {
-            margin-top: 8px;
-        }
-        .grid-toolbar-content ::slotted(.group) {
-            margin-left: 30px;
-        }
         #scrollableContainer {
             z-index: 0;
             min-height: 0;
             overflow:auto;
             @apply --layout-vertical;
-            @apply --layout-flex-auto;
+            @apply --layout-flex;
             @apply --layout-relative;
         }
         #baseContainer {
             display: grid;
             grid-template-columns: min-content auto min-content;
-            grid-template-rows: auto auto auto;
+            grid-template-rows: min-content min-content auto;
             min-width: fit-content;
             min-height: fit-content;
             z-index: 0;
+            @apply --layout-flex;
+        }
+        #bottom_left_egi, #bottom_egi, #bottom_right_egi {
+            align-self: end;
         }
         .noselect {
             -webkit-touch-callout: none;
@@ -135,6 +137,7 @@ const template = html`
              cursor: col-resize;
         }
         .table-header-row {
+            line-height: 1rem;
             font-size: 0.9rem;
             font-weight: 400;
             color: #757575;
@@ -148,6 +151,31 @@ const template = html`
             flex-grow: 0;
             flex-shrink: 0;
             @apply --layout-horizontal;
+        }
+        .table-header-column-content {
+            width: 100%;
+            @apply --layout-horizontal;
+            @apply --layout-center;
+        }
+        .table-header-column-title {
+            margin-right: 8px;
+            @apply --layout-flex;
+        }
+        .header-icon {
+            flex-grow: 0;
+            flex-shrink: 0;
+        }
+        .indicator-icon {
+            --iron-icon-width: 16px;
+            --iron-icon-height: 16px;
+        }
+        .sorting-group {
+            width: var(--egi-sorting-width, 29px);
+            @apply --layout-horizontal;
+        }
+        .ordering-number {
+            font-size: 8pt;
+            @apply --layout-self-center;
         }
         .table-data-row {
             z-index: 0;
@@ -184,6 +212,48 @@ const template = html`
             flex-grow: 0;
             flex-shrink: 0;
             @apply --layout-horizontal;
+        }
+        .egi-master {
+            height: 4.1rem;
+            font-size: 1rem;
+            font-weight: 400;
+            color: #212121;
+            border-bottom: thin solid #e3e3e3;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
+            min-width: -webkit-fit-content;
+            min-width: -moz-fit-content;
+            min-width: fit-content;
+            flex-grow: 0;
+            flex-shrink: 0;
+            @apply --layout-horizontal;
+        }
+        .master-actions {
+            position: absolute;
+            z-index: 2;
+            border-radius: 45%;
+            background-color: #e3e3e3;
+            @apply --layout-horizontal;
+            @apply --shadow-elevation-4dp;
+            display: none;
+        }
+        .master-actions ::slotted(tg-action) {
+            --paper-fab-background: white;
+            --paper-fab-keyboard-focus-background: var(--paper-grey-500);
+        } 
+        .master-actions ::slotted(.master-cancel-action) {
+            margin-right:2px;
+            --paper-fab: { 
+                border-radius: 50% 0 0 50%;
+                color: black;
+                
+            };
+        }
+        .master-actions ::slotted(.master-save-action) {
+            --paper-fab: { 
+                border-radius: 0 50% 50% 0;
+                color: black;
+            };
         }
         .footer {
             background-color: white;
@@ -240,38 +310,37 @@ const template = html`
             --paper-checkbox-unchecked-color: var(--paper-grey-900);
             --paper-checkbox-unchecked-ink-color: var(--paper-grey-900);
         }
-        .table-cell {
+        .table-master-cell, .table-cell {
             @apply --layout-horizontal;
-            @apply --layout-center;
             @apply --layout-relative;
             padding: 0 var(--egi-cell-padding, 0.6rem);
+        }
+        .table-cell {
+            @apply --layout-center;
         }
         .truncate {
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
+        .truncate[multiple-line] {
+            overflow: hidden;
+            white-space: normal;
+            word-break: break-word;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: var(--egi-number-of-header-lines, 1);
+        }
         tg-egi-cell.with-action {
             cursor: pointer;
         }
-        .action-cell {
-            @apply --layout-horizontal;
-            @apply --layout-center;
+        .action-master-cell, .action-cell {
             width: var(--egi-action-cell-width, 20px);
             padding: 0 var(--egi-action-cell-padding, 0.3rem);
+            @apply --layout-horizontal;
         }
-        .action, tg-secondary-action-dropdown ::slotted(.secondary-action) {
-            --tg-ui-action-icon-button-height: 1.6rem;
-            --tg-ui-action-icon-button-width: 1.6rem;
-            --tg-ui-action-icon-button-padding: 2px;
-            --tg-ui-action-spinner-width: 1.5rem;
-            --tg-ui-action-spinner-height: 1.5rem;
-            --tg-ui-action-spinner-min-width: 1rem;
-            --tg-ui-action-spinner-min-height: 1rem;
-            --tg-ui-action-spinner-max-width: 1.5rem;
-            --tg-ui-action-spinner-max-height: 1.5rem;
-            --tg-ui-action-spinner-padding: 0px;
-            --tg-ui-action-spinner-margin-left: 0;
+        .action-cell {
+            @apply --layout-center;
         }
         /*miscellanea styles*/
         .lock-layer {
@@ -283,6 +352,7 @@ const template = html`
         }
         .lock-layer[lock] {
             display: initial;
+            pointer-events: none;
         }
         .grid-layout-container {
             background-color: white;
@@ -295,6 +365,7 @@ const template = html`
             left: 0;
             right: 0;
             height:4px;
+            background: transparent;
             background: -moz-linear-gradient(bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0) 100%); 
             background: -webkit-linear-gradient(bottom, rgba(0,0,0,0.4) 0%,rgba(0,0,0,0) 100%); 
             background: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%,rgba(0,0,0,0) 100%); 
@@ -306,6 +377,7 @@ const template = html`
             left: 0;
             right: 0;
             height: 4px;
+            background: transparent;
             background: -moz-linear-gradient(top, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0) 100%);
             background: -webkit-linear-gradient(top, rgba(0,0,0,0.4) 0%,rgba(0,0,0,0) 100%); 
             background: linear-gradient(to top, rgba(0,0,0,0.4) 0%,rgba(0,0,0,0) 100%); 
@@ -347,23 +419,24 @@ const template = html`
         .z-index-2 {
             z-index: 2;
         }
+        .z-index-3 {
+            z-index: 3;
+        }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <!--configuring slotted elements-->
     <slot id="column_selector" name="property-column" hidden></slot>
     <slot id="primary_action_selector" name="primary-action" hidden></slot>
+    <slot id="default_property_action" name="defaultPropertyAction" hidden></slot>
+    <slot id="egi_master" name="egi-master" hidden></slot>
     <!--EGI template-->
-    <div id="paperMaterial" class="grid-container" elevation="1" style$="[[_calcMaterialStyle(showMarginAround)]]" fit-to-height$="[[fitToHeight]]">
+    <div id="paperMaterial" class="grid-container" style$="[[_calcMaterialStyle(showMarginAround)]]" fit-to-height$="[[fitToHeight]]">
         <!--Table toolbar-->
-        <div class="grid-toolbar" show-top-shadow$="[[_toolbarShadowVisible(_showTopShadow, headerFixed)]]" style$="[[_calcToolbarStyle(canDragFrom)]]">
+        <tg-responsive-toolbar id="egiToolbar" show-top-shadow$="[[_toolbarShadowVisible(_showTopShadow, headerFixed)]]" style$="[[_calcToolbarStyle(canDragFrom)]]">
             <paper-progress id="progressBar" hidden$="[[!_showProgress]]"></paper-progress>
-            <div class="grid-toolbar-content">
-                <slot id="top_action_selctor" name="entity-specific-action"></slot>
-            </div>
-            <div class="grid-toolbar-content" style="margin-left:auto">
-                <slot name="standart-action"></slot>
-            </div>
-        </div>
+            <slot id="top_action_selctor" slot="entity-specific-action" name="entity-specific-action"></slot>
+            <slot slot="standart-action" name="standart-action"></slot>
+        </tg-responsive-toolbar>
         <div id="scrollableContainer" on-scroll="_handleScrollEvent">
             <div id="baseContainer">
                 <div id="top_left_egi" show-top-shadow$="[[_topShadowVisible(_showTopShadow, headerFixed)]]" show-left-shadow$="[[_leftShadowVisible(_showLeftShadow, dragAnchorFixed)]]" class="grid-layout-container sticky-container z-index-2" style$="[[_calcTopLeftContainerStyle(headerFixed, dragAnchorFixed)]]">
@@ -375,9 +448,16 @@ const template = html`
                         <div class="action-cell cell" hidden$="[[!_primaryActionFixedAndVisible(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
                             <!--Primary action stub header goes here-->
                         </div>
-                        <template is="dom-repeat" items="[[fixedColumns]]">
-                            <div class="table-cell cell" fixed style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, 'true')]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
-                                <div class="truncate" style="width:100%">[[item.columnTitle]]</div>
+                        <template id="fixedHeadersTemplate" is="dom-repeat" items="[[fixedColumns]]">
+                            <div class="table-cell cell" fixed style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, item.shouldAddDynamicWidth, 'true')]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
+                                <div class="table-header-column-content">
+                                    <div class="truncate table-header-column-title" multiple-line$="[[_multipleHeaderLines]]" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
+                                    <iron-icon class="header-icon indicator-icon" hidden$="[[!item.editable]]" tooltip-text="This column is editable" icon="icons:create"></iron-icon>
+                                    <div class="header-icon sorting-group" hidden$="[[!_isSortingVisible(item.sortable, item.sorting)]]">
+                                        <iron-icon class="indicator-icon" icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_computeSortingIconStyle(item.sorting)]]"></iron-icon>
+                                        <span class="ordering-number">[[_calculateOrder(item.sortingNumber)]]</span>
+                                    </div>
+                                </div>
                                 <div class="resizing-box"></div>
                             </div>
                         </template>
@@ -391,24 +471,35 @@ const template = html`
                         <div class="action-cell cell" hidden$="[[!_primaryActionNotFixedAndVisible(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
                             <!--Primary action stub header goes here-->
                         </div>
-                        <template is="dom-repeat" items="[[columns]]">
-                            <div class="table-cell cell" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, 'false')]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
-                                <div class="truncate" style="width:100%">[[item.columnTitle]]</div>
+                        <template id="scrollableHeadersTemplate" is="dom-repeat" items="[[columns]]">
+                            <div class="table-cell cell" style$="[[_calcColumnHeaderStyle(item, item.width, item.growFactor, item.shouldAddDynamicWidth, 'false')]]" on-down="_makeEgiUnselectable" on-up="_makeEgiSelectable" on-track="_changeColumnSize" tooltip-text$="[[item.columnDesc]]" is-resizing$="[[_columnResizingObject]]" is-mobile$="[[mobile]]">
+                                <div class="table-header-column-content">
+                                    <div class="truncate table-header-column-title" multiple-line$="[[_multipleHeaderLines]]" style$="[[_calcColumnHeaderTextStyle(item)]]">[[item.columnTitle]]</div>
+                                    <iron-icon class="header-icon indicator-icon" hidden="[[!item.editable]]" tooltip-text="This column is editable" icon="icons:create"></iron-icon>
+                                    <div class="header-icon sorting-group" hidden$="[[!_isSortingVisible(item.sortable, item.sorting)]]">
+                                        <iron-icon class="indicator-icon" icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_computeSortingIconStyle(item.sorting)]]"></iron-icon>
+                                        <span class="ordering-number">[[_calculateOrder(item.sortingNumber)]]</span>
+                                    </div>
+                                </div>
                                 <div class="resizing-box"></div>
                             </div>
                         </template>
                     </div>
                 </div>
-                <div id="top_right_egi" show-top-shadow$="[[_topShadowVisible(_showTopShadow, headerFixed)]]" show-right-shadow$="[[_rightShadowVisible(_showRightShadow, secondaryActionsFixed)]]" class="grid-layout-container sticky-container z-index-2" style$="[[_calcTopRightContainerStyle(headerFixed, secondaryActionsFixed)]]">
+                <div id="top_right_egi" show-top-shadow$="[[_topShadowVisible(_showTopShadow, headerFixed)]]" show-right-shadow$="[[_rightShadowVisible(_showRightShadow, secondaryActionsFixed, _isSecondaryActionPresent)]]" class="grid-layout-container sticky-container z-index-2" style$="[[_calcTopRightContainerStyle(headerFixed, secondaryActionsFixed)]]">
                     <div class="table-header-row" hidden$="[[secondaryActionPresent]]">    
                         <div class="action-cell cell" hidden$="[[!_isSecondaryActionPresent]]">
                                 <!--Secondary actions header goes here-->
                         </div>
                     </div>
                 </div>
+                <div id="master_actions" class="master-actions">
+                    <slot name="cancel-button"></slot>
+                    <slot name="save-button"></slot>
+                </div>
                 <div id="left_egi" show-left-shadow$="[[_leftShadowVisible(_showLeftShadow, dragAnchorFixed)]]" class="grid-layout-container sticky-container z-index-1" style$="[[_calcLeftContainerStyle(dragAnchorFixed)]]">
-                    <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex" on-dom-change="_scrollContainerEntitiesStamped">
-                        <div class="table-data-row" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
+                    <template id="left_egi_domRepeat" is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex" on-dom-change="_scrollContainerEntitiesStamped">
+                        <div class="table-data-row" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" is-editing$="[[egiEntity.editing]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
                             <div class="drag-anchor" draggable$="[[_isDraggable(egiEntity.selected)]]" hidden$="[[!canDragFrom]]">
                                 <iron-icon icon="tg-icons:dragVertical"></iron-icon>
                             </div>
@@ -416,57 +507,89 @@ const template = html`
                                 <paper-checkbox class="blue body" checked="[[egiEntity.selected]]" on-change="_selectionChanged" on-mousedown="_checkSelectionState" on-keydown="_checkSelectionState"></paper-checkbox>
                             </div>
                             <div class="action-cell" hidden$="[[!_primaryActionFixedAndVisible(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
-                                <tg-ui-action class="action" show-dialog="[[primaryAction.showDialog]]" current-entity="[[egiEntity.entity]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" action-kind="[[primaryAction.actionKind]]" number-of-action="[[primaryAction.numberOfAction]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" ui-role="[[primaryAction.uiRole]]" icon-style="[[primaryAction.iconStyle]]"></tg-ui-action>
+                                <tg-egi-multi-action class="action" actions="[[primaryAction.actions]]" current-entity="[[_currentEntity(egiEntity.entity)]]" current-index="[[egiEntity.primaryActionIndex]]"></tg-egi-multi-action>
                             </div>
                             <template is="dom-repeat" items="[[fixedColumns]]" as="column">
-                                <tg-egi-cell column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'true')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapFixedAction"></tg-egi-cell>
+                                <tg-egi-cell column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'true')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapFixedAction"></tg-egi-cell>
                             </template>
                         </div>
                     </template>
+                    <div id="left_egi_master" style="display:none;" class="egi-master">
+                        <div class="drag-anchor" hidden$="[[!canDragFrom]]"></div>
+                        <div class="table-master-cell" hidden$="[[!_checkboxFixedAndVisible(checkboxVisible, checkboxesFixed)]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]">
+                            <!--Checkbox stub for master goes here-->
+                        </div>
+                        <div class="action-master-cell cell" hidden$="[[!_primaryActionFixedAndVisible(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
+                            <!--Primary action stub for master goes here-->
+                        </div>
+                        <template is="dom-repeat" items="[[fixedColumns]]" as="column">
+                            <div class="table-master-cell" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'false')]]">
+                                <slot name$="[[_getSlotNameFor(column.property)]]"></slot>
+                            </div>
+                        </template>
+                    </div>
                 </div>
-                <div class="grid-layout-container z-index-0">
-                    <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
-                        <div class="table-data-row" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
+                <div id="centre_egi" class="grid-layout-container z-index-0">
+                    <template id="centre_egi_domRepeat" is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
+                        <div class="table-data-row" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" is-editing$="[[egiEntity.editing]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
                             <div class="table-cell" hidden$="[[!_checkboxNotFixedAndVisible(checkboxVisible, checkboxesFixed)]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]" tooltip-text$="[[_selectTooltip(egiEntity.selected)]]">
                                 <paper-checkbox class="blue body" checked="[[egiEntity.selected]]" on-change="_selectionChanged" on-mousedown="_checkSelectionState" on-keydown="_checkSelectionState"></paper-checkbox>
                             </div>
                             <div class="action-cell" hidden$="[[!_primaryActionNotFixedAndVisible(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
-                                <tg-ui-action class="action" show-dialog="[[primaryAction.showDialog]]" current-entity="[[egiEntity.entity]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" action-kind="[[primaryAction.actionKind]]" number-of-action="[[primaryAction.numberOfAction]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" ui-role="[[primaryAction.uiRole]]" icon-style="[[primaryAction.iconStyle]]"></tg-ui-action>
+                                <tg-egi-multi-action class="action" actions="[[primaryAction.actions]]" current-entity="[[_currentEntity(egiEntity.entity)]]" current-index="[[egiEntity.primaryActionIndex]]"></tg-egi-multi-action>
                             </div>
                             <template is="dom-repeat" items="[[columns]]" as="column">
-                                <tg-egi-cell column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'false')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapAction"></tg-egi-cell>
+                                <tg-egi-cell column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'false')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapAction"></tg-egi-cell>
                             </template>
                         </div>
                     </template>
+                    <div id="centre_egi_master" style="display:none;" class="egi-master">
+                        <div class="table-master-cell" hidden$="[[!_checkboxNotFixedAndVisible(checkboxVisible, checkboxesFixed)]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]">
+                            <!--Checkbox stub for master goes here-->
+                        </div>
+                        <div class="action-master-cell cell" hidden$="[[!_primaryActionNotFixedAndVisible(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
+                            <!--Primary action stub for master goes here-->
+                        </div>
+                        <template is="dom-repeat" items="[[columns]]" as="column">
+                            <div class="table-master-cell" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'false')]]">
+                                <slot name$="[[column.property]]"></slot>
+                            </div>
+                        </template>
+                    </div>
                 </div>
-                <div class="grid-layout-container sticky-container z-index-1" show-right-shadow$="[[_rightShadowVisible(_showRightShadow, secondaryActionsFixed)]]" style$="[[_calcRightContainerStyle(secondaryActionsFixed)]]">
-                    <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
-                        <div class="table-data-row" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
+                <div id="right_egi" class="grid-layout-container sticky-container z-index-1" show-right-shadow$="[[_rightShadowVisible(_showRightShadow, secondaryActionsFixed, _isSecondaryActionPresent)]]" style$="[[_calcRightContainerStyle(secondaryActionsFixed)]]">
+                    <template id="right_egi_domRepeat" is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
+                        <div class="table-data-row" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" is-editing$="[[egiEntity.editing]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
                             <div class="action-cell" hidden$="[[!_isSecondaryActionPresent]]">
-                                <tg-secondary-action-button class="action" actions="[[_secondaryActions]]" current-entity="[[egiEntity.entity]]" is-single="[[_isSingleSecondaryAction]]" dropdown-trigger="[[_openDropDown]]"></tg-secondary-action-button>
+                                <tg-secondary-action-button class="action" actions="[[_secondaryActions]]" current-indices="[[egiEntity.secondaryActionIndices]]" current-entity="[[_currentEntity(egiEntity.entity)]]" is-single="[[_isSingleSecondaryAction]]" dropdown-trigger="[[_openDropDown]]"></tg-secondary-action-button>
                             </div>
                         </div>
                     </template>
+                    <div id="right_egi_master" style="display:none;" class="egi-master" hidden$="[[secondaryActionPresent]]">    
+                        <div class="action-master-cell cell" hidden$="[[!_isSecondaryActionPresent]]">
+                                <!--Secondary actions stub for master goes here-->
+                        </div>
+                    </div>
                 </div>
-                <div class="grid-layout-container sticky-container z-index-2" show-bottom-shadow$="[[_bottomShadowVisible(_showBottomShadow, summaryFixed)]]" show-left-shadow$="[[_leftShadowVisible(_showLeftShadow, dragAnchorFixed)]]" style$="[[_calcBottomLeftContainerStyle(summaryFixed, dragAnchorFixed)]]">
+                <div id="bottom_left_egi" class="grid-layout-container sticky-container z-index-3" show-bottom-shadow$="[[_bottomShadowVisible(_showBottomShadow, summaryFixed)]]" show-left-shadow$="[[_leftShadowVisible(_showLeftShadow, dragAnchorFixed)]]" style$="[[_calcBottomLeftContainerStyle(summaryFixed, dragAnchorFixed)]]">
                     <div class="footer">
                         <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
                             <div class="table-footer-row">
                                 <div class="drag-anchor" hidden$="[[!canDragFrom]]"></div>
-                                <div class="table-cell" hidden$="[[!_checkboxFixedAndVisible(checkboxVisible, checkboxesFixed)]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
+                                <div class="table-cell" hidden$="[[!_checkboxFixedAndVisible(checkboxVisible, checkboxesFixed)]]" style$="[[_calcSelectCheckBoxStyle(canDragFrom)]]">
                                     <!--Footer's select checkbox stub goes here-->
                                 </div>
                                 <div class="action-cell" hidden$="[[!_primaryActionFixedAndVisible(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
                                     <!--Footer's primary action stub goes here-->
                                 </div>
                                 <template is="dom-repeat" items="[[summaryRow.0]]" as="column">
-                                    <tg-egi-cell column="[[column]]" egi-entity="[[egiTotalsEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'true')]]" tooltip-text$="[[_getTotalTooltip(column)]]"></tg-egi-cell>
+                                    <tg-egi-cell column="[[column]]" egi-entity="[[egiTotalsEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'true')]]" tooltip-text$="[[_getTotalTooltip(column)]]"></tg-egi-cell>
                                 </template>
                             </div>
                         </template>
                     </div>
                 </div>
-                <div class="grid-layout-container sticky-container z-index-1" show-bottom-shadow$="[[_bottomShadowVisible(_showBottomShadow, summaryFixed)]]" style$="[[_calcBottomContainerStyle(summaryFixed)]]">
+                <div id="bottom_egi" class="grid-layout-container sticky-container z-index-2" show-bottom-shadow$="[[_bottomShadowVisible(_showBottomShadow, summaryFixed)]]" style$="[[_calcBottomContainerStyle(summaryFixed)]]">
                     <!-- Table footer -->
                     <div class="footer">
                         <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
@@ -478,13 +601,13 @@ const template = html`
                                     <!--Footer's primary action stub goes here-->
                                 </div>
                                 <template is="dom-repeat" items="[[summaryRow.1]]" as="column">
-                                    <tg-egi-cell column="[[column]]" egi-entity="[[egiTotalsEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, 'false')]]" tooltip-text$="[[_getTotalTooltip(column)]]"></tg-egi-cell>
+                                    <tg-egi-cell column="[[column]]" egi-entity="[[egiTotalsEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'false')]]" tooltip-text$="[[_getTotalTooltip(column)]]"></tg-egi-cell>
                                 </template>
                             </div>
                         </template>
                     </div>  
                 </div>
-                <div class="grid-layout-container sticky-container z-index-2" show-bottom-shadow$="[[_bottomShadowVisible(_showBottomShadow, summaryFixed)]]" show-right-shadow$="[[_rightShadowVisible(_showRightShadow, secondaryActionsFixed)]]" style$="[[_calcBottomRightContainerStyle(summaryFixed, secondaryActionsFixed)]]">
+                <div id="bottom_right_egi" class="grid-layout-container sticky-container z-index-3" show-bottom-shadow$="[[_bottomShadowVisible(_showBottomShadow, summaryFixed)]]" show-right-shadow$="[[_rightShadowVisible(_showRightShadow, secondaryActionsFixed, _isSecondaryActionPresent)]]" style$="[[_calcBottomRightContainerStyle(summaryFixed, secondaryActionsFixed)]]">
                     <div class="footer">
                         <template is="dom-repeat" items="[[_totalsRows]]" as="summaryRow" index-as="summaryIndex">
                             <div class="table-footer-row">
@@ -548,6 +671,12 @@ function updateSelectAll (egi, egiModel) {
     }
 };
 
+function _insertMaster (container, egiMaster, entityIndex) {
+    const row = container.querySelectorAll(".table-data-row")[entityIndex];
+    container.insertBefore(egiMaster, row.nextSibling);
+    egiMaster.style.display = null;
+};
+
 Polymer({
 
     _template: template,
@@ -584,6 +713,7 @@ Polymer({
         columns: {
             type: Array
         },
+        master: Object,
         allColumns: Array,
         fixedColumns: Array,
         /**
@@ -611,6 +741,14 @@ Polymer({
             type: Array,
             observer: "_renderingHintsChanged"
         },
+        primaryActionIndices: {
+            type: Array,
+            observer: "_primaryActionIndicesChanged"
+        },
+        secondaryActionIndices: {
+            type: Array,
+            observer: "_secondaryActionIndicesChanged"
+        },
         selectedAll: {
             type: Boolean,
             value: false
@@ -627,9 +765,24 @@ Polymer({
             value: true
         },
         /**
+         * Defines the number of wrapped lines in EGI.
+         */
+        numberOfHeaderLines: {
+            type: Number,
+            value: 1,
+            observer: "_numberOfHeaderLinesChanged"
+        },
+        /**
+         * Property needed for differentiating styles between multiple row header or single line header 
+         */
+        _multipleHeaderLines: {
+            type: Boolean,
+            value: false
+        },
+        /**
          * Defines the number of visible rows.
          */
-        visibleRowCount: {
+        visibleRowsCount: {
             type: Number,
             value: 0
         },
@@ -637,6 +790,12 @@ Polymer({
             type: String,
             value: "1.5rem",
             observer: "_rowHeightChanged"
+        },
+        //The width of .sorting-group element. 
+        sortIndicatorWidth: {
+            type: Number,
+            value: 29,
+            observer: "_sortIndicatorWidthChanged"
         },
         /**
          * This is alternative to visible row count and default egi behaviour that allows one to configure egi's height independently from content height.
@@ -732,15 +891,20 @@ Polymer({
         _isSecondaryActionPresent: Boolean,
         //the list of secondary actions
         _secondaryActions: Array,
+        //Default action for property columns. It is invoked only if there were no other action specified for specific property column.
+        _defaultPropertyAction: Object,
         //The callback to open drop down for secondary action.
-        _openDropDown: Function
+        _openDropDown: Function,
+
+        //Double tap related
+        _tapOnce: Boolean
     },
 
     behaviors: [TgEgiDataRetrievalBehavior, IronResizableBehavior, IronA11yKeysBehavior, TgShortcutProcessingBehavior, TgDragFromBehavior, TgElementSelectorBehavior],
 
     observers: [
         "_columnsChanged(columns, fixedColumns)",
-        "_heightRelatedPropertiesChanged(visibleRowCount, rowHeight, constantHeight, fitToHeight, summaryFixed, _totalsRowCount)"
+        "_heightRelatedPropertiesChanged(visibleRowsCount, rowHeight, constantHeight, fitToHeight, summaryFixed, _totalsRowCount)"
     ],
 
     created: function () {
@@ -778,6 +942,9 @@ Polymer({
         //Initialising the primary action.
         this.primaryAction = primaryActions.length > 0 ? primaryActions[0] : null;
 
+        //Initialising the default property action
+        this._defaultPropertyAction = this.$.default_property_action.assignedNodes()[0];
+
         //Initialising event listeners.
         this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
 
@@ -787,9 +954,23 @@ Polymer({
         });
 
         //Init secondary action drop down trigger
-        this._openDropDown = function (currentEntity, currentAction) {
-            this.$.secondaryActionDropDown.open(currentEntity, currentAction);
+        this._openDropDown = function (currentEntity, currentIndices, currentAction) {
+            this.$.secondaryActionDropDown.open(currentEntity, currentIndices, currentAction);
         }.bind(this);
+
+        //Initiate entity master for inline editing
+        this.master = this.$.egi_master.assignedNodes()[0];
+        if (this.master) {
+            this.master.egi = this;
+        }
+        this._makeRowEditable = this._makeRowEditable.bind(this);
+        this._acceptValuesFromMaster = this._acceptValuesFromMaster.bind(this);
+        this._closeMaster = this._closeMaster.bind(this);
+        this.$.left_egi_master.addEventListener('focusin', this._scrollToVisibleLeftMaster.bind(this));
+        this.$.centre_egi_master.addEventListener('focusin', this._scrollToVisibleCentreMaster.bind(this));
+
+        //Add event listener to know when egi has become visible
+        this.addEventListener("tg-centre-page-was-selected", this._egiBecameSelected.bind(this))
     },
 
     attached: function () {
@@ -798,6 +979,11 @@ Polymer({
         if (this.customShortcuts) {
             this._ownKeyBindings[this.customShortcuts] = '_shortcutPressed';
         }
+        //Initialise egi master shortcuts
+        this._ownKeyBindings["enter"] = '_editNextRow';
+        this._ownKeyBindings["alt+down"] = '_editNextRow';
+        this._ownKeyBindings["alt+up"] = '_editPreviousRow';
+        this._ownKeyBindings["esc"] = '_cancelMaster';
         //Initialising property column mappings
         this.columnPropertiesMapper = (function (entity) {
             const result = [];
@@ -805,7 +991,7 @@ Polymer({
                 const column = this.columns[index];
                 const entry = {
                     dotNotation: column.property,
-                    value: this.getValue(entity, column.property, column.type)
+                    value: this.getBindedValue(entity, column)
                 };
                 result.push(entry);
             }
@@ -813,7 +999,30 @@ Polymer({
         }).bind(this);
         this.async(function () {
             this.keyEventTarget = this._getKeyEventTarget();
+            if (this.master) {
+                this._initMasterEditors();
+                this.appendChild(this.master.saveButton);
+                this.appendChild(this.master.cancelButton);
+            }
         }, 1);
+    },
+
+    _editNextRow: function () {
+        if (this.isEditing()) {
+            this.master._saveAndEditNextRow();
+        }
+    },
+
+    _editPreviousRow: function () {
+        if (this.isEditing()) {
+            this.master._saveAndEditPreviousRow();
+        }
+    },
+
+    _cancelMaster: function () {
+        if (this.isEditing()) {
+            this.master._cancelMaster();
+        }
     },
 
     //API functions to update entity and rendering hints
@@ -878,7 +1087,7 @@ Polymer({
     setRenderingHints: function (entity, property, renderingHints) {
         const entityIndex = this._findEntity(entity, this.filteredEntities);
         if (entityIndex >= 0) {
-            this.set("egiModel." + entityIndex + ".renderingHints." + property, renderingHints);
+            this.egiModel[entityIndex].renderingHints[property] = renderingHints;
             const egiEntity = this.egiModel[entityIndex];
             egiEntity._propertyRenderingHintsChangedHandlers && egiEntity._propertyRenderingHintsChangedHandlers[property] && egiEntity._propertyRenderingHintsChangedHandlers[property]();
         }
@@ -896,7 +1105,16 @@ Polymer({
     },
 
     hasAction: function (entity, column) {
-        return column.customAction || this.isHyperlinkProp(entity, column.property, column.type) === true || this.getAttachmentIfPossible(entity, column.property);
+        return entity && (
+            column.customAction
+            || this.isHyperlinkProp(entity, column) === true
+            || this.getAttachmentIfPossible(entity, column)
+            || this.isEntityProperty(entity, column)
+        );
+    },
+
+    isEntityProperty: function (entity, column) {
+        return entity && entity.type && entity.type() && this._reflector.tg_determinePropertyType(entity.type(), column.collectionalProperty || column.property) instanceof this._reflector._getEntityTypePrototype();
     },
 
     isVisible: function (entity) {
@@ -907,14 +1125,14 @@ Polymer({
     editEntity: function (entity) {
         if (this.editingEntity) {
             const oldEntIndex = this._findEntity(this.editingEntity, this.filteredEntities);
+            this.editingEntity = null;
             if (oldEntIndex >= 0) {
-                this.editingEntity = null;
                 this.set("egiModel." + oldEntIndex + ".over", false);
             }
         }
         const entIndex = this._findEntity(entity, this.filteredEntities);
+        this.editingEntity = entity;
         if (entIndex >= 0) {
-            this.editingEntity = entity;
             this.set("egiModel." + entIndex + ".over", true);
         }
     },
@@ -1011,13 +1229,13 @@ Polymer({
      * Adjusts widths for columns based on current widths values, which could be altered by dragging column right border.
      */
     adjustColumnWidths: function (columnWidths) {
-        this.columns.forEach((column, columnIndex) => {
+        this.columns.filter(column => !column.collectionalProperty).forEach((column, columnIndex) => {
             this.set("columns." + columnIndex + ".growFactor", columnWidths[column.property].newGrowFactor);
             this.set("columns." + columnIndex + ".width", columnWidths[column.property].newWidth);
             this._updateTotalRowGrowFactor(columnIndex, columnWidths[column.property].newGrowFactor);
             this._updateTotalRowWidth(columnIndex, columnWidths[column.property].newWidth);
         });
-        this.fixedColumns.forEach((column, columnIndex) => {
+        this.fixedColumns.filter(column => !column.collectionalProperty).forEach((column, columnIndex) => {
             this.set("fixedColumns." + columnIndex + ".growFactor", columnWidths[column.property].newGrowFactor);
             this.set("fixedColumns." + columnIndex + ".width", columnWidths[column.property].newWidth);
             this._updateFixedTotalRowGrowFactor(columnIndex, columnWidths[column.property].newGrowFactor);
@@ -1037,23 +1255,94 @@ Polymer({
                 resultantColumns.push(column);
             }
         });
+        const dynamicColumns = this.allColumns.filter(column => column.collectionalProperty);
+        resultantColumns.push(...dynamicColumns)
         this._updateColumns(resultantColumns);
     },
 
-    tap: function (entity, index, column) {
-        if (column.runAction(entity) === false) {
+    /**
+     * Updates the sorting order for available columns
+     */
+    adjustColumnsSorting: function (sortingConfig) {
+        if (this.offsetParent !== null) {
+            // Adding the sorting indicator to columns may require making columns wider. 
+            // In order to determine whether the column width should be increased, it is necessary to use the scroll width and offset width of the actual column element.
+            // Reading the values of these attributes requires access to the template's elements, which may have not been initialised at this stage.
+            // Therefore, async call is needed. See render() method invocations for this.fixedColumns and this.columns.
+            this.async(() => {
+                const fixedHeaders = this.$.top_left_egi.querySelectorAll(".table-header-column-title");
+                const scrollingHeaders = this.$.top_egi.querySelectorAll(".table-header-column-title");
+                this._setSortingFor(sortingConfig, this.fixedColumns, fixedHeaders,"fixedColumns", "0"/*The index of fixed columns in summary row*/);
+                this._setSortingFor(sortingConfig, this.columns, scrollingHeaders, "columns", "1"/*The index of scrollable columns in summary row*/);
+            });
+        } else {
+            this._postponedSortingConfig = sortingConfig;
+        }
+    },
+
+    _setSortingFor(sortingConfig, columns, headerTitles, modelName, totalsModelName) {
+        columns.forEach((col, idx) => {
+            const configIdx = sortingConfig.findIndex(config => config.property === col.property);
+            if (configIdx >= 0) {
+                this.set(modelName + "." + idx + ".sorting", sortingConfig[configIdx].sorting === 'ASCENDING' ? true : false);
+                this.set(modelName + "." + idx + ".sortingNumber", configIdx);
+                if (headerTitles[idx].scrollWidth > headerTitles[idx].offsetWidth) {
+                    this.set(modelName + "." + idx + ".shouldAddDynamicWidth", true);
+                    this._updateTotalDynamicWidth(idx, totalsModelName, true);
+                }
+            } else {
+                this.set(modelName + "." + idx + ".sorting", null);
+                this.set(modelName + "." + idx + ".sortingNumber", -1);
+                if (this.get(modelName + "." + idx + ".shouldAddDynamicWidth")) {
+                    this.set(modelName + "." + idx + ".shouldAddDynamicWidth", false);
+                    this._updateTotalDynamicWidth(idx, totalsModelName, false);
+                }
+            }
+        });
+    },
+
+    tap: function (entityIndex, entity, index, column) {
+        if (this.master && this.master.editors.length > 0 && this._tapOnce && this.canOpenMaster()) {
+            delete this._tapOnce;
+            this.master._lastFocusedEditor = this.master.editors.find(editor => editor.propertyName === column.property);
+            this._makeRowEditable(entityIndex);
+        } else if (this.master && this.master.editors.length > 0 && this.canOpenMaster()) {
+            this._tapOnce = true;
+            this.async(() => {
+                if (this._tapOnce) {
+                    this._tapColumn(entity, column);
+                }
+                delete this._tapOnce;
+            }, 400);
+        } else {
+            this._tapColumn(entity, column);
+        }
+    },
+
+    /**
+     * Initiates corresponding 'tg-ui-action' (if present) with concrete function representing current entity.
+     * Opens hyperlink or attachment if 'tg-ui-action' is not present.
+     */
+    _tapColumn: function (entity, column) {
+        // 'this._currentEntity(entity)' returns closure with 'entity' tapped.
+        // This closure returns either 'entity' or the entity navigated to (EntityNavigationAction).
+        // Each tapping overrides this function to provide proper context of execution.
+        // This override should occur on every 'run' of the action so it is mandatory to use 'tg-property-column.runAction' public API.
+        if (!column.runAction(this._currentEntity(entity))) {
             // if the clicked property is a hyperlink and there was no custom action associted with it
             // then let's open the linked resources
-            if (this.isHyperlinkProp(entity, column.property, column.type) === true) {
-                const url = this.getValue(entity, column.property, column.type);
+            if (this.isHyperlinkProp(entity, column) === true) {
+                const url = this.getBindedValue(entity, column);
                 const win = window.open(url, '_blank');
                 win.focus();
             } else {
-                const attachment = this.getAttachmentIfPossible(entity, column.property);
+                const attachment = this.getAttachmentIfPossible(entity, column);
                 if (attachment && this.downloadAttachment) {
                     this.downloadAttachment(attachment);
+                } else if (this.isEntityProperty(entity, column)) {
+                    column.runDefaultAction(this._currentEntity(entity), this._defaultPropertyAction);
                 }
-            }
+            } 
         }
     },
 
@@ -1062,7 +1351,7 @@ Polymer({
         this.filter();  
     },
 
-    _filteredEntitiesChanged: function (newValue, oldValue) {
+    _filteredEntitiesChanged: function (newValue) {
         const tempEgiModel = [];
         newValue.forEach(newEntity => {
             const selectEntInd = this._findEntity(newEntity, this.selectedEntities);
@@ -1075,13 +1364,19 @@ Polymer({
         });
         newValue.forEach(newEntity => {
             const isSelected = this.selectedEntities.indexOf(newEntity) > -1;
-            const oldIndex = this._findEntity(newEntity, oldValue);
-            const newRendHints = oldIndex < 0 ? {} : (this.renderingHints && this.renderingHints[oldIndex]) || {};
+            const index = this.findEntityIndex(newEntity);
+            const newRendHints = (this.renderingHints && this.renderingHints[index]) || {};
+            const newPrimaryActionIndex = (this.primaryActionIndices && this.primaryActionIndices[index]) || 0;
+            const defaultSecondaryActionIndices = this._secondaryActions.map(action => 0);
+            const newSecondaryActionIndices = (this.secondaryActionIndices && this.secondaryActionIndices[index]) || defaultSecondaryActionIndices;
             const egiEntity = {
                 over: this._areEqual(this.editingEntity, newEntity),
                 selected: isSelected,
                 entity: newEntity,
-                renderingHints: newRendHints
+                renderingHints: newRendHints,
+                primaryActionIndex: newPrimaryActionIndex,
+                secondaryActionIndices: newSecondaryActionIndices,
+                entityModification: {}
             };
             tempEgiModel.push(egiEntity);
         });
@@ -1094,6 +1389,9 @@ Polymer({
     _updateColumns: function (resultantColumns) {
         this.fixedColumns = resultantColumns.splice(0, this.numOfFixedCols);
         this.columns = resultantColumns;
+        // Need to initiate DOM rendering as soon as possible due to the need to process resultant DOM in method _setSortingFor.
+        this.$.fixedHeadersTemplate.render();
+        this.$.scrollableHeadersTemplate.render();
         const columnWithGrowFactor = this.columns.find((item) => item.growFactor > 0);
         if (!columnWithGrowFactor && this.columns.length > 0) {
             this.set("columns." + (this.columns.length - 1) + ".growFactor", 1);
@@ -1108,6 +1406,13 @@ Polymer({
     },
 
     //Event listeners
+    _egiBecameSelected: function () {
+        if (this._postponedSortingConfig) {
+            this.adjustColumnsSorting(this._postponedSortingConfig);
+            delete this._postponedSortingConfig;
+        }
+    },
+
     _resizeEventListener: function() {
         this._handleScrollEvent();
     },
@@ -1117,6 +1422,9 @@ Polymer({
         this._showRightShadow = Math.ceil(this.$.scrollableContainer.clientWidth + this.$.scrollableContainer.scrollLeft) < this.$.scrollableContainer.scrollWidth;
         this._showTopShadow = this.$.scrollableContainer.scrollTop > 0;
         this._showBottomShadow = Math.ceil(this.$.scrollableContainer.clientHeight + this.$.scrollableContainer.scrollTop) < this.$.scrollableContainer.scrollHeight;
+        if (this.isEditing()) {
+            this.$.master_actions.style.left = this.$.scrollableContainer.scrollLeft + 16/* The desired distance of master actions from the left border */ + "px";
+        }
     },
 
     _handleTouchMove: function (e) {
@@ -1164,11 +1472,11 @@ Polymer({
     },
 
     _tapFixedAction: function (e, detail) {
-        this.tap(this.filteredEntities[e.model.parentModel.entityIndex], e.model.index, this.fixedColumns[e.model.index]);
+        this.tap(e.model.parentModel.entityIndex, this.filteredEntities[e.model.parentModel.entityIndex], e.model.index, this.fixedColumns[e.model.index]);
     },
 
     _tapAction: function (e, detail) {
-        this.tap(this.filteredEntities[e.model.parentModel.entityIndex], this.fixedColumns.length + e.model.index, this.columns[e.model.index]);
+        this.tap(e.model.parentModel.entityIndex, this.filteredEntities[e.model.parentModel.entityIndex], this.fixedColumns.length + e.model.index, this.columns[e.model.index]);
     },
 
     _columnDomChanged: function (addedColumns, removedColumns) {
@@ -1236,7 +1544,7 @@ Polymer({
         e.currentTarget.classList.toggle("resizing-action", true);
         //Calculate all properties needed for column resizing logic and create appropriate resizing object
         const columnElements = this._getHeaderColumns();
-        const leftFixedContainerWidth = calculateColumnWidthExcept (this, -1, columnElements, this.numOfFixedCols, () => this.dragAnchorFixed, () => this.checkboxesFixed, () => this.checkboxesWithPrimaryActionsFixed, () => false);
+        const leftFixedContainerWidth = calculateColumnWidthExcept (this, -1, columnElements, this.fixedColumns.length, () => this.dragAnchorFixed, () => this.checkboxesFixed, () => this.checkboxesWithPrimaryActionsFixed, () => false);
         const containerWithoutFixedSecondaryActionWidth = this.$.scrollableContainer.clientWidth - (this._isSecondaryActionPresent && this.secondaryActionsFixed ? columnElements[columnElements.length - 1].offsetWidth : 0);
         this._columnResizingObject = {
             oldColumnWidth: e.model.item.width,
@@ -1244,8 +1552,9 @@ Polymer({
             leftFixedContainerWidth: leftFixedContainerWidth,
             containerWithoutFixedSecondaryActionWidth: containerWithoutFixedSecondaryActionWidth,
             otherColumnWidth: calculateColumnWidthExcept(this, e.currentTarget.hasAttribute("fixed") ? e.model.index : this.fixedColumns.length + e.model.index, columnElements, this.columns.length + this.fixedColumns.length, () => true, () => true, () => true, () => true),
-            otherFixedColumnWidth :  calculateColumnWidthExcept(this, e.currentTarget.hasAttribute("fixed") ? e.model.index : -1, columnElements, this.numOfFixedCols, () => this.dragAnchorFixed, () => this.checkboxesFixed, () => this.checkboxesWithPrimaryActionsFixed, () => this.secondaryActionsFixed),
+            otherFixedColumnWidth :  calculateColumnWidthExcept(this, e.currentTarget.hasAttribute("fixed") ? e.model.index : -1, columnElements, this.fixedColumns.length, () => this.dragAnchorFixed, () => this.checkboxesFixed, () => this.checkboxesWithPrimaryActionsFixed, () => this.secondaryActionsFixed),
             widthCorrection: e.currentTarget.offsetWidth - e.currentTarget.firstElementChild.offsetWidth,
+            indicatorsWidth: [...e.currentTarget.firstElementChild.querySelectorAll(".header-icon:not([hidden])")].reduce((prev, curr) => prev + curr.offsetWidth, 0),
             hasAnyFlex: this.columns.some((column, index) => index !== e.model.index && column.growFactor !== 0)
         };
     },
@@ -1256,8 +1565,8 @@ Polymer({
             let newWidth = columnWidth + e.detail.ddx;
 
             //Correct size if EGI is less then min width.
-            if (newWidth < e.model.item.minWidth) {
-                newWidth = e.model.item.minWidth;
+            if (newWidth < e.model.item.minWidth + this._columnResizingObject.indicatorsWidth) {
+                newWidth = e.model.item.minWidth + this._columnResizingObject.indicatorsWidth;
             }
 
             //Correct width if fixed container has become bigger then scrollabel conatiner
@@ -1265,9 +1574,15 @@ Polymer({
                 newWidth = this.$.scrollableContainer.clientWidth - this._columnResizingObject.otherFixedColumnWidth - this._columnResizingObject.widthCorrection;
             }
 
+            //Correct width if additional dynamic width was added
+            let widthCorrection = 0;
+            if (e.model.item.shouldAddDynamicWidth) {
+                widthCorrection = -this.sortIndicatorWidth;
+            }
+
             if (columnWidth !== newWidth) {
-                this.set("fixedColumns." + e.model.index + ".width", newWidth);
-                this._updateFixedTotalRowWidth(e.model.index, newWidth);
+                this.set("fixedColumns." + e.model.index + ".width", newWidth + widthCorrection);
+                this._updateFixedTotalRowWidth(e.model.index, newWidth + widthCorrection);
                 this._updateTableSizeAsync();
             }
         }
@@ -1307,8 +1622,14 @@ Polymer({
             }
 
             //Correct size if EGI is less then min width.
-            if (newWidth < e.model.item.minWidth) {
-                newWidth = e.model.item.minWidth;
+            if (newWidth < e.model.item.minWidth + this._columnResizingObject.indicatorsWidth) {
+                newWidth = e.model.item.minWidth + this._columnResizingObject.indicatorsWidth;
+            }
+
+            //Correct width if additional dynamic width was added
+            let widthCorrection = 0;
+            if (e.model.item.shouldAddDynamicWidth) {
+                widthCorrection = -this.sortIndicatorWidth;
             }
             
             //Change the column width if it is needed
@@ -1322,8 +1643,8 @@ Polymer({
                     };
                     this._columnResizingObject.columnParameters = columnParameters;
                 }
-                this.set("columns." + e.model.index + ".width", newWidth);
-                this._updateTotalRowWidth(e.model.index, newWidth);
+                this.set("columns." + e.model.index + ".width", newWidth + widthCorrection);
+                this._updateTotalRowWidth(e.model.index, newWidth  + widthCorrection);
                 this._updateTableSizeAsync();
                 //scroll if needed.
                 if (mousePos.x > this._columnResizingObject.containerWithoutFixedSecondaryActionWidth || mousePos.x < this._columnResizingObject.leftFixedContainerWidth) {
@@ -1362,6 +1683,14 @@ Polymer({
         if (this._totalsRows) {
             this._totalsRows.forEach((totalRow, totalIndex) => {
                 this.set("_totalsRows." + totalIndex + ".1." + colIndex + ".growFactor", value);
+            });
+        }
+    },
+
+    _updateTotalDynamicWidth: function (colIndex, modelIndex, value) {
+        if (this._totalsRows) {
+            this._totalsRows.forEach((totalRow, totalIndex) => {
+                this.set("_totalsRows." + totalIndex + "." + modelIndex + "." + colIndex + ".shouldAddDynamicWidth", value);
             });
         }
     },
@@ -1485,16 +1814,17 @@ Polymer({
         return _showLeftShadow && dragAnchorFixed;
     },
 
-    _rightShadowVisible: function (_showRightShadow, secondaryActionsFixed) {
-        return _showRightShadow && secondaryActionsFixed;
+    _rightShadowVisible: function (_showRightShadow, secondaryActionsFixed, _isSecondaryActionPresent) {
+        return _showRightShadow && secondaryActionsFixed && _isSecondaryActionPresent;
     },
 
     _isDraggable: function (entitySelected) {
         return entitySelected ? "true" : "false";
     },
 
-    _calcColumnHeaderStyle: function (item, itemWidth, columnGrowFactor, fixed) {
-        let colStyle = "min-width: " + itemWidth + "px;" + "width: " + itemWidth + "px;"
+    _calcColumnHeaderStyle: function (item, itemWidth, columnGrowFactor, shouldAddDynamicWidth, fixed) {
+        const additionalWidth = shouldAddDynamicWidth ? this.sortIndicatorWidth : 0;
+        let colStyle = "min-width: " + (itemWidth + additionalWidth) + "px;" + "width: " + (itemWidth + additionalWidth) + "px;"
         if (columnGrowFactor === 0 || fixed === 'true') {
             colStyle += "flex-grow: 0;flex-shrink: 0;";
         } else {
@@ -1503,14 +1833,38 @@ Polymer({
         if (itemWidth === 0) {
             colStyle += "display: none;";
         }
+        return colStyle;
+    },
+
+    _calcColumnHeaderTextStyle: function (item) {
+        if (item.type === 'Integer' || item.type === 'BigDecimal' || item.type === 'Money') {
+            return "text-align: right;"
+        }
+        return "";
+    },
+
+    _isSortingVisible: function (sortable, sorting) {
+        return sortable && typeof sorting !== 'undefined' && sorting !== null;
+    },
+
+    _sortingIconForItem: function (sorting) {
+        return sorting === true ? 'arrow-drop-up' : (sorting === false ? 'arrow-drop-down' : 'arrow-drop-up');
+    },
+
+    _computeSortingIconStyle: function (sorting) {
+        return sorting === true ? 'align-self:flex-start' : (sorting === false ? 'align-self:flex-end' : 'align-self:flex-start');
+    },
+
+    _calculateOrder: function (sortingNumber) {
+        return sortingNumber >= 0 ? sortingNumber + 1 + "" : "";
+    },
+
+    _calcColumnStyle: function (item, itemWidth, columnGrowFactor, shouldAddDynamicWidth, fixed) {
+        let colStyle = this._calcColumnHeaderStyle(item, itemWidth, columnGrowFactor, shouldAddDynamicWidth, fixed);
         if (item.type === 'Integer' || item.type === 'BigDecimal' || item.type === 'Money') {
             colStyle += "text-align: right;"
         }
         return colStyle;
-    },
-
-    _calcColumnStyle: function (item, itemWidth, columnGrowFactor, fixed) {
-        return this._calcColumnHeaderStyle(item, itemWidth, columnGrowFactor, fixed);
     },
 
     // Observers
@@ -1544,6 +1898,17 @@ Polymer({
         this.updateStyles({"--egi-row-height": newValue});
     },
 
+    _numberOfHeaderLinesChanged: function (newValue) {
+        if (newValue > 0 && newValue < 4) {
+            this.updateStyles({"--egi-number-of-header-lines": newValue});
+            this._multipleHeaderLines = newValue > 1;
+        }
+    },
+
+    _sortIndicatorWidthChanged: function (newValue) {
+        this.updateStyles({"--egi-sorting-width": newValue + "px"});
+    },
+
     _totalsChanged: function (newTotals) {
         if (newTotals) {
             this.egiTotalsEntity = {entity: newTotals};
@@ -1570,12 +1935,14 @@ Polymer({
                         const totalColumn = item.summary[summaryRowCounter]
                         totalColumn.width = item.width;
                         totalColumn.growFactor = item.growFactor;
+                        totalColumn.shouldAddDynamicWidth = item.shouldAddDynamicWidth;
                         totalsRow.push(item.summary[summaryRowCounter]);
                     } else {
                         const totalColumn = {};
                         totalColumn.width = item.width;
                         totalColumn.growFactor = item.growFactor;
                         totalColumn.type = item.type
+                        totalColumn.shouldAddDynamicWidth = item.shouldAddDynamicWidth;
                         totalsRow.push(totalColumn);
                     }
                 });
@@ -1587,7 +1954,7 @@ Polymer({
         this._totalsRows = gridSummary;
     },
 
-    _heightRelatedPropertiesChanged: function (visibleRowCount, rowHeight, constantHeight, fitToHeight, summaryFixed, _totalsRowCount) {
+    _heightRelatedPropertiesChanged: function (visibleRowsCount, rowHeight, constantHeight, fitToHeight, summaryFixed, _totalsRowCount) {
         //Constant height take precedence over visible row count which takes precedence over default behaviour that extends the EGI's height to it's content height
         this.$.paperMaterial.style.removeProperty("height");
         this.$.paperMaterial.style.removeProperty("min-height");
@@ -1595,9 +1962,9 @@ Polymer({
         this.$.scrollableContainer.style.removeProperty("max-height");
         if (constantHeight) { //Set the height for the egi
             this.$.paperMaterial.style["height"] = "calc(" + constantHeight + " - 20px)";
-        } else if (visibleRowCount > 0) { //Set the height or max height for the scroll container so that only specified number of rows become visible.
+        } else if (visibleRowsCount > 0) { //Set the height or max height for the scroll container so that only specified number of rows become visible.
             this.$.paperMaterial.style["min-height"] = "fit-content";
-            const rowCount = visibleRowCount + (summaryFixed ? _totalsRowCount : 0);
+            const rowCount = visibleRowsCount + (summaryFixed ? _totalsRowCount : 0);
             const bottomMargin = this.getComputedStyleValue('--egi-bottom-margin').trim() || "15px";
             const height = "calc(3rem + " + rowCount + " * " + rowHeight + " + " + rowCount + "px" + (summaryFixed && _totalsRowCount > 0 ? (" + " + bottomMargin) : "") + ")";
             if (fitToHeight) {
@@ -1611,11 +1978,27 @@ Polymer({
 
     _renderingHintsChanged: function (newValue) {
         if (this.egiModel) {
-            this.egiModel.forEach((egiEntity, index) => {
-                egiEntity.renderingHints = (newValue && newValue[index]) || {};
+            this.egiModel.forEach((egiEntity) => {
+                egiEntity.renderingHints = (newValue && newValue[this.findEntityIndex(egiEntity.entity)]) || {};
                 egiEntity._renderingHintsChangedHandler && egiEntity._renderingHintsChangedHandler();
             });
             this._updateTableSizeAsync();
+        }
+    },
+
+    _primaryActionIndicesChanged: function (newValue) {
+        if (this.egiModel) {
+            this.egiModel.forEach((egiEntity, index) => {
+                this.set("egiModel." + index + ".primaryActionIndex", newValue[this.findEntityIndex(egiEntity.entity)]);
+            });
+        }
+    },
+
+    _secondaryActionIndicesChanged: function (newValue) {
+        if (this.egiModel) {
+            this.egiModel.forEach((egiEntity, index) => {
+                this.set("egiModel." + index + ".secondaryActionIndices", newValue[this.findEntityIndex(egiEntity.entity)]);
+            });
         }
     },
 
@@ -1668,6 +2051,16 @@ Polymer({
         return (selected ? 'Unselect' : 'Select') + ' this entity';
     },
 
+    _currentEntity: function (entity) {
+        const egi = this;
+        // Return old fashion javascript function (not arrow function). This function will be called by 
+        // action therefore this of the function will be the action (in case of arrow function this would be the EGI).
+        return function () {
+            //this - is the action that calls this function.
+            return this.supportsNavigation && egi.editingEntity ? egi.editingEntity : entity;
+        };
+    },
+
     _getTooltip: function (entity, column, action) {
         try {
             let tooltip = this.getValueTooltip(entity, column);
@@ -1682,16 +2075,16 @@ Polymer({
     },
 
     getValueTooltip: function (entity, column) {
-        const validationResult = entity.prop(column.property).validationResult();
+        const validationResult = this.getRealEntity(entity, column).prop(this.getRealProperty(column)).validationResult();
         if (this._reflector.isWarning(validationResult) || this._reflector.isError(validationResult)) {
             return validationResult.message && ("<b>" + validationResult.message + "</b>");
         } else if (column.tooltipProperty) {
-            const value = this.getValue(entity, column.tooltipProperty, "String").toString();
+            const value = this.getValue(this.getRealEntity(entity, column), column.tooltipProperty, "String").toString();
             return value && ("<b>" + value + "</b>");
         } else if (this._reflector.findTypeByName(column.type)) {
             return this._generateEntityTooltip(entity, column);
         } else {
-            const value = this.getValue(entity, column.property, column.type).toString();
+            const value = this.getBindedValue(entity, column).toString();
             return value && ("<b>" + value + "</b>");
         }
         return "";
@@ -1707,31 +2100,36 @@ Polymer({
     getActionTooltip: function (entity, column, action) {
         if (action && (action.shortDesc || action.longDesc)) {
             return this._generateActionTooltip(action);
-        } else if (this.getAttachmentIfPossible(entity, column.property)) {
+        } else if (this.getAttachmentIfPossible(entity, column)) {
             return this._generateActionTooltip({
                 shortDesc: 'Download',
                 longDesc: 'Click to download attachment.'
+            });
+        } else if (!this.isHyperlinkProp(entity, column) && this.isEntityProperty(entity, column)) {
+            const entityValue = getFirstEntityValue(this._reflector, entity, column.collectionalProperty || column.property);
+            const entityTitle = entityValue.type().entityTitle();
+            return this._generateActionTooltip({
+                shortDesc: `Edit ${entityTitle}`,
+                longDesc: `Edit ${entityTitle}`
             });
         }
         return "";
     },
     
     _generateEntityTooltip: function (entity, column) {
-        var key = this.getValue(entity, column.property, column.type);
-        var desc;
-        try {
-            if (Array.isArray(this.getValueFromEntity(entity, column.property))) {
-                desc = generateShortCollection(entity, column.property, this._reflector.findTypeByName(column.type))
-                    .map(function (subEntity) {
-                        return subEntity.get("desc");
-                    }).join(", ");
-            } else {
+        const valueToFormat = this.getValueFromEntity(entity, column);
+        if (Array.isArray(valueToFormat)) {
+            return this._reflector.tg_toString(valueToFormat, this.getRealEntity(entity, column).type(), this.getRealProperty(column), { collection: true, asTooltip: true });
+        } else {
+            let desc;
+            try {
                 desc = entity.get(column.property === '' ? "desc" : (column.property + ".desc"));
+            } catch (e) {
+                desc = ""; // TODO consider leaving the exception (especially strict proxies) to be able to see the problems of 'badly fetched columns'
             }
-        } catch (e) {
-            desc = ""; // TODO consider leaving the exception (especially strict proxies) to be able to see the problems of 'badly fetched columns'
+            const key = this.getBindedValue(entity, column);
+            return (key && ("<b>" + key + "</b>")) + (desc ? "<br>" + desc : "");
         }
-        return (key && ("<b>" + key + "</b>")) + (desc ? "<br>" + desc : "");
     },
 
     _generateActionTooltip: function (action) {
@@ -1847,7 +2245,7 @@ Polymer({
     getElementToDragFrom: function (target) {
         const elem = document.createElement('div');
         const entities = this.getSelectedEntities();
-        elem.innerHTML = entities.map(entity => this.getValueFromEntity(entity, "key")).join(", ");
+        elem.innerHTML = entities.map(entity => this.getValueFromEntity(entity, {property: "key"})).join(", ");
         elem.style["white-space"] = "nowrap";
         elem.style["overflow"] = "hidden";
         elem.style["text-overflow"] = "ellipsis";
@@ -1864,5 +2262,108 @@ Polymer({
             return data;
         }
         return {};
+    },
+
+    /************ EGI MASTER RELATED FUNCTIONS ***************/
+    isEditing: function () {
+        return this.$.centre_egi_master.offsetParent !== null;
+    },
+
+    canOpenMaster: function () {
+        return true;
+    },
+
+    _scrollToVisibleLeftMaster: function (e) {
+        const topEgiBox = this.$.top_egi.getBoundingClientRect();
+        const bottomEgiBox = this.$.bottom_egi.getBoundingClientRect();
+        const targetBox = e.target.getBoundingClientRect();
+        if (targetBox.top <= topEgiBox.bottom || targetBox.bottom >= bottomEgiBox.top) {
+            e.target.scrollIntoView({block: 'center'});
+        }
+    },
+
+    _scrollToVisibleCentreMaster: function (e) {
+        const leftEgiBox = this.$.left_egi.getBoundingClientRect();
+        const rightEgiBox = this.$.right_egi.getBoundingClientRect();
+        const targetBox = e.target.getBoundingClientRect();
+        let scrollHorizontally = false;
+        if (leftEgiBox.right >= targetBox.left || rightEgiBox.left <= targetBox.right) {
+            scrollHorizontally = true;
+        }
+        const topEgiBox = this.$.top_egi.getBoundingClientRect();
+        const bottomEgiBox = this.$.bottom_egi.getBoundingClientRect();
+        let scrollVertically = false;
+        if (targetBox.top <= topEgiBox.bottom || targetBox.bottom >= bottomEgiBox.top) {
+            scrollVertically = true;
+        }
+        if (scrollHorizontally || scrollVertically) {
+            e.target.scrollIntoView({block: scrollVertically ? 'center' : 'nearest', inline: 'center'});
+        }
+    },
+
+    _acceptValuesFromMaster: function () {
+        const entity = this.master._currBindingEntity["@@origin"];
+        const egiEntityToUpdate = this.egiModel[this.master.editableRow];
+        const entityToUpdate = egiEntityToUpdate.entity;
+        const modifPropHolder = this.master._extractModifiedPropertiesHolder(this.master._currBindingEntity, this.master._originalBindingEntity);
+        this.master.editors.forEach(editor => {
+            entityToUpdate.set(editor.propertyName, entity.get(editor.propertyName));
+            if (typeof modifPropHolder[editor.propertyName].val !== 'undefined') {
+                egiEntityToUpdate.entityModification[editor.propertyName] = true;
+            } else {
+                egiEntityToUpdate.entityModification[editor.propertyName] = false;
+            }
+            this.updateEntity(entityToUpdate, editor.propertyName);
+        });
+    },
+
+    _makeRowEditable: function (entityIndex) {
+        if (this.master.editableRow !== entityIndex ) {
+            if (typeof this.master.editableRow !== 'undefined') {
+                this.set("egiModel." + this.master.editableRow + ".editing", false);
+            }
+            if (entityIndex >= 0 && entityIndex < this.filteredEntities.length) {
+                this.master.resetMasterForNextEntity();
+                this.set("egiModel." + entityIndex + ".editing", true);
+                _insertMaster(this.$.left_egi, this.$.left_egi_master, entityIndex);
+                _insertMaster(this.$.centre_egi, this.$.centre_egi_master, entityIndex);
+                _insertMaster(this.$.right_egi, this.$.right_egi_master, entityIndex);
+                const rowOffset = this.$.centre_egi.querySelectorAll(".table-data-row")[entityIndex].offsetTop;
+                this.$.master_actions.style.top = (rowOffset - 35/*The desired offset of master actions above the row*/) + "px";
+                this.$.master_actions.style.left = this.$.scrollableContainer.scrollLeft + 16/*Desired distance from left border of egi */ + "px";
+                this.$.master_actions.style.display = 'flex';
+                this.master.editableRow = entityIndex;
+                this.master.entityId = this.filteredEntities[entityIndex].get("id");
+                this.master.entityType = this.filteredEntities[entityIndex].type().notEnhancedFullClassName();
+                this.master.retrieve();
+            } else {
+                this._closeMaster();
+            }
+        }
+    },
+
+    _closeMaster: function () {
+        if (typeof this.master.editableRow !== 'undefined') {
+            this.set("egiModel." + this.master.editableRow + ".editing", false);
+            delete this.master.editableRow;
+        }
+        this.$.master_actions.style.display = 'none';
+        this.$.left_egi_master.style.display = 'none';
+        this.$.centre_egi_master.style.display = 'none';
+        this.$.right_egi_master.style.display = 'none';
+    },
+
+    _initMasterEditors: function () {
+        if (this.master) {
+            this.master.editors.forEach(editor => {
+                editor.setAttribute("slot", this._getSlotNameFor(editor.propertyName));
+                editor.style.flexGrow = '1';
+                this.appendChild(editor);
+            });
+        }
+    },
+
+    _getSlotNameFor: function (propertyName) {
+        return propertyName || "this";
     },
 });

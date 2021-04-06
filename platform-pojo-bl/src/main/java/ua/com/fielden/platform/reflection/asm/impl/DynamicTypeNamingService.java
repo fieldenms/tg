@@ -2,6 +2,8 @@ package ua.com.fielden.platform.reflection.asm.impl;
 
 import java.util.UUID;
 
+import org.apache.commons.lang3.StringUtils;
+
 /**
  * A service for naming new classes created dynamically as the result of new property introduction or modification of existing.
  * 
@@ -14,7 +16,7 @@ public final class DynamicTypeNamingService {
     private DynamicTypeNamingService() { }
 
     private static String enhancedName(final String name) {
-        return name + APPENDIX + "_" + UUID.randomUUID().toString().replace("-", "");
+        return name + APPENDIX + "_" + StringUtils.remove(UUID.randomUUID().toString(), "-");
     }
 
     public static String nextTypeName(final String name) {

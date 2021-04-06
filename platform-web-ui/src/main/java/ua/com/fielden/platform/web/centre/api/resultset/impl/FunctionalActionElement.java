@@ -1,19 +1,23 @@
 package ua.com.fielden.platform.web.centre.api.resultset.impl;
 
 import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import ua.com.fielden.platform.dom.DomElement;
-import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.crit.impl.AbstractCriterionWidget;
 import ua.com.fielden.platform.web.interfaces.IImportable;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
+import ua.com.fielden.platform.web.view.master.api.actions.IAction;
+import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 
 /**
- * The implementation for functional entity actions (dom element).
+ * The implementation for functional entity actions (DOM element).
  *
  * @author TG Team
  *
@@ -93,7 +97,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
      *
      * @return
      */
-    private Map<String, Object> createAttributes() {
+    public Map<String, Object> createAttributes() {
         final LinkedHashMap<String, Object> attrs = new LinkedHashMap<>();
         if (isDebug()) {
             attrs.put("debug", "true");
@@ -107,6 +111,10 @@ public class FunctionalActionElement implements IRenderable, IImportable {
             attrs.put("data-route", getDataRoute());
         } else if (FunctionalActionKind.FRONT == functionalActionKind) {
             attrs.put("slot", "custom-front-action");
+        } else if (FunctionalActionKind.SHARE == functionalActionKind) {
+            attrs.put("slot", "custom-share-action");
+            attrs.put("disabled", "[[_buttonDisabled]]");
+            attrs.put(" style", "[[_computeButtonStyle(_buttonDisabled)]]"); // prepended with ' ' due to restriction in DOM API that requires only value pairs with ':' separator
         }
 
         attrs.put("ui-role", conf().role.toString());
@@ -118,12 +126,19 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         attrs.put("icon", getIcon());
         attrs.put("icon-style", getIconStyle());
         attrs.put("should-refresh-parent-centre-after-save", conf().shouldRefreshParentCentreAfterSave);
-        attrs.put("component-uri", "/master_ui/" + conf().functionalEntity.get().getName());
-        final String elementName = "tg-" + conf().functionalEntity.get().getSimpleName() + "-master";
+        attrs.put("component-uri", generateComponentUri());
+        final String elementName = generateElementName();
         attrs.put("element-name", elementName);
+        //If action has no functional entity type and it's noAction property is false then
+        //it is dynamic action that determines it's element name and import uri by current entity and if exists chosen property.
+        if (!conf().functionalEntity.isPresent()) {
+            attrs.put("dynamic-action", true);
+        }
         attrs.put("number-of-action", numberOfAction);
         attrs.put("action-kind", functionalActionKind);
-        attrs.put("element-alias", elementName + "_" + numberOfAction + "_" + functionalActionKind);
+        conf().functionalEntity.ifPresent(funcType ->  {
+            attrs.put("element-alias", elementName + "_" + numberOfAction + "_" + functionalActionKind);
+        });
 
         // in case of an menu item action show-dialog assignment happens within tg-master-menu
         if (FunctionalActionKind.INSERTION_POINT == functionalActionKind) {
@@ -131,6 +146,8 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         } else if (FunctionalActionKind.MENU_ITEM != functionalActionKind) {
             attrs.put("show-dialog", "[[_showDialog]]");
         }
+        //Specify taoster to show error message via the toast
+        attrs.put("toaster", "[[toaster]]");
 
         // in case of an action that models a menu item for an entity master with menu, context gets assigned
         // only after the main entity is saved at the client side as part of tg-master-menu logic.
@@ -162,8 +179,16 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         return attrs;
     }
 
+    private String generateElementName() {
+        return conf().functionalEntity.map(entityType -> "tg-" + entityType.getSimpleName() + "-master").orElse("");
+    }
+
+    private String generateComponentUri() {
+        return conf().functionalEntity.map(entityType -> "/master_ui/" + entityType.getName()).orElse("");
+    }
+
     public String getDataRoute() {
-        return conf().functionalEntity.get().getSimpleName();
+        return conf().functionalEntity.map(entityType -> entityType.getSimpleName()).orElse("");
     }
 
     public String getIcon() {
@@ -222,40 +247,90 @@ public class FunctionalActionElement implements IRenderable, IImportable {
      */
     public String createActionObject() {
         final StringBuilder attrs = new StringBuilder("{\n");
-
-        attrs.append("preAction: function (action) {\n");
-        attrs.append("    console.log('preAction: " + conf().shortDesc.orElse("noname") + "');\n");
-        if (conf().preAction.isPresent()) {
-            attrs.append(conf().preAction.get().build().toString());
-        } else {
-            attrs.append("    return Promise.resolve(true);\n");
-        }
-        attrs.append("},\n");
-
-        attrs.append("postActionSuccess: function (functionalEntity, action, master) {\n");
-        attrs.append("    console.log('postActionSuccess: " + conf().shortDesc.orElse("noname") + "', functionalEntity);\n");
-        if (conf().successPostAction.isPresent()) {
-            attrs.append(conf().successPostAction.get().build().toString());
-        }
-        attrs.append("},\n");
-
-        attrs.append("attrs: {\n");
-        attrs.append("    entityType:'" + conf().functionalEntity.get().getName() + "', currentState:'EDIT', centreUuid: self.uuid,\n");
-
-        if (conf().prefDimForView.isPresent()) {
-            final PrefDim prefDim = conf().prefDimForView.get();
-            attrs.append(format("    prefDim: {'width': function() {return %s}, 'height': function() {return %s}, 'widthUnit': '%s', 'heightUnit': '%s'},\n", prefDim.width, prefDim.height, prefDim.widthUnit.value, prefDim.heightUnit.value));
-        }
-
-        attrs.append("},\n");
-
-        attrs.append("postActionError: function (functionalEntity, action, master) {\n");
-        attrs.append("    console.log('postActionError: " + conf().shortDesc.orElse("noname") + "', functionalEntity);\n");
-        if (conf().errorPostAction.isPresent()) {
-            attrs.append(conf().errorPostAction.get().build().toString());
-        }
-        attrs.append("}\n");
+        attrs.append("preAction: ").append(createPreAction()).append(",\n");
+        attrs.append("postActionSuccess: ").append(createPostActionSuccess()).append(",\n");
+        attrs.append("attrs: ").append(createElementAttributes(false)).append(",\n");
+        attrs.append("postActionError: ").append(createPostActionError()).append("\n");
         return attrs.append("}\n").toString();
+    }
+
+    /**
+     * Creates non-empty JS function string for {@code bodyOpt}. Generated function logs the {@code name} and {@code actionShortDescOpt} and executes the body.
+     * 
+     * @param params -- string of parameters for the generated function
+     * @param codeOptIfEmptyBody -- code to be executed if body is empty
+     * @return
+     */
+    private static String createFunctionBody(final Optional<? extends IAction> bodyOpt, final String name, final String params, final Optional<String> codeOptIfEmptyBody, final Optional<String> actionShortDescOpt) {
+        final StringBuilder code = new StringBuilder();
+        code.append(format("function (%s) {\n", params));
+        code.append(format("    console.log('%s: %s');\n", name, actionShortDescOpt.orElse("noname")));
+        if (bodyOpt.isPresent()) {
+            code.append(bodyOpt.get().build().toString());
+        } else {
+            codeOptIfEmptyBody.ifPresent((c) -> code.append(c));
+        }
+        code.append("}");
+        return code.toString();
+    }
+
+    /**
+     * Creates JS function for {@link IPreAction}.
+     */
+    public String createPreAction() {
+        return createFunctionBody(conf().preAction, "preAction", "action", of("    return Promise.resolve(true);\n"), conf().shortDesc);
+    }
+
+    /**
+     * Creates JS function for {@link IPostAction}.
+     */
+    public String createPostActionFunctionBody(final Optional<? extends IAction> actionFunction, final String name) {
+        return createFunctionBody(actionFunction, name, "functionalEntity, action, master", empty(), conf().shortDesc);
+    }
+
+    /**
+     * Creates JS function for successful {@link IPostAction}.
+     */
+    public String createPostActionSuccess() {
+        return createPostActionFunctionBody(conf().successPostAction, "postActionSuccess");
+    }
+
+    /**
+     * Creates JS function for erroneous {@link IPostAction}.
+     */
+    public String createPostActionError() {
+        return createPostActionFunctionBody(conf().errorPostAction, "postActionError");
+    }
+
+    /**
+     * Creates action 'attrs' for generation ({@code asString} === false) or for client-side parsing in 'tg-app-template.postRetrieved' method ({@code asString} === true).
+     * 
+     * @param asString
+     * @return
+     */
+    public String createElementAttributes(final boolean asString) {
+        final StringBuilder code = new StringBuilder();
+        final String keyQ = asString ? "\"" : "";
+        final String valueQ = asString ? "\"" : "'";
+        code.append("{\n");
+        conf().functionalEntity.ifPresent(entityType -> {
+            code.append("    " + keyQ + "entityType" + keyQ + ": " + valueQ + entityType.getName() + valueQ + ",\n");
+        });
+        code.append("    " + keyQ + "currentState" + keyQ + ": " + valueQ + "EDIT" + valueQ + ",\n");
+        code.append("    " + keyQ + "centreUuid" + keyQ + ": " + keyQ + "self.uuid" + keyQ); // value surrounded with "" -- will be interpreted in tg-app-template specifically
+        
+        conf().prefDimForView.ifPresent(prefDim -> {
+            code.append(format(",\n    " + 
+                keyQ + "prefDim" + keyQ + ": " + "{" + 
+                    keyQ + "width" + keyQ + ": " + keyQ + "function() {return %s}" + keyQ +", " + // value surrounded with "" -- will be interpreted in tg-app-template specifically
+                    keyQ + "height" + keyQ + ": " + keyQ + "function() {return %s}" + keyQ + ", " + // value surrounded with "" -- will be interpreted in tg-app-template specifically
+                    keyQ + "widthUnit" + keyQ + ": " + valueQ + "%s" + valueQ + ", " +
+                    keyQ + "heightUnit" + keyQ + ": " + valueQ + "%s" + valueQ + 
+                "}", prefDim.width, prefDim.height, prefDim.widthUnit.value, prefDim.heightUnit.value
+            ));
+        });
+        code.append("\n}");
+        return code.toString();
     }
 
     public boolean isForMaster() {

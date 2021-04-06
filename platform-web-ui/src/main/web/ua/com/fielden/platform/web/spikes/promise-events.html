@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+    <title>Promise events</title>
+</head>
+
+<body>
+    <script>
+        const handledPromiseRejection = function (e) {
+            console.log("rejection handled");
+        }
+        const unhandledPromiseRejection = function (e) {
+            console.log("rejection unhandled");
+        }
+        window.addEventListener('rejectionhandled', handledPromiseRejection);
+        window.addEventListener('unhandledrejection', unhandledPromiseRejection);
+        const prom = new Promise((resolve, reject) => {
+            setTimeout(() => {
+                reject('rejected');
+            }, 1000);
+        }); // this generates first 'unhandledrejection' event
+
+        setTimeout(() => {
+            prom.catch(e => { // this catch gets actioned after promise has been fullfilled -- this leads to 'rejectionhandled' event
+                console.log("catched rejection in a while after fulfilling");
+                throw new Error("error"); // this generates second 'unhandledrejection' event
+            });
+        }, 3000);
+    </script>
+</body>

@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.web.factories.webui;
 
 import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.getEntityCentre;
-import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.saveAsName;
 
 import org.restlet.Request;
 import org.restlet.Response;
@@ -15,7 +14,9 @@ import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
+import ua.com.fielden.platform.web.centre.ICentreConfigSharingModel;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.CriteriaResource;
@@ -37,7 +38,9 @@ public class CriteriaResourceFactory extends Restlet {
     
     private final IUserProvider userProvider;
     private final IDeviceProvider deviceProvider;
+    private final IDates dates;
     private final EntityFactory entityFactory;
+    private final ICentreConfigSharingModel sharingModel;
 
     /**
      * Instantiates a factory for criteria entity resource.
@@ -51,7 +54,9 @@ public class CriteriaResourceFactory extends Restlet {
         this.companionFinder = injector.getInstance(ICompanionObjectFinder.class);
         this.userProvider = injector.getInstance(IUserProvider.class);
         this.deviceProvider = injector.getInstance(IDeviceProvider.class);
+        this.dates = injector.getInstance(IDates.class);
         this.entityFactory = injector.getInstance(EntityFactory.class);
+        this.sharingModel = injector.getInstance(ICentreConfigSharingModel.class);
     }
     
     @Override
@@ -62,14 +67,15 @@ public class CriteriaResourceFactory extends Restlet {
             new CriteriaResource(
                     restUtil,
                     getEntityCentre(request, webUiConfig),
-                    saveAsName(request),
                     domainTreeEnhancerCache,
                     webUiConfig,
                     companionFinder,
                     userProvider,
                     deviceProvider,
+                    dates,
                     critGenerator,
                     entityFactory,
+                    sharingModel,
                     getContext(),
                     request,
                     response //

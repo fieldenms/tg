@@ -16,6 +16,8 @@ import {microTask} from '/resources/polymer/@polymer/polymer/lib/utils/async.js'
 
 import { TgEditor, createEditorTemplate} from '/resources/editors/tg-editor.js';
 import { tearDownEvent, allDefined } from '/resources/reflection/tg-polymer-utils.js'
+import { composeEntityValue, composeDefaultEntityValue } from '/resources/editors/tg-entity-formatter.js'; 
+import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 
 const additionalTemplate = html`
     <style>
@@ -54,7 +56,7 @@ const additionalTemplate = html`
             --tg-editor-default-input-layer-display: flex;
         }
     </style>
-    <iron-ajax id="ajaxSearcher" loading="{{searching}}" url="[[_url]]" method="POST" handle-as="json" on-response="_processSearcherResponse" on-error="_processSearcherError"></iron-ajax>
+    <iron-ajax id="ajaxSearcher" headers="[[_headers]]" loading="{{searching}}" url="[[_url]]" method="POST" handle-as="json" on-response="_processSearcherResponse" reject-with-request on-error="_processSearcherError"></iron-ajax>
     <tg-serialiser id="serialiser"></tg-serialiser>`;
 const customInputTemplate = html`
     <iron-input bind-value="{{_editingValue}}" class="custom-input-wrapper">
@@ -78,6 +80,7 @@ const inputLayerTemplate = html`
         <template is="dom-repeat" items="[[_customPropTitle]]">
             <span hidden$="[[!item.title]]" style="color:#737373; font-size:0.8rem; padding-right:2px;"><span>[[item.title]]</span>:  </span>
             <span style$="[[_valueStyle(item, index)]]">[[item.value]]</span>
+            <span hidden$="[[!item.separator]]" style="white-space: pre;">[[item.separator]]</span>
         </template>
         <span style="color:#737373" hidden$="[[!_hasDesc(entity)]]">&nbsp;&ndash;&nbsp;<i>[[_formatDesc(entity)]]</i></span>
     </div>`;
@@ -311,6 +314,7 @@ export class TgEntityEditor extends TgEditor {
                    return (function (event) {
                        if (event.keyCode === 13 && this.opened === true) { // 'Enter' has been pressed
                            this._done();
+                           tearDownEvent(event);
                        } else if ((event.keyCode === 38 /*up*/ || event.keyCode === 40 /*down*/) && !event.ctrlKey) { // up/down arrow keys
                            // By default up/down arrow keys work like home/end for and input field
                            // That's why this event should be suppressed.
@@ -357,7 +361,18 @@ export class TgEntityEditor extends TgEditor {
             */
            _retrieveContainerSizes: {
                type: Function
-           }
+           },
+            
+            /**
+             * Additional headers for every 'iron-ajax' client-side requests. These only contain 
+             * our custom 'Time-Zone' header that indicates real time-zone for the client application.
+             * The time-zone then is to be assigned to threadlocal 'IDates.timeZone' to be able
+             * to compute 'Now' moment properly.
+             */
+            _headers: {
+                type: String,
+                value: _timeZoneHeader
+            }
        };
     }
     
@@ -500,9 +515,9 @@ export class TgEntityEditor extends TgEditor {
         let wasNewValueObserved = false;
         let indexOfFirstNewValue = -1;
         for (let index = 0; index < entities.length; index++) {
-            // Entity is converted to a string representation of its key.
-            // This includes correct conversion of simple, composite and union entities
-            const key = this.reflector().convert(entities[index]);
+            // Entity is converted to a string representation of itself that is the same as string representation of its key or [key is not assigned] string if there is no key.
+            // This includes correct conversion of simple and composite entities. Top-level union entities are not supported -- only as part of other entities as a property values.
+            const key = entities[index].toString();
             entities[index].key = key;
             const isNew = this.result.pushValue(entities[index]);
             // if a new value was observed for the first time then capture its index
@@ -661,9 +676,12 @@ export class TgEntityEditor extends TgEditor {
         }
     }
 
+    /**
+     * 'on-tap' event listener for tg-scrollable-component on result dialog which only contains paper-item elements for selection.
+     */
     _entitySelected () {
-        // if this this is non-multi mode and the tap happened on a result item then it should be selected
-        if (!this.multi && this.result && this.result.shadowRoot.activeElement.classList.contains("tg-item")) {
+        // if this is non-multi mode then selected item should be accepted
+        if (!this.multi) {
             this._done();
         }
     }
@@ -787,10 +805,13 @@ export class TgEntityEditor extends TgEditor {
      * However, there are exceptional situations where null values might be passed even in case of MULTI.
      */
     convertToString (value) {
-        // there are cases where value might be null even for MULTI selection criteria
-        // this happens when a crit-only property changes from type SINGLE to MULTI
-        // joining on an empty array evaluates to an empty string
-        return value === null ? "" : (this.multi === true ? value.join(this.separator) : "" + value);
+        // there are cases where value might be null even for MULTI selection criteria;
+        // this happens when a crit-only property changes from type SINGLE to MULTI;
+        // joining on an empty array evaluates to an empty string;
+        // null converts to '' in majority of cases (except boolean) in reflector.tg_toString... family of methods and this is the case for this editor (String or Array of Strings types)
+        return this.multi === true
+            ? this.reflector().tg_toString(value, this.entity.type(), this.propertyName, { bindingValue: true, collection: true, separator: this.separator }) // custom ',' separator is needed here, otherwise tg-editor.convertToString would be sufficient
+            : super.convertToString(value);
     }
 
     /**
@@ -851,13 +872,13 @@ export class TgEntityEditor extends TgEditor {
         if (!allDefined(arguments)) {
             return;
         }
-        var valueToFormat, fullEntity;
         if (!focused && entity !== null) {
-            fullEntity = this.reflector()._getValueFor(entity, "");
+            const fullEntity = this.reflector().tg_getFullEntity(entity);
+            let valueToFormat;
             if (this.reflector().isError(fullEntity.prop(this.propertyName).validationResult())) {
                 valueToFormat = _editingValue; // Here we can take fullEntity.prop(this.propertyName).lastInvalidValue(); to show also description of invalid values. However, 'not found mocks' need to be properly supported. Also description layer for unfocused editor can be enhanced in a similar way too.
             } else {
-                valueToFormat = this.reflector()._getValueFor(entity, this.propertyName);
+                valueToFormat = fullEntity.get(this.propertyName);
             }
             return super._getTooltip(valueToFormat);
         }
@@ -882,11 +903,11 @@ export class TgEntityEditor extends TgEditor {
     _createEntityTooltip (entity) {
         const titles = this._createEntityTitleObject(entity);
         if (titles.length === 1) {
-            return "<b>" + this.reflector().convert(entity) + "</b>" + (entity.get('desc') ? "<br>" + entity.get('desc') : "");
+            return "<b>" + titles[0].value + "</b>" + (entity.get('desc') ? "<br>" + entity.get('desc') : "");
         } else {
             return "<table style='border-collapse: collapse;'>" +
                 titles.map(entry => "<tr><td valign='top' style='padding-left:0'>" + entry.title + ": </td><td valign='top' style='padding-right:0'><b>" + entry.value + "</b></td></tr>").join("") +
-            "</table>"  + (entity.get('desc') ? "<br>" + entity.get('desc') : "");
+            "</table>"  + (entity.get('desc') ? entity.get('desc') : "");
         }
     }
 
@@ -896,7 +917,7 @@ export class TgEntityEditor extends TgEditor {
 
     _valueStyle (item, index) {
         if (this._customPropTitle && this._customPropTitle.length > 1) {
-            if (index < this._customPropTitle.length - 1) {
+            if (index < this._customPropTitle.length - 1 && item.title && !item.separator) {
                 return "padding-right: 5px";
             }
         }
@@ -905,9 +926,15 @@ export class TgEntityEditor extends TgEditor {
 
     _createTitleObject (entity) {
         if (entity !== null) {
-            var entityValue = this.reflector()._getValueFor(entity, this.propertyName);
+            const entityValue = this.reflector().tg_getFullValue(entity, this.propertyName);
+            const metaProp = this.reflector().getEntityTypeProp(this.reflector().tg_getFullEntity(entity), this.propertyName);
             if (entityValue !== null && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription()) {
-                return this._createEntityTitleObject(entityValue);
+                try {
+                    return composeEntityValue(entityValue, metaProp.displayAs());
+                } catch (e) {
+                    console.error(e.msg);
+                    return composeDefaultEntityValue(entityValue);
+                }
             }
         }
         return [{value: ""}];
@@ -927,7 +954,7 @@ export class TgEntityEditor extends TgEditor {
             if (entityValue.get(keyName)) {
                 titles.push({
                     title: entityType.prop(keyName).title(),
-                    value: this.reflector().convert(entityValue.get(keyName))
+                    value: this.reflector().tg_toString(entityValue.get(keyName), entityType, keyName)
                 });
             }
         });
@@ -938,12 +965,12 @@ export class TgEntityEditor extends TgEditor {
     }
 
     _createSimpleTitle (entityValue) {
-        return [{value: this.reflector().convert(entityValue)}];
+        return [{value: entityValue.toString()}]; // entityValue never empty
     }
 
     _hasDesc (entity) {
         if (entity !== null) {
-            var entityValue = this.reflector()._getValueFor(entity, this.propertyName);
+            const entityValue = this.reflector().tg_getFullValue(entity, this.propertyName);
             if (entityValue !== null && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription()) {
                 return !!entityValue.get('desc');
             }
@@ -953,7 +980,7 @@ export class TgEntityEditor extends TgEditor {
 
     _formatDesc (entity) {
         if (entity !== null) {
-            var entityValue = this.reflector()._getValueFor(entity, this.propertyName);
+            const entityValue = this.reflector().tg_getFullValue(entity, this.propertyName);
             if (entityValue !== null && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription() && entityValue.get('desc')) {
                 return entityValue.get('desc');
             }
@@ -966,8 +993,8 @@ export class TgEntityEditor extends TgEditor {
             return;
         }
         if (entity !== null) {
-            var entityValue = this.reflector()._getValueFor(entity, this.propertyName);
-            this._hasLayer = entityValue !== null && this.convertToString(this.reflector().convert(entityValue)) === _editingValue && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription();
+            const entityValue = this.reflector().tg_getFullValue(entity, this.propertyName);
+            this._hasLayer = entityValue !== null && this.convertToString(this.reflector().tg_convert(entityValue)) === _editingValue && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription();
         } else {
             this._hasLayer = false;
         }

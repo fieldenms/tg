@@ -52,10 +52,9 @@ import ua.com.fielden.platform.security.user.UserDao;
 import ua.com.fielden.platform.security.user.UserSecretDao;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.api.ISerialiser0;
 import ua.com.fielden.platform.serialisation.api.impl.Serialiser;
-import ua.com.fielden.platform.serialisation.api.impl.Serialiser0;
 import ua.com.fielden.platform.test.UserProviderForTesting;
+import ua.com.fielden.platform.test.ioc.DatesForTesting;
 import ua.com.fielden.platform.test.ioc.PlatformTestServerModule.TestSessionCacheBuilder;
 import ua.com.fielden.platform.test.ioc.TickerForSessionCache;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
@@ -65,6 +64,7 @@ import ua.com.fielden.platform.ui.config.api.IEntityMasterConfig;
 import ua.com.fielden.platform.ui.config.controller.EntityCentreConfigDao;
 import ua.com.fielden.platform.ui.config.controller.EntityLocatorConfigDao;
 import ua.com.fielden.platform.ui.config.controller.EntityMasterConfigDao;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdaterDao;
 import ua.com.fielden.platform.web.centre.CentreConfigDeleteActionDao;
@@ -73,6 +73,7 @@ import ua.com.fielden.platform.web.centre.CentreConfigEditActionDao;
 import ua.com.fielden.platform.web.centre.CentreConfigLoadActionDao;
 import ua.com.fielden.platform.web.centre.CentreConfigNewActionDao;
 import ua.com.fielden.platform.web.centre.CentreConfigSaveActionDao;
+import ua.com.fielden.platform.web.centre.CentreConfigShareActionDao;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDao;
 import ua.com.fielden.platform.web.centre.CustomisableColumnDao;
 import ua.com.fielden.platform.web.centre.ICentreColumnWidthConfigUpdater;
@@ -82,6 +83,7 @@ import ua.com.fielden.platform.web.centre.ICentreConfigEditAction;
 import ua.com.fielden.platform.web.centre.ICentreConfigLoadAction;
 import ua.com.fielden.platform.web.centre.ICentreConfigNewAction;
 import ua.com.fielden.platform.web.centre.ICentreConfigSaveAction;
+import ua.com.fielden.platform.web.centre.ICentreConfigShareAction;
 import ua.com.fielden.platform.web.centre.ICentreConfigUpdater;
 import ua.com.fielden.platform.web.centre.ICustomisableColumn;
 import ua.com.fielden.platform.web.centre.ILoadableCentreConfig;
@@ -116,7 +118,6 @@ public class WebHibernateModule extends CommonFactoryModule {
         bind(IUserProvider.class).to(UserProviderForTesting.class).in(Scopes.SINGLETON);
         bind(INewUserNotifier.class).toInstance(s -> {});
         bind(ISerialisationClassProvider.class).toInstance(serialisationClassProvider);
-        bind(ISerialiser0.class).to(Serialiser0.class);
         bind(ISerialiser.class).to(Serialiser.class);
         // bind DAO
         bind(IUserRole.class).to(UserRoleDao.class);
@@ -124,6 +125,7 @@ public class WebHibernateModule extends CommonFactoryModule {
         bind(ISecurityTokenInfo.class).to(SecurityTokenInfoDao.class);
         bind(ICustomisableColumn.class).to(CustomisableColumnDao.class);
         
+        bind(ICentreConfigShareAction.class).to(CentreConfigShareActionDao.class);
         bind(ICentreConfigNewAction.class).to(CentreConfigNewActionDao.class);
         bind(ICentreConfigDuplicateAction.class).to(CentreConfigDuplicateActionDao.class);
         bind(ICentreConfigDeleteAction.class).to(CentreConfigDeleteActionDao.class);
@@ -151,6 +153,7 @@ public class WebHibernateModule extends CommonFactoryModule {
         bindConstant().annotatedWith(UntrustedDeviceSessionDuration.class).to(5); // 5 minutes
 
         bind(Ticker.class).to(TickerForSessionCache.class).in(Scopes.SINGLETON);
+        bind(IDates.class).to(DatesForTesting.class).in(Scopes.SINGLETON);
         bind(IUniversalConstants.class).to(UniversalConstantsForTesting.class).in(Scopes.SINGLETON);
         bind(new TypeLiteral<Cache<String, UserSession>>(){}).annotatedWith(SessionCache.class).toProvider(TestSessionCacheBuilder.class).in(Scopes.SINGLETON);
         

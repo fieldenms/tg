@@ -62,6 +62,19 @@ const TgSelectionCriteriaBehaviorImpl = {
         },
 
         /**
+         * UUID for currently loaded centre configuration.
+         * 
+         * Returns '' for default configurations.
+         * Returns non-empty value (e.g. '4920dbe0-af69-4f57-a93a-cdd7157b75d8') for link, own save-as and inherited [from base / shared] configurations.
+         */
+        configUuid: {
+            type: String,
+            value: '',
+            notify: true,
+            observer: '_configUuidChanged'
+        },
+
+        /**
          * Description of currently loaded 'saveAs' configuration.
          */
         saveAsDesc: {
@@ -86,7 +99,9 @@ const TgSelectionCriteriaBehaviorImpl = {
         },
 
         /**
-         * Currently immutable capacity of the page.
+         * Page capacity taken from PREVIOUSLY_RUN surrogate centre after run / refresh / navigate action (see tg-entity-centre-behavior._postRun).
+         * 
+         * This is used for single purpose: update information on EDIT/NAVIGATE action dialogs (see EntityNavigationPreAction).
          */
         pageCapacity: {
             type: Number
@@ -100,9 +115,20 @@ const TgSelectionCriteriaBehaviorImpl = {
         //   alternatively, computing function needs to be specified). 									       //
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        _centreChanged: {
+        /**
+         * Indicates whether currently loaded centre configuration is [default, link or inherited] or changed [own save-as].
+         */
+        _centreDirty: {
             type: Boolean,
-            value: false,
+            value: false
+        },
+
+        /**
+         * Indicates whether currently loaded centre configuration is [default, link or inherited] or changed [own save-as] or criteria editors are being edited at the moment.
+         */
+        _centreDirtyOrEdited: {
+            type: Boolean,
+            computed: '_calculateCentreDirtyOrEdited(_centreDirty, _editedPropsExist)',
             notify: true
         },
 
@@ -218,18 +244,23 @@ const TgSelectionCriteriaBehaviorImpl = {
                 const criteriaEntity = entityAndCustomObject[0];
                 self._provideExceptionOccured(criteriaEntity, exceptionOccured);
                 const customObject = self._reflector().customObject(entityAndCustomObject);
-                const resultEntities = customObject.resultEntities || [];
-                const pageCount = customObject.pageCount;
-                const pageNumber = customObject.pageNumber;
-                const metaValues = customObject.metaValues;
-                const centreChanged = customObject.isCentreChanged;
-                const renderingHints = customObject.renderingHints || [];
-                const summary = customObject.summary;
-                const staleCriteriaMessage = customObject.staleCriteriaMessage;
-                const columnWidths = customObject.columnWidths;
-                const visibleColumnsWithOrder = customObject.visibleColumnsWithOrder;
+                const result = {
+                    resultEntities: customObject.resultEntities || [],
+                    pageCount: customObject.pageCount,
+                    pageNumber: customObject.pageNumber,
+                    metaValues: customObject.metaValues,
+                    centreDirty: customObject.centreDirty,
+                    renderingHints: customObject.renderingHints || [],
+                    dynamicColumns: customObject.dynamicColumns || {},
+                    summary: customObject.summary,
+                    staleCriteriaMessage: customObject.staleCriteriaMessage,
+                    columnWidths: customObject.columnWidths,
+                    resultConfig: customObject.resultConfig,
+                    primaryActionIndices: customObject.primaryActionIndices,
+                    secondaryActionIndices: customObject.secondaryActionIndices
+                };
 
-                self._postRunDefault(criteriaEntity, resultEntities, pageNumber, pageCount, metaValues, centreChanged, renderingHints, summary, staleCriteriaMessage, columnWidths, visibleColumnsWithOrder);
+                self._postRunDefault(criteriaEntity, result);
             });
         };
 
@@ -240,17 +271,17 @@ const TgSelectionCriteriaBehaviorImpl = {
         };
 
         // calbacks, that will potentially be augmented by tg-action child elements: 
-        self._postRunDefault = (function (criteriaEntity, resultEntities, pageNumber, pageCount, metaValues, centreChanged, renderingHints, summary, staleCriteriaMessage, columnWidths, visibleColumnsWithOrder) {
-            this.fire('egi-entities-appeared', resultEntities);
+        self._postRunDefault = (function (criteriaEntity, result) {
+            this.fire('egi-entities-appeared', result.resultEntities);
 
-            if (typeof staleCriteriaMessage !== 'undefined') { // if staleCriteriaMessage is defined (i.e. it can be 'null' or 'Selection criteria have been changed, but ...' message) -- then populate it into config button tooltip / colour
-                this.staleCriteriaMessage = staleCriteriaMessage;
+            if (typeof result.staleCriteriaMessage !== 'undefined') { // if staleCriteriaMessage is defined (i.e. it can be 'null' or 'Selection criteria have been changed, but ...' message) -- then populate it into config button tooltip / colour
+                this.staleCriteriaMessage = result.staleCriteriaMessage;
             }
-            if (typeof pageCount !== 'undefined') {
-                this.pageCount = pageCount; // at this stage -- update pageCount not only on run(), but also on firstPage(), nextPage() etc.
+            if (typeof result.pageCount !== 'undefined') {
+                this.pageCount = result.pageCount; // at this stage -- update pageCount not only on run(), but also on firstPage(), nextPage() etc.
             }
-            if (typeof pageNumber !== 'undefined') {
-                this.pageNumber = pageNumber;
+            if (typeof result.pageNumber !== 'undefined') {
+                this.pageNumber = result.pageNumber;
             }
             this.pageNumberUpdated = this.pageNumber;
             this.pageCountUpdated = this.pageCount;
@@ -258,16 +289,16 @@ const TgSelectionCriteriaBehaviorImpl = {
                 const msg = "Running completed successfully.";
                 this._openToastWithoutEntity(msg, false, msg, false);
 
-                this.postRun(null, null, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder);
+                this.postRun(null, null, result);
             } else {
-                this._setPropertyModel(metaValues);
-                this._centreChanged = centreChanged;
+                this._setPropertyModel(result.metaValues);
+                this._centreDirty = result.centreDirty;
 
                 const msg = this._toastMsg("Running", criteriaEntity);
                 this._openToast(criteriaEntity, msg, !criteriaEntity.isValid() || criteriaEntity.isValidWithWarning(), msg, false);
 
                 const newBindingEntity = this._postEntityReceived(criteriaEntity, false);
-                this.postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder);
+                this.postRun(criteriaEntity, newBindingEntity, result);
             }
         }).bind(self);
 
@@ -344,16 +375,32 @@ const TgSelectionCriteriaBehaviorImpl = {
             this.staleCriteriaMessage = customObject.staleCriteriaMessage;
         }
         this._setPropertyModel(customObject.metaValues);
-        this._centreChanged = customObject.isCentreChanged;
+        this._centreDirty = customObject.centreDirty;
         if (typeof customObject.saveAsDesc !== 'undefined') {
             this.saveAsDesc = customObject.saveAsDesc;
         }
         if (typeof customObject.saveAsName !== 'undefined') {
             this.saveAsName = customObject.saveAsName;
         }
+        if (typeof customObject.configUuid !== 'undefined') {
+            const newConfigUuid = customObject.configUuid;
+            const hrefNoParams = window.location.href.split('?')[0];
+            const hrefNoParamsNoSlash = hrefNoParams.endsWith('/') ? hrefNoParams.substring(0, hrefNoParams.length - 1) : hrefNoParams;
+            const hrefNoParamsNoSlashNoUuid = this.configUuid === '' ? hrefNoParamsNoSlash : hrefNoParamsNoSlash.substring(0, hrefNoParamsNoSlash.lastIndexOf(this.configUuid) - 1 /* slash also needs removal */);
+            const hrefReplacedUuid = hrefNoParamsNoSlashNoUuid + (newConfigUuid === '' ? '' : '/' + newConfigUuid);
+            if (hrefReplacedUuid !== window.location.href) { // when configuration is loaded through some action then potentially new URI will be formed matching new loaded configuration;
+                window.history.pushState(window.history.state, '', hrefReplacedUuid); // in that case need to create new history entry for new URI;
+                window.dispatchEvent(new CustomEvent('location-changed')); // the 'window.history.state' number will be increased later in tg-app-template 'location-changed' listener
+            } // if the URI hasn't been changed then URI is already matching to new loaded configuration and history transition has been recorded earlier (e.g. when manually changing URI in address bar)
+            this.configUuid = newConfigUuid;
+        }
         if (typeof customObject.wasRun !== 'undefined') {
             this._wasRun = customObject.wasRun;
         }
+    },
+
+    _configUuidChanged: function (newConfigUuid) {
+        this.fire('tg-config-uuid-changed', newConfigUuid);
     },
 
     _saveAsDescChanged: function (newSaveAsDesc) {
@@ -402,6 +449,9 @@ const TgSelectionCriteriaBehaviorImpl = {
         }
         if (propertyMetaValues["not"] !== false) {
             modifiedMetaValues["not"] = propertyMetaValues["not"];
+        }
+        if (propertyMetaValues["orGroup"] !== null) {
+            modifiedMetaValues["orGroup"] = propertyMetaValues["orGroup"];
         }
         if (propertyMetaValues["exclusive"] !== false) {
             modifiedMetaValues["exclusive"] = propertyMetaValues["exclusive"];
@@ -504,8 +554,8 @@ const TgSelectionCriteriaBehaviorImpl = {
         return !(pageCount <= 0);
     },
 
-    canManageCentreConfig: function (centreChanged, _editedPropsExist) {
-        return _editedPropsExist || (centreChanged === true);
+    _calculateCentreDirtyOrEdited: function (centreDirty, _editedPropsExist) {
+        return _editedPropsExist || (centreDirty === true);
     },
 
     /**
@@ -561,8 +611,8 @@ const TgSelectionCriteriaBehaviorImpl = {
             resolve(
                 self._runModifiedProperties(
                     self._createContextHolderForRunning(function () {
-                        return action === RunActions.run ? self._reset(_persistedModifiedPropertiesHolder) : null;
-                    },
+                            return action === RunActions.run ? self._reset(_persistedModifiedPropertiesHolder) : null;
+                        },
                         action,
                         isAutoRunning,
                         isSortingAction,
@@ -606,6 +656,7 @@ const TgSelectionCriteriaBehaviorImpl = {
                 const prop = this.propertyModel[propertyName];
                 this.notifyPath('propertyModel.' + propertyName + '.orNull', prop.orNull);
                 this.notifyPath('propertyModel.' + propertyName + '.not', prop.not);
+                this.notifyPath('propertyModel.' + propertyName + '.orGroup', prop.orGroup);
                 this.notifyPath('propertyModel.' + propertyName + '.exclusive', prop.exclusive);
                 this.notifyPath('propertyModel.' + propertyName + '.exclusive2', prop.exclusive2);
                 this.notifyPath('propertyModel.' + propertyName + '.datePrefix', prop.datePrefix);
@@ -628,6 +679,7 @@ const TgSelectionCriteriaBehaviorImpl = {
                 const model = {};
                 model["orNull"] = typeof meta["orNull"] === 'undefined' ? false : meta["orNull"];
                 model["not"] = typeof meta["not"] === 'undefined' ? false : meta["not"];
+                model["orGroup"] = typeof meta["orGroup"] === 'undefined' ? null : meta["orGroup"];
                 model["exclusive"] = typeof meta["exclusive"] === 'undefined' ? false : meta["exclusive"];
                 model["exclusive2"] = typeof meta["exclusive2"] === 'undefined' ? false : meta["exclusive2"];
                 model["datePrefix"] = typeof meta["datePrefix"] === 'undefined' ? null : meta["datePrefix"];
@@ -675,7 +727,7 @@ const TgSelectionCriteriaBehaviorImpl = {
     },
 
     /**
-     * Create context holder for running with custom '@@pageCapacity', "@@pageNumber" and other properties for running, page retrieval or
+     * Create context holder for running with custom "@@pageNumber" and other properties for running, page retrieval or
      *   concrete entities refresh processes.
      *
      * In this method selection criteria modifHolder should be sent every time -- it is required to actually 'run' the query.
@@ -695,7 +747,6 @@ const TgSelectionCriteriaBehaviorImpl = {
             self._reflector().setCustomProperty(contextHolder, "@@forceRegeneration", true);
         }
         self._reflector().setCustomProperty(contextHolder, "@@action", action);
-        self._reflector().setCustomProperty(contextHolder, "@@pageCapacity", self.pageCapacity);
         if (self.pageCount !== null) {
             self._reflector().setCustomProperty(contextHolder, "@@pageNumber", self.pageNumber);
         } else {

@@ -50,6 +50,7 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
 /**
@@ -89,11 +90,10 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Inject
     private IUniversalConstants universalConstants;
     @Inject
+    private IDates dates;
+    @Inject
     private IUserProvider up;
 
-    /** A marker to skip re-fetching an entity during save. */
-    private boolean skipRefetching = false;
-    
     /** A guard against an accidental use of quick save to prevent its use for companions with overridden method <code>save</code>.
      *  Refer issue <a href='https://github.com/fieldenms/tg/issues/421'>#421</a> for more details. */
     private Boolean hasSaveOverridden;
@@ -127,7 +127,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 this::getSession,
                 entityType,
                 this::newQueryExecutionContext,
-                () -> new EntityBatchDeleteByIdsOperation<T>(getSession(), (PersistedEntityMetadata<T>) getDomainMetadata().getPersistedEntityMetadataMap().get(entityType)));
+                () -> new EntityBatchDeleteByIdsOperation<>(getSession(), (PersistedEntityMetadata<T>) getDomainMetadata().getPersistedEntityMetadataMap().get(entityType)));
         
         entitySaver = new PersistentEntitySaver<>(
                 this::getSession,
@@ -137,8 +137,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 keyType,
                 this::getUser,
                 () -> getUniversalConstants().now(),
-                () -> skipRefetching,
-                this::isFilterable,
                 this::getCoFinder,
                 this::newQueryExecutionContext,
                 this::processAfterSaveEvent,
@@ -162,15 +160,10 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 getDomainMetadata(), 
                 getFilter(), 
                 getUsername(), 
-                getUniversalConstants(), 
+                dates, 
                 getIdOnlyProxiedEntityTypeCache());
     }
 
-    @Override
-    protected boolean isFilterable() {
-        return false;
-    }
-    
     /**
      * A separate setter is used in order to avoid enforcement of providing mapping generator as one of constructor parameter in descendant classes.
      *
@@ -232,7 +225,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     @Override
     @SessionRequired
-    public final long quickSave(final T entity) {
+    public long quickSave(final T entity) {
         if (hasSaveOverridden == null) {
             hasSaveOverridden = isMethodOverriddenOrDeclared(CommonEntityDao.class, getClass(), "save", getEntityType());
         }
@@ -242,13 +235,17 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                             getEntityType().getName(), 
                             getEntityType().getAnnotation(CompanionObject.class).value().getName()));
         }
-        
-        
-        try {
-            skipRefetching = true;
-            return save(entity).getId();
-        } finally {
-            skipRefetching = false;
+
+        if (entity == null) {
+            throw new EntityCompanionException(format("Null entity of type [%s] cannot be saved.", entityType.getName()));
+        } else if (!entity.isPersistent()) {
+            throw new EntityCompanionException(format("Quick save is not supported for non-persistent entity [%s].", entityType.getName()));
+        } else {
+            final Long id = entitySaver.coreSave(entity, true)._1;
+            if (id == null) {
+                throw new EntityCompanionException(format("Saving of entity [%s] did not return its ID.", entityType.getName()));
+            }
+            return id;
         }
     }
     
@@ -335,6 +332,10 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return universalConstants;
     }
     
+    public IDates dates() {
+        return dates;
+    }
+    
     /**
      * Just a convenience method for obtaining the current date/time as a single call {@code now()} instead of chaining {@code getUniversalConstants().now()}.
      * @return
@@ -352,6 +353,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * @param type -- entity type whose companion instance needs to be obtained
      * @return
      */
+    @Override
     @SuppressWarnings("unchecked")
     public <C extends IEntityDao<E>, E extends AbstractEntity<?>> C co$(final Class<E> type) {
         if (instrumented() && getEntityType().equals(type)) {
@@ -372,6 +374,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * @param type -- entity type whose companion instance needs to be obtained
      * @return
      */
+    @Override
     @SuppressWarnings("unchecked")
     public <C extends IEntityReader<E>, E extends AbstractEntity<?>> C co(final Class<E> type) {
         if (!instrumented() && getEntityType().equals(type)) {

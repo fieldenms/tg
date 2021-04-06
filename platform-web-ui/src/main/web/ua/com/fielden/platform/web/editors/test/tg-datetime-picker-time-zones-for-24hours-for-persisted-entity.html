@@ -59,19 +59,19 @@
 	        };
 	        
 	        test('[1473057180015] to UTC [2016-09-05 06:33:00.015]', function (done) {
-	            correctlyApproximates(done, 1473057180015, '2016-09-05 06:33:00.015', 80);
+	            correctlyApproximates(done, 1473057180015, '2016-09-05 06:33:00.015', 78);
 	        });
 	        
 	        test('[1473057204015] to UTC [2016-09-05 06:33:24.015]', function (done) {
-	            correctlyApproximates(done, 1473057204015, '2016-09-05 06:33:24.015', 81);
+	            correctlyApproximates(done, 1473057204015, '2016-09-05 06:33:24.015', 79);
 	        });
 	        
 	        test('[1473057204000] to UTC [2016-09-05 06:33:24.000]', function (done) {
-	            correctlyApproximates(done, 1473057204000, '2016-09-05 06:33:24.000', 82);
+	            correctlyApproximates(done, 1473057204000, '2016-09-05 06:33:24.000', 80);
 	        });
 	        
 	        test('[1473057180000] to UTC [2016-09-05 06:33]', function (done) {
-	            correctlyApproximates(done, 1473057180000, '2016-09-05 06:33', 83);
+	            correctlyApproximates(done, 1473057180000, '2016-09-05 06:33', 81);
 	        });
 	    });
         
@@ -80,7 +80,7 @@
 
             setup(function() {
                 master = fixture('MasterFixture');
-                master.entityId = '79';
+                master.entityId = '77';
                 reflector = document.querySelector('#reflector');
             });
             
@@ -135,7 +135,7 @@
                 };
 
                 master.postRetrieved = function (entity, bindingEntity, customObject) {
-                    const localisedMomentOf3609999 = _millisDateRepresentation(3609999); /* 01/01/1970 12:00:09.999 in Melbourne locale (UTC+10:00, NO DST at that time) */
+                    const localisedMomentOf3609999 = _millisDateRepresentation(3609999); /* 01/01/1970 11:00:09.999 in Melbourne locale (UTC+10:00, NO DST at that time) */
                     assert.strictEqual(ed._editingValue, localisedMomentOf3609999, "_editingValue should be non-empty on start.");
                     assert.strictEqual(ed._commValue, localisedMomentOf3609999, "_commValue should be non-empty on start.");
                     assert.strictEqual(ed._acceptedValue, 3609999, "_acceptedValue should be non-empty on start.");
@@ -199,13 +199,14 @@
             });
             
             test('[05:15] to local [16:15] previous day', function(done) {
-                const todayDate = moment().startOf("day").hour(16).minute(15);
-                correctlyApproximates(done, todayDate.utc().format('HH:mm'), todayDate.utc().format('YYYY-MM-DD HH:mm'), todayDate.local().format('DD/MM/YYYY HH:mm'), todayDate.valueOf());
+                const todayDate = moment().tz('UTC').startOf("day").hour(16).minute(15);
+                correctlyApproximates(done, todayDate.format('HH:mm'), todayDate.format('YYYY-MM-DD HH:mm'), todayDate.local().format('DD/MM/YYYY HH:mm'), todayDate.valueOf());
             });
             
             test('[t] to todays date with time set to start of the day', function(done) {
-                const todayDate = moment().startOf("day");
-                correctlyApproximates(done, 't', todayDate.utc().format('YYYY-MM-DD HH:mm'), todayDate.local().format('DD/MM/YYYY HH:mm'), todayDate.valueOf());
+                const todayDate = moment.tz('UTC').startOf("day");
+                console.warn(todayDate);
+                correctlyApproximates(done, 't', todayDate.format('YYYY-MM-DD HH:mm'), todayDate.local().format('DD/MM/YYYY HH:mm'), todayDate.valueOf());
             });
         });
         
@@ -214,7 +215,7 @@
 
             setup(function() {
                 master = fixture('MasterFixture');
-                master.entityId = '79';
+                master.entityId = '77';
                 reflector = document.querySelector('#reflector');
             });
 

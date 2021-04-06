@@ -31,7 +31,7 @@ Polymer({
     is: 'tg-boolean-criterion',
 
     observers: [
-        '_updateIconButtonStyle(orNull, not)'
+        '_updateIconButtonStyle(orNull, not, orGroup)'
     ],
 
     behaviors: [ TgAbstractMultiCriterionBehavior ],

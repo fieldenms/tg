@@ -3,10 +3,11 @@ import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js'
 
 import '/resources/polymer/@polymer/iron-ajax/iron-ajax.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
+import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 
 const template = html`
-    <iron-ajax id="ajaxSender" url="[[_url]]" method="POST" handle-as="json" on-response="_processValidatorResponse"
-        on-error="_processValidatorError"></iron-ajax>
+    <iron-ajax id="ajaxSender" headers="[[_headers]]" url="[[_url]]" method="POST" handle-as="json" on-response="_processValidatorResponse"
+        reject-with-request on-error="_processValidatorError"></iron-ajax>
 `;
 
 Polymer({
@@ -38,6 +39,17 @@ Polymer({
         _url: {
             type: String,
             computed: '_computeUrl(entityType)'
+        },
+        
+        /**
+         * Additional headers for every 'iron-ajax' client-side requests. These only contain 
+         * our custom 'Time-Zone' header that indicates real time-zone for the client application.
+         * The time-zone then is to be assigned to threadlocal 'IDates.timeZone' to be able
+         * to compute 'Now' moment properly.
+         */
+        _headers: {
+            type: String,
+            value: _timeZoneHeader
         }
     },
 
@@ -82,33 +94,14 @@ Polymer({
      * Cancels any unfinished validation that was requested earlier (if any).
      */
     abortValidationIfAny: function () {
-        var reflector = this._serialiser.$.reflector;
-        var numberOfAbortedRequests = reflector.discardAllRequests(this.$.ajaxSender);
-        if (numberOfAbortedRequests > 0) {
-            console.warn("abortValidationIfAny: number of aborted requests =", numberOfAbortedRequests);
-        }
+        this._serialiser.$.reflector.abortRequestsIfAny(this.$.ajaxSender, 'validation');
     },
 
     /**
      * Cancels any unfinished validation that was requested earlier (if any) except the last one and returns corresponding promise.
      */
     abortValidationExceptLastOne: function () {
-        var reflector = this._serialiser.$.reflector;
-        var numberOfAbortedRequests = reflector.discardAllRequests(this.$.ajaxSender, true);
-        if (numberOfAbortedRequests > 0) {
-            console.warn("abortValidationExceptLastOne: number of aborted requests =", numberOfAbortedRequests);
-        }
-        if (this.$.ajaxSender.activeRequests.length > 0) {
-            if (this.$.ajaxSender.activeRequests.length > 1) {
-                throw 'At this stage only one validation request should exist.';
-            }
-            return this.$.ajaxSender.activeRequests[0].completes;
-        } else {
-            if (numberOfAbortedRequests > 0) {
-                throw 'There were aborted requests, however the last one was needed to be NOT ABORTED, but it was.';
-            }
-            return null;
-        }
+        return this._serialiser.$.reflector.abortRequestsExceptLastOne(this.$.ajaxSender, 'validation');
     },
 
     /**

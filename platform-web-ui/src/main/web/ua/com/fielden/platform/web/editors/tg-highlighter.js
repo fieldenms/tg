@@ -10,7 +10,7 @@ RegExp.escape = function (text) {
     return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
 };
 
-function _searchRegExp (str) {
+export function searchRegExp (str) {
     const pattern = RegExp.escape(str).replace(/%/gi, ".*");
     return new RegExp(pattern, 'gi');
 };
@@ -36,7 +36,7 @@ export function matchedParts (str, searchQuery) {
     }
 
     // otherwise split 
-    const searchExp = _searchRegExp(searchQuery);
+    const searchExp = searchRegExp(searchQuery);
     let match;
     let startIndex = 0;
     while ((match = searchExp.exec(text)) !== null) {

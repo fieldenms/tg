@@ -37,15 +37,15 @@
 				const old_postRun = centre._postRun;
 				let firstTime = false;
 				
-				centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder) {
-					old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary, columnWidths, visibleColumnsWithOrder);
+				centre._postRun = function (criteriaEntity, newBindingEntity, result) {
+					old_postRun(criteriaEntity, newBindingEntity, result);
 					
 					if (firstTime === false) {
-						assert.strictEqual(resultEntities.length, 1, 'The count of resultant entities for the centre should be 1.');
-						const entity = resultEntities[0];
+						assert.strictEqual(result.resultEntities.length, 1, 'The count of resultant entities for the centre should be 1.');
+						const entity = result.resultEntities[0];
 						
-						const editAction = centre.$.egi.$.primary_action_selector.assignedNodes()[0];
-						editAction.currentEntity = entity;
+						const editAction = centre.$.egi.$.primary_action_selector.assignedNodes()[0].actions[0];
+						editAction.currentEntity = () => entity;
 						const value = editAction._run();
 						
 						editAction.postActionSuccess = function (potentiallySavedOrNewEntity) {
@@ -80,7 +80,7 @@
 						
 						firstTime = true;
 					} else {
-						assert.strictEqual(resultEntities.length, 1, 'The count of refreshed entity for the centre should be 1.');
+						assert.strictEqual(result.resultEntities.length, 1, 'The count of refreshed entity for the centre should be 1.');
 					}
 				};
 				

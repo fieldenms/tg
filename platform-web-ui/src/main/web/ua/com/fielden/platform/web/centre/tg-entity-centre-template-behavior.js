@@ -1,5 +1,6 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { TgEntityCentreBehavior } from '/resources/centre/tg-entity-centre-behavior.js';
+import '/resources/images/tg-icons.js'; // this is for common tg-icons:share icon
 
 const TgEntityCentreTemplateBehaviorImpl = {
 
@@ -12,7 +13,9 @@ const TgEntityCentreTemplateBehaviorImpl = {
         pageCount: Number,
         pageNumberUpdated: Number,
         pageCountUpdated: Number,
-        staleCriteriaMessage: String
+        staleCriteriaMessage: String,
+        _centreDirtyOrEdited: Boolean,
+        _defaultPropertyActionAttrs: Object
     },
 
     created: function () {
@@ -42,6 +45,7 @@ const TgEntityCentreTemplateBehaviorImpl = {
      */
     ready: function () {
         this.classList.add("canLeave");
+        this._defaultPropertyActionAttrs = {currentState: "EDIT", centreUuid: this.uuid};
     },
 
     ////////////// Template related method are here in order to reduce the template size ///////////////
@@ -67,11 +71,21 @@ const TgEntityCentreTemplateBehaviorImpl = {
     },
 
     confirm: function (message, buttons) {
-        return this._dom()._confirmationDialog().showConfirmationDialog(message, buttons);
+        if (!this.$.egi.isEditing()) {
+            return this._dom()._confirmationDialog().showConfirmationDialog(message, buttons);
+        }
+        return this._saveOrCancelPromise();
     },
 
     _dom: function () {
         return this.$.dom;
+    },
+
+    /**
+     * Returns insertion point element for this entity centre in concrete 'location' ('left', 'top', 'bottom', 'right').
+     */
+    _getInsertionPoint: function (location) {
+        return this._dom().$[location + 'InsertionPointContent'].assignedNodes({flatten: true})[0].querySelector('tg-entity-centre-insertion-point');
     },
 
     /**

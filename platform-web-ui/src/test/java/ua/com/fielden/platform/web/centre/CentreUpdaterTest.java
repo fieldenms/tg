@@ -1,19 +1,20 @@
 package ua.com.fielden.platform.web.centre;
 
 import static java.math.RoundingMode.HALF_UP;
-import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.AND_BEFORE;
-import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.DATE_MNEMONIC;
-import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.DATE_PREFIX;
-import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.EXCLUSIVE;
-import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.EXCLUSIVE2;
-import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.NOT;
-import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.OR_NULL;
-import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.VALUE;
-import static ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType.VALUE2;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.createEmptyDifferences;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.AND_BEFORE;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.DATE_MNEMONIC;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.DATE_PREFIX;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.EXCLUSIVE;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.EXCLUSIVE2;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.NOT;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.OR_GROUP;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.OR_NULL;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.VALUE;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.VALUE2;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.createMockNotFoundEntity;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.createNotFoundMockString;
 import static ua.com.fielden.snappy.DateRangePrefixEnum.NEXT;
@@ -90,6 +91,13 @@ public class CentreUpdaterTest extends CentreUpdaterTestMixin {
     @Test
     public void default_negation() {
         testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setNot(ROOT, "datePropDefault", null), expectedDiffWithValue("datePropDefault", NOT.name(), null));
+    }
+    
+    // OR condition group
+    
+    @Test
+    public void or_condition_group() {
+        testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setOrGroup(ROOT, "dateProp", 1), expectedDiffWithValue("dateProp", OR_GROUP.name(), 1));
     }
     
     // exclusiveness
@@ -286,7 +294,7 @@ public class CentreUpdaterTest extends CentreUpdaterTestMixin {
     
     @Test
     public void crit_single_propertyDescriptor_value() {
-        final PropertyDescriptor<TgCentreDiffSerialisationPersistentChild> propertyVal = new PropertyDescriptor<TgCentreDiffSerialisationPersistentChild>(TgCentreDiffSerialisationPersistentChild.class, "stringProp");
+        final PropertyDescriptor<TgCentreDiffSerialisationPersistentChild> propertyVal = new PropertyDescriptor<>(TgCentreDiffSerialisationPersistentChild.class, "stringProp");
         testDiffCreationAndApplication(CentreUpdaterTest::create, centre -> centre.getFirstTick().setValue(ROOT, "propertyDescriptorPropCritSingle", propertyVal), expectedDiffWithValue("propertyDescriptorPropCritSingle", VALUE.name(), propertyVal.toString()));
     }
     

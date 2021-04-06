@@ -1,5 +1,6 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
-import { random } from '/resources/reflection/tg-numeric-utils.js'
+import { random } from '/resources/reflection/tg-numeric-utils.js';
+import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
 
 export const TgSseBehavior = {
 
@@ -25,6 +26,12 @@ export const TgSseBehavior = {
         /* An optional function to react to SSE errors. Accepts error event as an argument. */
         errorHandler: {
             type: Function
+        },
+
+        /* Can be used to influence the default behaviour to reconnect when an error occurs. */
+        shouldReconnectWhenError: {
+            type: Boolean,
+            value: true
         },
 
         /* A reference to an established EventSource object. */
@@ -110,10 +117,16 @@ export const TgSseBehavior = {
         }, false);
 
         source.addEventListener('error', function (e) {
-            // TODO Might need to implement some error recovery strategy to reconnect to the server-side observable
             console.log('an error occurred: ', e);
 
-            if (e.eventPhase === EventSource.CLOSED) {
+            // invoke error handler if provided
+            if (self.errorHandler) {
+                self.errorHandler(e);
+            }
+
+            // only after custom error handling should we attempt to reconnect
+            // this is because the decision to reconnect can be made in the custom error handler
+            if (self.shouldReconnectWhenError === true && e.eventPhase === EventSource.CLOSED) {
                 // Connection was closed by the server
                 self.closeEventSource();
                 // Let's kick a timer for reconnection...
@@ -124,11 +137,6 @@ export const TgSseBehavior = {
                         self._timerIdForReconnection = null;
                     }
                 }, 15000);
-            }
-
-            // invoke error handler if provided
-            if (self.errorHandler) {
-                self.errorHandler(e);
             }
 
         }, false);

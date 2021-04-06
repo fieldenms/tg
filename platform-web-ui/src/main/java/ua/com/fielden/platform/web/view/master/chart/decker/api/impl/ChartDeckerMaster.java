@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.view.master.chart.decker.api.impl;
 
 import static java.util.Optional.ofNullable;
+import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.join;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getTimePortionToDisplay;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getTimeZone;
@@ -75,7 +76,7 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
                 final ChartSeries<T> s = series.get(seriesIndex);
                 final EntityActionConfig config = s.getAction();
                 this.actions.add(config);
-                if (config != null && !config.isNoAction()) {
+                if (config != null) {
                     final FunctionalActionElement el = FunctionalActionElement.newPropertyActionForMaster(config, deckIndex, s.getPropertyName());
                     importPaths.add(el.importPath());
                     container.add(el.render().clazz("chart-action").attr("hidden", true).attr("action-index", seriesIndex).attr("deck-index", deckIndex));
@@ -132,6 +133,7 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
                     + "    barLabel: (d, i) => this._labelFormatter(d, i, self.barOptions[" + deckIndex + "].propertyNames, self.barOptions[" + deckIndex + "].propertyTypes, self.barOptions[" + deckIndex + "].mode),\n"
                     + "    tooltip: (d, i) => this._tooltip(d, "
                                 + generateValueAccessor(deck.getEntityType(), deck.getPropertyType(), deck.getGroupKeyProp()) + ", "
+                                + generateValueAccessor(deck.getEntityType(), String.class, deck.getGroupDescProperty()) + ", "
                                 + "self.barOptions[" + deckIndex + "].propertyNames[i], "
                                 + "self.barOptions[" + deckIndex + "].propertyTypes[i], "
                                 + "self.legendItems[" + deckIndex + "][i].title, " + deckIndex + ", i),\n"
@@ -165,7 +167,7 @@ public class ChartDeckerMaster<T extends AbstractEntity<?>> implements IMaster<T
     }
 
     private String generateLegendItem(final ChartSeries<T> series) {
-        return "{title: '"  + series.getTitle() + "', colour: '" + series.getColour().getColourValue() + "'}";
+        return "{title: '"  + (isEmpty(series.getTitle()) ? "" : series.getTitle()) + "', colour: '" + series.getColour().getColourValue() + "'}";
     }
 
     private String generateValueAccessor(final Class<?> deckType, final Class<?> propertyType, final String aggregationProperty) {

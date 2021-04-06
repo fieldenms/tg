@@ -10,7 +10,11 @@ import com.google.inject.binder.AnnotatedBindingBuilder;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.validation.CanBuildReferenceHierarchyForEveryEntityValidator;
+import ua.com.fielden.platform.entity.validation.ICanBuildReferenceHierarchyForEntityValidator;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
+import ua.com.fielden.platform.utils.IDates;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.ioc.IBasicWebApplicationServerModule;
 
 /**
@@ -29,14 +33,17 @@ public class TgTestWebApplicationServerModule extends TgTestApplicationServerMod
             final List<Class<? extends AbstractEntity<?>>> domainTypes,
             final Class<? extends ISerialisationClassProvider> serialisationClassProviderType,
             final Class<? extends IFilter> automaticDataFilterType,
+            final Class<? extends IUniversalConstants> universalConstantsImplType,
+            final Class<? extends IDates> datesImplType,
             final Properties props) throws Exception {
-        super(defaultHibernateTypes, applicationDomainProvider, domainTypes, serialisationClassProviderType, automaticDataFilterType, props);
+        super(defaultHibernateTypes, applicationDomainProvider, domainTypes, serialisationClassProviderType, automaticDataFilterType, universalConstantsImplType, datesImplType, props);
         this.props = props;
     }
 
     @Override
     protected void configure() {
         super.configure();
+        bind(ICanBuildReferenceHierarchyForEntityValidator.class).to(CanBuildReferenceHierarchyForEveryEntityValidator.class);
         bindWebAppResources(new WebUiConfig(props));
     }
 

@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.criteria.generator.impl;
 
-import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.generateCriteriaPropertyName;
+import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.critName;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.getCriteriaProperty;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.isSecondParam;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isCritOnlySingle;
@@ -144,7 +144,7 @@ public class SynchroniseCriteriaWithModelHandler<CDTME extends ICentreDomainTree
         // all validations / definers need to be turned off
         criteriaEntity.beginInitialising();
         snapshot.forEach(metaProp -> {
-            final String criteriaPropName = generateCriteriaPropertyName(metaProp.getEntity().getType(), metaProp.getName());
+            final String criteriaPropName = critName(metaProp.getEntity().getType(), metaProp.getName());
             criteriaEntity.getPropertyOptionally(criteriaPropName).ifPresent(mp -> { // several crit-only single properties of original entity could be NOT added to selection criteria: need to ignore them
                 final MetaProperty<Object> criteriaMetaProp = (MetaProperty<Object>) mp;
                 // the order of meta-info application is synced with EntityJsonDeserialiser; all properties are copied excluding prevValue, valueChangeCount and visible -- it is believed that these props are not relevant for critOnlySinglePrototype lifecycle 

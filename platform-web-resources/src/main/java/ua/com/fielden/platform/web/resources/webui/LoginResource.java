@@ -12,6 +12,7 @@ import java.io.ByteArrayInputStream;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.restlet.Context;
@@ -127,7 +128,7 @@ public class LoginResource extends ServerResource {
 
     public Representation loginPage() {
         try {
-            final byte[] body = ResourceLoader.getText("ua/com/fielden/platform/web/login.html").replaceAll("@title", "Login").getBytes("UTF-8");
+            final byte[] body = StringUtils.replace(ResourceLoader.getText("ua/com/fielden/platform/web/login.html"), "@title", "Login").getBytes("UTF-8");
             return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(body), MediaType.TEXT_HTML));
         } catch (final Exception ex) {
             LOGGER.fatal(ex);
@@ -156,7 +157,7 @@ public class LoginResource extends ServerResource {
             }
         } catch (final Exception ex) {
             LOGGER.fatal(ex);
-            getResponse().setEntity(restUtil.errorJSONRepresentation(ex.getMessage()));
+            getResponse().setEntity(restUtil.errorJsonRepresentation(ex.getMessage()));
             getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
         } finally {
             LOGGER.debug(format("LOGIN ATTEMPT RESPONSE TIME: %s%n", TimeUnit.MILLISECONDS.convert(System.nanoTime() - nanoStart, TimeUnit.NANOSECONDS)));
@@ -198,6 +199,8 @@ public class LoginResource extends ServerResource {
                 LOGIN_ATTEMPTS.invalidate(credo.username); // logged in successful, invalidate user login attempts from cache
                 // create a new session for an authenticated user...
                 final User user = (User) authResult.getInstance();
+                // let's use this opportunity to clear expired sessions for the user
+                coUserSession.clearExpired(user);
                 final UserSession session = coUserSession.newSession(user, credo.trustedDevice);
          
                 // ...and provide the response with an authenticating cookie

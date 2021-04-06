@@ -14,6 +14,7 @@ import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.entity.validation.EntityExistsValidator;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
+import ua.com.fielden.platform.utils.IDates;
 
 /**
  * DAO driven {@link IMetaPropertyFactory} implementation.
@@ -29,8 +30,9 @@ public class DefaultMetaPropertyFactory extends AbstractMetaPropertyFactory {
     public DefaultMetaPropertyFactory(
             final DomainValidationConfig domainConfig,
             final DomainMetaPropertyConfig domainMetaConfig,
-            final ICompanionObjectFinder coFinder) {
-        super(domainConfig, domainMetaConfig);
+            final ICompanionObjectFinder coFinder,
+            final IDates dates) {
+        super(domainConfig, domainMetaConfig, dates);
         this.coFinder = coFinder;
     }
 

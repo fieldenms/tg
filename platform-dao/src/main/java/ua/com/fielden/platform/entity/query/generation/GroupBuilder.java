@@ -21,6 +21,6 @@ public class GroupBuilder extends AbstractTokensBuilder {
     @Override
     public Pair<TokenCategory, Object> getResult() {
         final ISingleOperand operand = getModelForSingleOperand(firstCat(), firstValue());
-        return new Pair<TokenCategory, Object>(TokenCategory.QRY_GROUP, new GroupBy(operand));
+        return new Pair<>(TokenCategory.QRY_GROUP, new GroupBy(operand));
     }
 }

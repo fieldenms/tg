@@ -12,11 +12,19 @@ import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
+import static ua.com.fielden.platform.entity.fetch.FetchProviderFactory.createDefaultFetchProvider;
+import static ua.com.fielden.platform.entity.fetch.FetchProviderFactory.createEmptyFetchProvider;
+import static ua.com.fielden.platform.entity.fetch.FetchProviderFactory.createFetchProviderWithKeyAndDesc;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotationPresent;
+import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
 import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.PROPERTY_SPLITTER;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+import static ua.com.fielden.platform.utils.EntityUtils.isIntrospectionDenied;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
 import static ua.com.fielden.platform.utils.StreamUtils.takeWhile;
 
 import java.io.Serializable;
@@ -42,6 +50,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -53,15 +62,17 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
 import ua.com.fielden.platform.companion.IEntityReader;
+import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.annotation.DateOnly;
+import ua.com.fielden.platform.entity.annotation.DenyIntrospection;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.fetch.FetchProviderFactory;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
@@ -119,6 +130,8 @@ public class EntityUtils {
             return value instanceof Number ? new Money(value.toString()).toString() : value.toString();
         } else if (valueType == BigDecimalWithTwoPlaces.class) {
             return value instanceof Number ? String.format("%,10.2f", value) : value.toString();
+        } else if (value instanceof Collection) {
+            return "[" + ((Collection<?>) value).stream().map(v -> v + "").collect(Collectors.joining(", ")) + "]";
         } else {
             return value.toString();
         }
@@ -389,13 +402,13 @@ public class EntityUtils {
      *            - use true if validation have to be performed inside the "finish" date setter, false - inside the "start" date setter
      * @throws Result
      */
-    public static void validateDateRange(final Date start, final Date finish, final MetaProperty<Date> startProperty, final MetaProperty<Date> finishProperty, final boolean finishSetter) {
+    public static void validateDateRange(final Date start, final Date finish, final MetaProperty<Date> startProperty, final MetaProperty<Date> finishProperty, final boolean finishSetter, final IDates dates) {
         if (finish != null) {
             if (start != null) {
                 if (start.after(finish)) {
                     throw Result.failure(finishSetter
-                    ? format("Property [%s] (value [%s]) cannot be before property [%s] (value [%s]).", finishProperty.getTitle(), toString(finish) , startProperty.getTitle(), toString(start))
-                    : format("Property [%s] (value [%s]) cannot be after property [%s] (value [%s]).", startProperty.getTitle(), toString(start), finishProperty.getTitle(), toString(finish)));
+                    ? format("Property [%s] (value [%s]) cannot be before property [%s] (value [%s]).", finishProperty.getTitle(), dates.toString(finish) , startProperty.getTitle(), dates.toString(start))
+                    : format("Property [%s] (value [%s]) cannot be after property [%s] (value [%s]).", startProperty.getTitle(), dates.toString(start), finishProperty.getTitle(), dates.toString(finish)));
                 }
             } else {
                 throw Result.failure(finishSetter
@@ -417,13 +430,13 @@ public class EntityUtils {
      *            - use true if validation have to be performed inside the "finish" date setter, false - inside the "start" date setter
      * @throws Result
      */
-    public static void validateDateTimeRange(final DateTime start, final DateTime finish, final MetaProperty<DateTime> startProperty, final MetaProperty<DateTime> finishProperty, final boolean finishSetter) {
+    public static void validateDateTimeRange(final DateTime start, final DateTime finish, final MetaProperty<DateTime> startProperty, final MetaProperty<DateTime> finishProperty, final boolean finishSetter, final IDates dates) {
         if (finish != null) {
             if (start != null) {
                 if (start.isAfter(finish)) {
                     throw Result.failure(finishSetter
-                    ? format("Property [%s] (value [%s]) cannot be before property [%s] (value [%s]).", finishProperty.getTitle(), toString(finish) , startProperty.getTitle(), toString(start))
-                    : format("Property [%s] (value [%s]) cannot be after property [%s] (value [%s]).", startProperty.getTitle(), toString(start), finishProperty.getTitle(), toString(finish)));
+                    ? format("Property [%s] (value [%s]) cannot be before property [%s] (value [%s]).", finishProperty.getTitle(), dates.toString(finish) , startProperty.getTitle(), dates.toString(start))
+                    : format("Property [%s] (value [%s]) cannot be after property [%s] (value [%s]).", startProperty.getTitle(), dates.toString(start), finishProperty.getTitle(), dates.toString(finish)));
                 }
             } else {
                 throw Result.failure(finishSetter
@@ -675,8 +688,8 @@ public class EntityUtils {
      * @param type
      * @return
      */
-    public static boolean isSyntheticEntityType(final Class<? extends AbstractEntity<?>> type) {
-        if (type == null) {
+    public static boolean isSyntheticEntityType(final Class<?> type) {
+        if (!isEntityType(type)) {
             return false;
         } else {
             try {
@@ -716,7 +729,7 @@ public class EntityUtils {
     /**
      * Determines whether {@code type} represents entity query criteria.
      * It uses temporal caching to speedup successive calls.
-     * 
+     *
      * @param type
      * @return
      */
@@ -730,6 +743,28 @@ public class EntityUtils {
             logger.error(msg, ex);
             throw new ReflectionException(msg, ex);
         }
+    }
+
+    /**
+     * Determines whether {@code type} has domain introspection denied.
+     * If denied then no information about this type should be exposed outside the internal application logic (i.e. no GraphQL or UI should be able to introspect such entities).
+     *
+     * @param type
+     * @return
+     */
+    public static boolean isIntrospectionDenied(final Class<? extends AbstractEntity<?>> type) {
+        return isAnnotationPresent(type, DenyIntrospection.class);
+    }
+
+    /**
+     * A predicate that expresses the most essential rules for checking if an entity type should permit introspection.
+     * For example, GraphQL and Domain Explorer functionality rely on this predicate to filter out entities that should not be supported for querying and review.
+     *
+     * @param type
+     * @return
+     */
+    public static boolean isIntrospectionAllowed(final Class<? extends AbstractEntity<?>> type) {
+        return !isIntrospectionDenied(type) && (isSyntheticEntityType(type) || isPersistedEntityType(type));
     }
 
     /**
@@ -794,8 +829,8 @@ public class EntityUtils {
      * Returns a deep copy of an object (all hierarchy of properties will be copied).<br>
      * <br>
      *
-     * <b>Important</b> : Depending on {@link ISerialiser} implementation, all classes that are used in passed object hierarchy should correspond some contract. For e.g. Kryo based
-     * serialiser requires all the classes to be registered and to have default constructor, simple java serialiser requires all the classes to implement {@link Serializable} etc.
+     * <b>Important</b> : Depending on {@link ISerialiser} implementation, all classes that are used in passed object hierarchy should correspond some contract.
+     * For e.g. simple java serialiser requires all the classes to implement {@link Serializable} etc.
      *
      * @param oldObj
      * @param serialiser
@@ -959,7 +994,7 @@ public class EntityUtils {
     }
 
     public static class BigDecimalWithTwoPlaces {
-    };
+    }
 
     public static SortedSet<String> getFirstLevelProps(final Set<String> allProps) {
         final SortedSet<String> result = new TreeSet<>();
@@ -1012,6 +1047,8 @@ public class EntityUtils {
         return isStale(staleOriginalValue, freshValue) && !EntityUtils.equalsEx(staleNewValue, freshValue);
     }
 
+    ////////////////////////////////////////////// ID_AND_VERSION //////////////////////////////////////////////
+
     /**
      * Creates empty {@link IFetchProvider} for concrete <code>entityType</code> with instrumentation.
      *
@@ -1020,12 +1057,24 @@ public class EntityUtils {
      * @return
      */
     public static <T extends AbstractEntity<?>> IFetchProvider<T> fetch(final Class<T> entityType, final boolean instumented) {
-        return FetchProviderFactory.createDefaultFetchProvider(entityType, instumented);
+        return createDefaultFetchProvider(entityType, instumented);
     }
 
     public static <T extends AbstractEntity<?>> IFetchProvider<T> fetch(final Class<T> entityType) {
-        return FetchProviderFactory.createDefaultFetchProvider(entityType, false);
+        return createDefaultFetchProvider(entityType, false);
     }
+
+    /**
+     * Creates empty {@link IFetchProvider} for concrete <code>entityType</code> <b>without</b> instrumentation.
+     *
+     * @param entityType
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> IFetchProvider<T> fetchNotInstrumented(final Class<T> entityType) {
+        return createDefaultFetchProvider(entityType, false);
+    }
+
+    ////////////////////////////////////////////// KEY_AND_DESC //////////////////////////////////////////////
 
     /**
      * Creates {@link IFetchProvider} for concrete <code>entityType</code> with 'key' and 'desc' (analog of {@link EntityQueryUtils#fetchKeyAndDescOnly(Class)}) with instrumentation.
@@ -1035,22 +1084,11 @@ public class EntityUtils {
      * @return
      */
     public static <T extends AbstractEntity<?>> IFetchProvider<T> fetchWithKeyAndDesc(final Class<T> entityType, final boolean instrumented) {
-        return FetchProviderFactory.createFetchProviderWithKeyAndDesc(entityType, instrumented);
+        return createFetchProviderWithKeyAndDesc(entityType, instrumented);
     }
 
     public static <T extends AbstractEntity<?>> IFetchProvider<T> fetchWithKeyAndDesc(final Class<T> entityType) {
-        return FetchProviderFactory.createFetchProviderWithKeyAndDesc(entityType, false);
-    }
-
-
-    /**
-     * Creates empty {@link IFetchProvider} for concrete <code>entityType</code> <b>without</b> instrumentation.
-     *
-     * @param entityType
-     * @return
-     */
-    public static <T extends AbstractEntity<?>> IFetchProvider<T> fetchNotInstrumented(final Class<T> entityType) {
-        return FetchProviderFactory.createDefaultFetchProvider(entityType, false);
+        return createFetchProviderWithKeyAndDesc(entityType, false);
     }
 
     /**
@@ -1060,7 +1098,29 @@ public class EntityUtils {
      * @return
      */
     public static <T extends AbstractEntity<?>> IFetchProvider<T> fetchNotInstrumentedWithKeyAndDesc(final Class<T> entityType) {
-        return FetchProviderFactory.createFetchProviderWithKeyAndDesc(entityType, false);
+        return createFetchProviderWithKeyAndDesc(entityType, false);
+    }
+
+    ////////////////////////////////////////////// NONE //////////////////////////////////////////////
+    /**
+     * Creates {@link IFetchProvider} for concrete <code>entityType</code> with no properties and concrete instrumentation.
+     *
+     * @param entityType
+     * @param instrumented
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> IFetchProvider<T> fetchNone(final Class<T> entityType, final boolean instrumented) {
+        return createEmptyFetchProvider(entityType, instrumented);
+    }
+
+    /**
+     * Creates un-instrumented {@link IFetchProvider} for concrete <code>entityType</code> with no properties.
+     *
+     * @param entityType
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> IFetchProvider<T> fetchNone(final Class<T> entityType) {
+        return fetchNone(entityType, false);
     }
 
     /**
@@ -1206,7 +1266,7 @@ public class EntityUtils {
 
     /**
      * Finds entity by {@code id} and retrieves it with a fetch model suitable for mutation (i.e. the same as for entity masters).
-     * However, if the resultant entity to be mutated then argument {@code co} must correspond to an instrumenting instance. 
+     * However, if the resultant entity to be mutated then argument {@code co} must correspond to an instrumenting instance.
      *
      * @param id
      * @param co -- either pure reader or mutator if the resultant entity needs to be changed
@@ -1218,10 +1278,10 @@ public class EntityUtils {
 
     /**
      * Finds entity by {@code key} and retrieves it with a fetch model suitable for mutation (i.e. the same as for entity masters).
-     * However, if the resultant entity to be mutated then argument {@code co} must correspond to an instrumenting instance. 
+     * However, if the resultant entity to be mutated then argument {@code co} must correspond to an instrumenting instance.
      *
      * @param co -- either pure reader or mutator if the resultant entity needs to be changed
-     * @param kayValues -- an array of values for entity key members 
+     * @param kayValues -- an array of values for entity key members
      * @return
      */
     public static <T extends AbstractEntity<?>> Optional<T> findByKeyWithMasterFetch(final IEntityReader<T> co, final Object... keyValues) {
@@ -1235,8 +1295,8 @@ public class EntityUtils {
      * If the path is invalid then the resultant stream would be empty.
      * If the path is valid, but there {@code null} values on some of the intermediate properties then corresponding sub-path values would be represented as empty {@link Optional}.
      * <p>
-     * This functionality is useful if one needs to analyse the nested values of entities that conclude in the property described by {@code propertyPath} starting with entity {@code root}. 
-     * 
+     * This functionality is useful if one needs to analyse the nested values of entities that conclude in the property described by {@code propertyPath} starting with entity {@code root}.
+     *
      * @param root
      * @param propertyPath
      * @return
@@ -1256,10 +1316,10 @@ public class EntityUtils {
             return t2(propName, ofNullable(root.get(path)));
         });
     }
-    
+
     /**
-     * Gets list of all properties paths representing value of entity key. For composite entities props are listed in key members declaration order taking into account cases of multilevel nesting.   
-     * 
+     * Gets list of all properties paths representing value of entity key. For composite entities props are listed in key members declaration order taking into account cases of multilevel nesting.
+     *
      * @param parentContextPath -- path to key property within EQL query context.
      * @param entityType -- entity type containing key property.
      * @return
@@ -1271,17 +1331,17 @@ public class EntityUtils {
 
         return keyPaths(entityType, Optional.of(parentContextPath));
     }
-    
+
     /**
-     * Gets list of all properties paths representing value of entity key. For composite entities props are listed in key members declaration order taking into account cases of multilevel nesting.   
-     * 
+     * Gets list of all properties paths representing value of entity key. For composite entities props are listed in key members declaration order taking into account cases of multilevel nesting.
+     *
      * @param entityType -- entity type containing key property.
      * @return
      */
     public static List<String> keyPaths(final Class<? extends AbstractEntity<?>> entityType) {
         return keyPaths(entityType, Optional.empty());
     }
-    
+
     private static List<String> keyPaths(final Class<? extends AbstractEntity<?>> entityType, final Optional<String> parentContextPath) {
         final List<String> result = new ArrayList<>();
 
@@ -1305,5 +1365,16 @@ public class EntityUtils {
      */
     public static boolean isNaturalOrderDescending(final Class<? extends AbstractEntity<?>> type) {
         return AnnotationReflector.getAnnotation(type, KeyType.class).descendingOrder();
+    }
+
+    /**
+     * Returns true if propertyName in entityType has {@link DateOnly} annotation.
+     *
+     * @param entityType
+     * @param propertyName
+     * @return
+     */
+    public static boolean isDateOnly(final Class<? extends AbstractEntity<?>> entityType, final String propertyName) {
+        return isAnnotationPresent(findFieldByName(entityType, propertyName), DateOnly.class);
     }
 }
