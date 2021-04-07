@@ -419,7 +419,7 @@ export class TgEntityEditor extends TgEditor {
     _labelTap (e) {
         if (this.openMasterAction && this.entity !== null) {
             const entityValue = this.reflector().tg_getFullValue(this.entity, this.propertyName);
-            if (entityValue !== null && !Array.isArray(entityValue)) {
+            if (entityValue !== null && !Array.isArray(entityValue) && entityValue.type().isMasterPresent()) {
                 this.openMasterAction.currentEntity = () => entityValue;
                 this.openMasterAction._run();       
             }

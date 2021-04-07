@@ -1,6 +1,5 @@
 import '/resources/egi/tg-custom-action-dialog.js';
 import '/resources/components/postal-lib.js';
-import '/resources/actions/tg-ui-action.js';
 
 import { tearDownEvent, isInHierarchy, deepestActiveElement, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
 import {createDialog} from '/resources/egi/tg-dialog-util.js';
@@ -15,23 +14,6 @@ export const selectEnabledEditor = function (editor) {
     const selectedElement = editor.shadowRoot.querySelector('.custom-input:not([hidden]):not([disabled]):not([readonly])');
     return (selectedElement && selectedElement.shadowRoot && selectedElement.shadowRoot.querySelector('textarea')) || selectedElement;
 }
-
-const createOpenMasterAction = function (entityMaster) {
-    const actionModel = document.createElement('tg-ui-action');
-    actionModel.uiRole = 'ICON';
-    actionModel.showDialog = entityMaster._showDialog;
-    actionModel.toaster = entityMaster.toaster;
-    actionModel.createContextHolder = entityMaster._createContextHolder;
-    actionModel.dynamicAction = true;
-    actionModel.attrs = {
-        currentState: 'EDIT',
-        centreUuid: entityMaster.uuid
-    };
-    actionModel.requireSelectionCriteria = 'false';
-    actionModel.requireSelectedEntities = 'ONE';
-    actionModel.requireMasterEntity = 'true';
-    return actionModel;
-};
 
 const TgEntityMasterBehaviorImpl = {
     properties: {
@@ -102,14 +84,6 @@ const TgEntityMasterBehaviorImpl = {
          */
         moduleId: {
             type: String
-        },
-
-        /**
-         * Represents the action that allows to open entityt master for specified entity.
-         */
-        openMasterAction: {
-            type: Object,
-            value: null
         },
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -683,8 +657,6 @@ const TgEntityMasterBehaviorImpl = {
                 }
             }
         }.bind(self));
-
-        self.openMasterAction = createOpenMasterAction(self);
     }, // end of ready callback
 
     attached: function () {

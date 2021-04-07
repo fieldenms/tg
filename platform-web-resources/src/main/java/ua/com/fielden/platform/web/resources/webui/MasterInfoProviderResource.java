@@ -8,12 +8,10 @@ import org.restlet.Response;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.master.MasterInfo;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
-import ua.com.fielden.platform.web.resources.webui.exceptions.MissingEntityTypeException;
 import ua.com.fielden.platform.web.view.master.MasterInfoProvider;
 
 /**
@@ -36,22 +34,16 @@ public class MasterInfoProviderResource extends AbstractWebResource {
     @Get
     @Override
     public Representation get() {
-        return handleUndesiredExceptions(getResponse(), () -> restUtil.singleJsonMasterRepresentation(masterInfoProvider.getMasterInfo(getEntityType()), getRequest().getAttributes().get("entityType").toString()), restUtil);
+        return handleUndesiredExceptions(getResponse(), () -> restUtil.singleJsonMasterRepresentation(masterInfoProvider.getMasterInfo(getEntityTypeName()), getRequest().getAttributes().get("entityType").toString()), restUtil);
     }
 
     /**
-     * Returns the entity type as class. If entity type attribute of URI can not be converted to class {@link MissingEntityTypeException} exception will be thrown.
+     * Returns the entity type name extracted from URI attribute.
      *
      * @return
      */
-    @SuppressWarnings("unchecked")
-    private Class<? extends AbstractEntity<?>> getEntityType() {
-        final String entityType = getRequest().getAttributes().get("entityType").toString();
-        try {
-            return (Class<? extends AbstractEntity<?>>) Class.forName(entityType);
-        } catch (final ClassNotFoundException e) {
-            throw new MissingEntityTypeException(String.format("The entity type class is missing for type: %s", entityType), e);
-        }
+    private String getEntityTypeName() {
+        return getRequest().getAttributes().get("entityType").toString();
     }
 
 }

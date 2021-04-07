@@ -26,6 +26,7 @@ import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.app.exceptions.WebUiBuilderException;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
+import ua.com.fielden.platform.web.view.master.exceptions.MissingEntityTypeException;
 
 public class MasterInfoProvider {
 
@@ -35,8 +36,26 @@ public class MasterInfoProvider {
         this.webUiConfig = webUiConfig;
     }
 
+    public MasterInfo getMasterInfo(final String className) {
+        return getMasterInfo(getEntityType(className));
+    }
+
     public MasterInfo getMasterInfo(final Class<? extends AbstractEntity<?>> type) {
         return buildConfiguredMasterActionInfo(type, "");
+    }
+
+    /**
+     * Returns the entity type as class. If entityType can not be converted to a class then {@link MissingEntityTypeException} exception will be thrown.
+     *
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private Class<? extends AbstractEntity<?>> getEntityType(final String entityType) {
+        try {
+            return (Class<? extends AbstractEntity<?>>) Class.forName(entityType);
+        } catch (final ClassNotFoundException e) {
+            throw new MissingEntityTypeException(String.format("The entity type class is missing for type: %s", entityType), e);
+        }
     }
 
     private MasterInfo buildConfiguredMasterActionInfo(final Class<? extends AbstractEntity<?>> type, final String relativePropertyName) {
@@ -87,12 +106,12 @@ public class MasterInfoProvider {
             return info;
         }).orElseGet(tryOtherMasters(type, relativePropertyName));
     }
-    
+
     /**
      * Tries to determine a master for {@code type} in case it is a synthetic type based on some entity that may have a master (e.g. the case of ReWorkActivity extending WorkActivity).
      * If that fails, it tries to check if {@code type} is perhaps an entity with a single composite key member of an entity type that may have a master (e.g. the case of Manager with a single key member of type Person).
      * If none of the above yields anything, the constructed supplier returns {@code null}.
-     * 
+     *
      * @param type
      * @param relativePropertyName
      * @return

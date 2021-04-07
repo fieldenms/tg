@@ -909,6 +909,14 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
         }).trim();
     }
 
+    /**
+     * Ruterns true if associated entity type has entity master otherwise returns false.
+     *
+     */
+     EntityType.prototype.isMasterPresent = function () {
+        return this._masterPresent;
+    }
+
     return EntityType;
 };
 

@@ -11,6 +11,16 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js
 
 const TgEntityMasterTemplateBehaviorImpl = {
 
+    properties: {
+        /**
+         * Represents the action that allows to open entityt master for specified entity.
+         */
+        openMasterAction: {
+            type: Object,
+            value: null
+        }
+    },
+
     ready: function () {
         const self = this;
         self.isMasterTemplate = true;
@@ -21,6 +31,7 @@ const TgEntityMasterTemplateBehaviorImpl = {
         if (self.uuid === undefined) {
             self.uuid = self.is + '/' + generateUUID();
         }
+        self.openMasterAction = self.$.openMasterAction;
     },
 
     attached: function () {

@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
@@ -32,6 +33,7 @@ import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
+import ua.com.fielden.platform.serialisation.jackson.EntityType;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
@@ -42,6 +44,7 @@ import ua.com.fielden.platform.web.ioc.exceptions.MissingCustomViewConfiguration
 import ua.com.fielden.platform.web.ioc.exceptions.MissingMasterConfigurationException;
 import ua.com.fielden.platform.web.ioc.exceptions.MissingWebResourceException;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
+import ua.com.fielden.platform.web.view.master.MasterInfoProvider;
 
 /**
  * {@link IWebResourceLoader} implementation.
@@ -55,7 +58,7 @@ public class WebResourceLoader implements IWebResourceLoader {
     private static final Logger logger = Logger.getLogger(WebResourceLoader.class);
     private final boolean deploymentMode;
     private final boolean vulcanizingMode;
-    
+
     @Inject
     public WebResourceLoader(final IWebUiConfig webUiConfig, final ISerialiser serialiser) {
         this.webUiConfig = webUiConfig;
@@ -65,17 +68,17 @@ public class WebResourceLoader implements IWebResourceLoader {
         this.vulcanizingMode = vulcanizing.equals(workflow);
         logger.info(format("\t[%s MODE]", vulcanizingMode ? "VULCANIZING (uses DEVELOPMENT internally)" : deploymentMode ? "DEPLOYMENT" : "DEVELOPMENT"));
     }
-    
+
     @Override
     public Optional<String> loadSource(final String resourceURI) {
         return getSource(resourceURI);
     }
-    
+
     @Override
     public InputStream loadStream(final String resourceUri) {
         return ofNullable(getStream(resourceUri)).orElseThrow(() -> new MissingWebResourceException(format("URI is unknown: [%s].", resourceUri)));
     }
-    
+
     private Optional<String> getSource(final String resourceUri) {
         if ("/app/application-startup-resources.js".equalsIgnoreCase(resourceUri)) {
             return getApplicationStartupResourcesSource(webUiConfig);
@@ -90,7 +93,7 @@ public class WebResourceLoader implements IWebResourceLoader {
         } else if ("/app/tg-app.js".equalsIgnoreCase(resourceUri)) {
             return ofNullable(webUiConfig.genMainWebUIComponent());
         } else if ("/app/tg-reflector.js".equalsIgnoreCase(resourceUri)) {
-            return getReflectorSource(serialiser, (TgJackson) serialiser.getEngine(JACKSON));
+            return getReflectorSource(webUiConfig, serialiser, (TgJackson) serialiser.getEngine(JACKSON));
         } else if (resourceUri.startsWith("/master_ui")) {
             return ofNullable(getMasterSource(resourceUri.replaceFirst(quote("/master_ui/"), "").replaceFirst(quote(".js"), ""), webUiConfig));
         } else if (resourceUri.startsWith("/centre_ui")) {
@@ -105,54 +108,62 @@ public class WebResourceLoader implements IWebResourceLoader {
             return empty();
         }
     }
-    
+
     @Override
     public Optional<String> checksum(final String resourceURI) {
         return webUiConfig.checksum(resourceURI);
     }
-    
-    private static Optional<String> getReflectorSource(final ISerialiser serialiser, final TgJackson tgJackson) {
+
+    private static Optional<String> getReflectorSource(final IWebUiConfig webUiConfig, final ISerialiser serialiser, final TgJackson tgJackson) {
         final Optional<String> originalSource = ofNullable(getText("ua/com/fielden/platform/web/reflection/tg-reflector.js"));
-        return originalSource.map(src -> src.replace("@typeTable", new String(serialiser.serialise(tgJackson.getTypeTable(), JACKSON), UTF_8)));
+        return originalSource.map(src -> src.replace("@typeTable", new String(serialiser.serialise(enhanceWithMasterPresence(webUiConfig, tgJackson.getTypeTable()), JACKSON), UTF_8)));
     }
-    
+
+    private static Map<String, EntityType> enhanceWithMasterPresence(final IWebUiConfig webUiConfig, final Map<String, EntityType> typeTable) {
+        final MasterInfoProvider masterInfoProvider = new MasterInfoProvider(webUiConfig);
+        typeTable.forEach((typeName, entityType) -> {
+            entityType.set_masterPresent(masterInfoProvider.getMasterInfo(typeName) != null);
+        });
+        return typeTable;
+    }
+
     /**
      * Injects service worker registration script with lazy tags loading after sw registration (deployment mode).
      * Injects lazy tags loading (development mode).
-     * 
+     *
      * @param originalSource
      * @return
      */
     private Optional<String> injectServiceWorkerScriptInto(final String originalSource) {
-        return ofNullable(originalSource.replace("@service-worker", 
+        return ofNullable(originalSource.replace("@service-worker",
                           this.deploymentMode
                           ? // deployment?
-                          "        if ('serviceWorker' in navigator) {\n" + 
-                          "            navigator.serviceWorker.register('/service-worker.js').then(function (registration) {\n" + 
-                          "                if (registration.active) {\n" + 
-                          "                    loadTags();\n" + 
-                          "                } else {\n" + 
-                          "                    registration.onupdatefound = function () {\n" + 
-                          "                        const installingWorker = registration.installing;\n" + 
-                          "                        installingWorker.onstatechange = function () {\n" + 
-                          "                            if (installingWorker.state === 'activated') {\n" + 
-                          "                                loadTags();\n" + 
-                          "                            }\n" + 
-                          "                        };\n" + 
-                          "                    };\n" + 
-                          "                }\n" + 
-                          "            });\n" + 
+                          "        if ('serviceWorker' in navigator) {\n" +
+                          "            navigator.serviceWorker.register('/service-worker.js').then(function (registration) {\n" +
+                          "                if (registration.active) {\n" +
+                          "                    loadTags();\n" +
+                          "                } else {\n" +
+                          "                    registration.onupdatefound = function () {\n" +
+                          "                        const installingWorker = registration.installing;\n" +
+                          "                        installingWorker.onstatechange = function () {\n" +
+                          "                            if (installingWorker.state === 'activated') {\n" +
+                          "                                loadTags();\n" +
+                          "                            }\n" +
+                          "                        };\n" +
+                          "                    };\n" +
+                          "                }\n" +
+                          "            });\n" +
                           "        }\n"
                           : // development?
                           "        loadTags();\n"
                         ));
     }
-    
+
     private Optional<String> getApplicationStartupResourcesSource(final IWebUiConfig webUiConfig) {
         return getFileSource("/resources/application-startup-resources.js", webUiConfig.resourcePaths())
                .map(src -> vulcanizingMode || deploymentMode ? appendMastersAndCentresImportURIs(src, webUiConfig) : src);
     }
-    
+
     /**
      * Appends the import URIs for all masters / centres, registered in WebUiConfig, that were not already included in <code>source</code>.
      *
@@ -163,14 +174,14 @@ public class WebResourceLoader implements IWebResourceLoader {
     private static String appendMastersAndCentresImportURIs(final String source, final IWebUiConfig webUiConfig) {
         final StringBuilder sb = new StringBuilder();
         sb.append(source);
-        
+
         final Comparator<Class<?>> classComparator = new Comparator<Class<?>>() {
             @Override
             public int compare(final Class<?> class1, final Class<?> class2) {
                 return class1.getName().compareTo(class2.getName());
             }
         };
-        
+
         sb.append("\n\n/* GENERATED MASTERS FROM IWebUiConfig */\n");
         final List<Class<? extends AbstractEntity<?>>> sortedMasterTypes = new ArrayList<>(webUiConfig.getMasters().keySet());
         sort(sortedMasterTypes, classComparator); // sort types by name to provide predictable order inside vulcanized resources
@@ -179,7 +190,7 @@ public class WebResourceLoader implements IWebResourceLoader {
                 sb.append(format("import '/master_ui/%s.js';\n", masterEntityType.getName()));
             }
         }
-        
+
         sb.append("\n/* GENERATED CENTRES FROM IWebUiConfig */\n");
         final List<Class<? extends MiWithConfigurationSupport<?>>> sortedCentreTypes = new ArrayList<>(webUiConfig.getCentres().keySet());
         sort(sortedCentreTypes, classComparator); // sort types by name to provide predictable order inside vulcanized resources
@@ -188,10 +199,10 @@ public class WebResourceLoader implements IWebResourceLoader {
                 sb.append(format("import '/centre_ui/%s.js';\n", centreMiType.getName()));
             }
         }
-        
+
         return sb.toString();
     }
-    
+
     /**
      * Checks whether the master or centre, associated with type <code>name</code>, was already included in 'application-startup-resources' file with <code>source</code>.
      *
@@ -202,7 +213,7 @@ public class WebResourceLoader implements IWebResourceLoader {
     private static boolean alreadyIncluded(final String name, final String source) {
         return source.contains(name);
     }
-    
+
     private static String getMasterSource(final String entityTypeString, final IWebUiConfig webUiConfig) {
         final EntityMaster<? extends AbstractEntity<?>> master = getEntityMaster(entityTypeString, webUiConfig);
         if (master == null) {
@@ -210,13 +221,13 @@ public class WebResourceLoader implements IWebResourceLoader {
         }
         return master.render().toString();
     }
-    
+
     private static String getCentreSource(final String mitypeString, final IWebUiConfig webUiConfig) {
         // At this stage (#231) we only support single EntityCentre instance for both MOBILE / DESKTOP applications.
         // This means that starting the MOBILE or DESKTOP app for the first time will show us the same initial full-blown (aka-desktop)
         // configuration; the user however could change the number of columns, resize their widths etc. for MOBILE and DESKTOP apps separately
         // (see CentreUpdater.deviceSpecific method for more details).
-        
+
         // In future potentially we would need to define distinct initial configurations for MOBILE and DESKTOP apps.
         // Here we would need to take device specific instance.
         final EntityCentre<? extends AbstractEntity<?>> centre = getEntityCentre(mitypeString, webUiConfig);
@@ -225,7 +236,7 @@ public class WebResourceLoader implements IWebResourceLoader {
         }
         return centre.buildFor().render().toString();
     }
-    
+
     private static String getCustomViewSource(final String viewName, final IWebUiConfig webUiConfig) {
         final AbstractCustomView view = getCustomView(viewName, webUiConfig);
         if (view == null) {
@@ -233,7 +244,7 @@ public class WebResourceLoader implements IWebResourceLoader {
         }
         return view.build().render().toString();
     }
-    
+
     ////////////////////////////////// Getting file source //////////////////////////////////
     private static Optional<String> getFileSource(final String resourceURI, final List<String> resourcePaths) {
         final String originalPath = resourceURI.replaceFirst("/resources/", "");
@@ -245,9 +256,9 @@ public class WebResourceLoader implements IWebResourceLoader {
             return getFileSource(filePath);
         }
     }
-    
+
     private static Optional<String> getFileSource(final String filePath) {
         return ofNullable(getText(filePath));
     }
-    
+
 }
