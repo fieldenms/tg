@@ -370,56 +370,49 @@ export class TgDatetimePicker extends TgEditor {
     _approximate (dateEditingValue) {
         this._validMoment = null;
         if (dateEditingValue) {
-            const firstSlashIndex = dateEditingValue.indexOf('/');
-            if (firstSlashIndex > -1) {
-                // remove all spaces and insert one after year digits (or [ /2017] or other current year in case of one slash)
-                const numberOfDigitsAfterLastSlash = this._calculateNumberOfDigitsAfterLastSlash(dateEditingValue);
-                const numberOfDigits = numberOfDigitsAfterLastSlash.number;
-                let aproximated = undefined;
-                if (numberOfDigitsAfterLastSlash.secondSlashExists === true) { // exactly two slashes
-                    // If numberOfDigitsAfterSecondSlash equals 3, 5 or more -- the string could be potentially valid in formats like '../../Y ...'
-                    // But they should not be valid. Only 1, 2 and 4 digits for years should be valid.
-                    if (numberOfDigits === 1 || numberOfDigits === 2 || numberOfDigits === 4) {
-                        aproximated = this._approximateWithNumberOfDigits(dateEditingValue, numberOfDigits);
-                    }
-                } else { // exactly one slash
-                    // If numberOfDigitsAfterFirstSlash equals 1 or 2 -- it could be represented as valid digits for month.
-                    if (numberOfDigits === 1 || numberOfDigits === 2) {
-                        aproximated = this._approximateWithNumberOfDigits(dateEditingValue, numberOfDigits);
-                    }
-                }
-                if (aproximated !== undefined) {
-                    return aproximated;
-                }
-            } else if (this.timeZone === 'UTC' && dateEditingValue.indexOf('-') >= 0) { //As the last resort try utc formatting
+            if (this.timeZone === 'UTC' && dateEditingValue.indexOf('-') >= 0) {
                 this._validMoment = this._tryUTCFormats(dateEditingValue);
                 if (this._validMoment !== null) {
                     return this.convertToString(this._validMoment.valueOf());
                 }
             } else {
-                const value = dateEditingValue.replace(new RegExp(' ', 'g'), '').trim();
-                if (value) {
-                    if (this._isLiteral(value)) {
-                        this._validMoment = this._tryLiterals(value);
-                        if (this._validMoment !== null) {
-                            return this.convertToString(this._validMoment.valueOf());
+                const valueWithoutSpaces = dateEditingValue.replace(new RegExp(' ', 'g'), '').trim();
+                if (valueWithoutSpaces) {
+                    this._validMoment = this._tryLiterals(valueWithoutSpaces);
+                    if (this._validMoment !== null) {
+                        return this.convertToString(this._validMoment.valueOf());
+                    }
+                    const firstSlashIndex = dateEditingValue.indexOf('/');
+                    if (firstSlashIndex > -1) {
+                        // remove all spaces and insert one after year digits (or [ /2017] or other current year in case of one slash)
+                        const numberOfDigitsAfterLastSlash = this._calculateNumberOfDigitsAfterLastSlash(dateEditingValue);
+                        const numberOfDigits = numberOfDigitsAfterLastSlash.number;
+                        let aproximated = undefined;
+                        if (numberOfDigitsAfterLastSlash.secondSlashExists === true) { // exactly two slashes
+                            // If numberOfDigitsAfterSecondSlash equals 3, 5 or more -- the string could be potentially valid in formats like '../../Y ...'
+                            // But they should not be valid. Only 1, 2 and 4 digits for years should be valid.
+                            if (numberOfDigits === 1 || numberOfDigits === 2 || numberOfDigits === 4) {
+                                aproximated = this._approximateWithNumberOfDigits(dateEditingValue, numberOfDigits);
+                            }
+                        } else { // exactly one slash
+                            // If numberOfDigitsAfterFirstSlash equals 1 or 2 -- it could be represented as valid digits for month.
+                            if (numberOfDigits === 1 || numberOfDigits === 2) {
+                                aproximated = this._approximateWithNumberOfDigits(dateEditingValue, numberOfDigits);
+                            }
+                        }
+                        if (aproximated !== undefined) {
+                            return aproximated;
                         }
                     } else {
-                        this._validMoment = this._tryTimePortionFormats(value, this._timePortionFormats.slice() /* the copy is made  */);
+                        this._validMoment = this._tryTimePortionFormats(valueWithoutSpaces, this._timePortionFormats.slice() /* the copy is made  */);
                         if (this._validMoment !== null) {
                             return this.convertToString(this._validMoment.valueOf());
                         }
                     }
                 }
-                return value;
             }
         }
         return dateEditingValue;
-    }
-
-    _isLiteral (value) {
-        const upperCasedValue = value[0].toUpperCase();
-        return this._literals.indexOf(upperCasedValue) >= 0;
     }
 
     _tryLiterals (editingValue) {
