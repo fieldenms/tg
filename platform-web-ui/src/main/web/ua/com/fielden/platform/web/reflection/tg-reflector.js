@@ -913,8 +913,8 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
      * Ruterns true if associated entity type has entity master otherwise returns false.
      *
      */
-     EntityType.prototype.isMasterPresent = function () {
-        return this._masterPresent;
+     EntityType.prototype.entityMaster = function () {
+        return this._entityMaster;
     }
 
     return EntityType;

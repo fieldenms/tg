@@ -13,6 +13,7 @@ import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.master.MasterInfo;
 
 /**
  * The entity type to represent serialisable entity types for client-side handling.
@@ -76,17 +77,17 @@ public class EntityType extends AbstractEntity<String> {
     private Boolean _compoundMenuItem;
 
     @IsProperty
-    @Title(value = "Is Master Present?", desc = "Indicates whether the associated entity type has entity master or not.")
-    private Boolean _masterPresent;
+    @Title(value = "Entity Master", desc = "Entity Master Data")
+    private MasterInfo _entityMaster;
 
     @Observable
-    public EntityType set_masterPresent(final Boolean _masterPresent) {
-        this._masterPresent = _masterPresent;
+    public EntityType set_entityMaster(final MasterInfo _entityMaster) {
+        this._entityMaster = _entityMaster;
         return this;
     }
 
-    public Boolean is_masterPresent() {
-        return _masterPresent;
+    public MasterInfo get_entityMaster() {
+        return _entityMaster;
     }
 
     @Observable

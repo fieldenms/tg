@@ -122,7 +122,7 @@ public class WebResourceLoader implements IWebResourceLoader {
     private static Map<String, EntityType> enhanceWithMasterPresence(final IWebUiConfig webUiConfig, final Map<String, EntityType> typeTable) {
         final MasterInfoProvider masterInfoProvider = new MasterInfoProvider(webUiConfig);
         typeTable.forEach((typeName, entityType) -> {
-            entityType.set_masterPresent(masterInfoProvider.getMasterInfo(typeName) != null);
+            entityType.set_entityMaster(masterInfoProvider.getMasterInfo(typeName));
         });
         return typeTable;
     }

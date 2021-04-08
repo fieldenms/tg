@@ -124,6 +124,14 @@ export class TgEntityEditor extends TgEditor {
            },
 
            /**
+            * Indicates whether action is available for this editor ir not.
+            */
+           actionAvailable: {
+               type: Boolean,
+               value: false
+           },
+
+           /**
             * Action to open master on title click
             */
            openMasterAction: {
@@ -419,7 +427,7 @@ export class TgEntityEditor extends TgEditor {
     _labelTap (e) {
         if (this.openMasterAction && this.entity !== null) {
             const entityValue = this.reflector().tg_getFullValue(this.entity, this.propertyName);
-            if (entityValue !== null && !Array.isArray(entityValue) && entityValue.type().isMasterPresent()) {
+            if (entityValue !== null && !Array.isArray(entityValue) && entityValue.type().entityMaster()) {
                 this.openMasterAction.currentEntity = () => entityValue;
                 this.openMasterAction._run();       
             }
@@ -931,6 +939,17 @@ export class TgEntityEditor extends TgEditor {
 
     _changeTitle (entity) {
         this._customPropTitle = this._createTitleObject(entity);
+        this.actionAvailable = this._isActionAvailable(entity); 
+    }
+
+    _isActionAvailable (entity) {
+        if (this.openMasterAction && entity !== null) {
+            const entityValue = this.reflector().tg_getFullValue(entity, this.propertyName);
+            if (entityValue !== null && !Array.isArray(entityValue) && entityValue.type().entityMaster()) {
+                return true;
+            }
+        }
+        return false; 
     }
 
     _valueStyle (item, index) {

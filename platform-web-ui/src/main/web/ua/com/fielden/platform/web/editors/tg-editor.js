@@ -43,14 +43,34 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                 left: 0;
                 right: 0;
             }
-            .main-container {
-                @apply --layout-vertical;
-                position:relative;
+
+            label {
+                cursor: default;
+                @apply --layout-horizontal;
             }
+
+            #actionaAvailability {
+                display: none;
+            }
+
+            label[action-available]:hover {
+                cursor: pointer;
+            }
+
+            label:hover #actionaAvailability[action-available] {
+                display: unset;
+            }
+
+            .main-container {
+                position:relative;
+                @apply --layout-vertical;
+            }
+
             .editor-prefix,
             .editor-suffix {
                 @apply --layout-horizontal;
             }
+            
             #decorator {
                 --paper-input-container-input: {
                     font-weight: 500;
@@ -97,7 +117,10 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
         ${additionalTemplate}
         <paper-input-container id="decorator" always-float-label has-layer$="[[_hasLayer]]" invalid="[[_invalid]]" is-invalid$="[[_invalid]]" disabled$="[[_disabled]]" focused$="[[focused]]">
             <!-- flex auto  for textarea! -->
-            <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" slot="label" on-tap="_labelTap">[[propTitle]]</label>
+            <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" action-available$="[[actionAvailable]]" disabled$="[[_disabled]]" slot="label" on-tap="_labelTap">
+                <span>[[propTitle]]</span>
+                <iron-icon id="actionaAvailability" icon="icons:arrow-upward" action-available$="[[actionAvailable]]"></iron-icon>
+            </label>
             <div clss="editor-prefix" slot="prefix">
                 ${customPrefixAttribute}
             </div>
@@ -231,6 +254,11 @@ export class TgEditor extends PolymerElement {
              */
             previousModifiedPropertiesHolder: {
                 type: Object
+            },
+
+            actionAvailable: {
+                type: Boolean,
+                value: false
             },
     
             /////////////////////////////////////////////////////////////////////////////////////////////////////////
