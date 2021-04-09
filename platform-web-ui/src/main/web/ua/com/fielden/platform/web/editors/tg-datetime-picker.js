@@ -16,7 +16,6 @@ import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 import { TgEditor, createEditorTemplate} from '/resources/editors/tg-editor.js'
 import { _momentTz, timeZoneFormats } from '/resources/reflection/tg-date-utils.js';
 import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js'
-import { TgAppConfig } from '/app/tg-app-config.js';
 
 const pickerStyle = html`
     <custom-style>
@@ -151,7 +150,6 @@ export class TgDatetimePicker extends TgEditor {
 
     constructor () {
         super();
-        this._appConfig = new TgAppConfig();
         moment.parseTwoDigitYear = function (input) {
             var currYear = moment().year();
             return parseInt(input, 10) + ((parseInt(input, 10) < currYear - 2000 + 30) ? 2000 : 1900);
@@ -315,7 +313,7 @@ export class TgDatetimePicker extends TgEditor {
                     return this.convertToString(this._validMoment.valueOf());
                 }
                 // determine current date portion format for this editor;
-                const datePortionFormat = this.timeZone ? timeZoneFormats[this.timeZone]['L'] : this._appConfig.dateFormat;
+                const datePortionFormat = this.timeZone ? timeZoneFormats[this.timeZone]['L'] : moment.localeData()._longDateFormat.L;
                 const separator = datePortionFormat.includes('/') ? '/' : datePortionFormat.includes('-') ? '-' : null;
                 if (!separator) {
                     throw new Error(`Date format [${datePortionFormat}] separator is not supported.`);
