@@ -321,9 +321,14 @@ export class TgDatetimePicker extends TgEditor {
                 if (dateEditingValue.indexOf(separator) > -1) {
                     const numberOfDigitsAfterLastSeparator = this._calculateNumberOfDigitsAfterLastSeparator(dateEditingValue, separator);
                     const numberOfDigits = numberOfDigitsAfterLastSeparator.number;
+                    const numberOfYearDigits = datePortionFormat[0] !== 'Y' // years are only supported on beginning and ending of datePortionFormat (not in the middle, like MM-YYYY-DD)
+                        ? numberOfDigits
+                        : numberOfDigitsAfterLastSeparator.secondSeparatorExists === true
+                            ? this._calculateNumberOfDigitsBeforeIndex(dateEditingValue, dateEditingValue.indexOf(separator))
+                            : numberOfDigits;
                     if (
-                        numberOfDigitsAfterLastSeparator.secondSeparatorExists === true && (numberOfDigits === 1 || numberOfDigits === 2 || numberOfDigits === 4) // exactly two slashes; if numberOfDigitsAfterSecondSlash equals 3, 5 or more -- the string could be potentially valid in formats like '../../Y ...'; but they should not be valid -- only 1, 2 and 4 digits for years should be valid.
-                        || numberOfDigitsAfterLastSeparator.secondSeparatorExists === false && (numberOfDigits === 1 || numberOfDigits === 2) // exactly one slash; if numberOfDigitsAfterFirstSlash equals 1 or 2 -- it could be represented as valid digits for month.
+                        numberOfDigitsAfterLastSeparator.secondSeparatorExists === true && (numberOfYearDigits === 1 || numberOfYearDigits === 2 || numberOfYearDigits === 4) // exactly two separators; if numberOfDigitsAfterSecondSeparator equals 3, 5 or more -- the string could be potentially valid in formats like '../../Y ...'; but they should not be valid -- only 1, 2 and 4 digits for years should be valid.
+                        || numberOfDigitsAfterLastSeparator.secondSeparatorExists === false && (numberOfDigits === 1 || numberOfDigits === 2) // exactly one slash; if numberOfDigitsAfterFirstSeparator equals 1 or 2 -- it could be represented as valid digits for month.
                     ) {
                         // remove all spaces and insert one after year digits (or [ /2017] or other current year in case of one slash)
                         const valueWithoutSpacesWithYear = this._insertOneSpaceAndYear(dateEditingValue.replace(new RegExp(' ', 'g'), ''), numberOfDigits, separator, datePortionFormat).trim();
@@ -451,6 +456,24 @@ export class TgDatetimePicker extends TgEditor {
         }
         let numberOfDigits = 0;
         for (let index = separatorIndex + 1; index < str.length; index++) {
+            if (' ' === str[index]) {
+                if (numberOfDigits > 0) {
+                    return numberOfDigits;
+                }
+            } else {
+                // assuming that not ' ' is a digit
+                numberOfDigits++;
+            }
+        }
+        return numberOfDigits;
+    }
+
+    _calculateNumberOfDigitsBeforeIndex (str, separatorIndex) {
+        if (separatorIndex === -1) {
+            throw '_calculateNumberOfDigitsBeforeIndex: index of separator should not be -1.';
+        }
+        let numberOfDigits = 0;
+        for (let index = separatorIndex - 1; index >= 0; index--) {
             if (' ' === str[index]) {
                 if (numberOfDigits > 0) {
                     return numberOfDigits;
