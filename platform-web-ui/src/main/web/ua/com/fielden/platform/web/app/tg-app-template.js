@@ -287,9 +287,15 @@ Polymer({
                 //This logic might be invoked in case when someone changes hash by typing it in to address bar.
                 this._replaceStateWithNumber();
             }
-            const currentOverlay = this._findFirstClosableDialog();
-            const historySteps = this.currentHistoryState.currIndex - window.history.state.currIndex; //Determine history steps (i.e whether user pressed back or forward or multiple back or forward or changed history in some other way. One should take into account that if history steps are greater than 0 then user went backward. If the history steps are less than 0 then user went forward. If history steps are equal to 0 then user chnaged history by clicking menu item it search menu or module menu etc.)
-            if (historySteps !== 0 && currentOverlay) { // if user went backward or forward and there is overlay open and 'root' page (for e.g. https://tgdev.com:8091) is not opening
+
+            // Determine history steps (i.e whether user pressed back or forward or multiple back or forward or changed history in some other way.
+            // One should take into account that if history steps are greater than 0 then user went backward. If the history steps are less than 0 then user went forward.
+            // If history steps are equal to 0 then user changed history by clicking menu item it search menu or module menu etc.)
+            const historySteps = this.currentHistoryState.currIndex - window.history.state.currIndex;
+            // Computes to false/null or the first closable dialog
+            // This is relevant if user went backward or forward (mobile device only) and there is overlay open and 'root' page (for e.g. https://tgdev.com:8091) is not opening
+            const currentOverlay = (historySteps !== 0 && isMobileApp() && this._findFirstClosableDialog());
+            if (currentOverlay) {
                 // disableNextHistoryChange flag is needed to avoid history movements cycling
                 if (!this.disableNextHistoryChange) {
                     if (historySteps > 0) { // moving back
