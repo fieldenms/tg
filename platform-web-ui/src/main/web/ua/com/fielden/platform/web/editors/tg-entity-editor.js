@@ -405,7 +405,8 @@ export class TgEntityEditor extends TgEditor {
     static get observers () {
         return [
             "_changeTitle(entity)", 
-            "_changeLayerExistance(_editingValue, entity)"
+            "_changeLayerExistance(_editingValue, entity)",
+            "_changeActionAvailability(_editingValue, entity, focused)"
         ];
     }
 
@@ -923,13 +924,13 @@ export class TgEntityEditor extends TgEditor {
             }
             return this._generateTooltip(valueToFormat, actionAvailable);
         }
-        return this._generateTooltip("", actionAvailable);
+        return '';
     }
 
     _generateTooltip (value, actionAvailable) {
         var tooltip = this._formatTooltipText(value);
         tooltip += this.propDesc && (tooltip ? '<br><br>' : '') + this.propDesc;
-        tooltip += actionAvailable && ((tooltip ? '<br><br>' : '') + this._getActionTooltip(this.reflector().tg_getFullValue(this.entity, this.propertyName).type().entityMaster()));
+        tooltip += actionAvailable && ((tooltip ? '<br><br>' : '') + this._getActionTooltip(value.type().entityMaster()));
         return tooltip;
     }
 
@@ -976,17 +977,19 @@ export class TgEntityEditor extends TgEditor {
 
     _changeTitle (entity) {
         this._customPropTitle = this._createTitleObject(entity);
-        this.actionAvailable = this._isActionAvailable(entity); 
+        
     }
 
-    _isActionAvailable (entity) {
-        if (this.openMasterAction && entity !== null) {
-            const entityValue = this.reflector().tg_getFullValue(entity, this.propertyName);
-            if (entityValue !== null && !Array.isArray(entityValue) && entityValue.type().entityMaster()) {
-                return true;
-            }
+    _changeActionAvailability (_editingValue, entity, focused) {
+        if (allDefined(arguments) && 
+                !focused && 
+                entity !== null && 
+                !this.reflector().isError(this.reflector().tg_getFullEntity(entity).prop(this.propertyName).validationResult())) {
+            const propValue = this.reflector().tg_getFullEntity(entity).get(this.propertyName);
+            this.actionAvailable = propValue !== null && this.reflector().isEntity(propValue) && propValue.type().entityMaster();
+        } else {
+            this.actionAvailable = false;
         }
-        return false; 
     }
 
     _valueStyle (item, index) {
