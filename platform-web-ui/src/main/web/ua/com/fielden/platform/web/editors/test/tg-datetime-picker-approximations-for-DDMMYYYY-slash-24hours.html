@@ -13,7 +13,6 @@
 </head>
 
 <body>
-    <tg-reflector id="reflector"></tg-reflector>
     <test-fixture id="MasterFixture">
         <template>
             <tg-TgPersistentEntityWithProperties-master 
@@ -26,17 +25,14 @@
     </test-fixture>
 
     <script type="module">
-
-        import '/app/tg-reflector.js';
         import { _momentTz, _millis } from '/resources/reflection/tg-date-utils.js';
         import '/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties';
 
         suite('value approximates from', function() {
-            let master, reflector;
+            let master;
 
             setup(function() {
                 master = fixture('MasterFixture');
-                reflector = document.querySelector('#reflector');
             });
             
             const correctlyApproximates = function (done, targetEditingValue, approximatedEditingValue, concreteAcceptedMillis) {
