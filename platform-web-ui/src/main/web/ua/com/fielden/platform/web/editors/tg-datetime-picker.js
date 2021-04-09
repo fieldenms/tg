@@ -125,10 +125,10 @@ export class TgDatetimePicker extends TgEditor {
                 type: Array,
                 value: function () {
                     return [
-                        'LTS',
                         'h:m:ss.SSSa',
                         'H:m:ss.SSS',
-                        'LT',
+                        'LTS', // e.g. HH:mm:ss.SSS
+                        'LT', // e.g. HH:mm
                         'hmma',
                         'Hmm',
                         'h:ma',

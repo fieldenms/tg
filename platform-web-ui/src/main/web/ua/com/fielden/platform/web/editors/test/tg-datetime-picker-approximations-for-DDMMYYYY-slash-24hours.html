@@ -38,8 +38,289 @@
             
             const correctlyApproximates = correctlyApproximatesFor(() => master);
             const incorrectlyApproximates = incorrectlyApproximatesFor(() => master);
+
+            (() => {
+                const target = '09/09/2007 23:05:34.567', result = '09/09/2007 23:05:34.567';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+
+            (() => {
+                const target = '09/09/2007 11:03:34.567a', result = '09/09/2007 11:03:34.567';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
             
-            // ===============================
+            (() => {
+                const target = '09/09/2007 11:03:34.567p', result = '09/09/2007 23:03:34.567';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '09/09/2007 23:05:3.567';
+                test(`[${target}] to itself`, done => incorrectlyApproximates(done, target));
+            })();
+            
+            (() => {
+                const target = '09/09/2007 23:05:34.56';
+                test(`[${target}] to itself`, done => incorrectlyApproximates(done, target));
+            })();
+            
+            (() => {
+                const target = '9/9/07 21:5:34.567', result = '09/09/2007 21:05:34.567';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '9/09/7 9:5:34.567  ', result = '09/09/2007 09:05:34.567';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '09/9/7 9:5 : 34  .  567  ', result = '09/09/2007 09:05:34.567';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '9/09/07 9:5:34.567  ', result = '09/09/2007 09:05:34.567';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+
+            (() => {
+                const target = '09/09/2002 11:03', result = '09/09/2002 11:03';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '09/09/2007 21:45', result = '09/09/2007 21:45';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '09/09/2002 937p', result = '09/09/2002 21:37';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '09/09/2002 937a', result = '09/09/2002 09:37';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+
+            (() => {
+                const target = '09/09/2002 937', result = '09/09/2002 09:37';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '09/09/2002 2137', result = '09/09/2002 21:37';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '9/9/02 2137', result = '09/09/2002 21:37';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '9/9/2 2137', result = '09/09/2002 21:37';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '9/9/2 937', result = '09/09/2002 09:37';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+
+            (() => {
+                const target = '09/09/2002 9:37a', result = '09/09/2002 09:37';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+
+            (() => {
+                const target = '09/09/2002 9:37p', result = '09/09/2002 21:37';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '09/09/2002 9:37', result = '09/09/2002 09:37';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '09/09/2002 9:7', result = '09/09/2002 09:07';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '09/09/2002 21:37', result = '09/09/2002 21:37';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '09/09/2002 21:7', result = '09/09/2002 21:07';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '9/9/2 21:7', result = '09/09/2002 21:07';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '9/9/2 9:7', result = '09/09/2002 09:07';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '09/09/2002 9a', result = '09/09/2002 09:00';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '09/09/2002 9A', result = '09/09/2002 09:00';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '09/09/2002 9p', result = '09/09/2002 21:00';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '09/09/2002 9P', result = '09/09/2002 21:00';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '09/09/2002 9', result = '09/09/2002 09:00';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '9/9/2 21', result = '09/09/2002 21:00';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '09/09/2002', result = '09/09/2002 00:00';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '09/09/2002', result = '09/09/2002 23:59:59.999';
+                test(`[${target}] to [${result}] in case of editor with timePortionToBecomeEndOfDay as true`, done => correctlyApproximates(done, target, result, _millis('09/09/2002 23:59:59.999')));
+            })();
+            
+            (() => {
+                const target = '9/09/2002', result = '09/09/2002 00:00';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '09/9/2002', result = '09/09/2002 00:00';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '09/09/02', result = '09/09/2002 00:00';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '09/09/02', result = '09/09/2002 23:59:59.999';
+                test(`[${target}] to [${result}] in case of editor with timePortionToBecomeEndOfDay as true`, done => correctlyApproximates(done, target, result, _millis('09/09/2002 23:59:59.999')));
+            })();
+            
+            (() => {
+                const target = '09/09/2', result = '09/09/2002 00:00';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+
+            (() => {
+                const target = '09/09/2', result = '09/09/2002 23:59:59.999';
+                test(`[${target}] to [${result}] in case of editor with timePortionToBecomeEndOfDay as true`, done => correctlyApproximates(done, target, result, _millis('09/09/2002 23:59:59.999')));
+            })();
+            
+            (() => {
+                const target = '9/9/2', result = '09/09/2002 23:59:59.999';
+                test(`[${target}] to [${result}] in case of editor with timePortionToBecomeEndOfDay as true`, done => correctlyApproximates(done, target, result, _millis('09/09/2002 23:59:59.999')));
+            })();
+            
+            (() => {
+                const year = moment().year() - 2000 + 30 - 1;
+                const target = `09/09/${year}`, result = `09/09/20${year} 00:00`;
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const year = moment().year() - 2000 + 30;
+                const target = `09/09/${year}`, result = `09/09/19${year} 00:00`;
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '9 / 9  /   2002 21:37', result = '09/09/2002 21:37';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '09/09/2002 21: 37', result = '09/09/2002 21:37';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '09/09/2002 21:7', result = '09/09/2002 21:07';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '9/9/97 21:45', result = '09/09/1997 21:45';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '09/09/7  21:45', result = '09/09/2007 21:45';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = ' 09/09/7 21:45', result = '09/09/2007 21:45';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = ' 09/09/2007 21:45', result = '09/09/2007 21:45';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '09/09/2007 21:45  ', result = '09/09/2007 21:45';
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '9/9/';
+                test(`[${target}] to itself`, done => incorrectlyApproximates(done, target));
+            })();
+            
+            (() => {
+                const target = '9/';
+                test(`[${target}] to itself`, done => incorrectlyApproximates(done, target));
+            })();
+            
+            (() => {
+                const target = '01/01/201';
+                test(`[${target}] to itself`, done => incorrectlyApproximates(done, target));
+            })();
+            
+            (() => {
+                const target = '01/01/20111';
+                test(`[${target}] to itself`, done => incorrectlyApproximates(done, target));
+            })();
+            
+            (() => {
+                const target = '01/01/201112 3:15';
+                test(`[${target}] to itself`, done => incorrectlyApproximates(done, target));
+            })();
+            
             // day+month aproximations into 'current year' date
             const currYearStr = _momentTz().format('YYYY'); // '2016';
             
@@ -78,7 +359,6 @@
                 test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
             })();
             
-            // ===============================
             // time portion aproximations into 'today' date
             const todayStr = _momentTz().format('L'); // '17/10/2016';
             
@@ -262,235 +542,8 @@
                 const target = '9:5:34.567  ', result = `${todayStr} 09:05:34.567`;
                 test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
             })();
-            // ===============================
             
-            (() => {
-                const target = '09/09/2002 11:03', result = '09/09/2002 11:03';
-                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
-            })();
-            
-            (() => {
-                const target = '09/09/2007 21:45', result = '09/09/2007 21:45';
-                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
-            })();
-            
-            (() => {
-                const target = '09/09/2002', result = '09/09/2002 00:00';
-                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
-            })();
-            
-            (() => {
-                const target = '09/09/2002', result = '09/09/2002 23:59:59.999';
-                test(`[${target}] to [${result}] in case of editor with timePortionToBecomeEndOfDay as true`, done => correctlyApproximates(done, target, result, _millis('09/09/2002 23:59:59.999')));
-            })();
-            
-            (() => {
-                const target = '9/09/2002', result = '09/09/2002 00:00';
-                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
-            })();
-
-            (() => {
-                const target = '09/9/2002', result = '09/09/2002 00:00';
-                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
-            })();
-            
-            (() => {
-                const target = '09/09/02', result = '09/09/2002 00:00';
-                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
-            })();
-            
-            (() => {
-                const target = '09/09/2', result = '09/09/2002 00:00';
-                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
-            })();
-            
-            (() => {
-                const year = moment().year() - 2000 + 30 - 1;
-                const target = `09/09/${year}`, result = `09/09/20${year} 00:00`;
-                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
-            })();
-            
-            (() => {
-                const year = moment().year() - 2000 + 30;
-                const target = `09/09/${year}`, result = `09/09/19${year} 00:00`;
-                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
-            })();
-            
-            (() => {
-                const target = '09/09/2002 9', result = '09/09/2002 09:00';
-                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
-            })();
-            
-            (() => {
-                const target = '09/09/2002 9p', result = '09/09/2002 21:00';
-                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
-            })();
-            
-            (() => {
-                const target = '09/09/2002 9P', result = '09/09/2002 21:00';
-                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
-            })();
-            
-            (() => {
-                const target = '09/09/2002 9:37', result = '09/09/2002 09:37';
-                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
-            })();
-            
-            (() => {
-                const target = '09/09/2002 9:7', result = '09/09/2002 09:07';
-                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
-            })();
-            
-            (() => {
-                const target = '09/09/2002 21:37', result = '09/09/2002 21:37';
-                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
-            })();
-            
-            (() => {
-                const target = '09/09/2002 21:7', result = '09/09/2002 21:07';
-                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
-            })();
-            
-            (() => {
-                const target = '09/09/2002 937', result = '09/09/2002 09:37';
-                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
-            })();
-            
-            (() => {
-                const target = '09/09/2002 2137', result = '09/09/2002 21:37';
-                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
-            })();
-            
-            (() => {
-                const target = '9/9/02 2137', result = '09/09/2002 21:37';
-                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
-            })();
-            
-            (() => {
-                const target = '9/9/2 2137', result = '09/09/2002 21:37';
-                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
-            })();
-            
-            (() => {
-                const target = '9/9/2 937', result = '09/09/2002 09:37';
-                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
-            })();
-            
-            (() => {
-                const target = '9/9/2 21:7', result = '09/09/2002 21:07';
-                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
-            })();
-            
-            (() => {
-                const target = '9/9/2 9:7', result = '09/09/2002 09:07';
-                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
-            })();
-            
-            (() => {
-                const target = '9/9/2 21', result = '09/09/2002 21:00';
-                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
-            })();
-            
-            (() => {
-                const target = '9 / 9  /   2002 21:37', result = '09/09/2002 21:37';
-                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
-            })();
-            
-            (() => {
-                const target = '09/09/2002 21: 37', result = '09/09/2002 21:37';
-                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
-            })();
-            
-            (() => {
-                const target = '09/09/2002 21:7', result = '09/09/2002 21:07';
-                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
-            })();
-            
-            (() => {
-                const target = '9/9/97 21:45', result = '09/09/1997 21:45';
-                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
-            })();
-            
-            (() => {
-                const target = '09/09/7  21:45', result = '09/09/2007 21:45';
-                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
-            })();
-            
-            (() => {
-                const target = ' 09/09/7 21:45', result = '09/09/2007 21:45';
-                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
-            })();
-            
-            (() => {
-                const target = ' 09/09/2007 21:45', result = '09/09/2007 21:45';
-                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
-            })();
-            
-            (() => {
-                const target = '09/09/2007 21:45  ', result = '09/09/2007 21:45';
-                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
-            })();
-            
-            (() => {
-                const target = '9/9/';
-                test(`[${target}] to [${target}]`, done => incorrectlyApproximates(done, target));
-            })();
-            
-            (() => {
-                const target = '9/';
-                test(`[${target}] to [${target}]`, done => incorrectlyApproximates(done, target));
-            })();
-            
-            (() => {
-                const target = '01/01/201';
-                test(`[${target}] to [${target}]`, done => incorrectlyApproximates(done, target));
-            })();
-            
-            (() => {
-                const target = '01/01/20111';
-                test(`[${target}] to [${target}]`, done => incorrectlyApproximates(done, target));
-            })();
-            
-            (() => {
-                const target = '01/01/201112 3:15';
-                test(`[${target}] to [${target}]`, done => incorrectlyApproximates(done, target));
-            })();
-            
-            (() => {
-                const target = '09/09/2007 23:05:34.567', result = '09/09/2007 23:05:34.567';
-                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
-            })();
-            
-            (() => {
-                const target = '09/09/2007 23:05:3.567';
-                test(`[${target}] to [${target}]`, done => incorrectlyApproximates(done, target));
-            })();
-            
-            (() => {
-                const target = '09/09/2007 23:05:34.56';
-                test(`[${target}] to [${target}]`, done => incorrectlyApproximates(done, target));
-            })();
-            
-            (() => {
-                const target = '9/9/7 21:5:34.567', result = '09/09/2007 21:05:34.567';
-                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
-            })();
-            
-            (() => {
-                const target = '9/9/7 9:5:34.567  ', result = '09/09/2007 09:05:34.567';
-                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
-            })();
-            
-            (() => {
-                const target = '9/9/7 9:5 : 34  .  567  ', result = '09/09/2007 09:05:34.567';
-                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
-            })();
-            
-            (() => {
-                const target = '9/9/7 9:5:34.567  ', result = '09/09/2007 09:05:34.567';
-                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
-            })();
-            
+            // today
             (() => {
                 const todayDate = moment().startOf('day');
                 const target = 't', result = todayDate.format('DD/MM/YYYY HH:mm');
