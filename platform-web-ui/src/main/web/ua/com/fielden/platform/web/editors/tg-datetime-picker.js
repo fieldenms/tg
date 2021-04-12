@@ -338,12 +338,24 @@ export class TgDatetimePicker extends TgEditor {
                         // remove all spaces and insert one after year digits (or [ /2017] or other current year in case of one separator);
                         const valueWithOneSpaceAndYear = this._insertOneSpaceAndYear(valueWithoutSpaces, numberOfDigits, separator, yearsOnEnding).trim(); // never empty -- at least one separator exists
                         // try combined date & time formats for approximation:
-                        this._validMoment = this._tryFormats(valueWithOneSpaceAndYear, this._formatsFor(datePortionFormat, separator), this._datePortionFormatsFor(datePortionFormat, separator), separator);
+                        const datePortionFormats = this._datePortionFormatsFor(datePortionFormat, separator);
+                        this._validMoment = this._tryFormats(valueWithOneSpaceAndYear, this._formatsFor(datePortionFormat, separator), (stringValue, validMoment, format) => {
+                            const indexOfY = format.indexOf('Y');
+                            let adjustedMoment = validMoment;
+                            if (indexOfY > -1 && format.indexOf('Y', indexOfY + 1) === -1) { // only one Y in the format
+                                const strWithDoubleDigitYear = this._convertToDoubleDigitYear(stringValue, indexOfY === 0 ? 0 : this._findSecondSeparatorIndex(stringValue, separator) + 1);
+                                adjustedMoment = _momentTz(strWithDoubleDigitYear, format.replace('Y', 'YY'), true, this.timeZone);
+                            }
+                            if (datePortionFormats.indexOf(format) !== -1 && this.timePortionToBecomeEndOfDay === true) {
+                                adjustedMoment.add(1, 'days').subtract(1, 'milliseconds'); // even though original validMoment can be mutated here, it will not be used anywhere else; so it is safe to do this mutation
+                            }
+                            return adjustedMoment;
+                        });
                     }
                 } else {
                     // if there is no separator then only time portion is present;
                     // try time formats only for approximation:
-                    this._validMoment = this._tryFormats(valueWithoutSpaces, this._timePortionFormats.slice() /* the copy is made  */, [] /* not needed */, separator);
+                    this._validMoment = this._tryFormats(valueWithoutSpaces, this._timePortionFormats.slice() /* the copy is made  */);
                 }
                 if (this._validMoment !== null) {
                     return this.convertToString(this._validMoment.valueOf());
@@ -405,26 +417,23 @@ export class TgDatetimePicker extends TgEditor {
     /**
      * Tries the formats one-by-one and returns the valid 'moment' object in case where some format has been successed.
      * In case of all formats failure -- returns 'null'.
+     * 
+     * @param adjustValidMoment -- function with parameters (stringValue, validMoment, format) to adjust 'validMoment', that is valid in 'format', to some other custom valid moment
      */
-    _tryFormats (stringValue, formats, datePortionFormats, separator) {
+    _tryFormats (stringValue, formats, adjustValidMoment) {
         if (formats.length === 0) {
             return null;
         } else {
             const firstFormat = formats[0];
             let tryingMoment = _momentTz(stringValue, firstFormat, true, this.timeZone);
             if (tryingMoment.isValid()) {
-                const indexOfY = firstFormat.indexOf('Y');
-                if (indexOfY > -1 && firstFormat.indexOf('Y', indexOfY + 1) === -1) { // only one Y in the format
-                    const strWithDoubleDigitYear = this._convertToDoubleDigitYear(stringValue, indexOfY === 0 ? 0 : this._findSecondSeparatorIndex(stringValue, separator) + 1);
-                    tryingMoment = _momentTz(strWithDoubleDigitYear, firstFormat.replace('Y', 'YY'), true, this.timeZone);
-                }
-                if (datePortionFormats.indexOf(firstFormat) !== -1 && this.timePortionToBecomeEndOfDay === true) {
-                    tryingMoment.add(1, 'days').subtract(1, 'milliseconds');
+                if (adjustValidMoment) {
+                    return adjustValidMoment(stringValue, tryingMoment, firstFormat);
                 }
                 return tryingMoment;
             } else {
                 formats.shift(); // first element is removed
-                return this._tryFormats(stringValue, formats, datePortionFormats, separator);
+                return this._tryFormats(stringValue, formats, adjustValidMoment);
             }
         }
     }
