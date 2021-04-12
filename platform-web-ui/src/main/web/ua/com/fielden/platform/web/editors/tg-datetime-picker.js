@@ -313,7 +313,7 @@ export class TgDatetimePicker extends TgEditor {
                     return this.convertToString(this._validMoment.valueOf());
                 }
                 // determine current date portion format for this editor;
-                const datePortionFormat = this.timeZone ? timeZoneFormats[this.timeZone]['L'] : moment.localeData()._longDateFormat.L;
+                const datePortionFormat = this.timeZone ? timeZoneFormats[this.timeZone]['L'] : moment.localeData().longDateFormat('L');
                 const separator = datePortionFormat.includes('/') ? '/' : datePortionFormat.includes('-') ? '-' : null;
                 if (!separator) {
                     throw new Error(`Date format [${datePortionFormat}] separator is not supported.`);

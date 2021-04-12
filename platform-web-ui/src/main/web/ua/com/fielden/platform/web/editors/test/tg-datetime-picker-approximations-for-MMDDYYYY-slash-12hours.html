@@ -37,9 +37,9 @@
             });
 
             suiteSetup(() => {
-                defaultDateFormat = moment.localeData()._longDateFormat.L;
-                defaultTimeFormat = moment.localeData()._longDateFormat.LT;
-                defaultTimeWithSecondsFormat = moment.localeData()._longDateFormat.LTS;
+                defaultDateFormat = moment.localeData().longDateFormat('L');
+                defaultTimeFormat = moment.localeData().longDateFormat('LT');
+                defaultTimeWithSecondsFormat = moment.localeData().longDateFormat('LTS');
                 moment.locale('custom-locale', { longDateFormat: { L: 'MM/DD/YYYY', LT: 'h:mmA', LTS: 'h:mm:ss.SSSA' } });
             });
             suiteTeardown(() => {

@@ -37,7 +37,7 @@
             });
 
             suiteSetup(() => {
-                defaultFormat = moment.localeData()._longDateFormat.L;
+                defaultFormat = moment.localeData().longDateFormat('L');
                 moment.locale('custom-locale', { longDateFormat: { L: 'YYYY-MM-DD' } });
             });
             suiteTeardown(() => {
