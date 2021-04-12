@@ -338,8 +338,8 @@ export class TgDatetimePicker extends TgEditor {
                         // remove all spaces and insert one after year digits (or [ /2017] or other current year in case of one separator);
                         const valueWithOneSpaceAndYear = this._insertOneSpaceAndYear(valueWithoutSpaces, numberOfDigits, separator, yearsOnEnding).trim(); // never empty -- at least one separator exists
                         // try combined date & time formats for approximation:
-                        const datePortionFormats = this._datePortionFormatsFor(datePortionFormat, separator);
-                        this._validMoment = this._tryFormats(valueWithOneSpaceAndYear, this._formatsFor(datePortionFormat, separator), (stringValue, validMoment, format) => {
+                        const datePortionFormats = this._datePortionApproximationFormatsFor(datePortionFormat, separator);
+                        this._validMoment = this._tryFormats(valueWithOneSpaceAndYear, this._approximationFormatsFor(datePortionFormat, separator), (stringValue, validMoment, format) => {
                             const indexOfY = format.indexOf('Y');
                             let adjustedMoment = validMoment;
                             if (indexOfY > -1 && format.indexOf('Y', indexOfY + 1) === -1) { // only one Y in the format
@@ -365,9 +365,13 @@ export class TgDatetimePicker extends TgEditor {
         return dateEditingValue;
     }
 
-    _datePortionFormatsFor (datePortionFormat, separator) {
+    /**
+     * Generates approximation formats for date portion from default date portion format and its separator.
+     * Only 'MM', 'DD' and 'YYYY' parts are supported. Only '/' and '-' separators are supported.
+     */
+    _datePortionApproximationFormatsFor (datePortionFormat, separator) {
         const parts = datePortionFormat.split(separator);
-        const partFormats = part => part.length === 2 ? part[0].toUpperCase() : ['YYYY', 'YY', 'Y'];
+        const partFormats = part => part.length === 2 ? part[0].toUpperCase() : ['YYYY', 'YY', 'Y']; // converts from 'MM' to 'M'; from 'DD' to 'D'; and from 'YYYY' to ['YYYY', 'YY', 'Y']
         const first = partFormats(parts[0]);
         const second = partFormats(parts[1]);
         const third = partFormats(parts[2]);
@@ -385,12 +389,16 @@ export class TgDatetimePicker extends TgEditor {
         return datePortionFormats;
     }
 
-    _formatsFor (datePortionFormat, separator) {
+    /**
+     * Generates full date & time approximation formats from default date portion format and its separator.
+     * Only 'MM', 'DD' and 'YYYY' parts are supported. Only '/' and '-' separators are supported.
+     * _timePortionFormats are not included.
+     */
+     _approximationFormatsFor (datePortionFormat, separator) {
         const resultFormats = [];
-        const datePortionFormats = this._datePortionFormatsFor(datePortionFormat, separator);
-        this._timePortionFormats.forEach(tpFormat => datePortionFormats.forEach(dpFormat => resultFormats.push(dpFormat + ' ' + tpFormat)));
-        datePortionFormats.forEach(dpFormat => resultFormats.push(dpFormat));
-        this._timePortionFormats.forEach(tpFormat => resultFormats.push(tpFormat));
+        const datePortionFormats = this._datePortionApproximationFormatsFor(datePortionFormat, separator);
+        this._timePortionFormats.forEach(tpFormat => datePortionFormats.forEach(dpFormat => resultFormats.push(dpFormat + ' ' + tpFormat))); // date and time combined
+        datePortionFormats.forEach(dpFormat => resultFormats.push(dpFormat));  // date only
         return resultFormats;
     }
 
