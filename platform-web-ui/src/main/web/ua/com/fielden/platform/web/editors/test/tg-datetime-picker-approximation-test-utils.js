@@ -1,3 +1,7 @@
+/**
+ * Performs Mocha web test for valid approximation of 'targetEditingValue' to 'approximatedEditingValue'.
+ * Additionally checks 'concreteAcceptedMillis' if specified.
+ */
 export const correctlyApproximatesFor = masterGetter => (done, targetEditingValue, approximatedEditingValue, concreteAcceptedMillis) => {
     const master = masterGetter();
     const edProperty = master.$.editor_4_dateProp;
@@ -38,6 +42,10 @@ export const correctlyApproximatesFor = masterGetter => (done, targetEditingValu
     master.retrieve();
 };
 
+/**
+ * Performs Mocha web test for invalid approximation of 'targetEditingValue'.
+ * The editing value must be left unchanged.
+ */
 export const incorrectlyApproximatesFor = masterGetter => (done, targetEditingValue) => {
     const master = masterGetter();
     const edProperty = master.$.editor_4_dateProp;
