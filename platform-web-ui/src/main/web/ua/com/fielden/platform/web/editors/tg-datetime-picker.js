@@ -332,7 +332,7 @@ export class TgDatetimePicker extends TgEditor {
                     //  (please be careful when adding '.' as date portion separator -- it is used to separate seconds from millis in 'ss.SSS')
                     const { secondSeparatorExists, numberOfDigits } = this._calculateNumberOfDigitsAfterLastSeparator(dateEditingValue, separator);
                     if (
-                        secondSeparatorExists === true && [1, 2, 4].includes(yearsOnEnding ? numberOfDigits : this._calculateNumberOfDigitsBeforeIndex(dateEditingValue, firstSeparatorIndex)) // exactly two separators; only 1, 2 and 4 digits for years should be valid
+                        secondSeparatorExists === true && [1, 2, 4].includes(yearsOnEnding ? numberOfDigits : this._calculateNumberOfDigits(dateEditingValue, 'before', firstSeparatorIndex)) // exactly two separators; only 1, 2 and 4 digits for years should be valid
                         || secondSeparatorExists === false && [1, 2].includes(numberOfDigits) // exactly one separator; only 1 and 2 digits for months / days should be valid (numberOfDigitsAfterFirstSeparator)
                     ) {
                         // remove all spaces and insert one after year digits (or [ /2017] or other current year in case of one separator);
@@ -463,9 +463,9 @@ export class TgDatetimePicker extends TgEditor {
         const secondSeparatorIndex = this._findSecondSeparatorIndex(str, separator);
         let numberOfDigits;
         if (secondSeparatorIndex === -1) {
-            numberOfDigits = this._calculateNumberOfDigitsAfterIndex(str, str.indexOf(separator));
+            numberOfDigits = this._calculateNumberOfDigits(str, 'after', str.indexOf(separator));
         } else {
-            numberOfDigits = this._calculateNumberOfDigitsAfterIndex(str, secondSeparatorIndex);
+            numberOfDigits = this._calculateNumberOfDigits(str, 'after', secondSeparatorIndex);
         }
         return {
             secondSeparatorExists: secondSeparatorIndex > -1,
@@ -473,40 +473,17 @@ export class TgDatetimePicker extends TgEditor {
         };
     }
 
-    _calculateNumberOfDigitsAfterIndex (str, separatorIndex) {
+    /**
+     * Calculates number of digits before / after separator meaning that we count from first / last separator in appropriate direction until the space or end of string.
+     */
+    _calculateNumberOfDigits (str, afterOrBefore, separatorIndex) {
         if (separatorIndex === -1) {
-            throw '_calculateNumberOfDigitsAfterIndex: index of separator should not be -1.';
+            throw `_calculateNumberOfDigits[${afterOrBefore} separator index]: index of separator should not be -1.`;
         }
-        let numberOfDigits = 0;
-        for (let index = separatorIndex + 1; index < str.length; index++) {
-            if (' ' === str[index]) {
-                if (numberOfDigits > 0) {
-                    return numberOfDigits;
-                }
-            } else {
-                // assuming that not ' ' is a digit
-                numberOfDigits++;
-            }
-        }
-        return numberOfDigits;
-    }
-
-    _calculateNumberOfDigitsBeforeIndex (str, separatorIndex) {
-        if (separatorIndex === -1) {
-            throw '_calculateNumberOfDigitsBeforeIndex: index of separator should not be -1.';
-        }
-        let numberOfDigits = 0;
-        for (let index = separatorIndex - 1; index >= 0; index--) {
-            if (' ' === str[index]) {
-                if (numberOfDigits > 0) {
-                    return numberOfDigits;
-                }
-            } else {
-                // assuming that not ' ' is a digit
-                numberOfDigits++;
-            }
-        }
-        return numberOfDigits;
+        const strWithSpaces = (afterOrBefore === 'after' ? str.substring(separatorIndex + 1) : str.substring(0, separatorIndex)).trim();
+        const split = strWithSpaces.split(' ');
+        const strWithoutSpaces = split[afterOrBefore === 'after' ? 0 : split.length - 1];
+        return strWithoutSpaces.length;
     }
 
     /**
