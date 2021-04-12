@@ -60,13 +60,13 @@ const additionalTemplate = html`
     <tg-serialiser id="serialiser"></tg-serialiser>`;
 const customLabelTemplate = html`
     <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" 
-           action-available$="[[actionAvailable]]" 
+           action-available$="[[entityMaster]]" 
            disabled$="[[_disabled]]" 
            slot="label" 
            on-tap="_labelTap" 
-           tooltip-text$="[[_getTooltip(_editingValue, entity, focused, actionAvailable)]]">
+           tooltip-text$="[[_getTooltip(_editingValue, entity, focused, entityMaster)]]">
         <span>[[propTitle]]</span>
-        <iron-icon id="actionaAvailability" icon="editor:mode-edit" action-available$="[[actionAvailable]]"></iron-icon>
+        <iron-icon id="actionaAvailability" icon="editor:mode-edit" action-available$="[[entityMaster]]"></iron-icon>
     </label>`;
 const customInputTemplate = html`
     <iron-input bind-value="{{_editingValue}}" class="custom-input-wrapper">
@@ -82,11 +82,11 @@ const customInputTemplate = html`
             on-mousedown="_onMouseDown" 
             on-focus="_onFocus" 
             disabled$="[[_disabled]]" 
-            tooltip-text$="[[_getTooltip(_editingValue, entity, focused, actionAvailable)]]"
+            tooltip-text$="[[_getTooltip(_editingValue, entity, focused, entityMaster)]]"
             autocomplete="off"/>
     </iron-input>`;
 const inputLayerTemplate = html`
-    <div class="input-layer" tooltip-text$="[[_getTooltip(_editingValue, entity, focused, actionAvailable)]]">
+    <div class="input-layer" tooltip-text$="[[_getTooltip(_editingValue, entity, focused, entityMaster)]]">
         <template is="dom-repeat" items="[[_customPropTitle]]">
             <span hidden$="[[!item.title]]" style="color:#737373; font-size:0.8rem; padding-right:2px;"><span>[[item.title]]</span>:  </span>
             <span style$="[[_valueStyle(item, index)]]">[[item.value]]</span>
@@ -134,11 +134,11 @@ export class TgEntityEditor extends TgEditor {
            },
 
            /**
-            * Indicates whether action is available for this editor ir not.
+            * Entity master instance for this autocomplter.
             */
-           actionAvailable: {
+           entityMaster: {
                type: Boolean,
-               value: false
+               computed: '_computeEntityMaster(multi, autocompletionType, propertyName)'
            },
 
            /**
@@ -405,8 +405,7 @@ export class TgEntityEditor extends TgEditor {
     static get observers () {
         return [
             "_changeTitle(entity)", 
-            "_changeLayerExistance(_editingValue, entity)",
-            "_changeActionAvailability(_editingValue, entity, focused)"
+            "_changeLayerExistance(_editingValue, entity)"
         ];
     }
 
@@ -910,7 +909,7 @@ export class TgEntityEditor extends TgEditor {
         }
     }
 
-    _getTooltip (_editingValue, entity, focused, actionAvailable) {
+    _getTooltip (_editingValue, entity, focused, entityMaster) {
         if (!allDefined(arguments)) {
             return;
         }
@@ -922,15 +921,15 @@ export class TgEntityEditor extends TgEditor {
             } else {
                 valueToFormat = fullEntity.get(this.propertyName);
             }
-            return this._generateTooltip(valueToFormat, actionAvailable);
+            return this._generateTooltip(valueToFormat, entityMaster);
         }
-        return '';
+        return this._generateTooltip(null, entityMaster);
     }
 
-    _generateTooltip (value, actionAvailable) {
+    _generateTooltip (value, entityMaster) {
         var tooltip = this._formatTooltipText(value);
         tooltip += this.propDesc && (tooltip ? '<br><br>' : '') + this.propDesc;
-        tooltip += actionAvailable && ((tooltip ? '<br><br>' : '') + this._getActionTooltip(value.type().entityMaster()));
+        tooltip += entityMaster && ((tooltip ? '<br><br>' : '') + this._getActionTooltip(entityMaster));
         return tooltip;
     }
 
@@ -938,7 +937,7 @@ export class TgEntityEditor extends TgEditor {
         if (valueToFormat !== null) {
             if (Array.isArray(valueToFormat)) {
                 return valueToFormat.length > 0 ? ("<b>" + valueToFormat.join(this.separator) + "</b>") : '';
-            } else if (valueToFormat !== '' && typeof valueToFormat === 'string'){
+            } else if (typeof valueToFormat === 'string'){
                 return "<b>" + valueToFormat + "</b>";
             } else if (this.reflector().isEntity(valueToFormat)) {
                 return this._createEntityTooltip(valueToFormat);
@@ -980,16 +979,12 @@ export class TgEntityEditor extends TgEditor {
         
     }
 
-    _changeActionAvailability (_editingValue, entity, focused) {
-        if (allDefined(arguments) && 
-                !focused && 
-                entity !== null && 
-                !this.reflector().isError(this.reflector().tg_getFullEntity(entity).prop(this.propertyName).validationResult())) {
-            const propValue = this.reflector().tg_getFullEntity(entity).get(this.propertyName);
-            this.actionAvailable = propValue !== null && this.reflector().isEntity(propValue) && propValue.type().entityMaster();
-        } else {
-            this.actionAvailable = false;
+    _computeEntityMaster (multi, autocompletionType, propertyName) {
+        if (!allDefined(arguments)) {
+            return null;
         }
+        const type = this.reflector().findTypeByName(autocompletionType);
+        return (!multi || null) && type && type.prop(propertyName).type().entityMaster();
     }
 
     _valueStyle (item, index) {
