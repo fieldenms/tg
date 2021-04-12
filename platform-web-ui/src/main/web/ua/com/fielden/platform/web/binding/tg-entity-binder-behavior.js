@@ -37,6 +37,14 @@ export const TgEntityBinderBehavior = {
         },
 
         /**
+         * Indicates whether entity binder is validating it's entity or not
+         */
+        isValidating: {
+            type: Boolean,
+            value: false
+        },
+
+        /**
          * Universal identifier of this element instance (used for pub / sub communication).
          *
          * It is either assigned from the outside or could be defined internally.
@@ -562,6 +570,8 @@ export const TgEntityBinderBehavior = {
             //     of previous validations!
             const holder = slf._extractModifiedPropertiesHolder(slf._currBindingEntity, slf._originalBindingEntity);
             holder['@validationCounter'] = slf._validationCounter;
+            //Indicate the validation start by setting true into isValidating property
+            this.isValidating = true;
             // After the first 'validate' invocation arrives -- debouncer will wait 50 milliseconds
             //   for the next 'validate' invocation, and if it arrives -- the recent one will become as active ( and
             //   again will start waiting for 50 millis and so on).
@@ -691,6 +701,8 @@ export const TgEntityBinderBehavior = {
                 this._continuations = {};
             }
             const newBindingEntity = this._postEntityReceived(validatedEntity, false);
+            //Indicate the validation finish by setting false into isValidating property
+            this.isValidating = false;
             // custom external action
             if (this.postValidated) {
                 this.postValidated(validatedEntity, newBindingEntity, customObject);
@@ -698,6 +710,8 @@ export const TgEntityBinderBehavior = {
         }).bind(self);
 
         self._postValidatedDefaultError = (function (errorResult) {
+            //Indicate the validation finish by setting false into isValidating property
+            this.isValidating = false;
             // This function will be invoked after server-side error appear.
             // 'tg-action' will augment this function with its own '_afterExecution' logic (spinner stopping etc.).
             console.warn("SERVER ERROR: ", errorResult);

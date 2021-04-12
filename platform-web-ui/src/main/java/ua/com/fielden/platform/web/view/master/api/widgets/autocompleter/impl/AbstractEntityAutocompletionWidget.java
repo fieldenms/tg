@@ -9,7 +9,6 @@ import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
 import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
 
 import java.lang.reflect.Field;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,17 +43,17 @@ public abstract class AbstractEntityAutocompletionWidget extends AbstractWidget 
             final String propName,
             final Class<? extends AbstractEntity<?>> propType) {
         super(widgetPath, titleAndDesc, propName);
-        
+
         defaultAdditionalProps.putAll(createDefaultAdditionalProps(propType));
-        
-        // assigned the collected default props 
+
+        // assigned the collected default props
         additionalProps.putAll(defaultAdditionalProps);
     }
-    
+
     /**
      * Creates default additional properties (except key) for autocompleter. This includes description if the type contains it.
      * Also this includes key members if the type is composite.
-     * 
+     *
      * @param propType
      * @return
      */
@@ -104,6 +103,7 @@ public abstract class AbstractEntityAutocompletionWidget extends AbstractWidget 
         }
 
         // assign other attributes...
+        attrs.put("is-validating", "[[isValidating]]");
         attrs.put("process-response", "[[_processResponse]]");
         attrs.put("process-error", "[[_processError]]");
         attrs.put("post-searched-default-error", "[[_postSearchedDefaultError]]");
@@ -129,15 +129,15 @@ public abstract class AbstractEntityAutocompletionWidget extends AbstractWidget 
         additionalProps.put(AbstractEntity.DESC, shouldSearchByDesc);
         this.lightDesc = shouldSearchByDesc;
     }
-    
+
     /**
      * Additional properties (except key) for autocompleter. This includes description if the type contains it.
      * Also this includes key members if the type is composite.
-     * 
+     *
      * @return
      */
     public Map<String, Boolean> additionalProps() {
         return unmodifiableMap(additionalProps);
     }
-    
+
 }
