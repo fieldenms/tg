@@ -552,6 +552,126 @@
                 const target = '9:5:34.567  ', result = `${todayStr} 9:05:34.567AM`;
                 test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
             })();
+            // AM/PM edge cases
+            (() => {
+                const target = '0', result = `${todayStr} 12:00AM`;
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '0a';
+                test(`[${target}] to itself`, done => incorrectlyApproximates(done, target));
+            })();
+            
+            (() => {
+                const target = '0p';
+                test(`[${target}] to itself`, done => incorrectlyApproximates(done, target));
+            })();
+            
+            (() => {
+                const target = '0:59', result = `${todayStr} 12:59AM`;
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '0:59a';
+                test(`[${target}] to itself`, done => incorrectlyApproximates(done, target));
+            })();
+            
+            (() => {
+                const target = '0:59p';
+                test(`[${target}] to itself`, done => incorrectlyApproximates(done, target));
+            })();
+            
+            (() => {
+                const target = '1', result = `${todayStr} 1:00AM`;
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '1a', result = `${todayStr} 1:00AM`;
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '1p', result = `${todayStr} 1:00PM`;
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '1:59', result = `${todayStr} 1:59AM`;
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '1:59a', result = `${todayStr} 1:59AM`;
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '1:59p', result = `${todayStr} 1:59PM`;
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '12', result = `${todayStr} 12:00PM`;
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '12a', result = `${todayStr} 12:00AM`;
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '12p', result = `${todayStr} 12:00PM`;
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '12:59', result = `${todayStr} 12:59PM`;
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '12:59a', result = `${todayStr} 12:59AM`;
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '12:59p', result = `${todayStr} 12:59PM`;
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '13', result = `${todayStr} 1:00PM`;
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '13a';
+                test(`[${target}] to itself`, done => incorrectlyApproximates(done, target));
+            })();
+            
+            (() => {
+                const target = '13p';
+                test(`[${target}] to itself`, done => incorrectlyApproximates(done, target));
+            })();
+            
+            (() => {
+                const target = '13:59', result = `${todayStr} 1:59PM`;
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '13:59a';
+                test(`[${target}] to itself`, done => incorrectlyApproximates(done, target));
+            })();
+            
+            (() => {
+                const target = '13:59p';
+                test(`[${target}] to itself`, done => incorrectlyApproximates(done, target));
+            })();
             
             // today
             (() => {
