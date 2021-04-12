@@ -308,35 +308,41 @@ export class TgDatetimePicker extends TgEditor {
         if (dateEditingValue) {
             const valueWithoutSpaces = dateEditingValue.replace(new RegExp(' ', 'g'), '').trim();
             if (valueWithoutSpaces) {
+                // at first, check literals:
                 this._validMoment = this._tryLiterals(valueWithoutSpaces);
                 if (this._validMoment !== null) {
                     return this.convertToString(this._validMoment.valueOf());
                 }
-                // determine current date portion format for this editor;
+                // determine current date portion format for this editor ...
                 const datePortionFormat = this.timeZone ? timeZoneFormats[this.timeZone]['L'] : moment.localeData().longDateFormat('L');
+                // ... and its separator;
                 const separator = datePortionFormat.includes('/') ? '/' : datePortionFormat.includes('-') ? '-' : null;
+                // validate separator and ...
                 if (!separator) {
                     throw new Error(`Date format [${datePortionFormat}] separator is not supported.`);
                 }
-                if (dateEditingValue.indexOf(separator) > -1) {
-                    const numberOfDigitsAfterLastSeparator = this._calculateNumberOfDigitsAfterLastSeparator(dateEditingValue, separator);
-                    const numberOfDigits = numberOfDigitsAfterLastSeparator.number;
-                    const numberOfYearDigits = datePortionFormat[0] !== 'Y' // years are only supported on beginning and ending of datePortionFormat (not in the middle, like MM-YYYY-DD)
-                        ? numberOfDigits
-                        : numberOfDigitsAfterLastSeparator.secondSeparatorExists === true
-                            ? this._calculateNumberOfDigitsBeforeIndex(dateEditingValue, dateEditingValue.indexOf(separator))
-                            : numberOfDigits;
+                const yearsOnEnding = datePortionFormat[0] !== 'Y';
+                // ... placing of the years portion;
+                if (yearsOnEnding && datePortionFormat[datePortionFormat.length - 1] !== 'Y') {
+                    throw new Error(`Placing of years in date format [${datePortionFormat}] is not supported. Years are only supported on beginning and ending of date format (not in the middle).`);
+                }
+                const firstSeparatorIndex = dateEditingValue.indexOf(separator);
+                if (firstSeparatorIndex > -1) {
+                    // if there is at least one separator then date portion is present;
+                    //  (please be careful when adding '.' as date portion separator -- it is used to separate seconds from millis in 'ss.SSS')
+                    const { secondSeparatorExists, numberOfDigits } = this._calculateNumberOfDigitsAfterLastSeparator(dateEditingValue, separator);
                     if (
-                        numberOfDigitsAfterLastSeparator.secondSeparatorExists === true && (numberOfYearDigits === 1 || numberOfYearDigits === 2 || numberOfYearDigits === 4) // exactly two separators; if numberOfDigitsAfterSecondSeparator equals 3, 5 or more -- the string could be potentially valid in formats like '../../Y ...'; but they should not be valid -- only 1, 2 and 4 digits for years should be valid.
-                        || numberOfDigitsAfterLastSeparator.secondSeparatorExists === false && (numberOfDigits === 1 || numberOfDigits === 2) // exactly one slash; if numberOfDigitsAfterFirstSeparator equals 1 or 2 -- it could be represented as valid digits for month.
+                        secondSeparatorExists === true && [1, 2, 4].includes(yearsOnEnding ? numberOfDigits : this._calculateNumberOfDigitsBeforeIndex(dateEditingValue, firstSeparatorIndex)) // exactly two separators; only 1, 2 and 4 digits for years should be valid
+                        || secondSeparatorExists === false && [1, 2].includes(numberOfDigits) // exactly one separator; only 1 and 2 digits for months / days should be valid (numberOfDigitsAfterFirstSeparator)
                     ) {
-                        // remove all spaces and insert one after year digits (or [ /2017] or other current year in case of one slash)
-                        const valueWithoutSpacesWithYear = this._insertOneSpaceAndYear(dateEditingValue.replace(new RegExp(' ', 'g'), ''), numberOfDigits, separator, datePortionFormat).trim();
-                        if (valueWithoutSpacesWithYear) {
-                            this._validMoment = this._tryFormats(valueWithoutSpacesWithYear, this._formatsFor(datePortionFormat, separator), this._datePortionFormatsFor(datePortionFormat, separator), separator);
-                        }
+                        // remove all spaces and insert one after year digits (or [ /2017] or other current year in case of one separator);
+                        const valueWithOneSpaceAndYear = this._insertOneSpaceAndYear(valueWithoutSpaces, numberOfDigits, separator, yearsOnEnding).trim(); // never empty -- at least one separator exists
+                        // try combined date & time formats for approximation:
+                        this._validMoment = this._tryFormats(valueWithOneSpaceAndYear, this._formatsFor(datePortionFormat, separator), this._datePortionFormatsFor(datePortionFormat, separator), separator);
                     }
                 } else {
+                    // if there is no separator then only time portion is present;
+                    // try time formats only for approximation:
                     this._validMoment = this._tryFormats(valueWithoutSpaces, this._timePortionFormats.slice() /* the copy is made  */, [] /* not needed */, separator);
                 }
                 if (this._validMoment !== null) {
@@ -409,7 +415,8 @@ export class TgDatetimePicker extends TgEditor {
             if (tryingMoment.isValid()) {
                 const indexOfY = firstFormat.indexOf('Y');
                 if (indexOfY > -1 && firstFormat.indexOf('Y', indexOfY + 1) === -1) { // only one Y in the format
-                    tryingMoment = _momentTz(this._convertToDoubleDigitYear(stringValue, indexOfY === 0 ? 0 : this._findSecondSeparatorIndex(stringValue, separator) + 1), firstFormat.replace('Y', 'YY'), true, this.timeZone);
+                    const strWithDoubleDigitYear = this._convertToDoubleDigitYear(stringValue, indexOfY === 0 ? 0 : this._findSecondSeparatorIndex(stringValue, separator) + 1);
+                    tryingMoment = _momentTz(strWithDoubleDigitYear, firstFormat.replace('Y', 'YY'), true, this.timeZone);
                 }
                 if (datePortionFormats.indexOf(firstFormat) !== -1 && this.timePortionToBecomeEndOfDay === true) {
                     tryingMoment.add(1, 'days').subtract(1, 'milliseconds');
@@ -444,9 +451,8 @@ export class TgDatetimePicker extends TgEditor {
             numberOfDigits = this._calculateNumberOfDigitsAfterIndex(str, secondSeparatorIndex);
         }
         return {
-            firstSeparatorExists: str.indexOf(separator) > -1,
             secondSeparatorExists: secondSeparatorIndex > -1,
-            number: numberOfDigits
+            numberOfDigits: numberOfDigits
         };
     }
 
@@ -487,9 +493,9 @@ export class TgDatetimePicker extends TgEditor {
     }
 
     /**
-     * Inserts one space after year digits (two slashes exist) or '/currYear ' after month digits (one slash exists).
+     * Inserts one space after last digits after last separator; inserts 'currYear' with space if years are not present (one separator).
      */
-    _insertOneSpaceAndYear (strWithoutSpaces, numberOfDigitsAfterLastSeparator, separator, datePortionFormat) {
+    _insertOneSpaceAndYear (strWithoutSpaces, numberOfDigitsAfterLastSeparator, separator, yearsOnEnding) {
         if (numberOfDigitsAfterLastSeparator === 0) {
             return strWithoutSpaces;
         } else {
@@ -501,7 +507,7 @@ export class TgDatetimePicker extends TgEditor {
                 } else {
                     const insertionPoint = firstSeparatorIndex + numberOfDigitsAfterLastSeparator + 1;
                     const currYearStr = _momentTz(this.timeZone).format('YYYY');
-                    return datePortionFormat[0] !== 'Y' // years are only supported on beginning and ending of datePortionFormat (not in the middle, like MM-YYYY-DD)
+                    return yearsOnEnding // years are only supported on beginning and ending of datePortionFormat (not in the middle, like MM-YYYY-DD)
                         ? strWithoutSpaces.slice(0, insertionPoint) + separator + currYearStr + ' ' + strWithoutSpaces.slice(insertionPoint)
                         : currYearStr + separator + strWithoutSpaces.slice(0, insertionPoint) + ' ' + strWithoutSpaces.slice(insertionPoint)
                 }
