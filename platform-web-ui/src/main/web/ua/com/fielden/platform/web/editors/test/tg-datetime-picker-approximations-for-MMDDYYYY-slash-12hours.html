@@ -672,6 +672,36 @@
                 const target = '13:59p';
                 test(`[${target}] to itself`, done => incorrectlyApproximates(done, target));
             })();
+            // AM/PM with whitespaces and lower/upper cases
+            (() => {
+                const target = '4:59 a', result = `${todayStr} 4:59AM`;
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '4:59   p', result = `${todayStr} 4:59PM`;
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '4:59 A', result = `${todayStr} 4:59AM`;
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '4:59   P', result = `${todayStr} 4:59PM`;
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '4:59 AM', result = `${todayStr} 4:59AM`;
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
+            
+            (() => {
+                const target = '4:59   PM', result = `${todayStr} 4:59PM`;
+                test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
+            })();
             
             // today
             (() => {
@@ -691,7 +721,7 @@
                 const target = 't  ', result = todayDate.format('MM/DD/YYYY h:mmA');
                 test(`[${target}] to [${result}]`, done => correctlyApproximates(done, target, result));
             })();
-
+            
         });
     </script>
 </body>
