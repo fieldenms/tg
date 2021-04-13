@@ -151,7 +151,7 @@ export class TgEntityEditor extends TgEditor {
 
            actionAvailable: {
                type: Boolean,
-               computed: '_computeActionAvailability(entityMaster, entity)'
+               computed: '_computeActionAvailability(entityMaster, entity, currentState)'
            },
 
            /**
@@ -1020,12 +1020,12 @@ export class TgEntityEditor extends TgEditor {
         return (!multi || null) && type && type.prop(propertyName).type().entityMaster();
     }
 
-    _computeActionAvailability (entityMaster, entity) {
-        if (!entityMaster || !entity) {
+    _computeActionAvailability (entityMaster, entity, currentState) {
+        if (!entityMaster || !entity || !currentState) {
             return false;
         }
         const fullEntity = this.reflector().tg_getFullEntity(entity);
-        return !this.reflector().isError(fullEntity.prop(this.propertyName).validationResult());
+        return currentState === 'EDIT' && !this.reflector().isError(fullEntity.prop(this.propertyName).validationResult());
     }
 
     _valueStyle (item, index) {
