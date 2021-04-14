@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.entity;
 
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
+import static ua.com.fielden.platform.security.tokens.Template.READ;
+import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseReading;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.traversePropPath;
 
@@ -9,14 +11,21 @@ import com.google.inject.Inject;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
+import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.security.IAuthorisationModel;
+import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 public class EntityManipulationActionProducer<T extends AbstractEntityManipulationAction> extends DefaultEntityProducerWithContext<T> {
+    private final IAuthorisationModel authorisation;
+    private final ISecurityTokenProvider securityTokenProvider;
 
     @Inject
-    public EntityManipulationActionProducer(final EntityFactory factory, final Class<T> entityType, final ICompanionObjectFinder companionFinder) {
+    public EntityManipulationActionProducer(final EntityFactory factory, final Class<T> entityType, final ICompanionObjectFinder companionFinder, final IAuthorisationModel authorisation, final ISecurityTokenProvider securityTokenProvider) {
         super(factory, entityType, companionFinder);
+        this.authorisation = authorisation;
+        this.securityTokenProvider = securityTokenProvider;
     }
 
     @SuppressWarnings("unchecked")
@@ -44,6 +53,7 @@ public class EntityManipulationActionProducer<T extends AbstractEntityManipulati
             if (entityType == null) {
                 throw new IllegalStateException("Please add selection criteria or current entity to the context of the functional entity with type: " + entity.getType().getName());
             } else {
+                authoriseReading(entityType.getSimpleName(), READ, authorisation, securityTokenProvider).ifFailure(Result::throwRuntime);
                 entity.setEntityTypeForEntityMaster(entityType);
             }
         }
