@@ -469,6 +469,7 @@ export class TgEntityEditor extends TgEditor {
         } else if (this.openMasterAction && this.entity !== null && this.actionAvailable) {
             const entityValue = this.reflector().tg_getFullValue(this.entity, this.propertyName);
             if (entityValue !== null && !Array.isArray(entityValue)) {
+                this.openMasterAction.chosenProperty = null;
                 this.openMasterAction.currentEntity = () => entityValue;
                 this.openMasterAction._run();       
             }
