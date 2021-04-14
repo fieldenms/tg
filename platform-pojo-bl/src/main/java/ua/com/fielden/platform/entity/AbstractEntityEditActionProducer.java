@@ -7,8 +7,6 @@ import java.util.function.Supplier;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.security.IAuthorisationModel;
-import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.centre.CentreContext;
@@ -24,8 +22,8 @@ public class AbstractEntityEditActionProducer<T extends EntityEditAction> extend
 
     private static final Supplier<? extends IllegalStateException> NOTHING_TO_EDIT_EXCEPTION_SUPPLIER = () -> new IllegalStateException("There is nothing to edit.");
     
-    public AbstractEntityEditActionProducer(final EntityFactory factory, final Class<T> entityType, final ICompanionObjectFinder companionFinder, final IAuthorisationModel authorisation, final ISecurityTokenProvider securityTokenProvider) {
-        super(factory, entityType, companionFinder, authorisation, securityTokenProvider);
+    public AbstractEntityEditActionProducer(final EntityFactory factory, final Class<T> entityType, final ICompanionObjectFinder companionFinder) {
+        super(factory, entityType, companionFinder);
     }
 
     @Override
