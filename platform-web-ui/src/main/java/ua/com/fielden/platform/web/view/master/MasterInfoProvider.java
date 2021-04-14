@@ -63,6 +63,7 @@ public class MasterInfoProvider {
             return webUiConfig.configApp().getOpenMasterAction(type).get().map(entityActionConfig -> {
                 final FunctionalActionElement funcElem = new FunctionalActionElement(entityActionConfig, 0, FunctionalActionKind.PRIMARY_RESULT_SET);
                 final DomElement actionElement = funcElem.render();
+                final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(type).getKey();
                 final MasterInfo  info = new MasterInfo();
                 info.setKey(actionElement.getAttr("element-name").value.toString());
                 info.setDesc(actionElement.getAttr("component-uri").value.toString());
@@ -74,6 +75,7 @@ public class MasterInfoProvider {
                 info.setRequireMasterEntity(actionElement.getAttr("require-master-entity").value.toString());
                 info.setEntityType(entityActionConfig.functionalEntity.get().getName());
                 info.setRelativePropertyName(relativePropertyName);
+                info.setEntityTypeTitle(entityTitle);
                 entityActionConfig.prefDimForView.ifPresent(prefDim -> {
                     info.setWidth(prefDim.width);
                     info.setHeight(prefDim.height);
@@ -103,6 +105,7 @@ public class MasterInfoProvider {
             info.setEntityType(type.getName());
             info.setEntityType(EntityEditAction.class.getName());
             info.setRelativePropertyName(relativePropertyName);
+            info.setEntityTypeTitle(entityTitle);
             return info;
         }).orElseGet(tryOtherMasters(type, relativePropertyName));
     }

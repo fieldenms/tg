@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity;
 
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.traversePropPath;
 
 import com.google.inject.Inject;
 
@@ -18,6 +19,7 @@ public class EntityManipulationActionProducer<T extends AbstractEntityManipulati
         super(factory, entityType, companionFinder);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected T provideDefaultValues(final T entity) {
         if (contextNotEmpty()) {
@@ -34,10 +36,10 @@ public class EntityManipulationActionProducer<T extends AbstractEntityManipulati
                             final T2<Class<AbstractEntity<?>>, Long> typeAndId = (T2<Class<AbstractEntity<?>>, Long>) computed;
                             return typeAndId._1;
                         } else {
-                            return determineEntityType(currEntity, selCrit);
+                            return determineEntityType(currEntity, selCrit, chosenProperty());
                         }
                     })
-                .orElse(determineEntityType(currEntity, selCrit));
+                .orElse(determineEntityType(currEntity, selCrit, chosenProperty()));
 
             if (entityType == null) {
                 throw new IllegalStateException("Please add selection criteria or current entity to the context of the functional entity with type: " + entity.getType().getName());
@@ -59,15 +61,22 @@ public class EntityManipulationActionProducer<T extends AbstractEntityManipulati
      * @return
      */
     @SuppressWarnings("unchecked")
-    private static Class<AbstractEntity<?>> determineEntityType(final AbstractEntity<?> currEntity, final EnhancedCentreEntityQueryCriteria<?, ?> selCrit) {
-        return currEntity != null ? determineBaseEntityType(getOriginalType(currEntity.getType())) :
-               selCrit != null ? (Class<AbstractEntity<?>>) selCrit.getEntityClass() : null;
+    private static Class<AbstractEntity<?>> determineEntityType(final AbstractEntity<?> currEntity, final EnhancedCentreEntityQueryCriteria<?, ?> selCrit, final String chosenProperty) {
+        return traversePropPath(currEntity, chosenProperty)
+                .findFirst()
+                .flatMap(t2 -> t2._2)
+                .map(entity -> determineBaseEntityType(getOriginalType(entity.getType())))
+                .orElseGet(() -> {
+                    return currEntity != null ? determineBaseEntityType(getOriginalType(currEntity.getType())) :
+                        selCrit != null ? (Class<AbstractEntity<?>>) selCrit.getEntityClass() : null;
+                });
+
     }
 
     /**
      * Returns the base type of {@code entityType} if it is a synthetic entity based on a persistent entity.
      * Otherwise, returns {@code entityType}.
-     * 
+     *
      * @param entityType
      * @return
      */

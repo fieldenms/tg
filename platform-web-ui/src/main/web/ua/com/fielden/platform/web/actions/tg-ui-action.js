@@ -256,6 +256,14 @@ Polymer({
             observer: "_iconStyleChanged"
         },
 
+        /**
+         * Entity type title that is used if action is navigateable it is retrieved if action was dynamic.
+         */
+        entityTypeTitle: {
+            type:String,
+            value: ""
+        },
+
         /** 
          * Property of this value gets passed into the data parameter for the details.saved topic of the event that is published after the functional entity has been saved.
          * There are cases where it is desired to prevent unnecesary centre refreshes such as in case of some insertion points.
@@ -745,6 +753,7 @@ Polymer({
         this.componentUri = masterInfo.desc;
         this.shortDesc = this._originalShortDesc || masterInfo.shortDesc;
         this.longDesc = this.longDesc || masterInfo.longDesc;
+            this.entityTypeTitle = masterInfo.entityTypeTitle;
         this.attrs = Object.assign({}, this.attrs, {
             entityType: masterInfo.entityType,
             currentState:'EDIT',
@@ -756,10 +765,7 @@ Polymer({
             }
         });
         if (masterInfo.relativePropertyName) {
-            const oldCurrentEntity = this.currentEntity.bind(this);
-            this.currentEntity = function () {
-                return oldCurrentEntity().get(masterInfo.relativePropertyName);
-            }
+            this.chosenProperty += (this.chosenProperty ? "." : "") + masterInfo.relativePropertyName;
         }
         this.requireSelectionCriteria = masterInfo.requireSelectionCriteria;
         this.requireSelectedEntities = masterInfo.requireSelectedEntities;

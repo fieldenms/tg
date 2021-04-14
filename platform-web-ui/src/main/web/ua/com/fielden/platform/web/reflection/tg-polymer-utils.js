@@ -14,7 +14,7 @@ export function generateUUID () {
 /**
  * Returns the first entity that lies on path of property name and entity
  */
-export function getFirstEntityValue (reflector, entity, propertyName) {
+export function getFirstEntityValueAndProperty (reflector, entity, propertyName) {
     if (entity && propertyName) {
         let currentProperty = propertyName;
         let currentValue = entity.get(currentProperty);
@@ -23,9 +23,9 @@ export function getFirstEntityValue (reflector, entity, propertyName) {
             currentProperty = lastDotIndex >= 0 ? currentProperty.substring(0, lastDotIndex) : "";
             currentValue = currentProperty ? entity.get(currentProperty) : entity;
         }
-        return currentValue; 
+        return [currentValue, currentProperty]; 
     } else if (entity) {
-        return entity;
+        return [entity, propertyName];
     }
 };
 
@@ -33,7 +33,7 @@ export function getFirstEntityValue (reflector, entity, propertyName) {
  * Returns the first entity value type that lies on path of property name and entity.
  */
 export function getFirstEntityValueType (reflector, entity, propertyName) {
-    const firstEntityValue = getFirstEntityValue(reflector, entity, propertyName);
+    const firstEntityValue = getFirstEntityValueAndProperty(reflector, entity, propertyName)[0];
     if (firstEntityValue) {
         return firstEntityValue.type().notEnhancedFullClassName();
     }
