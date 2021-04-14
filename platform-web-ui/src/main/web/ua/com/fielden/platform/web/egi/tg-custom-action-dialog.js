@@ -446,7 +446,7 @@ Polymer({
          * The type of entity being edited in this dialog.
          * 
          * For compound masters it represents the type of loaded compound master opener entity.
-         * For simple persistent masters (including those embedded by EntityNavigationAction / EntityEditAction / EntityNewAction) it represents the type of actual persistent entity.
+         * For simple persistent masters (including those embedded by EntityEditAction / EntityNewAction) it represents the type of actual persistent entity.
          * Otherwise (i.e. for functional masters) it is empty (null).
          */
         _mainEntityType: {

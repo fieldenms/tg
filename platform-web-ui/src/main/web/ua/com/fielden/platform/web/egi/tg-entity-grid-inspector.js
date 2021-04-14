@@ -1325,7 +1325,7 @@ Polymer({
      */
     _tapColumn: function (entity, column) {
         // 'this._currentEntity(entity)' returns closure with 'entity' tapped.
-        // This closure returns either 'entity' or the entity navigated to (EntityNavigationAction).
+        // This closure returns either 'entity' or the entity navigated to (EntityEditAction with EntityNavigationPreAction).
         // Each tapping overrides this function to provide proper context of execution.
         // This override should occur on every 'run' of the action so it is mandatory to use 'tg-property-column.runAction' public API.
         if (!column.runAction(this._currentEntity(entity))) {
