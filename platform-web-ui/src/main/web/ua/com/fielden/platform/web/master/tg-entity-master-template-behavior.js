@@ -18,7 +18,9 @@ const TgEntityMasterTemplateBehaviorImpl = {
         openMasterAction: {
             type: Object,
             value: null
-        }
+        },
+
+        _openMasterActionAttrs: Object
     },
 
     ready: function () {
@@ -31,6 +33,11 @@ const TgEntityMasterTemplateBehaviorImpl = {
         if (self.uuid === undefined) {
             self.uuid = self.is + '/' + generateUUID();
         }
+        self._openMasterActionAttrs = {
+            currentState: 'EDIT',
+            centreUuid: self.uuid
+        };
+
         self.openMasterAction = self.$.openMasterAction;
     },
 

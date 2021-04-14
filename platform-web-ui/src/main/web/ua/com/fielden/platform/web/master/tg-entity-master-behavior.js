@@ -1071,6 +1071,11 @@ const TgEntityMasterBehaviorImpl = {
                         topic: 'detail.saved',
                         data: newData
                     });
+                    //Revalidate current master if it desn't have embedded view in order to update master editors if the postal event was published by master
+                    //opened with entity editor title (i.e. openMasterAction)
+                    if (!self._hasEmbededView()) {
+                        self.validate();
+                    }
                 }
             }
         }));
