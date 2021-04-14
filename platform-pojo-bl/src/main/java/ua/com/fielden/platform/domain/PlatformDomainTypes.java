@@ -17,7 +17,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.EntityDeleteAction;
 import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityExportAction;
-import ua.com.fielden.platform.entity.EntityNavigationAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.entity.SecurityMatrixInsertionPoint;
 import ua.com.fielden.platform.entity.SecurityMatrixSaveAction;
@@ -132,7 +131,6 @@ public class PlatformDomainTypes {
         types.add(SecurityMatrixInsertionPoint.class);
         types.add(SecurityTokenTreeNodeEntity.class);
         types.add(SecurityMatrixSaveAction.class);
-        types.add(EntityNavigationAction.class);
         types.add(AttachmentPreviewEntityAction.class);
         types.add(MasterInfo.class);
         types.add(ReferenceHierarchy.class);

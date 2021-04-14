@@ -83,7 +83,7 @@ public class EntityManipulationActionProducer<T extends AbstractEntityManipulati
     @SuppressWarnings("unchecked")
     private static Class<AbstractEntity<?>> determineBaseEntityType(final Class<AbstractEntity<?>> entityType) {
         if (isSyntheticBasedOnPersistentEntityType(entityType)) {
-            // for the cases where EntityEditAction / EntityNavigationAction is used for opening SyntheticBasedOnPersistentEntity we explicitly use base type;
+            // for the cases where EntityEditAction is used for opening SyntheticBasedOnPersistentEntity we explicitly use base type;
             // however this is not the case for StandardActions.EDIT_ACTION because of computation existence that returns entityType.
             return (Class<AbstractEntity<?>>) entityType.getSuperclass();
         }
