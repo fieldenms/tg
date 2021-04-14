@@ -781,7 +781,7 @@ Polymer({
                 }
             });
             if (masterInfo.relativePropertyName) {
-                this.chosenProperty += (this.chosenProperty ? "." : "") + masterInfo.relativePropertyName;
+                this.chosenProperty = (this.chosenProperty ? this.chosenProperty + "." : "") + masterInfo.relativePropertyName;
             }
             this.requireSelectionCriteria = masterInfo.requireSelectionCriteria;
             this.requireSelectedEntities = masterInfo.requireSelectedEntities;
