@@ -60,6 +60,7 @@ import java.util.stream.Collectors;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
+import org.joda.time.DateTime;
 
 import com.google.inject.Injector;
 
@@ -78,6 +79,12 @@ import ua.com.fielden.platform.entity.query.metadata.EntityTypeInfo;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
 import ua.com.fielden.platform.eql.meta.EqlPropertyMetadata.Builder;
+import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
+import ua.com.fielden.platform.eql.stage1.TransformationContext;
+import ua.com.fielden.platform.eql.stage1.sources.Source1BasedOnSubqueries;
+import ua.com.fielden.platform.eql.stage1.sources.YieldInfoNode;
+import ua.com.fielden.platform.eql.stage1.sources.YieldInfoNodesGenerator;
+import ua.com.fielden.platform.eql.stage2.etc.Yields2;
 import ua.com.fielden.platform.eql.stage3.Table;
 import ua.com.fielden.platform.utils.EntityUtils;
 
@@ -103,6 +110,7 @@ public class EqlDomainMetadata {
     private final ConcurrentMap<String, EntityTypeInfo<?>> entityTypesInfos = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, Table> tables = new ConcurrentHashMap<>();
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo;
+    private final EntQueryGenerator gen;
 
     private Injector hibTypesInjector;
 
@@ -139,13 +147,14 @@ public class EqlDomainMetadata {
         this.hibTypesDefaults.put(boolean.class, H_BOOLEAN);
 
         this.hibTypesInjector = hibTypesInjector;
+        this.gen = new EntQueryGenerator(dbVersion, null, null, null, Collections.emptyMap(), this);
 
         entityTypes.parallelStream().forEach(entityType -> {
             try {
                 final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo = new EntityTypeInfo<>(entityType);
                 if (parentInfo.category != PURE) {
                     entityTypesInfos.put(entityType.getName(), parentInfo);
-                    List<EqlPropertyMetadata> propsMetadatas = generatePropertyMetadatasForEntity(parentInfo);
+                    final List<EqlPropertyMetadata> propsMetadatas = generatePropertyMetadatasForEntity(parentInfo);
                     entityPropsMetadata.put(entityType, new EqlEntityMetadata(parentInfo, propsMetadatas));
                     if (parentInfo.category == PERSISTED) {
                         tables.put(entityType.getName(), generateTable(parentInfo.tableName, propsMetadatas));
@@ -160,7 +169,26 @@ public class EqlDomainMetadata {
 
         domainInfo = entityPropsMetadata.entrySet().stream().collect(Collectors.toConcurrentMap(k -> k.getKey(), k -> new EntityInfo<>(k.getKey(), k.getValue().typeInfo.category)));
         domainInfo.values().stream().forEach(ei -> addProps(ei, domainInfo, entityPropsMetadata.get(ei.javaType()).props()));
-
+        
+        for (EqlEntityMetadata el : entityPropsMetadata.values()) {
+            if (el.typeInfo.category == QUERY_BASED) {
+                final EntityInfo<? extends AbstractEntity<?>> enhancedEntityInfo = generateEnhancedEntityInfoForSyntheticType(el.typeInfo);
+                domainInfo.put(enhancedEntityInfo.javaType(), enhancedEntityInfo);
+            }
+        }
+    }
+    
+    /**
+     * Only properties that are present in SE yields are preserved.
+     * 
+     * @param parentInfo
+     * @return
+     */
+    private <T extends AbstractEntity<?>> EntityInfo<T> generateEnhancedEntityInfoForSyntheticType(final EntityTypeInfo<T> parentInfo) {
+        final TransformationContext context = new TransformationContext(this);
+        final Yields2 yields = gen.generateAsSyntheticEntityQuery(parentInfo.entityModels.get(0), parentInfo.entityType).transform(context).yields;
+        final Map<String, YieldInfoNode> yieldInfoNodes = YieldInfoNodesGenerator.generate(yields.getYields());
+        return Source1BasedOnSubqueries.produceEntityInfoForDefinedEntityType(this, yieldInfoNodes, parentInfo.entityType);
     }
 
     private <T extends AbstractEntity<?>> void addProps(final EntityInfo<T> entityInfo, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> allEntitiesInfo, final Collection<EqlPropertyMetadata> entityPropsMetadatas) {
@@ -515,9 +543,24 @@ public class EqlDomainMetadata {
         final EntityInfo<?> created = new EntityInfo<>(type, eti.category);
         //domainInfo.put(type, created);
         addProps(created, domainInfo, propsMetadatas);
+
         return created;
     }
 
+    public EntityInfo<?> getEnhancedEntityInfo(final Class<? extends AbstractEntity<?>> type) {
+        final EntityInfo<?> existing = domainInfo.get(type);
+        if (existing != null) {
+            return existing;
+        }
+        
+        final EntityTypeInfo<?> eti = getEntityTypeInfo(type);
+        if (eti.category == QUERY_BASED) {
+            return generateEnhancedEntityInfoForSyntheticType(eti);
+        } else {
+            return getEntityInfo(type);
+        }
+    }
+    
     public <T extends AbstractEntity<?>> EntityTypeInfo<T> getEntityTypeInfo(final Class<T> type) {
         return (EntityTypeInfo<T>) entityTypesInfos.get(getOriginalEntityTypeFullName(type.getName()));
     }

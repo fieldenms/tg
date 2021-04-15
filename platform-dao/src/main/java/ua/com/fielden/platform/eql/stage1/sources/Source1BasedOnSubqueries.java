@@ -4,7 +4,6 @@ import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.QUERY_BASED;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,18 +34,16 @@ import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnSubqueries;
 
 public class Source1BasedOnSubqueries extends AbstractSource1<Source2BasedOnSubqueries> {
     private final List<SourceQuery1> models = new ArrayList<>();
+    private final boolean isSyntheticEntity;
 
-    public Source1BasedOnSubqueries(final String alias, final List<SourceQuery1> models, final int id) {
+    public Source1BasedOnSubqueries(final String alias, final List<SourceQuery1> models, final int id, final boolean isSyntheticEntity) {
         super(alias, id);
-        if (models.isEmpty()) {
-            throw new IllegalArgumentException("Couldn't produce instance of QueryBasedSource due to zero models passed to constructor!");
-        }
-
+        this.isSyntheticEntity = isSyntheticEntity;
         this.models.addAll(models);
-        validateYieldsMatrix(populateYieldMatrixFromQueryModels(this.models), this.models.size());
+        validateYieldsMatrix(generateYieldMatrixFromQueryModels(this.models), this.models.size());
     }
     
-    private static Map<String, List<Yield1>> populateYieldMatrixFromQueryModels(final List<SourceQuery1> models) {
+    private static Map<String, List<Yield1>> generateYieldMatrixFromQueryModels(final List<SourceQuery1> models) {
         final Map<String, List<Yield1>> yieldsMatrix = new HashMap<>();        
         for (final SourceQuery1 entQuery : models) {
             for (final Yield1 yield : entQuery.yields.getYields()) {
@@ -74,7 +71,7 @@ public class Source1BasedOnSubqueries extends AbstractSource1<Source2BasedOnSubq
     @Override
     public Source2BasedOnSubqueries transform(final TransformationContext context) {
         final List<SourceQuery2> transformedQueries = models.stream().map(m -> m.transform(context)).collect(toList());
-        return new Source2BasedOnSubqueries(transformedQueries, alias, transformId(context), produceEntityInfo(context.getDomainInfo(), transformedQueries, sourceType()));
+        return new Source2BasedOnSubqueries(transformedQueries, alias, transformId(context), produceEntityInfo(context.getDomainInfo(), transformedQueries, sourceType(), isSyntheticEntity));
     }
     
     @Override
@@ -87,6 +84,7 @@ public class Source1BasedOnSubqueries extends AbstractSource1<Source2BasedOnSubq
         final int prime = 31;
         int result = super.hashCode();
         result = prime * result + models.hashCode();
+        result = prime * result + (isSyntheticEntity ? 1231 : 1237);
         return result;
     }
 
@@ -106,11 +104,11 @@ public class Source1BasedOnSubqueries extends AbstractSource1<Source2BasedOnSubq
 
         final Source1BasedOnSubqueries other = (Source1BasedOnSubqueries) obj;
 
-        return Objects.equals(models, other.models);
+        return Objects.equals(models, other.models) && Objects.equals(isSyntheticEntity, other.isSyntheticEntity);
     }
     
-    private static EntityInfo<?> produceEntityInfoForDefinedEntityType(final EqlDomainMetadata domainInfo, final Map<String, YieldInfoNode> yieldInfoNodes, final Class<? extends AbstractEntity<?>> sourceType) {
-        final EntityInfo<? extends AbstractEntity<?>> entityInfo = new EntityInfo<>(sourceType, QUERY_BASED);
+    public static <T extends AbstractEntity<?>> EntityInfo<T> produceEntityInfoForDefinedEntityType(final EqlDomainMetadata domainInfo, final Map<String, YieldInfoNode> yieldInfoNodes, final Class<T> sourceType) {
+        final EntityInfo<T> entityInfo = new EntityInfo<>(sourceType, QUERY_BASED);
         final SortedMap<String, AbstractPropInfo<?>> declaredProps = domainInfo.getEntityInfo(sourceType).getProps();
         
         if (yieldInfoNodes.size() == 1 && yieldInfoNodes.containsKey(ID)) {
@@ -138,12 +136,12 @@ public class Source1BasedOnSubqueries extends AbstractSource1<Source2BasedOnSubq
         return entityInfo;
     }
     
-    private static EntityInfo<?> produceEntityInfo(final EqlDomainMetadata domainInfo, final List<SourceQuery2> models, final Class<? extends AbstractEntity<?>> sourceType) {
+    private static EntityInfo<?> produceEntityInfo(final EqlDomainMetadata domainInfo, final List<SourceQuery2> models, final Class<? extends AbstractEntity<?>> sourceType, final boolean isSyntheticEntity) {
         final Yields2 yields = models.get(0).yields;
         
         if (!EntityAggregates.class.equals(sourceType)) {
-            if (yields.allGenerated && !isSyntheticEntityType(sourceType)) {
-                return domainInfo.getEntityInfo(sourceType);    
+            if (yields.allGenerated || isSyntheticEntity) {
+                return domainInfo.getEnhancedEntityInfo(sourceType);
             } else {
                 final Map<String, YieldInfoNode> yieldInfoNodes = YieldInfoNodesGenerator.generate(yields.getYields());
                 return produceEntityInfoForDefinedEntityType(domainInfo, yieldInfoNodes, sourceType);

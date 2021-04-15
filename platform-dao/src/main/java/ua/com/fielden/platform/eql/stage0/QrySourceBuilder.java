@@ -90,8 +90,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
         for (final QueryModel<T> qryModel : models) {
             queries.add(getQueryBuilder().generateAsSyntheticEntityQuery(qryModel, resultType));
         }
-
-        return new Source1BasedOnSubqueries(alias, queries, getQueryBuilder().nextSourceId());
+        return new Source1BasedOnSubqueries(alias, queries, getQueryBuilder().nextSourceId(), true);
     }
     
     private Pair<TokenCategory, Object> buildResultForQrySourceBasedOnSubqueries() {
@@ -102,7 +101,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
             queries.add(getQueryBuilder().generateAsSourceQuery(qryModel));
         }
 
-        return pair(QRY_SOURCE, new Source1BasedOnSubqueries(alias, queries, getQueryBuilder().nextSourceId()));
+        return pair(QRY_SOURCE, new Source1BasedOnSubqueries(alias, queries, getQueryBuilder().nextSourceId(), false));
     }
 
     @Override
