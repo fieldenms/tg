@@ -670,7 +670,7 @@ public class EntityUtils {
                 return persistentTypes.get(type, () ->
                         isEntityType(type)
                         && !isUnionEntityType(type)
-                        && !isSyntheticEntityType((Class<? extends AbstractEntity<?>>) type)
+                        && !isSyntheticEntityType(type)
                         && AnnotationReflector.getAnnotation(type, MapEntityTo.class) != null);
             } catch (final Exception ex) {
                 final String msg = format("Could not determine persistent nature of entity type [%s].", type.getSimpleName());
@@ -1312,9 +1312,9 @@ public class EntityUtils {
 
         final Either<Exception, Stream<String>> either = TryWrapper.Try(() -> AbstractEntity.class.isAssignableFrom(PropertyTypeDeterminator.determinePropertyType(root.getType(), dslName(propertyPath))) ? paths : paths.skip(1));
         return takeWhile(either.getOrElse(Stream::empty), Objects::nonNull).map(path -> {
-            final int indexOfLastDot = path.lastIndexOf(PROPERTY_SPLITTER);
-            final String propName = indexOfLastDot > 0 ? path.substring(indexOfLastDot + 1) : path;
-            return t2(propName, ofNullable(isEmpty(path) ? root : root.get(path)));
+            //final int indexOfLastDot = path.lastIndexOf(PROPERTY_SPLITTER);
+            //final String propName = indexOfLastDot > 0 ? path.substring(indexOfLastDot + 1) : path;
+            return t2(path, ofNullable(isEmpty(path) ? root : root.get(path)));
         });
     }
 

@@ -1,10 +1,12 @@
 package ua.com.fielden.platform.entity;
 
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
 import static ua.com.fielden.platform.security.tokens.Template.READ;
 import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseReading;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.traversePropPath;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
 
 import com.google.inject.Inject;
 
@@ -68,8 +70,8 @@ public class EntityManipulationActionProducer<T extends AbstractEntityManipulati
     private static Class<AbstractEntity<?>> determineEntityType(final AbstractEntity<?> currEntity, final EnhancedCentreEntityQueryCriteria<?, ?> selCrit, final String chosenProperty) {
         return traversePropPath(currEntity, chosenProperty)
                 .findFirst()
-                .flatMap(t2 -> t2._2)
-                .map(entity -> determineBaseEntityType(getOriginalType(entity.getType())))
+                .map(t2 -> t2._1)
+                .map(propPath -> determineBaseEntityType(getOriginalType(determinePropertyType(currEntity.getType(), dslName(propPath)))))
                 .orElseGet(() -> {
                     return currEntity != null ? determineBaseEntityType(getOriginalType(currEntity.getType())) :
                         selCrit != null ? (Class<AbstractEntity<?>>) selCrit.getEntityClass() : null;
@@ -85,7 +87,7 @@ public class EntityManipulationActionProducer<T extends AbstractEntityManipulati
      * @return
      */
     @SuppressWarnings("unchecked")
-    private static Class<AbstractEntity<?>> determineBaseEntityType(final Class<AbstractEntity<?>> entityType) {
+    public static Class<AbstractEntity<?>> determineBaseEntityType(final Class<AbstractEntity<?>> entityType) {
         if (isSyntheticBasedOnPersistentEntityType(entityType)) {
             // for the cases where EntityEditAction is used for opening SyntheticBasedOnPersistentEntity we explicitly use base type;
             // however this is not the case for StandardActions.EDIT_ACTION because of computation existence that returns entityType.

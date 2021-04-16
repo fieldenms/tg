@@ -12,31 +12,29 @@ export function generateUUID () {
 };
 
 /**
- * Returns the first entity that lies on path of property name and entity
+ * Returns the first entity type and it's property path that lies on path of property name and entity
  */
-export function getFirstEntityValueAndProperty (reflector, entity, propertyName) {
+export function getFirstEntityTypeAndProperty (entity, propertyName) {
     if (entity && propertyName) {
+        const entityType = entity.type();
         let currentProperty = propertyName;
-        let currentValue = entity.get(currentProperty);
-        while (currentProperty && !reflector.isEntity(currentValue)) {
+        let currentType = entityType.prop(propertyName).type();
+        while (typeof currentType === 'string') {
             const lastDotIndex = currentProperty.lastIndexOf(".");
             currentProperty = lastDotIndex >= 0 ? currentProperty.substring(0, lastDotIndex) : "";
-            currentValue = currentProperty ? entity.get(currentProperty) : entity;
+            currentType = currentProperty ? entityType.prop(currentProperty).type() : entityType;
         }
-        return [currentValue, currentProperty]; 
+        return [currentType.notEnhancedFullClassName(), currentProperty]; 
     } else if (entity) {
-        return [entity, propertyName];
+        return [entity.type().notEnhancedFullClassName(), propertyName];
     }
 };
 
 /**
- * Returns the first entity value type that lies on path of property name and entity.
+ * Returns the first entity type that lies on path of property name and entity.
  */
-export function getFirstEntityValueType (reflector, entity, propertyName) {
-    const firstEntityValue = getFirstEntityValueAndProperty(reflector, entity, propertyName)[0];
-    if (firstEntityValue) {
-        return firstEntityValue.type().notEnhancedFullClassName();
-    }
+export function getFirstEntityType (entity, propertyName) {
+    return getFirstEntityTypeAndProperty(entity, propertyName)[0];
 };
 
 /**

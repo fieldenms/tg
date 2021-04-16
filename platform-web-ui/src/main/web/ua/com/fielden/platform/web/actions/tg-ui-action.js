@@ -10,7 +10,7 @@ import '/resources/components/postal-lib.js';
 
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
-import { tearDownEvent, getFirstEntityValueType } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, getFirstEntityType } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
@@ -492,7 +492,7 @@ Polymer({
 
             
             if (this.dynamicAction && this.currentEntity()) {
-                const currentEntityType = getFirstEntityValueType(this._reflector, this.currentEntity(), this.chosenProperty);
+                const currentEntityType = getFirstEntityType(this.currentEntity(), this.chosenProperty);
                 if (this._previousEntityType !== currentEntityType) {
                     if (!this.elementName) {//Element name for dynamic action is not specified at first run
                         this._originalShortDesc = this.shortDesc;//It means that shortDesc wasn't changed yet.
@@ -500,7 +500,7 @@ Polymer({
                     this.isActionInProgress = true;
                     try {
                         this._setEntityMasterInfo(currentEntityType);
-                        this._previousEntityType = getFirstEntityValueType(this._reflector, this.currentEntity(), this.chosenProperty);
+                        this._previousEntityType = getFirstEntityType(this.currentEntity(), this.chosenProperty);
                         postMasterInfoRetrieve();
                     } catch (e) {
                         this.isActionInProgress = false;
