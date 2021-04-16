@@ -76,6 +76,7 @@ public class MasterInfoProvider {
                 info.setEntityType(entityActionConfig.functionalEntity.get().getName());
                 info.setRelativePropertyName(relativePropertyName);
                 info.setEntityTypeTitle(entityTitle);
+                info.setRootEntityType(type);
                 entityActionConfig.prefDimForView.ifPresent(prefDim -> {
                     info.setWidth(prefDim.width);
                     info.setHeight(prefDim.height);
@@ -92,9 +93,7 @@ public class MasterInfoProvider {
     private MasterInfo buildDefaultMasterConfiguration(final Class<? extends AbstractEntity<?>> type, final String relativePropertyName) {
         return webUiConfig.configApp().getMaster(type).map(master -> {
             final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(type).getKey();
-            final MasterInfo  info = new MasterInfo();
-            info.setKey(format("tg-%s-master", type.getSimpleName()));
-            info.setDesc(format("/master_ui/%s", type.getName()));
+            final MasterInfo info = new MasterInfo();
             info.setKey("tg-EntityEditAction-master");
             info.setDesc("/master_ui/ua.com.fielden.platform.entity.EntityEditAction");
             info.setShortDesc(format("Edit %s", entityTitle));
@@ -102,10 +101,10 @@ public class MasterInfoProvider {
             info.setRequireSelectionCriteria("false");
             info.setRequireSelectedEntities("ONE");
             info.setRequireMasterEntity("false");
-            info.setEntityType(type.getName());
             info.setEntityType(EntityEditAction.class.getName());
             info.setRelativePropertyName(relativePropertyName);
             info.setEntityTypeTitle(entityTitle);
+            info.setRootEntityType(type);
             return info;
         }).orElseGet(tryOtherMasters(type, relativePropertyName));
     }

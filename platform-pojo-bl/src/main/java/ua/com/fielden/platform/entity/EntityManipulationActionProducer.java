@@ -2,8 +2,7 @@ package ua.com.fielden.platform.entity;
 
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
-import static ua.com.fielden.platform.security.tokens.Template.READ;
-import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseReading;
+import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseOpening;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.traversePropPath;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
@@ -49,7 +48,7 @@ public class EntityManipulationActionProducer<T extends AbstractEntityManipulati
             if (entityType == null) {
                 throw new IllegalStateException("Please add selection criteria or current entity to the context of the functional entity with type: " + entity.getType().getName());
             } else {
-                authoriseReading(entityType.getSimpleName(), READ, authorisation, securityTokenProvider).ifFailure(Result::throwRuntime);
+                authoriseOpening(entityType.getSimpleName(), authorisation, securityTokenProvider).ifFailure(Result::throwRuntime);
                 entity.setEntityTypeForEntityMaster(entityType);
             }
         }

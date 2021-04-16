@@ -2,10 +2,7 @@ package ua.com.fielden.platform.entity;
 
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
-import static ua.com.fielden.platform.security.tokens.Template.READ;
-import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseReading;
 import static ua.com.fielden.platform.web.utils.EntityRestorationUtils.findByIdWithFiltering;
 
 import java.util.Arrays;
@@ -20,7 +17,6 @@ import com.google.inject.Inject;
 import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.web.centre.CentreContext;
@@ -134,9 +130,6 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
             if (masterEntityInstanceOf(EntityNewAction.class)) {
                 producedEntity = provideDefaultValuesForStandardNew(entity, masterEntity(EntityNewAction.class));
             } else {
-                if (entity instanceof AbstractFunctionalEntityToOpenCompoundMaster) {
-                    authoriseReading(getKeyType(entityType).getSimpleName(), READ, authorisation, securityTokenProvider).ifFailure(Result::throwRuntime);
-                }
                 producedEntity = provideDefaultValues(entity);
             }
         }
