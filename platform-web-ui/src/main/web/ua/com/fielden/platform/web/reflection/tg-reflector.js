@@ -910,10 +910,10 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
     }
 
     /**
-     * Ruterns true if associated entity type has entity master otherwise returns false.
+     * Returns 'true' if associated entity type has entity master, otherwise returns 'false'.
      *
      */
-     EntityType.prototype.entityMaster = function () {
+    EntityType.prototype.entityMaster = function () {
         return this._entityMaster;
     }
 
