@@ -30,7 +30,7 @@ import { TgElementSelectorBehavior } from '/resources/components/tg-element-sele
 import { TgDragFromBehavior } from '/resources/components/tg-drag-from-behavior.js';
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
-import { getFirstEntityValueAndProperty, tearDownEvent, getRelativePos, isMobileApp} from '/resources/reflection/tg-polymer-utils.js';
+import { getFirstEntityTypeAndProperty, tearDownEvent, getRelativePos, isMobileApp} from '/resources/reflection/tg-polymer-utils.js';
 
 const template = html`
     <style>
@@ -2106,8 +2106,8 @@ Polymer({
                 longDesc: 'Click to download attachment.'
             });
         } else if (!this.isHyperlinkProp(entity, column) && this.isEntityProperty(entity, column)) {
-            const entityValue = getFirstEntityValueAndProperty(this._reflector, entity, column.collectionalProperty || column.property)[0];
-            const entityTitle = entityValue.type().entityTitle();
+            const entityType = getFirstEntityTypeAndProperty(entity, column.collectionalProperty || column.property)[0];
+            const entityTitle = this._reflector.findTypeByName(entityType).entityTitle();
             return this._generateActionTooltip({
                 shortDesc: `Edit ${entityTitle}`,
                 longDesc: `Edit ${entityTitle}`

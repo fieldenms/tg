@@ -3,8 +3,7 @@ import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
-import { getFirstEntityValueAndProperty } from '/resources/reflection/tg-polymer-utils.js';
-import { TgReflector } from '/app/tg-reflector.js';
+import { getFirstEntityTypeAndProperty } from '/resources/reflection/tg-polymer-utils.js';
 import { TgPropertyColumnBehavior } from '/resources/egi/tg-property-column-behavior.js';
 
 const template = html`
@@ -29,16 +28,10 @@ Polymer({
         editable: {
             type: Boolean,
             value: false
-        },
-
-        _reflector: Object
+        }
     },
 
     behaviors: [TgPropertyColumnBehavior],
-
-    created: function() {
-        this._reflector = new TgReflector();
-    },
 
     ready: function () {
         const tempSummary = this.$.summary_selection.assignedNodes();
@@ -65,7 +58,7 @@ Polymer({
     runDefaultAction: function (currentEntity, defaultPropertyAction) {
         if (defaultPropertyAction) {
             defaultPropertyAction.currentEntity = currentEntity;
-            defaultPropertyAction.chosenProperty = getFirstEntityValueAndProperty(this._reflector, currentEntity.bind(defaultPropertyAction)(), this.collectionalProperty || this.property)[1];
+            defaultPropertyAction.chosenProperty = getFirstEntityTypeAndProperty(currentEntity.bind(defaultPropertyAction)(), this.collectionalProperty || this.property)[1];
             defaultPropertyAction._run();
             return true;
         } 

@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.entity;
 
 import static java.util.Optional.ofNullable;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
 
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -21,7 +24,7 @@ import ua.com.fielden.platform.web.centre.CentreContext;
 public class AbstractEntityEditActionProducer<T extends EntityEditAction> extends EntityManipulationActionProducer<T> {
 
     private static final Supplier<? extends IllegalStateException> NOTHING_TO_EDIT_EXCEPTION_SUPPLIER = () -> new IllegalStateException("There is nothing to edit.");
-    
+
     public AbstractEntityEditActionProducer(final EntityFactory factory, final Class<T> entityType, final ICompanionObjectFinder companionFinder) {
         super(factory, entityType, companionFinder);
     }
@@ -49,8 +52,8 @@ public class AbstractEntityEditActionProducer<T extends EntityEditAction> extend
                             // 2. chosenProperty is a sub property of a property of type for Entity MAster, where that "parent" property belongs to the current entity, or
                             // 3. we have a genuine bug and need to throw an appropriate error
                             final Optional<? extends AbstractEntity<?>> optClickedEntity = EntityUtils.traversePropPath(currEntity, chosenProperty())
-                                    .filter(t2 -> t2._2.map(v -> entityTypeForMaster.isAssignableFrom(v.getType())).orElse(false)) // find only type-compatible values on path
-                                    .map(t2 -> entityTypeForMaster.cast(t2._2.get())).findFirst();
+                                    .filter(t2 -> entityTypeForMaster.isAssignableFrom(determineBaseEntityType(getOriginalType(determinePropertyType(currEntity.getType(), dslName(t2._1)))))) // find only type-compatible values on path
+                                    .findFirst().flatMap(t2 -> t2._2.map(v -> entityTypeForMaster.cast(v)));
                             return optClickedEntity.orElseThrow(NOTHING_TO_EDIT_EXCEPTION_SUPPLIER).getId();
                         } else if (currEntity != null && currEntity.getId() != null) { // "last resort" situation where we assume that ID is for the current entity
                             return currEntity.getId();
