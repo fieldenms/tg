@@ -4,8 +4,6 @@ import static java.lang.String.format;
 
 import java.util.Objects;
 
-import org.hibernate.type.IntegerType;
-
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.enums.DateIntervalUnit;
 import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
@@ -15,21 +13,11 @@ public class CountDateInterval3 extends TwoOperandsFunction3 {
 
     private DateIntervalUnit intervalUnit;
 
-    public CountDateInterval3(final DateIntervalUnit intervalUnit, final ISingleOperand3 periodEndDate, final ISingleOperand3 periodStartDate) {
-        super(periodEndDate, periodStartDate);
+    public CountDateInterval3(final DateIntervalUnit intervalUnit, final ISingleOperand3 periodEndDate, final ISingleOperand3 periodStartDate, final Class<?> type, final Object hibType) {
+        super(periodEndDate, periodStartDate, type, hibType);
         this.intervalUnit = intervalUnit;
     }
 
-    @Override
-    public Class<Integer> type() {
-        return Integer.class; 
-    }
-
-    @Override
-    public Object hibType() {
-        return IntegerType.INSTANCE;
-    }
-    
     @Override
     public String sql(final DbVersion dbVersion) {
         final String op1Sql = operand1.sql(dbVersion);

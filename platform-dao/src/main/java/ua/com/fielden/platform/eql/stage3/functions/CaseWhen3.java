@@ -18,24 +18,13 @@ public class CaseWhen3 extends AbstractFunction3 {
     private final ISingleOperand3 elseOperand;
     private final ITypeCast typeCast;
 
-    public CaseWhen3(final List<T2<ICondition3, ISingleOperand3>> whenThenPairs, final ISingleOperand3 elseOperand, final ITypeCast typeCast) {
+    public CaseWhen3(final List<T2<ICondition3, ISingleOperand3>> whenThenPairs, final ISingleOperand3 elseOperand, final ITypeCast typeCast, final Class<?> type, final Object hibType) {
+        super(type, hibType);
         this.whenThenPairs.addAll(whenThenPairs);
         this.elseOperand = elseOperand;
         this.typeCast = typeCast;
     }
 
-    @Override
-    public Class<?> type() {
-        // TODO EQL
-        return whenThenPairs.get(0)._2.type();
-    }
-
-    @Override
-    public Object hibType() {
-        // TODO EQL
-        return whenThenPairs.get(0)._2.hibType();
-    }
-    
     @Override
     public String sql(final DbVersion dbVersion) {
         final StringBuffer sb = new StringBuffer();
@@ -57,7 +46,7 @@ public class CaseWhen3 extends AbstractFunction3 {
     @Override
     public int hashCode() {
         final int prime = 31;
-        int result = 1;
+        int result = super.hashCode();
         result = prime * result + ((elseOperand == null) ? 0 : elseOperand.hashCode());
         result = prime * result + ((typeCast == null) ? 0 : typeCast.hashCode());
         result = prime * result + whenThenPairs.hashCode();
@@ -69,6 +58,10 @@ public class CaseWhen3 extends AbstractFunction3 {
         if (this == obj) {
             return true;
         }
+        
+        if (!super.equals(obj)) {
+            return false;
+        }        
         
         if (!(obj instanceof CaseWhen3)) {
             return false;

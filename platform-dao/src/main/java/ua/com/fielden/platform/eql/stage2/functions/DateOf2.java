@@ -13,23 +13,13 @@ import ua.com.fielden.platform.persistence.types.DateTimeType;
 public class DateOf2 extends SingleOperandFunction2<DateOf3> {
 
     public DateOf2(final ISingleOperand2<? extends ISingleOperand3> operand) {
-        super(operand);
+        super(operand, Date.class, DateTimeType.INSTANCE);
     }
 
-    @Override
-    public Class<Date> type() {
-        return Date.class; // TODO
-    }
-
-    @Override
-    public Object hibType() {
-        return new DateTimeType();
-    }
-    
     @Override
     public TransformationResult<DateOf3> transform(final TransformationContext context) {
         final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);
-        return new TransformationResult<DateOf3>(new DateOf3(operandTransformationResult.item), operandTransformationResult.updatedContext);
+        return new TransformationResult<DateOf3>(new DateOf3(operandTransformationResult.item, type, hibType), operandTransformationResult.updatedContext);
     }
     
     @Override

@@ -1,9 +1,5 @@
 package ua.com.fielden.platform.eql.stage2.functions;
 
-import java.math.BigDecimal;
-
-import org.hibernate.type.BigDecimalType;
-
 import ua.com.fielden.platform.eql.stage2.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
@@ -14,24 +10,14 @@ public class AverageOf2 extends SingleOperandFunction2<AverageOf3> {
     public final boolean distinct;
 
     public AverageOf2(final ISingleOperand2<? extends ISingleOperand3> operand, final boolean distinct) {
-        super(operand);
+        super(operand, operand.type(), operand.hibType());
         this.distinct = distinct;
     }
 
     @Override
-    public Class<BigDecimal> type() {
-        return BigDecimal.class;
-    }
-
-    @Override
-    public Object hibType() {
-        return BigDecimalType.INSTANCE;
-    }
-    
-    @Override
     public TransformationResult<AverageOf3> transform(final TransformationContext context) {
         final TransformationResult<? extends ISingleOperand3> operandTr = operand.transform(context);
-        return new TransformationResult<AverageOf3>(new AverageOf3(operandTr.item, distinct), operandTr.updatedContext);
+        return new TransformationResult<AverageOf3>(new AverageOf3(operandTr.item, distinct, type, hibType), operandTr.updatedContext);
     }
     
     @Override

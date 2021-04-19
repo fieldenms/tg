@@ -13,35 +13,19 @@ import ua.com.fielden.platform.eql.stage3.functions.CountAll3;
 
 public class CountAll2 extends AbstractFunction2<CountAll3> {
 
-    @Override
-    public Class<Integer> type() {
-        return Integer.class;
-    }
+    public static CountAll2 INSTANCE = new CountAll2();
     
-    @Override
-    public Object hibType() {
-        return IntegerType.INSTANCE;
+    private CountAll2() {
+        super(Integer.class, IntegerType.INSTANCE);
     }
 
     @Override
     public TransformationResult<CountAll3> transform(final TransformationContext context) {
-        return new TransformationResult<CountAll3>(new CountAll3(), context);
+        return new TransformationResult<CountAll3>(CountAll3.INSTANCE, context);
     }
 
     @Override
     public Set<Prop2> collectProps() {
         return emptySet();
-    } 
-    
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        final int result = 1;
-        return prime * result + CountAll2.class.getName().hashCode();
-    }
-    
-    @Override
-    public boolean equals(final Object obj) {
-        return this == obj || obj instanceof CountAll2;
     } 
 }

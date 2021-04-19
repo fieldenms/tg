@@ -148,7 +148,7 @@ public class EqlStage2TestCase extends EqlTestCase {
     }
 
     protected static Yield2 yieldCountAll(final String alias) {
-        return new Yield2(new CountAll2(), alias, false);
+        return new Yield2(CountAll2.INSTANCE, alias, false);
     }
 
     protected static Yield2 yield(final ISingleOperand2<? extends ISingleOperand3> operand, final String alias) {
@@ -224,12 +224,12 @@ public class EqlStage2TestCase extends EqlTestCase {
         return new Conditions2(false, asList(conditions));
     }
 
-    protected static ExistenceTest2 exists(final Sources2 sources, final Conditions2 conditions, final Yields2 yields, final Class<? extends AbstractEntity<?>> resultType) {
-        return new ExistenceTest2(false, subqry(sources, conditions, yields, resultType));
+    protected static ExistenceTest2 exists(final Sources2 sources, final Conditions2 conditions, final Yields2 yields, final Class<? extends AbstractEntity<?>> resultType, final Object hibType) {
+        return new ExistenceTest2(false, subqry(sources, conditions, yields, resultType, hibType));
     }
 
-    protected static ExistenceTest2 notExists(final Sources2 sources, final Conditions2 conditions, final Yields2 yields, final Class<? extends AbstractEntity<?>> resultType) {
-        return new ExistenceTest2(true, subqry(sources, conditions, yields, resultType));
+    protected static ExistenceTest2 notExists(final Sources2 sources, final Conditions2 conditions, final Yields2 yields, final Class<? extends AbstractEntity<?>> resultType, final Object hibType) {
+        return new ExistenceTest2(true, subqry(sources, conditions, yields, resultType, hibType));
     }
 
     protected static NullTest2 isNull(final ISingleOperand2<? extends ISingleOperand3> operand) {
@@ -296,11 +296,11 @@ public class EqlStage2TestCase extends EqlTestCase {
         return new ResultQuery2(qb2(sources, emptyConditions2, yields(yieldCountAll("KOUNT"))), EntityAggregates.class);
     }
 
-    protected static SubQuery2 subqry(final Sources2 sources, final Conditions2 conditions, final Yields2 yields, final Class<? extends AbstractEntity<?>> resultType) {
-        return new SubQuery2(qb2(sources, conditions, yields), resultType);
+    protected static SubQuery2 subqry(final Sources2 sources, final Conditions2 conditions, final Yields2 yields, final Class<? extends AbstractEntity<?>> resultType, final Object hibType) {
+        return new SubQuery2(qb2(sources, conditions, yields), resultType, hibType);
     }
 
-    protected static SubQuery2 subqry(final Sources2 sources, final Yields2 yields) {
-        return new SubQuery2(qb2(sources, emptyConditions2, yields), null);
+    protected static SubQuery2 subqry(final Sources2 sources, final Yields2 yields, final Class<?> resultType, final Object hibType) {
+        return new SubQuery2(qb2(sources, emptyConditions2, yields), resultType, hibType);
     }
 }

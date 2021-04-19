@@ -6,8 +6,6 @@ import static java.util.stream.Collectors.joining;
 import java.util.List;
 import java.util.Objects;
 
-import org.hibernate.type.StringType;
-
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
@@ -15,20 +13,11 @@ public class Concat3 extends AbstractFunction3 {
 
     private final List<ISingleOperand3> operands;
 
-    public Concat3(final List<ISingleOperand3> operands) {
+    public Concat3(final List<ISingleOperand3> operands, final Class<?> type, final Object hibType) {
+        super(type, hibType);
         this.operands = operands;
     }
 
-    @Override
-    public Class<String> type() {
-        return String.class;
-    }
-
-    @Override
-    public Object hibType() {
-        return StringType.INSTANCE;
-    }
-    
     @Override
     public String sql(final DbVersion dbVersion) {
         switch (dbVersion) {
@@ -45,7 +34,7 @@ public class Concat3 extends AbstractFunction3 {
     @Override
     public int hashCode() {
         final int prime = 31;
-        int result = 1;
+        int result = super.hashCode();
         result = prime * result + operands.hashCode();
         return result;
     }

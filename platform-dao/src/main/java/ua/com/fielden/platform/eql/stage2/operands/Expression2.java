@@ -12,12 +12,14 @@ import ua.com.fielden.platform.eql.stage3.operands.CompoundSingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.Expression3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
-public class Expression2 implements ISingleOperand2<Expression3> {
+public class Expression2 extends AbstractSingleOperand2 implements ISingleOperand2<Expression3> {
 
     public final ISingleOperand2<? extends ISingleOperand3> first;
     private final List<CompoundSingleOperand2> items;
+    
 
     public Expression2(final ISingleOperand2<? extends ISingleOperand3> first, final List<CompoundSingleOperand2> items) {
+        super(extractTypes(first, items));
         this.first = first;
         this.items = items;
     }
@@ -32,7 +34,7 @@ public class Expression2 implements ISingleOperand2<Expression3> {
             transformed.add(new CompoundSingleOperand3(itemTr.item, item.operator));
             currentContext = itemTr.updatedContext;
         }
-        return new TransformationResult<Expression3>(new Expression3(firstTr.item, transformed), currentContext);
+        return new TransformationResult<Expression3>(new Expression3(firstTr.item, transformed, type, hibType), currentContext);
     }
 
     @Override
@@ -51,34 +53,14 @@ public class Expression2 implements ISingleOperand2<Expression3> {
         return false;
     }
 
-    @Override
-    public Class<?> type() {
-        return determineType();//items.isEmpty() ? first.type() : BigDecimal.class;
-    }
-
-    @Override
-    public Object hibType() {
-        return determineHibType();//items.isEmpty() ? first.hibType() : BigDecimalType.INSTANCE;
-    }
-
-    private Class<?> determineType() {
+    private static Set<Class<?>> extractTypes(final ISingleOperand2<? extends ISingleOperand3> first, final List<CompoundSingleOperand2> items) {
         final Set<Class<?>> types = new HashSet<>();
         types.add(first.type());
         for (final CompoundSingleOperand2 item : items) {
             types.add(item.operand.type());
         }
         
-        return types.iterator().next();
-    }
-    
-    private Object determineHibType() {
-        final Set<Object> hibTypes = new HashSet<>();
-        hibTypes.add(first.hibType());
-        for (final CompoundSingleOperand2 item : items) {
-            hibTypes.add(item.operand.hibType());
-        }
-        
-        return hibTypes.iterator().next();
+        return types;
     }
 
     @Override

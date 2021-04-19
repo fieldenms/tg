@@ -2,27 +2,15 @@ package ua.com.fielden.platform.eql.stage3.functions;
 
 import static java.lang.String.format;
 
-import org.hibernate.type.StringType;
-
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
 public class LowerCaseOf3 extends SingleOperandFunction3 {
 
-    public LowerCaseOf3(final ISingleOperand3 operand) {
-        super(operand);
+    public LowerCaseOf3(final ISingleOperand3 operand, final Class<?> type, final Object hibType) {
+        super(operand, type, hibType);
     }
 
-    @Override
-    public Class<String> type() {
-        return String.class;
-    }
-
-    @Override
-    public Object hibType() {
-        return StringType.INSTANCE;
-    }  
-    
     @Override
     public String sql(final DbVersion dbVersion) {
         return format("LOWER(%s)", getConvertToStringSql(dbVersion, operand));

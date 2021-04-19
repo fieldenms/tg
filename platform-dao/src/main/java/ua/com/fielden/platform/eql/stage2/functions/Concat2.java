@@ -20,17 +20,8 @@ public class Concat2 extends AbstractFunction2<Concat3> {
     private final List<ISingleOperand2<? extends ISingleOperand3>> operands;
 
     public Concat2(final List<ISingleOperand2<? extends ISingleOperand3>> operands) {
+        super(String.class, StringType.INSTANCE);
         this.operands = operands;
-    }
-
-    @Override
-    public Class<String> type() {
-        return String.class;
-    }
-
-    @Override
-    public Object hibType() {
-        return StringType.INSTANCE;
     }
 
     @Override
@@ -42,7 +33,7 @@ public class Concat2 extends AbstractFunction2<Concat3> {
             transformed.add(operandTr.item);
             currentContext = operandTr.updatedContext;
         }
-        return new TransformationResult<Concat3>(new Concat3(transformed), currentContext);
+        return new TransformationResult<Concat3>(new Concat3(transformed, type, hibType), currentContext);
     }
 
     @Override

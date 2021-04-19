@@ -12,21 +12,11 @@ import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 public class SumOf3 extends SingleOperandFunction3 {
     private final boolean distinct;
     
-    public SumOf3(final ISingleOperand3 operand, final boolean distinct) {
-        super(operand);
+    public SumOf3(final ISingleOperand3 operand, final boolean distinct, final Class<?> type, final Object hibType) {
+        super(operand, type, hibType);
         this.distinct = distinct;
     }
     
-    @Override
-    public Class<?> type() {
-        return operand.type() != null ? operand.type() : BigDecimal.class;
-    }
-
-    @Override
-    public Object hibType() {
-        return operand.hibType() != null ? operand.hibType() : BigDecimalType.INSTANCE;
-    }
-
     @Override
     public String sql(final DbVersion dbVersion) {
         final String distinctClause = distinct ? "DISTINCT " : "";

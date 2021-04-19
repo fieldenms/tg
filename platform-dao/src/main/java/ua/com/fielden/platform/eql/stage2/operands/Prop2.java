@@ -19,23 +19,21 @@ import ua.com.fielden.platform.eql.stage3.operands.Prop3;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.types.tuples.T2;
 
-public class Prop2 implements ISingleOperand2<ISingleOperand3> {
+public class Prop2 extends AbstractSingleOperand2 implements ISingleOperand2<ISingleOperand3> {
     public final ISource2<? extends ISource3> source;
     private final List<AbstractPropInfo<?>> path;
     public final String name;
-    public final Class<?> type;
-    public final Object hibType;
 
     public Prop2(final ISource2<? extends ISource3> source, final List<AbstractPropInfo<?>> path) {
         this(source, path, false);
     }
 
     public Prop2(final ISource2<? extends ISource3> source, final List<AbstractPropInfo<?>> path, final boolean shouldBeTreatedAsId) {
+        super(shouldBeTreatedAsId ? Long.class : path.stream().reduce((first, second) -> second).orElse(null).javaType(), 
+                path.stream().reduce((first, second) -> second).orElse(null).hibType);
         this.source = source;
         this.path = path;
         this.name = path.stream().map(k -> k.name).collect(Collectors.joining("."));
-        this.type = shouldBeTreatedAsId ? Long.class : path.stream().reduce((first, second) -> second).orElse(null).javaType();
-        this.hibType = path.stream().reduce((first, second) -> second).orElse(null).hibType;
     }
 
     @Override
@@ -75,16 +73,6 @@ public class Prop2 implements ISingleOperand2<ISingleOperand3> {
     @Override
     public boolean ignore() {
         return false;
-    }
-
-    @Override
-    public Class<?> type() {
-        return type;
-    }
-
-    @Override
-    public Object hibType() {
-        return hibType;
     }
 
     @Override

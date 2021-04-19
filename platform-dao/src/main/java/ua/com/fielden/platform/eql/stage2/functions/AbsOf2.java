@@ -9,23 +9,13 @@ import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 public class AbsOf2 extends SingleOperandFunction2<AbsOf3> {
 
     public AbsOf2(final ISingleOperand2<? extends ISingleOperand3> operand) {
-        super(operand);
-    }
-
-    @Override
-    public Class<?> type() {
-        return operand.type();
-    }
-
-    @Override
-    public Object hibType() {
-        return operand.hibType();
+        super(operand, operand.type(), operand.hibType());
     }
     
     @Override
     public TransformationResult<AbsOf3> transform(final TransformationContext context) {
         final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);
-        return new TransformationResult<AbsOf3>(new AbsOf3(operandTransformationResult.item), operandTransformationResult.updatedContext);
+        return new TransformationResult<AbsOf3>(new AbsOf3(operandTransformationResult.item, type, hibType), operandTransformationResult.updatedContext);
     }
     
     @Override

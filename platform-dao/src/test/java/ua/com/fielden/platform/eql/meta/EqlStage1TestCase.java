@@ -67,7 +67,7 @@ public class EqlStage1TestCase extends EqlTestCase {
     }
     
     protected static Yield1 yieldCountAll(final String alias) {
-        return new Yield1(new CountAll1(), alias, false);
+        return new Yield1(CountAll1.INSTANCE, alias, false);
     }
 
     protected static Conditions1 conditions(final ICondition1<?> firstCondition, final CompoundCondition1... otherConditions) {

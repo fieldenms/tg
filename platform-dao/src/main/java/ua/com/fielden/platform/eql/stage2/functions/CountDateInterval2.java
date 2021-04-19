@@ -16,25 +16,15 @@ public class CountDateInterval2 extends TwoOperandsFunction2<CountDateInterval3>
     private DateIntervalUnit intervalUnit;
 
     public CountDateInterval2(final DateIntervalUnit intervalUnit, final ISingleOperand2<? extends ISingleOperand3> periodEndDate, final ISingleOperand2<? extends ISingleOperand3> periodStartDate) {
-        super(periodEndDate, periodStartDate);
+        super(periodEndDate, periodStartDate, Integer.class, IntegerType.INSTANCE);
         this.intervalUnit = intervalUnit;
-    }
-
-    @Override
-    public Class<Integer> type() {
-        return Integer.class; 
-    }
-
-    @Override
-    public Object hibType() {
-        return IntegerType.INSTANCE;
     }
 
     @Override
     public TransformationResult<CountDateInterval3> transform(final TransformationContext context) {
         final TransformationResult<? extends ISingleOperand3> firstOperandTr = operand1.transform(context);
         final TransformationResult<? extends ISingleOperand3> secondOperandTr = operand2.transform(firstOperandTr.updatedContext);
-        return new TransformationResult<CountDateInterval3>(new CountDateInterval3(intervalUnit, firstOperandTr.item, secondOperandTr.item), secondOperandTr.updatedContext);
+        return new TransformationResult<CountDateInterval3>(new CountDateInterval3(intervalUnit, firstOperandTr.item, secondOperandTr.item, type, hibType), secondOperandTr.updatedContext);
     }
     
     @Override

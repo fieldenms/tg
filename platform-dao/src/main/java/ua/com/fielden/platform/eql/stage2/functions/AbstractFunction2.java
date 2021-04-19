@@ -1,9 +1,20 @@
 package ua.com.fielden.platform.eql.stage2.functions;
 
+import java.util.Set;
+
+import ua.com.fielden.platform.eql.stage2.operands.AbstractSingleOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
-public abstract class AbstractFunction2<S3 extends ISingleOperand3> implements ISingleOperand2<S3> {
+public abstract class AbstractFunction2<S3 extends ISingleOperand3> extends AbstractSingleOperand2 implements ISingleOperand2<S3> {
+
+    public AbstractFunction2(Class<?> type, Object hibType) {
+        super(type, hibType);
+    }
+    
+    public AbstractFunction2(final Set<Class<?>> types) {
+        super(types);
+    }
 
     @Override
     public boolean ignore() {

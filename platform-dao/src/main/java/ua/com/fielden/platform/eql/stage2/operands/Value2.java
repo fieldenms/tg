@@ -26,7 +26,7 @@ public class Value2 implements ISingleOperand2<Value3> {
     }
     
     private boolean needsParameter() {
-        return true;//!(value instanceof Long || value instanceof Integer || value instanceof Short || yes.equals(value) || no.equals(value));
+        return !(value instanceof Integer || value instanceof Short || "Y".equals(value) || "N".equals(value));
     }
     
     @Override
@@ -51,10 +51,10 @@ public class Value2 implements ISingleOperand2<Value3> {
     @Override
     public TransformationResult<Value3> transform(final TransformationContext context) {
         if (needsParameter()) {
-            final Value3 transformed = new Value3(value, context.paramId);
+            final Value3 transformed = new Value3(value, context.paramId, hibType());
             return new TransformationResult<Value3>(transformed, context.cloneWithParamValue(transformed.getParamName(), transformed.value));
         } else {
-            return new TransformationResult<Value3>(new Value3(value, 0), context);
+            return new TransformationResult<Value3>(new Value3(value, 0, hibType()), context);
         }
     }
 

@@ -3,9 +3,11 @@ package ua.com.fielden.platform.eql.stage1.operands;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 
+import org.hibernate.type.LongType;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.eql.stage1.TransformationContext;
 import ua.com.fielden.platform.eql.stage1.QueryBlocks1;
+import ua.com.fielden.platform.eql.stage1.TransformationContext;
 import ua.com.fielden.platform.eql.stage1.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.QueryBlocks2;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
@@ -37,11 +39,15 @@ public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuer
         final OrderBys2 orderings2 = enhance(orderings.transform(enhancedContext), yields2, sources2.main);
         final Yields2 enhancedYields2 = enhanceYields(yields2, sources2);
         final QueryBlocks2 entQueryBlocks = new QueryBlocks2(sources2, conditions2, enhancedYields2, groups2, orderings2);
-
-        return new SubQuery2(entQueryBlocks, resultType);
+        final Object hibType = resultType == null ? enhancedYields2.getYields().iterator().next().operand.hibType() : LongType.INSTANCE;
+        return new SubQuery2(entQueryBlocks, enhance(resultType, enhancedYields2), hibType);
     }
 
-    private Yields2 enhanceYields(final Yields2 yields, final Sources2 sources2) {
+    private static Class<?> enhance(final Class<?> resultType, final Yields2 yields) {
+        return resultType == null ? yields.getYields().iterator().next().javaType() : resultType;
+    }
+    
+    private static Yields2 enhanceYields(final Yields2 yields, final Sources2 sources2) {
         if (yields.getYields().isEmpty()) {
             final ISingleOperand2<?> yieldedOperand = sources2.main.entityInfo().getProps().containsKey(ID)
                     ? new Prop2(sources2.main, listOf(sources2.main.entityInfo().getProps().get(ID)))

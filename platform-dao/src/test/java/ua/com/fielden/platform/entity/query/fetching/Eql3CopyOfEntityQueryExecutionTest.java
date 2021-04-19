@@ -207,7 +207,7 @@ public class Eql3CopyOfEntityQueryExecutionTest extends AbstractDaoTestCase {
                 yield().val("aaa").as("prop2").
                 modelAsAggregate();
         final EntityAggregates result = aggregateDao.getAllEntities(from(a).model()).get(0);
-        assertEquals(Character.valueOf('Y'), result.get("exists"));
+        assertEquals("Y", result.get("exists"));
         assertEquals("aaa", result.get("prop2"));
     }
     

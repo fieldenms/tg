@@ -13,25 +13,15 @@ public class AddDateInterval2 extends TwoOperandsFunction2<AddDateInterval3> {
     private final DateIntervalUnit intervalUnit;
     
     public AddDateInterval2(final ISingleOperand2<? extends ISingleOperand3> operand1, final DateIntervalUnit intervalUnit, final ISingleOperand2<? extends ISingleOperand3> operand2) {
-        super(operand1, operand2);
+        super(operand1, operand2, operand2.type(), operand2.hibType());
         this.intervalUnit = intervalUnit;
     }
 
     @Override
-    public Class<?> type() {
-        return operand2.type();
-    }
-
-    @Override
-    public Object hibType() {
-        return operand2.hibType();
-    }
-    
-    @Override
     public TransformationResult<AddDateInterval3> transform(final TransformationContext context) {
         final TransformationResult<? extends ISingleOperand3> firstOperandTr = operand1.transform(context);
         final TransformationResult<? extends ISingleOperand3> secondOperandTr = operand2.transform(firstOperandTr.updatedContext);
-        return new TransformationResult<AddDateInterval3>(new AddDateInterval3(firstOperandTr.item, intervalUnit, secondOperandTr.item), secondOperandTr.updatedContext);
+        return new TransformationResult<AddDateInterval3>(new AddDateInterval3(firstOperandTr.item, intervalUnit, secondOperandTr.item, type, hibType), secondOperandTr.updatedContext);
     }
     
     @Override

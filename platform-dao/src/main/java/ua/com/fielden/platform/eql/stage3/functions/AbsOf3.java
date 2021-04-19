@@ -7,20 +7,10 @@ import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
 public class AbsOf3 extends SingleOperandFunction3 {
 
-    public AbsOf3(final ISingleOperand3 operand) {
-        super(operand);
+    public AbsOf3(final ISingleOperand3 operand, final Class<?> type, final Object hibType) {
+        super(operand, type, hibType);
     }
 
-    @Override
-    public Class<?> type() {
-        return operand.type();
-    }
-
-    @Override
-    public Object hibType() {
-        return operand.hibType();
-    }
-    
     @Override
     public String sql(final DbVersion dbVersion) {
         switch (dbVersion) {

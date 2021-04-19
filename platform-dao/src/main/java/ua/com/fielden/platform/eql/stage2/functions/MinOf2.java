@@ -9,23 +9,13 @@ import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 public class MinOf2 extends SingleOperandFunction2<MinOf3> {
 
     public MinOf2(final ISingleOperand2<? extends ISingleOperand3> operand) {
-        super(operand);
+        super(operand, operand.type(), operand.hibType());
     }
 
-    @Override
-    public Class<?> type() {
-        return operand.type();
-    }
-
-    @Override
-    public Object hibType() {
-        return operand.hibType();
-    } 
-    
     @Override
     public TransformationResult<MinOf3> transform(final TransformationContext context) {
         final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);
-        return new TransformationResult<MinOf3>(new MinOf3(operandTransformationResult.item), operandTransformationResult.updatedContext);
+        return new TransformationResult<MinOf3>(new MinOf3(operandTransformationResult.item, type, hibType), operandTransformationResult.updatedContext);
     }
     
     @Override

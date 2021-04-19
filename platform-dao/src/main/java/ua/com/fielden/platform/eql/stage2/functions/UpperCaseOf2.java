@@ -10,23 +10,13 @@ import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
 public class UpperCaseOf2 extends SingleOperandFunction2<UpperCaseOf3> {
     public UpperCaseOf2(final ISingleOperand2<? extends ISingleOperand3> operand) {
-        super(operand);
+        super(operand, String.class, StringType.INSTANCE);
     }
 
-    @Override
-    public Class<String> type() {
-        return String.class;
-    }
-
-    @Override
-    public Object hibType() {
-        return StringType.INSTANCE;
-    }   
-    
     @Override
     public TransformationResult<UpperCaseOf3> transform(final TransformationContext context) {
         final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);
-        return new TransformationResult<UpperCaseOf3>(new UpperCaseOf3(operandTransformationResult.item), operandTransformationResult.updatedContext);
+        return new TransformationResult<UpperCaseOf3>(new UpperCaseOf3(operandTransformationResult.item, type, hibType), operandTransformationResult.updatedContext);
     }
     
     @Override

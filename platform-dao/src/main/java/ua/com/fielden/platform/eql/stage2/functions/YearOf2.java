@@ -15,7 +15,7 @@ public class YearOf2 extends DatePartFunction2<YearOf3> {
     @Override
     public TransformationResult<YearOf3> transform(final TransformationContext context) {
         final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);
-        return new TransformationResult<YearOf3>(new YearOf3(operandTransformationResult.item), operandTransformationResult.updatedContext);
+        return new TransformationResult<YearOf3>(new YearOf3(operandTransformationResult.item, type, hibType), operandTransformationResult.updatedContext);
     }
     
     @Override

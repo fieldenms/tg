@@ -8,16 +8,6 @@ import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 public abstract class DatePartFunction2<S3 extends ISingleOperand3> extends SingleOperandFunction2<S3> {
 
     public DatePartFunction2(final ISingleOperand2<? extends ISingleOperand3> operand) {
-        super(operand);
-    }
-
-    @Override
-    public Class<Integer> type() {
-        return Integer.class;
-    }
-
-    @Override
-    public Object hibType() {
-        return IntegerType.INSTANCE;
+        super(operand, Integer.class, IntegerType.INSTANCE);
     }
 }

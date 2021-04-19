@@ -2,27 +2,15 @@ package ua.com.fielden.platform.eql.stage3.functions;
 
 import static java.lang.String.format;
 
-import org.hibernate.type.IntegerType;
-
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
 public class DayOfWeekOf3 extends SingleOperandFunction3 {
 
-    public DayOfWeekOf3(final ISingleOperand3 operand) {
-        super(operand);
+    public DayOfWeekOf3(final ISingleOperand3 operand, final Class<?> type, final Object hibType) {
+        super(operand, type, hibType);
     }
     
-    @Override
-    public Class<Integer> type() {
-        return Integer.class; //TODO
-    }
-
-    @Override
-    public Object hibType() {
-        return IntegerType.INSTANCE;
-    }
-
     @Override
     public String sql(final DbVersion dbVersion) {
         switch (dbVersion) {

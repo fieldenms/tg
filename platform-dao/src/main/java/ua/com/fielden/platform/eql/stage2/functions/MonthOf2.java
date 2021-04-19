@@ -15,7 +15,7 @@ public class MonthOf2 extends DatePartFunction2<MonthOf3> {
     @Override
     public TransformationResult<MonthOf3> transform(final TransformationContext context) {
         final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);
-        return new TransformationResult<MonthOf3>(new MonthOf3(operandTransformationResult.item), operandTransformationResult.updatedContext);
+        return new TransformationResult<MonthOf3>(new MonthOf3(operandTransformationResult.item, type, hibType), operandTransformationResult.updatedContext);
     }
     
     @Override

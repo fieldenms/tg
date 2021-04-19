@@ -6,17 +6,14 @@ import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 
-public class Prop3 implements ISingleOperand3 {
+public class Prop3 extends  AbstractSingleOperand3 {
     public final String name;
     public final ISource3 source; // can be null for prop headers
-    public final Class<?> type;
-    public final Object hibType;
 
     public Prop3(final String name, final ISource3 source, final Class<?> type, final Object hibType) {
+        super(type, hibType);
         this.name = name;
         this.source = source;
-        this.type = type;
-        this.hibType = hibType;
     }
 
     @Override
@@ -33,23 +30,11 @@ public class Prop3 implements ISingleOperand3 {
     }
     
     @Override
-    public Class<?> type() {
-        return type;
-    }
-    
-    @Override
-    public Object hibType() {
-        return hibType;
-    }
-    
-    @Override
     public int hashCode() {
         final int prime = 31;
-        int result = 1;
+        int result = super.hashCode();
         result = prime * result + name.hashCode();
         result = prime * result + (source == null ? 0 : source.hashCode());
-        result = prime * result + hibType.getClass().getName().hashCode();
-        result = prime * result + (type == null ? 0 : type.hashCode());
         return result;
     }
 
@@ -59,12 +44,16 @@ public class Prop3 implements ISingleOperand3 {
             return true;
         }
         
+        if (!super.equals(obj)) {
+            return false;
+        }
+        
         if (!(obj instanceof Prop3)) {
             return false;
         }
         
         final Prop3 other = (Prop3) obj;
         
-        return Objects.equals(name, other.name) && Objects.equals(source, other.source) && Objects.equals(type, other.type) && Objects.equals(hibType.getClass().getName(), other.hibType.getClass().getName());
+        return Objects.equals(name, other.name) && Objects.equals(source, other.source);
     }
 }

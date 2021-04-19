@@ -2,9 +2,6 @@ package ua.com.fielden.platform.eql.stage2.operands;
 
 import java.util.Objects;
 
-import org.hibernate.type.LongType;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage2.QueryBlocks2;
 import ua.com.fielden.platform.eql.stage2.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.TransformationResult;
@@ -20,9 +17,9 @@ public class SubQuery2 extends AbstractQuery2 implements ISingleOperand2<SubQuer
 
     public final Object hibType;
 
-    public SubQuery2(final QueryBlocks2 queryBlocks, final Class<? extends AbstractEntity<?>> resultType) {
+    public SubQuery2(final QueryBlocks2 queryBlocks, final Class<?> resultType, final Object hibType) {
         super(queryBlocks, resultType);
-        this.hibType = resultType == null ? yields.getYields().iterator().next().operand.hibType() : LongType.INSTANCE;
+        this.hibType = hibType;
     }
 
     @Override
@@ -35,7 +32,7 @@ public class SubQuery2 extends AbstractQuery2 implements ISingleOperand2<SubQuer
 
         final QueryBlocks3 entQueryBlocks = new QueryBlocks3(sourcesTr.item, conditionsTr.item, yieldsTr.item, groupsTr.item, orderingsTr.item);
 
-        return new TransformationResult<SubQuery3>(new SubQuery3(entQueryBlocks, resultType), orderingsTr.updatedContext);
+        return new TransformationResult<SubQuery3>(new SubQuery3(entQueryBlocks, resultType, hibType), orderingsTr.updatedContext);
     }
 
     @Override

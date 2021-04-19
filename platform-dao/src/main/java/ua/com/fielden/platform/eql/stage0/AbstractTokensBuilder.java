@@ -326,7 +326,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
     protected ISingleOperand1<? extends ISingleOperand2<?>> getZeroArgFunctionModel(final Functions function) {
         switch (function) {
         case COUNT_ALL:
-            return new CountAll1();
+            return CountAll1.INSTANCE;
         case NOW:
             return new Value1(getParamValue(EntQueryGenerator.NOW)); //new Now1();
 

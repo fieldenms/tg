@@ -8,7 +8,8 @@ abstract class TwoOperandsFunction3 extends AbstractFunction3 {
     public final ISingleOperand3 operand1;
     public final ISingleOperand3 operand2;
 
-    public TwoOperandsFunction3(final ISingleOperand3 operand1, final ISingleOperand3 operand2) {
+    public TwoOperandsFunction3(final ISingleOperand3 operand1, final ISingleOperand3 operand2, final Class<?> type, final Object hibType) {
+        super(type, hibType);
         this.operand1 = operand1;
         this.operand2 = operand2;
     }
@@ -16,7 +17,7 @@ abstract class TwoOperandsFunction3 extends AbstractFunction3 {
     @Override
     public int hashCode() {
         final int prime = 31;
-        int result = 1;
+        int result = super.hashCode();
         result = prime * result + operand1.hashCode();
         result = prime * result + operand2.hashCode();
         return result;
@@ -27,7 +28,11 @@ abstract class TwoOperandsFunction3 extends AbstractFunction3 {
         if (this == obj) {
             return true;
         }
-
+        
+        if (!super.equals(obj)) {
+            return false;
+        }     
+        
         if (!(obj instanceof TwoOperandsFunction3)) {
             return false;
         }

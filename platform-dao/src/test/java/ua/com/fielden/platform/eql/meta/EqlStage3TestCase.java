@@ -18,6 +18,7 @@ import org.hibernate.type.LongType;
 import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
 
+import afu.org.checkerframework.checker.units.qual.h;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
@@ -55,7 +56,6 @@ import ua.com.fielden.platform.eql.stage3.sources.SingleNodeSources3;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
 
 public class EqlStage3TestCase extends EqlTestCase {
-    public static Type dateTimeHibType = new DateTimeType();
     public static int sqlId = 0;
 
     public static int nextSqlId() {
@@ -110,8 +110,8 @@ public class EqlStage3TestCase extends EqlTestCase {
         return new Source3BasedOnTable(tables.get(sourceType.getName()), sourceForContextId.id + "_" + subcontextId, nextSqlId());
     }
 
-    protected static Expression3 expr(final ISingleOperand3 op1) {
-        return new Expression3(op1, emptyList());
+    protected static Expression3 expr(final ISingleOperand3 op1, final Class<?> type, final Object hibType) {
+        return new Expression3(op1, emptyList(), type, hibType);
     }
 
     protected static ISingleOperand3 prop(final String name, final ISource3 source) {
@@ -135,7 +135,7 @@ public class EqlStage3TestCase extends EqlTestCase {
     }
 
     protected static ISingleOperand3 dateProp(final String name, final ISource3 source) {
-        return new Prop3(name, source, Date.class, dateTimeHibType);
+        return new Prop3(name, source, Date.class, DateTimeType.INSTANCE);
     }
 
     protected static ComparisonTest3 eq(final ISingleOperand3 op1, final ISingleOperand3 op2) {
@@ -270,12 +270,12 @@ public class EqlStage3TestCase extends EqlTestCase {
     //        return new EntQuery3(new EntQueryBlocks3(sources, new Conditions3(false, emptyList()), yields, groups(), orders()), queryCategory, resultType);
     //    }
 
-    protected static SubQuery3 subqry(final ISources3 sources, final Yields3 yields, final Class<?> resultType) {
-        return new SubQuery3(new QueryBlocks3(sources, new Conditions3(false, emptyList()), yields, groups(), orders()), resultType);
+    protected static SubQuery3 subqry(final ISources3 sources, final Yields3 yields, final Class<?> resultType, final Type hibType) {
+        return new SubQuery3(new QueryBlocks3(sources, new Conditions3(false, emptyList()), yields, groups(), orders()), resultType, hibType);
     }
 
-    protected static SubQuery3 subqry(final ISources3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType) {
-        return new SubQuery3(new QueryBlocks3(sources, conditions, yields, groups(), orders()), resultType);
+    protected static SubQuery3 subqry(final ISources3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType, final Type hibType) {
+        return new SubQuery3(new QueryBlocks3(sources, conditions, yields, groups(), orders()), resultType, hibType);
     }
 
     private static ResultQuery3 resultQry(final ISources3 sources, final Yields3 yields, final Class<?> resultType) {
@@ -343,7 +343,7 @@ public class EqlStage3TestCase extends EqlTestCase {
     }
 
     protected static Yield3 yieldCountAll(final String alias) {
-        return new Yield3(new CountAll3(), alias, nextSqlId(), false, null, null);
+        return new Yield3(new CountAll3(INTEGER, H_INTEGER), alias, nextSqlId(), false, INTEGER, H_INTEGER);
     }
 
     protected static Yield3 yieldEntity(final String propName, final ISource3 source, final String alias, final Class<? extends AbstractEntity<?>> propType) {
@@ -366,8 +366,8 @@ public class EqlStage3TestCase extends EqlTestCase {
         return new Yield3(prop(propName, source), alias, nextSqlId(), false, null, null);
     }
 
-    protected static Yield3 yieldModel(final SubQuery3 model, final String alias) {
-        return new Yield3(model, alias, nextSqlId(), false, null, null);
+    protected static Yield3 yieldModel(final SubQuery3 model, final String alias, final Class<?> type, final Type hibType) {
+        return new Yield3(model, alias, nextSqlId(), false, type, hibType);
     }
 
     protected static Yield3 yieldSingleEntity(final String propName, final ISource3 source, final Class<? extends AbstractEntity<?>> propType) {

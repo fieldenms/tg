@@ -25,11 +25,9 @@ public class Yield2 {
     }
 
     public TransformationResult<Yield3> transform(final TransformationContext context) {
-        final Object hibType = operand instanceof Prop2 ? ((Prop2) operand).hibType : null;
-        final Class<?> type = operand instanceof Prop2 ? ((Prop2) operand).type : null;
         final TransformationContext newContext = !operand.isHeader() ? context.cloneWithNextSqlId() : context;
         final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(newContext);
-        return new TransformationResult<Yield3>(new Yield3(operandTransformationResult.item, alias, operand.isHeader() ? 0 : newContext.sqlId, operand.isHeader(), type, hibType), operandTransformationResult.updatedContext);
+        return new TransformationResult<Yield3>(new Yield3(operandTransformationResult.item, alias, operand.isHeader() ? 0 : newContext.sqlId, operand.isHeader(), operand.type(), operand.hibType()), operandTransformationResult.updatedContext);
     }
 
     @Override

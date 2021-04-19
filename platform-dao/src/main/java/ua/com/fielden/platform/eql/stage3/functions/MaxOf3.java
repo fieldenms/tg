@@ -7,20 +7,10 @@ import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
 public class MaxOf3 extends SingleOperandFunction3 {
 
-    public MaxOf3(final ISingleOperand3 operand) {
-        super(operand);
+    public MaxOf3(final ISingleOperand3 operand, final Class<?> type, final Object hibType) {
+        super(operand, type, hibType);
     }
 
-    @Override
-    public Class<?> type() {
-        return operand.type();
-    }
-
-    @Override
-    public Object hibType() {
-        return operand.hibType();
-    } 
-    
     @Override
     public String sql(final DbVersion dbVersion) {
         return format("MAX(%s)", operand.sql(dbVersion));

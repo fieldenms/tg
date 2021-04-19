@@ -6,10 +6,15 @@ import java.util.Date;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
+import ua.com.fielden.platform.eql.stage3.operands.AbstractSingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
-public abstract class AbstractFunction3 implements ISingleOperand3 {
+public abstract class AbstractFunction3 extends AbstractSingleOperand3 {
     
+    public AbstractFunction3(Class<?> type, Object hibType) {
+        super(type, hibType);
+    }
+
     @Override
     public String sql(final DbVersion dbVersion) {
         throw new EqlStage3ProcessingException(format("Function [%s] is not yet implemented for RDBMS [%s]!", getClass().getSimpleName(), dbVersion));

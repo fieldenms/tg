@@ -60,7 +60,6 @@ import java.util.stream.Collectors;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
-import org.joda.time.DateTime;
 
 import com.google.inject.Injector;
 
@@ -137,7 +136,7 @@ public class EqlDomainMetadata {
         if (hibTypesDefaults != null) {
             for (final Entry<Class<?>, Class<?>> entry : hibTypesDefaults.entrySet()) {
                 try {
-                    this.hibTypesDefaults.put(entry.getKey(), entry.getValue().newInstance());
+                    this.hibTypesDefaults.put(entry.getKey(), entry.getValue().getDeclaredField("INSTANCE").get(null));//.newInstance());
                 } catch (final Exception e) {
                     throw new EqlMetadataGenerationException("Couldn't generate instantiate hibernate type [" + entry.getValue() + "] due to: " + e);
                 }

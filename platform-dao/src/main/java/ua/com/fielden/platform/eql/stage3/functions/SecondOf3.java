@@ -5,10 +5,10 @@ import static java.lang.String.format;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
-public class SecondOf3 extends DatePartFunction3 {
+public class SecondOf3 extends SingleOperandFunction3 {
 
-    public SecondOf3(final ISingleOperand3 operand) {
-        super(operand);
+    public SecondOf3(final ISingleOperand3 operand, final Class<?> type, final Object hibType) {
+        super(operand, type, hibType);
     }
 
     @Override

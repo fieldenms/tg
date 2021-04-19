@@ -7,10 +7,12 @@ import ua.com.fielden.platform.entity.query.DbVersion;
 public class Value3 implements ISingleOperand3 {
     public final Object value;
     public final int paramId;
+    public final Object hibType;
 
-    public Value3(final Object value, final int paramId) {
+    public Value3(final Object value, final int paramId, final Object hibType) {
         this.value = value;
         this.paramId = paramId;
+        this.hibType = hibType;
     }
 
     public String getParamName() {
@@ -43,5 +45,15 @@ public class Value3 implements ISingleOperand3 {
         final Value3 other = (Value3) obj;
         
         return Objects.equals(value, other.value) && paramId == other.paramId;
+    }
+
+    @Override
+    public Class<?> type() {
+        return value != null ? value.getClass() : null;
+    }
+
+    @Override
+    public Object hibType() {
+        return hibType;
     }
 }

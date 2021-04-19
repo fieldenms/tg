@@ -3,15 +3,16 @@ package ua.com.fielden.platform.eql.stage2.functions;
 import java.util.Objects;
 import java.util.Set;
 
-import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
 abstract class SingleOperandFunction2<S3 extends ISingleOperand3> extends AbstractFunction2<S3> {
 
     public final ISingleOperand2<? extends ISingleOperand3> operand;
 
-    public SingleOperandFunction2(final ISingleOperand2<? extends ISingleOperand3> operand) {
+    public SingleOperandFunction2(final ISingleOperand2<? extends ISingleOperand3> operand, final Class<?> type, final Object hibType) {
+        super(type, hibType);
         this.operand = operand;
     }
 
