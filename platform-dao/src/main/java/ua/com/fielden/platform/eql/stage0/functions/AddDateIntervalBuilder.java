@@ -3,7 +3,7 @@ package ua.com.fielden.platform.eql.stage0.functions;
 import ua.com.fielden.platform.entity.query.fluent.enums.DateIntervalUnit;
 import ua.com.fielden.platform.eql.stage0.AbstractTokensBuilder;
 import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
-import ua.com.fielden.platform.eql.stage1.functions.AddDateInterval1;
+import ua.com.fielden.platform.eql.stage1.operands.functions.AddDateInterval1;
 
 public class AddDateIntervalBuilder extends ThreeArgumentsFunctionBuilder {
 

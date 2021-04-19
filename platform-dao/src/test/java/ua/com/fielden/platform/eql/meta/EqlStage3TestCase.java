@@ -40,13 +40,13 @@ import ua.com.fielden.platform.eql.stage3.etc.OrderBy3;
 import ua.com.fielden.platform.eql.stage3.etc.OrderBys3;
 import ua.com.fielden.platform.eql.stage3.etc.Yield3;
 import ua.com.fielden.platform.eql.stage3.etc.Yields3;
-import ua.com.fielden.platform.eql.stage3.functions.CountAll3;
 import ua.com.fielden.platform.eql.stage3.operands.Prop3;
 import ua.com.fielden.platform.eql.stage3.operands.Expression3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.ResultQuery3;
 import ua.com.fielden.platform.eql.stage3.operands.SourceQuery3;
 import ua.com.fielden.platform.eql.stage3.operands.SubQuery3;
+import ua.com.fielden.platform.eql.stage3.operands.functions.CountAll3;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.eql.stage3.sources.ISources3;
 import ua.com.fielden.platform.eql.stage3.sources.MultipleNodesSources3;
@@ -343,7 +343,7 @@ public class EqlStage3TestCase extends EqlTestCase {
     }
 
     protected static Yield3 yieldCountAll(final String alias) {
-        return new Yield3(new CountAll3(INTEGER, H_INTEGER), alias, nextSqlId(), false, INTEGER, H_INTEGER);
+        return new Yield3(CountAll3.INSTANCE, alias, nextSqlId(), false, INTEGER, H_INTEGER);
     }
 
     protected static Yield3 yieldEntity(final String propName, final ISource3 source, final String alias, final Class<? extends AbstractEntity<?>> propType) {
