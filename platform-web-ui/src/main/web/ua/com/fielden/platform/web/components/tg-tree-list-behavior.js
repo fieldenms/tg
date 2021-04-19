@@ -336,6 +336,16 @@ export const TgTreeListBehavior = {
             this.debounce("refreshTree", refreshTree.bind(this));
         }
     },
+
+    collapseSubTreeViewExceptParent: function(parentItem) {
+        const idx = this._entities.indexOf(parentItem);
+        if (parentItem.entity.hasChildren && parentItem.opened) {
+            const numOfItemsToDelete = calculateNumberOfOpenedItems(parentItem);
+            parentItem.children.forEach(item => this.collapseSubTree(item));
+            this.splice("_entities", idx + 1 + parentItem.additionalInfoNodes.length, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(parentItem, true, false));
+            this.debounce("refreshTree", refreshTree.bind(this));
+        }
+    },
     
     reloadSubtreeFull: function (idx, entity) {
         if (entity.entity.hasChildren) {
