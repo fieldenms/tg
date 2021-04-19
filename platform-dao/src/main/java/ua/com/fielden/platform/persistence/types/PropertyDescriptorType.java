@@ -27,6 +27,8 @@ import ua.com.fielden.platform.types.markers.IPropertyDescriptorType;
 public class PropertyDescriptorType implements UserType, IPropertyDescriptorType {
     private static final Logger LOGGER = Logger.getLogger(PropertyDescriptorType.class);
     
+    public static final PropertyDescriptorType INSTANCE = new PropertyDescriptorType();
+    
     private static final int[] SQL_TYPES = { Types.VARCHAR };
     
     @Override

@@ -29,6 +29,8 @@ import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
 public class UtcDateTimeType extends AbstractStandardBasicType<Date> implements IdentifierType<Date>, LiteralType<Date>, IUtcDateTimeType {
     private static final long serialVersionUID = 1L;
 
+    public static final UtcDateTimeType INSTANCE = new UtcDateTimeType();
+    
     private static final TimeZone UTC = TimeZone.getTimeZone("UTC");
 
     public UtcDateTimeType() {
