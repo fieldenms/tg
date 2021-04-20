@@ -96,7 +96,7 @@ const makeParentVisible = function (entity) {
 const firstClosedParentFromTop = function (entity) {
     const parents = [];
     let parent = entity;
-    while (parent && parent.parent) {
+    while (parent) {
         parents.unshift(parent);
         parent = parent.parent;
     }
@@ -276,13 +276,13 @@ export const TgTreeListBehavior = {
                 nextMatchedItem = null;
             }
         }
-        if (nextMatchedItem && this._entities.indexOf(nextMatchedItem) < 0) {
-            const topParent = firstClosedParentFromTop(nextMatchedItem);
-            const idx = this._entities.indexOf(topParent);
+        const topClosedParent = firstClosedParentFromTop(nextMatchedItem);
+        if (nextMatchedItem && topClosedParent) {
+            const idx = this._entities.indexOf(topClosedParent);
             if (idx >= 0) {
-                const numOfItemsToDelete = calculateNumberOfOpenedItems(topParent);
+                const numOfItemsToDelete = calculateNumberOfOpenedItems(topClosedParent);
                 expandAncestors(nextMatchedItem);
-                this.splice("_entities", idx + 1 + topParent.additionalInfoNodes.length, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(topParent, true, true));
+                this.splice("_entities", idx + 1 + topClosedParent.additionalInfoNodes.length, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(topClosedParent, true, true));
             }
         }
         this.debounce("refreshTree", () => {
