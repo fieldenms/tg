@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.meta;
 
 import static java.lang.String.format;
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
@@ -45,7 +46,6 @@ import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -89,7 +89,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
 
 public class EqlDomainMetadata {
 
-    private static final TypeResolver typeResolver = new TypeResolver();
+    public static final TypeResolver typeResolver = new TypeResolver();
     private static final Type H_LONG = typeResolver.basic("long");
     private static final Type H_STRING = typeResolver.basic("string");
     private static final Type H_BOOLEAN = typeResolver.basic("yes_no");
@@ -146,7 +146,7 @@ public class EqlDomainMetadata {
         this.hibTypesDefaults.put(boolean.class, H_BOOLEAN);
 
         this.hibTypesInjector = hibTypesInjector;
-        this.gen = new EntQueryGenerator(dbVersion, null, null, null, Collections.emptyMap(), this);
+        this.gen = new EntQueryGenerator(dbVersion, null, null, null, emptyMap(), this);
 
         entityTypes.parallelStream().forEach(entityType -> {
             try {
@@ -527,7 +527,7 @@ public class EqlDomainMetadata {
     }
 
     public Map<Class<? extends AbstractEntity<?>>, EqlEntityMetadata> entityPropsMetadata() {
-        return Collections.unmodifiableMap(entityPropsMetadata);
+        return unmodifiableMap(entityPropsMetadata);
     }
     
     public EntityInfo<?> getEntityInfo(final Class<? extends AbstractEntity<?>> type) {

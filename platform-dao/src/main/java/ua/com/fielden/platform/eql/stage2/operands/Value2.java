@@ -1,11 +1,10 @@
 package ua.com.fielden.platform.eql.stage2.operands;
 
 import static java.util.Collections.emptySet;
+import static ua.com.fielden.platform.eql.meta.EqlDomainMetadata.typeResolver;
 
 import java.util.Objects;
 import java.util.Set;
-
-import org.hibernate.type.TypeResolver;
 
 import ua.com.fielden.platform.eql.stage2.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.TransformationResult;
@@ -14,7 +13,6 @@ import ua.com.fielden.platform.eql.stage3.operands.Value3;
 public class Value2 implements ISingleOperand2<Value3> {
     private final Object value;
     private final boolean ignoreNull;
-    private static TypeResolver tr = new TypeResolver();
 
     public Value2(final Object value) {
         this(value, false);
@@ -45,7 +43,7 @@ public class Value2 implements ISingleOperand2<Value3> {
     
     @Override
     public Object hibType() {
-        return value != null ? tr.basic(type().getName()) : null;
+        return value != null ? typeResolver.basic(type().getName()) : null;
     }
     
     @Override

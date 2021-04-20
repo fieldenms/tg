@@ -12,7 +12,6 @@ import java.util.Map;
 
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
-import org.hibernate.type.TypeResolver;
 
 import com.google.inject.Guice;
 
@@ -75,7 +74,6 @@ public class BaseEntQueryTCase1 {
     protected static final Type H_STRING = StandardBasicTypes.STRING;
     protected static final Type H_BIG_DECIMAL = StandardBasicTypes.BIG_DECIMAL;
     protected static final Type H_BIG_INTEGER = StandardBasicTypes.BIG_INTEGER;
-    protected static final TypeResolver typeResolver = new TypeResolver();
 
     public static final Map<Class, Class> hibTypeDefaults = new HashMap<>();
 
