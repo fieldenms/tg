@@ -89,13 +89,13 @@ const makeParentVisible = function (entity) {
 };
 
 /**
- * Returns the top most parent of the tree item.
+ * Returns the oldest closed ancestor of specified entity.
  * 
- * @param {Object} entity - treeItem which top most ancestor should be find.
+ * @param {Object} entity - treeItem for which the oldest closed ancestor should be find.
  */
 const firstClosedParentFromTop = function (entity) {
     const parents = [];
-    let parent = entity;
+    let parent = entity && entity.parent;
     while (parent) {
         parents.unshift(parent);
         parent = parent.parent;
@@ -280,9 +280,8 @@ export const TgTreeListBehavior = {
         if (nextMatchedItem && topClosedParent) {
             const idx = this._entities.indexOf(topClosedParent);
             if (idx >= 0) {
-                const numOfItemsToDelete = calculateNumberOfOpenedItems(topClosedParent);
                 expandAncestors(nextMatchedItem);
-                this.splice("_entities", idx + 1 + topClosedParent.additionalInfoNodes.length, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(topClosedParent, true, true));
+                this.splice("_entities", idx + 1 + topClosedParent.additionalInfoNodes.length, 0, ...getChildrenToAdd.bind(this)(topClosedParent, true, true));
             }
         }
         this.debounce("refreshTree", () => {
