@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.eql.stage2.operands;
 
 import static java.util.Collections.emptySet;
+import static ua.com.fielden.platform.eql.meta.EqlDomainMetadata.N;
+import static ua.com.fielden.platform.eql.meta.EqlDomainMetadata.Y;
 import static ua.com.fielden.platform.eql.meta.EqlDomainMetadata.typeResolver;
 
 import java.util.Objects;
@@ -24,7 +26,7 @@ public class Value2 implements ISingleOperand2<Value3> {
     }
     
     private boolean needsParameter() {
-        return !(value instanceof Integer || value instanceof Short || "Y".equals(value) || "N".equals(value));
+        return !(value == null || value instanceof Integer || Y.equals(value) || N.equals(value));
     }
     
     @Override

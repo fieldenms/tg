@@ -21,7 +21,11 @@ public class Value3 implements ISingleOperand3 {
     
     @Override
     public String sql(final DbVersion dbVersion) {
-        return paramId == 0 ? (value instanceof String ? "'" + value + "'" : value.toString()) : ":" + getParamName(); 
+        if (value == null) {
+            return " NULL ";
+        } else {
+            return paramId == 0 ? (value instanceof String ? "'" + value + "'" : value.toString()) : ":" + getParamName();    
+        }
     }
 
     @Override
