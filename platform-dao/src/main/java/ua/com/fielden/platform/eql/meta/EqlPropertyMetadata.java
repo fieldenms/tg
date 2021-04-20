@@ -49,7 +49,7 @@ public class EqlPropertyMetadata {
         int result = 1;
         result = prime * result + name.hashCode();
         result = prime * result + javaType.hashCode();
-        result = prime * result + ((hibType == null) ? 0 : hibType.hashCode());
+        result = prime * result + hibType.hashCode();
         result = prime * result + (required ? 0 : (required ? 1231 : 1237));
         result = prime * result + (critOnly ? 0 : (critOnly ? 1231 : 1237));
         result = prime * result + ((column == null) ? 0 : column.hashCode());

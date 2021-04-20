@@ -585,8 +585,8 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
 
     @Test
     public void test_query_with_union_property0b() {
-        final ExpressionModel idModel = expr().caseWhen().prop("wagonSlot").isNotNull().then().prop("wagonSlot"). //
-        when().prop("workshop").isNotNull().then().prop("workshop").otherwise().val(null).end().model();
+        final ExpressionModel idModel = expr().caseWhen().prop("wagonSlot").isNotNull().then().prop("wagonSlot.id"). //
+        when().prop("workshop").isNotNull().then().prop("workshop.id").otherwise().val(null).end().model();
 
         final EntityResultQueryModel<TgBogieLocation> qry = select(TgBogieLocation.class).where().expr(idModel).eq().val(workshopDao.findByKey("WSHOP1")).model();
         final List<TgBogieLocation> models = bogieLocationDao.getAllEntities(from(qry).with(fetchAll(TgBogieLocation.class)).model());

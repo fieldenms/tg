@@ -93,6 +93,8 @@ public class EqlDomainMetadata {
     private static final Type H_LONG = typeResolver.basic("long");
     private static final Type H_STRING = typeResolver.basic("string");
     private static final Type H_BOOLEAN = typeResolver.basic("yes_no");
+    public static final String Y = "Y";
+    public static final String N = "N";
 
     public static final List<String> specialProps = unmodifiableListOf(ID, KEY, VERSION);
 

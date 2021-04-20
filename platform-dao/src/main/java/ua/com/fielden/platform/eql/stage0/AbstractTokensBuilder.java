@@ -14,6 +14,8 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.PR
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.VAL;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.buildCondition;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty.queryPropertyParamName;
+import static ua.com.fielden.platform.eql.meta.EqlDomainMetadata.N;
+import static ua.com.fielden.platform.eql.meta.EqlDomainMetadata.Y;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.util.ArrayList;
@@ -30,6 +32,7 @@ import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
+import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.stage0.functions.AbsOfBuilder;
 import ua.com.fielden.platform.eql.stage0.functions.AddDateIntervalBuilder;
 import ua.com.fielden.platform.eql.stage0.functions.AverageOfBuilder;
@@ -407,7 +410,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
     /** Ensures that values of boolean types are converted properly. */
     private Object convertValue(final Object value) {
         if (value instanceof Boolean) {
-            return (boolean) value ? "Y" : "N";
+            return (boolean) value ? Y : N;
         }
         return value;
     }

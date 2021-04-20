@@ -21,7 +21,9 @@ public class Expression1 implements ISingleOperand1<Expression2> {
 
     @Override
     public Expression2 transform(final TransformationContext context) {
-        return new Expression2(first.transform(context), items.stream().map(el -> el.transform(context)).collect(toList()));
+        return items.isEmpty() ? //
+                new Expression2(first.transform(context)) : //
+                new Expression2(first.transform(context), items.stream().map(el -> el.transform(context)).collect(toList()));
     }
 
     @Override

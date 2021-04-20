@@ -3,7 +3,6 @@ package ua.com.fielden.platform.eql.stage3;
 
 import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
-import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.DbVersion.H2;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -14,7 +13,6 @@ import org.hibernate.type.BigDecimalType;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.eql.meta.EqlStage3TestCase;
@@ -242,8 +240,6 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
     @Test
     public void calc_prop_is_correctly_transformed_14() {
         final ResultQuery3 actQry = qryCountAll(select(TeWorkOrder.class).where().prop("vehicleModel.key").isNotNull());
-        System.out.println(actQry.sql(DbVersion.H2));
-
         final String wo1 = "1";
 
         final Source3BasedOnTable wo = source(WORK_ORDER, wo1);

@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.eql.stage2.operands;
 
+import static java.util.Collections.emptyList;
+
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -17,11 +20,16 @@ public class Expression2 extends AbstractSingleOperand2 implements ISingleOperan
     public final ISingleOperand2<? extends ISingleOperand3> first;
     private final List<CompoundSingleOperand2> items;
     
-
     public Expression2(final ISingleOperand2<? extends ISingleOperand3> first, final List<CompoundSingleOperand2> items) {
         super(extractTypes(first, items));
         this.first = first;
         this.items = items;
+    }
+
+    public Expression2(final ISingleOperand2<? extends ISingleOperand3> first) {
+        super(first.type(), first.hibType());
+        this.first = first;
+        this.items = emptyList();
     }
     
     @Override

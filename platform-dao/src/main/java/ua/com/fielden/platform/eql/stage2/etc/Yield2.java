@@ -4,7 +4,6 @@ import java.util.Objects;
 
 import ua.com.fielden.platform.eql.stage2.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.TransformationResult;
-import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.etc.Yield3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
