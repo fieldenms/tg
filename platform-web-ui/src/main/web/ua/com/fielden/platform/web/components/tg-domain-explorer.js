@@ -68,7 +68,7 @@ const template = html`
         <div class="editor-container">
             <slot name="filter-element"></slot>
         </div>
-        <tg-tree-table id="domainExplorerTree" class="domain-explorer-tree" model="[[treeModel]]" last-search-text="{{lastSearchText}}" on-current-matched-item-changed="_updateCurrentMatchedItemRelatedData" on-tg-load-subtree="_loadSubtree" on>
+        <tg-tree-table id="domainExplorerTree" class="domain-explorer-tree" model="[[treeModel]]" last-search-text="{{lastSearchText}}" on-current-matched-item-changed="_updateCurrentMatchedItemRelatedData" on-tg-load-subtree="_loadSubtree">
             <tg-hierarchy-column slot='hierarchy-column' property="key" type="String" width="420" min-width="80" grow-factor="0" column-title="Title" column-desc="Domain entity or property title." content-builder="[[_buildContent]]"></tg-hierarchy-column>
             <tg-property-column slot='regular-column' property="desc" type="String" width="370" min-width="80" grow-factor="0" column-title="Description" column-desc="Domain entity or property description."></tg-property-column>
             <tg-property-column slot='regular-column' property="propertyType.desc" type="String" width="220" min-width="80" grow-factor="0" column-title="Property Type" column-desc="Property type."></tg-property-column>
@@ -190,7 +190,6 @@ class TgDomainExplorer extends PolymerElement {
     }
 
     _updateCurrentMatchedItemRelatedData(e) {
-        const oldItemIdx = this.matchedItemOrder - 1;
         if (this.$.domainExplorerTree._matchedTreeItems) {
             this.matchedItemOrder = this.$.domainExplorerTree._matchedTreeItems.indexOf(this.$.domainExplorerTree.currentMatchedItem) + 1;
             this.numberOfMatchedItems = this.$.domainExplorerTree._matchedTreeItems.length;

@@ -93,12 +93,14 @@ const makeParentVisible = function (entity) {
  * 
  * @param {Object} entity - treeItem which top most ancestor should be find.
  */
-const topMostParent = function (entity) {
+const firstClosedParentFromTop = function (entity) {
+    const parents = [];
     let parent = entity;
     while (parent && parent.parent) {
+        parents.unshift(parent);
         parent = parent.parent;
     }
-    return parent;
+    return parents.find(item => !item.opened);
 }
 
 /**
@@ -213,6 +215,11 @@ export const TgTreeListBehavior = {
             value: ""
         },
 
+        _lastSearchText: {
+            type: String,
+            value: ""
+        },
+
         _matchedTreeItems: {
             type: Array,
             value: () => []
@@ -235,6 +242,7 @@ export const TgTreeListBehavior = {
      * @param {String} text - pattern to find among tree items of treeModel.
      */
     find: function (text) {
+        this._lastSearchText = text;
         this._matchedTreeItems = this._find(searchRegExp(text), !!text, this._treeModel);
         this.splice("_entities", 0, this._entities.length, ...composeChildren.bind(this)(this._treeModel, true));
         this.lastSearchText = text;
@@ -268,8 +276,8 @@ export const TgTreeListBehavior = {
                 nextMatchedItem = null;
             }
         }
-        if (nextMatchedItem) {
-            const topParent = topMostParent(nextMatchedItem);
+        if (nextMatchedItem && this._entities.indexOf(nextMatchedItem) < 0) {
+            const topParent = firstClosedParentFromTop(nextMatchedItem);
             const idx = this._entities.indexOf(topParent);
             if (idx >= 0) {
                 const numOfItemsToDelete = calculateNumberOfOpenedItems(topParent);
@@ -463,6 +471,9 @@ export const TgTreeListBehavior = {
             this._regenerateModel();
             if (this._lastFilterText) {
                 this.filter(this._lastFilterText);
+            }
+            if (this._lastSearchText) {
+                this.find(this._lastSearchText);
             }
         } else if (change.path && change.path.endsWith("children")) {
             this._childrenModelChanged(change);
