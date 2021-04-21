@@ -17,6 +17,9 @@ import { TgEditor, createEditorTemplate} from '/resources/editors/tg-editor.js'
 import { _momentTz, timeZoneFormats } from '/resources/reflection/tg-date-utils.js';
 import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js'
 
+const AFTER = 'AFTER';
+const BEFORE = 'BEFORE';
+
 const pickerStyle = html`
     <custom-style>
         <style>
@@ -332,7 +335,7 @@ export class TgDatetimePicker extends TgEditor {
                     //  (please be careful when adding '.' as date portion separator -- it is used to separate seconds from millis in 'ss.SSS')
                     const { secondSeparatorExists, numberOfDigits } = this._calculateNumberOfDigitsAfterLastSeparator(dateEditingValue, separator);
                     if (
-                        secondSeparatorExists === true && [1, 2, 4].includes(yearsOnEnding ? numberOfDigits : this._calculateNumberOfDigits(dateEditingValue, 'before', firstSeparatorIndex)) // exactly two separators; only 1, 2 and 4 digits for years should be valid
+                        secondSeparatorExists === true && [1, 2, 4].includes(yearsOnEnding ? numberOfDigits : this._calculateNumberOfDigits(dateEditingValue, BEFORE, firstSeparatorIndex)) // exactly two separators; only 1, 2 and 4 digits for years should be valid
                         || secondSeparatorExists === false && [1, 2].includes(numberOfDigits) // exactly one separator; only 1 and 2 digits for months / days should be valid (numberOfDigitsAfterFirstSeparator)
                     ) {
                         // remove all spaces and insert one after year digits (or [ /2017] or other current year in case of one separator);
@@ -463,9 +466,9 @@ export class TgDatetimePicker extends TgEditor {
         const secondSeparatorIndex = this._findSecondSeparatorIndex(str, separator);
         let numberOfDigits;
         if (secondSeparatorIndex === -1) {
-            numberOfDigits = this._calculateNumberOfDigits(str, 'after', str.indexOf(separator));
+            numberOfDigits = this._calculateNumberOfDigits(str, AFTER, str.indexOf(separator));
         } else {
-            numberOfDigits = this._calculateNumberOfDigits(str, 'after', secondSeparatorIndex);
+            numberOfDigits = this._calculateNumberOfDigits(str, AFTER, secondSeparatorIndex);
         }
         return {
             secondSeparatorExists: secondSeparatorIndex > -1,
@@ -480,9 +483,9 @@ export class TgDatetimePicker extends TgEditor {
         if (separatorIndex === -1) {
             throw `_calculateNumberOfDigits[${afterOrBefore} separator index]: index of separator should not be -1.`;
         }
-        const strWithSpaces = (afterOrBefore === 'after' ? str.substring(separatorIndex + 1) : str.substring(0, separatorIndex)).trim();
+        const strWithSpaces = (afterOrBefore === AFTER ? str.substring(separatorIndex + 1) : str.substring(0, separatorIndex)).trim();
         const split = strWithSpaces.split(' ');
-        const strWithoutSpaces = split[afterOrBefore === 'after' ? 0 : split.length - 1];
+        const strWithoutSpaces = split[afterOrBefore === AFTER ? 0 : split.length - 1];
         return strWithoutSpaces.length;
     }
 
