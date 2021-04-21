@@ -236,6 +236,7 @@ Polymer({
         action.shortDesc = "";
         this._actions[referenceHierarchyActions.EDIT] = (e) => {
             action.currentEntity = () => e.model.entity.entity.entity;
+            action.chosenProperty = null;
             action._run();
         };
         return (entity) => {
