@@ -16,7 +16,7 @@ public class UpperCaseOf2 extends SingleOperandFunction2<UpperCaseOf3> {
     @Override
     public TransformationResult<UpperCaseOf3> transform(final TransformationContext context) {
         final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);
-        return new TransformationResult<UpperCaseOf3>(new UpperCaseOf3(operandTransformationResult.item, type, hibType), operandTransformationResult.updatedContext);
+        return new TransformationResult<>(new UpperCaseOf3(operandTransformationResult.item, type, hibType), operandTransformationResult.updatedContext);
     }
     
     @Override

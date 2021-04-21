@@ -38,7 +38,7 @@ public class QuantifiedTest2 extends AbstractCondition2<QuantifiedTest3> {
         final TransformationResult<? extends ISingleOperand3> leftOperandTr = leftOperand.transform(context);
         final TransformationResult<SubQuery3> rightOperandTr = rightOperand.transform(leftOperandTr.updatedContext);
         
-        return new TransformationResult<QuantifiedTest3>(new QuantifiedTest3(leftOperandTr.item, operator, quantifier, rightOperandTr.item), rightOperandTr.updatedContext);
+        return new TransformationResult<>(new QuantifiedTest3(leftOperandTr.item, operator, quantifier, rightOperandTr.item), rightOperandTr.updatedContext);
     }
 
     @Override

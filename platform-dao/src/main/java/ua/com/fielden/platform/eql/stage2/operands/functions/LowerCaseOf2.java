@@ -16,7 +16,7 @@ public class LowerCaseOf2 extends SingleOperandFunction2<LowerCaseOf3> {
     @Override
     public TransformationResult<LowerCaseOf3> transform(final TransformationContext context) {
         final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);
-        return new TransformationResult<LowerCaseOf3>(new LowerCaseOf3(operandTransformationResult.item, type, hibType), operandTransformationResult.updatedContext);
+        return new TransformationResult<>(new LowerCaseOf3(operandTransformationResult.item, type, hibType), operandTransformationResult.updatedContext);
     }
     
     @Override

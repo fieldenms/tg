@@ -29,7 +29,7 @@ public class ResultQuery2 extends AbstractQuery2 implements ITransformableToS3<R
 
         final QueryBlocks3 entQueryBlocks = new QueryBlocks3(sourcesTr.item, conditionsTr.item, yieldsTr.item, groupsTr.item, orderingsTr.item);
 
-        return new TransformationResult<ResultQuery3>(new ResultQuery3(entQueryBlocks, resultType), orderingsTr.updatedContext);
+        return new TransformationResult<>(new ResultQuery3(entQueryBlocks, resultType), orderingsTr.updatedContext);
     }
 
     @Override

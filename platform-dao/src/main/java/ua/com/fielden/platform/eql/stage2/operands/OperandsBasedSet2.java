@@ -28,7 +28,7 @@ public class OperandsBasedSet2 implements ISetOperand2<OperandsBasedSet3> {
             currentContext = operandTr.updatedContext;
         }
 
-        return new TransformationResult<OperandsBasedSet3>(new OperandsBasedSet3(transformedOperands), currentContext);
+        return new TransformationResult<>(new OperandsBasedSet3(transformedOperands), currentContext);
     }
 
     @Override

@@ -50,7 +50,7 @@ public class Conditions2 extends AbstractCondition2<Conditions3> {
 //                .filter(andGroup -> !andGroup.isEmpty())
 //                .collect(toList());
         
-        return new TransformationResult<Conditions3>(new Conditions3(negated, result), currentContext);
+        return new TransformationResult<>(new Conditions3(negated, result), currentContext);
     }
 
     @Override

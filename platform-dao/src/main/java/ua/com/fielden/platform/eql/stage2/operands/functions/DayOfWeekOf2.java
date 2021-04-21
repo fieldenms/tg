@@ -17,7 +17,7 @@ public class DayOfWeekOf2 extends SingleOperandFunction2<DayOfWeekOf3> {
     @Override
     public TransformationResult<DayOfWeekOf3> transform(final TransformationContext context) {
         final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);
-        return new TransformationResult<DayOfWeekOf3>(new DayOfWeekOf3(operandTransformationResult.item, type, hibType), operandTransformationResult.updatedContext);
+        return new TransformationResult<>(new DayOfWeekOf3(operandTransformationResult.item, type, hibType), operandTransformationResult.updatedContext);
     }
     
     @Override

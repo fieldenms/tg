@@ -60,7 +60,7 @@ public class CaseWhen2 extends AbstractFunction2<CaseWhen3> {
         }
         final TransformationResult<? extends ISingleOperand3> elseOperandTr = elseOperand == null ? null : elseOperand.transform(currentContext);
         
-        return new TransformationResult<CaseWhen3>(new CaseWhen3(transformedWhenThenPairs, elseOperandTr == null ? null : elseOperandTr.item, typeCast, type, hibType), elseOperandTr == null ? currentContext : elseOperandTr.updatedContext);
+        return new TransformationResult<>(new CaseWhen3(transformedWhenThenPairs, elseOperandTr == null ? null : elseOperandTr.item, typeCast, type, hibType), elseOperandTr == null ? currentContext : elseOperandTr.updatedContext);
     }
 
     @Override

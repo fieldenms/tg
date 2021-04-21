@@ -14,7 +14,7 @@ public class DayOf2 extends DatePartFunction2<DayOf3> {
     @Override
     public TransformationResult<DayOf3> transform(final TransformationContext context) {
         final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);
-        return new TransformationResult<DayOf3>(new DayOf3(operandTransformationResult.item, type, hibType), operandTransformationResult.updatedContext);
+        return new TransformationResult<>(new DayOf3(operandTransformationResult.item, type, hibType), operandTransformationResult.updatedContext);
     }
     
     @Override

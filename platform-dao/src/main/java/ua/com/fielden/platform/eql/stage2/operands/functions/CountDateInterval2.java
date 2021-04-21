@@ -24,7 +24,7 @@ public class CountDateInterval2 extends TwoOperandsFunction2<CountDateInterval3>
     public TransformationResult<CountDateInterval3> transform(final TransformationContext context) {
         final TransformationResult<? extends ISingleOperand3> firstOperandTr = operand1.transform(context);
         final TransformationResult<? extends ISingleOperand3> secondOperandTr = operand2.transform(firstOperandTr.updatedContext);
-        return new TransformationResult<CountDateInterval3>(new CountDateInterval3(intervalUnit, firstOperandTr.item, secondOperandTr.item, type, hibType), secondOperandTr.updatedContext);
+        return new TransformationResult<>(new CountDateInterval3(intervalUnit, firstOperandTr.item, secondOperandTr.item, type, hibType), secondOperandTr.updatedContext);
     }
     
     @Override

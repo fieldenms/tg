@@ -32,7 +32,7 @@ public class ComparisonTest2 extends AbstractCondition2<ComparisonTest3> {
     public TransformationResult<ComparisonTest3> transform(final TransformationContext context) {
         final TransformationResult<? extends ISingleOperand3> leftOperandTr = leftOperand.transform(context);
         final TransformationResult<? extends ISingleOperand3> rightOperandTr = rightOperand.transform(leftOperandTr.updatedContext);
-        return new TransformationResult<ComparisonTest3>(new ComparisonTest3(leftOperandTr.item, operator, rightOperandTr.item), rightOperandTr.updatedContext);
+        return new TransformationResult<>(new ComparisonTest3(leftOperandTr.item, operator, rightOperandTr.item), rightOperandTr.updatedContext);
     }
 
     @Override

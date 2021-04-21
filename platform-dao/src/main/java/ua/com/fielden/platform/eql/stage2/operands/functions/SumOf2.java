@@ -17,7 +17,7 @@ public class SumOf2 extends SingleOperandFunction2<SumOf3> {
     @Override
     public TransformationResult<SumOf3> transform(final TransformationContext context) {
         final TransformationResult<? extends ISingleOperand3> operandTr = operand.transform(context);
-        return new TransformationResult<SumOf3>(new SumOf3(operandTr.item, distinct, type, hibType), operandTr.updatedContext);
+        return new TransformationResult<>(new SumOf3(operandTr.item, distinct, type, hibType), operandTr.updatedContext);
     }
     
     @Override

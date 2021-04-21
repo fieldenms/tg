@@ -32,7 +32,7 @@ public class LikeTest2 extends AbstractCondition2<LikeTest3> {
     public TransformationResult<LikeTest3> transform(final TransformationContext context) {
         final TransformationResult<? extends ISingleOperand3> leftOperandTr = leftOperand.transform(context);
         final TransformationResult<? extends ISingleOperand3> rightOperandTr = rightOperand.transform(leftOperandTr.updatedContext);
-        return new TransformationResult<LikeTest3>(new LikeTest3(leftOperandTr.item, rightOperandTr.item, options), rightOperandTr.updatedContext);
+        return new TransformationResult<>(new LikeTest3(leftOperandTr.item, rightOperandTr.item, options), rightOperandTr.updatedContext);
     }
 
     @Override

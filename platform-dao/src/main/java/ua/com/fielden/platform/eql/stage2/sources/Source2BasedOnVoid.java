@@ -16,7 +16,7 @@ public class Source2BasedOnVoid implements ISource2<Source3BasedOnVoid> {
 
     @Override
     public TransformationResult<Source3BasedOnVoid> transform(final TransformationContext context) {
-        return new TransformationResult<Source3BasedOnVoid>(new Source3BasedOnVoid(), context);
+        return new TransformationResult<>(new Source3BasedOnVoid(), context);
     }
 
     @Override

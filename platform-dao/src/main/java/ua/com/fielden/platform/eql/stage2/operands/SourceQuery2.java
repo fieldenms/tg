@@ -29,7 +29,7 @@ public class SourceQuery2 extends AbstractQuery2 implements ITransformableToS3<S
 
         final QueryBlocks3 entQueryBlocks = new QueryBlocks3(sourcesTr.item, conditionsTr.item, yieldsTr.item, groupsTr.item, orderingsTr.item);
 
-        return new TransformationResult<SourceQuery3>(new SourceQuery3(entQueryBlocks, resultType), orderingsTr.updatedContext);
+        return new TransformationResult<>(new SourceQuery3(entQueryBlocks, resultType), orderingsTr.updatedContext);
     }
 
     @Override

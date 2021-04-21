@@ -15,7 +15,7 @@ public class SecondOf2 extends DatePartFunction2<SecondOf3> {
     @Override
     public TransformationResult<SecondOf3> transform(final TransformationContext context) {
         final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);
-        return new TransformationResult<SecondOf3>(new SecondOf3(operandTransformationResult.item, type, hibType), operandTransformationResult.updatedContext);
+        return new TransformationResult<>(new SecondOf3(operandTransformationResult.item, type, hibType), operandTransformationResult.updatedContext);
     }
     
     @Override

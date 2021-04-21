@@ -3,7 +3,6 @@ package ua.com.fielden.platform.eql.stage3.operands;
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.eql.exceptions.EqlStage3ProcessingException;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 
 public class Prop3 extends  AbstractSingleOperand3 {
@@ -18,14 +17,6 @@ public class Prop3 extends  AbstractSingleOperand3 {
 
     @Override
     public String sql(final DbVersion dbVersion) {
-        if (source == null) {
-            throw new EqlStage3ProcessingException(String.format("There is no query source (Stage3) associated with this property [name = %s, javaType = %s, hibType = %s].", name, type.getName(), hibType.getClass().getName())); 
-        }
-        
-        if (source.column(name) == null) {
-            throw new EqlStage3ProcessingException(String.format("There is no column in the query source (Stage3) associated with this property [name = %s, javaType = %s, hibType = %s].", name, type.getName(), hibType.getClass().getName()));
-        }
-        
         return source.sqlAlias() + "." + source.column(name);
     }
     

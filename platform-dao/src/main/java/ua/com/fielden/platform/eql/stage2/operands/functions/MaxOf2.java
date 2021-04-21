@@ -15,7 +15,7 @@ public class MaxOf2 extends SingleOperandFunction2<MaxOf3> {
     @Override
     public TransformationResult<MaxOf3> transform(final TransformationContext context) {
         final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);
-        return new TransformationResult<MaxOf3>(new MaxOf3(operandTransformationResult.item, type, hibType), operandTransformationResult.updatedContext);
+        return new TransformationResult<>(new MaxOf3(operandTransformationResult.item, type, hibType), operandTransformationResult.updatedContext);
     }
     
     @Override

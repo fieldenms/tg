@@ -42,7 +42,7 @@ public class Expression2 extends AbstractSingleOperand2 implements ISingleOperan
             transformed.add(new CompoundSingleOperand3(itemTr.item, item.operator));
             currentContext = itemTr.updatedContext;
         }
-        return new TransformationResult<Expression3>(new Expression3(firstTr.item, transformed, type, hibType), currentContext);
+        return new TransformationResult<>(new Expression3(firstTr.item, transformed, type, hibType), currentContext);
     }
 
     @Override

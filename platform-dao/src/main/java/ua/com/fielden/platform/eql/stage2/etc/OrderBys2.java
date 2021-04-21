@@ -29,7 +29,7 @@ public class OrderBys2 {
             transformed.add(orderByTr.item);
             currentContext = orderByTr.updatedContext;
         }
-        return new TransformationResult<OrderBys3>(new OrderBys3(transformed), currentContext);
+        return new TransformationResult<>(new OrderBys3(transformed), currentContext);
     }
 
     public Set<Prop2> collectProps() {

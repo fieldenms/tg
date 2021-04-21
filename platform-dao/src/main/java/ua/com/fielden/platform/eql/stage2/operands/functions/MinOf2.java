@@ -15,7 +15,7 @@ public class MinOf2 extends SingleOperandFunction2<MinOf3> {
     @Override
     public TransformationResult<MinOf3> transform(final TransformationContext context) {
         final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);
-        return new TransformationResult<MinOf3>(new MinOf3(operandTransformationResult.item, type, hibType), operandTransformationResult.updatedContext);
+        return new TransformationResult<>(new MinOf3(operandTransformationResult.item, type, hibType), operandTransformationResult.updatedContext);
     }
     
     @Override

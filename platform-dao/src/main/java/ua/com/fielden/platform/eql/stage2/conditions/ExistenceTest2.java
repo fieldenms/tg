@@ -27,7 +27,7 @@ public class ExistenceTest2 extends AbstractCondition2<ExistenceTest3> {
     @Override
     public TransformationResult<ExistenceTest3> transform(final TransformationContext context) {
         final TransformationResult<TypelessSubQuery3> subQueryTr = subQuery.transform(context);
-        return new TransformationResult<ExistenceTest3>(new ExistenceTest3(negated, subQueryTr.item), subQueryTr.updatedContext);
+        return new TransformationResult<>(new ExistenceTest3(negated, subQueryTr.item), subQueryTr.updatedContext);
     }
     
     @Override

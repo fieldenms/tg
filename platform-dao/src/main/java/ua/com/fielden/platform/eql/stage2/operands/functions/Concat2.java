@@ -33,7 +33,7 @@ public class Concat2 extends AbstractFunction2<Concat3> {
             transformed.add(operandTr.item);
             currentContext = operandTr.updatedContext;
         }
-        return new TransformationResult<Concat3>(new Concat3(transformed, type, hibType), currentContext);
+        return new TransformationResult<>(new Concat3(transformed, type, hibType), currentContext);
     }
 
     @Override

@@ -21,7 +21,7 @@ public class AddDateInterval2 extends TwoOperandsFunction2<AddDateInterval3> {
     public TransformationResult<AddDateInterval3> transform(final TransformationContext context) {
         final TransformationResult<? extends ISingleOperand3> firstOperandTr = operand1.transform(context);
         final TransformationResult<? extends ISingleOperand3> secondOperandTr = operand2.transform(firstOperandTr.updatedContext);
-        return new TransformationResult<AddDateInterval3>(new AddDateInterval3(firstOperandTr.item, intervalUnit, secondOperandTr.item, type, hibType), secondOperandTr.updatedContext);
+        return new TransformationResult<>(new AddDateInterval3(firstOperandTr.item, intervalUnit, secondOperandTr.item, type, hibType), secondOperandTr.updatedContext);
     }
     
     @Override

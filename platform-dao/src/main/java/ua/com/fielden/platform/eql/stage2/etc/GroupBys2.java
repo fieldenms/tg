@@ -31,7 +31,7 @@ public class GroupBys2 {
             transformed.add(groupByTr.item);
             currentContext = groupByTr.updatedContext;
         }
-        return new TransformationResult<GroupBys3>(new GroupBys3(transformed), currentContext);
+        return new TransformationResult<>(new GroupBys3(transformed), currentContext);
     }
 
     public Set<Prop2> collectProps() {

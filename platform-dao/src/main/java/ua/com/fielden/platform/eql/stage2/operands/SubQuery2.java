@@ -32,7 +32,7 @@ public class SubQuery2 extends AbstractQuery2 implements ISingleOperand2<SubQuer
 
         final QueryBlocks3 entQueryBlocks = new QueryBlocks3(sourcesTr.item, conditionsTr.item, yieldsTr.item, groupsTr.item, orderingsTr.item);
 
-        return new TransformationResult<SubQuery3>(new SubQuery3(entQueryBlocks, resultType, hibType), orderingsTr.updatedContext);
+        return new TransformationResult<>(new SubQuery3(entQueryBlocks, resultType, hibType), orderingsTr.updatedContext);
     }
 
     @Override

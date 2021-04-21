@@ -52,9 +52,9 @@ public class Value2 implements ISingleOperand2<Value3> {
     public TransformationResult<Value3> transform(final TransformationContext context) {
         if (needsParameter()) {
             final Value3 transformed = new Value3(value, context.paramId, hibType());
-            return new TransformationResult<Value3>(transformed, context.cloneWithParamValue(transformed.getParamName(), transformed.value));
+            return new TransformationResult<>(transformed, context.cloneWithParamValue(transformed.getParamName(), transformed.value));
         } else {
-            return new TransformationResult<Value3>(new Value3(value, 0, hibType()), context);
+            return new TransformationResult<>(new Value3(value, 0, hibType()), context);
         }
     }
 

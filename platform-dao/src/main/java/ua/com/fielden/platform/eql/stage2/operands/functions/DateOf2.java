@@ -19,7 +19,7 @@ public class DateOf2 extends SingleOperandFunction2<DateOf3> {
     @Override
     public TransformationResult<DateOf3> transform(final TransformationContext context) {
         final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);
-        return new TransformationResult<DateOf3>(new DateOf3(operandTransformationResult.item, type, hibType), operandTransformationResult.updatedContext);
+        return new TransformationResult<>(new DateOf3(operandTransformationResult.item, type, hibType), operandTransformationResult.updatedContext);
     }
     
     @Override

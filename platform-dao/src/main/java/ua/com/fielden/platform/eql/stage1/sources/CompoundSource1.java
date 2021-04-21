@@ -25,7 +25,7 @@ public class CompoundSource1 {
         final ISource2<?> source2 = source.transform(context);
         final TransformationContext enhancedContext = context.cloneWithAdded(source2);
         final Conditions2 joinConditions2 = joinConditions.transform(enhancedContext);
-        return new TransformationResult<CompoundSource2>(new CompoundSource2(source2, joinType, joinConditions2), enhancedContext);
+        return new TransformationResult<>(new CompoundSource2(source2, joinType, joinConditions2), enhancedContext);
     }
 
     @Override

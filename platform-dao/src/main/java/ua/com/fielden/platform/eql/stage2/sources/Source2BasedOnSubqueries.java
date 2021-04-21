@@ -69,7 +69,7 @@ public class Source2BasedOnSubqueries extends AbstractSource2 implements ISource
         }
            
         final Source3BasedOnSubqueries transformedSource = new Source3BasedOnSubqueries(transformedQueries, id, sqlId);
-        return new TransformationResult<Source3BasedOnSubqueries>(transformedSource, currentContext);
+        return new TransformationResult<>(transformedSource, currentContext);
     }
 
     @Override

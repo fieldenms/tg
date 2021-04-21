@@ -29,9 +29,9 @@ public class OrderBy2 {
     public TransformationResult<OrderBy3> transform(final TransformationContext context, final Yields3 yields) {
         if (operand != null) {
             final TransformationResult<? extends ISingleOperand3> operandTr = operand.transform(context);
-            return new TransformationResult<OrderBy3>(new OrderBy3(operandTr.item, isDesc), operandTr.updatedContext);
+            return new TransformationResult<>(new OrderBy3(operandTr.item, isDesc), operandTr.updatedContext);
         } else {
-            return new TransformationResult<OrderBy3>(new OrderBy3(yields.getYieldsMap().get(yieldName), isDesc), context);
+            return new TransformationResult<>(new OrderBy3(yields.getYieldsMap().get(yieldName), isDesc), context);
         }
     }
     

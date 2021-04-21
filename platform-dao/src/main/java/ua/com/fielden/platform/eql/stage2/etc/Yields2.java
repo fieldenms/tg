@@ -52,7 +52,7 @@ public class Yields2 {
             currentContext = yieldTr.updatedContext;
             yieldsList.add(yieldTr.item);
         }
-        return new TransformationResult<Yields3>(new Yields3(yieldsList), currentContext);
+        return new TransformationResult<>(new Yields3(yieldsList), currentContext);
     }
     
     public Set<Prop2> collectProps() {
