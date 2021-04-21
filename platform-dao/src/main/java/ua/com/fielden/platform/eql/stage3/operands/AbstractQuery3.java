@@ -52,7 +52,7 @@ public abstract class AbstractQuery3 {
         result = prime * result + sources.hashCode();
         result = prime * result + groups.hashCode();
         result = prime * result + orderings.hashCode();
-        result = prime * result + resultType.hashCode();
+        result = prime * result + ((resultType == null) ? 0 : resultType.hashCode());
         return result;
     }
 

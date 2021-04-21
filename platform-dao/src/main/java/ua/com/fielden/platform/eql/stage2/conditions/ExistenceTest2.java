@@ -6,15 +6,15 @@ import java.util.Set;
 import ua.com.fielden.platform.eql.stage2.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
-import ua.com.fielden.platform.eql.stage2.operands.SubQuery2;
+import ua.com.fielden.platform.eql.stage2.operands.TypelessSubQuery2;
 import ua.com.fielden.platform.eql.stage3.conditions.ExistenceTest3;
-import ua.com.fielden.platform.eql.stage3.operands.SubQuery3;
+import ua.com.fielden.platform.eql.stage3.operands.TypelessSubQuery3;
 
 public class ExistenceTest2 extends AbstractCondition2<ExistenceTest3> {
     private final boolean negated;
-    private final SubQuery2 subQuery;
+    private final TypelessSubQuery2 subQuery;
 
-    public ExistenceTest2(final boolean negated, final SubQuery2 subQuery) {
+    public ExistenceTest2(final boolean negated, final TypelessSubQuery2 subQuery) {
         this.negated = negated;
         this.subQuery = subQuery;
     }
@@ -26,7 +26,7 @@ public class ExistenceTest2 extends AbstractCondition2<ExistenceTest3> {
 
     @Override
     public TransformationResult<ExistenceTest3> transform(final TransformationContext context) {
-        final TransformationResult<SubQuery3> subQueryTr = subQuery.transform(context);
+        final TransformationResult<TypelessSubQuery3> subQueryTr = subQuery.transform(context);
         return new TransformationResult<ExistenceTest3>(new ExistenceTest3(negated, subQueryTr.item), subQueryTr.updatedContext);
     }
     

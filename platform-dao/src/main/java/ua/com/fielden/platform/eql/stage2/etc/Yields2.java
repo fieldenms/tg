@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.stage2.etc;
 
 import static java.util.Collections.unmodifiableCollection;
 import static java.util.Collections.unmodifiableSortedMap;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -14,12 +15,15 @@ import java.util.TreeMap;
 import ua.com.fielden.platform.eql.stage2.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
+import ua.com.fielden.platform.eql.stage2.operands.Value2;
 import ua.com.fielden.platform.eql.stage3.etc.Yield3;
 import ua.com.fielden.platform.eql.stage3.etc.Yields3;
 
 public class Yields2 {
     private final SortedMap<String, Yield2> yieldsMap = new TreeMap<String, Yield2>();
     public final boolean allGenerated;
+    
+    public static Yields2 nullYields = new Yields2(listOf(new Yield2(new Value2(null), "", false))); 
 
     public Yields2(final List<Yield2> yields, final boolean allGenerated) {
         this.allGenerated = allGenerated;

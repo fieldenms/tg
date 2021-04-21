@@ -7,6 +7,7 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperat
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.NE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.IJ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.LJ;
+import static ua.com.fielden.platform.eql.stage2.etc.Yields2.nullYields;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 import java.util.ArrayList;
@@ -37,11 +38,12 @@ import ua.com.fielden.platform.eql.stage2.etc.OrderBy2;
 import ua.com.fielden.platform.eql.stage2.etc.OrderBys2;
 import ua.com.fielden.platform.eql.stage2.etc.Yield2;
 import ua.com.fielden.platform.eql.stage2.etc.Yields2;
-import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.ResultQuery2;
 import ua.com.fielden.platform.eql.stage2.operands.SourceQuery2;
 import ua.com.fielden.platform.eql.stage2.operands.SubQuery2;
+import ua.com.fielden.platform.eql.stage2.operands.TypelessSubQuery2;
 import ua.com.fielden.platform.eql.stage2.operands.functions.CountAll2;
 import ua.com.fielden.platform.eql.stage2.sources.CompoundSource2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
@@ -58,7 +60,6 @@ public class EqlStage2TestCase extends EqlTestCase {
     protected static final Conditions2 emptyConditions2 = new Conditions2(false, emptyList());
     protected static final GroupBys2 emptyGroupBys2 = new GroupBys2(emptyList());
     protected static final OrderBys2 emptyOrderBys2 = new OrderBys2(emptyList());
-    protected static final Yields2 emptyYields2 = new Yields2(emptyList(), true);
 
     protected static AbstractPropInfo<?> pi(final Class<?> type, final String propName) {
         return DOMAIN_METADATA.eqlDomainMetadata.getEntityInfo((Class<? extends AbstractEntity<?>>) type).getProps().get(propName);
@@ -113,10 +114,6 @@ public class EqlStage2TestCase extends EqlTestCase {
     protected static ResultQuery2 qry(final AggregatedResultQueryModel qry) {
         final TransformationContext context = new TransformationContext(DOMAIN_METADATA.eqlDomainMetadata);
         return qb().generateAsResultQuery(qry, null, null).transform(context);
-    }
-
-    protected static QueryBlocks2 qb2(final Sources2 sources, final Conditions2 conditions) {
-        return new QueryBlocks2(sources, conditions, emptyYields2, emptyGroupBys2, emptyOrderBys2);
     }
 
     protected static QueryBlocks2 qb2(final Sources2 sources, final Conditions2 conditions, final Yields2 yields) {
@@ -224,12 +221,12 @@ public class EqlStage2TestCase extends EqlTestCase {
         return new Conditions2(false, asList(conditions));
     }
 
-    protected static ExistenceTest2 exists(final Sources2 sources, final Conditions2 conditions, final Yields2 yields, final Class<? extends AbstractEntity<?>> resultType, final Object hibType) {
-        return new ExistenceTest2(false, subqry(sources, conditions, yields, resultType, hibType));
+    protected static ExistenceTest2 exists(final Sources2 sources, final Conditions2 conditions) {
+        return new ExistenceTest2(false, typelessSubqry(sources, conditions));
     }
 
-    protected static ExistenceTest2 notExists(final Sources2 sources, final Conditions2 conditions, final Yields2 yields, final Class<? extends AbstractEntity<?>> resultType, final Object hibType) {
-        return new ExistenceTest2(true, subqry(sources, conditions, yields, resultType, hibType));
+    protected static ExistenceTest2 notExists(final Sources2 sources, final Conditions2 conditions) {
+        return new ExistenceTest2(true, typelessSubqry(sources, conditions));
     }
 
     protected static NullTest2 isNull(final ISingleOperand2<? extends ISingleOperand3> operand) {
@@ -298,6 +295,10 @@ public class EqlStage2TestCase extends EqlTestCase {
 
     protected static SubQuery2 subqry(final Sources2 sources, final Conditions2 conditions, final Yields2 yields, final Class<? extends AbstractEntity<?>> resultType, final Object hibType) {
         return new SubQuery2(qb2(sources, conditions, yields), resultType, hibType);
+    }
+
+    protected static TypelessSubQuery2 typelessSubqry(final Sources2 sources, final Conditions2 conditions) {
+        return new TypelessSubQuery2(new QueryBlocks2(sources, conditions, nullYields, emptyGroupBys2, emptyOrderBys2));
     }
 
     protected static SubQuery2 subqry(final Sources2 sources, final Yields2 yields, final Class<?> resultType, final Object hibType) {

@@ -4,13 +4,14 @@ import java.util.Objects;
 
 import ua.com.fielden.platform.eql.stage1.TransformationContext;
 import ua.com.fielden.platform.eql.stage1.operands.SubQuery1;
+import ua.com.fielden.platform.eql.stage1.operands.TypelessSubQuery1;
 import ua.com.fielden.platform.eql.stage2.conditions.ExistenceTest2;
 
 public class ExistenceTest1 implements ICondition1<ExistenceTest2> {
     private final boolean negated;
-    private final SubQuery1 subQuery;
+    private final TypelessSubQuery1 subQuery;
 
-    public ExistenceTest1(final boolean negated, final SubQuery1 subQuery) {
+    public ExistenceTest1(final boolean negated, final TypelessSubQuery1 subQuery) {
         this.negated = negated;
         this.subQuery = subQuery;
     }

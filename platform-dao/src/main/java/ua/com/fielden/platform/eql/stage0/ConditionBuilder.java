@@ -365,7 +365,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
     }
 
     private ExistenceTest1 getPlainExistenceTest() {
-        return new ExistenceTest1((Boolean) firstValue(), getQueryBuilder().generateAsSubquery((QueryModel<?>) secondValue()));
+        return new ExistenceTest1((Boolean) firstValue(), getQueryBuilder().generateAsTypelessSubquery((QueryModel<?>) secondValue()));
     }
 
     private SetTest1 getPlainSetTest() {
@@ -389,7 +389,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
     private Conditions1 getMultipleExistenceTest() {
         final List<ICondition1<? extends ICondition2<?>>> conditions = new ArrayList<>();
         for (final QueryModel<?> qm : (List<QueryModel<?>>) secondValue()) {
-            conditions.add(new ExistenceTest1((Boolean) firstValue(), getQueryBuilder().generateAsSubquery(qm)));
+            conditions.add(new ExistenceTest1((Boolean) firstValue(), getQueryBuilder().generateAsTypelessSubquery(qm)));
         }
         final LogicalOperator logicalOperator = ANY_OF_EQUERY_TOKENS == secondCat() ? OR : AND;
         return getGroup(conditions, logicalOperator);

@@ -32,6 +32,7 @@ import ua.com.fielden.platform.eql.stage1.etc.OrderBys1;
 import ua.com.fielden.platform.eql.stage1.operands.ResultQuery1;
 import ua.com.fielden.platform.eql.stage1.operands.SourceQuery1;
 import ua.com.fielden.platform.eql.stage1.operands.SubQuery1;
+import ua.com.fielden.platform.eql.stage1.operands.TypelessSubQuery1;
 import ua.com.fielden.platform.eql.stage1.sources.ISource1;
 import ua.com.fielden.platform.eql.stage1.sources.Sources1;
 import ua.com.fielden.platform.utils.IDates;
@@ -87,6 +88,10 @@ public class EntQueryGenerator {
 
     public SubQuery1 generateAsSubquery(final QueryModel<?> qryModel) {
         return new SubQuery1(parseTokensIntoComponents(qryModel, null), qryModel.getResultType());
+    }
+
+    public TypelessSubQuery1 generateAsTypelessSubquery(final QueryModel<?> qryModel) {
+        return new TypelessSubQuery1(parseTokensIntoComponents(qryModel, null));
     }
 
     private QueryBlocks1 parseTokensIntoComponents(final QueryModel<?> qryModel, final OrderingModel orderModel) {
