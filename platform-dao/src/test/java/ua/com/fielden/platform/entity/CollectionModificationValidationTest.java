@@ -3,11 +3,13 @@ package ua.com.fielden.platform.entity;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.function.Function;
 
 import org.apache.log4j.Logger;
 import org.junit.Test;
@@ -15,6 +17,7 @@ import org.junit.Test;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociation;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.tokens.AlwaysAccessibleToken;
 import ua.com.fielden.platform.security.tokens.CompoundModuleToken;
 import ua.com.fielden.platform.security.tokens.attachment.AttachmentDownload_CanExecute_Token;
@@ -26,6 +29,20 @@ import ua.com.fielden.platform.security.tokens.compound_master_menu.TgCompoundEn
 import ua.com.fielden.platform.security.tokens.compound_master_menu.TgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem_CanAccess_Token;
 import ua.com.fielden.platform.security.tokens.compound_master_menu.TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem_CanAccess_Token;
 import ua.com.fielden.platform.security.tokens.open_compound_master.OpenTgCompoundEntityMasterAction_CanOpen_Token;
+import ua.com.fielden.platform.security.tokens.open_simple_master.TgCloseLeaveExampleDetailMaster_CanOpen_Token;
+import ua.com.fielden.platform.security.tokens.open_simple_master.TgCloseLeaveExampleDetailUnpersistedMaster_CanOpen_Token;
+import ua.com.fielden.platform.security.tokens.open_simple_master.TgCloseLeaveExampleMaster_CanOpen_Token;
+import ua.com.fielden.platform.security.tokens.open_simple_master.TgCollectionalSerialisationParentMaster_CanOpen_Token;
+import ua.com.fielden.platform.security.tokens.open_simple_master.TgCompoundEntityDetailMaster_CanOpen_Token;
+import ua.com.fielden.platform.security.tokens.open_simple_master.TgDeletionTestEntityMaster_CanOpen_Token;
+import ua.com.fielden.platform.security.tokens.open_simple_master.TgEntityForColourMasterMaster_CanOpen_Token;
+import ua.com.fielden.platform.security.tokens.open_simple_master.TgEntityWithPropertyDependencyMaster_CanOpen_Token;
+import ua.com.fielden.platform.security.tokens.open_simple_master.TgEntityWithTimeZoneDatesMaster_CanOpen_Token;
+import ua.com.fielden.platform.security.tokens.open_simple_master.TgGeneratedEntityForTrippleDecAnalysisMaster_CanOpen_Token;
+import ua.com.fielden.platform.security.tokens.open_simple_master.TgGeneratedEntityMaster_CanOpen_Token;
+import ua.com.fielden.platform.security.tokens.open_simple_master.TgMessageMaster_CanOpen_Token;
+import ua.com.fielden.platform.security.tokens.open_simple_master.TgPersistentCompositeEntityMaster_CanOpen_Token;
+import ua.com.fielden.platform.security.tokens.open_simple_master.TgPersistentEntityWithPropertiesMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.persistent.KeyNumber_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.persistent.KeyNumber_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.persistent.TgCompoundEntityChild_CanDelete_Token;
@@ -332,6 +349,8 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
         final SecurityTokenInfo tgCompoundEntityMaster_OpenMain_MenuItem_CanAccess = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(TgCompoundEntityMaster_OpenMain_MenuItem_CanAccess_Token.class.getName());
         final SecurityTokenInfo tgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem_CanAccess = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(TgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem_CanAccess_Token.class.getName());
         final SecurityTokenInfo tgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem_CanAccess = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem_CanAccess_Token.class.getName());
+        
+        final Function<Class<? extends ISecurityToken>, SecurityTokenInfo> createTokenInfo = (token) -> newPlainEntity(SecurityTokenInfo.class, null).setKey(token.getName());
 
         final UserRoleTokensUpdater updater = createUpdater(userRole);
         final HashSet<SecurityTokenInfo> expectedTokens = setOf(
@@ -345,6 +364,21 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
             userRolesUpdater_CanExecute, userRoleTokensUpdater_CanExecute,
             attachment_CanSave, attachment_CanRead, attachment_CanReadModel, attachment_CanDelete, attachmentDownload_CanExecute,
             canRead, canReadModel,
+            
+            createTokenInfo.apply(TgCloseLeaveExampleDetailMaster_CanOpen_Token.class),
+            createTokenInfo.apply(TgCloseLeaveExampleDetailUnpersistedMaster_CanOpen_Token.class),
+            createTokenInfo.apply(TgCloseLeaveExampleMaster_CanOpen_Token.class),
+            createTokenInfo.apply(TgCollectionalSerialisationParentMaster_CanOpen_Token.class),
+            createTokenInfo.apply(TgCompoundEntityDetailMaster_CanOpen_Token.class),
+            createTokenInfo.apply(TgDeletionTestEntityMaster_CanOpen_Token.class),
+            createTokenInfo.apply(TgEntityForColourMasterMaster_CanOpen_Token.class),
+            createTokenInfo.apply(TgEntityWithPropertyDependencyMaster_CanOpen_Token.class),
+            createTokenInfo.apply(TgEntityWithTimeZoneDatesMaster_CanOpen_Token.class),
+            createTokenInfo.apply(TgGeneratedEntityForTrippleDecAnalysisMaster_CanOpen_Token.class),
+            createTokenInfo.apply(TgGeneratedEntityMaster_CanOpen_Token.class),
+            createTokenInfo.apply(TgMessageMaster_CanOpen_Token.class),
+            createTokenInfo.apply(TgPersistentCompositeEntityMaster_CanOpen_Token.class),
+            createTokenInfo.apply(TgPersistentEntityWithPropertiesMaster_CanOpen_Token.class),
             
             compoundModule, tgComoundEntity_CanDelete, tgCompoundEntity_CanSave, tgCompoundEntityChild_CanDelete, tgCompoundEntityChild_CanSave, tgCompoundEntityDetail_CanSave, openTgCompoundEntityMasterAction_CanOpen, 
             tgCompoundEntityMaster_OpenMain_MenuItem_CanAccess, tgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem_CanAccess, tgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem_CanAccess
