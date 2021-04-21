@@ -55,7 +55,7 @@ public class TokenUtils {
     }
 
     /**
-     * Finds specific reading token for concrete entity type, if exists.
+     * Finds token in {@link ISecurityTokenProvider} for the specified {@code template}, if exists.
      * 
      * @param templateParam -- string param to inject to {@link Template#forClassName()} to form token simple class name
      * @param template -- template (kind) of the token
