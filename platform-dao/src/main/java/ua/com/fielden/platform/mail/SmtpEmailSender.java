@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.mail;
 
-import static java.lang.String.format;
 import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
@@ -44,8 +43,6 @@ import ua.com.fielden.platform.types.tuples.T2;
  *
  */
 public class SmtpEmailSender {
-    
-    private static final Logger LOGGER = Logger.getLogger(SmtpEmailSender.class);
 
     private static enum EmailType {
         PLAIN {
@@ -131,7 +128,6 @@ public class SmtpEmailSender {
         final Properties props = new Properties();
         final String username = System.getProperty("email.smtp.username", System.getenv("email.smtp.username"));
         final String password = System.getProperty("email.smtp.password", System.getenv("email.smtp.password"));
-        LOGGER.info(format("Session: %s, %s", username, password));
         final Authenticator auth;
         if (!StringUtils.isEmpty(username) &&
             !StringUtils.isEmpty(password)) {
@@ -147,7 +143,6 @@ public class SmtpEmailSender {
             auth = null;
         }
         props.put("mail.smtp.host", host);
-        LOGGER.info(props);
         return Session.getDefaultInstance(props, auth);
     }
 
