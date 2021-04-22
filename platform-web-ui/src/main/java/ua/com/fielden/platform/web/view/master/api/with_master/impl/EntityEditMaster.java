@@ -10,7 +10,7 @@ import ua.com.fielden.platform.web.interfaces.IRenderable;
  * <p>
  * Firstly, it ensures that it will not be closed on SAVE / CANCEL buttons of embedded master (see closeAfterExecution property setting).
  * Secondly, it adds support for navigation between heterogenic entities. Use {@link EntityNavigationPreAction} to enable navigation.
- * 
+ *
  * @author TG Team
  *
  */
@@ -25,7 +25,9 @@ public class EntityEditMaster extends EntityManipulationMaster<EntityEditAction>
               + "             self._seqEditAfterLoadListener = function (e) {\n"
               + "                 this._assignPostSavedHandlersForEmbeddedMaster(e);\n"
               + "                 const saveButton = e.detail.shadowRoot.querySelector(\"tg-action[role='save']\");\n"
-              + "                 saveButton.closeAfterExecution = false;\n"
+              + "                 if (saveButton) {\n"
+              + "                     saveButton.closeAfterExecution = false;\n"
+              + "                 }\n"
               + "             }.bind(self);\n"
               + "             self._handleBindingEntityAppeared = function (e) {\n"
               + "                 if (this._previousMaster && this._previousMaster.entityType !== this.$.loader.loadedElement.entityType) {\n"
