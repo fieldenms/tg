@@ -18,7 +18,6 @@ import org.hibernate.type.LongType;
 import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
 
-import afu.org.checkerframework.checker.units.qual.h;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
@@ -40,9 +39,9 @@ import ua.com.fielden.platform.eql.stage3.etc.OrderBy3;
 import ua.com.fielden.platform.eql.stage3.etc.OrderBys3;
 import ua.com.fielden.platform.eql.stage3.etc.Yield3;
 import ua.com.fielden.platform.eql.stage3.etc.Yields3;
-import ua.com.fielden.platform.eql.stage3.operands.Prop3;
 import ua.com.fielden.platform.eql.stage3.operands.Expression3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
+import ua.com.fielden.platform.eql.stage3.operands.Prop3;
 import ua.com.fielden.platform.eql.stage3.operands.ResultQuery3;
 import ua.com.fielden.platform.eql.stage3.operands.SourceQuery3;
 import ua.com.fielden.platform.eql.stage3.operands.SubQuery3;
@@ -50,9 +49,9 @@ import ua.com.fielden.platform.eql.stage3.operands.functions.CountAll3;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.eql.stage3.sources.ISources3;
 import ua.com.fielden.platform.eql.stage3.sources.MultipleNodesSources3;
+import ua.com.fielden.platform.eql.stage3.sources.SingleNodeSources3;
 import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnSubqueries;
 import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnTable;
-import ua.com.fielden.platform.eql.stage3.sources.SingleNodeSources3;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
 
 public class EqlStage3TestCase extends EqlTestCase {

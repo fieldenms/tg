@@ -116,7 +116,6 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(TgAuthor.class);
         add(TgAuthorship.class);
         add(TgAuthorRoyalty.class);
-        add(TgEntityWithLoopedCalcProps.class);
         add(TgBogie.class);
         add(TgBogieLocation.class);
         add(TgBogieClass.class);

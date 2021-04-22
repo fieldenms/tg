@@ -5,9 +5,6 @@ import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.QUERY_BASED;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -32,7 +29,6 @@ import ua.com.fielden.platform.sample.domain.TeVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgAuthorRoyalty;
 import ua.com.fielden.platform.sample.domain.TgAuthorship;
 import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
-import ua.com.fielden.platform.sample.domain.TgEntityWithLoopedCalcProps;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
 import ua.com.fielden.platform.sample.domain.TgPersonName;
 
@@ -509,13 +505,6 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
     @Test
     public void test_14() {
         qryCountAll(select(AUTHOR).where().prop("hasMultiplePublications").eq().val(true));
-    }
-
-    @Test
-    @Ignore
-    public void test_15() {
-        // TODO EQL.3
-        qryCountAll(select(TgEntityWithLoopedCalcProps.class).where().prop("calc1").gt().val(25));
     }
 
     @Test

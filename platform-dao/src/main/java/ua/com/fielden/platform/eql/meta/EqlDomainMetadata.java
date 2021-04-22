@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.meta;
 
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Optional.empty;
@@ -33,6 +34,7 @@ import static ua.com.fielden.platform.reflection.Finder.hasLinkProperty;
 import static ua.com.fielden.platform.reflection.Finder.isOne2One_association;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isRequiredByDefinition;
+import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 import static ua.com.fielden.platform.utils.CollectionUtil.unmodifiableListOf;
 import static ua.com.fielden.platform.utils.EntityUtils.getRealProperties;
 import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
@@ -45,6 +47,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -74,6 +77,7 @@ import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
+import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.metadata.EntityTypeInfo;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
@@ -83,8 +87,12 @@ import ua.com.fielden.platform.eql.stage1.TransformationContext;
 import ua.com.fielden.platform.eql.stage1.sources.Source1BasedOnSubqueries;
 import ua.com.fielden.platform.eql.stage1.sources.YieldInfoNode;
 import ua.com.fielden.platform.eql.stage1.sources.YieldInfoNodesGenerator;
+import ua.com.fielden.platform.eql.stage2.PathsToTreeTransformator;
 import ua.com.fielden.platform.eql.stage2.etc.Yields2;
+import ua.com.fielden.platform.eql.stage2.operands.Prop2;
+import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage3.Table;
+import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 public class EqlDomainMetadata {
@@ -170,15 +178,17 @@ public class EqlDomainMetadata {
 
         domainInfo = entityPropsMetadata.entrySet().stream().collect(Collectors.toConcurrentMap(k -> k.getKey(), k -> new EntityInfo<>(k.getKey(), k.getValue().typeInfo.category)));
         domainInfo.values().stream().forEach(ei -> addProps(ei, domainInfo, entityPropsMetadata.get(ei.javaType()).props()));
-        
+
         for (EqlEntityMetadata el : entityPropsMetadata.values()) {
             if (el.typeInfo.category == QUERY_BASED) {
                 final EntityInfo<? extends AbstractEntity<?>> enhancedEntityInfo = generateEnhancedEntityInfoForSyntheticType(el.typeInfo);
                 domainInfo.put(enhancedEntityInfo.javaType(), enhancedEntityInfo);
             }
         }
+
+        validateCalcProps();
     }
-    
+
     /**
      * Only properties that are present in SE yields are preserved.
      * 
@@ -190,6 +200,34 @@ public class EqlDomainMetadata {
         final Yields2 yields = gen.generateAsSyntheticEntityQuery(parentInfo.entityModels.get(0), parentInfo.entityType).transform(context).yields;
         final Map<String, YieldInfoNode> yieldInfoNodes = YieldInfoNodesGenerator.generate(yields.getYields());
         return Source1BasedOnSubqueries.produceEntityInfoForDefinedEntityType(this, yieldInfoNodes, parentInfo.entityType);
+    }
+
+    private void validateCalcProps() {
+        final PathsToTreeTransformator p2tt = new PathsToTreeTransformator(this, gen);
+        for (final EntityInfo<?> et : domainInfo.values()) {
+            if (et.getCategory() != UNION) {
+                final Source2BasedOnPersistentType source = new Source2BasedOnPersistentType(et.javaType(), et, "dummy_id");
+                for (final AbstractPropInfo<?> prop : et.getProps().values()) {
+                    if (prop.expression != null && !prop.name.equals(KEY)) {
+                        try {
+                            p2tt.groupChildren(setOf(new Prop2(source, asList(prop))));    
+                        } catch (Exception e) {
+                            throw new EqlException("There is an error in expression of calculated property [" + et.javaType().getSimpleName() + ":" + prop.name + "]: " + e.getMessage());
+                        }
+                    } else if (prop.hasExpression() && prop instanceof ComponentTypePropInfo) {
+                        for (final AbstractPropInfo<?> subprop : ((ComponentTypePropInfo<?>) prop).getProps().values()) {
+                            if (subprop.expression != null) {
+                                try {
+                                    p2tt.groupChildren(setOf(new Prop2(source, asList(prop, subprop))));    
+                                } catch (Exception e) {
+                                    throw new EqlException("There is an error in expression of calculated property [" + et.javaType().getSimpleName() + ":" + prop.name  + "." + subprop.name + "]: " + e.getMessage());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private <T extends AbstractEntity<?>> void addProps(final EntityInfo<T> entityInfo, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> allEntitiesInfo, final Collection<EqlPropertyMetadata> entityPropsMetadatas) {
@@ -523,7 +561,7 @@ public class EqlDomainMetadata {
                 ? name.substring(0, name.length() - 1)
                 : name;
     }
-    
+
     public Map<String, Table> getTables() {
         return unmodifiableMap(tables);
     }
@@ -531,13 +569,13 @@ public class EqlDomainMetadata {
     public Map<Class<? extends AbstractEntity<?>>, EqlEntityMetadata> entityPropsMetadata() {
         return unmodifiableMap(entityPropsMetadata);
     }
-    
+
     public EntityInfo<?> getEntityInfo(final Class<? extends AbstractEntity<?>> type) {
         final EntityInfo<?> existing = domainInfo.get(type);
         if (existing != null) {
             return existing;
         }
-        
+
         final EntityTypeInfo<?> eti = getEntityTypeInfo(type);
         final List<EqlPropertyMetadata> propsMetadatas = generatePropertyMetadatasForEntity(eti);
         //entityPropsMetadata.put(type, t2(eti.category, propsMetadatas));
@@ -553,7 +591,7 @@ public class EqlDomainMetadata {
         if (existing != null) {
             return existing;
         }
-        
+
         final EntityTypeInfo<?> eti = getEntityTypeInfo(type);
         if (eti.category == QUERY_BASED) {
             return generateEnhancedEntityInfoForSyntheticType(eti);
@@ -561,7 +599,7 @@ public class EqlDomainMetadata {
             return getEntityInfo(type);
         }
     }
-    
+
     public <T extends AbstractEntity<?>> EntityTypeInfo<T> getEntityTypeInfo(final Class<T> type) {
         return (EntityTypeInfo<T>) entityTypesInfos.get(getOriginalEntityTypeFullName(type.getName()));
     }

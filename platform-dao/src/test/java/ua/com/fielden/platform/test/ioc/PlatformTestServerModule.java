@@ -163,7 +163,6 @@ public class PlatformTestServerModule extends BasicWebServerModule {
 
         bind(ITgAuthorship.class).to(TgAuthorshipDao.class);
         bind(ITgAuthorRoyalty.class).to(TgAuthorRoyaltyDao.class);
-        bind(ITgEntityWithLoopedCalcProps.class).to(TgEntityWithLoopedCalcPropsDao.class);
         bind(ITgPublishedYearly.class).to(TgPublishedYearlyDao.class);
 
 
