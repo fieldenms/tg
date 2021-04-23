@@ -69,8 +69,7 @@ public class EntityManipulationActionProducer<T extends AbstractEntityManipulati
                 .map(t2 -> t2._1)
                 .map(propPath -> determineBaseEntityType(getOriginalType(determinePropertyType(currEntity.getType(), dslName(propPath)))))
                 .orElseGet(() -> {
-                    return currEntity != null ? determineBaseEntityType(getOriginalType(currEntity.getType())) :
-                        selCrit != null ? (Class<AbstractEntity<?>>) selCrit.getEntityClass() : null;
+                    return selCrit != null ? (Class<AbstractEntity<?>>) selCrit.getEntityClass() : null;
                 });
 
     }
