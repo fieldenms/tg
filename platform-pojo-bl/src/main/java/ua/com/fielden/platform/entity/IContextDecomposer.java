@@ -1,7 +1,13 @@
 package ua.com.fielden.platform.entity;
 
+import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toCollection;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.EntityManipulationActionProducer.determineBaseEntityType;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
+import static ua.com.fielden.platform.utils.EntityUtils.traversePropPath;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -249,6 +255,23 @@ public interface IContextDecomposer {
         return !currentEntityEmpty();
     }
     
+    default Optional<Long> tappedEntityId(final Class<? extends AbstractEntity<?>> entityTypeForMaster) {
+        if (currentEntityEmpty()) {
+            throw new EntityProducingException("Current entity must be not empty.");
+        } else if (!currentEntityInstanceOf(entityTypeForMaster) && chosenPropertyEmpty()) {
+            return ofNullable(currentEntity().getId()); // "last resort" situation where we assume that ID is for the current entity
+        }
+        // there are two possible legitimate cases here:
+        // 1. either currentEntity().get(chosenProperty()) is of type for Entity Master and all is good, or
+        // 2. chosenProperty is a sub property of a property of type for Entity MAster, where that "parent" property belongs to the current entity, or
+        // 3. we have a genuine bug and need to throw an appropriate error
+        return traversePropPath(currentEntity(), chosenProperty())
+            .filter(t2 -> entityTypeForMaster.isAssignableFrom(determineBaseEntityType(getOriginalType(determinePropertyType(currentEntity().getType(), dslName(t2._1)))))) // find only type-compatible values on path
+            .findFirst()
+            .flatMap(t2 -> t2._2) // get clicked entity, if any
+            .map(AbstractEntity::getId);
+    }
+    
     /**
      * Returns the current entity, which could be <code>null</code>.
      * 
@@ -413,7 +436,7 @@ public interface IContextDecomposer {
     
         private final IContextDecomposer decomposer;
         
-        private ContextOfMasterEntity(IContextDecomposer decomposer) {
+        private ContextOfMasterEntity(final IContextDecomposer decomposer) {
             this.decomposer = decomposer;
         }
         
