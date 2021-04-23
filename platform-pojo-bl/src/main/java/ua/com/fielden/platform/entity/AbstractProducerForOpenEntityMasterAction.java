@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity;
 
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.AbstractEntityEditActionProducer.NOTHING_TO_OPEN_MSG;
 
 import java.util.function.Supplier;
 
@@ -16,7 +17,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
  * @param <A>
  */
 public abstract class AbstractProducerForOpenEntityMasterAction<T extends AbstractEntity<?>, A extends AbstractFunctionalEntityToOpenCompoundMaster<T>> extends DefaultEntityProducerWithContext<A> {
-    private static final Supplier<? extends CompoundMasterException> NOTHING_TO_OPEN_EXCEPTION_SUPPLIER = () -> new CompoundMasterException("There is no entity to open.");
+    private static final Supplier<? extends CompoundMasterException> NOTHING_TO_OPEN_EXCEPTION_SUPPLIER = () -> new CompoundMasterException(NOTHING_TO_OPEN_MSG);
     protected final Class<T> entityType;
 
     public AbstractProducerForOpenEntityMasterAction(

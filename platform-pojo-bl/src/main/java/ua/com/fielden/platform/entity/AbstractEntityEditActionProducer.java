@@ -17,7 +17,8 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  * @param <T>
  */
 public class AbstractEntityEditActionProducer<T extends EntityEditAction> extends EntityManipulationActionProducer<T> {
-    private static final Supplier<? extends IllegalStateException> NOTHING_TO_EDIT_EXCEPTION_SUPPLIER = () -> new IllegalStateException("There is nothing to edit.");
+    static final String NOTHING_TO_OPEN_MSG = "There is nothing to open.";
+    private static final Supplier<? extends RuntimeException> NOTHING_TO_OPEN_EXCEPTION_SUPPLIER = () -> new SimpleMasterException(NOTHING_TO_OPEN_MSG);
 
     public AbstractEntityEditActionProducer(final EntityFactory factory, final Class<T> entityType, final ICompanionObjectFinder companionFinder) {
         super(factory, entityType, companionFinder);
@@ -35,7 +36,7 @@ public class AbstractEntityEditActionProducer<T extends EntityEditAction> extend
                 .map(computed -> ((T2<Class<AbstractEntity<?>>, Long>) computed)._2)
                 .orElseGet(() -> ofNullable(currentEntity())
                     .flatMap(ce -> tappedEntityId(editedEntity.getEntityTypeAsClass()))
-                    .orElseThrow(NOTHING_TO_EDIT_EXCEPTION_SUPPLIER)
+                    .orElseThrow(NOTHING_TO_OPEN_EXCEPTION_SUPPLIER)
                 );
             editedEntity.setEntityId(id.toString());
         }
