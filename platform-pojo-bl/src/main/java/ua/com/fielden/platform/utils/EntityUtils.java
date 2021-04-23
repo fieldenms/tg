@@ -22,6 +22,7 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotatio
 import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
 import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.PROPERTY_SPLITTER;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.StreamUtils.takeWhile;
@@ -1301,6 +1302,9 @@ public class EntityUtils {
      * @return
      */
     public static Stream<T2<String, Optional<? extends AbstractEntity<?>>>> traversePropPath(final AbstractEntity<?> root, final String propertyPath) {
+        if (propertyPath == null) {
+            return Stream.of(t2("", Optional.of(root)));
+        }
         final Stream<String> paths = Stream.iterate(propertyPath, path -> {
             final int indexOfLastDot = lastIndexOf(path, PROPERTY_SPLITTER);
             return indexOfLastDot > 0 ? path.substring(0, indexOfLastDot) :
@@ -1309,11 +1313,8 @@ public class EntityUtils {
 
         // skip the first element (i.e. last property in the path) if it does not terminate with an entity-typed property
         // if this check fails then the path itself is in error...
-
-        final Either<Exception, Stream<String>> either = TryWrapper.Try(() -> AbstractEntity.class.isAssignableFrom(PropertyTypeDeterminator.determinePropertyType(root.getType(), dslName(propertyPath))) ? paths : paths.skip(1));
+        final Either<Exception, Stream<String>> either = TryWrapper.Try(() -> AbstractEntity.class.isAssignableFrom(determinePropertyType(root.getType(), dslName(propertyPath))) ? paths : paths.skip(1));
         return takeWhile(either.getOrElse(Stream::empty), Objects::nonNull).map(path -> {
-            //final int indexOfLastDot = path.lastIndexOf(PROPERTY_SPLITTER);
-            //final String propName = indexOfLastDot > 0 ? path.substring(indexOfLastDot + 1) : path;
             return t2(path, ofNullable(isEmpty(path) ? root : root.get(path)));
         });
     }
