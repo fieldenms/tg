@@ -1302,7 +1302,9 @@ public class EntityUtils {
      * @return
      */
     public static Stream<T2<String, Optional<? extends AbstractEntity<?>>>> traversePropPath(final AbstractEntity<?> root, final String propertyPath) {
-        if (propertyPath == null) {
+        if (root == null) {
+            return empty();
+        } else if (propertyPath == null) {
             return Stream.of(t2("", Optional.of(root)));
         }
         final Stream<String> paths = Stream.iterate(propertyPath, path -> {

@@ -511,6 +511,12 @@ public class EntityUtilsTest {
     }
 
     @Test
+    public void traversing_any_property_path_with_empty_root_produces_empty_stream() {
+        final List<T2<String, Optional<? extends AbstractEntity<?>>>> trace = EntityUtils.traversePropPath(null, "any").collect(toList());
+        assertEquals(0, trace.size());
+    }
+
+    @Test
     public void key_paths_works_for_simple_key() {
         assertEquals(listOf("key"),
                 keyPaths(TgVehicle.class));
