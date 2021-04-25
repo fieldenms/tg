@@ -121,7 +121,7 @@ public class LoginResource extends ServerResource {
             return loginPage();
         } catch (final Exception ex) {
             // in case of an exception try try return a login page.
-            LOGGER.fatal(ex);
+            LOGGER.fatal(ex.getMessage(), ex);
             return loginPage();
         }
     }
@@ -131,7 +131,7 @@ public class LoginResource extends ServerResource {
             final byte[] body = StringUtils.replace(ResourceLoader.getText("ua/com/fielden/platform/web/login.html"), "@title", "Login").getBytes("UTF-8");
             return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(body), MediaType.TEXT_HTML));
         } catch (final Exception ex) {
-            LOGGER.fatal(ex);
+            LOGGER.fatal(ex.getMessage(), ex);
             throw new IllegalStateException(ex);
         }
     }
@@ -156,7 +156,7 @@ public class LoginResource extends ServerResource {
                 }
             }
         } catch (final Exception ex) {
-            LOGGER.fatal(ex);
+            LOGGER.fatal(ex.getMessage(), ex);
             getResponse().setEntity(restUtil.errorJsonRepresentation(ex.getMessage()));
             getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
         } finally {
@@ -245,8 +245,8 @@ public class LoginResource extends ServerResource {
         public String toString() {
             try {
                 return new ObjectMapper().writer().writeValueAsString(this);
-            } catch (final JsonProcessingException e) {
-                LOGGER.error(e);
+            } catch (final JsonProcessingException ex) {
+                LOGGER.error(ex.getMessage(), ex);
                 return "could not serialise to JSON";
             }
         }
