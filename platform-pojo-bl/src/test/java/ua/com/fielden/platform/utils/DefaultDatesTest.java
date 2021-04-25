@@ -4,7 +4,7 @@ import static java.lang.Math.abs;
 import static org.joda.time.DateTimeZone.forID;
 import static org.joda.time.DateTimeZone.getDefault;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -27,30 +27,33 @@ public class DefaultDatesTest {
         
         final String testingTimeZoneId = "Pacific/Kiritimati";
         dates.setRequestTimeZone(testingTimeZoneId); 
-        
-        assertEquals(forID(testingTimeZoneId), dates.requestTimeZone());
+
+        assertTrue(dates.requestTimeZone().isPresent());
+        assertEquals(forID(testingTimeZoneId), dates.requestTimeZone().get());
     }
     
     @Test
     public void request_time_zone_gets_properly_set_in_current_and_another_thread_and_they_differ() throws InterruptedException, ExecutionException {
         final DefaultDates dates = new DefaultDates(true);
-        
+
         final String testingTimeZoneId = "Pacific/Kiritimati";
         dates.setRequestTimeZone(testingTimeZoneId); 
-        
-        assertEquals(forID(testingTimeZoneId), dates.requestTimeZone());
-        
+
+        assertTrue(dates.requestTimeZone().isPresent());
+        assertEquals(forID(testingTimeZoneId), dates.requestTimeZone().get());
+
         final boolean result = CompletableFuture.supplyAsync(() -> {
             // start another thread with different request time-zone setting
             final String anotherTestingTimeZoneId = "Pacific/Pago_Pago";
             dates.setRequestTimeZone(anotherTestingTimeZoneId);
-            
-            return forID(anotherTestingTimeZoneId).equals(dates.requestTimeZone());
+
+            return forID(anotherTestingTimeZoneId).equals(dates.requestTimeZone().orElse(null));
         }).get();
+
         if (!result) {
             fail("Time zone on different thread should be different.");
         }
-        assertEquals(forID(testingTimeZoneId), dates.requestTimeZone()); // the time-zone on this thread is still the same
+        assertEquals(forID(testingTimeZoneId), dates.requestTimeZone().get()); // the time-zone on this thread is still the same
     }
     
     @Test
@@ -59,7 +62,7 @@ public class DefaultDatesTest {
         
         dates.setRequestTimeZone(null);
         
-        assertNull(dates.requestTimeZone());
+        assertFalse(dates.requestTimeZone().isPresent());
     }
     
     @Test
@@ -68,7 +71,7 @@ public class DefaultDatesTest {
         
         dates.setRequestTimeZone("");
         
-        assertNull(dates.requestTimeZone());
+        assertFalse(dates.requestTimeZone().isPresent());
     }
     
     @Test
@@ -76,8 +79,9 @@ public class DefaultDatesTest {
         final DefaultDates dates = new DefaultDates(true);
         
         dates.setRequestTimeZone("  Pacific/Kiritimati \n");
-        
-        assertEquals(forID("Pacific/Kiritimati"), dates.requestTimeZone());
+
+        assertTrue(dates.requestTimeZone().isPresent());
+        assertEquals(forID("Pacific/Kiritimati"), dates.requestTimeZone().get());
     }
     
     @Test
@@ -86,7 +90,8 @@ public class DefaultDatesTest {
         
         dates.setRequestTimeZone("  Pacific/Kiritimati,Pacific/Pago_Pago  ");
         
-        assertEquals(forID("Pacific/Kiritimati"), dates.requestTimeZone());
+        assertTrue(dates.requestTimeZone().isPresent());
+        assertEquals(forID("Pacific/Kiritimati"), dates.requestTimeZone().get());
     }
     
     @Test
@@ -95,7 +100,7 @@ public class DefaultDatesTest {
         
         dates.setRequestTimeZone("Pacific/BlaBlaBla");
         
-        assertNull(dates.requestTimeZone());
+        assertFalse(dates.requestTimeZone().isPresent());
     }
     
     // timeZone() method:
@@ -103,7 +108,7 @@ public class DefaultDatesTest {
     @Test
     public void time_zone_equals_to_default_in_independent_mode_with_empty_request_time_zone() {
         final DefaultDates dates = new DefaultDates(true);
-        assertNull(dates.requestTimeZone());
+        assertFalse(dates.requestTimeZone().isPresent());
         
         assertEquals(getDefault(), dates.timeZone());
     }
@@ -112,16 +117,18 @@ public class DefaultDatesTest {
     public void time_zone_equals_to_default_in_independent_mode_even_with_non_empty_request_time_zone() {
         final DefaultDates dates = new DefaultDates(true);
         final String testingTimeZoneId = "Pacific/Kiritimati";
-        dates.setRequestTimeZone(testingTimeZoneId); 
-        assertEquals(forID(testingTimeZoneId), dates.requestTimeZone());
-        
+        dates.setRequestTimeZone(testingTimeZoneId);
+
+        assertTrue(dates.requestTimeZone().isPresent());
+        assertEquals(forID(testingTimeZoneId), dates.requestTimeZone().get());
+
         assertEquals(getDefault(), dates.timeZone());
     }
     
     @Test
     public void time_zone_equals_to_default_in_dependent_mode_with_empty_request_time_zone() {
         final DefaultDates dates = new DefaultDates(false);
-        assertNull(dates.requestTimeZone());
+        assertFalse(dates.requestTimeZone().isPresent());
         
         assertEquals(getDefault(), dates.timeZone());
     }
@@ -130,8 +137,10 @@ public class DefaultDatesTest {
     public void time_zone_equals_to_non_empty_request_time_zone_in_dependent_mode() {
         final DefaultDates dates = new DefaultDates(false);
         final String testingTimeZoneId = "Pacific/Kiritimati";
-        dates.setRequestTimeZone(testingTimeZoneId); 
-        assertEquals(forID(testingTimeZoneId), dates.requestTimeZone());
+        dates.setRequestTimeZone(testingTimeZoneId);
+        
+        assertTrue(dates.requestTimeZone().isPresent());
+        assertEquals(forID(testingTimeZoneId), dates.requestTimeZone().get());
         
         assertEquals(forID(testingTimeZoneId), dates.timeZone());
     }
@@ -141,7 +150,7 @@ public class DefaultDatesTest {
     @Test
     public void zoned_moment_has_default_time_zone_in_independent_mode_with_empty_request_time_zone() {
         final DefaultDates dates = new DefaultDates(true);
-        assertNull(dates.requestTimeZone());
+        assertFalse(dates.requestTimeZone().isPresent());
         
         assertEquals(new DateTime(date, getDefault()), dates.zoned(date));
     }
@@ -151,16 +160,18 @@ public class DefaultDatesTest {
         final DefaultDates dates = new DefaultDates(true);
         final String testingTimeZoneId = "Pacific/Kiritimati";
         dates.setRequestTimeZone(testingTimeZoneId); 
-        assertEquals(forID(testingTimeZoneId), dates.requestTimeZone());
-        
+
+        assertTrue(dates.requestTimeZone().isPresent());
+        assertEquals(forID(testingTimeZoneId), dates.requestTimeZone().get());
+
         assertEquals(new DateTime(date, getDefault()), dates.zoned(date));
     }
     
     @Test
     public void zoned_moment_has_default_time_zone_in_dependent_mode_with_empty_request_time_zone() {
         final DefaultDates dates = new DefaultDates(false);
-        assertNull(dates.requestTimeZone());
-        
+        assertFalse(dates.requestTimeZone().isPresent());
+
         assertEquals(new DateTime(date, getDefault()), dates.zoned(date));
     }
     
@@ -168,8 +179,10 @@ public class DefaultDatesTest {
     public void zoned_moment_has_non_empty_request_time_zone_in_dependent_mode() {
         final DefaultDates dates = new DefaultDates(false);
         final String testingTimeZoneId = "Pacific/Kiritimati";
-        dates.setRequestTimeZone(testingTimeZoneId); 
-        assertEquals(forID(testingTimeZoneId), dates.requestTimeZone());
+        dates.setRequestTimeZone(testingTimeZoneId);
+
+        assertTrue(dates.requestTimeZone().isPresent());
+        assertEquals(forID(testingTimeZoneId), dates.requestTimeZone().get());
         
         assertEquals(new DateTime(date, forID(testingTimeZoneId)), dates.zoned(date));
     }
@@ -179,7 +192,7 @@ public class DefaultDatesTest {
     @Test
     public void date_prints_in_default_time_zone_in_independent_mode_with_empty_request_time_zone() {
         final DefaultDates dates = new DefaultDates(true);
-        assertNull(dates.requestTimeZone());
+        assertFalse(dates.requestTimeZone().isPresent());
         
         assertEquals(dates.toString(new DateTime(date, getDefault())), dates.toString(date));
     }
@@ -189,7 +202,9 @@ public class DefaultDatesTest {
         final DefaultDates dates = new DefaultDates(true);
         final String testingTimeZoneId = "Pacific/Kiritimati";
         dates.setRequestTimeZone(testingTimeZoneId); 
-        assertEquals(forID(testingTimeZoneId), dates.requestTimeZone());
+
+        assertTrue(dates.requestTimeZone().isPresent());
+        assertEquals(forID(testingTimeZoneId), dates.requestTimeZone().get());
         
         assertEquals(dates.toString(new DateTime(date, getDefault())), dates.toString(date));
     }
@@ -197,7 +212,7 @@ public class DefaultDatesTest {
     @Test
     public void date_prints_in_default_time_zone_in_dependent_mode_with_empty_request_time_zone() {
         final DefaultDates dates = new DefaultDates(false);
-        assertNull(dates.requestTimeZone());
+        assertFalse(dates.requestTimeZone().isPresent());
         
         assertEquals(dates.toString(new DateTime(date, getDefault())), dates.toString(date));
     }
@@ -206,20 +221,20 @@ public class DefaultDatesTest {
     public void date_prints_in_non_empty_request_time_zone_in_dependent_mode() {
         final DefaultDates dates = new DefaultDates(false);
         final String testingTimeZoneId = "Pacific/Kiritimati";
-        dates.setRequestTimeZone(testingTimeZoneId); 
-        assertEquals(forID(testingTimeZoneId), dates.requestTimeZone());
-        
+        dates.setRequestTimeZone(testingTimeZoneId);
+
+        assertTrue(dates.requestTimeZone().isPresent());
+        assertEquals(forID(testingTimeZoneId), dates.requestTimeZone().get());
+
         assertEquals(dates.toString(new DateTime(date, forID(testingTimeZoneId))), dates.toString(date));
     }
     
-    // now() method:
-    
-    private final Long MILLIS_DIFF_THRESHOULD = 10L; // millis are close enough if they differ in less than MILLIS_DIFF_THRESHOULD millis; 2L is sufficient in most cases, take 10L to be sure
+    private final Long MILLIS_DIFF_THRESHOULD = 1000L; // 1 second precision when comparing "nows" is good enough in this case
     
     @Test
     public void now_moment_is_in_default_time_zone_in_independent_mode_with_empty_request_time_zone() {
         final DefaultDates dates = new DefaultDates(true);
-        assertNull(dates.requestTimeZone());
+        assertFalse(dates.requestTimeZone().isPresent());
         
         assertTrue(abs(new DateTime(getDefault()).getMillis() - dates.now().getMillis()) < MILLIS_DIFF_THRESHOULD);
     }
@@ -228,16 +243,18 @@ public class DefaultDatesTest {
     public void now_moment_is_in_default_time_zone_but_with_values_from_real_request_time_zone_in_independent_mode_if_request_time_zone_is_not_empty() {
         final DefaultDates dates = new DefaultDates(true);
         final String testingTimeZoneId = "Pacific/Kiritimati";
-        dates.setRequestTimeZone(testingTimeZoneId); 
-        assertEquals(forID(testingTimeZoneId), dates.requestTimeZone());
-        
-        assertTrue(abs(new DateTime(dates.requestTimeZone()).withZoneRetainFields(getDefault()).getMillis() - dates.now().getMillis()) < MILLIS_DIFF_THRESHOULD);
+        dates.setRequestTimeZone(testingTimeZoneId);
+
+        assertTrue(dates.requestTimeZone().isPresent());
+        assertEquals(forID(testingTimeZoneId), dates.requestTimeZone().get());
+
+        assertTrue(abs(new DateTime(dates.requestTimeZone().get()).withZoneRetainFields(getDefault()).getMillis() - dates.now().getMillis()) < MILLIS_DIFF_THRESHOULD);
     }
     
     @Test
     public void now_moment_is_in_default_time_zone_in_dependent_mode_with_empty_request_time_zone() {
         final DefaultDates dates = new DefaultDates(false);
-        assertNull(dates.requestTimeZone());
+        assertFalse(dates.requestTimeZone().isPresent());
         
         assertTrue(abs(new DateTime(getDefault()).getMillis() - dates.now().getMillis()) < MILLIS_DIFF_THRESHOULD);
     }
@@ -246,10 +263,11 @@ public class DefaultDatesTest {
     public void now_is_in_non_empty_request_time_zone_in_dependent_mode() {
         final DefaultDates dates = new DefaultDates(false);
         final String testingTimeZoneId = "Pacific/Kiritimati";
-        dates.setRequestTimeZone(testingTimeZoneId); 
-        assertEquals(forID(testingTimeZoneId), dates.requestTimeZone());
+        dates.setRequestTimeZone(testingTimeZoneId);
+        assertTrue(dates.requestTimeZone().isPresent());
+        assertEquals(forID(testingTimeZoneId), dates.requestTimeZone().get());
         
-        assertTrue(abs(new DateTime(dates.requestTimeZone()).getMillis() - dates.now().getMillis()) < MILLIS_DIFF_THRESHOULD);
+        assertTrue(abs(new DateTime(dates.requestTimeZone().get()).getMillis() - dates.now().getMillis()) < MILLIS_DIFF_THRESHOULD);
     }
     
 }

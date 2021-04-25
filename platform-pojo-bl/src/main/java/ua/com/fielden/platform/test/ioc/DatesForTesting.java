@@ -1,9 +1,11 @@
 package ua.com.fielden.platform.test.ioc;
 
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 import ua.com.fielden.platform.utils.IDates;
 
@@ -65,5 +67,10 @@ public class DatesForTesting implements IDates {
         setTimeSupplier(null);
         return this;
     }
-    
+
+    @Override
+    public Optional<DateTimeZone> requestTimeZone() {
+        return Optional.empty();
+    }
+
 }
