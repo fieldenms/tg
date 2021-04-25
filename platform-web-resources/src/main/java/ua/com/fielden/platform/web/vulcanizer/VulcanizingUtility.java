@@ -357,7 +357,7 @@ public class VulcanizingUtility {
                 final String addPaths = stream(additionalPaths).collect(joining(pathSeparator));
                 final String path = getenv().get("PATH");
                 final String newPathVal = format("%s%s%s", path, pathSeparator, addPaths);
-                LOGGER.info(format("Setting environment variable PATH=%s", newPathVal));
+                LOGGER.info(format("\t\t\tSetting environment variable PATH=%s", newPathVal));
                 pb.environment().put("PATH", newPathVal);
             }
             Stream.of(envVarPairs).forEach(pair -> {
@@ -365,7 +365,7 @@ public class VulcanizingUtility {
                 if (p.length != 2) {
                     throw new VulcanisationException(format("Pair name/value [%s] for an environment variable is not formatted correctly.", p));
                 }
-                LOGGER.info(format("Setting environment variable %s=%s", p[0], p[1]));
+                LOGGER.info(format("\t\t\tSetting environment variable %s=%s", p[0], p[1]));
                 pb.environment().put(p[0], p[1]);
             });
 
@@ -377,7 +377,7 @@ public class VulcanizingUtility {
             // should would include errors and any other output produced by the process
             try (final BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));) {
                 final String output = reader.lines().collect(joining("\n"));
-                LOGGER.info(format("OUTPUT: %n%s%n", output));
+                LOGGER.info(format("\t\t\tOUTPUT: %n%s%n", output));
             }
             // wait for the process to complete before doing anything else...
             process.waitFor();

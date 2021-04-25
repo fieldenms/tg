@@ -8,6 +8,7 @@ import '/resources/polymer/@polymer/iron-selector/iron-selector.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 import { IronA11yKeysBehavior } from '/resources/polymer/@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
 import { afterNextRender } from "/resources/polymer/@polymer/polymer/lib/utils/render-status.js";
+import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 /* Paper elements */
 import '/resources/polymer/@polymer/paper-styles/color.js';
 import '/resources/polymer/@polymer/app-layout/app-drawer-layout/app-drawer-layout.js';
@@ -86,7 +87,7 @@ const template = html`
     <tg-app-config id="appConfig"></tg-app-config>
     <slot id="menuItemActions" name="menu-item-action"></slot>
 
-    <app-drawer-layout id="drawerPanel" fullbleed>
+    <app-drawer-layout id="drawerPanel" fullbleed on-app-drawer-transitioned="_appDrawerTransitioned">
         <app-drawer id="drawer" disable-swipe="[[!mobile]]" slot="drawer">
             <paper-listbox id="menu" attr-for-selected="data-route" selected="{{route}}" style="height: 100%; overflow: auto;">
                 <slot id="menuItems" name="menu-item"></slot>
@@ -250,7 +251,7 @@ Polymer({
         }
     },
 
-    behaviors: [ IronA11yKeysBehavior, TgFocusRestorationBehavior ],
+    behaviors: [ IronA11yKeysBehavior, TgFocusRestorationBehavior, IronResizableBehavior ],
 
     listeners: {
         transitionend: '_onTransitionEnd'
@@ -540,6 +541,12 @@ Polymer({
                 }
             }
         }
+    },
+
+    _appDrawerTransitioned: function () {
+        // need to notify tg-master-menu's content about possible resizing after drawer transition ended;
+        // this should facilitate proper resizing of, e.g., 'tg-responsive-toolbar' containing in embedded centre
+        this.notifyResize();
     },
 
     _sectionTitleChanged: function (newValue, oldValue) {
