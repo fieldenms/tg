@@ -95,6 +95,11 @@ Polymer({
 
     ready: function () {
         this.treeItemAction = function(e){};
+        this.$.treeList._isClientFull = this._isTreeClientFull.bind(this.$.treeList);
+    },
+
+    _isTreeClientFull: function () {
+        return this._physicalSize >= this._viewportHeight * 2;
     },
 
     resizeTree: function () {
@@ -103,6 +108,13 @@ Polymer({
 
     isEntityRendered: function (index) {
         return this.$.treeList._isIndexRendered(index);
+    },
+
+    scrollToItem: function (treeItem, force) {
+        const itemIndex = this._entities.indexOf(treeItem);
+        if (itemIndex >= 0 && (force || (this.$.treeList.firstVisibleIndex >= itemIndex || this.$.treeList.lastVisibleIndex <= itemIndex))) {
+            this.$.treeList.scrollToItem(treeItem);
+        }
     },
 
     _isSelected: function (selectedEntity, entity) {
@@ -134,7 +146,7 @@ Polymer({
         const entityModel = this.$.treeList.modelForElement(toElement);
         const entity = entityModel && entityModel.entity;
         const toEntity = entity && entity.isAdditionalInfo ? entity.relatedTo : entity;
-        if (fromEntity !== toEntity) {
+        if (fromEntity !== toEntity && this.currentMatchedItem !== this._entities[this._getBaseEntityIdx(e.model.index)]) {
             this.setOver(this._getBaseEntityIdx(e.model.index), false);
         }
     },
