@@ -54,7 +54,7 @@ public class EntityManipulationActionProducer<T extends AbstractEntityManipulati
     }
 
     /**
-     * Determines the precise type based on {@code currentEntity}, {@code chosenProperty} and {@code selectionCrit} to define the Entity Master type that should be displayed.
+     * Determines the precise type based on {@code currentEntity}, {@code chosenProperty} and {@code selectionCrit}.
      * 
      * @param currentEntity
      * @param chosenProperty
@@ -62,7 +62,7 @@ public class EntityManipulationActionProducer<T extends AbstractEntityManipulati
      * @return
      */
     @SuppressWarnings("unchecked")
-    private static Class<AbstractEntity<?>> determineEntityType(final AbstractEntity<?> currentEntity, final String chosenProperty, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) {
+    public static Class<AbstractEntity<?>> determineEntityType(final AbstractEntity<?> currentEntity, final String chosenProperty, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) {
         return traversePropPath(currentEntity, chosenProperty) // traverse entity-typed paths and values
             .findFirst() // find first (most full) pair, if any
             .map(pathAndValueOpt -> determineActualEntityType(currentEntity.getType(), pathAndValueOpt._1)) // take the path only and determine actual entity type from that path
