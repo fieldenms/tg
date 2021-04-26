@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity;
 
+import static java.util.Optional.empty;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toCollection;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
@@ -259,7 +260,7 @@ public interface IContextDecomposer {
      */
     default Optional<Long> chosenEntityId(final Class<? extends AbstractEntity<?>> compatibilityType) {
         if (currentEntityEmpty()) {
-            throw new EntityProducingException("Current entity must be not empty.");
+            return empty();
         } else if (chosenPropertyEmpty() && !currentEntityInstanceOf(compatibilityType)) { // for non-compatible currentEntity without chosenProperty (edge-case)
             return ofNullable(currentEntity().getId()); // we still try to use ID of that current entity (e.g. WaCostDetails to be opened for WorkActivity in primary action -- one-2-one association, the same ID shared by both entities)
         }

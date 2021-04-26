@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.entity;
 
-import static java.util.Optional.ofNullable;
-
 import java.util.function.Supplier;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -34,8 +32,7 @@ public class AbstractEntityEditActionProducer<T extends EntityEditAction> extend
                 .map(computation -> computation.apply(entity, (CentreContext<AbstractEntity<?>, AbstractEntity<?>>) getContext()))
                 .filter(computed -> computed instanceof T2)
                 .map(computed -> ((T2<Class<AbstractEntity<?>>, Long>) computed)._2)
-                .orElseGet(() -> ofNullable(currentEntity())
-                    .flatMap(ce -> chosenEntityId(editedEntity.getEntityTypeAsClass()))
+                .orElseGet(() -> chosenEntityId(editedEntity.getEntityTypeAsClass())
                     .orElseThrow(NOTHING_TO_OPEN_EXCEPTION_SUPPLIER)
                 );
             editedEntity.setEntityId(id.toString());
