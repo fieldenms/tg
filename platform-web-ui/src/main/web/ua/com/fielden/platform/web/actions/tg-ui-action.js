@@ -753,7 +753,7 @@ Polymer({
         this.componentUri = masterInfo.desc;
         this.shortDesc = this._originalShortDesc || masterInfo.shortDesc;
         this.longDesc = this.longDesc || masterInfo.longDesc;
-            this.entityTypeTitle = masterInfo.entityTypeTitle;
+        this.entityTypeTitle = masterInfo.entityTypeTitle;
         this.attrs = Object.assign({}, this.attrs, {
             entityType: masterInfo.entityType,
             currentState:'EDIT',

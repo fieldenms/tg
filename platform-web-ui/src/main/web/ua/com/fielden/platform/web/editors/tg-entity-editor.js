@@ -21,6 +21,23 @@ import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 
 const additionalTemplate = html`
     <style>
+        label {
+            cursor: default;
+            @apply --layout-horizontal;
+            @apply --layout-center;
+        }
+        #actionaAvailability {
+            display: none;
+            width: 18px;
+            height: 18px;
+            margin-left: 4px;
+        }
+        label[action-available]:hover {
+            cursor: pointer;
+        }
+        label:hover #actionaAvailability[action-available] {
+            display: unset;
+        }
         #input.upper-case {
             text-transform: uppercase;
         }
@@ -155,7 +172,7 @@ export class TgEntityEditor extends TgEditor {
            },
 
            /**
-            * Indicates whether host started validation process or not. Needed to find out whether open master action sjould be opened or not.
+            * Indicates whether host started validation process or not. Needed to find out whether open master action should be opened or not.
             */
            isValidating: {
                type: Boolean,
@@ -163,7 +180,7 @@ export class TgEntityEditor extends TgEditor {
                observer: "_validatingChanged"
            },
 
-           //Resolve function that will be invoked when validation will be resolved
+           //Function that will be invoked after host's validation will finish.
            _validationResolver: {
                type: Function,
                value: null
@@ -175,8 +192,8 @@ export class TgEntityEditor extends TgEditor {
            },
    
            /*
-               * A string with comma separated property names that shoould be displayed in addition to key.
-               */
+            * A string with comma separated property names that shoould be displayed in addition to key.
+            */
            additionalProperties: {
                type: String,
                value: ''

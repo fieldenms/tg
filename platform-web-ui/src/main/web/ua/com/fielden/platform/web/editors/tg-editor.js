@@ -48,27 +48,6 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                 right: 0;
             }
 
-            label {
-                cursor: default;
-                @apply --layout-horizontal;
-                @apply --layout-center;
-            }
-
-            #actionaAvailability {
-                display: none;
-                width: 18px;
-                height: 18px;
-                margin-left: 4px;
-            }
-
-            label[action-available]:hover {
-                cursor: pointer;
-            }
-
-            label:hover #actionaAvailability[action-available] {
-                display: unset;
-            }
-
             .main-container {
                 position:relative;
                 @apply --layout-vertical;
