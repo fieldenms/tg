@@ -4,8 +4,11 @@ import static java.util.Optional.empty;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toCollection;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static ua.com.fielden.platform.entity.EntityManipulationActionProducer.determineActualEntityType;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
+import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.traversePropPath;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -16,6 +19,7 @@ import java.util.Set;
 import java.util.function.BiFunction;
 
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**
@@ -251,6 +255,43 @@ public interface IContextDecomposer {
      */
     default boolean currentEntityNotEmpty() {
         return !currentEntityEmpty();
+    }
+    
+    /**
+     * Determines actual (i.e. not generated / synthetic) type from entity-typed property path ({@code entityTypedPropPath}) in root entity type ({@code rootType}).
+     * 
+     * @param rootType -- root entity type
+     * @param entityTypedPropPath -- dot-notated entity-typed property path defined in {@code rootType}; "" is supported meaning root type itself; the path can be taken from {@link EntityUtils#traversePropPath(AbstractEntity, String)}
+     * @return
+     */
+    default Class<AbstractEntity<?>> determineActualEntityType(final Class<? extends AbstractEntity<?>> rootType, final String entityTypedPropPath) {
+        return determineBaseEntityType(getOriginalType(determinePropertyType(rootType, dslName(entityTypedPropPath))));
+    }
+
+    /**
+     * Returns the base type of {@code entityType} if it is a synthetic entity based on a persistent entity.
+     * Otherwise, returns {@code entityType}.
+     *
+     * @param entityType
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    default Class<AbstractEntity<?>> determineBaseEntityType(final Class<AbstractEntity<?>> entityType) {
+        if (isSyntheticBasedOnPersistentEntityType(entityType)) {
+            // for the cases where EntityEditAction is used for opening SyntheticBasedOnPersistentEntity we explicitly use base type;
+            // however this is not the case for StandardActions.EDIT_ACTION because of computation existence that returns entityType.
+            return (Class<AbstractEntity<?>>) entityType.getSuperclass();
+        }
+        return entityType;
+    }
+    
+    /**
+     * Returns optional type for chosen entity defined by [currentEntity; chosenProperty].
+     */
+    default Optional<Class<AbstractEntity<?>>> chosenEntityType() {
+        return traversePropPath(currentEntity(), chosenProperty()) // traverse entity-typed paths and values
+            .findFirst() // find first (most full) pair, if any
+            .map(pathAndValueOpt -> determineActualEntityType(currentEntity().getType(), pathAndValueOpt._1)); // take the path only and determine actual entity type from that path
     }
     
     /**
