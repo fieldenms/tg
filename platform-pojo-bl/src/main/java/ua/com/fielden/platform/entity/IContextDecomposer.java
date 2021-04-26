@@ -252,21 +252,26 @@ public interface IContextDecomposer {
         return !currentEntityEmpty();
     }
     
-    default Optional<Long> tappedEntityId(final Class<? extends AbstractEntity<?>> entityTypeForMaster) {
+    /**
+     * Returns optional ID for type-compatible chosen entity defined by [currentEntity; chosenProperty].
+     * 
+     * @param compatibilityType -- the entity type with which chosen entity should be compatible
+     */
+    default Optional<Long> chosenEntityId(final Class<? extends AbstractEntity<?>> compatibilityType) {
         if (currentEntityEmpty()) {
             throw new EntityProducingException("Current entity must be not empty.");
-        } else if (!currentEntityInstanceOf(entityTypeForMaster) && chosenPropertyEmpty()) {
-            return ofNullable(currentEntity().getId()); // "last resort" situation where we assume that ID is for the current entity
+        } else if (chosenPropertyEmpty() && !currentEntityInstanceOf(compatibilityType)) { // for non-compatible currentEntity without chosenProperty (edge-case)
+            return ofNullable(currentEntity().getId()); // we still try to use ID of that current entity (e.g. WaCostDetails to be opened for WorkActivity in primary action -- one-2-one association, the same ID shared by both entities)
         }
-        // there are two possible legitimate cases here:
+        // there are couple of possible legitimate cases here:
         // 1. either currentEntity().get(chosenProperty()) is of type for Entity Master and all is good, or
-        // 2. chosenProperty is a sub property of a property of type for Entity MAster, where that "parent" property belongs to the current entity, or
-        // 3. we have a genuine bug and need to throw an appropriate error
-        return traversePropPath(currentEntity(), chosenProperty())
-            .filter(t2 -> entityTypeForMaster.isAssignableFrom(determineActualEntityType(currentEntity().getType(), t2._1))) // find only type-compatible values on path
-            .findFirst()
-            .flatMap(t2 -> t2._2) // get clicked entity, if any
-            .map(AbstractEntity::getId);
+        // 2. chosenProperty is a sub property of a property of type for Entity Master, where that "parent" property belongs to the current entity, or
+        // 3. currentEntity() itself is of type for Entity Master (chosenProperty() is "" aka "this" or chosenProperty() is not defined in context configuration)
+        return traversePropPath(currentEntity(), chosenProperty()) // traverse entity-typed paths and values
+            .filter(pathAndValueOpt -> compatibilityType.isAssignableFrom(determineActualEntityType(currentEntity().getType(), pathAndValueOpt._1))) // find only type-compatible paths
+            .findFirst() // find first (most full) type-compatible pair, if any
+            .flatMap(pathAndValueOpt -> pathAndValueOpt._2) // get optional entity value, if any
+            .map(AbstractEntity::getId); // get ID from it, if any
     }
     
     /**

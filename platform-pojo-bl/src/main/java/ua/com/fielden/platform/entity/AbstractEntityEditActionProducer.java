@@ -35,7 +35,7 @@ public class AbstractEntityEditActionProducer<T extends EntityEditAction> extend
                 .filter(computed -> computed instanceof T2)
                 .map(computed -> ((T2<Class<AbstractEntity<?>>, Long>) computed)._2)
                 .orElseGet(() -> ofNullable(currentEntity())
-                    .flatMap(ce -> tappedEntityId(editedEntity.getEntityTypeAsClass()))
+                    .flatMap(ce -> chosenEntityId(editedEntity.getEntityTypeAsClass()))
                     .orElseThrow(NOTHING_TO_OPEN_EXCEPTION_SUPPLIER)
                 );
             editedEntity.setEntityId(id.toString());
