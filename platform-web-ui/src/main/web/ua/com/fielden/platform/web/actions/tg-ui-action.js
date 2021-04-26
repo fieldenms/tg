@@ -501,7 +501,8 @@ Polymer({
 
             
             if (this.dynamicAction && this.currentEntity()) {
-                const currentEntityType = getFirstEntityType(this.currentEntity(), this.chosenProperty);
+                const currentEntityTypeGetter = () => getFirstEntityType(this.currentEntity(), this.chosenProperty).notEnhancedFullClassName();
+                const currentEntityType = currentEntityTypeGetter();
                 if (this._previousEntityType !== currentEntityType) {
                     if (!this.elementName) {//Element name for dynamic action is not specified at first run
                         this._originalShortDesc = this.shortDesc;//It means that shortDesc wasn't changed yet.
@@ -512,7 +513,7 @@ Polymer({
                         .then(res => {
                             try {
                                 this._processMasterRetriever(res);
-                                this._previousEntityType = getFirstEntityType(this.currentEntity(), this.chosenProperty);
+                                this._previousEntityType = currentEntityTypeGetter();
                                 postMasterInfoRetrieve();
                             }catch (e) {
                                 this.isActionInProgress = false;

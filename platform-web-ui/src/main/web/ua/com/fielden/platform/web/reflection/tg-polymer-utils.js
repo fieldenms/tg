@@ -27,9 +27,9 @@ export function getFirstEntityTypeAndProperty (entity, propertyName) {
             currentProperty = lastDotIndex >= 0 ? currentProperty.substring(0, lastDotIndex) : "";
             currentType = currentProperty ? entityType.prop(currentProperty).type() : entityType;
         }
-        return [currentType.notEnhancedFullClassName(), currentProperty]; 
+        return [currentType, currentProperty]; 
     } else if (entity) {
-        return [entity.type().notEnhancedFullClassName(), propertyName];
+        return [entity.type(), propertyName];
     }
 };
 
