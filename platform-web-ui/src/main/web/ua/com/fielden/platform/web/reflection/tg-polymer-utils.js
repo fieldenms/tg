@@ -1,3 +1,5 @@
+import { TgReflector } from '/app/tg-reflector.js';
+
 /**
  * Generates the unique identifier.
  */
@@ -16,10 +18,11 @@ export function generateUUID () {
  */
 export function getFirstEntityTypeAndProperty (entity, propertyName) {
     if (entity && propertyName) {
+        const reflector = new TgReflector();
         const entityType = entity.type();
         let currentProperty = propertyName;
         let currentType = entityType.prop(propertyName).type();
-        while (typeof currentType === 'string') {
+        while (!(currentType instanceof reflector._getEntityTypePrototype())) {
             const lastDotIndex = currentProperty.lastIndexOf(".");
             currentProperty = lastDotIndex >= 0 ? currentProperty.substring(0, lastDotIndex) : "";
             currentType = currentProperty ? entityType.prop(currentProperty).type() : entityType;
