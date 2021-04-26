@@ -70,7 +70,7 @@ public class EntityTypeInfo <ET extends AbstractEntity<?>> {
         compositeKeyMembers = isCompositeEntity(entityType) ? ImmutableList.copyOf(getCompositeKeyMembers(entityType)) : ImmutableList.of();
     }
 
-    private String getTableClause(final Class<ET> entityType) {
+    private static String getTableClause(final Class<? extends AbstractEntity<?>> entityType) {
         try {
             return ENTITY_NAME_TO_TABLE_NAME.get(entityType.getSimpleName(), () -> {
                     final MapEntityTo mapEntityToAnnotation = getAnnotation(entityType, MapEntityTo.class);

@@ -52,7 +52,7 @@ public class Sources2  {
         return new TransformationResult<>(currentSourceTree, currentContext);
     }
 
-    private TransformationResult<ISources3> transform(final ISource2<?> explicitSource, final TransformationContext context) {
+    private static TransformationResult<ISources3> transform(final ISource2<?> explicitSource, final TransformationContext context) {
         final TransformationResult<? extends ISource3> explicitSourceTr = explicitSource.transform(context);    
         return attachChildren(explicitSourceTr.item, context.getSourceChildren(explicitSource.id()), explicitSourceTr.updatedContext);
     }
@@ -62,7 +62,7 @@ public class Sources2  {
         TransformationContext currentContext = children.isEmpty() ? context : context.cloneWithResolutions(source, children);
         
         for (final ChildGroup fc : children) {
-            if (fc.source != null) {
+            if (!fc.items().isEmpty()) {
                 final TransformationResult<ISources3> res = attachChild(currMainSources, source, fc, currentContext);
                 currMainSources = res.item;
                 currentContext = res.updatedContext;

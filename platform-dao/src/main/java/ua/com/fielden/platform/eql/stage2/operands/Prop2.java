@@ -62,10 +62,6 @@ public class Prop2 extends AbstractSingleOperand2 implements ISingleOperand2<ISi
         return unmodifiableList(path);
     }
     
-    public boolean isCalculated() {
-        return lastPart().hasExpression();
-    }
-    
     public AbstractPropInfo<?> lastPart() {
         return path.get(path.size() - 1);
     }
