@@ -261,10 +261,10 @@ Polymer({
         },
 
         /**
-         * Entity type title that is used if action is navigateable it is retrieved if action was dynamic.
+         * Entity type title that is used if action is navigatable; it is retrieved only if action is dynamic.
          */
         entityTypeTitle: {
-            type:String,
+            type: String,
             value: ""
         },
 

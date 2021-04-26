@@ -184,7 +184,7 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
     }
 
     /**
-     * Re-fetches entity (defined by {@code id} and {@code type}) using {@code property}'s fetch provider for the entity type behind this producer.
+     * Re-fetches entity (defined by {@code id} and {@code entityType}) using {@code property}'s fetch provider for the entity type behind this producer.
      * Returns uninstrumented instance.
      *
      * @param id
