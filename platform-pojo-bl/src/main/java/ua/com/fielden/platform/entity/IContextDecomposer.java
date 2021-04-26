@@ -3,11 +3,8 @@ package ua.com.fielden.platform.entity;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toCollection;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static ua.com.fielden.platform.entity.EntityManipulationActionProducer.determineBaseEntityType;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
-import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
+import static ua.com.fielden.platform.entity.EntityManipulationActionProducer.determineActualEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.traversePropPath;
-import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -266,7 +263,7 @@ public interface IContextDecomposer {
         // 2. chosenProperty is a sub property of a property of type for Entity MAster, where that "parent" property belongs to the current entity, or
         // 3. we have a genuine bug and need to throw an appropriate error
         return traversePropPath(currentEntity(), chosenProperty())
-            .filter(t2 -> entityTypeForMaster.isAssignableFrom(determineBaseEntityType(getOriginalType(determinePropertyType(currentEntity().getType(), dslName(t2._1)))))) // find only type-compatible values on path
+            .filter(t2 -> entityTypeForMaster.isAssignableFrom(determineActualEntityType(currentEntity().getType(), t2._1))) // find only type-compatible values on path
             .findFirst()
             .flatMap(t2 -> t2._2) // get clicked entity, if any
             .map(AbstractEntity::getId);

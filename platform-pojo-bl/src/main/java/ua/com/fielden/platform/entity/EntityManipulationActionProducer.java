@@ -12,6 +12,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 public class EntityManipulationActionProducer<T extends AbstractEntityManipulationAction> extends DefaultEntityProducerWithContext<T> {
@@ -67,11 +68,22 @@ public class EntityManipulationActionProducer<T extends AbstractEntityManipulati
         return traversePropPath(currEntity, chosenProperty)
                 .findFirst()
                 .map(t2 -> t2._1)
-                .map(propPath -> determineBaseEntityType(getOriginalType(determinePropertyType(currEntity.getType(), dslName(propPath)))))
+                .map(propPath -> determineActualEntityType(currEntity.getType(), propPath))
                 .orElseGet(() -> {
                     return selCrit != null ? (Class<AbstractEntity<?>>) selCrit.getEntityClass() : null;
                 });
 
+    }
+
+    /**
+     * Determines actual (i.e. not generated / synthetic) type from entity-typed property path ({@code entityTypedPropPath}) in root entity type ({@code rootType}).
+     * 
+     * @param rootType -- root entity type
+     * @param entityTypedPropPath -- dot-notated entity-typed property path defined in {@code rootType}; "" is supported meaning root type itself; the path can be taken from {@link EntityUtils#traversePropPath(AbstractEntity, String)}
+     * @return
+     */
+    public static Class<AbstractEntity<?>> determineActualEntityType(final Class<? extends AbstractEntity<?>> rootType, final String entityTypedPropPath) {
+        return determineBaseEntityType(getOriginalType(determinePropertyType(rootType, dslName(entityTypedPropPath))));
     }
 
     /**
