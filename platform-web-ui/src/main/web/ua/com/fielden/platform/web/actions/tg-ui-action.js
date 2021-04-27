@@ -353,8 +353,8 @@ Polymer({
          * The type of entity for which dynamic action was invoked previous time.
          */
         _previousEntityType: {
-            type: String,
-            value: ""
+            type: Object,
+            value: null
         },
         /**
          * The saved short desc in case the action is dynamic 
@@ -489,7 +489,7 @@ Polymer({
 
             
             if (this.dynamicAction && this.currentEntity()) {
-                const currentEntityTypeGetter = () => getFirstEntityType(this.currentEntity(), this.chosenProperty).notEnhancedFullClassName();
+                const currentEntityTypeGetter = () => getFirstEntityType(this.currentEntity(), this.chosenProperty); // returned currentEntityType is never empty due to this.currentEntity() never empty here
                 const currentEntityType = currentEntityTypeGetter();
                 if (this._previousEntityType !== currentEntityType) {
                     if (!this.elementName) {//Element name for dynamic action is not specified at first run
@@ -734,16 +734,10 @@ Polymer({
         return isActionInProgress || disabled;
     },
 
-    _setEntityMasterInfo: function(entityType) {
-        const entityTypeObject = this._reflector.findTypeByName(entityType);
-        if (!entityTypeObject) {
-            const typeErrorMessage = `Could not find ${entityType} entity type`;
-            this.toaster && this.toaster.openToastForError("Type Error", typeErrorMessage, true);
-            throw {msg: typeErrorMessage};
-        }
-        const masterInfo = entityTypeObject.entityMaster();
+    _setEntityMasterInfo: function (entityType) {
+        const masterInfo = entityType.entityMaster();
         if (!masterInfo) {
-            const masterErrorMessage = `Could not find master for entity type: ${entityType}.`
+            const masterErrorMessage = `Could not find master for entity type: ${entityType.notEnhancedFullClassName()}.`
             this.toaster && this.toaster.openToastForError("Entity Master Error", masterErrorMessage, true);
             throw {msg: masterErrorMessage};
         }
