@@ -8,6 +8,7 @@ import static org.joda.time.format.DateTimeFormat.forPattern;
 import static ua.com.fielden.platform.utils.EntityUtils.dateWithoutTimeFormat;
 
 import java.util.Date;
+import java.util.Optional;
 
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
@@ -29,7 +30,7 @@ public class DefaultDates implements IDates {
     private static final String SERVER_TIME_ZONE_APPLIED = "Server time-zone will be used.";
     private final Logger logger = Logger.getLogger(getClass());
     private final boolean independentTimeZone;
-    private final ThreadLocal<DateTimeZone> requestTimeZone = new ThreadLocal<>();
+    private final ThreadLocal<DateTimeZone> threadLocalRequestTimeZone = new ThreadLocal<>();
     
     @Inject
     public DefaultDates(final @Named("independent.time.zone") boolean independentTimeZone) {
@@ -38,7 +39,7 @@ public class DefaultDates implements IDates {
     
     @Override
     public DateTimeZone timeZone() {
-        return independentTimeZone ? getDefault() : requestTimeZone.get() == null ? getDefault() : requestTimeZone.get();
+        return independentTimeZone ? getDefault() : requestTimeZone().orElse(getDefault());
     }
     
     public void setRequestTimeZone(final String timeZoneString) {
@@ -46,7 +47,7 @@ public class DefaultDates implements IDates {
             // in case where multiple 'Time-Zone' headers have been returned, just use the first one; this is for additional safety if official 'Time-Zone' header will appear in future
             final String timeZoneId = timeZoneString.contains(",") ? timeZoneString.trim().split(",")[0] : timeZoneString.trim(); // ',' is not a special character in reg expressions, no need to escape it
             try {
-                requestTimeZone.set(forID(timeZoneId));
+                threadLocalRequestTimeZone.set(forID(timeZoneId));
             } catch (final IllegalArgumentException ex) {
                 logger.error(format("Unknown client time-zone [%s]. %s", timeZoneId, SERVER_TIME_ZONE_APPLIED), ex);
             }
@@ -55,17 +56,16 @@ public class DefaultDates implements IDates {
         //     logger.debug(format("Empty client time-zone string is returned from client application. %s", SERVER_TIME_ZONE_APPLIED));
         // }
     }
-    
+
     @Override
     public DateTime now() {
-        if (requestTimeZone.get() != null) {
-            final DateTime nowInClientTimeZone = new DateTime(requestTimeZone.get());
+        return requestTimeZone().map(tz -> {
+            final DateTime nowInClientTimeZone = new DateTime(tz);
             return independentTimeZone ? nowInClientTimeZone.withZoneRetainFields(getDefault()) : nowInClientTimeZone;
-        } else {
-            return new DateTime(); // now in server time-zone; used as a fallback where no time-zone was used.
-        }
+        })
+        .orElseGet(() -> new DateTime()); // now in server time-zone; used as a fallback where no time-zone was used.
     }
-    
+
     @Override
     public DateTime zoned(final Date date) {
         return new DateTime(date, timeZone());
@@ -81,8 +81,9 @@ public class DefaultDates implements IDates {
         return toString(zoned(date));
     }
     
-    DateTimeZone requestTimeZone() {
-        return requestTimeZone.get();
+    @Override
+    public Optional<DateTimeZone> requestTimeZone() {
+        return Optional.ofNullable(threadLocalRequestTimeZone.get());
     }
     
 }

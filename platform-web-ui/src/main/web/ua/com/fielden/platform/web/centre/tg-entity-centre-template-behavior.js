@@ -96,10 +96,10 @@ const TgEntityCentreTemplateBehaviorImpl = {
         return this._dom()._ajaxDiscarder();
     },
 
-    navigationPreAction: function  (action, navigatioType) {
+    navigationPreAction: function  (action, navigationType) {
         if (!action.supportsNavigation) {
             action.supportsNavigation = true;
-            action.entityTypeTitle = action.entityTypeTitle || navigatioType;
+            action.entityTypeTitle = action.entityTypeTitle || navigationType;
             action._oldRestoreActionState = action.restoreActionState;
             action.restoreActionState = function () {
                 action._oldRestoreActionState();

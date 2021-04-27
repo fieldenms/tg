@@ -257,10 +257,10 @@ Polymer({
         },
 
         /**
-         * Entity type title that is used if action is navigateable it is retrieved if action was dynamic.
+         * Entity type title that is used if action is navigatable; it is retrieved only if action is dynamic.
          */
         entityTypeTitle: {
-            type:String,
+            type: String,
             value: ""
         },
 
@@ -463,6 +463,13 @@ Polymer({
 
         this._processMasterError = this._processMasterError.bind(this);
 
+        self._runDynamicAction = function (currentEntity, chosenProperty) {
+            this.currentEntity = currentEntity;
+            this.chosenProperty = chosenProperty;
+
+            this._run();
+        }.bind(this);
+
         self._run = (function (event) {
             console.log(this.shortDesc + ": execute");
 
@@ -492,7 +499,8 @@ Polymer({
 
             
             if (this.dynamicAction && this.currentEntity()) {
-                const currentEntityType = getFirstEntityType(this.currentEntity(), this.chosenProperty);
+                const currentEntityTypeGetter = () => getFirstEntityType(this.currentEntity(), this.chosenProperty).notEnhancedFullClassName();
+                const currentEntityType = currentEntityTypeGetter();
                 if (this._previousEntityType !== currentEntityType) {
                     if (!this.elementName) {//Element name for dynamic action is not specified at first run
                         this._originalShortDesc = this.shortDesc;//It means that shortDesc wasn't changed yet.
@@ -500,7 +508,7 @@ Polymer({
                     this.isActionInProgress = true;
                     try {
                         this._setEntityMasterInfo(currentEntityType);
-                        this._previousEntityType = getFirstEntityType(this.currentEntity(), this.chosenProperty);
+                        this._previousEntityType = currentEntityTypeGetter();
                         postMasterInfoRetrieve();
                     } catch (e) {
                         this.isActionInProgress = false;

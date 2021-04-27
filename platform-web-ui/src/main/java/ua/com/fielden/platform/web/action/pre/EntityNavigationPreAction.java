@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.action.pre;
 
+import static java.lang.String.format;
+
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 
@@ -24,7 +26,7 @@ public class EntityNavigationPreAction implements IPreAction {
 
     @Override
     public JsCode build() {
-        return new JsCode(String.format("self.navigationPreAction(action, '%s');%n", navigationType));
+        return new JsCode(format("self.navigationPreAction(action, '%s');%n", navigationType));
     }
 
 }

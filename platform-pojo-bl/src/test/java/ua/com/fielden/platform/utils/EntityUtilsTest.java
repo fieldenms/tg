@@ -483,6 +483,18 @@ public class EntityUtilsTest {
     }
 
     @Test
+    public void traversing_undefined_property_path_produces_stream_with_root_property_and_value_pair() {
+        final Entity entity1 = factory.newEntity(Entity.class);
+        entity1.setKey("E1");
+
+        final List<T2<String, Optional<? extends AbstractEntity<?>>>> trace = EntityUtils.traversePropPath(entity1, null).collect(toList());
+        assertEquals(1, trace.size());
+        final T2<String, Optional<? extends AbstractEntity<?>>> t2_1 = trace.get(0);
+        assertEquals("", t2_1._1);
+        assertEquals(entity1, t2_1._2.get());
+    }
+
+    @Test
     public void traversing_path_with_one_entity_typed_property_produces_stream_with_two_elements() {
         final Entity entity1 = factory.newEntity(Entity.class);
         entity1.setKey("E1");
@@ -496,6 +508,12 @@ public class EntityUtilsTest {
         final T2<String, Optional<? extends AbstractEntity<?>>> t2_2 = trace.get(1);
         assertEquals("", t2_2._1);
         assertEquals(entity1, t2_2._2.get());
+    }
+
+    @Test
+    public void traversing_any_property_path_with_empty_root_produces_empty_stream() {
+        final List<T2<String, Optional<? extends AbstractEntity<?>>>> trace = EntityUtils.traversePropPath(null, "any").collect(toList());
+        assertEquals(0, trace.size());
     }
 
     @Test

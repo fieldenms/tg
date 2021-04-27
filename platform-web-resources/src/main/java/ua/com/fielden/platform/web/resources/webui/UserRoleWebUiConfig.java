@@ -25,6 +25,7 @@ import ua.com.fielden.platform.security.user.UserRoleProducer;
 import ua.com.fielden.platform.security.user.UserRoleTokensUpdater;
 import ua.com.fielden.platform.security.user.UserRoleTokensUpdaterProducer;
 import ua.com.fielden.platform.ui.menu.sample.MiUserRole;
+import ua.com.fielden.platform.web.action.pre.EntityNavigationPreAction;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
@@ -121,7 +122,7 @@ public class UserRoleWebUiConfig {
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
                 .withDimensions(mkDim(480, 320))
                 .done();
-        return new EntityMaster<UserRole>(
+        return new EntityMaster<>(
                 UserRole.class,
                 UserRoleProducer.class,
                 masterConfigForUserRole,
@@ -148,7 +149,7 @@ public class UserRoleWebUiConfig {
                         + "    ]"))
                 .withDimensions(mkDim("'30%'", "'50%'"))
                 .done();
-        return new EntityMaster<UserRoleTokensUpdater>(
+        return new EntityMaster<>(
                 UserRoleTokensUpdater.class,
                 UserRoleTokensUpdaterProducer.class,
                 masterConfig,
@@ -176,9 +177,11 @@ public class UserRoleWebUiConfig {
             public EntityActionConfig mkAction() {
                 return action(EntityEditAction.class)
                         .withContext(context().withCurrentEntity().withSelectionCrit().build())
+                        .preAction(new EntityNavigationPreAction("User Role"))
                         .icon("editor:mode-edit")
                         .shortDesc("Edit User Role")
                         .longDesc("Opens master for User Role editing.")
+                        .withNoParentCentreRefresh()
                         .build();
             }
 

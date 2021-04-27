@@ -184,14 +184,26 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
     }
 
     /**
-     * Re-fetches entity using <code>property</code>'s fetch provider for the entity type behind this producer.
+     * Re-fetches entity (defined by {@code id} and {@code entityType}) using {@code property}'s fetch provider for the entity type behind this producer.
+     * Returns uninstrumented instance.
+     *
+     * @param id
+     * @param entityType
+     * @return
+     */
+    protected final <M extends AbstractEntity<?>> M refetch(final Long id, final Class<M> entityType, final String property) {
+        return findByIdWithFiltering(id, co(entityType), reader.get().getFetchProvider().<M>fetchFor(property).fetchModel());
+    }
+
+    /**
+     * Re-fetches {@code entity} using {@code property}'s fetch provider for the entity type behind this producer.
      * Returns uninstrumented instance.
      *
      * @param entity
      * @return
      */
     protected final <M extends AbstractEntity<?>> M refetch(final M entity, final String property) {
-        return findByIdWithFiltering(entity.getId(), co((Class<M>) entity.getType()), reader.get().getFetchProvider().<M>fetchFor(property).fetchModel());
+        return refetch(entity.getId(), (Class<M>) entity.getType(), property);
     }
 
     /**

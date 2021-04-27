@@ -269,8 +269,7 @@ Polymer({
                     delete this.$.openMasterAction.modifyFunctionalEntity;
                 };
             }
-            this.$.openMasterAction.currentEntity = () => entity;
-            this.$.openMasterAction._run();
+            this.$.openMasterAction._runDynamicAction(() => entity, null);
         }
     },
     
