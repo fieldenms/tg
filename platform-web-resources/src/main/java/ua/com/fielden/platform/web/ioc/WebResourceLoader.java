@@ -114,12 +114,28 @@ public class WebResourceLoader implements IWebResourceLoader {
         return webUiConfig.checksum(resourceURI);
     }
 
+    /**
+     * Generates 'tg-reflector' resource with type table containing master configurations.
+     * 
+     * @param webUiConfig -- web UI configuration containing information about all entity masters
+     * @param serialiser
+     * @param tgJackson
+     * @return
+     */
     private static Optional<String> getReflectorSource(final IWebUiConfig webUiConfig, final ISerialiser serialiser, final TgJackson tgJackson) {
         final Optional<String> originalSource = ofNullable(getText("ua/com/fielden/platform/web/reflection/tg-reflector.js"));
-        return originalSource.map(src -> src.replace("@typeTable", new String(serialiser.serialise(enhanceWithMasterPresence(webUiConfig, tgJackson.getTypeTable()), JACKSON), UTF_8)));
+        return originalSource.map(src -> src.replace("@typeTable", new String(serialiser.serialise(enhanceWithMasterInfo(webUiConfig, tgJackson.getTypeTable()), JACKSON), UTF_8)));
     }
 
-    private static Map<String, EntityType> enhanceWithMasterPresence(final IWebUiConfig webUiConfig, final Map<String, EntityType> typeTable) {
+    /**
+     * Extends types in {@code typeTable} with information about their masters.
+     * The type can have no master -- in this case {@link EntityType#get_entityMaster()} will be empty ({@code null}).
+     * 
+     * @param webUiConfig -- web UI configuration containing information about all entity masters
+     * @param typeTable
+     * @return
+     */
+    private static Map<String, EntityType> enhanceWithMasterInfo(final IWebUiConfig webUiConfig, final Map<String, EntityType> typeTable) {
         final MasterInfoProvider masterInfoProvider = new MasterInfoProvider(webUiConfig);
         typeTable.forEach((typeName, entityType) -> {
             entityType.set_entityMaster(masterInfoProvider.getMasterInfo(typeName));
