@@ -13,7 +13,6 @@ import { TgElementSelectorBehavior } from '/resources/components/tg-element-sele
 import { tearDownEvent, getFirstEntityType } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
-import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 import {processResponseError, toastMsgForError} from '/resources/reflection/tg-ajax-utils.js';
 import { enhanceStateRestoration } from '/resources/components/tg-global-error-handler.js';
 
@@ -421,17 +420,6 @@ Polymer({
         },
 
         /**
-         * Additional headers for every 'iron-ajax' client-side requests. These only contain 
-         * our custom 'Time-Zone' header that indicates real time-zone for the client application.
-         * The time-zone then is to be assigned to threadlocal 'IDates.timeZone' to be able
-         * to compute 'Now' moment properly.
-         */
-        _headers: {
-            type: String,
-            value: _timeZoneHeader
-        },
-
-        /**
          * In case where this tg-ui-action represents continuation action, continuationProperty uniquely identifies continuation in saving session of parent initiating entity (will be set into companion object).
          */
         continuationProperty: {
@@ -460,8 +448,6 @@ Polymer({
         const self = this;
         this._reflector = new TgReflector();
         this._serialiser = new TgSerialiser();
-
-        this._processMasterError = this._processMasterError.bind(this);
 
         /**
          * Runs dynamic action with the specified mandatory context. Both 'currentEntity' and 'chosenProperty' must be specified.
@@ -783,10 +769,6 @@ Polymer({
         this.requireSelectedEntities = masterInfo.requireSelectedEntities;
         this.requireMasterEntity = masterInfo.requireMasterEntity;
         this.shouldRefreshParentCentreAfterSave = masterInfo.shouldRefreshParentCentreAfterSave;
-    }, 
-    
-    _processMasterError: function (e) {
-        processResponseError(e, this._reflector, this._serialiser, null, this.toaster);
-    },
+    }
 
 });
