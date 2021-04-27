@@ -463,6 +463,10 @@ Polymer({
 
         this._processMasterError = this._processMasterError.bind(this);
 
+        /**
+         * Runs dynamic action with the specified mandatory context. Both 'currentEntity' and 'chosenProperty' must be specified.
+         * 'chosenProperty' can be null -- in this case dynamic action runs for 'currentEntity' itself.
+         */
         self._runDynamicAction = function (currentEntity, chosenProperty) {
             this.currentEntity = currentEntity;
             this.chosenProperty = chosenProperty;
