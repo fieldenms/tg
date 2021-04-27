@@ -3,6 +3,7 @@ package ua.com.fielden.platform.entity;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseOpening;
+
 import java.util.function.Supplier;
 
 import com.google.inject.Inject;
@@ -49,9 +50,11 @@ public class EntityManipulationActionProducer<T extends AbstractEntityManipulati
                     }
                 })
                 .orElseGet(determineTypeFrom)
-            ).map(entityType -> entity.setEntityTypeForEntityMaster(entityType))
-             .orElseThrow(() -> new SimpleMasterException(format("Please add selection criteria or current entity to the context of the functional entity with type: %s", entity.getType().getName())));
-            authoriseOpening(entityType.getSimpleName(), authorisation, securityTokenProvider).ifFailure(Result::throwRuntime);
+            ).map(entityType -> {
+                authoriseOpening(entityType.getSimpleName(), authorisation, securityTokenProvider).ifFailure(Result::throwRuntime);
+                return entity.setEntityTypeForEntityMaster(entityType);
+            })
+            .orElseThrow(() -> new SimpleMasterException(format("Please add selection criteria or current entity to the context of the functional entity with type: %s", entity.getType().getName())));
         }
         return entity;
     }
