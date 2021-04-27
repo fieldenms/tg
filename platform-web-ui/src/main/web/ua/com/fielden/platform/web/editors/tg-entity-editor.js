@@ -26,7 +26,7 @@ const additionalTemplate = html`
             @apply --layout-horizontal;
             @apply --layout-center;
         }
-        #actionaAvailability {
+        #actionAvailability {
             display: none;
             width: 18px;
             height: 18px;
@@ -35,7 +35,7 @@ const additionalTemplate = html`
         label[action-available]:hover {
             cursor: pointer;
         }
-        label:hover #actionaAvailability[action-available] {
+        label:hover #actionAvailability[action-available] {
             display: unset;
         }
         #input.upper-case {
@@ -83,7 +83,7 @@ const customLabelTemplate = html`
            on-tap="_labelTap" 
            tooltip-text$="[[_getTooltip(_editingValue, entity, focused, actionAvailable)]]">
         <span>[[propTitle]]</span>
-        <iron-icon id="actionaAvailability" icon="editor:mode-edit" action-available$="[[actionAvailable]]"></iron-icon>
+        <iron-icon id="actionAvailability" icon="editor:mode-edit" action-available$="[[actionAvailable]]"></iron-icon>
     </label>`;
 const customInputTemplate = html`
     <iron-input bind-value="{{_editingValue}}" class="custom-input-wrapper">
@@ -154,7 +154,7 @@ export class TgEntityEditor extends TgEditor {
             * Entity master instance for this autocomplter.
             */
            entityMaster: {
-               type: Boolean,
+               type: Object,
                computed: '_computeEntityMaster(multi, autocompletionType, propertyName)'
            },
 
@@ -483,10 +483,10 @@ export class TgEntityEditor extends TgEditor {
             }).then(res => {
                 this._labelTap();
             });
-        } else if (this.openMasterAction && this.entity !== null && this.actionAvailable) {
+        } else if (this.openMasterAction && this.actionAvailable) {
             const entityValue = this.reflector().tg_getFullValue(this.entity, this.propertyName);
-            if (entityValue !== null && !Array.isArray(entityValue)) {
-                this.openMasterAction._runDynamicAction(() => entityValue, null);       
+            if (this.reflector().isEntity(entityValue)) {
+                this.openMasterAction._runDynamicAction(() => entityValue, null);
             }
         }
     }
@@ -969,7 +969,7 @@ export class TgEntityEditor extends TgEditor {
     }
 
     _generateTooltip (value, actionAvailable) {
-        var tooltip = this._formatTooltipText(value);
+        let tooltip = this._formatTooltipText(value);
         tooltip += this.propDesc && (tooltip ? '<br><br>' : '') + this.propDesc;
         tooltip += actionAvailable && ((tooltip ? '<br><br>' : '') + this._getActionTooltip(this.entityMaster));
         return tooltip;
@@ -991,7 +991,7 @@ export class TgEntityEditor extends TgEditor {
     }
 
     _getActionTooltip  (entityMaster) {
-        const shortDesc = "<b>" + entityMaster.shortDesc + "</b>";
+        const shortDesc = entityMaster.shortDesc ? "<b>" + entityMaster.shortDesc + "</b>" : "";
         let longDesc;
         if (shortDesc) {
             longDesc = entityMaster.longDesc ? "<br>" + entityMaster.longDesc : "";
