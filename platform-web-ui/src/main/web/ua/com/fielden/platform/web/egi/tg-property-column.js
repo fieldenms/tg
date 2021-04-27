@@ -57,9 +57,7 @@ Polymer({
 
     runDefaultAction: function (currentEntity, defaultPropertyAction) {
         if (defaultPropertyAction) {
-            defaultPropertyAction.currentEntity = currentEntity;
-            defaultPropertyAction.chosenProperty = getFirstEntityTypeAndProperty(currentEntity.bind(defaultPropertyAction)(), this.collectionalProperty || this.property)[1];
-            defaultPropertyAction._run();
+            defaultPropertyAction._runDynamicAction(currentEntity, getFirstEntityTypeAndProperty(currentEntity.bind(defaultPropertyAction)(), this.collectionalProperty || this.property)[1]);
             return true;
         } 
         return false;

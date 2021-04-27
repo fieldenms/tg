@@ -472,6 +472,13 @@ Polymer({
 
         this._processMasterError = this._processMasterError.bind(this);
 
+        self._runDynamicAction = function (currentEntity, chosenProperty) {
+            this.currentEntity = currentEntity;
+            this.chosenProperty = chosenProperty;
+
+            this._run();
+        }.bind(this);
+
         self._run = (function (event) {
             console.log(this.shortDesc + ": execute");
 

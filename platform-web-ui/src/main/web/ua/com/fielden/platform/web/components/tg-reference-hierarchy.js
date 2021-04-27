@@ -235,9 +235,7 @@ Polymer({
     _buildEditAction: function(action) {
         action.shortDesc = "";
         this._actions[referenceHierarchyActions.EDIT] = (e) => {
-            action.currentEntity = () => e.model.entity.entity.entity;
-            action.chosenProperty = null;
-            action._run();
+            action._runDynamicAction(() => e.model.entity.entity.entity, null);
         };
         return (entity) => {
             const typeTitle = this.$.reflector.getType(entity.entity.entity.type().notEnhancedFullClassName()).entityTitle();
