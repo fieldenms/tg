@@ -585,7 +585,7 @@ export const TgEntityBinderBehavior = {
                     // IMPORTANT: no need to check whether the _hasModified(holder) === true -- because the error recovery should happen!
                     // (if the entity was not modified -- _validate(holder) will start the error recovery process)
                     slf._validationPromise = slf._validateForDescendants(slf._reset(holder));
-                    slf._validationPromise.then(res => resolve(res));
+                    slf._validationPromise.then(res => resolve(res)).catch(e => {}); // _validationPromise can be aborted (see abortValidationIfAny) and this is okay; catch handler is used to prevent 'Uncaught (in promise)' errors
                 }, 50);
             });
         }).bind(self);
