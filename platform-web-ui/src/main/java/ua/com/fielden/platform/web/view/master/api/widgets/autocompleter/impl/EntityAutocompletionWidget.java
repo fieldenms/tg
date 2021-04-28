@@ -27,7 +27,7 @@ public class EntityAutocompletionWidget extends AbstractEntityAutocompletionWidg
         attrs.put("as-part-of-entity-master", true);
         attrs.put("create-modified-properties-holder", "[[_createModifiedPropertiesHolder]]");
         attrs.put("originally-produced-entity", "[[_originallyProducedEntity]]");
-        attrs.put("is-validating", "[[isValidating]]");
+        attrs.put("last-validation-attempt-promise", "[[lastValidationAttemptPromise]]");
         attrs.put("open-master-action", "[[openMasterAction]]");
         return attrs;
     };
