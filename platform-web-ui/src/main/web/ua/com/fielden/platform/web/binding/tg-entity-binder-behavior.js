@@ -570,7 +570,7 @@ export const TgEntityBinderBehavior = {
             //     of previous validations!
             const holder = slf._extractModifiedPropertiesHolder(slf._currBindingEntity, slf._originalBindingEntity);
             holder['@validationCounter'] = slf._validationCounter;
-            //Indicate the validation start by setting true into isValidating property
+            // Indicate the validation start by setting true into isValidating property
             this.isValidating = true;
             // After the first 'validate' invocation arrives -- debouncer will wait 50 milliseconds
             //   for the next 'validate' invocation, and if it arrives -- the recent one will become as active ( and
@@ -701,7 +701,7 @@ export const TgEntityBinderBehavior = {
                 this._continuations = {};
             }
             const newBindingEntity = this._postEntityReceived(validatedEntity, false);
-            //Indicate the validation finish by setting false into isValidating property
+            // Indicate the validation finish by setting false into isValidating property
             this.isValidating = false;
             // custom external action
             if (this.postValidated) {
@@ -710,7 +710,7 @@ export const TgEntityBinderBehavior = {
         }).bind(self);
 
         self._postValidatedDefaultError = (function (errorResult) {
-            //Indicate the validation finish by setting false into isValidating property
+            // Indicate the validation finish by setting false into isValidating property
             this.isValidating = false;
             // This function will be invoked after server-side error appear.
             // 'tg-action' will augment this function with its own '_afterExecution' logic (spinner stopping etc.).

@@ -151,7 +151,7 @@ export class TgEntityEditor extends TgEditor {
            },
 
            /**
-            * Entity master instance for this autocomplter.
+            * Entity master instance for this autocompleter.
             */
            entityMaster: {
                type: Object,
@@ -159,13 +159,16 @@ export class TgEntityEditor extends TgEditor {
            },
 
            /**
-            * Action to open master on title click
+            * Action to open master on title click.
             */
            openMasterAction: {
                type: Object,
                value: null
            },
 
+           /**
+            * Indicates whether title action is available for tapping and is visible.
+            */
            actionAvailable: {
                type: Boolean,
                computed: '_computeActionAvailability(entityMaster, entity, currentState)'
@@ -180,7 +183,9 @@ export class TgEntityEditor extends TgEditor {
                observer: "_validatingChanged"
            },
 
-           //Function that will be invoked after host's validation will finish.
+           /**
+            * Function that will be invoked after host's validation will finish.
+            */
            _validationResolver: {
                type: Function,
                value: null
@@ -990,6 +995,9 @@ export class TgEntityEditor extends TgEditor {
         return '';
     }
 
+    /**
+     * Calculates title action tooltip.
+     */
     _getActionTooltip  (entityMaster) {
         const shortDesc = entityMaster.shortDesc ? "<b>" + entityMaster.shortDesc + "</b>" : "";
         let longDesc;
@@ -1018,9 +1026,11 @@ export class TgEntityEditor extends TgEditor {
 
     _changeTitle (entity) {
         this._customPropTitle = this._createTitleObject(entity);
-        
     }
 
+    /**
+     * Triggers title tapping logic after validation completion, if it was initiated during validation.
+     */
     _validatingChanged (newValue, oldValue) {
         if (!newValue && this._validationResolver) {
             this._validationResolver();
@@ -1028,6 +1038,9 @@ export class TgEntityEditor extends TgEditor {
         }
     }
 
+    /**
+     * Computes entity master object for entity-typed property represented by this autocompleter (only for non-multi).
+     */
     _computeEntityMaster (multi, autocompletionType, propertyName) {
         if (!allDefined(arguments)) {
             return null;
@@ -1036,12 +1049,15 @@ export class TgEntityEditor extends TgEditor {
         return (!multi || null) && type && type.prop(propertyName).type().entityMaster();
     }
 
+    /**
+     * Computes whether title action is available for tapping and visible.
+     */
     _computeActionAvailability (entityMaster, entity, currentState) {
         if (!entityMaster || !entity || !currentState) {
             return false;
         }
         const fullEntity = this.reflector().tg_getFullEntity(entity);
-        return currentState === 'EDIT' && !this.reflector().isError(fullEntity.prop(this.propertyName).validationResult());
+        return currentState === 'EDIT' && !this.reflector().isError(fullEntity.prop(this.propertyName).validationResult()); // currentState is not 'EDIT' e.g. where refresh / saving process is in progress
     }
 
     _valueStyle (item, index) {
