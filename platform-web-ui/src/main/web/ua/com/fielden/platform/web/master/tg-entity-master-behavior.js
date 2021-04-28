@@ -1071,8 +1071,9 @@ const TgEntityMasterBehaviorImpl = {
                         topic: 'detail.saved',
                         data: newData
                     });
-                    //Revalidate current master if it desn't have embedded view in order to update master editors if the postal event was published by master
-                    //opened with entity editor title (i.e. openMasterAction)
+                    // Revalidate current master if it simple (i.e. doesn't have embedded view) in order to update master editors;
+                    // do this for example if postal 'detail.saved' event was published by child master;
+                    // these child masters include those opened with entity editor title (i.e. openMasterAction), or from property / entity / continuation actions
                     if (!self._hasEmbededView()) {
                         self.validate();
                     }
