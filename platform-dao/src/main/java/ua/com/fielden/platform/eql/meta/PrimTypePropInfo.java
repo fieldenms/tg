@@ -9,11 +9,11 @@ public class PrimTypePropInfo<T> extends AbstractPropInfo<T> {
     private final Class<T> propType;
 
     public PrimTypePropInfo(final String name, final Object hibType, final Class<T> propType) {
-        this(name, hibType, propType, null);
+        this(name, hibType, propType, null, false);
     }
     
-    public PrimTypePropInfo(final String name, final Object hibType, final Class<T> propType, final ExpressionModel expression) {
-        super(name, hibType, expression);
+    public PrimTypePropInfo(final String name, final Object hibType, final Class<T> propType, final ExpressionModel expression, final boolean implicit) {
+        super(name, hibType, expression, implicit);
         this.propType = propType;
     }
 

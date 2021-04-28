@@ -19,7 +19,7 @@ public class EntityTypePropInfo<T extends AbstractEntity<?>> extends AbstractPro
     public final boolean required;
 
     public EntityTypePropInfo(final String name, final EntityInfo<T> propEntityInfo, final Object hibType, final boolean required) {
-        this(name, propEntityInfo, hibType, required, null);
+        this(name, propEntityInfo, hibType, required, null, false);
     }
 
     @Override
@@ -27,8 +27,8 @@ public class EntityTypePropInfo<T extends AbstractEntity<?>> extends AbstractPro
         return new EntityTypePropInfo<T>(newName, propEntityInfo, hibType, required);
     }
     
-    public EntityTypePropInfo(final String name, final EntityInfo<T> propEntityInfo, final Object hibType, final boolean required, final ExpressionModel expression) {
-        super(name, hibType, expression);
+    public EntityTypePropInfo(final String name, final EntityInfo<T> propEntityInfo, final Object hibType, final boolean required, final ExpressionModel expression, final boolean implicit) {
+        super(name, hibType, expression, implicit);
         this.propEntityInfo = propEntityInfo;
         this.required = required;
     }

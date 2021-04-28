@@ -13,14 +13,20 @@ import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 public abstract class AbstractPropInfo<T> implements IResolvable<T> {
     public final String name; //shouldn't contain dots
     public final ExpressionModel expression;
+    public final boolean implicit;
     public final Object hibType;
 
-    public AbstractPropInfo(final String name, final Object hibType, final ExpressionModel expression) {
+    public AbstractPropInfo(final String name, final Object hibType, final ExpressionModel expression, final boolean implicit) {
         this.name = name;
         this.expression = expression;
         this.hibType = hibType;
+        this.implicit = implicit;
     }
     
+    public AbstractPropInfo(final String name, final Object hibType, final ExpressionModel expression) {
+        this(name, hibType, expression, false);
+    }
+
     public abstract AbstractPropInfo<T> cloneRenamed(final String newName);
     
     public boolean hasExpression() {
@@ -34,6 +40,7 @@ public abstract class AbstractPropInfo<T> implements IResolvable<T> {
         result = prime * result + name.hashCode();
         result = prime * result + hibType.hashCode();
         result = prime * result + ((expression == null) ? 0 : expression.hashCode());
+        result = prime * result + (implicit ? 1231 : 1237);
         return result;
     }
 
@@ -49,6 +56,6 @@ public abstract class AbstractPropInfo<T> implements IResolvable<T> {
 
         final AbstractPropInfo<?> other = (AbstractPropInfo<?>) obj;
         
-        return Objects.equals(name, other.name) && Objects.equals(hibType, other.hibType) && Objects.equals(expression, other.expression);
+        return Objects.equals(name, other.name) && Objects.equals(hibType, other.hibType) && Objects.equals(expression, other.expression) && Objects.equals(implicit, other.implicit);
     }
 }

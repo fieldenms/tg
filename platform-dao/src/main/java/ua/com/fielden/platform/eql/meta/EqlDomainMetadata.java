@@ -207,7 +207,7 @@ public class EqlDomainMetadata {
                 final Source2BasedOnPersistentType source = new Source2BasedOnPersistentType(et.javaType(), et, "dummy_id");
                 for (final AbstractPropInfo<?> prop : et.getProps().values()) {
                     if (prop.expression != null && !prop.name.equals(KEY)) {
-                        try {
+                       try {
                             p2tt.groupChildren(setOf(new Prop2(source, asList(prop))));    
                         } catch (Exception e) {
                             throw new EqlException("There is an error in expression of calculated property [" + et.javaType().getSimpleName() + ":" + prop.name + "]: " + e.getMessage());
@@ -240,30 +240,30 @@ public class EqlDomainMetadata {
                     final EntityInfo<? extends AbstractUnionEntity> ef = new EntityInfo<>((Class<? extends AbstractUnionEntity>) javaType, UNION);
                     for (final EqlPropertyMetadata sub : el.subitems()) {
                         if (sub.expressionModel == null) {
-                            ef.addProp(new EntityTypePropInfo(sub.name, allEntitiesInfo.get(sub.javaType), sub.hibType, false, null));
+                            ef.addProp(new EntityTypePropInfo(sub.name, allEntitiesInfo.get(sub.javaType), sub.hibType, false, null, sub.implicit));
                         } else {
                             final ExpressionModel subExpr = sub.expressionModel;
                             if (EntityUtils.isEntityType(sub.javaType)) {
-                                ef.addProp(new EntityTypePropInfo(sub.name, allEntitiesInfo.get(sub.javaType), sub.hibType, false, subExpr));
+                                ef.addProp(new EntityTypePropInfo(sub.name, allEntitiesInfo.get(sub.javaType), sub.hibType, false, subExpr, sub.implicit));
                             } else {
-                                ef.addProp(new PrimTypePropInfo(sub.name, sub.hibType, sub.javaType, subExpr));
+                                ef.addProp(new PrimTypePropInfo(sub.name, sub.hibType, sub.javaType, subExpr, sub.implicit));
                             }
 
                         }
                     }
                     entityInfo.addProp(new UnionTypePropInfo(name, ef, hibType, false));
                 } else if (isPersistedEntityType(javaType)) {
-                    entityInfo.addProp(new EntityTypePropInfo(name, allEntitiesInfo.get(javaType), hibType, el.required, expr));
+                    entityInfo.addProp(new EntityTypePropInfo(name, allEntitiesInfo.get(javaType), hibType, el.required, expr, el.implicit));
                     //                } else if (ID.equals(name)){
                     //                    entityInfo.addProp(new EntityTypePropInfo(name, allEntitiesInfo.get(entityInfo.javaType()), hibType, required, expr));
                 } else {
                     if (el.subitems().isEmpty()) {
-                        entityInfo.addProp(new PrimTypePropInfo(name, hibType, javaType, expr));
+                        entityInfo.addProp(new PrimTypePropInfo(name, hibType, javaType, expr, el.implicit));
                     } else {
                         final ComponentTypePropInfo propTpi = new ComponentTypePropInfo(name, javaType, hibType);
                         for (final EqlPropertyMetadata sub : el.subitems()) {
                             final ExpressionModel subExpr = sub.expressionModel;
-                            propTpi.addProp(new PrimTypePropInfo(sub.name, sub.hibType, sub.javaType, subExpr));
+                            propTpi.addProp(new PrimTypePropInfo(sub.name, sub.hibType, sub.javaType, subExpr, sub.implicit));
                         }
                         entityInfo.addProp(propTpi);
                     }
@@ -329,7 +329,7 @@ public class EqlDomainMetadata {
                 }
                 return of(idProperty);
             } else if (isEntityType(getKeyType(parentInfo.entityType))) {
-                return of(new EqlPropertyMetadata.Builder(ID, Long.class, H_LONG).expression(expr().prop(KEY).model()).build());
+                return of(new EqlPropertyMetadata.Builder(ID, Long.class, H_LONG).expression(expr().prop(KEY).model()).implicit().build());
             } else {
                 return empty();
             }
@@ -354,7 +354,7 @@ public class EqlDomainMetadata {
                 return null;
             }
         } else if (DynamicEntityKey.class.equals(keyType)) {
-            return new EqlPropertyMetadata.Builder(KEY, String.class, H_STRING).expression(generateCompositeKeyEqlExpression((Class<? extends AbstractEntity<DynamicEntityKey>>) parentInfo.entityType)).required().build();
+            return new EqlPropertyMetadata.Builder(KEY, String.class, H_STRING).expression(generateCompositeKeyEqlExpression((Class<? extends AbstractEntity<DynamicEntityKey>>) parentInfo.entityType)).implicit().required().build();
         } else {
             final Object keyHibType = typeResolver.basic(keyType.getName());
             switch (parentInfo.category) {
@@ -458,9 +458,9 @@ public class EqlDomainMetadata {
         final List<Field> unionMembers = unionProperties(unionPropType);
         final List<String> unionMembersNames = unionMembers.stream().map(up -> up.getName()).collect(toList());
         final List<EqlPropertyMetadata> subitems = new ArrayList<>();
-        subitems.add(new EqlPropertyMetadata.Builder(KEY, String.class, H_STRING).expression(generateUnionEntityPropertyContextualExpression(unionMembersNames, KEY, contextPropName)).build());
-        subitems.add(new EqlPropertyMetadata.Builder(ID, Long.class, H_LONG).expression(generateUnionEntityPropertyContextualExpression(unionMembersNames, ID, contextPropName)).build());
-        subitems.add(new EqlPropertyMetadata.Builder(DESC, String.class, H_STRING).expression(generateUnionCommonDescPropExpressionModel(unionMembers, contextPropName)).build());
+        subitems.add(new EqlPropertyMetadata.Builder(KEY, String.class, H_STRING).expression(generateUnionEntityPropertyContextualExpression(unionMembersNames, KEY, contextPropName)).implicit().build());
+        subitems.add(new EqlPropertyMetadata.Builder(ID, Long.class, H_LONG).expression(generateUnionEntityPropertyContextualExpression(unionMembersNames, ID, contextPropName)).implicit().build());
+        subitems.add(new EqlPropertyMetadata.Builder(DESC, String.class, H_STRING).expression(generateUnionCommonDescPropExpressionModel(unionMembers, contextPropName)).implicit().build());
 
         final List<String> commonProps = commonProperties(unionPropType).stream().filter(n -> !DESC.equals(n)).collect(toList());
         final Class<?> firstUnionEntityPropType = unionMembers.get(0).getType(); // e.g. WagonSlot in TgBogieLocation
@@ -471,7 +471,7 @@ public class EqlDomainMetadata {
             final Class<?> javaType = determinePropertyType(firstUnionEntityPropType, commonProp);
             final Object subHibType = getHibernateType(findFieldByName(firstUnionEntityPropType, commonProp));
 
-            subitems.add(new EqlPropertyMetadata.Builder(commonProp, javaType, subHibType).expression(generateUnionEntityPropertyContextualExpression(unionMembersNames, commonProp, contextPropName)).build());
+            subitems.add(new EqlPropertyMetadata.Builder(commonProp, javaType, subHibType).expression(generateUnionEntityPropertyContextualExpression(unionMembersNames, commonProp, contextPropName)).implicit().build());
         }
 
         return subitems;
@@ -533,7 +533,7 @@ public class EqlDomainMetadata {
 
         // 1-2-1 is not required to exist -- that's why need longer formula -- that's why 1-2-1 is in fact implicitly calculated nullable prop
         final ExpressionModel expressionModel = expr().model(select((Class<? extends AbstractEntity<?>>) propField.getType()).where().prop(KEY).eq().extProp(ID).model()).model();
-        return new EqlPropertyMetadata.Builder(propName, javaType, hibType).notRequired().expression(expressionModel).build();
+        return new EqlPropertyMetadata.Builder(propName, javaType, hibType).notRequired().expression(expressionModel).implicit().build();
     }
 
     private final Table generateTable(final String tableName, final List<EqlPropertyMetadata> propsMetadatas) {
