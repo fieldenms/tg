@@ -149,12 +149,10 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                 }
             }
             
-            entity.setPreferredProperty(
-                ofNullable(node.get("@_pp")) // for undefined node, set 'null'
-                .filter(JsonNode::isTextual) // for non-textual value, also set 'null' (e.g. in case of client-side erroneous entity manipulation)
+            ofNullable(node.get("@_pp")) // for undefined node, leave preferred property 'null' (default value after creation)
+                .filter(JsonNode::isTextual) // for non-textual value, also leave preferred property 'null' (e.g. in case of client-side erroneous entity's preferred property manipulation)
                 .map(JsonNode::asText) // for defined node, set its textual representation
-                .orElse(null)
-            );
+                .ifPresent(preferredProperty -> entity.setPreferredProperty(preferredProperty));
             
             final List<CachedProperty> nonProxiedProps = properties.stream().filter(prop -> node.get(prop.field().getName()) != null).collect(Collectors.toList()); 
             for (final CachedProperty prop : nonProxiedProps) {
