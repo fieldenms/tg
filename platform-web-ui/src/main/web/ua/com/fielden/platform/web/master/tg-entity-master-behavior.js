@@ -10,10 +10,27 @@ import { TgRequiredPropertiesFocusTraversalBehavior } from '/resources/component
 import { queryElements } from '/resources/components/tg-element-selector-behavior.js';
 import { enhanceStateRestoration } from '/resources/components/tg-global-error-handler.js';
 
-export const selectEnabledEditor = function (editor) {
-    const selectedElement = editor.shadowRoot.querySelector('.custom-input:not([hidden]):not([disabled]):not([readonly])');
-    return (selectedElement && selectedElement.shadowRoot && selectedElement.shadowRoot.querySelector('textarea')) || selectedElement;
-}
+export const findFirstInputToFocus = editors => {
+    const selectEnabledEditor = editor => {
+        const selectedElement = editor.shadowRoot.querySelector('.custom-input:not([hidden]):not([disabled]):not([readonly])');
+        return (selectedElement && selectedElement.shadowRoot && selectedElement.shadowRoot.querySelector('textarea')) || selectedElement;
+    };
+    
+    let editorIndex, firstInput, selectedElement;
+    for (editorIndex = 0; editorIndex < editors.length; editorIndex++) {
+        if (editors[editorIndex].offsetParent !== null) {
+            selectedElement = selectEnabledEditor(editors[editorIndex]);
+            firstInput = firstInput || selectedElement;
+            if (editors[editorIndex]._error && !editors[editorIndex].isInWarning()) {
+                if (selectedElement) {
+                    return selectedElement;
+                }
+            }
+        }
+    }
+    // if the input has been identified then return it
+    return firstInput; // either empty or not
+};
 
 const TgEntityMasterBehaviorImpl = {
     properties: {
@@ -769,26 +786,12 @@ const TgEntityMasterBehaviorImpl = {
      * Looks for the first input that is not hidden and not disabled to focus it.
      */
     _focusFirstInput: function () {
-        const editors = this.getEditors();
-        let editorIndex, firstInput, selectedElement;
-        for (editorIndex = 0; editorIndex < editors.length; editorIndex++) {
-            if (editors[editorIndex].offsetParent !== null) {
-                selectedElement = selectEnabledEditor(editors[editorIndex]);
-                firstInput = firstInput || selectedElement;
-                if (editors[editorIndex]._error && !editors[editorIndex].isInWarning()) {
-                    if (selectedElement) {
-                        selectedElement.focus();
-                        return;
-                    }
-                }
-            }
-        }
-        // if the input has been identified then focus it.
+        const firstInput = findFirstInputToFocus(this.getEditors());
         if (firstInput) {
-            firstInput.focus();
+            firstInput.focus(); // if the input has been identified then focus it
         } else if (this.offsetParent !== null) {
-            //Otherwise find first focusable element and focus it. If there are no focusable element then fire event that asks
-            //it's ancestors to focus their first best element.
+            // Otherwise find first focusable element and focus it. If there are no focusable element then fire event that asks
+            //  it's ancestors to focus their first best element.
             const focusedElements = this._getCurrentFocusableElements();
             if (focusedElements.length > 0) {
                 if (this.shadowRoot.activeElement === null) {

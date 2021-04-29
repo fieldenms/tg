@@ -1,6 +1,6 @@
 import '/resources/components/postal-lib.js';
 
-import { TgEntityMasterBehavior, selectEnabledEditor} from '/resources/master/tg-entity-master-behavior.js';
+import { TgEntityMasterBehavior, findFirstInputToFocus } from '/resources/master/tg-entity-master-behavior.js';
 import { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';
 import { queryElements } from '/resources/components/tg-element-selector-behavior.js';
 import { IronA11yKeysBehavior } from '/resources/polymer/@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
@@ -105,23 +105,9 @@ const TgEgiMasterBehaviorImpl = {
      * Looks for the first input that is not hidden and not disabled to focus it.
      */
     _focusFirstInput: function () {
-        const editors = this.getEditors();
-        let editorIndex, firstInput, selectedElement;
-        for (editorIndex = 0; editorIndex < editors.length; editorIndex++) {
-            if (editors[editorIndex].offsetParent !== null) {
-                selectedElement = selectEnabledEditor(editors[editorIndex]);
-                firstInput = firstInput || selectedElement;
-                if (editors[editorIndex]._error && !editors[editorIndex].isInWarning()) {
-                    if (selectedElement) {
-                        selectedElement.focus();
-                        return;
-                    }
-                }
-            }
-        }
-        // if the input has been identified then focus it, otherwise do nothing
+        const firstInput = findFirstInputToFocus(this.getEditors());
         if (firstInput) {
-            firstInput.focus();
+            firstInput.focus(); // if the input has been identified then focus it
         } else {
             const focusableParent = getParentAnd(this, parent => parent.matches(FOCUSABLE_ELEMENTS_SELECTOR));
             if (focusableParent) {
