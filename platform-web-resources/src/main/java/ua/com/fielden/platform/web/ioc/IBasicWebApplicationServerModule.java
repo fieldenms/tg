@@ -88,7 +88,7 @@ public interface IBasicWebApplicationServerModule {
      *
      * @param injector
      */
-    default void initWebApp(final Injector injector) {
+    default void initWebAppWithoutCaching(final Injector injector) {
         final AbstractWebUiConfig webApp = (AbstractWebUiConfig) injector.getInstance(IWebUiConfig.class);
         webApp.setInjector(injector);
 
@@ -99,6 +99,21 @@ public interface IBasicWebApplicationServerModule {
 
         // initialise IWebApp with its masters / centres
         webApp.initConfiguration();
+    }
+
+    /**
+     * Initialises an already bound {@link IWebUiConfig} instance.
+     * The default implementation assumes that is has a concrete type {@link AbstractWebUiConfig}.
+     * <p>
+     * This implementation creates default configurations for all registered centres to perform early
+     * caching of DomainTreeEnhancers (to avoid heavy computations later).
+     * 
+     * @param injector
+     */
+    default void initWebApp(final Injector injector) {
+        initWebAppWithoutCaching(injector);
+        // trigger caching of DomainTreeEnhancers to avoid heavy computations later
+        injector.getInstance(IWebUiConfig.class).createDefaultConfigurationsForAllCentres();
     }
 
     /**

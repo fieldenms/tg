@@ -259,8 +259,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         eccCompanion = companionFinder.find(ua.com.fielden.platform.ui.config.EntityCentreConfig.class);
         mmiCompanion = companionFinder.find(MainMenuItem.class);
         userCompanion = companionFinder.find(User.class);
-        // this is to trigger caching of DomainTreeEnhancers to avoid heavy computations later
-        createDefaultCentre();
     }
 
     /**
@@ -938,7 +936,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                         resultProp.dynamicColBuilderType.isPresent(),
                         !resultProp.propDef.isPresent(),
                         resultProp.width,
-                        centre.getSecondTick().getGrowFactor(root, resultPropName),
+                        resultProp.dynamicColBuilderType.isPresent() ? 0 : centre.getSecondTick().getGrowFactor(root, resultPropName), // collectional dynamic columns are always unchecked -- skip getGrowFactor() invocation and use 0 as default grow factor
                         resultProp.isFlexible,
                         tooltipProp,
                         egiRepresentationFor(

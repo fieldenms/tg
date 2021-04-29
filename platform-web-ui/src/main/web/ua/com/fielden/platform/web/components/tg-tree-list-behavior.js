@@ -90,16 +90,18 @@ const makeParentVisible = function (entity) {
 };
 
 /**
- * Returns the top most parent of the tree item.
+ * Returns the oldest closed ancestor of specified entity.
  * 
- * @param {Object} entity - treeItem which top most ancestor should be find.
+ * @param {Object} entity - treeItem for which the oldest closed ancestor should be find.
  */
-const topMostParent = function (entity) {
-    let parent = entity;
-    while (parent && parent.parent) {
+const firstClosedParentFromTop = function (entity) {
+    const parents = [];
+    let parent = entity && entity.parent;
+    while (parent) {
+        parents.unshift(parent);
         parent = parent.parent;
     }
-    return parent;
+    return parents.find(item => !item.opened);
 }
 
 /**
@@ -216,6 +218,11 @@ export const TgTreeListBehavior = {
             value: ""
         },
 
+        _lastSearchText: {
+            type: String,
+            value: ""
+        },
+
         _matchedTreeItems: {
             type: Array,
             value: () => []
@@ -238,6 +245,7 @@ export const TgTreeListBehavior = {
      * @param {String} text - pattern to find among tree items of treeModel.
      */
     find: function (text) {
+        this._lastSearchText = text;
         this._matchedTreeItems = this._find(searchRegExp(text), !!text, this._treeModel);
         this.splice("_entities", 0, this._entities.length, ...composeChildren.bind(this)(this._treeModel, true));
         this.lastSearchText = text;
@@ -271,13 +279,12 @@ export const TgTreeListBehavior = {
                 nextMatchedItem = null;
             }
         }
-        if (nextMatchedItem) {
-            const topParent = topMostParent(nextMatchedItem);
-            const idx = this._entities.indexOf(topParent);
+        const topClosedParent = firstClosedParentFromTop(nextMatchedItem);
+        if (nextMatchedItem && topClosedParent) {
+            const idx = this._entities.indexOf(topClosedParent);
             if (idx >= 0) {
-                const numOfItemsToDelete = calculateNumberOfOpenedItems(topParent);
                 expandAncestors(nextMatchedItem);
-                this.splice("_entities", idx + 1 + topParent.additionalInfoNodes.length, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(topParent, true, true));
+                this.splice("_entities", idx + 1 + topClosedParent.additionalInfoNodes.length, 0, ...getChildrenToAdd.bind(this)(topClosedParent, true, true));
             }
         }
         this.async(() => {
@@ -337,6 +344,16 @@ export const TgTreeListBehavior = {
             this.notifyPath("_entities." + idx + ".opened", false);
             this.splice("_entities", idx + 1 + parentItem.additionalInfoNodes.length, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(parentItem, true, false));
             this.async(refreshTree.bind(this), 1);
+        }
+    },
+
+    collapseSubTreeViewExceptParent: function(parentItem) {
+        const idx = this._entities.indexOf(parentItem);
+        if (parentItem.entity.hasChildren && parentItem.opened) {
+            const numOfItemsToDelete = calculateNumberOfOpenedItems(parentItem);
+            parentItem.children.forEach(item => this.collapseSubTree(item));
+            this.splice("_entities", idx + 1 + parentItem.additionalInfoNodes.length, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(parentItem, true, false));
+            this.debounce("refreshTree", refreshTree.bind(this));
         }
     },
     
@@ -456,6 +473,9 @@ export const TgTreeListBehavior = {
             this._regenerateModel();
             if (this._lastFilterText) {
                 this.filter(this._lastFilterText);
+            }
+            if (this._lastSearchText) {
+                this.find(this._lastSearchText);
             }
         } else if (change.path && change.path.endsWith("children")) {
             this._childrenModelChanged(change);
