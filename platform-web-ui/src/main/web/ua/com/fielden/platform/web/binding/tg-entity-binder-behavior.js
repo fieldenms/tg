@@ -691,6 +691,7 @@ export const TgEntityBinderBehavior = {
                 this._continuations = {};
             }
             const newBindingEntity = this._postEntityReceived(validatedEntity, false);
+            self.fire('binding-entity-validated', self._currBindingEntity);
             // custom external action
             if (this.postValidated) {
                 this.postValidated(validatedEntity, newBindingEntity, customObject);

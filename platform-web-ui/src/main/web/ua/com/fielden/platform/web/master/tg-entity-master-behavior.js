@@ -16,20 +16,28 @@ export const findFirstInputToFocus = editors => {
         return (selectedElement && selectedElement.shadowRoot && selectedElement.shadowRoot.querySelector('textarea')) || selectedElement;
     };
     
-    let editorIndex, firstInput, selectedElement;
+    let editorIndex, firstInput, firstPreferredInput, selectedElement;
     for (editorIndex = 0; editorIndex < editors.length; editorIndex++) {
         if (editors[editorIndex].offsetParent !== null) {
             selectedElement = selectEnabledEditor(editors[editorIndex]);
             firstInput = firstInput || selectedElement;
+            const isPreferred = () => selectedElement && editors[editorIndex].propertyName && editors[editorIndex].propertyName === editors[editorIndex].entity['@@origin'].preferredProperty();
+            firstPreferredInput = firstPreferredInput || (isPreferred() ? selectedElement : null);
             if (editors[editorIndex]._error && !editors[editorIndex].isInWarning()) {
                 if (selectedElement) {
+                    if (firstPreferredInput === selectedElement) {
+                        selectedElement.isPreferredCase = true;
+                    }
                     return selectedElement;
                 }
             }
         }
     }
+    if (firstPreferredInput) {
+        firstPreferredInput.isPreferredCase = true;
+    }
     // if the input has been identified then return it
-    return firstInput; // either empty or not
+    return firstPreferredInput || firstInput; // either empty or not
 };
 
 const TgEntityMasterBehaviorImpl = {
@@ -674,6 +682,15 @@ const TgEntityMasterBehaviorImpl = {
                 }
             }
         }.bind(self));
+        
+        // focus preferred property on validation
+        self.addEventListener('binding-entity-validated', function (e) {
+            const target = e.target || e.srcElement;
+            if (target === this) {
+                this.focusPreferredProperty();
+            }
+        }.bind(self));
+        
     }, // end of ready callback
 
     attached: function () {
@@ -789,6 +806,9 @@ const TgEntityMasterBehaviorImpl = {
         const firstInput = findFirstInputToFocus(this.getEditors());
         if (firstInput) {
             firstInput.focus(); // if the input has been identified then focus it
+            if (firstInput.isPreferredCase) {
+                firstInput.select();
+            }
         } else if (this.offsetParent !== null) {
             // Otherwise find first focusable element and focus it. If there are no focusable element then fire event that asks
             //  it's ancestors to focus their first best element.
@@ -808,6 +828,21 @@ const TgEntityMasterBehaviorImpl = {
     },
 
     /**
+     * Focuses first input with preferred property if it exists.
+     */
+    focusPreferredProperty: function () {
+        this.async(function () {
+            if (!this._hasEmbededView()) {
+                const firstInput = findFirstInputToFocus(this.getEditors());
+                if (firstInput && firstInput.isPreferredCase) {
+                    firstInput.focus();
+                    firstInput.select();
+                }
+            }
+        }.bind(this), 100);
+    },
+
+    /**
      * Focuses embeded view if it exists otherwise focuses first input.
      */
     focusView: function () {
@@ -818,7 +853,7 @@ const TgEntityMasterBehaviorImpl = {
                 // Desktop app specific: focus first input when opening dialog.
                 // This is also used when closing dialog: if child dialog was not closed, then its first input should be focused (this however can not be reproduced on mobile due to maximised nature of all dialogs).
                 // So, in mobile app the input will not be focused on dialog opening (and the keyboard will not appear suddenly until the user explicitly clicks on some editor).
-                if (!isMobileApp()) {
+                if (!isMobileApp()) { // TODO SAVE for mobile app to trigger focusing of preferred property editor?
                     this._focusFirstInput();
                 }
             }
