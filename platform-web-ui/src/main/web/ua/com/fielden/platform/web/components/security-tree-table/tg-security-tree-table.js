@@ -1,21 +1,21 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
-import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 
-import '/resources/components/security-tree-table/tg-security-tree-table-row.js';
+import '/resources/components/tg-tree-table.js';
+import '/resources/egi/tg-property-column.js';
+import '/resources/components/security-tree-table/tg-security-checkbox.js';
+
+import { searchRegExp } from '/resources/editors/tg-highlighter.js';
+
 
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
-import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 
 const template = html`
     <style>
         /* Container styles*/
         :host {
-            @apply --layout-vertical;
-        }
-        #elementToFocus {
             margin: 10px;
             min-height: 0;
             background-color: white;
@@ -23,195 +23,38 @@ const template = html`
             @apply --layout-vertical;
             @apply --layout-relative;
         }
-        #baseContainer {
+        tg-tree-table {
             min-height: 0;
-            @apply --layout-horizontal;
-            @apply --layout-relative;
-        }
-        #scrollContainer {
-            padding-bottom: 15px;
-            -webkit-overflow-scrolling: touch;
-            overflow: auto;
-            @apply --layout-vertical;
             @apply --layout-flex;
         }
-        #lockContainer {
-            pointer-events: none;
-            @apply --layout-fit;
-        }
-        #topShadow {
-            box-shadow: 0px 3px 6px -2px rgba(0,0,0,0.7);
-            pointer-events: none;
-            @apply --layout-fit;
-        }
-        #bottomShadow {
-            top: 100%;
-            height: 20px;
-            left: 0;
-            right: 0;
-            box-shadow: 0px -3px 6px -2px rgba(0,0,0,0.7);
-            pointer-events: none;
-        }
-        /*Table elements styles*/
-        .tree-table-header-row {
-            font-size: 0.9rem;
-            font-weight: 400;
-            min-height: 3rem;
-            color: #757575;
-            -webkit-font-smoothing: antialiased;
-            text-rendering: optimizeLegibility;
-            min-width: -webkit-fit-content;
-            min-width: -moz-fit-content;
-            min-width: fit-content;
-            flex-grow: 0;
-            flex-shrink: 0;
-            @apply --layout-horizontal;
-        }
-        .header-column {
-            box-sizing: border-box;
-            @apply --layout-horizontal; 
-            @apply --layout-center;
-
-        }
-        .header-column[column-type=hierarchy] {
-            padding: 0 0.6rem;
-        }
-        .header-column[column-type=regular] {
-            padding: 0.6rem;
-            writing-mode: vertical-lr;
-            transform: rotate(180deg);
-            @apply --layout-horizontal;
-            @apply --layout-start-justified;
-
-        }
-        /* Miscelenia styles */
-        .truncate {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .absolute,
-        .absolutely-white {
-            position: absolute;
-        }   
-        .absolutely-white {
-            background-color: white;
-            pointer-events: auto;
-        }
     </style>
-    <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning paper-material-styles"></style>
-    <div id="elementToFocus">
-        <div id="baseContainer">
-            <!--Scroll Container-->
-            <div id="scrollContainer" on-scroll="_handleScrollEvent">
-                <!--Tree table header-->
-                <div class="tree-table-header-row">
-                    <div class="header-column" column-type="hierarchy" tooltip-text$="[[hierarchyColumn.columnDesc]]" style$="[[_calcColumnStyle(hierarchyColumn, hierarchyColumn.width, hierarchyColumn.growFactor)]]">
-                            <div class="truncate">[[hierarchyColumn.columnTitle]]</div>
-                    </div>
-                    <template is="dom-repeat" items="[[columns]]">
-                        <div class="header-column" hidden$="[[!item.visible]]" column-type="regular" tooltip-text$="[[item.columnDesc]]" style$="[[_calcColumnStyle(item, item.width, item.growFactor)]]">
-                            <div class="truncate">[[item.columnTitle]]</div>
-                        </div>
-                    </template>
-                </div>
-                <!--table body-->
-                <template is="dom-repeat" items="[[treeModel]]" as="treeEntity" index-as="treeEntityIndex">
-                    <tg-security-tree-table-row entity="[[treeEntity]]" hierarchy-column="[[hierarchyColumn]]" columns="[[columns]]"></tg-security-tree-table-row>
-                </template>
-                <!-- Scrollable container goes here -->
-            </div>
-            <!--Fixed Container-->
-            <div id="lockContainer" style="overflow:hidden">
-                <div id="topLockContainer" class="absolutely-white tree-table-header-row" style$="[[_calculateTopLockPanelStyle(_scrollLeft)]]">
-                    <div id="topShadow" hidden$="[[!_showTopShadow]]"></div>
-                    <div class="header-column" column-type="hierarchy" tooltip-text$="[[hierarchyColumn.columnDesc]]" style$="[[_calcColumnStyle(hierarchyColumn, hierarchyColumn.width, hierarchyColumn.growFactor)]]">
-                            <div class="truncate">[[hierarchyColumn.columnTitle]]</div>
-                    </div>
-                    <template is="dom-repeat" items="[[columns]]">
-                        <div class="header-column" hidden$="[[!item.visible]]" column-type="regular" tooltip-text$="[[item.columnDesc]]" style$="[[_calcColumnStyle(item, item.width, item.growFactor)]]">
-                            <div class="truncate">[[item.columnTitle]]</div>
-                        </div>
-                    </template>
-                </div>
-                <div id="bottomShadow" class="absolute" hidden$="[[!_showBottomShadow]]"></div>
-            </div>
-        </div>
-    </div>`;
+    <tg-tree-table id="tokenTree" model="[[entities]]" display-bottom-shadow on-tg-tree-table-column-change="_updateColumnsDimensions">
+        <template is="dom-repeat" items="[[__columns]]">
+            <tg-property-column slot$="[[item.slot]]" property="[[item.property]]" type="[[item.type]]" visible="[[item.visible]]" vertical="[[item.vertical]]" width="[[item.width]]" min-width="[[item.minWidth]]" grow-factor="[[item.growFactor]]" column-title="[[item.columnTitle]]" column-desc="[[item.columnDesc]]" element-provider="[[_buildTreeElement]]" check="[[item.check]]"></tg-property-column>
+        </template>
+    </tg-tree-table>`;
 
 Polymer({
     _template: template,
 
     is: 'tg-security-tree-table',
 
-    behaviors: [IronResizableBehavior],
-    
-    listeners: {"tg-tree-toggle-collapse-state": "_toggleTreeEntityToggleState"},
-
     properties: {
         entities: {
-            type: Array,
-            observer: "_entitiesChanged"
+            type: Array
         },
-        hierarchyColumn: Object,
-        columns: Array,
-        
-        //Properties for managing shadow visibility
-        _showTopShadow: Boolean,
-        _showBottomShadow: Boolean,
-        
-        //Properties for managing lock container scrolling
-        _scrollLeft: Number,
-        _scrollTop: Number
+        columns: {
+            type: Array,
+            observer: "_columnsChanged"
+        },
+        //Filtered columns those are visible.
+        __columns: Array,
     },
 
-    ready: function () {                    
-        //Initialising event listeners.
-        this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
-    },
-    
-    /////////////////////////////Event listeners////////////////////////////////////
-    _toggleTreeEntityToggleState: function (e) {
-        this._updateTableSizeAsync();
-    },
-    
-    /**
-     * Resize event handler that adjusts the lock container size and position.
-     */
-    _resizeEventListener: function (event, details) {
-        this.$.lockContainer.style.bottom = this._calcHorizontalScrollBarHeight() + "px";
-        this.$.lockContainer.style.right = this._calcVerticalScrollBarWidth() + "px";
-        this._handleScrollEvent();
-    },
-    
-    /**
-     * Calculates the vertical scrollbar width.
-     */
-    _calcVerticalScrollBarWidth: function () {
-        return this.$.scrollContainer.offsetWidth - this.$.scrollContainer.clientWidth;
+    ready: function () {
+        this._buildTreeElement = this._buildTreeElement.bind(this);
     },
 
-    /**
-     * Calculates the horizontal scrollbar height.
-     */
-    _calcHorizontalScrollBarHeight: function () {
-        return this.$.scrollContainer.offsetHeight - this.$.scrollContainer.clientHeight;
-    },
-
-    /**
-     * Scrolling related functions.
-     */
-    _handleScrollEvent: function () {
-        this._scrollLeft = this.$.scrollContainer.scrollLeft;
-        this._scrollTop = this.$.scrollContainer.scrollTop;
-        this._updateShadows();
-    },
-    
-    _updateShadows: function () {
-        this._showTopShadow = this.$.scrollContainer.scrollTop !== 0;
-        this._showBottomShadow = (this.$.scrollContainer.clientHeight + this.$.scrollContainer.scrollTop) !== this.$.scrollContainer.scrollHeight;
-    },
-    
     /**
      * invokes resize event listener on asynch.
      */
@@ -223,119 +66,95 @@ Polymer({
 
     //////////////////////////Security token filtering related functions//////////////////////////////
     filterTokens: function (text) {
-        if (this.treeModel) {
-            this._expandAll();
-            this._filterTreeModel(text, this.treeModel);
-            this._updateTableSizeAsync();
-        }
-    },
-
-    _filterTreeModel: function (text, treeModel) {
-        treeModel.forEach(treeEntity => {
-            if (treeEntity.entity.get("title").toLowerCase().search(text.toLowerCase()) >= 0) {
-                this._setVisible(treeEntity, true);
-                this._makeParentVisible(treeEntity);
-                this._setHighlight(treeEntity, text ? true : false);
-            } else {
-                this._setVisible(treeEntity, false);
-                this._setHighlight(treeEntity, false);
-            }
-            if (treeEntity.children && treeEntity.children.length > 0) {
-                this._filterTreeModel(text, treeEntity.children);
-            }
-        });
-    },
-
-    _setHighlight: function (treeEntity, highlight) {
-        treeEntity.highlighted = highlight;
-        if (treeEntity.highlightFunctions) {
-            treeEntity.highlightFunctions.forEach(highlightFunction => highlightFunction(highlight));
-        }
-    },
-
-    _setVisible: function (treeEntity, visible) {
-        treeEntity.entity.$visible = visible;
-        if (treeEntity.visibilityFunctions) {
-            treeEntity.visibilityFunctions.forEach(visibilityFunction => visibilityFunction(visible));
-        }
-    },
-
-    _makeParentVisible: function (entity) {
-        let parent = entity.parent;
-        while (parent) {
-            this._setVisible(parent, true);
-            parent = parent.parent;
-        }
-    },
-
-    _expandAll: function () {
-        if (this.treeModel) {
-            this.treeModel.forEach(treeEntity => {
-                this._expandEntity(treeEntity);
-            });
-        }
-    },
-    
-    _expandEntity: function(treeEntity) {
-        if (treeEntity.children && treeEntity.children.length > 0) {
-            treeEntity.collapsed = false;
-            if (treeEntity.expandFunctions) {
-                treeEntity.expandFunctions.forEach(expandFunction => expandFunction());
-            }
-            treeEntity.children.forEach(child => this._expandEntity(child));
-        }
+        this.$.tokenTree.filter(text);
     },
 
     //////////////////////////User role filtering related functions//////////////////////////////
     filterRoles: function (text) {
         if (this.columns) {
-            this.columns.forEach((column, index) => {
-                if (column.columnTitle.toLowerCase().search(text.toLowerCase()) >= 0) {
-                    this.set("columns." + index + ".visible", true);
-                } else {
-                    this.set("columns." + index + ".visible", false);
+            const regexToSearch = searchRegExp(text);
+            this.columns.filter(column => column.slot === "regular-column").forEach((column, index) => {
+                column.visible = column.columnTitle.search(regexToSearch) >= 0;
+            });
+            this._columnsChanged(this.columns);
+            this.$.tokenTree._updateTableSizeAsync();
+        }
+    },
+
+    ////////////////////////////Observers/////////////////////////////////////
+    _columnsChanged: function (newValue, oldValue) {
+        if (oldValue) {
+            newValue.forEach(newColumn => {
+                const oldColumn = oldValue.find(column => column.property === newColumn.property);
+                if (oldColumn) {
+                    newColumn.width = oldColumn.width;
+                    newColumn.growFactor = oldColumn.growFactor;
                 }
             });
-            this._updateTableSizeAsync();
         }
+        this.__columns = newValue.filter(column => column.visible);
     },
 
-    ///////////////////Observer related functions//////////////////////////////
-    _entitiesChanged: function (newEntities, oldEntities) {
-        this.treeModel = this._createTreeModel(newEntities);
-        this._updateTableSizeAsync();
-    },
-
-    _createTreeModel: function (children, parent) {
-        const childrenList = children && children.map(child => {
-            const treeEntity = {
-                over: false,
-                collapsed: true,
-                highlighted: false,
-                visible: true,
-                entity: child,
-                parent: parent
-            };
-            if (child.children && child.children.length > 0) {
-                treeEntity.children = this._createTreeModel(child.children, treeEntity);
+    ///////////////////////////Event listeners////////////////////////////////
+    _updateColumnsDimensions: function (e) {
+        const columnSizes = e.detail;
+        Object.keys(columnSizes).forEach(key => {
+            const value = columnSizes[key];
+            const column = this.columns.find(column => column.property === key);
+            if (column) {
+                if (typeof value.growFactor !== 'undefined'){
+                    column.growFactor = value.growFactor;
+                }
+                if (typeof value.width !== 'undefined'){
+                    column.growFactor = value.width;
+                }
             }
-            return treeEntity;
         });
-        return childrenList;
     },
 
-    ////////////////////////Style calculation methods.//////////////////////////////////////
-    _calcColumnStyle: function (column, columnWidth, columnGrowFactor) {
-        let colStyle = "min-width: " + columnWidth + "px;" + "width: " + columnWidth + "px;"
-        if (columnGrowFactor === 0) {
-            colStyle += "flex-grow: 0;flex-shrink:0;";
+    ////////////////////////////Content builders//////////////////////////////
+    _buildTreeElement: function (parent, entity, column) {
+        if (column.isHierarchyColumn) {
+            this._buildHierarchyColumnElements(parent, entity, column);
         } else {
-            colStyle += "flex-grow: " + columnGrowFactor + ";";
+            this._buildSecurityColumnElements(parent, entity, column);
         }
-        return colStyle;
     },
 
-    _calculateTopLockPanelStyle: function(_scrollLeft) {
-        return "top:0;right:0;left:-" + _scrollLeft + "px;"; 
+    _buildHierarchyColumnElements: function (parent, entity, column) {
+        const value = entity.entity.get(column.property);
+        const text = document.createElement("span");
+        text.innerHTML = value;
+        text.classList.add("truncate")
+        const checkbox = this._getCheckobx(entity, column, "_token");
+        checkbox.style.marginLeft = "4px";
+        parent.appendChild(checkbox);
+        parent.appendChild(text);
+    },
+
+    _getCheckobx: function (entity, column, propName) {
+        if (!entity.checkBoxes$) {
+            entity.checkBoxes$ = {};
+        }
+        if (!entity.checkBoxes$[propName]) {
+            entity.checkBoxes$[propName] = [];
+        }
+        let freeCheckbox = entity.checkBoxes$[propName].find(checkbox => checkbox.parentElement === null);
+        if (!freeCheckbox) {
+            freeCheckbox = this._createCheckbox(entity, column);
+            entity.checkBoxes$[propName].push(freeCheckbox);
+        }
+        return freeCheckbox;
+    },
+
+    _createCheckbox: function (entity, column) {
+        const checkbox = document.createElement('tg-security-checkbox');
+        checkbox.entity = entity;
+        checkbox.column = column;
+        return checkbox;
+    },
+
+    _buildSecurityColumnElements: function (parent, entity, column) {
+        parent.appendChild(this._getCheckobx(entity, column, column.property));
     }
 });

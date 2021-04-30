@@ -79,6 +79,9 @@ public class SecurityMatrixInsertionPointMaster implements IMaster<SecurityMatri
                 .attr("lock", "[[lock]]")
                 .add(tokenFilter, roleFilter, reloadAction);
 
+        final StringBuilder prefDimBuilder = new StringBuilder();
+        prefDimBuilder.append("{'width': function() {return '100%'}, 'height': function() {return '100%'}, 'widthUnit': '', 'heightUnit': ''}");
+
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
                 .replace(IMPORTS, createImports(linkedSetOf("components/tg-security-matrix", "editors/tg-singleline-text-editor"))
                         + "import { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';\n")
@@ -86,7 +89,7 @@ public class SecurityMatrixInsertionPointMaster implements IMaster<SecurityMatri
                 .replace("<!--@tg-entity-master-content-->", securityMatrix.toString())
                 .replace("//generatedPrimaryActions", "")
                 .replace("//@ready-callback", readyCallback())
-                .replace("@prefDim", "null")
+                .replace("@prefDim", prefDimBuilder.toString())
                 .replace("@noUiValue", "false")
                 .replace("@saveOnActivationValue", "true");
 
