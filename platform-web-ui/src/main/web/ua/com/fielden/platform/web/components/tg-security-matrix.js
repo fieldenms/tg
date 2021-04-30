@@ -158,7 +158,7 @@ class SecurityMatrixEntity extends EntityStub {
                 if (property === "_token") {
                     return calculateState(Object.keys(this.roleIdMap).filter(roleKey => visible ? this._isPropertyVisible(roleKey) : true).map(roleKey => this.getState(roleKey)));
                 } else {
-                    return this.$state[property] ? "CHECKED" : "UNCHECKED";
+                    return this.$state[property];
                 }
             }
         }
