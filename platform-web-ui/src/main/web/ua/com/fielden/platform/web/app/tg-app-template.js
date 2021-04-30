@@ -653,10 +653,10 @@ Polymer({
         const activeElement = deepestActiveElement();
         if (activeElement && (activeElement.nodeName.toLowerCase() === 'input'|| activeElement.nodeName.toLowerCase() === 'textarea')) {
             let node = activeElement;
-            while (node !== null && node.nodeName.toLowerCase() !== 'paper-input-container') {
+            while (node && node.nodeName.toLowerCase() !== 'paper-input-container') {
                 node = node.parentNode || node.getRootNode().host;
             }
-            if (node !== null && !this._isElementInViewport(node)) {
+            if (node && !this._isElementInViewport(node)) {
                 node.scrollIntoView({block: "end", inline: "end", behavior: "smooth"}); // Safari (WebKit) does not support options object (smooth scrolling). We are aiming Chrome for iOS devices at this stage.
             }
         } 
