@@ -153,7 +153,7 @@ class SecurityMatrixEntity extends EntityStub {
             return this.$state[property];
         } else {
             if (this.hasChildren) {
-                return calculateState(this.children.filter(child => child.__model.visible).map(child => child.getState(property, visible)));
+                return calculateState(this.children.filter(child => child.__model().visible).map(child => child.getState(property, visible)));
             } else {
                 if (property === "_token") {
                     return calculateState(Object.keys(this.roleIdMap).filter(roleKey => visible ? this._isPropertyVisible(roleKey) : true).map(roleKey => this.getState(roleKey)));
@@ -232,7 +232,7 @@ class SecurityMatrixEntity extends EntityStub {
     }
 
     _check(property, value) {
-        if (this.__model.visible && this._isPropertyVisible(property)) {
+        if (this.__model().visible && this._isPropertyVisible(property)) {
             this._checkWithoutParent(property, value);
             this._checkColumnParent(property, value);
             this.$afterCheckCallback();
@@ -254,7 +254,7 @@ class SecurityMatrixEntity extends EntityStub {
     _checkWithoutParent(property, value) {
         if (this.hasChildren) {
             this.children.forEach(child => {
-                if (child.__model.visible && this._isPropertyVisible(property)) {
+                if (child.__model().visible && this._isPropertyVisible(property)) {
                     child._checkWithoutParent(property, value);
                 }
             });
@@ -307,8 +307,8 @@ class SecurityMatrixEntity extends EntityStub {
 };
 
 const updateViewFor = function (entity, property, newState, newAllState) {
-    if (entity.__model.checkBoxes$ && entity.__model.checkBoxes$[property]) {
-        entity.__model.checkBoxes$[property].forEach(checkbox => {
+    if (entity.__model().checkBoxes$ && entity.__model().checkBoxes$[property]) {
+        entity.__model().checkBoxes$[property].forEach(checkbox => {
             checkbox._setState(newState, newAllState);
         });
     }
