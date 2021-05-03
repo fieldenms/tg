@@ -344,7 +344,7 @@ export class TgEntityEditor extends TgEditor {
            },
    
            /**
-            * OVERRIDDEN FROM TgEditorBehavior: this specific textArea's event is invoked after some key has been pressed.
+            * Overridden from TgEditor: this specific event is invoked after some key has been pressed.
             *
             * Designated to be bound to child elements.
             */

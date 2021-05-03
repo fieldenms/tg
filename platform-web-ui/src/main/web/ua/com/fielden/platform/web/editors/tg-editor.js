@@ -440,7 +440,7 @@ export class TgEditor extends PolymerElement {
             },
             
             /**
-             * This event is invoked after some key has been pressed. We are interested in 'Enter' key to provide value commit behaviour.
+             * This event is invoked after some key has been pressed.
              *
              * Designated to be bound to child elements.
              */
