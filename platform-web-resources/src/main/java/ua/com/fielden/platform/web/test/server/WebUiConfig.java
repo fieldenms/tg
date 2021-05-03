@@ -899,7 +899,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         injector())).
                 addMaster(new EntityMaster<>(
                         TgPersistentCompositeEntity.class,
-                        null,
+                        masterConfigForTgPersistentCompositeEntity(),
                         injector())).
                 addMaster(EntityMaster.noUiFunctionalMaster(TgExportFunctionalEntity.class, TgExportFunctionalEntityProducer.class, injector())).
                 addMaster(EntityMaster.noUiFunctionalMaster(TgDummyAction.class, injector())).
@@ -1113,6 +1113,24 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 prefDimForView(prefDim).
                 withNoParentCentreRefresh().
                 build();
+    }
+
+    private static IMaster<TgPersistentCompositeEntity> masterConfigForTgPersistentCompositeEntity() {
+        final String layout = LayoutComposer.mkGridForMasterFitWidth(2, 1);
+        final String actionBarLayout = LayoutComposer.mkActionLayoutForMaster(1, 110);
+        final IMaster<TgPersistentCompositeEntity> config =
+                new SimpleMasterBuilder<TgPersistentCompositeEntity>().forEntity(TgPersistentCompositeEntity.class)
+                .addProp("key1").asAutocompleter()
+                .also()
+                .addProp("key2").asSpinner()
+                .also()
+                .addAction(MasterActions.REFRESH).shortDesc("CANCEL")
+                .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), actionBarLayout)
+                .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
+                .setLayoutFor(Device.TABLET, Optional.empty(), layout)
+                .setLayoutFor(Device.MOBILE, Optional.empty(), layout)
+                .done();
+        return config;
     }
 
     private static IMaster<TgCreatePersistentStatusAction> masterConfigForTgCreatePersistentStatusAction() {
@@ -1799,7 +1817,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .also()
                 .addEditableProp("bigDecimalProp")
                     .minWidth(68);
-                    
+
         final Function<String, EntityActionConfig> createDummyAction = colour -> action(TgDummyAction.class)
             .withContext(context().withSelectedEntities().build())
             .icon("accessibility")

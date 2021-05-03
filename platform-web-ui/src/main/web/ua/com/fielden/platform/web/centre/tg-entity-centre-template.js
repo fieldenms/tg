@@ -79,6 +79,7 @@ const entityCentreTemplate = html`
                 create-context-holder='[[_createContextHolder]]'
                 dynamic-action
                 attrs='[[_defaultPropertyActionAttrs]]'
+                pre-action='[[navigationPreAction]]'
                 require-selection-criteria='false'
                 require-selected-entities='ONE'
                 require-master-entity='false'

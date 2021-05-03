@@ -63,7 +63,7 @@ const generateChildrenModel = function (children, parentEntity, additionalInfoCb
             selected: false,
             over: false
         };
-        parent.entity.__model = parent;
+        parent.entity.__model = () => parent;
         if (child.hasChildren) {
             if (child.children && child.children.length > 0) {
                 parent.children = generateChildrenModel(child.children, parent, additionalInfoCb);
@@ -147,7 +147,7 @@ const generateLoadingIndicator = function (parent) {
         selected: false,
         over: false
     };
-    loaderIndicator.entity.__model = loaderIndicator;
+    loaderIndicator.entity.__model = () => loaderIndicator;
     return loaderIndicator;
 };
 
