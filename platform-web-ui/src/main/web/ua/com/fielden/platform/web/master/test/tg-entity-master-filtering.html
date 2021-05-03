@@ -119,7 +119,7 @@
                 }).bind(this); // this triggers retrieval with getMasterEntity() context and entityId = 'find_or_new' -- see _getMasterEntityAssigned method in master behavior
             });
             
-            test('works for master going through its producer and EntityNavigationAction master entity', function (done) {
+            test('works for master going through its producer and EntityEditAction master entity', function (done) {
                 master.postRetrievedError = function (errorResult) {
                     assert.strictEqual(errorResult.message, exMessage(mainEntityTitle), 'Result of master retrieval should contain [Not found] error -- FILTERED instance should be filtered out.');
                     done();
@@ -128,12 +128,12 @@
                 entity.id = 83;
                 const context = reflector.createContextHolder(null, 'ALL', null, null, () => [entity], null, null);
                 
-                const _originallyProducedEntity = reflector.newEntity('ua.com.fielden.platform.entity.EntityNavigationAction');
+                const _originallyProducedEntity = reflector.newEntity('ua.com.fielden.platform.entity.EntityEditAction');
                 _originallyProducedEntity.entityId = '83';
                 _originallyProducedEntity.key = 'NO_KEY';
                 
                 master.getMasterEntity = (function () {
-                    reflector.setCustomProperty(context, '@@funcEntityType', 'ua.com.fielden.platform.entity.EntityNavigationAction');
+                    reflector.setCustomProperty(context, '@@funcEntityType', 'ua.com.fielden.platform.entity.EntityEditAction');
                     return reflector.createSavingInfoHolder(_originallyProducedEntity, master._extractModifiedPropertiesHolder(master._extractBindingView(_originallyProducedEntity, null, null), master._extractOriginalBindingView(_originallyProducedEntity, null)), context, {});
                 }).bind(this); // this triggers retrieval with getMasterEntity() context and entityId = 'find_or_new' -- see _getMasterEntityAssigned method in master behavior
             });

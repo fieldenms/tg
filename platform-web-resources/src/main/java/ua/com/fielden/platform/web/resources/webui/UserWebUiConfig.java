@@ -14,7 +14,7 @@ import java.util.Optional;
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.entity.EntityDeleteAction;
-import ua.com.fielden.platform.entity.EntityNavigationAction;
+import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserProducer;
@@ -119,7 +119,7 @@ public class UserWebUiConfig {
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
                 .withDimensions(mkDim(400, 324))
                 .done();
-        return new EntityMaster<User>(
+        return new EntityMaster<>(
                 User.class,
                 UserProducer.class,
                 masterConfigForUser,
@@ -146,7 +146,7 @@ public class UserWebUiConfig {
                         + "    ]"))
                 .withDimensions(mkDim("'30%'", "'50%'"))
                 .done();
-        return new EntityMaster<UserRolesUpdater>(
+        return new EntityMaster<>(
                 UserRolesUpdater.class,
                 UserRolesUpdaterProducer.class,
                 masterConfig,
@@ -172,7 +172,7 @@ public class UserWebUiConfig {
         EDIT_ACTION {
             @Override
             public EntityActionConfig mkAction() {
-                return action(EntityNavigationAction.class)
+                return action(EntityEditAction.class)
                         .withContext(context().withCurrentEntity().withSelectionCrit().build())
                         .preAction(new EntityNavigationPreAction("User"))
                         .icon("editor:mode-edit")

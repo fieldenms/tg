@@ -12,7 +12,7 @@ import '/resources/components/postal-lib.js';
 
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
-import { tearDownEvent, getFirstEntityValueType } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, getFirstEntityType } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
@@ -260,6 +260,14 @@ Polymer({
             observer: "_iconStyleChanged"
         },
 
+        /**
+         * Entity type title that is used if action is navigatable; it is retrieved only if action is dynamic.
+         */
+        entityTypeTitle: {
+            type: String,
+            value: ""
+        },
+
         /** 
          * Property of this value gets passed into the data parameter for the details.saved topic of the event that is published after the functional entity has been saved.
          * There are cases where it is desired to prevent unnecesary centre refreshes such as in case of some insertion points.
@@ -464,6 +472,17 @@ Polymer({
 
         this._processMasterError = this._processMasterError.bind(this);
 
+        /**
+         * Runs dynamic action with the specified mandatory context. Both 'currentEntity' and 'chosenProperty' must be specified.
+         * 'chosenProperty' can be null -- in this case dynamic action runs for 'currentEntity' itself.
+         */
+        self._runDynamicAction = function (currentEntity, chosenProperty) {
+            this.currentEntity = currentEntity;
+            this.chosenProperty = chosenProperty;
+
+            this._run();
+        }.bind(this);
+
         self._run = (function (event) {
             console.log(this.shortDesc + ": execute");
 
@@ -493,7 +512,8 @@ Polymer({
 
             
             if (this.dynamicAction && this.currentEntity()) {
-                const currentEntityType = getFirstEntityValueType(this._reflector, this.currentEntity(), this.chosenProperty);
+                const currentEntityTypeGetter = () => getFirstEntityType(this.currentEntity(), this.chosenProperty).notEnhancedFullClassName();
+                const currentEntityType = currentEntityTypeGetter();
                 if (this._previousEntityType !== currentEntityType) {
                     if (!this.elementName) {//Element name for dynamic action is not specified at first run
                         this._originalShortDesc = this.shortDesc;//It means that shortDesc wasn't changed yet.
@@ -504,7 +524,7 @@ Polymer({
                         .then(res => {
                             try {
                                 this._processMasterRetriever(res);
-                                this._previousEntityType = getFirstEntityValueType(this._reflector, this.currentEntity(), this.chosenProperty);
+                                this._previousEntityType = currentEntityTypeGetter();
                                 postMasterInfoRetrieve();
                             }catch (e) {
                                 this.isActionInProgress = false;
@@ -761,6 +781,7 @@ Polymer({
             this.componentUri = masterInfo.desc;
             this.shortDesc = this._originalShortDesc || masterInfo.shortDesc;
             this.longDesc = this.longDesc || masterInfo.longDesc;
+            this.entityTypeTitle = masterInfo.entityTypeTitle;
             this.attrs = Object.assign({}, this.attrs, {
                 entityType: masterInfo.entityType,
                 currentState:'EDIT',
@@ -772,10 +793,7 @@ Polymer({
                 }
             });
             if (masterInfo.relativePropertyName) {
-                const oldCurrentEntity = this.currentEntity.bind(this);
-                this.currentEntity = function () {
-                    return oldCurrentEntity().get(masterInfo.relativePropertyName);
-                }
+                this.chosenProperty = (this.chosenProperty ? this.chosenProperty + "." : "") + masterInfo.relativePropertyName;
             }
             this.requireSelectionCriteria = masterInfo.requireSelectionCriteria;
             this.requireSelectedEntities = masterInfo.requireSelectedEntities;
