@@ -887,6 +887,8 @@ Polymer({
                     dialog.center();
                 }
                 if (dialog._childDialogs.length === 0) {
+                    // focuses child dialog view in case it is was not closed and does not have its own child dialogs;
+                    //  (e.g. in master dialog view it focuses input in error, preferred input or first input -- see 'focusView' in 'tg-entity-master-behavior') 
                     dialog._focusDialogWithInput();
                 }
             }
@@ -1210,6 +1212,8 @@ Polymer({
         this.style.removeProperty("transition-duration");
         //Removes the optimisation hook if master size or position was changed.
         this.$.elementLoader.style.removeProperty("display");
+        // focuses dialog view after dialog resizing transition is completed;
+        //  (e.g. in master dialog view it focuses input in error, preferred input or first input -- see 'focusView' in 'tg-entity-master-behavior') 
         this._focusDialogWithInput();
         this._hideBlockingPane();
     },

@@ -10,7 +10,15 @@ import { TgRequiredPropertiesFocusTraversalBehavior } from '/resources/component
 import { queryElements } from '/resources/components/tg-element-selector-behavior.js';
 import { enhanceStateRestoration } from '/resources/components/tg-global-error-handler.js';
 
-export const findFirstInputToFocus = editors => {
+/**
+ * Returns enabled invalid input if there is one.
+ * Otherwise returns enabled preferred input if there is one.
+ * Otherwise returns first enabled input if there is one.
+ * Otherwise returns null.
+ * 
+ * If returned input is present, returns whether it is 'preferred'.
+ */
+const findFirstInputToFocus = editors => {
     const selectEnabledEditor = editor => {
         const selectedElement = editor.shadowRoot.querySelector('.custom-input:not([hidden]):not([disabled]):not([readonly])');
         return (selectedElement && selectedElement.shadowRoot && selectedElement.shadowRoot.querySelector('textarea')) || selectedElement;
@@ -32,6 +40,41 @@ export const findFirstInputToFocus = editors => {
     }
     return firstPreferredInput ? { inputToFocus: firstPreferredInput, preferred: true } :
            firstInput ? { inputToFocus: firstInput, preferred: false } : null;
+};
+
+/**
+ * Triggers focusing of invalid / preferred / first enabled input, if there is any.
+ * 
+ * In case of preferred input focusing, the contents of the input gets selected.
+ * 
+ * @param orElseFocus -- function for focusing in case if there is no enabled input to focus
+ */
+export const focusEnabledInputIfAny = function (orElseFocus) {
+    const inputToFocus = findFirstInputToFocus(this.getEditors());
+    if (inputToFocus) {
+        inputToFocus.inputToFocus.focus();
+        if (inputToFocus.preferred) {
+            inputToFocus.inputToFocus.select();
+        }
+    } else if (orElseFocus) {
+        orElseFocus();
+    }
+};
+
+/**
+ * Triggers focusing of preferred enabled input, if there is any.
+ * Also selects contents of focused input.
+ * 
+ * @param orElseFocus -- function for focusing in case if there is no preferred enabled input to focus
+ */
+export const focusPreferredEnabledInputIfAny = function (orElseFocus) {
+    const inputToFocus = findFirstInputToFocus(this.getEditors());
+    if (inputToFocus && inputToFocus.preferred) {
+        inputToFocus.inputToFocus.focus();
+        inputToFocus.inputToFocus.select();
+    } else if (orElseFocus) {
+        orElseFocus();
+    }
 };
 
 const TgEntityMasterBehaviorImpl = {
@@ -664,9 +707,9 @@ const TgEntityMasterBehaviorImpl = {
             postal.publish({ channel: self.centreUuid, topic: 'refresh.post.success', data: { canClose: true } });
         }).bind(self);
 
-        //Should focus master when it receives binding entity.
-        self.addEventListener('binding-entity-appeared', function (e) {
-            const target = e.target || e.srcElement;
+        // focus invalid / preferred / first enabled editor (if present) when binding entity appears (refresh / cancel / save + continuous creation)
+        self.addEventListener('binding-entity-appeared', function (event) {
+            const target = event.target || event.srcElement;
             if (target === this) {
                 this.focusView();
                 if (!this._hasEmbededView()) {
@@ -677,13 +720,13 @@ const TgEntityMasterBehaviorImpl = {
             }
         }.bind(self));
         
-        // focus preferred property on validation
-        self.addEventListener('binding-entity-validated', function (e) {
-            const target = e.target || e.srcElement;
+        // focus preferred property editor (if present) and select its contents (validate)
+        self.addEventListener('binding-entity-validated', (event) => {
+            const target = event.target || event.srcElement;
             if (target === this) {
-                this.focusPreferredProperty();
+                this.focusPreferredView();
             }
-        }.bind(self));
+        });
         
     }, // end of ready callback
 
@@ -794,27 +837,25 @@ const TgEntityMasterBehaviorImpl = {
     },
 
     /**
-     * Looks for the first input that is not hidden and not disabled to focus it.
+     * Triggers focusing of invalid / preferred / first enabled input, if there is any; triggers focusing of first focusable element otherwise.
+     * 
+     * In case of preferred input focusing, the contents of the input gets selected.
      */
     _focusFirstInput: function () {
-        const inputToFocus = findFirstInputToFocus(this.getEditors());
-        if (inputToFocus) {
-            inputToFocus.inputToFocus.focus();
-            if (inputToFocus.preferred) {
-                inputToFocus.inputToFocus.select();
-            }
-        } else if (this.offsetParent !== null) {
-            // Otherwise find first focusable element and focus it. If there are no focusable element then fire event that asks
-            //  it's ancestors to focus their first best element.
-            const focusedElements = this._getCurrentFocusableElements();
-            if (focusedElements.length > 0) {
-                if (this.shadowRoot.activeElement === null) {
-                    focusedElements[0].focus();
+        focusEnabledInputIfAny.bind(this)(() => {
+            if (this.offsetParent !== null) {
+                // Otherwise find first focusable element and focus it. If there are no focusable element then fire event that asks
+                //  it's ancestors to focus their first best element.
+                const focusedElements = this._getCurrentFocusableElements();
+                if (focusedElements.length > 0) {
+                    if (this.shadowRoot.activeElement === null) {
+                        focusedElements[0].focus();
+                    }
+                } else {
+                    this.fire("tg-no-item-focused");
                 }
-            } else {
-                this.fire("tg-no-item-focused");
             }
-        }
+        });
     },
 
     getEditors: function () {
@@ -822,25 +863,23 @@ const TgEntityMasterBehaviorImpl = {
     },
 
     /**
-     * Focuses first input with preferred property if it exists.
+     * Triggers focusing of preferred enabled input, if there is any.
+     * Also selects contents of focused input.
      */
-    focusPreferredProperty: function () {
-        this.async(function () {
-            if (!this._hasEmbededView()) {
-                const inputToFocus = findFirstInputToFocus(this.getEditors());
-                if (inputToFocus && inputToFocus.preferred) {
-                    inputToFocus.inputToFocus.focus();
-                    inputToFocus.inputToFocus.select();
-                }
-            }
-        }.bind(this), 100);
+    _focusPreferredInput: function () {
+        focusPreferredEnabledInputIfAny.bind(this)();
     },
 
     /**
-     * Focuses embeded view if it exists otherwise focuses first input.
+     * Focuses embedded view if it exists; otherwise:
+     * 
+     * Desktop: triggers focusing of invalid / preferred / first enabled input, if there is any; triggers focusing of first focusable element otherwise.
+     * Mobile: triggers focusing of preferred enabled input, if there is any.
+     * 
+     * In case of preferred input focusing, the contents of the input gets selected.
      */
     focusView: function () {
-        this.async(function () {
+        this.async(() => {
             if (this._hasEmbededView()) {
                 this._focusEmbededView()
             } else {
@@ -850,10 +889,22 @@ const TgEntityMasterBehaviorImpl = {
                 if (!isMobileApp()) {
                     this._focusFirstInput();
                 } else {
-                    this.focusPreferredProperty();
+                    this._focusPreferredInput();
                 }
             }
-        }.bind(this), 100);
+        }, 100);
+    },
+
+    /**
+     * For simple masters (no embedded view) and both desktop / mobile profiles, triggers focusing of preferred enabled input, if there is any.
+     * Also selects contents of focused input.
+     */
+    focusPreferredView: function () {
+        this.async(() => {
+            if (!this._hasEmbededView()) {
+                this._focusPreferredInput();
+            }
+        }, 100);
     },
 
     /**

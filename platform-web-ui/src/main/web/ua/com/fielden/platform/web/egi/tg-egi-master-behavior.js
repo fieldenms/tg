@@ -1,6 +1,6 @@
 import '/resources/components/postal-lib.js';
 
-import { TgEntityMasterBehavior, findFirstInputToFocus } from '/resources/master/tg-entity-master-behavior.js';
+import { TgEntityMasterBehavior, focusEnabledInputIfAny } from '/resources/master/tg-entity-master-behavior.js';
 import { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';
 import { queryElements } from '/resources/components/tg-element-selector-behavior.js';
 import { IronA11yKeysBehavior } from '/resources/polymer/@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
@@ -68,7 +68,7 @@ const TgEgiMasterBehaviorImpl = {
                 });
             } else {
                 this._resetEgiMasterState();
-                this.focusView();
+                this.focusView(); // focus invalid editor after save (and select it's contents if it is preferred)
             }
         }
     },
@@ -78,11 +78,33 @@ const TgEgiMasterBehaviorImpl = {
         this._postClose();
     },
 
+    /**
+     * Desktop: triggers focusing of invalid / preferred / first enabled input, if there is any; triggers focusing of first focusable element otherwise.
+     * Mobile: triggers focusing of preferred enabled input, if there is any.
+     * 
+     * In case of preferred input focusing, the contents of the input gets selected.
+     * 
+     * This method is overridden from 'tg-entity-master-behavior' to decrease async time and avoid checking for "has embedded view".
+     */
     focusView: function () {
         this.async(() => {
             if (!isMobileApp()) {
                 this._focusFirstInput();
+            } else {
+                this._focusPreferredInput();
             }
+        }, 1);
+    },
+
+    /**
+     * For simple masters (no embedded view) and both desktop / mobile profiles, triggers focusing of preferred enabled input, if there is any.
+     * Also selects contents of focused input.
+     * 
+     * This method is overridden from 'tg-entity-master-behavior' to decrease async time and avoid checking for "has embedded view".
+     */
+    focusPreferredView: function () {
+        this.async(() => {
+            this._focusPreferredInput();
         }, 1)
     },
 
@@ -102,21 +124,17 @@ const TgEgiMasterBehaviorImpl = {
     },
 
     /**
-     * Looks for the first input that is not hidden and not disabled to focus it.
+     * Triggers focusing of invalid / preferred / first enabled input, if there is any; triggers focusing of first focusable element otherwise.
+     * 
+     * In case of preferred input focusing, the contents of the input gets selected.
      */
     _focusFirstInput: function () {
-        const inputToFocus = findFirstInputToFocus(this.getEditors());
-        if (inputToFocus) {
-            inputToFocus.inputToFocus.focus();
-            if (inputToFocus.preferred) {
-                inputToFocus.inputToFocus.select();
-            }
-        } else {
+        focusEnabledInputIfAny.bind(this)(() => {
             const focusableParent = getParentAnd(this, parent => parent.matches(FOCUSABLE_ELEMENTS_SELECTOR));
             if (focusableParent) {
                 focusableParent.focus();
             }
-        }
+        });
     },
 
     getEditors: function () {
@@ -235,7 +253,7 @@ const TgEgiMasterBehaviorImpl = {
         if (!this.saveButton._disabled) {
             if (this.editors.some(editor => editor._invalid)) {
                 this._resetEgiMasterState();
-                this.focusView();
+                this.focusView(); // focus invalid editor (and select it's contents if it is preferred)
             } else {
                 this._shouldEditNextRow = true;
                 const editorToCommit = getActiveParentAnd(element => element.hasAttribute('tg-editor'));
@@ -258,7 +276,7 @@ const TgEgiMasterBehaviorImpl = {
         if (!this.saveButton._disabled) {
             if (this.editors.some(editor => editor._invalid)) {
                 this._resetEgiMasterState();
-                this.focusView();
+                this.focusView(); // focus invalid editor (and select it's contents if it is preferred)
             } else {
                 this._shouldEditPreviousRow = true;
                 const editorToCommit = getActiveParentAnd(element => element.hasAttribute('tg-editor'));
