@@ -108,6 +108,9 @@ const TgEgiMasterBehaviorImpl = {
         const firstInput = findFirstInputToFocus(this.getEditors());
         if (firstInput) {
             firstInput.focus(); // if the input has been identified then focus it
+            if (firstInput.isPreferredCase) {
+                firstInput.select();
+            }
         } else {
             const focusableParent = getParentAnd(this, parent => parent.matches(FOCUSABLE_ELEMENTS_SELECTOR));
             if (focusableParent) {
