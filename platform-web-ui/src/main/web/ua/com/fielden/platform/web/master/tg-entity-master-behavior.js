@@ -853,8 +853,10 @@ const TgEntityMasterBehaviorImpl = {
                 // Desktop app specific: focus first input when opening dialog.
                 // This is also used when closing dialog: if child dialog was not closed, then its first input should be focused (this however can not be reproduced on mobile due to maximised nature of all dialogs).
                 // So, in mobile app the input will not be focused on dialog opening (and the keyboard will not appear suddenly until the user explicitly clicks on some editor).
-                if (!isMobileApp()) { // TODO SAVE for mobile app to trigger focusing of preferred property editor?
+                if (!isMobileApp()) {
                     this._focusFirstInput();
+                } else {
+                    this.focusPreferredProperty();
                 }
             }
         }.bind(this), 100);
