@@ -58,9 +58,9 @@ export class TgSinglelineTextEditor extends TgEditor {
                             if (typeof this._autoCommitTimeoutId === 'number') { // if there is in-progress timeout handling auto-commit
                                 clearTimeout(this._autoCommitTimeoutId); // then cancel this timeout immediately
                             }
-                            this._asyncAutoCommitHandle = setTimeout(() => { // create and start new timeout to be fulfilled in autoCommitMillis time
+                            this._autoCommitTimeoutId = setTimeout(() => { // create and start new timeout to be fulfilled in autoCommitMillis time
                                 this.commitIfChanged(); // commit the current _editingValue if it is changed; after that timeout has been fulfilled and served its purpose
-                                delete this._asyncAutoCommitHandle; // remove timeout reference not to keep garbage; this is to avoid unnecessary clearTimeout calls for already completed timeouts
+                                delete this._autoCommitTimeoutId; // remove timeout reference not to keep garbage; this is to avoid unnecessary clearTimeout calls for already completed timeouts
                             }, this.autoCommitMillis);
                         }
                     };

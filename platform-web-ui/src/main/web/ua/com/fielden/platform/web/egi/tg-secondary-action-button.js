@@ -38,7 +38,7 @@ Polymer({
         actions: Array,
         /**
          * The 'currentEntity' function contains the entity on which secondary action was tapped
-         * or the entity navigated to (EntityNavigationAction).
+         * or the entity navigated to (EntityEditAction with EntityNavigationPreAction).
          */
         currentEntity: {
             type: Function,

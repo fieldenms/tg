@@ -5,6 +5,7 @@ import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
@@ -20,7 +21,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.master.MasterInfo;
 import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.app.exceptions.WebUiBuilderException;
@@ -44,7 +44,7 @@ public class MasterInfoProvider {
             return webUiConfig.configApp().getOpenMasterAction(type).get().map(entityActionConfig -> {
                 final FunctionalActionElement funcElem = new FunctionalActionElement(entityActionConfig, 0, FunctionalActionKind.PRIMARY_RESULT_SET);
                 final DomElement actionElement = funcElem.render();
-                final MasterInfo  info = new MasterInfo();
+                final MasterInfo info = new MasterInfo();
                 info.setKey(actionElement.getAttr("element-name").value.toString());
                 info.setDesc(actionElement.getAttr("component-uri").value.toString());
                 info.setShortDesc(actionElement.getAttr("short-desc").value.toString());
@@ -55,6 +55,7 @@ public class MasterInfoProvider {
                 info.setRequireMasterEntity(actionElement.getAttr("require-master-entity").value.toString());
                 info.setEntityType(entityActionConfig.functionalEntity.get().getName());
                 info.setRelativePropertyName(relativePropertyName);
+                info.setEntityTypeTitle(getEntityTitleAndDesc(type).getKey());
                 entityActionConfig.prefDimForView.ifPresent(prefDim -> {
                     info.setWidth(prefDim.width);
                     info.setHeight(prefDim.height);
@@ -70,8 +71,8 @@ public class MasterInfoProvider {
 
     private MasterInfo buildDefaultMasterConfiguration(final Class<? extends AbstractEntity<?>> type, final String relativePropertyName) {
         return webUiConfig.configApp().getMaster(type).map(master -> {
-            final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(type).getKey();
-            final MasterInfo  info = new MasterInfo();
+            final String entityTitle = getEntityTitleAndDesc(type).getKey();
+            final MasterInfo info = new MasterInfo();
             info.setKey(format("tg-%s-master", type.getSimpleName()));
             info.setDesc(format("/master_ui/%s", type.getName()));
             info.setKey("tg-EntityEditAction-master");
@@ -84,15 +85,16 @@ public class MasterInfoProvider {
             info.setEntityType(type.getName());
             info.setEntityType(EntityEditAction.class.getName());
             info.setRelativePropertyName(relativePropertyName);
+            info.setEntityTypeTitle(entityTitle);
             return info;
         }).orElseGet(tryOtherMasters(type, relativePropertyName));
     }
-    
+
     /**
      * Tries to determine a master for {@code type} in case it is a synthetic type based on some entity that may have a master (e.g. the case of ReWorkActivity extending WorkActivity).
      * If that fails, it tries to check if {@code type} is perhaps an entity with a single composite key member of an entity type that may have a master (e.g. the case of Manager with a single key member of type Person).
      * If none of the above yields anything, the constructed supplier returns {@code null}.
-     * 
+     *
      * @param type
      * @param relativePropertyName
      * @return
