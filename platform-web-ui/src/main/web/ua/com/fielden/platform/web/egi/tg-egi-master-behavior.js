@@ -105,11 +105,11 @@ const TgEgiMasterBehaviorImpl = {
      * Looks for the first input that is not hidden and not disabled to focus it.
      */
     _focusFirstInput: function () {
-        const firstInput = findFirstInputToFocus(this.getEditors());
-        if (firstInput) {
-            firstInput.focus(); // if the input has been identified then focus it
-            if (firstInput.isPreferredCase) {
-                firstInput.select();
+        const inputToFocus = findFirstInputToFocus(this.getEditors());
+        if (inputToFocus) {
+            inputToFocus.inputToFocus.focus();
+            if (inputToFocus.preferred) {
+                inputToFocus.inputToFocus.select();
             }
         } else {
             const focusableParent = getParentAnd(this, parent => parent.matches(FOCUSABLE_ELEMENTS_SELECTOR));

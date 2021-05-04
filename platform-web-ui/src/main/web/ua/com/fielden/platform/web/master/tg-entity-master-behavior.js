@@ -25,19 +25,13 @@ export const findFirstInputToFocus = editors => {
             firstPreferredInput = firstPreferredInput || (isPreferred() ? selectedElement : null);
             if (editors[editorIndex]._error && !editors[editorIndex].isInWarning()) {
                 if (selectedElement) {
-                    if (firstPreferredInput === selectedElement) {
-                        selectedElement.isPreferredCase = true;
-                    }
-                    return selectedElement;
+                    return { inputToFocus: selectedElement, preferred: firstPreferredInput === selectedElement };
                 }
             }
         }
     }
-    if (firstPreferredInput) {
-        firstPreferredInput.isPreferredCase = true;
-    }
-    // if the input has been identified then return it
-    return firstPreferredInput || firstInput; // either empty or not
+    return firstPreferredInput ? { inputToFocus: firstPreferredInput, preferred: true } :
+           firstInput ? { inputToFocus: firstInput, preferred: false } : null;
 };
 
 const TgEntityMasterBehaviorImpl = {
@@ -803,11 +797,11 @@ const TgEntityMasterBehaviorImpl = {
      * Looks for the first input that is not hidden and not disabled to focus it.
      */
     _focusFirstInput: function () {
-        const firstInput = findFirstInputToFocus(this.getEditors());
-        if (firstInput) {
-            firstInput.focus(); // if the input has been identified then focus it
-            if (firstInput.isPreferredCase) {
-                firstInput.select();
+        const inputToFocus = findFirstInputToFocus(this.getEditors());
+        if (inputToFocus) {
+            inputToFocus.inputToFocus.focus();
+            if (inputToFocus.preferred) {
+                inputToFocus.inputToFocus.select();
             }
         } else if (this.offsetParent !== null) {
             // Otherwise find first focusable element and focus it. If there are no focusable element then fire event that asks
@@ -833,10 +827,10 @@ const TgEntityMasterBehaviorImpl = {
     focusPreferredProperty: function () {
         this.async(function () {
             if (!this._hasEmbededView()) {
-                const firstInput = findFirstInputToFocus(this.getEditors());
-                if (firstInput && firstInput.isPreferredCase) {
-                    firstInput.focus();
-                    firstInput.select();
+                const inputToFocus = findFirstInputToFocus(this.getEditors());
+                if (inputToFocus && inputToFocus.preferred) {
+                    inputToFocus.inputToFocus.focus();
+                    inputToFocus.inputToFocus.select();
                 }
             }
         }.bind(this), 100);
