@@ -36,6 +36,8 @@ import ua.com.fielden.platform.domain.metadata.DomainPropertyHolderCo;
 import ua.com.fielden.platform.domain.metadata.DomainPropertyHolderDao;
 import ua.com.fielden.platform.domain.metadata.DomainTypeCo;
 import ua.com.fielden.platform.domain.metadata.DomainTypeDao;
+import ua.com.fielden.platform.entity.CalendarEntityCo;
+import ua.com.fielden.platform.entity.CalendarEntityDao;
 import ua.com.fielden.platform.entity.EntityDeleteActionDao;
 import ua.com.fielden.platform.entity.EntityEditActionDao;
 import ua.com.fielden.platform.entity.EntityNewActionDao;
@@ -258,6 +260,9 @@ public class BasicWebServerModule extends CommonFactoryModule {
         //Bind master info companion
         bind(IMasterInfo.class).to(MasterInfoDao.class);
 
+        //Custom view entities
+        bind(CalendarEntityCo.class).to(CalendarEntityDao.class);
+
         // user security related bindings
         bind(IUser.class).to(UserDao.class);
         bind(IUserSecret.class).to(UserSecretDao.class);
@@ -297,7 +302,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
         // warnings acknowledgement binding
         bind(IAcknowledgeWarnings.class).to(AcknowledgeWarningsDao.class);
         bind(IPropertyWarning.class).to(PropertyWarningDao.class);
-        
+
         if (webApiPresent) { // in case where Web API has been turned-on in application.properties ...
             // ... bind Web API to platform-dao GraphQL-based implementation
             bind(IWebApi.class).to(GraphQLService.class).in(Singleton.class);
