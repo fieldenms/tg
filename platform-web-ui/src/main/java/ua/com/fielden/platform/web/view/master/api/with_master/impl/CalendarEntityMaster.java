@@ -31,7 +31,15 @@ public class CalendarEntityMaster<T extends AbstractEntity<?>> implements IMaste
 
     private final IRenderable renderable;
 
-    public CalendarEntityMaster(final Class<T> entityType, final String eventKeyProp, final String eventDescProp, final String eventFromProp, final String eventToProp) {
+    public CalendarEntityMaster(
+            final Class<T> entityType,
+            final String eventKeyProp,
+            final String eventDescProp,
+            final String eventFromProp,
+            final String eventToProp,
+            final String colorProp,
+            final String colorTitleProp,
+            final String colorDescProp) {
         final DomElement calendar = new DomElement("tg-fullcalendar")
                 .attr("id", "calendar")
                 .attr("custom-event-target", "[[customEventTarget]]")
@@ -42,6 +50,9 @@ public class CalendarEntityMaster<T extends AbstractEntity<?>> implements IMaste
                 .attr("event-desc-property", StringUtils.isEmpty(eventDescProp) ? "" : eventDescProp)
                 .attr("event-from-property", eventFromProp)
                 .attr("event-to-property", eventToProp)
+                .attr("color-property", colorProp)
+                .attr("color-title-property", colorTitleProp)
+                .attr("color-desc-property", colorDescProp)
                 .attr("uuid", "[[centreUuid]]");
 
         final StringBuilder prefDimBuilder = new StringBuilder();
