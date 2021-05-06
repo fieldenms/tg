@@ -887,7 +887,7 @@ Polymer({
                     dialog.center();
                 }
                 if (dialog._childDialogs.length === 0) {
-                    // focuses child dialog view in case it is was not closed and does not have its own child dialogs;
+                    // focuses child dialog view in case if it wasn't closed and does not have its own child dialogs;
                     //  (e.g. in master dialog view it focuses input in error, preferred input or first input -- see 'focusView' in 'tg-entity-master-behavior') 
                     dialog._focusDialogWithInput();
                 }
@@ -1282,10 +1282,24 @@ Polymer({
                 //The following instruction will take place after the last _hideBlockingLayer invocation causes blocking layer to become invisible.
                 this._masterVisibilityChanges = undefined;
                 this._masterLayoutChanges = undefined;
-                this.notifyResize();
+                this.notifyResizeWithoutItselfAndAncestors(); // descendant notifications are needed to recalculate shadows in tg-scrollable-component._contentScrolled
             }
             
         }
+    },
+    
+    /**
+     * Notifies resize for this dialog's descendants and not dialog itself / ancestors.
+     *
+     * This is not to trigger 'iron-overlay-behavior._onIronResize' which triggers 'iron-fit-behavior.refit'.
+     * 'iron-fit-behavior.refit' has undesired side effect -- the contents is scrolled to the top.
+     * That side effect interferes with focusing / scrolling of / to, e.g., first input on masters.
+     */
+    notifyResizeWithoutItselfAndAncestors: function () {
+        const _fireResize = this._fireResize;
+        this._fireResize = () => {};
+        this.notifyResize();
+        this._fireResize = _fireResize;
     },
     
     _showMaster: function(action, element, closeEventChannel, closeEventTopics, actionWithContinuation) {
