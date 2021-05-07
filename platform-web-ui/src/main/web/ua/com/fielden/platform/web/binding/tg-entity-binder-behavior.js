@@ -695,6 +695,7 @@ export const TgEntityBinderBehavior = {
             if (this.postValidated) {
                 this.postValidated(validatedEntity, newBindingEntity, customObject);
             }
+            self.fire('binding-entity-validated', self._currBindingEntity); // this event can be used to react on validation events (see 'binding-entity-appeared' for refresh / cancel / save + continuous creation)
         }).bind(self);
 
         self._postValidatedDefaultError = (function (errorResult) {
