@@ -43,6 +43,32 @@ const findFirstInputToFocus = editors => {
 };
 
 /**
+ * Check whether an element is visible in its 'tg-scrollable-component' viewport.
+ * If there is no 'tg-scrollable-component' ancestor then returns 'true' (no need to re-scroll).
+ * 
+ * @see https://stackoverflow.com/questions/123999/how-to-tell-if-a-dom-element-is-visible-in-the-current-viewport
+ */
+const _isElementInViewport = function (el) {
+    let parent = el;
+    while (parent && parent.tagName !== 'TG-SCROLLABLE-COMPONENT') {
+        // go through parent elements (including going out from shadow DOM)
+        parent = parent.tagName === 'TG-FLEX-LAYOUT'
+            ? (parent.assignedSlot || parent.parentElement || parent.getRootNode().host) // tg-flex-layout should be distributed into slot with tg-scrollable-component ancestor; fallback to standard lookup in case if not [yet] distributed
+            : (parent.parentElement || parent.getRootNode().host);
+    }
+    const root = parent ? parent.$.scrollablePanel : null;
+    if (!root) {
+        return true;
+    }
+    const rootRect = root.getBoundingClientRect();
+    const rect = el.getBoundingClientRect();
+    return rect.top >= rootRect.top // check whether 'rect' is fully inside in 'rootRect'
+        && rect.left >= rootRect.left
+        && rect.bottom <= rootRect.bottom
+        && rect.right <= rootRect.right;
+};
+
+/**
  * Triggers focusing of invalid / preferred / first enabled input, if there is any.
  * 
  * In case of preferred input focusing, the contents of the input gets selected.
@@ -53,6 +79,9 @@ export const focusEnabledInputIfAny = function (orElseFocus) {
     const inputToFocus = findFirstInputToFocus(this.getEditors());
     if (inputToFocus) {
         inputToFocus.inputToFocus.focus();
+        if (!_isElementInViewport(inputToFocus.inputToFocus)) { // .focus() scrolls to view; however, if the editor was already focused but scrolled out of view, .focus() will not tigger re-scrolling (already focused); hence we scroll it manually
+            inputToFocus.inputToFocus.scrollIntoView(); // behavior: 'auto' -- no animation; block: 'start' (vertical alignment); inline: 'nearest' (horisontal alignment);
+        }
         if (inputToFocus.preferred) {
             inputToFocus.inputToFocus.select();
         }
@@ -71,6 +100,9 @@ export const focusPreferredEnabledInputIfAny = function (orElseFocus) {
     const inputToFocus = findFirstInputToFocus(this.getEditors());
     if (inputToFocus && inputToFocus.preferred) {
         inputToFocus.inputToFocus.focus();
+        if (!_isElementInViewport(inputToFocus.inputToFocus)) { // .focus() scrolls to view; however, if the editor was already focused but scrolled out of view, .focus() will not tigger re-scrolling (already focused); hence we scroll it manually
+            inputToFocus.inputToFocus.scrollIntoView(); // behavior: 'auto' -- no animation; block: 'start' (vertical alignment); inline: 'nearest' (horisontal alignment);
+        }
         inputToFocus.inputToFocus.select();
     } else if (orElseFocus) {
         orElseFocus();
