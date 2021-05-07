@@ -17,29 +17,41 @@ import { enhanceStateRestoration } from '/resources/components/tg-global-error-h
  * Otherwise returns null.
  * 
  * If returned input is present, returns whether it is 'preferred'.
+ *
+ * @param preferredOnly -- consider only preferred inputs (independent from invalid)
  */
-const findFirstInputToFocus = editors => {
+const findFirstInputToFocus = (preferredOnly, editors) => {
     const selectEnabledEditor = editor => {
         const selectedElement = editor.shadowRoot.querySelector('.custom-input:not([hidden]):not([disabled]):not([readonly])');
         return (selectedElement && selectedElement.shadowRoot && selectedElement.shadowRoot.querySelector('textarea')) || selectedElement;
     };
     
-    let editorIndex, firstInput, firstPreferredInput, selectedElement;
-    for (editorIndex = 0; editorIndex < editors.length; editorIndex++) {
-        if (editors[editorIndex].offsetParent !== null) {
-            selectedElement = selectEnabledEditor(editors[editorIndex]);
-            firstInput = firstInput || selectedElement;
-            const isPreferred = () => selectedElement && editors[editorIndex].propertyName && editors[editorIndex].propertyName === editors[editorIndex].entity['@@origin'].preferredProperty();
-            firstPreferredInput = firstPreferredInput || (isPreferred() ? selectedElement : null);
-            if (editors[editorIndex]._error && !editors[editorIndex].isInWarning()) {
-                if (selectedElement) {
-                    return { inputToFocus: selectedElement, preferred: firstPreferredInput === selectedElement };
+    let firstInput, firstPreferredInput, firstInvalidInput;
+    for (let editorIndex = 0; editorIndex < editors.length; editorIndex++) {
+        const currentEditor = editors[editorIndex];
+        if (currentEditor.offsetParent !== null) {
+            const selectedElement = selectEnabledEditor(currentEditor);
+            if (selectedElement) {
+                if (!firstInput) {
+                    firstInput = selectedElement;
+                }
+                if (!firstPreferredInput && currentEditor.propertyName && currentEditor.propertyName === currentEditor.entity['@@origin'].preferredProperty()) {
+                    firstPreferredInput = selectedElement;
+                }
+                if (!firstInvalidInput && currentEditor._error && !currentEditor.isInWarning()) {
+                    firstInvalidInput = selectedElement;
                 }
             }
         }
     }
-    return firstPreferredInput ? { inputToFocus: firstPreferredInput, preferred: true } :
-           firstInput ? { inputToFocus: firstInput, preferred: false } : null;
+    return preferredOnly ? (
+               firstPreferredInput ? { inputToFocus: firstPreferredInput, preferred: true } :
+               null
+           ) :
+           firstInvalidInput ? { inputToFocus: firstInvalidInput, preferred: firstInvalidInput === firstPreferredInput } :
+           firstPreferredInput ? { inputToFocus: firstPreferredInput, preferred: true } :
+           firstInput ? { inputToFocus: firstInput, preferred: false } :
+           null;
 };
 
 /**
@@ -69,14 +81,15 @@ const _isElementInViewport = function (el) {
 };
 
 /**
- * Triggers focusing of invalid / preferred / first enabled input, if there is any.
+ * Triggers focusing of invalid / preferred / first enabled input, if there is any (or preferred enabled input for 'preferredOnly' === true).
  * 
- * In case of preferred input focusing, the contents of the input gets selected.
+ * If preferred input is getting focus, the contents of the input gets selected.
  * 
+ * @param preferredOnly -- consider only preferred inputs (independent from invalid)
  * @param orElseFocus -- function for focusing in case if there is no enabled input to focus
  */
-export const focusEnabledInputIfAny = function (orElseFocus) {
-    const inputToFocus = findFirstInputToFocus(this.getEditors());
+export const focusEnabledInputIfAny = function (preferredOnly, orElseFocus) {
+    const inputToFocus = findFirstInputToFocus(preferredOnly, this.getEditors());
     if (inputToFocus) {
         inputToFocus.inputToFocus.focus();
         if (!_isElementInViewport(inputToFocus.inputToFocus)) { // .focus() scrolls to view; however, if the editor was already focused but scrolled out of view, .focus() will not tigger re-scrolling (already focused); hence we scroll it manually
@@ -85,25 +98,6 @@ export const focusEnabledInputIfAny = function (orElseFocus) {
         if (inputToFocus.preferred) {
             inputToFocus.inputToFocus.select();
         }
-    } else if (orElseFocus) {
-        orElseFocus();
-    }
-};
-
-/**
- * Triggers focusing of preferred enabled input, if there is any.
- * Also selects contents of focused input.
- * 
- * @param orElseFocus -- function for focusing in case if there is no preferred enabled input to focus
- */
-export const focusPreferredEnabledInputIfAny = function (orElseFocus) {
-    const inputToFocus = findFirstInputToFocus(this.getEditors());
-    if (inputToFocus && inputToFocus.preferred) {
-        inputToFocus.inputToFocus.focus();
-        if (!_isElementInViewport(inputToFocus.inputToFocus)) { // .focus() scrolls to view; however, if the editor was already focused but scrolled out of view, .focus() will not tigger re-scrolling (already focused); hence we scroll it manually
-            inputToFocus.inputToFocus.scrollIntoView(); // behavior: 'auto' -- no animation; block: 'start' (vertical alignment); inline: 'nearest' (horisontal alignment);
-        }
-        inputToFocus.inputToFocus.select();
     } else if (orElseFocus) {
         orElseFocus();
     }
@@ -874,7 +868,7 @@ const TgEntityMasterBehaviorImpl = {
      * In case of preferred input focusing, the contents of the input gets selected.
      */
     _focusFirstInput: function () {
-        focusEnabledInputIfAny.bind(this)(() => {
+        focusEnabledInputIfAny.bind(this)(false, () => {
             if (this.offsetParent !== null) {
                 // Otherwise find first focusable element and focus it. If there are no focusable element then fire event that asks
                 //  it's ancestors to focus their first best element.
@@ -899,7 +893,7 @@ const TgEntityMasterBehaviorImpl = {
      * Also selects contents of focused input.
      */
     _focusPreferredInput: function () {
-        focusPreferredEnabledInputIfAny.bind(this)();
+        focusEnabledInputIfAny.bind(this)(true);
     },
 
     /**
