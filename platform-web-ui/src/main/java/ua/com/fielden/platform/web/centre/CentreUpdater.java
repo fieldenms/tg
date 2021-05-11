@@ -305,6 +305,21 @@ public class CentreUpdater {
     }
     
     /**
+     * Updates (retrieves) current version of centre dashboardable indicator.
+     *
+     * @param user
+     * @param miType
+     * @param saveAsName -- user-defined title of 'saveAs' centre configuration or empty {@link Optional} for unnamed centre
+     * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
+     * @return
+     */
+    public static boolean updateCentreDashboardable(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName, final DeviceProfile device, final IEntityCentreConfig eccCompanion) {
+        final String deviceSpecificName = deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, saveAsName), device);
+        final EntityCentreConfig eccWithDesc = findConfig(miType, user, deviceSpecificName + DIFFERENCES_SUFFIX, eccCompanion);
+        return eccWithDesc != null && eccWithDesc.isDashboardable();
+    }
+    
+    /**
      * Updates (retrieves) current version of centre uuid.
      *
      * @param user
@@ -329,6 +344,7 @@ public class CentreUpdater {
      * @param saveAsName -- user-defined title of 'saveAs' centre configuration or empty {@link Optional} for unnamed centre
      * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
      * @param newTitle -- new title for configuration (aka 'saveAsName')
+     * @param dashboardable -- parameter indicating whether edited centre configuration should be present on a dashboard
      * @param newDesc -- new description for configuration
      */
     public static void editCentreTitleAndDesc(
@@ -338,6 +354,7 @@ public class CentreUpdater {
             final DeviceProfile device,
             final String newTitle,
             final String newDesc,
+            final boolean newDashboardable,
             final IEntityCentreConfig eccCompanion) {
         final Function<Optional<String>, Function<String, String>> nameOf = (saveAs) -> (surrogateName) -> deviceSpecific(saveAsSpecific(surrogateName, saveAs), device) + DIFFERENCES_SUFFIX;
         final Function<String, String> currentNameOf = nameOf.apply(saveAsName);
@@ -359,8 +376,9 @@ public class CentreUpdater {
         if (previouslyRunConfig != null) { // previouslyRun centre may not exist
             previouslyRunConfig.setTitle(previouslyRunNewTitle);
         }
-        // newDesc
+        // newDesc / newDashboardable
         freshConfig.setDesc(newDesc);
+        freshConfig.setDashboardable(newDashboardable);
         
         // clear all centres with the same name in the case where title has been changed -- new title potentially can be in conflict with another configuration and that another configuration should be deleted
         if (!equalsEx(saveAsName, of(newTitle))) {

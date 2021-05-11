@@ -35,6 +35,20 @@ public abstract class AbstractCentreConfigCommitAction extends AbstractCentreCon
     @Title(value = "Skip UI", desc = "Controls the requirement to show or to skip displaying of the associated entity master.")
     private boolean skipUi = false;
     
+    @IsProperty
+    @Title(value = "Add to dashboard?", desc = "Indicates whether centre configuration should be added to a dashboard.")
+    private boolean dashboardable;
+    
+    @Observable
+    public AbstractCentreConfigCommitAction setDashboardable(final boolean dashboardable) {
+        this.dashboardable = dashboardable;
+        return this;
+    }
+    
+    public boolean isDashboardable() {
+        return dashboardable;
+    }
+    
     @Observable
     public AbstractCentreConfigCommitAction setSkipUi(final boolean skipUi) {
         this.skipUi = skipUi;

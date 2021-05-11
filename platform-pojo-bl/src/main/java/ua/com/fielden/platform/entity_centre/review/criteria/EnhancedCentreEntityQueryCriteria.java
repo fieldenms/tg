@@ -3,7 +3,6 @@ package ua.com.fielden.platform.entity_centre.review.criteria;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -37,8 +36,8 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private Supplier<ICentreDomainTreeManagerAndEnhancer> previouslyRunCentreSupplier;
     /** IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE. */
     private Function<Map<String, Object>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>> freshCentreApplier;
-    private BiFunction<String, String, Map<String, Object>> centreEditor;
-    private BiFunction<String, String, Map<String, Object>> centreSaver;
+    private Function<String, Function<String, Function<Boolean, Map<String, Object>>>> centreEditor;
+    private Function<String, Function<String, Function<Boolean, Map<String, Object>>>> centreSaver;
     private Runnable centreDeleter;
     /** IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE. */
     private Runnable freshCentreSaver;
@@ -51,6 +50,7 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private Supplier<Optional<String>> saveAsNameSupplier;
     private Consumer<Optional<String>> preferredConfigMaker;
     private Function<Optional<String>, Optional<T2<String, String>>> centreTitleAndDescGetter;
+    private Function<Optional<String>, Boolean> centreDashboardableGetter;
     private Function<Optional<String>, Optional<String>> centreConfigUuidGetter;
     private Supplier<Boolean> centreDirtyGetter;
     private Function<Optional<String>, Function<Supplier<ICentreDomainTreeManagerAndEnhancer>, Boolean>> centreDirtyCalculator;
@@ -150,20 +150,20 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
         return freshCentreApplier.apply(modifHolder);
     }
 
-    public void setCentreEditor(final BiFunction<String, String, Map<String, Object>> centreEditor) {
+    public void setCentreEditor(final Function<String, Function<String, Function<Boolean, Map<String, Object>>>> centreEditor) {
         this.centreEditor = centreEditor;
     }
 
-    public Map<String, Object> editCentre(final String title, final String desc) {
-        return centreEditor.apply(title, desc);
+    public Map<String, Object> editCentre(final String title, final String desc, final boolean dashboardable) {
+        return centreEditor.apply(title).apply(desc).apply(dashboardable);
     }
 
-    public void setCentreSaver(final BiFunction<String, String, Map<String, Object>> centreSaver) {
+    public void setCentreSaver(final Function<String, Function<String, Function<Boolean, Map<String, Object>>>> centreSaver) {
         this.centreSaver = centreSaver;
     }
 
-    public Map<String, Object> saveCentre(final String title, final String desc) {
-        return centreSaver.apply(title, desc);
+    public Map<String, Object> saveCentre(final String title, final String desc, final boolean dashboardable) {
+        return centreSaver.apply(title).apply(desc).apply(dashboardable);
     }
 
     public void setDefaultCentreClearer(final Runnable defaultCentreClearer) {
@@ -259,6 +259,14 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
 
     public Optional<T2<String, String>> centreTitleAndDesc(final Optional<String> saveAsName) {
         return centreTitleAndDescGetter.apply(saveAsName);
+    }
+
+    public void setCentreDashboardableGetter(final Function<Optional<String>, Boolean> centreDashboardableGetter) {
+        this.centreDashboardableGetter = centreDashboardableGetter;
+    }
+
+    public boolean centreDashboardable(final Optional<String> saveAsName) {
+        return centreDashboardableGetter.apply(saveAsName);
     }
 
     public void setCentreConfigUuidGetter(final Function<Optional<String>, Optional<String>> centreConfigUuidGetter) {
