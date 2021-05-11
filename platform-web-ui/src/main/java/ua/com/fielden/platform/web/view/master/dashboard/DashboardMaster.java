@@ -9,7 +9,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -35,7 +34,7 @@ public class DashboardMaster<T extends AbstractEntity<?>> implements IMaster<T> 
 
         final DomElement dashboardDom = new DomElement("tg-dashboard")
                 .attr("id", "dashboard")
-                .add(generateCentresDom(centres).toArray(new DomElement [0]));
+                .attr("views", "[[centres]]");
 
         final StringBuilder prefDimBuilder = new StringBuilder();
         prefDimBuilder.append("{'width': function() {return '100%'}, 'height': function() {return '100%'}, 'widthUnit': '', 'heightUnit': ''}");
@@ -56,18 +55,6 @@ public class DashboardMaster<T extends AbstractEntity<?>> implements IMaster<T> 
                 return new InnerTextElement(entityMasterStr);
             }
         };
-    }
-
-    private List<DomElement> generateCentresDom(final List<EntityCentre<?>> centres) {
-        return IntStream.range(0, centres.size()).mapToObj(centreIndex -> {
-            return new DomElement("tg-element-loader")
-                    .attr("import", "[[centres." + centreIndex+ ".import]]")
-                    .attr("element-name", "[[centres." + centreIndex+ ".elementName]]")
-                    .attr("view-type$", "[[centres." + centreIndex+ ".type]]")
-                    .attr("attrs", "[[centres." + centreIndex+ ".attrs]]")
-                    .attr("auto", true)
-                    .attr("slot", "centres");
-        }).collect(Collectors.toList());
     }
 
     private String readyCallback(final List<EntityCentre<?>> centres) {
