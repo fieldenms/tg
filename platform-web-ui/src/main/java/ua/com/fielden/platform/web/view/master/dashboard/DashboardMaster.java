@@ -11,6 +11,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.apache.commons.lang3.StringUtils;
+
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
@@ -20,6 +22,7 @@ import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
+import ua.com.fielden.platform.web.menu.module.impl.WebView;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 
 public class DashboardMaster<T extends AbstractEntity<?>> implements IMaster<T> {
@@ -60,18 +63,21 @@ public class DashboardMaster<T extends AbstractEntity<?>> implements IMaster<T> 
             return new DomElement("tg-element-loader")
                     .attr("import", "[[centres." + centreIndex+ ".import]]")
                     .attr("element-name", "[[centres." + centreIndex+ ".elementName]]")
+                    .attr("view-type$", "[[centres." + centreIndex+ ".type]]")
                     .attr("attrs", "[[centres." + centreIndex+ ".attrs]]")
-                    .attr("auto", "[[centres." + centreIndex+ ".auto]]");
+                    .attr("auto", true)
+                    .attr("slot", "centres");
         }).collect(Collectors.toList());
     }
 
     private String readyCallback(final List<EntityCentre<?>> centres) {
+        final String centresAttrs = StringUtils.join(centres.stream().map(centre -> new WebView(centre).code().toString()).collect(Collectors.toList()), ",\n");
         return "self.classList.add('layout');\n"
                 + "self.classList.add('vertical');\n"
                 + "self.canLeave = function () {\n"
                 + "    return null;\n"
                 + "}.bind(self);\n"
-                + "";
+                + "self.centres = [" + centresAttrs + "];\n";
     }
 
     @Override

@@ -30,7 +30,6 @@ const template = html`
         .master-container {
             border-radius: 2px;
             overflow: hidden;
-            background-color: white;
             max-height: 100%;
             @apply --layout-vertical;
             @apply --shadow-elevation-2dp;
