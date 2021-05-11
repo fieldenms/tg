@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.ui.config;
 
+import java.util.Date;
+
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
@@ -12,8 +14,10 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
+import ua.com.fielden.platform.ui.config.definers.EntityCentreConfigDashboardableDefiner;
 
 /**
  * A type designed for storing entity centres in a binary format, which can be used for storing configurations in databases, files etc.
@@ -78,6 +82,37 @@ public class EntityCentreConfig extends AbstractConfiguration<DynamicEntityKey> 
     @MapTo
     @Title(value = "Config UUID", desc = "UUID of centre configuration [represented by this EntityCentreConfig instance] for the user that created it (SAVED or FRESH surrogate kind) or other users with which it was shared / based-on (FRESH surrogate kind only).")
     private String configUuid;
+
+    @IsProperty
+    @MapTo
+    @Title(value = "Dashboardable?", desc = "Indicates whether this configuration is dashboardable i.e. it is present in owner's dashboard or dashboards of users with which it was shared / based-on")
+    @AfterChange(EntityCentreConfigDashboardableDefiner.class)
+    private boolean dashboardable = false;
+
+    @IsProperty
+    @MapTo
+    @Title(value = "Dashboardable Date", desc = "Date when this configuration was made dashboardable")
+    private Date dashboardableDate;
+
+    @Observable
+    public EntityCentreConfig setDashboardableDate(final Date dashboardableDate) {
+        this.dashboardableDate = dashboardableDate;
+        return this;
+    }
+
+    public Date getDashboardableDate() {
+        return dashboardableDate;
+    }
+
+    @Observable
+    public EntityCentreConfig setDashboardable(final boolean dashboardable) {
+        this.dashboardable = dashboardable;
+        return this;
+    }
+
+    public boolean isDashboardable() {
+        return dashboardable;
+    }
 
     @Observable
     public EntityCentreConfig setConfigUuid(final String configUuid) {

@@ -248,7 +248,7 @@ public class CentreUpdaterUtils extends CentreUpdater {
      */
     protected static EntityCentreConfig findConfig(final Class<?> menuItemType, final User user, final String deviceSpecificDiffName, final IEntityCentreConfig eccCompanion) {
         return eccCompanion.getEntity(
-            from(modelFor(user, menuItemType.getName(), deviceSpecificDiffName)).with(fetchWithKeyAndDesc(EntityCentreConfig.class, true).with("preferred").with("configUuid").fetchModel()).model()
+            from(modelFor(user, menuItemType.getName(), deviceSpecificDiffName)).with(fetchWithKeyAndDesc(EntityCentreConfig.class, true).with("preferred").with("configUuid").with("dashboardable").with("dashboardableDate").fetchModel()).model()
         );
     }
     
