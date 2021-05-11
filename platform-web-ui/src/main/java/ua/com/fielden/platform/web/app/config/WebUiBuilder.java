@@ -184,6 +184,17 @@ public class WebUiBuilder implements IWebUiBuilder {
         addCentre(centre);
         return centre;
     }
+    
+    @Override
+    public <M extends MiWithConfigurationSupport<?>> Optional<EntityCentre<?>> getCentre(final String menuTypeName) {
+        try {
+            return getCentre((Class<? extends MiWithConfigurationSupport<?>>) Class.forName(menuTypeName));
+        } catch (final ClassNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+            return Optional.empty();
+        }
+    }
 
     @Override
     public <M extends MiWithConfigurationSupport<?>> Optional<EntityCentre<?>> getCentre(final Class<M> menuType) {

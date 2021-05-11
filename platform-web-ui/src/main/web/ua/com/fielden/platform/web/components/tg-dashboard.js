@@ -121,6 +121,16 @@ class TgDashboard extends PolymerElement {
         if (isDashboardElement(loadingElement, this._getLoaders())) {
             const view = e.detail;
             if (isCentre(loadingElement)) {
+                const oldPostRetrieved = view.postRetrieved;
+                view.postRetrieved = function (entity, bindingEntity, customObject) {
+                    if (oldPostRetrieved) {
+                        oldPostRetrieved(entity, bindingEntity, customObject);
+                    }
+                    if (view.autoRun) {
+                        view.run(true); // identify autoRunning situation only in case where centre has autoRun as true but does not represent 'link' centre (has no URI criteria values)
+                    }
+                    view.postRetrieved = oldPostRetrieved;
+                };
                 view.retrieve().catch(error => {});
             } else if (isMaster(loadingElement)) {
                 view.postRetrieved = function (entity, bindingEntity, customObject) {

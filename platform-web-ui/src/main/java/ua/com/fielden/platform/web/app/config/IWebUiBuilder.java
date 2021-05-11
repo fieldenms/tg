@@ -128,6 +128,15 @@ public interface IWebUiBuilder {
     <M extends MiWithConfigurationSupport<?>> Optional<EntityCentre<?>> getCentre(final Class<M> menuType);
 
     /**
+     * Returns an optional value with a centre instance for the specified menu item type.
+     * An empty optional value is returned if there is no centre registered for the specified type.
+     *
+     * @param menuType
+     * @return
+     */
+    <M extends MiWithConfigurationSupport<?>> Optional<EntityCentre<?>> getCentre(final String menuTypeName);
+
+    /**
      * Adds the custom view to the application configuration object.
      *
      * @param customView

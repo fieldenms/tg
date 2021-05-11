@@ -185,7 +185,11 @@ Polymer({
             if (this._isCentre(this.menuItem)) {
                 self._loadCentre.bind(this)(detail, true);
             } else if (this.menuItem.view.viewType === 'master') {
+                const postRetrieved = detail.postRetrieved;
                 detail.postRetrieved = function (entity, bindingEntity, customObject) {
+                    if (postRetrieved) {
+                        postRetrieved(entity, bindingEntity, customObject);
+                    }
                     self.fire("menu-item-view-loaded", self.menuItem);
                 };
                 detail.postValidated = function (validatedEntity, bindingEntity, customObject) {};

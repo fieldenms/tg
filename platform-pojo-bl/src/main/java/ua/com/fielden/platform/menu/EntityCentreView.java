@@ -31,6 +31,20 @@ public class EntityCentreView extends AbstractView {
     @IsProperty
     private String uri;
 
+    @IsProperty
+    @Title("Config UUID")
+    private String configUuid;
+    
+    @Observable
+    public EntityCentreView setConfigUuid(final String configUuid) {
+        this.configUuid = configUuid;
+        return this;
+    }
+
+    public String getConfigUuid() {
+        return configUuid;
+    }
+    
     @Observable
     public EntityCentreView setUri(final String uri) {
         this.uri = uri;

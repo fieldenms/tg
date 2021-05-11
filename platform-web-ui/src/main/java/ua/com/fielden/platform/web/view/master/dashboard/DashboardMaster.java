@@ -6,29 +6,23 @@ import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedName
 import static ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder.createImports;
 
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
-
-import org.apache.commons.lang3.StringUtils;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.ResourceLoader;
-import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
-import ua.com.fielden.platform.web.menu.module.impl.WebView;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 
 public class DashboardMaster<T extends AbstractEntity<?>> implements IMaster<T> {
 
     private final IRenderable renderable;
 
-    public DashboardMaster(final Class<T> entityType, final List<EntityCentre<?>> centres) {
+    public DashboardMaster(final Class<T> entityType) {
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
         importPaths.add("components/tg-dashboard");
 
@@ -44,7 +38,7 @@ public class DashboardMaster<T extends AbstractEntity<?>> implements IMaster<T> 
                         + "\nimport { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';\n")
                 .replace(ENTITY_TYPE, flattenedNameOf(entityType))
                 .replace("<!--@tg-entity-master-content-->", dashboardDom.toString())
-                .replace("//@ready-callback", readyCallback(centres))
+                .replace("//@ready-callback", readyCallback())
                 .replace("@prefDim", prefDimBuilder.toString())
                 .replace("@noUiValue", "false")
                 .replace("@saveOnActivationValue", "true");
@@ -57,14 +51,27 @@ public class DashboardMaster<T extends AbstractEntity<?>> implements IMaster<T> 
         };
     }
 
-    private String readyCallback(final List<EntityCentre<?>> centres) {
-        final String centresAttrs = StringUtils.join(centres.stream().map(centre -> new WebView(centre).code().toString()).collect(Collectors.toList()), ",\n");
+    private String readyCallback() {
         return "self.classList.add('layout');\n"
                 + "self.classList.add('vertical');\n"
                 + "self.canLeave = function () {\n"
                 + "    return null;\n"
                 + "}.bind(self);\n"
-                + "self.centres = [" + centresAttrs + "];\n";
+                + "self.postRetrieved = (entity, bindingEntity, customObject) => {\n"
+                + "    self.centres = entity.get('configViews').map(configView => { return {\n"
+                + "        import: configView.get('htmlImport'),\n"
+                + "        elementName: configView.get('elementName'),\n"
+                + "        type: configView.get('viewType'),\n"
+                + "        attrs: {\n"
+                + "            uuid: configView.get('attrs').get('uuid'),\n"
+                + "            autoRun: true,\n" // always auto-runnable by default
+                + "            enforcePostSaveRefresh: configView.get('attrs').get('enforcePostSaveRefresh'),\n"
+                + "            uri: configView.get('attrs').get('uri'),\n"
+                + "            configUuid: configView.get('attrs').get('configUuid')\n"
+                + "        }\n"
+                + "    };});\n"
+                + "    entity.set('configViews', []);\n"
+                + "};\n";
     }
 
     @Override
