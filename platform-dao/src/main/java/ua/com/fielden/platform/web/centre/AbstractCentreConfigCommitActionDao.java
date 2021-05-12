@@ -6,6 +6,7 @@ import java.util.Map;
 import ua.com.fielden.platform.continuation.NeedMoreData;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
@@ -51,5 +52,10 @@ public abstract class AbstractCentreConfigCommitActionDao<T extends AbstractCent
      * @return
      */
     protected abstract Map<String, Object> performSave(final T entity);
+    
+    @Override
+    protected IFetchProvider<T> createFetchProvider() {
+        return super.createFetchProvider().with("dashboardRefreshFrequency");
+    }
     
 }

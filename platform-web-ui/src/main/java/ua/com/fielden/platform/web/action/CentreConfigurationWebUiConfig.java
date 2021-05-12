@@ -169,13 +169,14 @@ public class CentreConfigurationWebUiConfig {
      */
     private static <T extends AbstractCentreConfigCommitAction> IMaster<T> createCentreConfigCommitActionMaster(final Injector injector, final Class<T> entityType, final String customSaveDesc, final String customCancelDesc) {
         final String actionLayout = mkActionLayoutForMaster();
-        final String layout = mkGridForMasterFitWidth(3, 1);
+        final String layout = mkGridForMasterFitWidth(4, 1);
 
         return new SimpleMasterBuilder<T>()
             .forEntity(entityType)
             .addProp("title").asSinglelineText().also()
             .addProp("desc").asMultilineText().also()
             .addProp("dashboardable").asCheckbox().also()
+            .addProp("dashboardRefreshFrequency").asAutocompleter().also()
             .addAction(REFRESH).shortDesc("CANCEL").longDesc(customCancelDesc)
             .addAction(SAVE).shortDesc("SAVE").longDesc(customSaveDesc)
             .setActionBarLayoutFor(DESKTOP, empty(), actionLayout)
@@ -184,7 +185,7 @@ public class CentreConfigurationWebUiConfig {
             .setLayoutFor(DESKTOP, empty(), layout)
             .setLayoutFor(TABLET, empty(), layout)
             .setLayoutFor(MOBILE, empty(), layout)
-            .withDimensions(mkDim(400, 320))
+            .withDimensions(mkDim(400, 382))
             .done();
     }
     /**

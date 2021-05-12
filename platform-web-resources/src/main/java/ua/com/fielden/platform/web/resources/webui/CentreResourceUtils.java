@@ -684,13 +684,17 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         validationPrototype.setCentreDashboardableGetter(saveAsNameForDashboardable -> {
             return saveAsNameForDashboardable.map(name -> updateCentreDashboardable(user, miType, of(name), device, eccCompanion)).orElse(false);
         });
+        // returns dashboard refresh frequency for named (inherited or owned) configuration and null for unnamed (default) configuration
+        validationPrototype.setCentreDashboardRefreshFrequencyGetter(saveAsNameForDashboardable -> {
+            return saveAsNameForDashboardable.map(name -> updateCentreDashboardRefreshFrequency(user, miType, of(name), device, eccCompanion)).orElse(null);
+        });
         // returns configUuid for named (inherited, owned or link) configuration and empty optional for unnamed (default) configuration
         validationPrototype.setCentreConfigUuidGetter(saveAsNameForConfigUuid -> {
             return updateCentreConfigUuid(user, miType, saveAsNameForConfigUuid, device, eccCompanion);
         });
         // changes title / desc for current saveAsName'd configuration; returns custom object containing centre information
-        validationPrototype.setCentreEditor(newName -> newDesc -> dashboardable -> {
-            editCentreTitleAndDesc(user, miType, saveAsName, device, newName, newDesc, dashboardable, eccCompanion);
+        validationPrototype.setCentreEditor(newName -> newDesc -> dashboardable -> dashboardRefreshFrequency -> {
+            editCentreTitleAndDesc(user, miType, saveAsName, device, newName, newDesc, dashboardable, dashboardRefreshFrequency, eccCompanion);
             // currently loaded configuration should remain preferred -- no action is required
             return validationPrototype.centreCustomObject(
                 createCriteriaEntity(validationPrototype.centreContextHolder().getModifHolder(), companionFinder, critGenerator, miType, of(newName), user, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel),
@@ -699,17 +703,18 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             );
         });
         // performs copying of current configuration with the specified title / desc; makes it preferred; returns custom object containing centre information
-        validationPrototype.setCentreSaver(newName -> newDesc -> dashboardable -> {
+        validationPrototype.setCentreSaver(newName -> newDesc -> dashboardable -> dashboardRefreshFrequency -> {
             final Optional<String> newSaveAsName = of(newName);
             final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
             // save 'freshCentre' with a new name into FRESH / SAVED -- button SAVE will be disabled
             final String newConfigUuid = randomUUID().toString();
             final Function<String, Consumer<String>> createAndOverrideUuid = newDescription -> surrogateName -> {
                 commitCentre(user, miType, surrogateName, newSaveAsName, device, freshCentre, newDescription, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-                findConfigOpt(miType, user, NAME_OF.apply(surrogateName).apply(newSaveAsName).apply(device), eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("configUuid").with("dashboardable").with("dashboardableDate"))
+                findConfigOpt(miType, user, NAME_OF.apply(surrogateName).apply(newSaveAsName).apply(device), eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("configUuid").with("dashboardable").with("dashboardableDate").with("dashboardRefreshFrequency"))
                     .ifPresent(config -> {
                         if (FRESH_CENTRE_NAME.equals(surrogateName)) {
                             config.setDashboardable(dashboardable);
+                            config.setDashboardRefreshFrequency(dashboardRefreshFrequency);
                         }
                         eccCompanion.saveWithConflicts(config.setConfigUuid(newConfigUuid));
                     }); // update with newConfigUuid
