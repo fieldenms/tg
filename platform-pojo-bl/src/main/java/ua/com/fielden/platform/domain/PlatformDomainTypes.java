@@ -14,6 +14,8 @@ import ua.com.fielden.platform.domain.metadata.DomainPropertyTreeEntity;
 import ua.com.fielden.platform.domain.metadata.DomainTreeEntity;
 import ua.com.fielden.platform.domain.metadata.DomainType;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.Duration;
+import ua.com.fielden.platform.entity.DurationUnit;
 import ua.com.fielden.platform.entity.EntityDeleteAction;
 import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityExportAction;
@@ -145,5 +147,7 @@ public class PlatformDomainTypes {
         types.add(DomainExplorerInsertionPoint.class);
         types.add(DomainTreeEntity.class);
         types.add(DomainPropertyTreeEntity.class);
+        types.add(DurationUnit.class);
+        types.add(Duration.class);
     }
 }
