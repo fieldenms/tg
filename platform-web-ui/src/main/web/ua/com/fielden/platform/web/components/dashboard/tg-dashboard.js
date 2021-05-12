@@ -45,12 +45,9 @@ class TgDashboard extends PolymerElement {
 
     ready () {
         super.ready();
-        this.addEventListener("tg-config-uuid-changed", this._configUuidChanged.bind(this));
+        this.addEventListener('tg-config-uuid-changed', tearDownEvent); // prevent propagating of centre config UUID event to the top (tg-view-with-menu) to avoid browser URI change
     }
-    
-    _configUuidChanged (event) {
-        tearDownEvent(event);
-    }
+
 }
 
 customElements.define('tg-dashboard', TgDashboard);
