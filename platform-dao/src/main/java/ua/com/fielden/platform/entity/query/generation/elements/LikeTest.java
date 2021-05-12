@@ -40,7 +40,9 @@ public class LikeTest extends AbstractCondition {
     }
     
     private String leftOperandWithTypecastingSql() {
-        if (Integer.class == leftOperand.type()) {
+        if (Long.class == leftOperand.type()) {
+            return format("CAST(%s AS VARCHAR(11))", leftOperand.sql());
+        } else if (Integer.class == leftOperand.type()) {
             return format("CAST(%s AS VARCHAR(11))", leftOperand.sql());
         } else if (leftOperand.type() == null || String.class == leftOperand.type()) {
             return leftOperand.sql();
@@ -73,7 +75,7 @@ public class LikeTest extends AbstractCondition {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(final Object obj) {
         if (this == obj) {
             return true;
         }
