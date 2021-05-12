@@ -2,6 +2,8 @@ import {html, PolymerElement} from '/resources/polymer/@polymer/polymer/polymer-
 import { mixinBehaviors } from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
 
 import '/resources/element_loader/tg-element-loader.js';
+import { TgReflector } from '/app/tg-reflector.js';
+import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
 
 import '/resources/polymer/@polymer/iron-icon/iron-icon.js';
 import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
@@ -34,7 +36,22 @@ const template = html`
             height: 40px;
             background-color: var(--paper-light-blue-600);
             @apply --layout-horizontal;
-            @apply --layout-end-justified;
+        }
+        .dashboard-item-title-content {
+            @apply --layout-relative;
+            @apply --layout-flex;
+        }
+        .dashboard-item-title {
+            font-size: 18px;
+            padding-left: 8px;
+            @apply --layout-fit;
+            @apply --layout-horizontal;
+            @apply --layout-center;
+        }
+        .truncate {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .dasboard-action {
             width: 40px;
@@ -47,6 +64,11 @@ const template = html`
         }
     </style>
     <div class="dashboard-item-toolbar">
+        <div class="dashboard-item-title-content">
+            <div class="dashboard-item-title">
+                <span class="truncate">[[itemTitle]]</span>
+            </div>
+        </div>
         <paper-icon-button class="dasboard-action" icon="[[_dashboardItemIcon(item.maximised)]]" on-tap="_toggleSize"></paper-icon-button>
     </div>
     <tg-element-loader id="loader" import="[[item.import]]" element-name="[[item.elementName]]" attrs="[[item.attrs]]" view-type$="[[item.type]]" auto></tg-element-loader>`;
@@ -75,17 +97,38 @@ class TgDashboardItem extends mixinBehaviors([IronResizableBehavior], PolymerEle
                 value: null
             },
 
+            itemTitle: {
+                type: String,
+                value: ""
+            },
+
+            description: {
+                type: String,
+                value: ""
+            },
+
             maximised: {
                 type: Boolean,
                 reflectToAttribute: true,
                 computed: "_isMaximised(item.maximised)"
+            },
+
+            _reflector: {
+                type: Object,
             }
         };
+    }
+
+    constructor() {
+        super();
+        this._reflector = new TgReflector();
     }
 
     ready () {
         super.ready();
         this.addEventListener("after-load", this._afterLoadListener.bind(this));
+        this.addEventListener("tg-save-as-name-changed", this._setTitle.bind(this));
+        this.addEventListener("tg-save-as-desc-changed", this._setDesc.bind(this));
     }
 
     /////////////////////////Binding property calculation////////////////////////////
@@ -98,6 +141,17 @@ class TgDashboardItem extends mixinBehaviors([IronResizableBehavior], PolymerEle
     }
 
     /////////////////////////Event listeners////////////////////////////////////////////
+
+    _setTitle (e) {
+        const saveAsNameForDisplay = this._reflector.LINK_CONFIG_TITLE !== e.detail ? e.detail : '';
+        this.itemTitle = saveAsNameForDisplay;
+        tearDownEvent(e);
+    }
+
+    _setDesc (e) {
+        this.description = e.detail;
+        tearDownEvent(e);
+    }
 
     _toggleSize (e) {
         this.set("item.maximised", !this.item.maximised);

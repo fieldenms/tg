@@ -13,7 +13,7 @@ const template = html`
         }
         .dashboard-container {
             display: grid;
-            grid-template-columns: repeat(3, auto);
+            grid-template-columns: repeat(3, 1fr);
             grid-auto-rows: minmax(300px, auto);
             row-gap: 8px;
             column-gap: 8px;
