@@ -24,7 +24,7 @@ public class DashboardMaster<T extends AbstractEntity<?>> implements IMaster<T> 
 
     public DashboardMaster(final Class<T> entityType) {
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
-        importPaths.add("components/tg-dashboard");
+        importPaths.add("components/dashboard/tg-dashboard");
 
         final DomElement dashboardDom = new DomElement("tg-dashboard")
                 .attr("id", "dashboard")
