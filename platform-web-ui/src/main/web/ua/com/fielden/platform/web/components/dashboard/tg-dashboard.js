@@ -1,6 +1,7 @@
 import {html, PolymerElement} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
 import '/resources/element_loader/tg-element-loader.js';
+import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
 
 import '/resources/polymer/@polymer/iron-icon/iron-icon.js';
 import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
@@ -100,9 +101,20 @@ class TgDashboard extends PolymerElement {
         };
     }
 
+//    static get listeners() {
+//        return {
+//            'tg-config-uuid-changed': '_configUuidChanged'
+//        };
+//    }
+
     ready () {
         super.ready();
         this.addEventListener("after-load", this._afterLoadListener.bind(this));
+        this.addEventListener("tg-config-uuid-changed", this._configUuidChanged.bind(this));
+    }
+    
+    _configUuidChanged (event) {
+        tearDownEvent(event);
     }
 
     /////////////////////////Binding property calculation////////////////////////////
