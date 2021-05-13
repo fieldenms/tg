@@ -91,6 +91,7 @@ import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.Duration;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
@@ -320,6 +321,21 @@ public class CentreUpdater {
     }
     
     /**
+     * Updates (retrieves) current version of centre dashboard refresh frequency.
+     *
+     * @param user
+     * @param miType
+     * @param saveAsName -- user-defined title of 'saveAs' centre configuration or empty {@link Optional} for unnamed centre
+     * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
+     * @return
+     */
+    public static Duration updateCentreDashboardRefreshFrequency(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName, final DeviceProfile device, final IEntityCentreConfig eccCompanion) {
+        final String deviceSpecificName = deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, saveAsName), device);
+        final EntityCentreConfig eccWithDesc = findConfig(miType, user, deviceSpecificName + DIFFERENCES_SUFFIX, eccCompanion);
+        return eccWithDesc != null ? eccWithDesc.getDashboardRefreshFrequency() : null;
+    }
+    
+    /**
      * Updates (retrieves) current version of centre uuid.
      *
      * @param user
@@ -344,7 +360,8 @@ public class CentreUpdater {
      * @param saveAsName -- user-defined title of 'saveAs' centre configuration or empty {@link Optional} for unnamed centre
      * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
      * @param newTitle -- new title for configuration (aka 'saveAsName')
-     * @param dashboardable -- parameter indicating whether edited centre configuration should be present on a dashboard
+     * @param newDashboardable -- parameter indicating whether edited centre configuration should be present on a dashboard
+     * @param newDashboardRefreshFrequency -- refresh frequency for edited centre configuration on a dashboard
      * @param newDesc -- new description for configuration
      */
     public static void editCentreTitleAndDesc(
@@ -355,6 +372,7 @@ public class CentreUpdater {
             final String newTitle,
             final String newDesc,
             final boolean newDashboardable,
+            final Duration newDashboardRefreshFrequency,
             final IEntityCentreConfig eccCompanion) {
         final Function<Optional<String>, Function<String, String>> nameOf = (saveAs) -> (surrogateName) -> deviceSpecific(saveAsSpecific(surrogateName, saveAs), device) + DIFFERENCES_SUFFIX;
         final Function<String, String> currentNameOf = nameOf.apply(saveAsName);
@@ -376,9 +394,10 @@ public class CentreUpdater {
         if (previouslyRunConfig != null) { // previouslyRun centre may not exist
             previouslyRunConfig.setTitle(previouslyRunNewTitle);
         }
-        // newDesc / newDashboardable
+        // newDesc / newDashboardable / newDashboardRefreshFrequency
         freshConfig.setDesc(newDesc);
         freshConfig.setDashboardable(newDashboardable);
+        freshConfig.setDashboardRefreshFrequency(newDashboardRefreshFrequency);
         
         // clear all centres with the same name in the case where title has been changed -- new title potentially can be in conflict with another configuration and that another configuration should be deleted
         if (!equalsEx(saveAsName, of(newTitle))) {
