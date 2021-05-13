@@ -58,4 +58,11 @@ public abstract class AbstractCentreConfigCommitActionDao<T extends AbstractCent
         return super.createFetchProvider().with("dashboardRefreshFrequency");
     }
     
+    @Override
+    public T new_() {
+        final T entity = super.new_();
+        entity.getProperty("dashboardRefreshFrequency").setEditable(false);
+        return entity;
+    }
+    
 }

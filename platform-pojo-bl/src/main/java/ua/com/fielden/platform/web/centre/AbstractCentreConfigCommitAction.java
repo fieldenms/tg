@@ -41,7 +41,7 @@ public abstract class AbstractCentreConfigCommitAction extends AbstractCentreCon
     @IsProperty
     @Title(value = "Add to dashboard?", desc = "Indicates whether centre configuration should be added to a dashboard.")
     @AfterChange(CentreConfigCommitActionDashboardableDefiner.class)
-    private boolean dashboardable;
+    private boolean dashboardable = false;
     
     @IsProperty
     @Title(value = "Dashboard refresh frequency", desc = "Defines how frequently centre configuration should be refreshed as part of the dashboard refresh lifecycle.")
