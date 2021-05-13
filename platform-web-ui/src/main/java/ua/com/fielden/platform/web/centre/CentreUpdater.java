@@ -36,6 +36,8 @@ import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
+import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrLink;
+import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrLinkOrInherited;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.AND_BEFORE;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.DATE_MNEMONIC;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.DATE_PREFIX;
@@ -77,6 +79,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -98,6 +101,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
+import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
@@ -321,6 +325,33 @@ public class CentreUpdater {
     }
     
     /**
+     * Updates (retrieves) current version of centre runAutomatically.
+     *
+     * @param user
+     * @param miType
+     * @param saveAsName -- user-defined title of 'saveAs' centre configuration or empty {@link Optional} for unnamed centre
+     * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
+     * @return
+     */
+    public static boolean updateCentreRunAutomatically(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName, final DeviceProfile device, final IEntityCentreConfig eccCompanion, final IWebUiConfig webUiConfig, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) {
+        if (!saveAsName.isPresent()) { // default
+            return webUiConfig.configApp().getCentre(miType).get().isRunAutomatically();
+        } else if (isDefaultOrLink(saveAsName)) { // link
+            return true;
+        } else if (isDefaultOrLinkOrInherited(saveAsName, selectionCrit)) {
+            throw new IllegalStateException("Not supported yet");
+        }
+        final String deviceSpecificName = deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, saveAsName), device);
+        final EntityCentreConfig eccWithDesc = findConfig(miType, user, deviceSpecificName + DIFFERENCES_SUFFIX, eccCompanion);
+        final Boolean ownRunAutomatically = eccWithDesc != null ? eccWithDesc.isRunAutomatically() : null;
+        final boolean defaultRunAutomatically = webUiConfig.configApp().getCentre(miType).get().isRunAutomatically();
+        if (Objects.equals(defaultRunAutomatically, ownRunAutomatically)) {
+            // TODO perhaps clearing of value to null would be beneficial
+        }
+        return ownRunAutomatically != null ? ownRunAutomatically : defaultRunAutomatically;
+    }
+    
+    /**
      * Updates (retrieves) current version of centre dashboard refresh frequency.
      *
      * @param user
@@ -373,7 +404,9 @@ public class CentreUpdater {
             final String newDesc,
             final boolean newDashboardable,
             final Duration newDashboardRefreshFrequency,
-            final IEntityCentreConfig eccCompanion) {
+            final boolean newRunAutomatically,
+            final IEntityCentreConfig eccCompanion,
+            final IWebUiConfig webUiConfig) {
         final Function<Optional<String>, Function<String, String>> nameOf = (saveAs) -> (surrogateName) -> deviceSpecific(saveAsSpecific(surrogateName, saveAs), device) + DIFFERENCES_SUFFIX;
         final Function<String, String> currentNameOf = nameOf.apply(saveAsName);
         final String currentNameFresh = currentNameOf.apply(FRESH_CENTRE_NAME);
@@ -394,10 +427,12 @@ public class CentreUpdater {
         if (previouslyRunConfig != null) { // previouslyRun centre may not exist
             previouslyRunConfig.setTitle(previouslyRunNewTitle);
         }
-        // newDesc / newDashboardable / newDashboardRefreshFrequency
+        // newDesc / newDashboardable / newDashboardRefreshFrequency / newRunAutomatically
         freshConfig.setDesc(newDesc);
         freshConfig.setDashboardable(newDashboardable);
         freshConfig.setDashboardRefreshFrequency(newDashboardRefreshFrequency);
+        final boolean inheritedRunAutomatically = webUiConfig.configApp().getCentre(miType).get().isRunAutomatically();
+        freshConfig.setRunAutomatically(newRunAutomatically == inheritedRunAutomatically ? null : newRunAutomatically); // both runAutomatically and inheritedRunAutomatically are not null
         
         // clear all centres with the same name in the case where title has been changed -- new title potentially can be in conflict with another configuration and that another configuration should be deleted
         if (!equalsEx(saveAsName, of(newTitle))) {
