@@ -36,6 +36,10 @@ import ua.com.fielden.platform.domain.metadata.DomainPropertyHolderCo;
 import ua.com.fielden.platform.domain.metadata.DomainPropertyHolderDao;
 import ua.com.fielden.platform.domain.metadata.DomainTypeCo;
 import ua.com.fielden.platform.domain.metadata.DomainTypeDao;
+import ua.com.fielden.platform.entity.DurationCo;
+import ua.com.fielden.platform.entity.DurationDao;
+import ua.com.fielden.platform.entity.DurationUnitCo;
+import ua.com.fielden.platform.entity.DurationUnitDao;
 import ua.com.fielden.platform.entity.EntityDeleteActionDao;
 import ua.com.fielden.platform.entity.EntityEditActionDao;
 import ua.com.fielden.platform.entity.EntityNewActionDao;
@@ -308,6 +312,9 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(DomainPropertyHolderCo.class).to(DomainPropertyHolderDao.class);
         bind(DomainExplorerCo.class).to(DomainExplorerDao.class);
         bind(DomainExplorerInsertionPointCo.class).to(DomainExplorerInsertionPointDao.class);
+
+        bind(DurationUnitCo.class).to(DurationUnitDao.class);
+        bind(DurationCo.class).to(DurationDao.class);
     }
 
     public Properties getProps() {

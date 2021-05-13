@@ -304,7 +304,8 @@ Polymer({
     listeners: {
         'tg-save-as-name-changed': '_updateSaveAsName',
         'tg-save-as-desc-changed': '_updateSaveAsDesc',
-        'tg-config-uuid-changed': '_updateConfigUuid'
+        'tg-config-uuid-changed': '_updateConfigUuid',
+        'tg-config-uuid-before-change': '_updateURI'
     },
     
     created: function () {
@@ -706,11 +707,11 @@ Polymer({
     },
     
     /**
-     * Updates configUuid from its 'change' event. It controls URI change (uuid part).
+     * Updates browser URI (uuid part) from configUuid 'before-change' event.
      */
-    _updateConfigUuid: function (event) {
-        const newConfigUuid = event.detail.newConfigUuid;
+    _updateURI: function (event) {
         const configUuid = event.detail.configUuid;
+        const newConfigUuid = event.detail.newConfigUuid;
         const hrefNoParams = window.location.href.split('?')[0];
         const hrefNoParamsNoSlash = hrefNoParams.endsWith('/') ? hrefNoParams.substring(0, hrefNoParams.length - 1) : hrefNoParams;
         const hrefNoParamsNoSlashNoUuid = configUuid === '' ? hrefNoParamsNoSlash : hrefNoParamsNoSlash.substring(0, hrefNoParamsNoSlash.lastIndexOf(configUuid) - 1 /* slash also needs removal */);
@@ -719,8 +720,14 @@ Polymer({
             window.history.pushState(window.history.state, '', hrefReplacedUuid); // in that case need to create new history entry for new URI;
             window.dispatchEvent(new CustomEvent('location-changed')); // the 'window.history.state' number will be increased later in tg-app-template 'location-changed' listener
         } // if the URI hasn't been changed then URI is already matching to new loaded configuration and history transition has been recorded earlier (e.g. when manually changing URI in address bar)
+    },
+    
+    /**
+     * Updates configUuid from its 'change' event.
+     */
+    _updateConfigUuid: function (event) {
         this._initCentreConfigInfoEntry();
-        this._centreConfigInfo()[this._selectedPage].configUuid = newConfigUuid;
+        this._centreConfigInfo()[this._selectedPage].configUuid = event.detail;
     },
     
     /**
