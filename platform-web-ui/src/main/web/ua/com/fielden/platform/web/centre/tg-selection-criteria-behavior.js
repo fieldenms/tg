@@ -383,6 +383,9 @@ const TgSelectionCriteriaBehaviorImpl = {
             this.saveAsName = customObject.saveAsName;
         }
         if (typeof customObject.configUuid !== 'undefined') {
+            const newConfigUuid = customObject.configUuid;
+            const configUuid = this.configUuid;
+            this.fire('tg-config-uuid-before-change', { newConfigUuid: newConfigUuid, configUuid: configUuid });
             this.configUuid = customObject.configUuid;
         }
         if (typeof customObject.wasRun !== 'undefined') {
@@ -390,8 +393,8 @@ const TgSelectionCriteriaBehaviorImpl = {
         }
     },
 
-    _configUuidChanged: function (newConfigUuid, configUuid) {
-        this.fire('tg-config-uuid-changed', { newConfigUuid: newConfigUuid, configUuid: configUuid });
+    _configUuidChanged: function (newConfigUuid) {
+        this.fire('tg-config-uuid-changed', newConfigUuid);
     },
 
     _saveAsDescChanged: function (newSaveAsDesc) {
