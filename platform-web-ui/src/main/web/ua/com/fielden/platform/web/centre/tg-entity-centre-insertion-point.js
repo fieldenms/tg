@@ -242,6 +242,10 @@ Polymer({
             type: Object,
             observer: '_centreSelectionChanged'
         },
+        centreState: {
+            type: String,
+            observer: "_centreStateChanged"
+        },
         /**
          * Actions provided by entity centre for this insertion point
          */
@@ -407,6 +411,12 @@ Polymer({
     _centreSelectionChanged: function (newValue, oldValue) {
         if (this._element) {
             this._element.centreSelection = newValue;
+        }
+    },
+
+    _centreStateChanged: function (newValue, oldValue) {
+        if (this._element) {
+            this._element.centreState = newValue;
         }
     },
 
