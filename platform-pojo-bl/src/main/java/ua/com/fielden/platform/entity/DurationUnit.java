@@ -37,15 +37,15 @@ public class DurationUnit extends AbstractEntity<String> {
     @IsProperty
     @Title("Millis")
     @MapTo
-    private Long millis;
+    private Integer millis; // no more than 2,147,483,647 which is sufficient even for 'days' durationUnit (= 86400000 milliseconds)
     
     @Observable
-    protected DurationUnit setMillis(final Long millis) {
+    protected DurationUnit setMillis(final Integer millis) {
         this.millis = millis;
         return this;
     }
     
-    public Long getMillis() {
+    public Integer getMillis() {
         return millis;
     }
     

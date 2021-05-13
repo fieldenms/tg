@@ -42,7 +42,7 @@ public class Duration extends AbstractEntity<DynamicEntityKey> {
     @Title("Count")
     @CompositeKeyMember(1)
     @BeforeChange(@Handler(value = GreaterValidator.class, str = { @StrParam(name = "limit", value = "0") }))
-    private Long count;
+    private Integer count; // no more than 2,147,483,647 which is sufficient even for 'milliseconds' durationUnit (~24.86 days)
     
     @IsProperty
     @MapTo
@@ -78,12 +78,12 @@ public class Duration extends AbstractEntity<DynamicEntityKey> {
     }
     
     @Observable
-    public Duration setCount(final Long count) {
+    public Duration setCount(final Integer count) {
         this.count = count;
         return this;
     }
     
-    public Long getCount() {
+    public Integer getCount() {
         return count;
     }
     
