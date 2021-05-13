@@ -100,6 +100,21 @@ public class EntityCentreConfig extends AbstractConfiguration<DynamicEntityKey> 
     @Title(value = "Dashboard Refresh Frequency", desc = "Defines how frequently this configuration should be refreshed as part of the dashboard refresh lifecycle")
     private Duration dashboardRefreshFrequency;
 
+    @IsProperty
+    @MapTo
+    @Title(value = "Run Automatically?", desc = "Defines whether this configuration should be auto run upon loading; null means that this configuration inherits runAutomatically from Centre DSL configuration")
+    private Boolean runAutomatically; // intentionally Boolean and not boolean!
+
+    @Observable
+    public EntityCentreConfig setRunAutomatically(final Boolean runAutomatically) {
+        this.runAutomatically = runAutomatically;
+        return this;
+    }
+
+    public Boolean isRunAutomatically() {
+        return runAutomatically;
+    }
+
     @Observable
     public EntityCentreConfig setDashboardRefreshFrequency(final Duration dashboardRefreshFrequency) {
         this.dashboardRefreshFrequency = dashboardRefreshFrequency;
