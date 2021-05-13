@@ -47,6 +47,20 @@ public abstract class AbstractCentreConfigCommitAction extends AbstractCentreCon
     @Title(value = "Dashboard refresh frequency", desc = "Defines how frequently centre configuration should be refreshed as part of the dashboard refresh lifecycle.")
     private Duration dashboardRefreshFrequency;
     
+    @IsProperty
+    @Title(value = "Run automatically?", desc = "Defines whether this configuration should be auto run upon loading")
+    private boolean runAutomatically = false; // boolean and not Boolean! (used in UI)
+
+    @Observable
+    public AbstractCentreConfigCommitAction setRunAutomatically(final boolean runAutomatically) {
+        this.runAutomatically = runAutomatically;
+        return this;
+    }
+
+    public boolean isRunAutomatically() {
+        return runAutomatically;
+    }
+    
     @Observable
     public AbstractCentreConfigCommitAction setDashboardRefreshFrequency(final Duration dashboardRefreshFrequency) {
         this.dashboardRefreshFrequency = dashboardRefreshFrequency;
