@@ -140,6 +140,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.PropertyColumnElement;
+import ua.com.fielden.platform.web.centre.api.resultset.toolbar.impl.CentreToolbar;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.layout.FlexLayout;
@@ -210,6 +211,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private static final String RIGHT_INSERTION_POINT_DOM = "<!--@right_insertion_points-->";
     private static final String TOP_INSERTION_POINT_DOM = "<!--@top_insertion_points-->";
     private static final String BOTTOM_INSERTION_POINT_DOM = "<!--@bottom_insertion_points-->";
+    private static final String ALTERNATIVE_VIEW_INSERTION_POINT_DOM = "<!--@alternative_view_insertion_points-->";
     // generic custom code
     private static final String READY_CUSTOM_CODE = "//@centre-is-ready-custom-code";
     private static final String ATTACHED_CUSTOM_CODE = "//@centre-has-been-attached-custom-code";
@@ -996,7 +998,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final DomContainer functionalActionsDom = new DomContainer();
 
         for (int i = 0; i < actionGroups.size(); i++) {
-            final DomElement groupElement = new DomElement("div").attr("selectable-elements-container", null).attr("slot", "entity-specific-action").clazz("entity-specific-action", i == 0 ? "first-group" : "group");
+            final DomElement groupElement = createActionGroupDom(i);
             for (final FunctionalActionElement el : actionGroups.get(i)) {
                 importPaths.add(el.importPath());
                 groupElement.add(el.render());
@@ -1088,6 +1090,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final DomContainer leftInsertionPointsDom = new DomContainer();
         final DomContainer rightInsertionPointsDom = new DomContainer();
         final DomContainer bottomInsertionPointsDom = new DomContainer();
+        final DomContainer alternativeViewsDom = new DomContainer();
+        int numOfViews = dslDefaultConfig.isEgiHidden() ? 0 : 1;
         for (final InsertionPointBuilder el : insertionPointActionsElements) {
             final DomElement insertionPoint = el.render();
             if (el.whereToInsert() == InsertionPoints.TOP) {
@@ -1098,10 +1102,30 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 rightInsertionPointsDom.add(insertionPoint);
             } else if (el.whereToInsert() == InsertionPoints.BOTTOM) {
                 bottomInsertionPointsDom.add(insertionPoint);
+            } else if (el.whereToInsert() == InsertionPoints.ALTERNATIVE_VIEW) {
+                alternativeViewsDom.add(insertionPoint);
+                numOfViews++;
             } else {
                 throw new IllegalArgumentException("Unexpected insertion point type.");
             }
         }
+
+        //Generating toolbar group for switching Views
+        if (numOfViews > 1) {
+            final DomElement viewSwichGroup = createActionGroupDom(functionalActionsDom.childCount());
+            if (!dslDefaultConfig.isEgiHidden()) {
+                viewSwichGroup.add(CentreToolbar.selectEgi());
+            }
+            int viewIndex = 2;
+            for (final InsertionPointBuilder el : insertionPointActionsElements) {
+                if (el.whereToInsert() == InsertionPoints.ALTERNATIVE_VIEW) {
+                    viewSwichGroup.add(CentreToolbar.selectView(viewIndex, el.icon(), el.viewTitle()));
+                    viewIndex++;
+                }
+            }
+            functionalActionsDom.add(viewSwichGroup);
+        }
+
         //Generating shortcuts for EGI
         final StringBuilder shortcuts = new StringBuilder();
 
@@ -1184,6 +1208,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace(RIGHT_INSERTION_POINT_DOM, rightInsertionPointsDom.toString()).
                 replace(TOP_INSERTION_POINT_DOM, topInsertionPointsDom.toString()).
                 replace(BOTTOM_INSERTION_POINT_DOM, bottomInsertionPointsDom.toString()).
+                replace(ALTERNATIVE_VIEW_INSERTION_POINT_DOM, alternativeViewsDom.toString()).
                 replace(READY_CUSTOM_CODE, customCode.map(code -> code.toString()).orElse("")).
                 replace(ATTACHED_CUSTOM_CODE, customCodeOnAttach.map(code -> code.toString()).orElse(""));
         logger.debug("Finishing...");
@@ -1195,6 +1220,10 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         };
         logger.debug("Done.");
         return representation;
+    }
+
+    private DomElement createActionGroupDom(final int groupIndex) {
+        return new DomElement("div").attr("selectable-elements-container", null).attr("slot", "entity-specific-action").clazz("entity-specific-action", groupIndex == 0 ? "first-group" : "group");
     }
 
     /**

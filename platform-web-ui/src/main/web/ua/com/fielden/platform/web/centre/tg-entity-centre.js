@@ -182,6 +182,7 @@ const template = html`
             </div>
             <div id="fantomSplitter" class="fantom-splitter"></div>
         </tg-centre-result-view>
+        <slot name="alternative-view-insertion-point"></slot>
     </iron-pages>`;
 
 Polymer({

@@ -102,6 +102,7 @@ const entityCentreTemplate = html`
         <div slot="top-insertion-point" class="top-insertion-point">
             <!--@top_insertion_points-->
         </div>
+        <!--@alternative_view_insertion_points-->
     </tg-entity-centre>
 `;
 

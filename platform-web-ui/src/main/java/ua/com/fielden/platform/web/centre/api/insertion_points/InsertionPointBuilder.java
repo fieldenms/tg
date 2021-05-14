@@ -5,6 +5,7 @@ import static ua.com.fielden.platform.web.centre.api.resultset.toolbar.impl.Cent
 import static ua.com.fielden.platform.web.centre.api.resultset.toolbar.impl.CentreToolbar.paginationShortcut;
 
 import java.util.LinkedHashSet;
+import java.util.Optional;
 import java.util.Set;
 
 import ua.com.fielden.platform.dom.DomElement;
@@ -52,6 +53,9 @@ public class InsertionPointBuilder implements IRenderable, IExecutable {
             insertionPointDom.add(pagination("insertion-point-child"));
             insertionPointDom.attr("custom-shortcuts", join(paginationShortcut(), " "));
         }
+        if (whereToInsert() == InsertionPoints.ALTERNATIVE_VIEW) {
+            insertionPointDom.attr("slot", "alternative-view-insertion-point");
+        }
         return insertionPointDom;
     }
 
@@ -93,5 +97,13 @@ public class InsertionPointBuilder implements IRenderable, IExecutable {
      */
     public InsertionPoints whereToInsert() {
         return insertionPointActionElement.entityActionConfig.whereToInsertView.get();
+    }
+
+    public Optional<String> icon() {
+        return insertionPointActionElement.entityActionConfig.icon;
+    }
+
+    public Optional<String> viewTitle() {
+        return insertionPointActionElement.entityActionConfig.shortDesc;
     }
 }

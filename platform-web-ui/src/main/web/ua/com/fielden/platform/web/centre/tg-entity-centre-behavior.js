@@ -945,6 +945,21 @@ const TgEntityCentreBehaviorImpl = {
     },
 
     /**
+     * 
+     * @param {EventObject} e - event created by tapping on button that switches to the view specified in view-index attribute 
+     */
+    _selectAlternativeView: function (e) {
+        const viewIndex = +e.target.getAttribute("view-index");
+        if (!this.$.egi.isEditing()) { 
+            this.async(() => {
+                 this._selectedView = viewIndex;
+             }, 100);
+         } else {
+             this._showSaveOrCancelToast();
+         }
+    },
+
+    /**
      * Starts the process of criteria entity retrieval.
      */
     retrieve: function () {
