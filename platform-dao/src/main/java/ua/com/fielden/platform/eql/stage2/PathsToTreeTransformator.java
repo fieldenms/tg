@@ -125,13 +125,13 @@ public class PathsToTreeTransformator {
     private T2<List<Child>, Map<String, List<Child>>> generateQrySourceChildren( //
             final ISource2<?> sourceForCalcPropResolution, // 
             final String explicitSourceId, //
-            final Map<String, List<AbstractPropInfo<?>>> props, //long name + path
+            final Map<String, List<AbstractPropInfo<?>>> propPathesByFullNames, //long name + path
             final List<String> context //           
     ) {
         final List<Child> result = new ArrayList<>();
         final Map<String, List<Child>> other = new HashMap<>();
 
-        for (final FirstPropInfoAndItsPathes propEntry : groupByFirstProp(props).values()) {
+        for (final FirstPropInfoAndItsPathes propEntry : groupByFirstProp(propPathesByFullNames).values()) {
             final List<String> childContext = new ArrayList<>(context);
             childContext.add(propEntry.firstPropName);
 
