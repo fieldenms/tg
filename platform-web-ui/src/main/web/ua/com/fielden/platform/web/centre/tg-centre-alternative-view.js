@@ -1,5 +1,7 @@
 import '/resources/egi/tg-responsive-toolbar.js';
 
+import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
+
 import {html, PolymerElement} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
 const template = html`

@@ -20,7 +20,7 @@ public interface IInsertionPoints<T extends AbstractEntity<?>> extends IEcbCompl
      * @param whereToInsertView
      * @return
      */
-    IInsertionPointsFlexible<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView);
+    IInsertionPointWithToolbar<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView);
 
     /**
      * The same as {@link #addInsertionPoint(EntityActionConfig, InsertionPoints)} but also adds pagination buttons to the insertion point which
@@ -30,5 +30,5 @@ public interface IInsertionPoints<T extends AbstractEntity<?>> extends IEcbCompl
      * @param whereToInsertView
      * @return
      */
-    IInsertionPointsFlexible<T> addInsertionPointWithPagination(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView);
+    IInsertionPointWithToolbar<T> addInsertionPointWithPagination(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView);
 }
