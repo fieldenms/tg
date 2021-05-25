@@ -36,8 +36,8 @@ import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
+import static ua.com.fielden.platform.web.centre.CentreConfigUtils.findLoadableConfig;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrLink;
-import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrLinkOrInherited;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.AND_BEFORE;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.DATE_MNEMONIC;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.DATE_PREFIX;
@@ -338,9 +338,19 @@ public class CentreUpdater {
             return webUiConfig.configApp().getCentre(miType).get().isRunAutomatically();
         } else if (isDefaultOrLink(saveAsName)) { // link
             return true;
-        } else if (isDefaultOrLinkOrInherited(saveAsName, selectionCrit)) {
-            throw new IllegalStateException("Not supported yet");
         }
+        final Optional<LoadableCentreConfig> loadableConfigOpt = findLoadableConfig(saveAsName, selectionCrit);
+        if (loadableConfigOpt.isPresent() && loadableConfigOpt.get().isInherited()) {
+            if (loadableConfigOpt.get().isBase()) { // inherited from base
+                return updateCentreRunAutomatically0(user.getBasedOnUser(), miType, saveAsName, device, eccCompanion, webUiConfig);
+            } else { // inherited from shared
+                return updateCentreRunAutomatically0(loadableConfigOpt.get().getSharedBy(), miType, of(loadableConfigOpt.get().getSaveAsName()), device, eccCompanion, webUiConfig);
+            }
+        }
+        return updateCentreRunAutomatically0(user, miType, saveAsName, device, eccCompanion, webUiConfig);
+    }
+
+    public static boolean updateCentreRunAutomatically0(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName, final DeviceProfile device, final IEntityCentreConfig eccCompanion, final IWebUiConfig webUiConfig) {
         final String deviceSpecificName = deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, saveAsName), device);
         final EntityCentreConfig eccWithDesc = findConfig(miType, user, deviceSpecificName + DIFFERENCES_SUFFIX, eccCompanion);
         final Boolean ownRunAutomatically = eccWithDesc != null ? eccWithDesc.isRunAutomatically() : null;
@@ -431,7 +441,7 @@ public class CentreUpdater {
         freshConfig.setDesc(newDesc);
         freshConfig.setDashboardable(newDashboardable);
         freshConfig.setDashboardRefreshFrequency(newDashboardRefreshFrequency);
-        final boolean inheritedRunAutomatically = webUiConfig.configApp().getCentre(miType).get().isRunAutomatically();
+        final boolean inheritedRunAutomatically = webUiConfig.configApp().getCentre(miType).get().isRunAutomatically(); // runAutomatically is always inherited from default configuration's value -- only own save-as configs can be edited
         freshConfig.setRunAutomatically(newRunAutomatically == inheritedRunAutomatically ? null : newRunAutomatically); // both runAutomatically and inheritedRunAutomatically are not null
         
         // clear all centres with the same name in the case where title has been changed -- new title potentially can be in conflict with another configuration and that another configuration should be deleted
@@ -634,6 +644,8 @@ public class CentreUpdater {
                                 final LoadableCentreConfig foundLcc = loadableConfigurations.stream().filter(lcc -> ecc.getConfigUuid().equals(lcc.getConfig().getConfigUuid())).findAny().get();
                                 foundLcc.setInherited(true); // ... and make corresponding configuration inherited (from shared) ...
                                 foundLcc.setSharedByMessage(sharingModel.sharedByMessage(ecc.getOwner())); // ... with appropriate domain-specific message indication about that
+                                foundLcc.setSharedBy(ecc.getOwner());
+                                foundLcc.setSaveAsName(obtainTitleFrom(ecc.getTitle(), SAVED_CENTRE_NAME, device));
                             }
                         });
                     }
