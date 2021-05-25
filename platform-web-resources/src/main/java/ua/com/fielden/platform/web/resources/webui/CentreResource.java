@@ -64,7 +64,6 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
     private final RestServerUtil restUtil;
     
     private final Class<? extends MiWithConfigurationSupport<?>> miType;
-    private final EntityCentre<AbstractEntity<?>> centre;
     private final Optional<String> saveAsName;
     
     private final IUserProvider userProvider;
@@ -98,7 +97,6 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
         this.restUtil = restUtil;
         
         miType = centre.getMenuItemType();
-        this.centre = centre;
         this.saveAsName = saveAsName;
         this.userProvider = userProvider;
         this.companionFinder = companionFinder;
@@ -136,10 +134,8 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
                     // it is necessary to use "fresh" instance of cdtme (after the discarding process)
                     newFreshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
                     updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder); // do not leave only FRESH centre out of two (FRESH + SAVED) => update SAVED centre explicitly
-                    // must leave current configuration preferred after deletion (only for named configs -- always true for inherited ones, and for non autoRun centres)
-                    if (!centre.isRunAutomatically()) {
-                        makePreferred(user, miType, saveAsName, device(), companionFinder);
-                    }
+                    // must leave current configuration preferred after deletion (only for named configs -- always true for inherited ones)
+                    makePreferred(user, miType, saveAsName, device(), companionFinder);
                     actualSaveAsName = saveAsName;
                 } else { // inherited from shared
                     final Optional<EntityCentreConfig> upstreamConfig = updateInheritedFromShared(loadableConfig.get().getConfig().getConfigUuid(), miType, device(), saveAsName, user, eccCompanion, empty());

@@ -1,12 +1,12 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import static java.util.Collections.emptyList;
 import static java.lang.String.format;
+import static java.util.Collections.emptyList;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
-import static java.util.stream.Collectors.toList;
 import static java.util.UUID.randomUUID;
+import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.data.generator.IGenerator.FORCE_REGENERATION_KEY;
 import static ua.com.fielden.platform.data.generator.IGenerator.shouldForceRegeneration;
 import static ua.com.fielden.platform.error.Result.failure;
@@ -240,7 +240,7 @@ public class CriteriaResource extends AbstractWebResource {
                     actualSaveAsName = firstTimeLoadingFrom(validateUuidAndGetUpstreamConfig(configUuid.get()).orElseThrow(Result::asRuntime));
                 }
                 // configuration being loaded need to become preferred
-                if (!LINK_CONFIG_TITLE.equals(actualSaveAsName.get()) && !webUiConfig.getCentres().get(miType).isRunAutomatically()) {
+                if (!LINK_CONFIG_TITLE.equals(actualSaveAsName.get())) {
                     makePreferred(user, miType, actualSaveAsName, device(), companionFinder);
                 }
                 resolvedConfigUuid = configUuid;
@@ -250,9 +250,7 @@ public class CriteriaResource extends AbstractWebResource {
                     resolvedConfigUuid = updateCentreConfigUuid(user, miType, actualSaveAsName, device(), eccCompanion);
                 } else {
                     actualSaveAsName = empty(); // in case where first time loading has been occurred earlier we still prefer configuration specified by absence of uuid: default
-                    if (!webUiConfig.getCentres().get(miType).isRunAutomatically()) {
-                        makePreferred(user, miType, actualSaveAsName, device(), companionFinder); // most likely transition from save-as configuration has been occurred and need to update preferred config; in other case we can go to other centre and back from already loaded default config and this call will make default config preferred again
-                    }
+                    makePreferred(user, miType, actualSaveAsName, device(), companionFinder); // most likely transition from save-as configuration has been occurred and need to update preferred config; in other case we can go to other centre and back from already loaded default config and this call will make default config preferred again
                     resolvedConfigUuid = empty();
                 }
             }
