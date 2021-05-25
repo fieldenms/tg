@@ -4,6 +4,7 @@ import ua.com.fielden.platform.entity.Duration;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.Readonly;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
@@ -41,10 +42,12 @@ public abstract class AbstractCentreConfigCommitAction extends AbstractCentreCon
     @IsProperty
     @Title(value = "Add to dashboard?", desc = "Indicates whether centre configuration should be added to a dashboard.")
     @AfterChange(CentreConfigCommitActionDashboardableDefiner.class)
+    @Readonly // TODO remove when dashboardable functionality will be available
     private boolean dashboardable = false;
     
     @IsProperty
     @Title(value = "Dashboard refresh frequency", desc = "Defines how frequently centre configuration should be refreshed as part of the dashboard refresh lifecycle.")
+    @Readonly // TODO remove when dashboardable functionality will be available
     private Duration dashboardRefreshFrequency;
     
     @IsProperty

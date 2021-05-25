@@ -11,7 +11,7 @@ public class CentreConfigCommitActionDashboardableDefiner implements IAfterChang
             prop.setRequired(false);
             prop.setValue(null);
             prop.setRequired(dashboardable);
-            prop.setEditable(dashboardable);
+            // TODO uncomment when dashboardable functionality will be available: prop.setEditable(dashboardable);
         });
     }
     
