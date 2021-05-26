@@ -16,7 +16,9 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.SortedMap;
 import java.util.TimeZone;
+import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
@@ -66,7 +68,9 @@ import ua.com.fielden.platform.dao.exceptions.EntityAlreadyExists;
 import ua.com.fielden.platform.dao.session.TransactionalExecution;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
+import ua.com.fielden.platform.eql.meta.EqlPropertyMetadata;
 import ua.com.fielden.platform.eql.meta.Table;
+import ua.com.fielden.platform.eql.meta.Table.PropColumnInfo;
 
 public class EntityBatchInsertOperation {
     private static WrapperOptionsStub wrapperOptionsStub = new WrapperOptionsStub();
@@ -87,10 +91,11 @@ public class EntityBatchInsertOperation {
             throw new EntityAlreadyExists("Trying to perform batch insert for persisted entities.");
         }
         
+        final SortedMap<String, PropColumnInfo> propColumns = generateColumns(dm.eqlDomainMetadata.entityPropsMetadata().get(entities.get(0).getType()).props());//;
         final Table table = dm.eqlDomainMetadata.getTableForEntityType(entities.get(0).getType());
         final TransactionalExecution trEx = trExecSupplier.get(); // this is a single transaction that will save all batches. 
         
-        final List<PropInsertInfo> propInsertInfos = table.columns.entrySet().stream(). //
+        final List<PropInsertInfo> propInsertInfos = propColumns.entrySet().stream(). //
                 filter(entry -> !entry.getKey().equals(ID) && !entry.getKey().equals(VERSION)). //
                 map(x -> new PropInsertInfo(x.getKey() + (isPersistedEntityType(x.getValue().type) ? "." + ID : ""), x.getValue().columnName, x.getValue().hibType)). //
                 collect(toList());
@@ -136,6 +141,29 @@ public class EntityBatchInsertOperation {
         return insertedCount.get(); 
     }
 
+    private static SortedMap<String, PropColumnInfo> generateColumns(final List<EqlPropertyMetadata> propsMetadatas) {
+        final SortedMap<String, PropColumnInfo> columns = new TreeMap<>();
+        for (final EqlPropertyMetadata el : propsMetadatas) {
+
+            if (el.column != null) {
+                columns.put(el.name, new PropColumnInfo(el.column.name, el.javaType, el.hibType));
+            } else if (!el.subitems().isEmpty()) {
+                if (el.hibType instanceof CompositeUserType) {
+                    final EqlPropertyMetadata subitem = el.subitems().get(0);
+                    columns.put(el.name, new PropColumnInfo(subitem.column.name, el.javaType, el.hibType));
+                } else {
+                    for (final EqlPropertyMetadata subitem : el.subitems()) {
+                        if (subitem.expressionModel == null) {
+                            columns.put(el.name + "." + subitem.name, new PropColumnInfo(subitem.column.name, subitem.javaType, subitem.hibType));
+                        }
+                    }
+                }
+            }
+        }
+
+        return columns;
+    }
+    
     private static String generateInsertStmt(final String tableName, final List<String> columns) {
         return format("INSERT INTO %s(_ID, _VERSION, %s) VALUES(NEXT VALUE FOR %s, 0, %s);", //
                 tableName, //

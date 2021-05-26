@@ -3,6 +3,7 @@ package ua.com.fielden.platform.entity;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -26,6 +27,7 @@ import ua.com.fielden.platform.sample.domain.TgEntityWithManyPropTypesCo;
 import ua.com.fielden.platform.sample.domain.UnionEntity;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Hyperlink;
+import ua.com.fielden.platform.types.Money;
 
 public class EntityBatchInsertOperationTest extends AbstractDaoTestCase {
     
@@ -50,6 +52,16 @@ public class EntityBatchInsertOperationTest extends AbstractDaoTestCase {
     @Test
     public void batch_insert_operation_works_for_two_full_batches_with_last_batch_not_full() {
         testBatchInsertOfEntities(createEntitiesForBatchInsert("Ent1", "Ent2", "Ent3", "Ent4", "Ent5"));
+    }
+    
+    @Test
+    public void batch_insert_operation_fails_while_trying_to_insert_persisted_entities() {
+        testBatchInsertOfEntities(createEntitiesForBatchInsert("Ent1", "Ent2", "Ent3"));
+        try {
+            testBatchInsertOfEntities(getInstance(TgEntityWithManyPropTypesCo.class).getAllEntities(from(select(TgEntityWithManyPropTypes.class).model()).with(fetchAll(TgEntityWithManyPropTypes.class)).model()));
+            fail("Should have failed while trying to batch insert persisted entities");
+        } catch (final Exception e) {
+        }
     }
 
     private void testBatchInsertOfEntities(final List<TgEntityWithManyPropTypes> entities) {
@@ -80,7 +92,7 @@ public class EntityBatchInsertOperationTest extends AbstractDaoTestCase {
                 setUtcDateProp(date("2021-01-01 00:00:00")).
                 setHyperlinkProp(new Hyperlink("https://fielden.com")).
                 setPropertyDescriptorProp(new PropertyDescriptor<>(TgEntityWithManyPropTypes.class, "unionProp")).
-                //setMoneyProp(new Money("20")).
+                setMoneyProp(new Money("20")).
                 setUnionProp(unionEntityValue);
         
     }
