@@ -166,6 +166,11 @@ Polymer({
             }
             centre._setQueryParams();
             if (centre.autoRun || centre.queryPart) {
+                if (centre._selectedView === 0) {
+                    centre.async(() => {
+                        centre._selectedView = 1;
+                    }, 100);
+                }
                 centre.run(!centre.queryPart); // identify autoRunning situation only in case where centre has autoRun as true but does not represent 'link' centre (has no URI criteria values)
                 delete centre.queryPart;
             }

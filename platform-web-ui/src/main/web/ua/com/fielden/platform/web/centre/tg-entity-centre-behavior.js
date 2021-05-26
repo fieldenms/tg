@@ -428,6 +428,11 @@ const TgEntityCentreBehaviorImpl = {
 
         this._setQueryParams();
         if (this.autoRun || this.queryPart) {
+            if (this._selectedView === 0) {
+                this.async(() => {
+                    this._selectedView = 1;
+                }, 100);
+            }
             this.run(!this.queryPart); // identify autoRunning situation only in case where centre has autoRun as true but does not represent 'link' centre (has no URI criteria values)
             delete this.queryPart;
         }
@@ -814,8 +819,8 @@ const TgEntityCentreBehaviorImpl = {
             }
         }));
 
-        //Select the result view if autoRun is true
-        if (self.autoRun || self.queryPart) {
+        // select result view if link centre gets attached
+        if (self.queryPart) {
             self._selectedView = 1;
         }
     },
