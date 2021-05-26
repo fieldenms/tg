@@ -1,9 +1,11 @@
 package ua.com.fielden.platform.entity.query;
 
 import static java.lang.String.format;
+import static java.lang.String.join;
 import static java.util.Collections.nCopies;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
+import static ua.com.fielden.platform.dao.HibernateMappingsGenerator.ID_SEQUENCE_NAME;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
@@ -16,6 +18,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
+import java.util.stream.IntStream;
 
 import javax.persistence.FlushModeType;
 
@@ -57,15 +62,34 @@ import org.hibernate.usertype.UserType;
 import com.google.common.collect.Iterators;
 
 import ua.com.fielden.platform.dao.exceptions.DbException;
+import ua.com.fielden.platform.dao.exceptions.EntityAlreadyExists;
 import ua.com.fielden.platform.dao.session.TransactionalExecution;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
 import ua.com.fielden.platform.eql.meta.Table;
 
 public class EntityBatchInsertOperation {
     private static WrapperOptionsStub wrapperOptionsStub = new WrapperOptionsStub();
-
-    public static void batchInsert(final List<? extends AbstractEntity<?>> entities, final Table table, final TransactionalExecution trEx, final int batchSize) {
-
+    private final DomainMetadata dm;
+    private final Supplier<TransactionalExecution> trExecSupplier;
+    
+    public EntityBatchInsertOperation(final DomainMetadata dm, final Supplier<TransactionalExecution> trExecSupplier) {
+        this.dm = dm;
+        this.trExecSupplier = trExecSupplier;
+    }
+    
+    public int batchInsert(final List<? extends AbstractEntity<?>> entities, final int batchSize) {
+        if (entities.isEmpty()) {
+            return 0;
+        }
+        
+        if (entities.stream().anyMatch(ent -> ent.isPersisted())) {
+            throw new EntityAlreadyExists("Trying to perform batch insert for persisted entities.");
+        }
+        
+        final Table table = dm.eqlDomainMetadata.getTableForEntityType(entities.get(0).getType());
+        final TransactionalExecution trEx = trExecSupplier.get(); // this is a single transaction that will save all batches. 
+        
         final List<PropInsertInfo> propInsertInfos = table.columns.entrySet().stream(). //
                 filter(entry -> !entry.getKey().equals(ID) && !entry.getKey().equals(VERSION)). //
                 map(x -> new PropInsertInfo(x.getKey() + (isPersistedEntityType(x.getValue().type) ? "." + ID : ""), x.getValue().columnName, x.getValue().hibType)). //
@@ -74,7 +98,7 @@ public class EntityBatchInsertOperation {
         final List<String> columns = propInsertInfos.stream().map(x -> x.columnName).collect(toList());
 
         final String insertStmt = generateInsertStmt(table.name, columns);
-        
+        final AtomicInteger insertedCount = new AtomicInteger(0);
         Iterators.partition(entities.iterator(), batchSize > 0 ? batchSize : 1) //
                 .forEachRemaining(batch -> { //
                     trEx.exec(conn -> {
@@ -101,17 +125,23 @@ public class EntityBatchInsertOperation {
                                     throw new DbException(error, ex);
                                 }
                             });
-                            pst.executeBatch();
+                            final int[] batchCounts = pst.executeBatch();
+                            insertedCount.addAndGet(IntStream.of(batchCounts).sum());
                         } catch (final SQLException ex) {
                             throw new DbException("Could not batch insert generated entities.", ex);
                         }
                     });
                 });
-
+        
+        return insertedCount.get(); 
     }
 
     private static String generateInsertStmt(final String tableName, final List<String> columns) {
-        return format("INSERT INTO %s(_ID, _VERSION, %s) VALUES(NEXT VALUE FOR TG_ENTITY_ID_SEQ, 0, %s);", tableName, columns.stream().collect(joining(", ")), String.join(", ", nCopies(columns.size(), "?")));
+        return format("INSERT INTO %s(_ID, _VERSION, %s) VALUES(NEXT VALUE FOR %s, 0, %s);", //
+                tableName, //
+                columns.stream().collect(joining(", ")), // 
+                ID_SEQUENCE_NAME, //
+                join(", ", nCopies(columns.size(), "?")));
     }
 
     private static class PropInsertInfo {

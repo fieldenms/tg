@@ -35,8 +35,6 @@ import ua.com.fielden.platform.sample.domain.compound.ITgCompoundEntityDetail;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityChildDao;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityDao;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityDetailDao;
-import ua.com.fielden.platform.sample.domain.ITgDateTestEntity;
-import ua.com.fielden.platform.sample.domain.TgDateTestEntityDao;
 import ua.com.fielden.platform.security.annotations.SessionCache;
 import ua.com.fielden.platform.security.annotations.SessionHashingKey;
 import ua.com.fielden.platform.security.annotations.TrustedDeviceSessionDuration;
@@ -148,6 +146,10 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bind(ITgAuthoriser.class).to(TgAuthoriserDao.class);
         bind(ITgOriginator.class).to(TgOriginatorDao.class);
         bind(ITgDateTestEntity.class).to(TgDateTestEntityDao.class);
+        bind(TgEntityWithManyPropTypesCo.class).to(TgEntityWithManyPropTypesDao.class);
+        bind(IEntityOne.class).to(EntityOneDao.class);
+        bind(IEntityTwo.class).to(EntityTwoDao.class);
+        bind(IUnionEntity.class).to(UnionEntityDao.class);
 
         bind(ITgMakeCount.class).to(TgMakeCountDao.class);
         bind(ITgAverageFuelUsage.class).to(TgAverageFuelUsageDao.class);
