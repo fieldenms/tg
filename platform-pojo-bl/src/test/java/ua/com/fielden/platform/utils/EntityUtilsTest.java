@@ -50,6 +50,8 @@ import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.domain.metadata.DomainExplorer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ChildEntity;
+import ua.com.fielden.platform.entity.Duration;
+import ua.com.fielden.platform.entity.DurationUnit;
 import ua.com.fielden.platform.entity.Entity;
 import ua.com.fielden.platform.entity.EntityExt;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -601,7 +603,7 @@ public class EntityUtilsTest {
 
     @Test
     public void only_a_specific_subset_of_platform_level_entities_have_introspection_allowed() {
-        final LinkedHashSet<Class<? extends AbstractEntity<?>>> expected = linkedSetOf(Attachment.class, DomainExplorer.class, KeyNumber.class, User.class, UserRole.class, UserAndRoleAssociation.class, SecurityRoleAssociation.class);
+        final LinkedHashSet<Class<? extends AbstractEntity<?>>> expected = linkedSetOf(Attachment.class, DomainExplorer.class, Duration.class, DurationUnit.class, KeyNumber.class, User.class, UserRole.class, UserAndRoleAssociation.class, SecurityRoleAssociation.class);
         final LinkedHashSet<Class<? extends AbstractEntity<?>>> filtered = PlatformDomainTypes.types.stream().filter(EntityUtils::isIntrospectionAllowed).collect(toCollection(LinkedHashSet::new));
         assertEquals(expected, filtered);
     }
