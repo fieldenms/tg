@@ -129,11 +129,6 @@ public class ResultSetBuilderWrapperForEditors<T extends AbstractEntity<?>> impl
     }
 
     @Override
-    public IInsertionPointWithToolbar<T> addInsertionPointWithPagination(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
-        return builder.addInsertionPointWithPagination(actionConfig, whereToInsertView);
-    }
-
-    @Override
     public EntityCentreConfig<T> build() {
         return builder.build();
     }

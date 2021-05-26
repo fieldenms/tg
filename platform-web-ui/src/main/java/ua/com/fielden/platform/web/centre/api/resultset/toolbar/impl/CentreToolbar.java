@@ -17,10 +17,8 @@ import ua.com.fielden.platform.web.minijs.JsCode;
 
 public class CentreToolbar implements IToolbarConfig {
 
-    protected final InnerTextElement topLevelPlacement = new InnerTextElement("<!-- GENERATED FUNCTIONAL ACTIONS: -->\n<!--@functional_actions-->");
-
     protected DomElement createToolbarElement() {
-        return new DomContainer().add(topLevelPlacement, configButton(), pagination("standart-action"), refreshButton());
+        return new DomContainer().add(topLevelPlacement, configButton(), switchViewPlacement, pagination("standart-action"), refreshButton());
     }
 
     @Override
@@ -63,7 +61,6 @@ public class CentreToolbar implements IToolbarConfig {
 
     public static DomElement selectEgi() {
         return new DomElement("paper-icon-button")
-                //.attr("toggle", true)
                 .attr("slot", "standart-action")
                 .attr("icon", "image:grid-on")
                 .attr("on-tap", "_activateResultSetView")
@@ -72,7 +69,6 @@ public class CentreToolbar implements IToolbarConfig {
 
     public static DomElement selectView(final int viewIndex, final Optional<String> icon, final Optional<String> viewDescription) {
         return new DomElement("paper-icon-button")
-                //.attr("toggle", true)
                 .attr("slot", "standart-action")
                 .attr("icon", icon.orElse("av:equalizer"))
                 .attr("on-tap", "_selectAlternativeView")

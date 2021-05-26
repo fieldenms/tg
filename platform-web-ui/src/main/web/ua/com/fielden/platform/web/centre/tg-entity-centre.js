@@ -463,6 +463,7 @@ Polymer({
         return this.$.confirmationDialog;
     },
 
+    //TODO this page selection change handler should be enhanced for more pages
     _pageSelectionChanged: function (event) {
         const target = event.target || event.srcElement;
         if (target === this.$.views) {
@@ -495,6 +496,7 @@ Polymer({
         return queryElements(container, FOCUSABLE_ELEMENTS_SELECTOR).filter(element => !element.disabled && element.offsetParent !== null)[0];
     },
 
+    //TODO This selected view focusing should take into account more pages than just two.
     focusSelectedView: function () {
         if (!isMobileApp() && this._selectedView === 0) {
             const elementToFocus = this._getVisibleFocusableElementIn(this.$.selectionView);
@@ -526,6 +528,7 @@ Polymer({
         }
     },
 
+    //TODO Enhance to take into account more than two pages.
     addOwnKeyBindings: function () {
         const egi = this.$.customEgiSlot.assignedNodes({ flatten: true })[0];
         const selectionCriteria = this.$.selectionView;
@@ -536,6 +539,7 @@ Polymer({
         }
     },
 
+    //TODO Enhance to take into account more than two pages.
     removeOwnKeyBindings: function () {
         if (this._selectedView === 0) {
             this.$.selectionView.removeOwnKeyBindings();

@@ -513,22 +513,11 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         public IInsertionPointWithToolbar<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
             return ResultSetBuilder.this.addInsertionPoint(actionConfig, whereToInsertView);
         }
-
-        @Override
-        public IInsertionPointWithToolbar<T> addInsertionPointWithPagination(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
-            return ResultSetBuilder.this.addInsertionPointWithPagination(actionConfig, whereToInsertView);
-        }
-
     }
 
     @Override
     public IInsertionPointWithToolbar<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
-        return new InsertionPointConfigBuilder<>(this, actionConfig, false, whereToInsertView);
-    }
-
-    @Override
-    public IInsertionPointWithToolbar<T> addInsertionPointWithPagination(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
-        return new InsertionPointConfigBuilder<>(this, actionConfig, true, whereToInsertView);
+        return new InsertionPointConfigBuilder<>(this, actionConfig, whereToInsertView);
     }
 
     @Override

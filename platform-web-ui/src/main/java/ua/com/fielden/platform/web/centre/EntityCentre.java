@@ -55,6 +55,7 @@ import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
 import com.google.common.collect.ListMultimap;
@@ -190,6 +191,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private static final String EGI_FUNCTIONAL_ACTION_DOM = "<!--@functional_actions-->";
     private static final String EGI_PRIMARY_ACTION_DOM = "<!--@primary_action-->";
     private static final String EGI_SECONDARY_ACTIONS_DOM = "<!--@secondary_actions-->";
+    //Custom toolbar action for switching view
+    private static final String SWITCH_VIEW_ACTION_DOM = "<!--@switch_view_actions-->";
     // Front actions
     private static final String FRONT_ACTIONS_DOM = "<!--@custom-front-actions-->";
     private static final String FRONT_ACTIONS = "//generatedFrontActionObjects";
@@ -995,7 +998,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         logger.debug("Initiating functional actions...");
         final StringBuilder functionalActionsObjects = new StringBuilder();
 
-        final DomContainer functionalActionsDom = new DomContainer();
+        final DomElement functionalActionsDom = new DomContainer();
 
         for (int i = 0; i < actionGroups.size(); i++) {
             final DomElement groupElement = createActionGroupDom(i);
@@ -1086,14 +1089,22 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         }
         importPaths.add(dslDefaultConfig.getToolbarConfig().importPath());
 
+        final List<String> toolbarCode = new ArrayList<>();
+        toolbarCode.add(dslDefaultConfig.getToolbarConfig().code(entityType).toString());
+        final List<String> toolbarStyles = new ArrayList<>();
+        toolbarStyles.add(dslDefaultConfig.getToolbarConfig().styles().toString());
+
         final DomContainer topInsertionPointsDom = new DomContainer();
         final DomContainer leftInsertionPointsDom = new DomContainer();
         final DomContainer rightInsertionPointsDom = new DomContainer();
         final DomContainer bottomInsertionPointsDom = new DomContainer();
-        final DomContainer alternativeViewsDom = new DomContainer();
-        int numOfViews = dslDefaultConfig.isEgiHidden() ? 0 : 1;
+        final List<String>alternativeViewsDom = new ArrayList<>();
         for (final InsertionPointBuilder el : insertionPointActionsElements) {
             final DomElement insertionPoint = el.render();
+            el.toolbar().ifPresent(toolbar -> {
+                toolbarCode.add(toolbar.code(entityType).toString());
+                toolbarStyles.add(toolbar.styles().toString());
+            });
             if (el.whereToInsert() == InsertionPoints.TOP) {
                 topInsertionPointsDom.add(insertionPoint);
             } else if (el.whereToInsert() == InsertionPoints.LEFT) {
@@ -1103,28 +1114,13 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             } else if (el.whereToInsert() == InsertionPoints.BOTTOM) {
                 bottomInsertionPointsDom.add(insertionPoint);
             } else if (el.whereToInsert() == InsertionPoints.ALTERNATIVE_VIEW) {
-                alternativeViewsDom.add(insertionPoint);
-                numOfViews++;
+                alternativeViewsDom.add(insertionPoint.toString().replace(SWITCH_VIEW_ACTION_DOM, switchViewButtons(insertionPointActionsElements, Optional.of(el)).toString()));
             } else {
                 throw new IllegalArgumentException("Unexpected insertion point type.");
             }
         }
 
-        //Generating toolbar group for switching Views
-        if (numOfViews > 1) {
-            final DomElement viewSwichGroup = createActionGroupDom(functionalActionsDom.childCount());
-            if (!dslDefaultConfig.isEgiHidden()) {
-                viewSwichGroup.add(CentreToolbar.selectEgi());
-            }
-            int viewIndex = 2;
-            for (final InsertionPointBuilder el : insertionPointActionsElements) {
-                if (el.whereToInsert() == InsertionPoints.ALTERNATIVE_VIEW) {
-                    viewSwichGroup.add(CentreToolbar.selectView(viewIndex, el.icon(), el.viewTitle()));
-                    viewIndex++;
-                }
-            }
-            functionalActionsDom.add(viewSwichGroup);
-        }
+        final DomElement egiSwitchViewButtons = switchViewButtons(insertionPointActionsElements, Optional.empty());
 
         //Generating shortcuts for EGI
         final StringBuilder shortcuts = new StringBuilder();
@@ -1178,9 +1174,11 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace(EGI_ROW_HEIGHT, dslDefaultConfig.getRowHeight()).
                 replace(EGI_FIT_TO_HEIGHT, FIT_TO_HEIGHT.eval(dslDefaultConfig.isFitToHeight())).
                 ///////////////////////
-                replace(TOOLBAR_DOM, dslDefaultConfig.getToolbarConfig().render().toString()).
-                replace(TOOLBAR_JS, dslDefaultConfig.getToolbarConfig().code(entityType).toString()).
-                replace(TOOLBAR_STYLES, dslDefaultConfig.getToolbarConfig().styles().toString()).
+                replace(TOOLBAR_DOM, dslDefaultConfig.getToolbarConfig().render().toString()
+                        .replace(EGI_FUNCTIONAL_ACTION_DOM, functionalActionsDom.toString())
+                        .replace(SWITCH_VIEW_ACTION_DOM, egiSwitchViewButtons.toString()).toString()).
+                replace(TOOLBAR_JS, StringUtils.join(toolbarCode, "\n")).
+                replace(TOOLBAR_STYLES, StringUtils.join(toolbarStyles, "\n")).
                 replace(FULL_MI_TYPE, miType.getName()).
                 replace(QUERY_ENHANCER_CONFIG, queryEnhancerContextConfigString()).
                 replace(CRITERIA_DOM, editorContainer.toString()).
@@ -1200,7 +1198,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                         : propActionsString).
                 replace(SELECTION_CRITERIA_LAYOUT_CONFIG, layout.code().toString()).
                 replace(EGI_LAYOUT_CONFIG, gridLayoutConfig.getValue()).
-                replace(EGI_FUNCTIONAL_ACTION_DOM, functionalActionsDom.toString()).
                 replace(EGI_PRIMARY_ACTION_DOM, primaryActionDom.toString()).
                 replace(EGI_SECONDARY_ACTIONS_DOM, secondaryActionsDom.toString()).
                 replace(INSERTION_POINT_ACTIONS_DOM, insertionPointActionsDom.toString()).
@@ -1208,7 +1205,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace(RIGHT_INSERTION_POINT_DOM, rightInsertionPointsDom.toString()).
                 replace(TOP_INSERTION_POINT_DOM, topInsertionPointsDom.toString()).
                 replace(BOTTOM_INSERTION_POINT_DOM, bottomInsertionPointsDom.toString()).
-                replace(ALTERNATIVE_VIEW_INSERTION_POINT_DOM, alternativeViewsDom.toString()).
+                replace(ALTERNATIVE_VIEW_INSERTION_POINT_DOM, StringUtils.join(alternativeViewsDom, "\n")).
                 replace(READY_CUSTOM_CODE, customCode.map(code -> code.toString()).orElse("")).
                 replace(ATTACHED_CUSTOM_CODE, customCodeOnAttach.map(code -> code.toString()).orElse(""));
         logger.debug("Finishing...");
@@ -1220,6 +1217,23 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         };
         logger.debug("Done.");
         return representation;
+    }
+
+    private DomElement switchViewButtons(final List<InsertionPointBuilder> insertionPointActionsElements, final Optional<InsertionPointBuilder> insertionPoint) {
+        final DomElement viewSwichGroup = new DomContainer();
+        if (!insertionPoint.isPresent() || insertionPoint.get().whereToInsert() == InsertionPoints.ALTERNATIVE_VIEW) {
+            if (!dslDefaultConfig.isEgiHidden() && insertionPoint.isPresent()) {
+                viewSwichGroup.add(CentreToolbar.selectEgi());
+            }
+            int viewIndex = 2;
+            for (final InsertionPointBuilder el : insertionPointActionsElements) {
+                if (el.whereToInsert() == InsertionPoints.ALTERNATIVE_VIEW && (!insertionPoint.isPresent() || el != insertionPoint.get())) {
+                    viewSwichGroup.add(CentreToolbar.selectView(viewIndex, el.icon(), el.viewTitle()));
+                    viewIndex++;
+                }
+            }
+        }
+        return viewSwichGroup;
     }
 
     private DomElement createActionGroupDom(final int groupIndex) {

@@ -1,9 +1,5 @@
 package ua.com.fielden.platform.web.centre.api.insertion_points;
 
-import static org.apache.commons.lang.StringUtils.join;
-import static ua.com.fielden.platform.web.centre.api.resultset.toolbar.impl.CentreToolbar.pagination;
-import static ua.com.fielden.platform.web.centre.api.resultset.toolbar.impl.CentreToolbar.paginationShortcut;
-
 import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -11,6 +7,7 @@ import java.util.Set;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
+import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 import ua.com.fielden.platform.web.interfaces.IExecutable;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.minijs.JsCode;
@@ -49,11 +46,10 @@ public class InsertionPointBuilder implements IRenderable, IExecutable {
                 .attr("column-properties-mapper", "{{columnPropertiesMapper}}")
                 .attr("context-retriever", "[[insertionPointContextRetriever]]")
                 .attr("flexible", insertionPointConfig.isFlex());
-        if (insertionPointConfig.hasPaginationButtons()) {
-            insertionPointDom.add(pagination("insertion-point-child"));
-            insertionPointDom.attr("custom-shortcuts", join(paginationShortcut(), " "));
-        }
+        insertionPointConfig.getToolbar().ifPresent(toolbar -> insertionPointDom.add(toolbar.render()));
         if (whereToInsert() == InsertionPoints.ALTERNATIVE_VIEW) {
+            insertionPointDom.attr("separate-view", true);
+            insertionPointDom.attr("hide-margins", true);
             insertionPointDom.attr("slot", "alternative-view-insertion-point");
         }
         return insertionPointDom;
@@ -84,10 +80,11 @@ public class InsertionPointBuilder implements IRenderable, IExecutable {
     public Set<String> importPaths() {
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
         importPaths.add(insertionPointActionElement.importPath());
-        if (insertionPointConfig.hasPaginationButtons()) {
-            importPaths.add("polymer/@polymer/paper-icon-button/paper-icon-button");
-        }
         return importPaths;
+    }
+
+    public Optional<IToolbarConfig> toolbar() {
+        return insertionPointConfig.getToolbar();
     }
 
     /**

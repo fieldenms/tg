@@ -3,11 +3,15 @@ package ua.com.fielden.platform.web.centre.api.resultset.toolbar;
 import java.util.List;
 
 import ua.com.fielden.platform.dom.CssStyles;
+import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.web.interfaces.IImportable;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.minijs.JsCode;
 
 public interface IToolbarConfig extends IRenderable, IImportable {
+
+    public static final InnerTextElement topLevelPlacement = new InnerTextElement("<!-- GENERATED FUNCTIONAL ACTIONS: -->\n<!--@functional_actions-->");
+    public static final InnerTextElement switchViewPlacement = new InnerTextElement("<!-- GENERATED SWITCH VIEW ACTIONS: -->\n<!--@switch_view_actions-->");
 
     /**
      * Generates the Java script code for this toolbar depending on entity type.

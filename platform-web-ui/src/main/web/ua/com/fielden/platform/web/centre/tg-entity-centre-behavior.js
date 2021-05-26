@@ -489,10 +489,8 @@ const TgEntityCentreBehaviorImpl = {
         self._selectedView = 0;
         self._showProgress = false;
         //Configures the egi's margin.
-        const insertionPoints = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point');
-        if (insertionPoints.length === 1 && insertionPoints[0].flexible) {
-            insertionPoints[0].hideMargins = true;
-        }
+        const insertionPoints = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point:not([separate-view])');
+        
         this.$.egi.showMarginAround = insertionPoints.length > 0;
 
         self._postRun = (function (criteriaEntity, newBindingEntity, result) {
@@ -521,6 +519,7 @@ const TgEntityCentreBehaviorImpl = {
                 if (this._triggerRun) {
                     if (this._selectedView === 0) {
                         this.async(function () {
+                            //TODO should set the  preferred view or default
                             this._selectedView = 1;
                         }, 100);
                     }
@@ -816,6 +815,7 @@ const TgEntityCentreBehaviorImpl = {
 
         //Select the result view if autoRun is true
         if (self.autoRun || self.queryPart) {
+            //TODO should set the  preferred view or default
             self._selectedView = 1;
         }
     },
@@ -1055,6 +1055,7 @@ const TgEntityCentreBehaviorImpl = {
      *     from the result-set if they became unmatchable to the selection criteria after modification).
      */
     refreshEntities: function (entities) {
+        //TODO this._selectedView === 1 should become this._selectedView !== 0
         if (this._selectedView === 1 && (// only if the selectedView is the resultset do we need to refresh entitites and...
             // there is no data or refresh is enforeced or...
             this.enforcePostSaveRefresh === true || this.$.egi.egiModel.length === 0 ||

@@ -12,6 +12,7 @@ import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizabl
 
 import '/resources/images/tg-icons.js';
 import '/resources/components/tg-toast.js';
+import '/resources/egi/tg-responsive-toolbar.js';
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
 
@@ -27,77 +28,31 @@ import '/resources/centre/tg-entity-centre-styles.js';
 import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
 import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
 
-const customStyle = html`
-    <custom-style>
-        <style>
-            .insertion-point-dialog > #insertionPointContent {
-                background-color: white;
-                @apply --shadow-elevation-2dp;
-            }
-            .insertion-point-dialog .title-bar paper-icon-button {
-                transform: scale(-1, -1);
-            }
-            .insertion-point-dialog paper-icon-button.revers {
-                transform: scale(-1, 1);
-            }
-            #insertionPointContent .truncate {
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-            #insertionPointContent .title-bar {
-                height: 44px;
-                min-height: 44px;
-                font-size: 18px;
-                cursor: default;
-                color: white;
-                min-width: 0;
-                overflow: hidden;
-                -webkit-user-select: none;
-                -moz-user-select: none;
-                -ms-user-select: none;
-                user-select: none;
-                background-color: var(--paper-light-blue-600);
-            }
-            #insertionPointContent paper-icon-button.expand-colapse-button {
-                min-width: 40px;
-                min-height: 40px;
-                stroke: var(--paper-grey-100);
-                fill: var(--paper-grey-100);
-                color: var(--paper-grey-100);
-            }
-            #insertionPointContent paper-icon-button.expand-colapse-button:hover {
-                min-width: 40px;
-                min-height: 40px;
-                stroke: var(--paper-grey-300);
-                fill: var(--paper-grey-300);
-                color: var(--paper-grey-300);
-            }
-            #insertionPointContent #custom_actions_container {
-                position: absolute;
-                background-color: white;
-                top: 44px;
-                right: 0;
-            }
-            #insertionPointContent #loadableContent {
-                z-index:0;
-            }
-        </style>
-    </custom-style>
-`;
-customStyle.setAttribute('style', 'display: none;');
-document.head.appendChild(customStyle.content);
-
 const template = html`
     <style>
         :host {
             @apply --layout-vertical;
             overflow: auto;
         }
+
         .truncate {
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+        }
+
+        #pm {
+            background: white;
+            border-radius: 2px;
+            @apply --shadow-elevation-2dp;
+        }
+
+        #pm[detached] {
+            position: fixed;
+            top: 2%;
+            left: 2%;
+            width: 96%;
+            height: 96%;
         }
         .title-bar {
             height: 44px;
@@ -112,6 +67,7 @@ const template = html`
             user-select: none;
             background-color: var(--paper-light-blue-600);
         }
+
         paper-icon-button.expand-colapse-button {
             min-width: 40px;
             min-height: 40px;
@@ -119,6 +75,7 @@ const template = html`
             fill: var(--paper-grey-100);
             color: var(--paper-grey-100);
         }
+
         paper-icon-button.expand-colapse-button:hover {
             min-width: 40px;
             min-height: 40px;
@@ -126,31 +83,32 @@ const template = html`
             fill: var(--paper-grey-300);
             color: var(--paper-grey-300);
         }
-        .paper-material {
-            background: white;
-            border-radius: 2px;
+
+        #pm[detached] paper-icon-button.expand-colapse-button {
+            transform: scale(-1, -1);
         }
+
         #loadableContent {
             z-index:0;
         }
+
         [flexible] {
-            flex-grow: 1;
+            @apply --layout-flex;
         }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning tg-entity-centre-styles paper-material-styles"></style>
-    <div id="pm" hidden$="[[detachedView]]" class="paper-material layout vertical" elevation="1" flexible$="[[flexible]]">
-        <div hidden>
-            <slot name="insertion-point-child" id="custom_actions_content"></slot>
-        </div>
+    <div id="pm" class="layout vertical" detached$="[[detachedView]]" flexible$="[[flexible]]">
         <div id="insertionPointContent" tabindex='0' class="layout vertical flex relative">
-            <div class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc)]]">
+            <div class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc, separateView)]]">
                 <span class="title-text truncate" style="margin-left:16px;" tooltip-text$="[[longDesc]]">[[shortDesc]]</span>
                 <paper-icon-button class="title-bar-button expand-colapse-button" style="margin-left:10px;margin-right:2px;" icon="icons:open-in-new" on-tap="_expandColapseTap"></paper-icon-button>
             </div>
+            <tg-responsive-toolbar id="viewToolbar" hidden$="[[!_isToolbarVisible(detachedView, separateView)]]">
+                <slot slot="entity-specific-action" name="entity-specific-action"></slot>
+                <slot slot="standart-action" name="standart-action"></slot>
+            </tg-responsive-toolbar>
             <div id="loadableContent" class="relative">
                 <tg-element-loader id="elementLoader"></tg-element-loader>
-            </div>
-            <div id="custom_actions_container" class="layout horizontal center end-justified" style="padding-right:2px" hidden$="[[!detachedView]]">
             </div>
         </div>
     </div>
@@ -177,6 +135,15 @@ Polymer({
             type: Boolean,
             value: false,
             observer: "_flexibilityChanged"
+        },
+
+        /**
+         * Indicates whether this view is represented as separete view or side-by-side with main EGI
+         */
+        separateView: {
+            type: Boolean,
+            value: false,
+            reflectToAttribute: true
         },
         
         /**
@@ -247,12 +214,6 @@ Polymer({
             observer: "_centreStateChanged"
         },
         /**
-         * Actions provided by entity centre for this insertion point
-         */
-        customActions: {
-            type: Array,
-        },
-        /**
          * Provides custom key bindings.
          */
         customShortcuts: {
@@ -294,32 +255,27 @@ Polymer({
 
     ready: function () {
         this.triggerElement = this.$.insertionPointContent;
-        setTimeout(function() {
-            // Initialising the custom actions' list.
-            const customActionsList = [];
-            Array.prototype.forEach.call(this.$.custom_actions_content.assignedNodes({ flatten: true }), function (item) {
-                customActionsList.push(item);
-            }.bind(this));
-            this.customActions = customActionsList;
-        }.bind(this), 0);
+        // Initialising the custom actions' list.
+        // [...this.$.entitySpecificAction.assignedNodes({ flatten: true })].forEach( item => {
+        //     this.$.viewToolbar.appendChild(item);
+        // });
+        // [...this.$.standartAction.assignedNodes({ flatten: true })].forEach(item => {
+        //     this.$.viewToolbar.appendChild(item);
+        // });
     },
 
     attached: function () {
-        const self = this;
-        this.async(function () {
-            if (!self.egiBindingAdded) {
+        this.async(() => {
+            if (!this.egiBindingAdded) {
                 // cache parent result view, that contains this insertion point
-                self.resultView = self.findResultView();
-                if (self.resultView) {
+                this.resultView = this.findResultView();
+                if (this.resultView) {
                     // add all EGI shortcuts to this result view to listen to EGI shotcuts when insertion point is focused
-                    self.addOwnKeyBinding(self.resultView._findParentCentre().$.egi.customShortcuts, '_egiShortcutPressed');
-                    self.egiBindingAdded = true;
+                    this.addOwnKeyBinding(this.resultView._findParentCentre().$.egi.customShortcuts, '_egiShortcutPressed');
+                    this.egiBindingAdded = true;
                 }
             }
-            self.keyEventTarget = self.$.insertionPointContent;
-            if (this.customActions) {
-                this.customActions.forEach(elem => this.$.custom_actions_container.appendChild(elem));
-            }
+            this.keyEventTarget = this.$.insertionPointContent;
         }, 1);
     },
 
@@ -337,35 +293,27 @@ Polymer({
     /**
      * Creates dynamically the 'dom-bind' template, which hold the dialog for the calendar.
      */
-    _createDialog: function () {
-        const dialog = document.createElement('div');
-        dialog.classList.toggle('insertion-point-dialog', true);
-        dialog.classList.toggle('layout', true);
-        dialog.classList.toggle('vertical', true);
-        dialog.style.position = 'absolute';
-        dialog.style.top = '2%';
-        dialog.style.left = '2%';
-        dialog.style.width = '96%';
-        dialog.style.height = '96%';
-        dialog.style.zIndex = '1';
-        return dialog;
-    },
+    // _createDialog: function () {
+    //     const dialog = document.createElement('div');
+    //     dialog.classList.toggle('insertion-point-dialog', true);
+    //     dialog.classList.toggle('layout', true);
+    //     dialog.classList.toggle('vertical', true);
+    //     dialog.style.position = 'absolute';
+    //     dialog.style.top = '2%';
+    //     dialog.style.left = '2%';
+    //     dialog.style.width = '96%';
+    //     dialog.style.height = '96%';
+    //     dialog.style.zIndex = '1';
+    //     return dialog;
+    // },
 
     _showDialog: function () {
-        if (!this._dialog) {
-            this._dialog = this._createDialog();
-        }
-
         this.detachedView = true;
-        document.body.appendChild(this._dialog);
-        this._dialog.appendChild(this.$.insertionPointContent);
         this.$.insertionPointContent.focus();
     },
 
     _closeDialog: function () {
-        document.body.removeChild(this._dialog);
         this.detachedView = false;
-        this.$.pm.appendChild(this.$.insertionPointContent);
         if (this.contextRetriever && this.contextRetriever().$.centreResultContainer) {
             this.contextRetriever().$.centreResultContainer.focus();
         }
@@ -537,8 +485,12 @@ Polymer({
         tearDownEvent(event);
     },
 
-    _hasTitleBar: function (shortDesc) {
-        return !!shortDesc;
+    _hasTitleBar: function (shortDesc, separateView) {
+        return !separateView && !!shortDesc;
+    },
+
+    _isToolbarVisible: function (detachedView, separateView) {
+        return detachedView || separateView;
     },
 
     _shortcutPressed: function (e) {

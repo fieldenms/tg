@@ -19,21 +19,19 @@ public class InsertionPointConfigBuilder<T extends AbstractEntity<?>> implements
     private final ResultSetBuilder<T> resultSetBuilder;
 
     private final EntityActionConfig insertionPointAction;
-    private final boolean hasPaginationButtons;
     private final InsertionPoints whereToInsertView;
     private boolean flex = false;
     private Optional<IToolbarConfig> toolbarConfig = Optional.empty();
 
-    public InsertionPointConfigBuilder(final ResultSetBuilder<T> resultSetBuilder, final EntityActionConfig insertionPointAction, final boolean hasPaginationButtons, final InsertionPoints whereToInsertView) {
+    public InsertionPointConfigBuilder(final ResultSetBuilder<T> resultSetBuilder, final EntityActionConfig insertionPointAction, final InsertionPoints whereToInsertView) {
         this.resultSetBuilder = resultSetBuilder;
         this.insertionPointAction = insertionPointAction;
-        this.hasPaginationButtons = hasPaginationButtons;
         this.whereToInsertView = whereToInsertView;
     }
 
     @Override
     public EntityCentreConfig<T> build() {
-        resultSetBuilder.addInsertionPoint(configInsertionPoint(mkInsertionPoint(this.insertionPointAction, this.whereToInsertView), hasPaginationButtons).setFlex(flex).setToolbar(toolbarConfig));
+        resultSetBuilder.addInsertionPoint(configInsertionPoint(mkInsertionPoint(this.insertionPointAction, this.whereToInsertView)).setFlex(flex).setToolbar(toolbarConfig));
         return resultSetBuilder.build();
     }
 
@@ -51,14 +49,7 @@ public class InsertionPointConfigBuilder<T extends AbstractEntity<?>> implements
 
     @Override
     public IInsertionPointWithToolbar<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
-        resultSetBuilder.addInsertionPoint(configInsertionPoint(mkInsertionPoint(this.insertionPointAction, this.whereToInsertView), hasPaginationButtons));
-        return new InsertionPointConfigBuilder<>(resultSetBuilder, actionConfig, false, whereToInsertView);
+        resultSetBuilder.addInsertionPoint(configInsertionPoint(mkInsertionPoint(this.insertionPointAction, this.whereToInsertView)));
+        return new InsertionPointConfigBuilder<>(resultSetBuilder, actionConfig, whereToInsertView);
     }
-
-    @Override
-    public IInsertionPointWithToolbar<T> addInsertionPointWithPagination(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
-        resultSetBuilder.addInsertionPoint(configInsertionPoint(mkInsertionPoint(this.insertionPointAction, this.whereToInsertView), hasPaginationButtons));
-        return new InsertionPointConfigBuilder<>(resultSetBuilder, actionConfig, true, whereToInsertView);
-    }
-
 }

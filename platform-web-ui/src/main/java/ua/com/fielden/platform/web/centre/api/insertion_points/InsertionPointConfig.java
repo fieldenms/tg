@@ -15,7 +15,6 @@ import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 public class InsertionPointConfig {
 
     private final EntityActionConfig insertionPointAction;
-    private final boolean hasPaginationButtons;
     private boolean flex = false;
     private Optional<IToolbarConfig> toolbar = Optional.empty();
 
@@ -23,11 +22,9 @@ public class InsertionPointConfig {
      * Initiates the insertion point configuration object with action configuration and pagination indicator
      *
      * @param insertionPointAction
-     * @param hasPaginationButtons
      */
-    private InsertionPointConfig(final EntityActionConfig insertionPointAction, final boolean hasPaginationButtons) {
+    private InsertionPointConfig(final EntityActionConfig insertionPointAction) {
         this.insertionPointAction = insertionPointAction;
-        this.hasPaginationButtons = hasPaginationButtons;
     }
 
     /**
@@ -36,16 +33,12 @@ public class InsertionPointConfig {
      * @param insertionPointAction
      * @return
      */
-    public static InsertionPointConfig configInsertionPoint(final EntityActionConfig insertionPointAction, final boolean hasPaginationButton) {
-        return new InsertionPointConfig(insertionPointAction, hasPaginationButton);
+    public static InsertionPointConfig configInsertionPoint(final EntityActionConfig insertionPointAction) {
+        return new InsertionPointConfig(insertionPointAction);
     }
 
     public EntityActionConfig getInsertionPointAction() {
         return insertionPointAction;
-    }
-
-    public boolean hasPaginationButtons() {
-        return hasPaginationButtons;
     }
 
     public InsertionPointConfig setFlex(final boolean flex) {
