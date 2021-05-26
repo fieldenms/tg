@@ -24,6 +24,9 @@ import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanDelete_T
 import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanSave_Token;
+import ua.com.fielden.platform.security.tokens.open_simple_master.AttachmentMaster_CanOpen_Token;
+import ua.com.fielden.platform.security.tokens.open_simple_master.UserMaster_CanOpen_Token;
+import ua.com.fielden.platform.security.tokens.open_simple_master.UserRoleMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.persistent.KeyNumber_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.persistent.KeyNumber_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.synthetic.DomainExplorer_CanReadModel_Token;
@@ -87,10 +90,12 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
                 User_CanRead_Token.class,
                 User_CanReadModel_Token.class,
                 User_CanDelete_Token.class,
+                UserMaster_CanOpen_Token.class,
                 UserRole_CanSave_Token.class,
                 UserRole_CanRead_Token.class,
                 UserRole_CanReadModel_Token.class,
                 UserRole_CanDelete_Token.class,
+                UserRoleMaster_CanOpen_Token.class,
                 UserAndRoleAssociation_CanRead_Token.class,
                 UserAndRoleAssociation_CanReadModel_Token.class,
                 UserRolesUpdater_CanExecute_Token.class,
@@ -99,6 +104,7 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
                 Attachment_CanRead_Token.class,
                 Attachment_CanReadModel_Token.class,
                 Attachment_CanDelete_Token.class,
+                AttachmentMaster_CanOpen_Token.class,
                 AttachmentDownload_CanExecute_Token.class,
                 DomainExplorer_CanRead_Token.class,
                 DomainExplorer_CanReadModel_Token.class,

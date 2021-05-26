@@ -29,6 +29,7 @@ import ua.com.fielden.platform.security.tokens.compound_master_menu.TgCompoundEn
 import ua.com.fielden.platform.security.tokens.compound_master_menu.TgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem_CanAccess_Token;
 import ua.com.fielden.platform.security.tokens.compound_master_menu.TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem_CanAccess_Token;
 import ua.com.fielden.platform.security.tokens.open_compound_master.OpenTgCompoundEntityMasterAction_CanOpen_Token;
+import ua.com.fielden.platform.security.tokens.open_simple_master.AttachmentMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.TgCloseLeaveExampleDetailMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.TgCloseLeaveExampleDetailUnpersistedMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.TgCloseLeaveExampleMaster_CanOpen_Token;
@@ -43,6 +44,8 @@ import ua.com.fielden.platform.security.tokens.open_simple_master.TgGeneratedEnt
 import ua.com.fielden.platform.security.tokens.open_simple_master.TgMessageMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.TgPersistentCompositeEntityMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.TgPersistentEntityWithPropertiesMaster_CanOpen_Token;
+import ua.com.fielden.platform.security.tokens.open_simple_master.UserMaster_CanOpen_Token;
+import ua.com.fielden.platform.security.tokens.open_simple_master.UserRoleMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.persistent.KeyNumber_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.persistent.KeyNumber_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.persistent.TgCompoundEntityChild_CanDelete_Token;
@@ -358,11 +361,11 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
             domainExplorer_CanRead, domainExplorer_CanReadModel,
             graphiQL_CanExecute,
             keyNumber_CanRead, keyNumber_CanReadModel,
-            user_CanDelete, user_CanSave, user_CanRead, user_CanReadModel,
-            userRole_CanDelete, userRole_CanSave, userRole_CanRead, userRole_CanReadModel,
+            user_CanDelete, user_CanSave, user_CanRead, user_CanReadModel, createTokenInfo.apply(UserMaster_CanOpen_Token.class),
+            userRole_CanDelete, userRole_CanSave, userRole_CanRead, userRole_CanReadModel, createTokenInfo.apply(UserRoleMaster_CanOpen_Token.class),
             userRoleAssociation_CanRead, userRoleAssociation_CanReadModel,
             userRolesUpdater_CanExecute, userRoleTokensUpdater_CanExecute,
-            attachment_CanSave, attachment_CanRead, attachment_CanReadModel, attachment_CanDelete, attachmentDownload_CanExecute,
+            attachment_CanSave, attachment_CanRead, attachment_CanReadModel, attachment_CanDelete, createTokenInfo.apply(AttachmentMaster_CanOpen_Token.class), attachmentDownload_CanExecute,
             canRead, canReadModel,
             
             createTokenInfo.apply(TgCloseLeaveExampleDetailMaster_CanOpen_Token.class),
