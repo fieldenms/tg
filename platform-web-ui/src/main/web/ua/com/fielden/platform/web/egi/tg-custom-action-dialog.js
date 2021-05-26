@@ -518,7 +518,7 @@ Polymer({
         this._onCaptureFocus = this._onCaptureFocus.bind(this);
         this._onCaptureKeyDown = this._onCaptureKeyDown.bind(this);
 
-        this._focusDialogWithInput = this._focusDialogWithInput.bind(this);
+        this._focusDialogView = this._focusDialogView.bind(this);
         this._finishErroneousOpening = this._finishErroneousOpening.bind(this);
         this._handleActionNavigationChange = this._handleActionNavigationChange.bind(this);
         this._handleActionNavigationInvoked = this._handleActionNavigationInvoked.bind(this);
@@ -887,7 +887,9 @@ Polymer({
                     dialog.center();
                 }
                 if (dialog._childDialogs.length === 0) {
-                    dialog._focusDialogWithInput();
+                    // focuses child dialog view in case if it wasn't closed and does not have its own child dialogs;
+                    //  (e.g. in master dialog view it focuses input in error, preferred input or first input -- see 'focusView' in 'tg-entity-master-behavior') 
+                    dialog._focusDialogView();
                 }
             }
         });
@@ -1210,7 +1212,9 @@ Polymer({
         this.style.removeProperty("transition-duration");
         //Removes the optimisation hook if master size or position was changed.
         this.$.elementLoader.style.removeProperty("display");
-        this._focusDialogWithInput();
+        // focuses dialog view after dialog resizing transition is completed;
+        //  (e.g. in master dialog view it focuses input in error, preferred input or first input -- see 'focusView' in 'tg-entity-master-behavior') 
+        this._focusDialogView();
         this._hideBlockingPane();
     },
     
@@ -1278,10 +1282,24 @@ Polymer({
                 //The following instruction will take place after the last _hideBlockingLayer invocation causes blocking layer to become invisible.
                 this._masterVisibilityChanges = undefined;
                 this._masterLayoutChanges = undefined;
-                this.notifyResize();
+                this.notifyResizeWithoutItselfAndAncestors(); // descendant notifications are needed to recalculate shadows in tg-scrollable-component._contentScrolled
             }
             
         }
+    },
+    
+    /**
+     * Notifies resize for this dialog's descendants and not dialog itself / ancestors.
+     *
+     * This is not to trigger 'iron-overlay-behavior._onIronResize' which triggers 'iron-fit-behavior.refit'.
+     * 'iron-fit-behavior.refit' has undesired side effect -- the contents is scrolled to the top.
+     * That side effect interferes with focusing / scrolling of / to, e.g., first input on masters.
+     */
+    notifyResizeWithoutItselfAndAncestors: function () {
+        const _fireResize = this._fireResize;
+        this._fireResize = () => {};
+        this.notifyResize();
+        this._fireResize = _fireResize;
     },
     
     _showMaster: function(action, element, closeEventChannel, closeEventTopics, actionWithContinuation) {
@@ -1418,10 +1436,10 @@ Polymer({
     },
 
     /**
-     * Listener that listens binding entity appeared event and focuses first input.
+     * Focuses dialog view if the inner element was already loaded and has 'focusView' function.
      */
-    _focusDialogWithInput: function(e) {
-        if (this._lastElement.focusView) {
+    _focusDialogView: function(e) {
+        if (this._lastElement && this._lastElement.focusView) {
             this._lastElement.focusView();
         }
     },
@@ -1445,6 +1463,9 @@ Polymer({
         if (target === this) {
             this.async(function() {
                 this.refit();
+                // focuses dialog view in case if it has recently been opened and re-fitting started (which will be followed by reflow process and scrolling to the top);
+                //  (e.g. in master dialog view it focuses input in error, preferred input or first input -- see 'focusView' in 'tg-entity-master-behavior') 
+                this._focusDialogView();
             }.bind(this), 100);
             this._setIsRunning(false);
         } else { 
