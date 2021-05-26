@@ -38,9 +38,6 @@ class MasterWithCentre<T extends AbstractEntity<?>> implements IMaster<T> {
         //// this suffix is used to remove the last comma, which prevents JSON conversion ////
         //////////////////////////////////////////////////////////////////////////////////////
         attrs.append("{");
-        if (entityCentre.isRunAutomatically()) {
-            attrs.append("\"autoRun\": true, ");
-        }
         if (entityCentre.shouldEnforcePostSaveRefresh()) {
             attrs.append("\"enforcePostSaveRefresh\": true, ");
         }
