@@ -717,17 +717,6 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
         assertEquals("The number of columns should be 3", dtm().getFirstTick().getColumnsNumber(), 3);
     }
 
-    @Test
-    public void test_that_runAutomatically_can_be_set_and_altered() {
-        // THE FIRST TIME -- returns DEFAULT VALUE //
-        // default value should be FALSE
-        assertFalse("Run automatically by default should be FALSE", dtm().isRunAutomatically());
-
-        // Alter and check //
-        assertTrue("The manager reference should be the same", dtm() == dtm().setRunAutomatically(true));
-        assertTrue("Run automatically should be true", dtm().isRunAutomatically());
-    }
-
     @Override
     public void test_that_PropertyCheckingListeners_work() {
     }
