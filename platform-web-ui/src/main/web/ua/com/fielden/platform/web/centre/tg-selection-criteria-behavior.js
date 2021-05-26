@@ -83,6 +83,14 @@ const TgSelectionCriteriaBehaviorImpl = {
         },
 
         /**
+         * Indicates whether current centre configuration should load data immediately upon loading.
+         */
+        autoRun: {
+            type: Boolean,
+            notify: true
+        },
+
+        /**
          * Centre URI parameters taken from tg-entity-centre-behavior.
          */
         queryPart: {
@@ -381,6 +389,9 @@ const TgSelectionCriteriaBehaviorImpl = {
         }
         if (typeof customObject.saveAsName !== 'undefined') {
             this.saveAsName = customObject.saveAsName;
+        }
+        if (typeof customObject.autoRun !== 'undefined') {
+            this.autoRun = customObject.autoRun;
         }
         if (typeof customObject.configUuid !== 'undefined') {
             const newConfigUuid = customObject.configUuid;

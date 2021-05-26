@@ -124,6 +124,10 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      */
     private static final String CONFIG_UUID = "configUuid";
     /**
+     * The key for customObject's value containing configuration autoRun.
+     */
+    private static final String AUTO_RUN = "autoRun";
+    /**
      * The key for customObject's value indicating whether centre configuration is dirty meaning it is changed or of [default, link, inherited] kind.
      */
     static final String CENTRE_DIRTY = "centreDirty";
@@ -180,6 +184,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @param centreDirty
      * @param saveAsName -- represents a configuration title to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
      * @param configUuid -- represents uuid of configuration to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
+     * @param autoRun -- represents autoRun parameter of configuration to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
      * @param saveAsDesc -- represents a configuration title's tooltip to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
      * @param staleCriteriaMessage
      *
@@ -190,6 +195,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final boolean centreDirty,
         final Optional<Optional<String>> saveAsName,
         final Optional<Optional<String>> configUuid,
+        final Optional<Boolean> autoRun,
         final Optional<Optional<String>> saveAsDesc,
         final Optional<Optional<String>> staleCriteriaMessage
     ) {
@@ -199,6 +205,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         });
         configUuid.ifPresent(uuid -> {
             customObject.put(CONFIG_UUID, uuid.orElse(""));
+        });
+        autoRun.ifPresent(autoRunning -> {
+            customObject.put(AUTO_RUN, autoRunning);
         });
         saveAsDesc.ifPresent(desc -> {
             customObject.put(SAVE_AS_DESC, desc.orElse(""));
@@ -586,6 +595,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 validationPrototype.centreDirtyCalculator().apply(customObjectSaveAsName).apply(() -> freshCentre),
                 of(customObjectSaveAsName),
                 configUuid,
+                of(validationPrototype.centreRunAutomatically(customObjectSaveAsName)),
                 of(validationPrototype.centreTitleAndDesc(customObjectSaveAsName).map(titleDesc -> titleDesc._2)),
                 empty()
             );

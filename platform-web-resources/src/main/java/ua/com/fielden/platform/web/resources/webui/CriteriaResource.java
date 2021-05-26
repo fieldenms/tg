@@ -468,6 +468,7 @@ public class CriteriaResource extends AbstractWebResource {
                 appliedCriteriaEntity.centreDirtyCalculator().apply(saveAsName).apply(() -> updatedFreshCentre),
                 of(saveAsName),
                 of(configUuid),
+                of(appliedCriteriaEntity.centreRunAutomatically(saveAsName)),
                 of(ofNullable(saveAsDesc)),
                 empty()
             ))
@@ -491,13 +492,15 @@ public class CriteriaResource extends AbstractWebResource {
             final IMainMenuItem mmiCompanion,
             final IUser userCompanion,
             final ICentreConfigSharingModel sharingModel) {
+        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = createCriteriaValidationPrototype(miType, saveAsName, updatedFreshCentre, companionFinder, critGenerator, -1L, user, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
         return restUtil.rawListJsonRepresentation(
-                createCriteriaValidationPrototype(miType, saveAsName, updatedFreshCentre, companionFinder, critGenerator, -1L, user, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel),
+                appliedCriteriaEntity,
                 createCriteriaMetaValuesCustomObjectWithSaveAsInfo(
                         createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)),
                         isDefaultOrLink(saveAsName) || isInherited(saveAsName, () -> loadableConfigurations(user, miType, device, companionFinder, sharingModel).apply(of(saveAsName)).stream()), // if not [default, link, inherited] then it is own save-as; after discarding it is always not changed -- checking of isFreshCentreChanged is not needed
                         of(saveAsName),
                         empty(),
+                        of(appliedCriteriaEntity.centreRunAutomatically(saveAsName)),
                         saveAsDesc,
                         of(ofNullable(staleCriteriaMessage))
                 )//
