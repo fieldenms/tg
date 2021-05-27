@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity;
 
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
+import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseOpening;
 
 import java.util.function.Supplier;
 
@@ -9,10 +10,17 @@ import com.google.inject.Inject;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.security.IAuthorisationModel;
+import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 public class EntityManipulationActionProducer<T extends AbstractEntityManipulationAction> extends DefaultEntityProducerWithContext<T> {
+    @Inject
+    private IAuthorisationModel authorisation;
+    @Inject
+    private ISecurityTokenProvider securityTokenProvider;
 
     @Inject
     public EntityManipulationActionProducer(final EntityFactory factory, final Class<T> entityType, final ICompanionObjectFinder companionFinder) {
@@ -42,8 +50,11 @@ public class EntityManipulationActionProducer<T extends AbstractEntityManipulati
                     }
                 })
                 .orElseGet(determineTypeFrom)
-            ).map(entityType -> entity.setEntityTypeForEntityMaster(entityType))
-             .orElseThrow(() -> new SimpleMasterException(format("Please add selection criteria or current entity to the context of the functional entity with type: %s", entity.getType().getName())));
+            ).map(entityType -> {
+                authoriseOpening(entityType.getSimpleName(), authorisation, securityTokenProvider).ifFailure(Result::throwRuntime);
+                return entity.setEntityTypeForEntityMaster(entityType);
+            })
+            .orElseThrow(() -> new SimpleMasterException(format("Please add selection criteria or current entity to the context of the functional entity with type: %s", entity.getType().getName())));
         }
         return entity;
     }
