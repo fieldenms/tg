@@ -19,6 +19,7 @@ import '/resources/polymer/@polymer/neon-animation/animations/slide-from-top-ani
 import '/resources/layout/tg-tile-layout.js';
 import '/resources/components/tg-menu-search-input.js';
 import '/resources/actions/tg-ui-action.js';
+import '/resources/images/tg-icons.js';
 
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
@@ -99,7 +100,7 @@ const template = html`
         <tg-menu-search-input id="menuSearcher" menu="[[menuConfig.menu]]" tooltip="Application-wide menu search (tap or hit F3 to invoke)."></tg-menu-search-input>
         <div id="logoutContainer" class="layout horizontal center" style="display: contents">
             <span class="flex truncate" style="font-size:1rem; padding-right:4px; text-align: right;">[[menuConfig.userName]]</span>
-            <paper-icon-button id="logoutButton" icon="icons:exit-to-app" tooltip-text="Logout" on-tap="_logout"></paper-icon-button>
+            <paper-icon-button id="logoutButton" icon="tg-icons:logout" tooltip-text="Logout" on-tap="_logout"></paper-icon-button>
         </div>
     </div>
 

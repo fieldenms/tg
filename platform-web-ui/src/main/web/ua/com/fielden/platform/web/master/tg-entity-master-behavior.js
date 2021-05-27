@@ -1180,6 +1180,12 @@ const TgEntityMasterBehaviorImpl = {
                         topic: 'detail.saved',
                         data: newData
                     });
+                    // Revalidate the current master if it is simple (i.e. doesn't have an embedded view) in order to update master editors;
+                    // do this, for example, if a postal 'detail.saved' event was published by child master;
+                    // these child masters include those opened with entity editor title (i.e. openMasterAction), or from property / entity / continuation actions
+                    if (!self._hasEmbededView()) {
+                        self.validate();
+                    }
                 }
             }
         }));

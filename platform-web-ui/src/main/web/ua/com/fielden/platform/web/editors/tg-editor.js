@@ -2,6 +2,7 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 import '/resources/polymer/@polymer/iron-icon/iron-icon.js';
 import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
+import '/resources/polymer/@polymer/iron-icons/editor-icons.js';
 import '/resources/polymer/@polymer/paper-input/paper-input-container.js';
 import '/resources/polymer/@polymer/paper-input/paper-input-error.js';
 import '/resources/polymer/@polymer/paper-input/paper-input-char-counter.js';
@@ -12,7 +13,10 @@ import {PolymerElement, html} from '/resources/polymer/@polymer/polymer/polymer-
 
 import { tearDownEvent, allDefined } from '/resources/reflection/tg-polymer-utils.js';
 
-export function createEditorTemplate (additionalTemplate, customPrefixAttribute, customInput, inputLayer, customIconButtons, propertyAction) {
+const defaultLabelTemplate = html`
+    <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue)]]" slot="label">[[propTitle]]</label>`;
+
+export function createEditorTemplate (additionalTemplate, customPrefixAttribute, customInput, inputLayer, customIconButtons, propertyAction, customLabelTemplate) {
     return html`
         <style>
             :host {
@@ -43,14 +47,17 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                 left: 0;
                 right: 0;
             }
+
             .main-container {
-                @apply --layout-vertical;
                 position:relative;
+                @apply --layout-vertical;
             }
+
             .editor-prefix,
             .editor-suffix {
                 @apply --layout-horizontal;
             }
+            
             #decorator {
                 --paper-input-container-input: {
                     font-weight: 500;
@@ -97,7 +104,7 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
         ${additionalTemplate}
         <paper-input-container id="decorator" always-float-label has-layer$="[[_hasLayer]]" invalid="[[_invalid]]" is-invalid$="[[_invalid]]" disabled$="[[_disabled]]" focused$="[[focused]]">
             <!-- flex auto  for textarea! -->
-            <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" slot="label">[[propTitle]]</label>
+            ${customLabelTemplate || defaultLabelTemplate}
             <div clss="editor-prefix" slot="prefix">
                 ${customPrefixAttribute}
             </div>
@@ -232,7 +239,7 @@ export class TgEditor extends PolymerElement {
             previousModifiedPropertiesHolder: {
                 type: Object
             },
-    
+
             /////////////////////////////////////////////////////////////////////////////////////////////////////////
             //////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
             /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -958,7 +965,7 @@ export class TgEditor extends PolymerElement {
         const formatedText = this._formatText(value);
         return formatedText && "<b>" + formatedText + "</b>";
     }
-    
+
     /**
      * Create context holder with custom '@@searchString' property ('tg-entity-editor' and 'tg-entity-search-criteria' only).
      */

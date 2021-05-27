@@ -21,6 +21,23 @@ import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 
 const additionalTemplate = html`
     <style>
+        label {
+            cursor: default;
+            @apply --layout-horizontal;
+            @apply --layout-center;
+        }
+        #actionAvailability {
+            display: none;
+            width: 18px;
+            height: 18px;
+            margin-left: 4px;
+        }
+        label[action-available]:hover {
+            cursor: pointer;
+        }
+        label:hover #actionAvailability[action-available] {
+            display: unset;
+        }
         #input.upper-case {
             text-transform: uppercase;
         }
@@ -58,6 +75,16 @@ const additionalTemplate = html`
     </style>
     <iron-ajax id="ajaxSearcher" headers="[[_headers]]" loading="{{searching}}" url="[[_url]]" method="POST" handle-as="json" on-response="_processSearcherResponse" reject-with-request on-error="_processSearcherError"></iron-ajax>
     <tg-serialiser id="serialiser"></tg-serialiser>`;
+const customLabelTemplate = html`
+    <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" 
+           action-available$="[[actionAvailable]]" 
+           disabled$="[[_disabled]]" 
+           slot="label" 
+           on-tap="_labelTap" 
+           tooltip-text$="[[_getTooltip(_editingValue, entity, focused, actionAvailable)]]">
+        <span>[[propTitle]]</span>
+        <iron-icon id="actionAvailability" icon="editor:mode-edit" action-available$="[[actionAvailable]]"></iron-icon>
+    </label>`;
 const customInputTemplate = html`
     <iron-input bind-value="{{_editingValue}}" class="custom-input-wrapper">
         <input
@@ -72,11 +99,11 @@ const customInputTemplate = html`
             on-mousedown="_onMouseDown" 
             on-focus="_onFocus" 
             disabled$="[[_disabled]]" 
-            tooltip-text$="[[_getTooltip(_editingValue, entity, focused)]]"
+            tooltip-text$="[[_getTooltip(_editingValue, entity, focused, actionAvailable)]]"
             autocomplete="off"/>
     </iron-input>`;
 const inputLayerTemplate = html`
-    <div class="input-layer" tooltip-text$="[[_getTooltip(_editingValue, entity, focused)]]">
+    <div class="input-layer" tooltip-text$="[[_getTooltip(_editingValue, entity, focused, actionAvailable)]]">
         <template is="dom-repeat" items="[[_customPropTitle]]">
             <span hidden$="[[!item.title]]" style="color:#737373; font-size:0.8rem; padding-right:2px;"><span>[[item.title]]</span>:  </span>
             <span style$="[[_valueStyle(item, index)]]">[[item.value]]</span>
@@ -104,7 +131,7 @@ function replaceAll(find, replace, str) {
 export class TgEntityEditor extends TgEditor {
 
     static get template() { 
-        return createEditorTemplate(additionalTemplate, html``, customInputTemplate, inputLayerTemplate, customIconButtonsTemplate, propertyActionTemplate);
+        return createEditorTemplate(additionalTemplate, html``, customInputTemplate, inputLayerTemplate, customIconButtonsTemplate, propertyActionTemplate, customLabelTemplate);
     }
 
     static get properties () {
@@ -122,15 +149,50 @@ export class TgEntityEditor extends TgEditor {
            result: {
                type: Object
            },
-   
+
+           /**
+            * Entity master instance for this autocompleter.
+            */
+           entityMaster: {
+               type: Object,
+               computed: '_computeEntityMaster(multi, autocompletionType, propertyName)'
+           },
+
+           /**
+            * Action to open master on title click.
+            */
+           openMasterAction: {
+               type: Object,
+               value: null
+           },
+
+           /**
+            * Indicates whether title action is available for tapping and is visible.
+            */
+           actionAvailable: {
+               type: Boolean,
+               computed: '_computeActionAvailability(entityMaster, entity, currentState)'
+           },
+
+           /**
+            * Promise that starts on validate() call of the host master and fullfils iff this validation attempt gets successfully resolved.
+            * 
+            * If this attempt gets superseded by other attempt then the promise instance will never be resolved.
+            * However, 'lastValidationAttemptPromise' property gets replaced in this case.
+            */
+           lastValidationAttemptPromise: {
+               type: Object,
+               value: null
+           },
+
            _searchQuery: {
                type: String,
                value: ''
            },
    
            /*
-               * A string with comma separated property names that shoould be displayed in addition to key.
-               */
+            * A string with comma separated property names that shoould be displayed in addition to key.
+            */
            additionalProperties: {
                type: String,
                value: ''
@@ -406,6 +468,33 @@ export class TgEntityEditor extends TgEditor {
             const container = this.decorator();
             return [container.getBoundingClientRect(), container.offsetHeight];
         }.bind(this);
+    }
+
+    /**
+     * Handles tap events on entity editor label.
+     * 
+     * @param {MouseEvent} e the event generated by tapping on label.
+     */
+    _labelTap (e) {
+        if (this.lastValidationAttemptPromise) {
+            this.lastValidationAttemptPromise.then(res => {
+                this._openEntityMaster();
+            });
+        } else {
+            this._openEntityMaster();
+        }
+    }
+
+    /**
+     * Opens entity master for an entity-typed value contained in this autocompleter.
+     */
+    _openEntityMaster () {
+        if (this.openMasterAction && this.actionAvailable) {
+            const entityValue = this.reflector().tg_getFullValue(this.entity, this.propertyName);
+            if (this.reflector().isEntity(entityValue)) {
+                this.openMasterAction._runDynamicAction(() => entityValue, null);
+            }
+        }
     }
 
     /**
@@ -868,7 +957,7 @@ export class TgEntityEditor extends TgEditor {
         }
     }
 
-    _getTooltip (_editingValue, entity, focused) {
+    _getTooltip (_editingValue, entity, focused, actionAvailable) {
         if (!allDefined(arguments)) {
             return;
         }
@@ -880,9 +969,16 @@ export class TgEntityEditor extends TgEditor {
             } else {
                 valueToFormat = fullEntity.get(this.propertyName);
             }
-            return super._getTooltip(valueToFormat);
+            return this._generateTooltip(valueToFormat, actionAvailable);
         }
-        return "";
+        return this._generateTooltip(null, actionAvailable);
+    }
+
+    _generateTooltip (value, actionAvailable) {
+        let tooltip = this._formatTooltipText(value);
+        tooltip += this.propDesc && (tooltip ? '<br><br>' : '') + this.propDesc;
+        tooltip += actionAvailable && ((tooltip ? '<br><br>' : '') + this._getActionTooltip(this.entityMaster));
+        return tooltip;
     }
 
     _formatTooltipText (valueToFormat) {
@@ -892,12 +988,30 @@ export class TgEntityEditor extends TgEditor {
             } else if (typeof valueToFormat === 'string'){
                 return "<b>" + valueToFormat + "</b>";
             } else if (this.reflector().isEntity(valueToFormat)) {
-                return this._createEntityTooltip(valueToFormat)
+                return this._createEntityTooltip(valueToFormat);
             } else {
                 return '';
             }
         }
         return '';
+    }
+
+    /**
+     * Calculates title action tooltip.
+     */
+    _getActionTooltip  (entityMaster) {
+        const shortDesc = entityMaster.shortDesc ? "<b>" + entityMaster.shortDesc + "</b>" : "";
+        let longDesc;
+        if (shortDesc) {
+            longDesc = entityMaster.longDesc ? "<br>" + entityMaster.longDesc : "";
+        } else {
+            longDesc = entityMaster.longDesc ? "<b>" + entityMaster.longDesc + "</b>" : "";
+        }
+        const tooltip = shortDesc + longDesc;
+        return tooltip && "<div style='display:flex;'>" +
+            "<div style='margin-right:10px;'>With action: </div>" +
+            "<div style='flex-grow:1;'>" + tooltip + "</div>" +
+            "</div>"
     }
 
     _createEntityTooltip (entity) {
@@ -913,6 +1027,28 @@ export class TgEntityEditor extends TgEditor {
 
     _changeTitle (entity) {
         this._customPropTitle = this._createTitleObject(entity);
+    }
+
+    /**
+     * Computes entity master object for entity-typed property represented by this autocompleter (only for non-multi).
+     */
+    _computeEntityMaster (multi, autocompletionType, propertyName) {
+        if (!allDefined(arguments)) {
+            return null;
+        }
+        const type = this.reflector().findTypeByName(autocompletionType);
+        return (!multi || null) && type && type.prop(propertyName).type().entityMaster();
+    }
+
+    /**
+     * Computes whether title action is available for tapping and visible.
+     */
+    _computeActionAvailability (entityMaster, entity, currentState) {
+        if (!entityMaster || !entity || !currentState) {
+            return false;
+        }
+        const fullEntity = this.reflector().tg_getFullEntity(entity);
+        return currentState === 'EDIT' && !this.reflector().isError(fullEntity.prop(this.propertyName).validationResult()); // currentState is not 'EDIT' e.g. where refresh / saving process is in progress
     }
 
     _valueStyle (item, index) {
