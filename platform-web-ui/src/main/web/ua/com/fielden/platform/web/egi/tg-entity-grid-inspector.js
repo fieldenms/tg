@@ -2115,11 +2115,7 @@ Polymer({
                 longDesc: 'Click to download attachment.'
             });
         } else if (!this.isHyperlinkProp(entity, column) && this.hasDefaultAction(entity, column)) {
-            const entityTitle = getFirstEntityType(entity, column.collectionalProperty || column.property).entityTitle();
-            return this._generateActionTooltip({
-                shortDesc: `Edit ${entityTitle}`,
-                longDesc: `Edit ${entityTitle}`
-            });
+            return this._generateActionTooltip(this.hasDefaultAction(entity, column));
         }
         return "";
     },

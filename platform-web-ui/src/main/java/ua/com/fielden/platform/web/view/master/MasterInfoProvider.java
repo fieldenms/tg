@@ -95,7 +95,7 @@ public class MasterInfoProvider {
             final MasterInfo info = new MasterInfo();
             info.setKey("tg-EntityEditAction-master");
             info.setDesc("/master_ui/ua.com.fielden.platform.entity.EntityEditAction");
-            info.setShortDesc(format("Edit %s", entityTitle));
+            info.setShortDesc(entityTitle);
             info.setLongDesc(format("Edit %s", entityTitle));
             info.setRequireSelectionCriteria("false");
             info.setRequireSelectedEntities("ONE");
