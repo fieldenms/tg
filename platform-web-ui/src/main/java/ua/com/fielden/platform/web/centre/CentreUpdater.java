@@ -37,7 +37,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.findLoadableConfig;
-import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrLink;
+import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isLink;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.AND_BEFORE;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.DATE_MNEMONIC;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.DATE_PREFIX;
@@ -334,9 +334,7 @@ public class CentreUpdater {
      * @return
      */
     public static boolean updateCentreRunAutomatically(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName, final DeviceProfile device, final IEntityCentreConfig eccCompanion, final IWebUiConfig webUiConfig, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) {
-        if (!saveAsName.isPresent()) { // default
-            return webUiConfig.configApp().getCentre(miType).get().isRunAutomatically();
-        } else if (isDefaultOrLink(saveAsName)) { // link
+        if (isLink(saveAsName)) { // link
             return true;
         }
         final Optional<LoadableCentreConfig> loadableConfigOpt = findLoadableConfig(saveAsName, selectionCrit);
@@ -347,13 +345,13 @@ public class CentreUpdater {
                 return updateCentreRunAutomatically0(loadableConfigOpt.get().getSharedBy(), miType, of(loadableConfigOpt.get().getSaveAsName()), device, eccCompanion, webUiConfig);
             }
         }
-        return updateCentreRunAutomatically0(user, miType, saveAsName, device, eccCompanion, webUiConfig);
+        return updateCentreRunAutomatically0(user, miType, saveAsName, device, eccCompanion, webUiConfig); // default or own save-as
     }
 
     public static boolean updateCentreRunAutomatically0(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName, final DeviceProfile device, final IEntityCentreConfig eccCompanion, final IWebUiConfig webUiConfig) {
         final String deviceSpecificName = deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, saveAsName), device);
-        final EntityCentreConfig eccWithDesc = findConfig(miType, user, deviceSpecificName + DIFFERENCES_SUFFIX, eccCompanion);
-        final Boolean ownRunAutomatically = eccWithDesc != null ? eccWithDesc.isRunAutomatically() : null;
+        final EntityCentreConfig config = findConfig(miType, user, deviceSpecificName + DIFFERENCES_SUFFIX, eccCompanion);
+        final Boolean ownRunAutomatically = config != null ? config.isRunAutomatically() : null;
         final boolean defaultRunAutomatically = webUiConfig.configApp().getCentre(miType).get().isRunAutomatically();
         if (Objects.equals(defaultRunAutomatically, ownRunAutomatically)) {
             // TODO perhaps clearing of value to null would be beneficial
