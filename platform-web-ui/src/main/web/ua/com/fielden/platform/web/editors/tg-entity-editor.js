@@ -486,7 +486,7 @@ export class TgEntityEditor extends TgEditor {
     }
 
     /**
-     * Opens entity master for entity-typed value containing in this autocompleter.
+     * Opens entity master for an entity-typed value contained in this autocompleter.
      */
     _openEntityMaster () {
         if (this.openMasterAction && this.actionAvailable) {
