@@ -10,6 +10,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import static ua.com.fielden.platform.types.Colour.BLACK;
 
 import java.math.BigDecimal;
+import java.util.Currency;
 import java.util.List;
 
 import org.junit.Test;
@@ -92,9 +93,12 @@ public class EntityBatchInsertOperationTest extends AbstractDaoTestCase {
                 setUtcDateProp(date("2021-01-01 00:00:00")).
                 setHyperlinkProp(new Hyperlink("https://fielden.com")).
                 setPropertyDescriptorProp(new PropertyDescriptor<>(TgEntityWithManyPropTypes.class, "unionProp")).
-                setMoneyProp(new Money("20")).
+                setMoneyUserTypeProp(new Money(new BigDecimal("100"), Currency.getInstance("USD"))).
+                setMoneyWithTaxAmountUserTypeProp(new Money(new BigDecimal("2000"), 20, Currency.getInstance("AUD"))).
+                setSimpleMoneyTypeProp(new Money("20")).
+                setSimplyMoneyWithTaxAmountProp(new Money(new BigDecimal("1000"), 20, Currency.getInstance("AUD"))).
+                setSimplyMoneyWithTaxAndExTaxAmountTypeProp(new Money(new BigDecimal("3000"), 15, Currency.getInstance("EUR"))).
                 setUnionProp(unionEntityValue);
-        
     }
     
     @Override

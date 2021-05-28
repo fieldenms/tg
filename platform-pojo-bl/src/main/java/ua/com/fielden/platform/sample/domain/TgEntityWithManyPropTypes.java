@@ -15,6 +15,11 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.markers.IMoneyUserType;
+import ua.com.fielden.platform.types.markers.IMoneyWithTaxAmountUserType;
+import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
+import ua.com.fielden.platform.types.markers.ISimplyMoneyWithTaxAmountType;
+import ua.com.fielden.platform.types.markers.ISimplyMoneyWithTaxAndExTaxAmountType;
 import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
 
 @KeyType(String.class)
@@ -49,10 +54,6 @@ public class TgEntityWithManyPropTypes extends AbstractEntity<String> {
 
     @IsProperty
     @MapTo
-    private Money moneyProp;
- 
-    @IsProperty
-    @MapTo
     private Class<?> classProperty;
 
     @IsProperty
@@ -83,6 +84,81 @@ public class TgEntityWithManyPropTypes extends AbstractEntity<String> {
     @MapTo
     private PropertyDescriptor<TgEntityWithManyPropTypes> propertyDescriptorProp;
 
+    @IsProperty
+    @MapTo
+    @PersistentType(userType = IMoneyUserType.class)
+    private Money moneyUserTypeProp;
+    
+    @IsProperty
+    @MapTo
+    @PersistentType(userType = IMoneyWithTaxAmountUserType.class)
+    private Money moneyWithTaxAmountUserTypeProp;
+
+    @IsProperty
+    @MapTo
+    @PersistentType(userType = ISimpleMoneyType.class)
+    private Money simpleMoneyTypeProp;
+
+    @IsProperty
+    @MapTo
+    @PersistentType(userType = ISimplyMoneyWithTaxAmountType.class)
+    private Money simplyMoneyWithTaxAmountProp;
+
+    @IsProperty
+    @MapTo
+    @PersistentType(userType = ISimplyMoneyWithTaxAndExTaxAmountType.class)
+    private Money simplyMoneyWithTaxAndExTaxAmountTypeProp;
+
+    @Observable
+    public TgEntityWithManyPropTypes setSimpleMoneyTypeProp(final Money simpleMoneyTypeProp) {
+        this.simpleMoneyTypeProp = simpleMoneyTypeProp;
+        return this;
+    }
+
+    public Money getSimpleMoneyTypeProp() {
+        return simpleMoneyTypeProp;
+    }
+
+    @Observable
+    public TgEntityWithManyPropTypes setSimplyMoneyWithTaxAndExTaxAmountTypeProp(final Money simplyMoneyWithTaxAndExTaxAmountTypeProp) {
+        this.simplyMoneyWithTaxAndExTaxAmountTypeProp = simplyMoneyWithTaxAndExTaxAmountTypeProp;
+        return this;
+    }
+
+    public Money getSimplyMoneyWithTaxAndExTaxAmountTypeProp() {
+        return simplyMoneyWithTaxAndExTaxAmountTypeProp;
+    }
+
+    @Observable
+    public TgEntityWithManyPropTypes setMoneyWithTaxAmountUserTypeProp(final Money moneyWithTaxAmountUserTypeProp) {
+        this.moneyWithTaxAmountUserTypeProp = moneyWithTaxAmountUserTypeProp;
+        return this;
+    }
+
+    public Money getMoneyWithTaxAmountUserTypeProp() {
+        return moneyWithTaxAmountUserTypeProp;
+    }
+
+    @Observable
+    public TgEntityWithManyPropTypes setMoneyUserTypeProp(final Money moneyUserTypeProp) {
+        this.moneyUserTypeProp = moneyUserTypeProp;
+        return this;
+    }
+
+    public Money getMoneyUserTypeProp() {
+        return moneyUserTypeProp;
+    }
+    
+    @Observable
+    public TgEntityWithManyPropTypes setSimplyMoneyWithTaxAmountProp(final Money simplyMoneyWithTaxAmountProp) {
+        this.simplyMoneyWithTaxAmountProp = simplyMoneyWithTaxAmountProp;
+        return this;
+    }
+
+    public Money getSimplyMoneyWithTaxAmountProp() {
+        return simplyMoneyWithTaxAmountProp;
+    }
+    
     @Observable
     public TgEntityWithManyPropTypes setPropertyDescriptorProp(final PropertyDescriptor<TgEntityWithManyPropTypes> propertyDescriptorProp) {
         this.propertyDescriptorProp = propertyDescriptorProp;
@@ -181,16 +257,6 @@ public class TgEntityWithManyPropTypes extends AbstractEntity<String> {
 
     public EntityOne getEntityProp() {
         return entityProp;
-    }
-
-    @Observable
-    public TgEntityWithManyPropTypes setMoneyProp(final Money moneyProp) {
-        this.moneyProp = moneyProp;
-        return this;
-    }
-
-    public Money getMoneyProp() {
-        return moneyProp;
     }
 
     @Observable
