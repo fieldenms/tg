@@ -15,6 +15,7 @@ import java.util.List;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.dao.exceptions.EntityAlreadyExists;
 import ua.com.fielden.platform.dao.session.TransactionalExecution;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.EntityBatchInsertOperation;
@@ -61,7 +62,7 @@ public class EntityBatchInsertOperationTest extends AbstractDaoTestCase {
         try {
             testBatchInsertOfEntities(getInstance(TgEntityWithManyPropTypesCo.class).getAllEntities(from(select(TgEntityWithManyPropTypes.class).model()).with(fetchAll(TgEntityWithManyPropTypes.class)).model()));
             fail("Should have failed while trying to batch insert persisted entities");
-        } catch (final Exception e) {
+        } catch (final EntityAlreadyExists e) {
         }
     }
 
