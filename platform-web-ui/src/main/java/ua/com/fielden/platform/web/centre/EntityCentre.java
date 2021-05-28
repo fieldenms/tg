@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.lang3.StringUtils.join;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isCritOnlySingle;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.validateRootType;
 import static ua.com.fielden.platform.domaintree.impl.CalculatedProperty.generateNameFrom;
@@ -55,7 +56,6 @@ import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
 import com.google.common.collect.ListMultimap;
@@ -1120,6 +1120,10 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             }
         }
 
+        if (dslDefaultConfig.isEgiHidden() && insertionPointActionsElements.stream().filter(el -> el.whereToInsert() == InsertionPoints.ALTERNATIVE_VIEW).count() == 0) {
+            throw new WebUiBuilderException(format("At least one result view should be available for %s entity centre.", miType.getSimpleName()));
+        }
+
         final DomElement egiSwitchViewButtons = switchViewButtons(insertionPointActionsElements, Optional.empty());
 
         //Generating shortcuts for EGI
@@ -1139,6 +1143,13 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 }
             }
         }
+        ////////////////Generating custom code for ready method////////////////////////
+        final List<String> customCodes = new ArrayList<>();
+        final long preferredSize = insertionPointActionsElements.stream().filter(ip -> ip.whereToInsert() == InsertionPoints.ALTERNATIVE_VIEW && ip.isPreferred()).count();
+        if (preferredSize > 0) {
+            customCodes.add(String.format("self.preferredView = %s;", preferredSize + 1));// should be shifted by 1 to take into account EGI and selection criteria view indices
+        }
+        customCodes.add(customCode.map(code -> code.toString()).orElse(""));
         ///////////////////////////////////////
         final String frontActionString = frontActionsObjects.toString();
         final String shareActionsString = shareActionsObjects.toString();
@@ -1177,8 +1188,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace(TOOLBAR_DOM, dslDefaultConfig.getToolbarConfig().render().toString()
                         .replace(EGI_FUNCTIONAL_ACTION_DOM, functionalActionsDom.toString())
                         .replace(SWITCH_VIEW_ACTION_DOM, egiSwitchViewButtons.toString()).toString()).
-                replace(TOOLBAR_JS, StringUtils.join(toolbarCode, "\n")).
-                replace(TOOLBAR_STYLES, StringUtils.join(toolbarStyles, "\n")).
+                replace(TOOLBAR_JS, join(toolbarCode, "\n")).
+                replace(TOOLBAR_STYLES, join(toolbarStyles, "\n")).
                 replace(FULL_MI_TYPE, miType.getName()).
                 replace(QUERY_ENHANCER_CONFIG, queryEnhancerContextConfigString()).
                 replace(CRITERIA_DOM, editorContainer.toString()).
@@ -1205,8 +1216,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace(RIGHT_INSERTION_POINT_DOM, rightInsertionPointsDom.toString()).
                 replace(TOP_INSERTION_POINT_DOM, topInsertionPointsDom.toString()).
                 replace(BOTTOM_INSERTION_POINT_DOM, bottomInsertionPointsDom.toString()).
-                replace(ALTERNATIVE_VIEW_INSERTION_POINT_DOM, StringUtils.join(alternativeViewsDom, "\n")).
-                replace(READY_CUSTOM_CODE, customCode.map(code -> code.toString()).orElse("")).
+                replace(ALTERNATIVE_VIEW_INSERTION_POINT_DOM, join(alternativeViewsDom, "\n")).
+                replace(READY_CUSTOM_CODE, join(customCodes, "\n")).
                 replace(ATTACHED_CUSTOM_CODE, customCodeOnAttach.map(code -> code.toString()).orElse(""));
         logger.debug("Finishing...");
         final IRenderable representation = new IRenderable() {

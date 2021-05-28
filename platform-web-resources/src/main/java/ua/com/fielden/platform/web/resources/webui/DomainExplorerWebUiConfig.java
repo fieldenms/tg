@@ -53,7 +53,7 @@ public class DomainExplorerWebUiConfig {
                              .icon("stub")
                              .withNoParentCentreRefresh()
                              .build(),
-                         InsertionPoints.BOTTOM
+                         InsertionPoints.ALTERNATIVE_VIEW
                      ).flex()
                 .build();
 

@@ -628,6 +628,8 @@ const template = html`
         </tg-secondary-action-dropdown>
     </div>`;
 
+const MSG_SAVE_OR_CANCEL = "Please save or cancel changes.";
+
 function calculateColumnWidthExcept (egi, columnIndex, columnElements, columnLength, dragAnchor, checkboxes, primaryActions, secondaryActions) {
     let columnWidth = 0;
     if (egi.canDragFrom && dragAnchor()) {
@@ -2263,10 +2265,31 @@ Polymer({
         return {};
     },
 
+    /**
+     * @returns value that indicates whether this EGI is hidden or not.
+     */
+    isHidden: function () {
+        return this.hasAttribute("hidden");
+    },
+
     /************ EGI MASTER RELATED FUNCTIONS ***************/
     isEditing: function () {
         return this.$.centre_egi_master.offsetParent !== null;
     },
+
+    /**
+     * @returns object that explains the reason why this EGI can not be left or undefined.
+     */
+    canLeave: function () {
+        if (this.isEditing()) {
+            return {
+                msg: MSG_SAVE_OR_CANCEL
+            }
+        }
+    },
+
+    //Performs custom tasks before leaving this EGI.
+    leave: function() {},
 
     canOpenMaster: function () {
         return true;

@@ -1,6 +1,7 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
+import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 
 //Actions those can be applied to entity centre.
 const RunActions = {
@@ -8,6 +9,8 @@ const RunActions = {
     navigate: "navigate",
     refresh: "refresh"
 };
+
+const CRITERIA_NOT_LOADED_MSG = "Cannot activate result-set view (not initialised criteria).";
 
 const TgSelectionCriteriaBehaviorImpl = {
 
@@ -559,6 +562,36 @@ const TgSelectionCriteriaBehaviorImpl = {
     },
 
     /**
+     * A function to cancel active autocompletion search request.
+     */
+    _cancelAutocompletion: function () {
+        this._dom().querySelectorAll('tg-entity-editor').forEach((currentValue, currentIndex, list) => {
+            if (currentValue.searching) {
+                currentValue._cancelSearch();
+            }
+        });
+    },
+
+    /**
+     * @returns object that explains the reason why this selection criteria can not be left or undefined.
+     */
+    canLeave: function () {
+        if (this._criteriaLoaded === false) {
+            return {
+                msg: CRITERIA_NOT_LOADED_MSG
+            };
+        }
+    },
+
+    //Performs custom tasks before leaving this selection criteria.
+    leave: function () {
+        // cancel any autocompleter searches
+        this._cancelAutocompletion();
+        //Persist active element
+        this.persistActiveElement();
+    },
+
+    /**
      * Starts the process of centre run.
      *
      * isAutoRunning -- returns true if this running action represents autoRun event action invocation rather than simple running, undefined or false otherwise; not to be confused with 'link' centre auto-running capability
@@ -760,6 +793,7 @@ const TgSelectionCriteriaBehaviorImpl = {
 
 export const TgSelectionCriteriaBehavior = [
     TgEntityBinderBehavior,
+    TgFocusRestorationBehavior,
     TgSelectionCriteriaBehaviorImpl,
     TgElementSelectorBehavior
 ];

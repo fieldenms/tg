@@ -53,6 +53,7 @@ const template = html`
             left: 2%;
             width: 96%;
             height: 96%;
+            z-index: 1;
         }
         .title-bar {
             height: 44px;
@@ -91,13 +92,9 @@ const template = html`
         #loadableContent {
             z-index:0;
         }
-
-        [flexible] {
-            @apply --layout-flex;
-        }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning tg-entity-centre-styles paper-material-styles"></style>
-    <div id="pm" class="layout vertical" detached$="[[detachedView]]" flexible$="[[flexible]]">
+    <div id="pm" class="layout vertical flex" detached$="[[detachedView]]">
         <div id="insertionPointContent" tabindex='0' class="layout vertical flex relative">
             <div class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc, separateView)]]">
                 <span class="title-text truncate" style="margin-left:16px;" tooltip-text$="[[longDesc]]">[[shortDesc]]</span>
@@ -107,7 +104,7 @@ const template = html`
                 <slot slot="entity-specific-action" name="entity-specific-action"></slot>
                 <slot slot="standart-action" name="standart-action"></slot>
             </tg-responsive-toolbar>
-            <div id="loadableContent" class="relative">
+            <div id="loadableContent" class="relative flex">
                 <tg-element-loader id="elementLoader"></tg-element-loader>
             </div>
         </div>
@@ -129,15 +126,6 @@ Polymer({
 
     properties: {
         /**
-         * Indicates whether insertion point fits all visible are or not.
-         */
-        flexible: {
-            type: Boolean,
-            value: false,
-            observer: "_flexibilityChanged"
-        },
-
-        /**
          * Indicates whether this view is represented as separete view or side-by-side with main EGI
          */
         separateView: {
@@ -148,7 +136,7 @@ Polymer({
         
         /**
          * Indicates whether to hide margins around insertion point.
-         * This is typically needed for the case where there is only one flexible insertion point and EGI is hidden.
+         * This is typically needed for the case where this insertion point is separate alternative view.
          */
         hideMargins: {
             type: Boolean,
@@ -251,17 +239,10 @@ Polymer({
         _dialog: Object
     },
 
-    observers: ['_adjustView(detachedView)'],
+    observers: ['_adjustView(detachedView, separateView)'],
 
     ready: function () {
         this.triggerElement = this.$.insertionPointContent;
-        // Initialising the custom actions' list.
-        // [...this.$.entitySpecificAction.assignedNodes({ flatten: true })].forEach( item => {
-        //     this.$.viewToolbar.appendChild(item);
-        // });
-        // [...this.$.standartAction.assignedNodes({ flatten: true })].forEach(item => {
-        //     this.$.viewToolbar.appendChild(item);
-        // });
     },
 
     attached: function () {
@@ -289,23 +270,6 @@ Polymer({
         this.removeOwnKeyBindings();
         this.addOwnKeyBinding(newValue, '_shortcutPressed');
     },
-
-    /**
-     * Creates dynamically the 'dom-bind' template, which hold the dialog for the calendar.
-     */
-    // _createDialog: function () {
-    //     const dialog = document.createElement('div');
-    //     dialog.classList.toggle('insertion-point-dialog', true);
-    //     dialog.classList.toggle('layout', true);
-    //     dialog.classList.toggle('vertical', true);
-    //     dialog.style.position = 'absolute';
-    //     dialog.style.top = '2%';
-    //     dialog.style.left = '2%';
-    //     dialog.style.width = '96%';
-    //     dialog.style.height = '96%';
-    //     dialog.style.zIndex = '1';
-    //     return dialog;
-    // },
 
     _showDialog: function () {
         this.detachedView = true;
@@ -379,16 +343,6 @@ Polymer({
         }
     },
 
-    _flexibilityChanged: function (newValue, oldValue) {
-        if (newValue) {
-            this.style["flex-grow"] = "1";
-            this.parentElement.style["flex-grow"] = "1";
-        } else {
-            this.style.removeProperty("flex-grow");
-            this.parentElement.style.removeProperty("flex-grow");
-        }
-    },
-
     _hideMarginsChanged: function (newValue, oldValue) {
         if (newValue) {
             this.$.pm.style.removeProperty("margin");
@@ -436,13 +390,13 @@ Polymer({
                     if (promise) {
                         return promise
                             .then(function () {
-                                self._adjustView(self.detachedView);
+                                self._adjustView(self.detachedView, self.separateView);
                                 customAction.restoreActiveElement();
                             });
                     } else {
                         return Promise.resolve()
                             .then(function () {
-                                self._adjustView(self.detachedView);
+                                self._adjustView(self.detachedView, self.separateView);
                                 customAction.restoreActiveElement();
                             });
                     }
@@ -461,14 +415,34 @@ Polymer({
         }
     },
 
-    _adjustView: function (detachedView) {
-        if (this.$.elementLoader.prefDim && detachedView === false) {
+    /**
+     * @returns Checks whether this insertion point can be left.
+     */
+    canLeave: function () {
+        if (this._element && typeof this._element.canLeave === 'function') {
+            return this._element.canLeave();
+        }
+    },
+
+    /**
+     * Performs custom tasks before leaving this insertion point. This is stub  right now to conform switching to alternative views API in entity centre behavior.
+     */
+    leave: function () {},
+
+    _adjustView: function (detachedView, separateView) {
+        this.style.removeProperty("width");
+        this.style.removeProperty("height");
+        this.$.loadableContent.style.removeProperty("width");
+        this.$.loadableContent.style.removeProperty("height");
+        this.$.loadableContent.style.removeProperty("min-height");
+        if (separateView) {
+            this.style.width = "100%";
+            this.style.height = "100%";
+        } else if (this.$.elementLoader.prefDim && detachedView === false) {
             const prefDim = this.$.elementLoader.prefDim;
-            this.$.pm.style.width = prefDim.width() + prefDim.widthUnit;
-            this.$.loadableContent.style.removeProperty('width');
-            this.$.loadableContent.style.height = prefDim.height() + prefDim.heightUnit;
+            this.$.loadableContent.style.width = prefDim.width() + prefDim.widthUnit;
+            this.$.loadableContent.style.minHeight = prefDim.height() + prefDim.heightUnit;
         } else {
-            this.$.pm.style.removeProperty('width');
             this.$.loadableContent.style.width = '100%';
             this.$.loadableContent.style.height = '100%';
         }

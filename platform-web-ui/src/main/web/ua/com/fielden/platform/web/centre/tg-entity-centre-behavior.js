@@ -102,6 +102,7 @@ const createColumnAction = function (entityCentre) {
 };
 
 const MSG_SAVE_OR_CANCEL = "Please save or cancel changes.";
+const NOT_ENOUGH_RESULT_VIEWS = "At least one result view should be available";
 
 const TgEntityCentreBehaviorImpl = {
     properties: {
@@ -209,6 +210,24 @@ const TgEntityCentreBehaviorImpl = {
         insertionPointContextRetriever: {
             type: Function,
         },
+
+        /**
+         * container of all viewes (selection criteria, egi, alternative views) to switch between them. 
+         */
+        resultViews: {
+            type: Array,
+            value: () => []
+        },
+
+        /**
+         * The preferred result view index to show after run.
+         */
+        preferredView: Number,
+
+        /**
+         * The previous view index. It should be used when moving from selection criteria to result view with view button.
+         */
+        _previousView: Number,
 
         /**
          * Custom callback that will be invoked after successfull retrieval of selection criteria entity.
@@ -490,8 +509,15 @@ const TgEntityCentreBehaviorImpl = {
         self._showProgress = false;
         //Configures the egi's margin.
         const insertionPoints = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point:not([separate-view])');
-        
         this.$.egi.showMarginAround = insertionPoints.length > 0;
+        //Configure all views to be able to switch between them
+        this.resultViews = [this.$.selection_criteria, this.$.egi, ...this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point[separate-view]')];
+        if (this.resultViews.length === 2 && this.$.egi.isHidden()) {
+            throw new Error(NOT_ENOUGH_RESULT_VIEWS);
+        } else {
+            this.preferredView = this.preferredView === undefined ? 
+                    (this.$.egi.isHidden() ? 2/*first alternative result view*/ : 1 /*Egi view*/) : this.preferredView;
+        }
 
         self._postRun = (function (criteriaEntity, newBindingEntity, result) {
             if (criteriaEntity === null || criteriaEntity.isValidWithoutException()) {
@@ -519,8 +545,7 @@ const TgEntityCentreBehaviorImpl = {
                 if (this._triggerRun) {
                     if (this._selectedView === 0) {
                         this.async(function () {
-                            //TODO should set the  preferred view or default
-                            this._selectedView = 1;
+                            this._selectedView = this.preferredView;
                         }, 100);
                     }
                     this._triggerRun = false;
@@ -631,11 +656,6 @@ const TgEntityCentreBehaviorImpl = {
         }).bind(self);
 
         /**
-         * A function to cancel active autocompletion search request.
-         */
-        self._cancelAutocompletion = () => this.$.selection_criteria._dom().querySelectorAll('tg-entity-editor').forEach((currentValue, currentIndex, list) => {if (currentValue.searching) currentValue._cancelSearch();});
-
-        /**
          * A function to run the entity centre.
          */
         self.run = (function (isAutoRunning, isSortingAction, forceRegeneration) {
@@ -645,7 +665,7 @@ const TgEntityCentreBehaviorImpl = {
 
             const self = this;
             // cancel any autocompleter searches
-            self._cancelAutocompletion();
+            this.$.selection_criteria._cancelAutocompletion();
 
             self._actionInProgress = true;
             self.$.egi.clearSelection();
@@ -692,7 +712,7 @@ const TgEntityCentreBehaviorImpl = {
                     this.actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
                 }.bind(self), 1);
             } else {
-                this._showSaveOrCancelToast();
+                this._showToastWithMessage(MSG_SAVE_OR_CANCEL);
                 if (action) {
                     action.restoreActionState();
                 }
@@ -720,16 +740,7 @@ const TgEntityCentreBehaviorImpl = {
          * A function to activate the view with the result set (EGI and insertion points).
          */
         self._activateResultSetView = (function () {
-            self.async(function () {
-                if (self._criteriaLoaded === false) {
-                    throw "Cannot activate result-set view (not initialised criteria).";
-                }
-                // cancel any autocompleter searches
-                self._cancelAutocompletion();
-
-                self.$.dom.persistActiveElement();
-                self._selectedView = 1;
-            }, 100);
+            this._activateView(this._previousView === undefined ? this.preferredView : this._previousView);
         }).bind(self);
         /**
          * Updates the progress bar state.
@@ -816,7 +827,7 @@ const TgEntityCentreBehaviorImpl = {
         //Select the result view if autoRun is true
         if (self.autoRun || self.queryPart) {
             //TODO should set the  preferred view or default
-            self._selectedView = 1;
+            self._selectedView = self.preferredView;
         }
     },
 
@@ -848,12 +859,12 @@ const TgEntityCentreBehaviorImpl = {
         this._focusView(e, false);
     },
 
-    _showSaveOrCancelToast: function () {
-        this.$.selection_criteria._openToastWithoutEntity(MSG_SAVE_OR_CANCEL, false, MSG_SAVE_OR_CANCEL, false);
+    _showToastWithMessage: function (msg) {
+        this.$.selection_criteria._openToastWithoutEntity(msg, false, msg, false);
     },
 
     _saveOrCancelPromise: function () {
-        this._showSaveOrCancelToast();
+        this._showToastWithMessage(MSG_SAVE_OR_CANCEL);
         return Promise.reject(MSG_SAVE_OR_CANCEL);
     },
 
@@ -930,33 +941,36 @@ const TgEntityCentreBehaviorImpl = {
         });
     },
 
+    _activateView: function (index) {
+        this.async(() => {
+            if (index < 0 || index >= this.resultViews.length) {
+                this._showToastWithMessage(`There is no view with ${index}`);
+            } else {
+                const canNotLeave = this.resultViews[this._selectedView].canLeave();
+                if (canNotLeave) {
+                    this._showToastWithMessage(canNotLeave.msg);
+                } else {
+                    this.resultViews[this._selectedView].leave();
+                    this._previousView = this._selectedView;
+                    this._selectedView = index;
+                }
+            }   
+        }, 100);
+    },
     /**
      * Activate the view with selection criteria.
      */
     _activateSelectionCriteriaView: function () {
-        const self = this;
-        if (!this.$.egi.isEditing()) { 
-           self.async(function () {
-                self._selectedView = 0;
-            }, 100);
-        } else {
-            this._showSaveOrCancelToast();
-        }
+        this._activateView(0);
     },
 
     /**
      * 
      * @param {EventObject} e - event created by tapping on button that switches to the view specified in view-index attribute 
      */
-    _selectAlternativeView: function (e) {
+    _activateAlternativeView: function (e) {
         const viewIndex = +e.target.getAttribute("view-index");
-        if (!this.$.egi.isEditing()) { 
-            this.async(() => {
-                 this._selectedView = viewIndex;
-             }, 100);
-         } else {
-             this._showSaveOrCancelToast();
-         }
+        this._activateView(viewIndex);
     },
 
     /**
@@ -1114,8 +1128,7 @@ const TgEntityCentreBehaviorImpl = {
         // Check whether all insertion points can be left.
         const insertionPoints = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point');
         for (let insPoIndex = 0; insPoIndex < insertionPoints.length; insPoIndex++) {
-            const elementWithCanLeave = insertionPoints[insPoIndex].querySelector('.canLeave');
-            const canLeaveChild = elementWithCanLeave && elementWithCanLeave.canLeave();
+            const canLeaveChild = insertionPoints[insPoIndex].canLeave();
             if (canLeaveChild) {
                 return canLeaveChild;
             }

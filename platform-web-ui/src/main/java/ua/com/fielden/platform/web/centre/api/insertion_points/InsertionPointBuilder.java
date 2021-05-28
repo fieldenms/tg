@@ -87,6 +87,10 @@ public class InsertionPointBuilder implements IRenderable, IExecutable {
         return insertionPointConfig.getToolbar();
     }
 
+    public boolean isPreferred() {
+        return insertionPointConfig.isPreferred();
+    }
+
     /**
      * Determines the place where to insert the insertion point on entity centre.
      *

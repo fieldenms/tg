@@ -16,6 +16,7 @@ public class InsertionPointConfig {
 
     private final EntityActionConfig insertionPointAction;
     private boolean flex = false;
+    private boolean preferred = false;
     private Optional<IToolbarConfig> toolbar = Optional.empty();
 
     /**
@@ -48,6 +49,15 @@ public class InsertionPointConfig {
 
     public boolean isFlex() {
         return flex;
+    }
+
+    public InsertionPointConfig setPreferred(final boolean preferred) {
+        this.preferred = preferred;
+        return this;
+    }
+
+    public boolean isPreferred() {
+        return preferred;
     }
 
     public InsertionPointConfig setToolbar(final Optional<IToolbarConfig> toolbar) {

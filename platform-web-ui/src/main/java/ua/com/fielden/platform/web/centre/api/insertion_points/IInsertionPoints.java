@@ -20,5 +20,5 @@ public interface IInsertionPoints<T extends AbstractEntity<?>> extends IEcbCompl
      * @param whereToInsertView
      * @return
      */
-    IInsertionPointWithToolbar<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView);
+    IInsertionPointPreferred<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView);
 }

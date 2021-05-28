@@ -63,7 +63,8 @@ public class CentreToolbar implements IToolbarConfig {
         return new DomElement("paper-icon-button")
                 .attr("slot", "standart-action")
                 .attr("icon", "image:grid-on")
-                .attr("on-tap", "_activateResultSetView")
+                .attr("view-index", 1)
+                .attr("on-tap", "_activateAlternativeView")
                 .attr("tooltip-text$", "Show grid result view");
     }
 
@@ -71,7 +72,7 @@ public class CentreToolbar implements IToolbarConfig {
         return new DomElement("paper-icon-button")
                 .attr("slot", "standart-action")
                 .attr("icon", icon.orElse("av:equalizer"))
-                .attr("on-tap", "_selectAlternativeView")
+                .attr("on-tap", "_activateAlternativeView")
                 .attr("view-index", viewIndex)
                 .attr("tooltip-text$", "Show " + viewDescription.orElse("alternative result view"));
     }
