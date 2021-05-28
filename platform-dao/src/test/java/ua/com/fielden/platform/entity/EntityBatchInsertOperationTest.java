@@ -56,14 +56,10 @@ public class EntityBatchInsertOperationTest extends AbstractDaoTestCase {
         testBatchInsertOfEntities(createEntitiesForBatchInsert("Ent1", "Ent2", "Ent3", "Ent4", "Ent5"));
     }
     
-    @Test
+    @Test(expected = EntityAlreadyExists.class)
     public void batch_insert_operation_fails_while_trying_to_insert_persisted_entities() {
         testBatchInsertOfEntities(createEntitiesForBatchInsert("Ent1", "Ent2", "Ent3"));
-        try {
-            testBatchInsertOfEntities(getInstance(TgEntityWithManyPropTypesCo.class).getAllEntities(from(select(TgEntityWithManyPropTypes.class).model()).with(fetchAll(TgEntityWithManyPropTypes.class)).model()));
-            fail("Should have failed while trying to batch insert persisted entities");
-        } catch (final EntityAlreadyExists e) {
-        }
+        testBatchInsertOfEntities(getInstance(TgEntityWithManyPropTypesCo.class).getAllEntities(from(select(TgEntityWithManyPropTypes.class).model()).with(fetchAll(TgEntityWithManyPropTypes.class)).model()));
     }
 
     private void testBatchInsertOfEntities(final List<TgEntityWithManyPropTypes> entities) {
