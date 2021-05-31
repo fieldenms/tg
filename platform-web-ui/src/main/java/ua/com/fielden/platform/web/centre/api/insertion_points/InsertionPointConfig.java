@@ -15,7 +15,6 @@ import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 public class InsertionPointConfig {
 
     private final EntityActionConfig insertionPointAction;
-    private boolean flex = false;
     private boolean preferred = false;
     private Optional<IToolbarConfig> toolbar = Optional.empty();
 
@@ -40,15 +39,6 @@ public class InsertionPointConfig {
 
     public EntityActionConfig getInsertionPointAction() {
         return insertionPointAction;
-    }
-
-    public InsertionPointConfig setFlex(final boolean flex) {
-        this.flex = flex;
-        return this;
-    }
-
-    public boolean isFlex() {
-        return flex;
     }
 
     public InsertionPointConfig setPreferred(final boolean preferred) {

@@ -430,21 +430,25 @@ Polymer({
     leave: function () {},
 
     _adjustView: function (detachedView, separateView) {
-        this.style.removeProperty("width");
-        this.style.removeProperty("height");
         this.$.loadableContent.style.removeProperty("width");
         this.$.loadableContent.style.removeProperty("height");
+        this.$.loadableContent.style.removeProperty("min-width");
         this.$.loadableContent.style.removeProperty("min-height");
-        if (separateView) {
-            this.style.width = "100%";
-            this.style.height = "100%";
-        } else if (this.$.elementLoader.prefDim && detachedView === false) {
-            const prefDim = this.$.elementLoader.prefDim;
-            this.$.loadableContent.style.width = prefDim.width() + prefDim.widthUnit;
-            this.$.loadableContent.style.minHeight = prefDim.height() + prefDim.heightUnit;
+        this.style.removeProperty("width");
+        this.style.removeProperty("height");
+        if (!detachedView) {
+            if (this.$.elementLoader.prefDim) {
+                const prefDim = this.$.elementLoader.prefDim;
+                this.$.loadableContent.style.minWidth = prefDim.width() + prefDim.widthUnit;
+                this.$.loadableContent.style.minHeight = prefDim.height() + prefDim.heightUnit;
+            } 
+            if (separateView) {
+                this.style.width = "100%";
+                this.style.height = "100%";
+            }
         } else {
-            this.$.loadableContent.style.width = '100%';
-            this.$.loadableContent.style.height = '100%';
+            this.$.loadableContent.style.width = "100%";
+            this.$.loadableContent.style.height = "100%";
         }
         this.updateStyles();
         this.notifyResize();

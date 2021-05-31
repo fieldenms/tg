@@ -44,8 +44,7 @@ public class InsertionPointBuilder implements IRenderable, IExecutable {
                 .attr("centre-selection", "[[centreSelection]]")
                 .attr("centre-state", "[[currentState]]")
                 .attr("column-properties-mapper", "{{columnPropertiesMapper}}")
-                .attr("context-retriever", "[[insertionPointContextRetriever]]")
-                .attr("flexible", insertionPointConfig.isFlex());
+                .attr("context-retriever", "[[insertionPointContextRetriever]]");
         insertionPointConfig.getToolbar().ifPresent(toolbar -> insertionPointDom.add(toolbar.render()));
         if (whereToInsert() == InsertionPoints.ALTERNATIVE_VIEW) {
             insertionPointDom.attr("separate-view", true);

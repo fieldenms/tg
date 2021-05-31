@@ -108,14 +108,6 @@ class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], PolymerElem
             colorTitleProperty: String,
             colorDescProperty: String,
 
-            /**
-             * Function that retrieves context for this component.
-             */
-            contextRetriever: {
-                type: Object,
-                observer: "_contextRetrieverChanged"
-            },
-
             centreState: {
                 type: Object,
                 observer: "_centreStateChanged"
@@ -186,13 +178,6 @@ class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], PolymerElem
             _calendar.getEvents().forEach(event => event.remove());
             _calendar.render();
         }
-    }
-
-    _contextRetrieverChanged (contextRetriever) {
-        const oldActions = this.querySelectorAll("[slot=standart-action]");
-        oldActions.forEach(oldAction => this.removeChild(oldAction));
-        const newActions = contextRetriever().shadowRoot.querySelectorAll("[slot=standart-action]");
-        newActions.forEach(newAction => this.appendChild(newAction));
     }
 
     _centreStateChanged (centreState) {

@@ -12,7 +12,6 @@ import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPointPreferred;
 import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPointWithToolbar;
 import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPoints;
-import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPointsFlexible;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
 import ua.com.fielden.platform.web.centre.api.insertion_points.exception.InsertionPointConfigException;
 import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
@@ -23,7 +22,6 @@ public class InsertionPointConfigBuilder<T extends AbstractEntity<?>> implements
 
     private final EntityActionConfig insertionPointAction;
     private final InsertionPoints whereToInsertView;
-    private boolean flex = false;
     private boolean preferred = false;
     private Optional<IToolbarConfig> toolbarConfig = Optional.empty();
 
@@ -35,18 +33,12 @@ public class InsertionPointConfigBuilder<T extends AbstractEntity<?>> implements
 
     @Override
     public EntityCentreConfig<T> build() {
-        resultSetBuilder.addInsertionPoint(configInsertionPoint(mkInsertionPoint(this.insertionPointAction, this.whereToInsertView)).setFlex(flex).setPreferred(preferred).setToolbar(toolbarConfig));
+        resultSetBuilder.addInsertionPoint(configInsertionPoint(mkInsertionPoint(this.insertionPointAction, this.whereToInsertView)).setPreferred(preferred).setToolbar(toolbarConfig));
         return resultSetBuilder.build();
     }
 
     @Override
-    public IInsertionPoints<T> flex() {
-        this.flex = true;
-        return this;
-    }
-
-    @Override
-    public IInsertionPointsFlexible<T> setToolbar(final IToolbarConfig toolbar) {
+    public IInsertionPoints<T> setToolbar(final IToolbarConfig toolbar) {
         this.toolbarConfig = Optional.ofNullable(toolbar);
         return this;
     }
