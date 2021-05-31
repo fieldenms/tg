@@ -35,7 +35,8 @@ const additionalTemplate = html`
         label[action-available]:hover {
             cursor: pointer;
         }
-        :host([action-visible]) #actionAvailability[action-available]{
+        :host(:hover) #actionAvailability[action-available],
+        #decorator[focused]  #actionAvailability[action-available] {
             display: unset;
         }
         #input.upper-case {
@@ -81,8 +82,6 @@ const customLabelTemplate = html`
            disabled$="[[_disabled]]" 
            slot="label" 
            on-tap="_labelTap"
-           on-mouseenter="_showAction"
-           on-mouseleave="_hideAction"
            tooltip-text$="[[_getTooltip(_editingValue, entity, focused, actionAvailable)]]">
         <span>[[propTitle]]</span>
         <iron-icon id="actionAvailability" icon="editor:mode-edit" action-available$="[[actionAvailable]]"></iron-icon>
@@ -100,8 +99,6 @@ const customInputTemplate = html`
             on-mouseup="_onMouseUp" 
             on-mousedown="_onMouseDown" 
             on-focus="_onFocus"
-            on-mouseenter="_showAction"
-            on-mouseleave="_hideAction"
             disabled$="[[_disabled]]" 
             tooltip-text$="[[_getTooltip(_editingValue, entity, focused, actionAvailable)]]"
             autocomplete="off"/>
@@ -176,12 +173,6 @@ export class TgEntityEditor extends TgEditor {
            actionAvailable: {
                type: Boolean,
                computed: '_computeActionAvailability(entityMaster, entity, currentState)'
-           },
-
-           actionVisible: {
-               type: Boolean,
-               value: false,
-               reflectToAttribute: true
            },
 
            /**
@@ -493,20 +484,6 @@ export class TgEntityEditor extends TgEditor {
         } else {
             this._openEntityMaster();
         }
-    }
-
-    /**
-     * Mouse enter handler that makes edit action visible if it's available.
-     */
-    _showAction (e) {
-        this.actionVisible = true;
-    }
-
-    /**
-     * Mouse leave handler that makes edit action invisible.
-     */
-    _hideAction (e) {
-        this.actionVisible = false;
     }
 
     /**
