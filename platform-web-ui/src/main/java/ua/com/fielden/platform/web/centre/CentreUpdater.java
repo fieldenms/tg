@@ -325,6 +325,18 @@ public class CentreUpdater {
     }
     
     /**
+     * Updates (retrieves) current version of centre runAutomatically for default configuration.
+     *
+     * @param user
+     * @param miType
+     * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
+     * @return
+     */
+    public static boolean isDefaultConfigRunAutomatically(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final IEntityCentreConfig eccCompanion, final IWebUiConfig webUiConfig) {
+        return updateCentreRunAutomatically(user, miType, empty(), device, eccCompanion, webUiConfig, null);
+    }
+    
+    /**
      * Updates (retrieves) current version of centre runAutomatically.
      *
      * @param user
@@ -337,28 +349,30 @@ public class CentreUpdater {
         if (isLink(saveAsName)) { // link
             return true;
         }
+        final Function<User, Function<Optional<String>, Boolean /* actually, boolean */>> updateCentreRunAutomatically0 = customUser -> customSaveAsName -> {
+            final String deviceSpecificName = deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, customSaveAsName), device);
+            final EntityCentreConfig config = findConfig(miType, customUser, deviceSpecificName + DIFFERENCES_SUFFIX, eccCompanion);
+            final Boolean ownRunAutomatically = config != null ? config.isRunAutomatically() : null;
+            final boolean defaultRunAutomatically = webUiConfig.configApp().getCentre(miType).get().isRunAutomatically();
+            if (Objects.equals(defaultRunAutomatically, ownRunAutomatically)) {
+                // TODO perhaps clearing of value to null would be beneficial
+            }
+            return ownRunAutomatically != null ? ownRunAutomatically : defaultRunAutomatically;
+        };
+        if (!saveAsName.isPresent()) {
+            return updateCentreRunAutomatically0.apply(user).apply(saveAsName); // default
+        }
         final Optional<LoadableCentreConfig> loadableConfigOpt = findLoadableConfig(saveAsName, selectionCrit);
         if (loadableConfigOpt.isPresent() && loadableConfigOpt.get().isInherited()) {
             if (loadableConfigOpt.get().isBase()) { // inherited from base
-                return updateCentreRunAutomatically0(user.getBasedOnUser(), miType, saveAsName, device, eccCompanion, webUiConfig);
+                return updateCentreRunAutomatically0.apply(user.getBasedOnUser()).apply(saveAsName);
             } else { // inherited from shared
-                return updateCentreRunAutomatically0(loadableConfigOpt.get().getSharedBy(), miType, of(loadableConfigOpt.get().getSaveAsName()), device, eccCompanion, webUiConfig);
+                return updateCentreRunAutomatically0.apply(loadableConfigOpt.get().getSharedBy()).apply(of(loadableConfigOpt.get().getSaveAsName()));
             }
         }
-        return updateCentreRunAutomatically0(user, miType, saveAsName, device, eccCompanion, webUiConfig); // default or own save-as
+        return updateCentreRunAutomatically0.apply(user).apply(saveAsName); // own save-as
     }
 
-    public static boolean updateCentreRunAutomatically0(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName, final DeviceProfile device, final IEntityCentreConfig eccCompanion, final IWebUiConfig webUiConfig) {
-        final String deviceSpecificName = deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, saveAsName), device);
-        final EntityCentreConfig config = findConfig(miType, user, deviceSpecificName + DIFFERENCES_SUFFIX, eccCompanion);
-        final Boolean ownRunAutomatically = config != null ? config.isRunAutomatically() : null;
-        final boolean defaultRunAutomatically = webUiConfig.configApp().getCentre(miType).get().isRunAutomatically();
-        if (Objects.equals(defaultRunAutomatically, ownRunAutomatically)) {
-            // TODO perhaps clearing of value to null would be beneficial
-        }
-        return ownRunAutomatically != null ? ownRunAutomatically : defaultRunAutomatically;
-    }
-    
     /**
      * Updates (retrieves) current version of centre dashboard refresh frequency.
      *
