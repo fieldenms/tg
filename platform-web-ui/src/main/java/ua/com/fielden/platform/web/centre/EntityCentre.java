@@ -4,7 +4,8 @@ import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
-import static org.apache.commons.lang3.StringUtils.join;
+import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import static org.apache.commons.lang.StringUtils.join;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isCritOnlySingle;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.validateRootType;
 import static ua.com.fielden.platform.domaintree.impl.CalculatedProperty.generateNameFrom;
@@ -35,6 +36,8 @@ import static ua.com.fielden.platform.web.centre.EgiConfigurations.TOOLBAR_VISIB
 import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
 import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp.derivePropName;
+import static ua.com.fielden.platform.web.centre.api.resultset.toolbar.impl.CentreToolbar.selectEgi;
+import static ua.com.fielden.platform.web.centre.api.resultset.toolbar.impl.CentreToolbar.selectView;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalPropertyName;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalType;
@@ -141,7 +144,6 @@ import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.PropertyColumnElement;
-import ua.com.fielden.platform.web.centre.api.resultset.toolbar.impl.CentreToolbar;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.layout.FlexLayout;
@@ -1114,7 +1116,15 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             } else if (el.whereToInsert() == InsertionPoints.BOTTOM) {
                 bottomInsertionPointsDom.add(insertionPoint);
             } else if (el.whereToInsert() == InsertionPoints.ALTERNATIVE_VIEW) {
-                alternativeViewsDom.add(insertionPoint.toString().replace(SWITCH_VIEW_ACTION_DOM, switchViewButtons(insertionPointActionsElements, Optional.of(el)).toString()));
+                final DomElement switchButtons = switchViewButtons(insertionPointActionsElements, Optional.of(el));
+                final StringBuffer newShortcuts = new StringBuffer(getChildrenShortcuts(switchButtons));
+                if (newShortcuts.length() != 0) {
+                    if (insertionPoint.getAttr("cutom-shortcuts") != null) {
+                        newShortcuts.append(" " + insertionPoint.getAttr("cutom-shortcuts").value.toString());
+                    }
+                    insertionPoint.attr("shortcuts", newShortcuts.toString());
+                }
+                alternativeViewsDom.add(insertionPoint.toString().replace(SWITCH_VIEW_ACTION_DOM, switchButtons.toString()));
             } else {
                 throw new IllegalArgumentException("Unexpected insertion point type.");
             }
@@ -1143,6 +1153,12 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 }
             }
         }
+
+        final String switchActionShortcuts = getChildrenShortcuts(egiSwitchViewButtons);
+        if  (isNotEmpty(switchActionShortcuts)) {
+            shortcuts.append(switchActionShortcuts);
+        }
+
         ////////////////Generating custom code for ready method////////////////////////
         final List<String> customCodes = new ArrayList<>();
         final long preferredSize = insertionPointActionsElements.stream().filter(ip -> ip.whereToInsert() == InsertionPoints.ALTERNATIVE_VIEW && ip.isPreferred()).count();
@@ -1230,16 +1246,22 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return representation;
     }
 
+    private static String getChildrenShortcuts(final DomElement parent) {
+        return join(parent.children().stream()
+                .filter(child -> child.getAttr("shortcut") != null)
+                .map(child -> child.getAttr("shortcut").value.toString()).collect(Collectors.toList()), " ");
+    }
+
     private DomElement switchViewButtons(final List<InsertionPointBuilder> insertionPointActionsElements, final Optional<InsertionPointBuilder> insertionPoint) {
         final DomElement viewSwichGroup = new DomContainer();
         if (!insertionPoint.isPresent() || insertionPoint.get().whereToInsert() == InsertionPoints.ALTERNATIVE_VIEW) {
             if (!dslDefaultConfig.isEgiHidden() && insertionPoint.isPresent()) {
-                viewSwichGroup.add(CentreToolbar.selectEgi());
+                viewSwichGroup.add(selectEgi());
             }
             int viewIndex = 2;
             for (final InsertionPointBuilder el : insertionPointActionsElements) {
                 if (el.whereToInsert() == InsertionPoints.ALTERNATIVE_VIEW && (!insertionPoint.isPresent() || el != insertionPoint.get())) {
-                    viewSwichGroup.add(CentreToolbar.selectView(viewIndex, el.icon(), el.viewTitle()));
+                    viewSwichGroup.add(selectView(viewIndex, el.icon(), el.viewTitle()));
                     viewIndex++;
                 }
             }

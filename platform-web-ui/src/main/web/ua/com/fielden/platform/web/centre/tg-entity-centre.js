@@ -182,7 +182,7 @@ const template = html`
             </div>
             <div id="fantomSplitter" class="fantom-splitter"></div>
         </tg-centre-result-view>
-        <slot name="alternative-view-insertion-point"></slot>
+        <slot id="alternativeViewSlot" name="alternative-view-insertion-point"></slot>
     </iron-pages>`;
 
 Polymer({
@@ -199,10 +199,22 @@ Polymer({
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         _selectedView: {
-            type: Number,
-            notify: true,
-            observer: '_selectedViewChanged'
+            type: Number
         },
+
+         /**
+         * container of all viewes (selection criteria, egi, alternative views) to switch between them. 
+         */
+        _resultViews: {
+            type: Array,
+            value: () => []
+        },
+
+        /**
+         * The previous view index.
+         */
+         _previousView: Number,
+
         _url: Function,
         /**
          * Binds centre info from custom object that contains it. In case where custom object is deliberately empty then does nothing.
@@ -259,14 +271,15 @@ Polymer({
     behaviors: [ IronResizableBehavior, TgFocusRestorationBehavior, TgElementSelectorBehavior ],
 
     ready: function () {
-        setTimeout(function() {
-            this.leftInsertionPointPresent = this.$.leftInsertionPointContent.assignedNodes({ flatten: true })[0].children.length > 0;
-            this.rightInsertionPointPresent = this.$.rightInsertionPointContent.assignedNodes({ flatten: true })[0].children.length > 0;
-        }.bind(this), 0);
+        this.leftInsertionPointPresent = this.$.leftInsertionPointContent.assignedNodes({ flatten: true })[0].children.length > 0;
+        this.rightInsertionPointPresent = this.$.rightInsertionPointContent.assignedNodes({ flatten: true })[0].children.length > 0;
         this._leftSplitterUpdater = this._leftSplitterUpdater.bind(this);
         this._rightSplitterUpdater = this._rightSplitterUpdater.bind(this);
         this._leftInsertionPointContainerUpdater = this._leftInsertionPointContainerUpdater.bind(this);
         this._rightInsertionPointContainerUpdater = this._rightInsertionPointContainerUpdater.bind(this);
+        this._resultViews = [this.$.selectionView, 
+            this.$.customEgiSlot.assignedNodes({ flatten: true })[0], 
+            ...this.$.alternativeViewSlot.assignedNodes({ flatten: true })];
         this._confirm = this.confirm.bind(this);
     },
 
@@ -463,89 +476,64 @@ Polymer({
         return this.$.confirmationDialog;
     },
 
-    //TODO this page selection change handler should be enhanced for more pages
     _pageSelectionChanged: function (event) {
         const target = event.target || event.srcElement;
         if (target === this.$.views) {
-            const egi = this.$.customEgiSlot.assignedNodes({ flatten: true })[0];
-            const selectionView = this.$.selectionView;
-            if (this._selectedView === 0) {
-                this._configViewBindings(egi, selectionView);
-            } else if (this._selectedView === 1) {
-                this._configViewBindings(selectionView, egi);
-            }
+            const prevView = this._resultViews[this._previousView];
+            const currentView = this._resultViews[this._selectedView];
+            this._configViewBindings(prevView, currentView);
             this.focusSelectedView();
             tearDownEvent(event);
-            (this._selectedView === 0 ? this.$.selectionView: this.$.centreResultContainer).fire("tg-centre-page-was-selected");
+            (this._selectedView === 1 ? this.$.centreResultContainer : this._resultViews[this._selectedView]).fire("tg-centre-page-was-selected");
         }
     },
 
     _configViewBindings: function (prevView, newView) {
-        prevView.removeOwnKeyBindings();
+        if (prevView) {
+            prevView.removeOwnKeyBindings();
+        }
         const ownKeyBindings = newView._ownKeyBindings;
         for (let shortcuts in ownKeyBindings) {
             newView.addOwnKeyBinding(shortcuts, ownKeyBindings[shortcuts]);
         }
     },
 
-    _selectedViewChanged: function (newValue, oldValue) {
-        this._prevSelectedView = oldValue;
-    },
-
     _getVisibleFocusableElementIn: function (container) {
         return queryElements(container, FOCUSABLE_ELEMENTS_SELECTOR).filter(element => !element.disabled && element.offsetParent !== null)[0];
     },
 
-    //TODO This selected view focusing should take into account more pages than just two.
     focusSelectedView: function () {
-        if (!isMobileApp() && this._selectedView === 0) {
-            const elementToFocus = this._getVisibleFocusableElementIn(this.$.selectionView);
-            // needs to be focused anyway (first-time loading, moving to selectionCrit from EGI or from another module)
-            if (elementToFocus) {
-                elementToFocus.focus();
-            } else {
-                this.$.selectionView.keyEventTarget.focus();
-            }
-            if (this._prevSelectedView === undefined) {
-                this.$.views.scrollTop = 0; // scrolls centre content to the top when first time loading the view
-                this._prevSelectedView = 0;
-            } else {
-                // do not scroll anywhere, scrolling position will be preserved (for e.g. when moving from another module back)
-                this.restoreActiveElement(); // restore active element (only if such element was persisted previously, for e.g. when using f5 and some editor is focused or when explicitly clicking on Run button)
-            }
-        } else if (!isMobileApp() && this._selectedView === 1) {
-            const egi = this.$.customEgiSlot.assignedNodes({ flatten: true })[0];
-            if (!egi.isEditing()) {
-                const elementToFocus = this._getVisibleFocusableElementIn(egi);
-                // Element to focus is present only for grid representation of EGI. The card representation doesn't support focusing.
+        if (!isMobileApp()) {
+            const elementToFocus = this._getVisibleFocusableElementIn(this._resultViews[this._selectedView]);
+            if (this._selectedView !== 1 || !this._resultViews[1].isEditing()) {
                 if (elementToFocus) {
                     elementToFocus.focus();
-                    this.$.views.scrollTop = 0; // scrolls EGI to the top when changing selectionCrit -> EGI views or going to this centre from another centre / module
+                    this.$.views.scrollTop = this._selectedView === 1 ? 0 : this.$.views.scrollTop;
                 } else {
-                    egi.keyEventTarget.focus();
+                    this._resultViews[this._selectedView].keyEventTarget.focus();
                 }
             }
+            if (this._selectedView === 0) {
+                if (this._previousView === undefined) {
+                    this.$.views.scrollTop = 0; // scrolls centre content to the top when first time loading the view
+                    this._previousView = 0;
+                } else {
+                    // do not scroll anywhere, scrolling position will be preserved (for e.g. when moving from another module back)
+                    this.restoreActiveElement(); // restore active element (only if such element was persisted previously, for e.g. when using f5 and some editor is focused or when explicitly clicking on Run button)
+                }
+            }   
         }
     },
 
-    //TODO Enhance to take into account more than two pages.
     addOwnKeyBindings: function () {
-        const egi = this.$.customEgiSlot.assignedNodes({ flatten: true })[0];
-        const selectionCriteria = this.$.selectionView;
-        if (this._selectedView === 0) {
-            this._configViewBindings(egi, selectionCriteria);
-        } else if (this._selectedView === 1) {
-            this._configViewBindings(selectionCriteria, egi);
-        }
+        const view = this._resultViews[this._selectedView];
+        const previousView = this._resultViews[this._previousView];
+        this._configViewBindings(previousView, view);
     },
 
-    //TODO Enhance to take into account more than two pages.
     removeOwnKeyBindings: function () {
-        if (this._selectedView === 0) {
-            this.$.selectionView.removeOwnKeyBindings();
-        } else if (this._selectedView === 1) {
-            this.$.customEgiSlot.assignedNodes({ flatten: true })[0].removeOwnKeyBindings();
-        }
+        const view = this._resultViews[this._selectedView];
+        view.removeOwnKeyBindings();
     },
 
     discardAsync: function () {

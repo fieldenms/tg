@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.web.centre.api.insertion_points;
 
+import static org.apache.commons.lang3.StringUtils.join;
+
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -44,7 +47,8 @@ public class InsertionPointBuilder implements IRenderable, IExecutable {
                 .attr("centre-selection", "[[centreSelection]]")
                 .attr("centre-state", "[[currentState]]")
                 .attr("column-properties-mapper", "{{columnPropertiesMapper}}")
-                .attr("context-retriever", "[[insertionPointContextRetriever]]");
+                .attr("context-retriever", "[[insertionPointContextRetriever]]")
+                .attr("custom-shortcuts", join(insertionPointConfig.getToolbar().map(toolbar -> toolbar.getAvailableShortcuts()).orElse(new ArrayList<>()), " "));
         insertionPointConfig.getToolbar().ifPresent(toolbar -> insertionPointDom.add(toolbar.render()));
         if (whereToInsert() == InsertionPoints.ALTERNATIVE_VIEW) {
             insertionPointDom.attr("separate-view", true);

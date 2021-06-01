@@ -225,7 +225,7 @@ const TgEntityCentreBehaviorImpl = {
         preferredView: Number,
 
         /**
-         * The previous view index. It should be used when moving from selection criteria to result view with view button.
+         * The previous view index.
          */
         _previousView: Number,
 
@@ -826,7 +826,6 @@ const TgEntityCentreBehaviorImpl = {
 
         //Select the result view if autoRun is true
         if (self.autoRun || self.queryPart) {
-            //TODO should set the  preferred view or default
             self._selectedView = self.preferredView;
         }
     },
@@ -1069,8 +1068,7 @@ const TgEntityCentreBehaviorImpl = {
      *     from the result-set if they became unmatchable to the selection criteria after modification).
      */
     refreshEntities: function (entities) {
-        //TODO this._selectedView === 1 should become this._selectedView !== 0
-        if (this._selectedView === 1 && (// only if the selectedView is the resultset do we need to refresh entitites and...
+        if (this._selectedView !== 0 && (// only if the selectedView is not the one of resultant views, we need to refresh entitites and...
             // there is no data or refresh is enforeced or...
             this.enforcePostSaveRefresh === true || this.$.egi.egiModel.length === 0 ||
             // there are no entities specified or the currrent result contains any of them then...

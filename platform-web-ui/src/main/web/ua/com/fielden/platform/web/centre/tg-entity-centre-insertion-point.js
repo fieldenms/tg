@@ -236,7 +236,11 @@ Polymer({
         /**
          * The dialog for detachedView insertion point.
          */
-        _dialog: Object
+        _dialog: Object,
+
+        _ownKeyBindings: {
+            type: Object
+        }
     },
 
     observers: ['_adjustView(detachedView, separateView)'],
@@ -267,8 +271,10 @@ Polymer({
     },
 
     _customShortcutsChanged: function (newValue, oldValue) {
-        this.removeOwnKeyBindings();
-        this.addOwnKeyBinding(newValue, '_shortcutPressed');
+        this._ownKeyBindings = {};
+        if (newValue) {
+            this._ownKeyBindings[newValue] = '_shortcutPressed';
+        }
     },
 
     _showDialog: function () {
