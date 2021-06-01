@@ -102,16 +102,16 @@ public class EntityCentreConfig extends AbstractConfiguration<DynamicEntityKey> 
 
     @IsProperty
     @MapTo
-    @Title(value = "Run Automatically?", desc = "Defines whether this configuration should be auto run upon loading; null means that this configuration inherits runAutomatically from Centre DSL configuration")
-    private Boolean runAutomatically; // intentionally Boolean and not boolean!
+    @Title(value = "Run Automatically?", desc = "Defines whether this configuration should be auto run upon loading")
+    private boolean runAutomatically = false;
 
     @Observable
-    public EntityCentreConfig setRunAutomatically(final Boolean runAutomatically) {
+    public EntityCentreConfig setRunAutomatically(final boolean runAutomatically) {
         this.runAutomatically = runAutomatically;
         return this;
     }
 
-    public Boolean isRunAutomatically() {
+    public boolean isRunAutomatically() {
         return runAutomatically;
     }
 

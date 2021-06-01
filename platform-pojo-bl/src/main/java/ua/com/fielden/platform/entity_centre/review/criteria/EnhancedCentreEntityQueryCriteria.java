@@ -53,7 +53,7 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private Function<Optional<String>, Optional<T2<String, String>>> centreTitleAndDescGetter;
     private Function<Optional<String>, Boolean> centreDashboardableGetter;
     private Function<Optional<String>, Duration> centreDashboardRefreshFrequencyGetter;
-    private Function<Optional<String>, Boolean> centreRunAutomaticallyGetter; // here only true/false is applicable, not null
+    private Function<Optional<String>, Boolean> centreRunAutomaticallyGetter;
     private Function<Optional<String>, Optional<String>> centreConfigUuidGetter;
     private Supplier<Boolean> centreDirtyGetter;
     private Function<Optional<String>, Function<Supplier<ICentreDomainTreeManagerAndEnhancer>, Boolean>> centreDirtyCalculator;
@@ -272,7 +272,7 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
         return centreDashboardableGetter.apply(saveAsName);
     }
 
-    public void setCentreRunAutomaticallyGetter(final Function<Optional<String>, Boolean> centreRunAutomaticallyGetter) { // here only true/false is applicable, not null
+    public void setCentreRunAutomaticallyGetter(final Function<Optional<String>, Boolean> centreRunAutomaticallyGetter) {
         this.centreRunAutomaticallyGetter = centreRunAutomaticallyGetter;
     }
 

@@ -705,7 +705,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         });
         // changes title / desc for current saveAsName'd configuration; returns custom object containing centre information
         validationPrototype.setCentreEditor(newName -> newDesc -> dashboardable -> dashboardRefreshFrequency -> runAutomatically -> {
-            editCentreTitleAndDesc(user, miType, saveAsName, device, newName, newDesc, dashboardable, dashboardRefreshFrequency, runAutomatically, eccCompanion, webUiConfig);
+            editCentreTitleAndDesc(user, miType, saveAsName, device, newName, newDesc, dashboardable, dashboardRefreshFrequency, runAutomatically, eccCompanion);
             // currently loaded configuration should remain preferred -- no action is required
             return validationPrototype.centreCustomObject(
                 createCriteriaEntity(validationPrototype.centreContextHolder().getModifHolder(), companionFinder, critGenerator, miType, of(newName), user, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel),
@@ -726,8 +726,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                         if (FRESH_CENTRE_NAME.equals(surrogateName)) {
                             config.setDashboardable(dashboardable);
                             config.setDashboardRefreshFrequency(dashboardRefreshFrequency);
-                            final boolean inheritedRunAutomatically = validationPrototype.centreRunAutomatically(saveAsName);
-                            config.setRunAutomatically(runAutomatically == inheritedRunAutomatically ? null : runAutomatically); // both runAutomatically and inheritedRunAutomatically are not null
+                            config.setRunAutomatically(runAutomatically);
                         }
                         eccCompanion.saveWithConflicts(config.setConfigUuid(newConfigUuid));
                     }); // update with newConfigUuid

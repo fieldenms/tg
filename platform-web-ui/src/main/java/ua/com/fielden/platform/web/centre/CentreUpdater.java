@@ -79,7 +79,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -349,15 +348,10 @@ public class CentreUpdater {
         if (isLink(saveAsName)) { // link
             return true;
         }
-        final Function<User, Function<Optional<String>, Boolean /* actually, boolean */>> updateCentreRunAutomatically0 = customUser -> customSaveAsName -> {
+        final Function<User, Function<Optional<String>, Boolean>> updateCentreRunAutomatically0 = customUser -> customSaveAsName -> {
             final String deviceSpecificName = deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, customSaveAsName), device);
             final EntityCentreConfig config = findConfig(miType, customUser, deviceSpecificName + DIFFERENCES_SUFFIX, eccCompanion);
-            final Boolean ownRunAutomatically = config != null ? config.isRunAutomatically() : null;
-            final boolean defaultRunAutomatically = webUiConfig.configApp().getCentre(miType).get().isRunAutomatically();
-            if (Objects.equals(defaultRunAutomatically, ownRunAutomatically)) {
-                // TODO perhaps clearing of value to null would be beneficial
-            }
-            return ownRunAutomatically != null ? ownRunAutomatically : defaultRunAutomatically;
+            return config != null && config.isRunAutomatically();
         };
         if (!saveAsName.isPresent()) {
             return updateCentreRunAutomatically0.apply(user).apply(saveAsName); // default
@@ -427,8 +421,7 @@ public class CentreUpdater {
             final boolean newDashboardable,
             final Duration newDashboardRefreshFrequency,
             final boolean newRunAutomatically,
-            final IEntityCentreConfig eccCompanion,
-            final IWebUiConfig webUiConfig) {
+            final IEntityCentreConfig eccCompanion) {
         final Function<Optional<String>, Function<String, String>> nameOf = (saveAs) -> (surrogateName) -> deviceSpecific(saveAsSpecific(surrogateName, saveAs), device) + DIFFERENCES_SUFFIX;
         final Function<String, String> currentNameOf = nameOf.apply(saveAsName);
         final String currentNameFresh = currentNameOf.apply(FRESH_CENTRE_NAME);
@@ -453,8 +446,7 @@ public class CentreUpdater {
         freshConfig.setDesc(newDesc);
         freshConfig.setDashboardable(newDashboardable);
         freshConfig.setDashboardRefreshFrequency(newDashboardRefreshFrequency);
-        final boolean inheritedRunAutomatically = webUiConfig.configApp().getCentre(miType).get().isRunAutomatically(); // runAutomatically is always inherited from default configuration's value -- only own save-as configs can be edited
-        freshConfig.setRunAutomatically(newRunAutomatically == inheritedRunAutomatically ? null : newRunAutomatically); // both runAutomatically and inheritedRunAutomatically are not null
+        freshConfig.setRunAutomatically(newRunAutomatically);
         
         // clear all centres with the same name in the case where title has been changed -- new title potentially can be in conflict with another configuration and that another configuration should be deleted
         if (!equalsEx(saveAsName, of(newTitle))) {

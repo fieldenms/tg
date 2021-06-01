@@ -52,7 +52,7 @@ public abstract class AbstractCentreConfigCommitAction extends AbstractCentreCon
     
     @IsProperty
     @Title(value = "Run automatically?", desc = "Defines whether this configuration should be auto run upon loading")
-    private boolean runAutomatically = false; // boolean and not Boolean! (used in UI)
+    private boolean runAutomatically = false;
 
     @Observable
     public AbstractCentreConfigCommitAction setRunAutomatically(final boolean runAutomatically) {
