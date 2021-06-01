@@ -93,7 +93,7 @@ export const focusEnabledInputIfAny = function (preferredOnly, orElseFocus) {
         if (!_isElementInViewport(inputToFocus.inputToFocus)) { // .focus() scrolls to view; however, if the editor was already focused but scrolled out of view, .focus() will not tigger re-scrolling (already focused); hence we scroll it manually
             inputToFocus.inputToFocus.scrollIntoView(); // behavior: 'auto' -- no animation; block: 'start' (vertical alignment); inline: 'nearest' (horisontal alignment);
         }
-        if (inputToFocus.preferred) {
+        if (inputToFocus.preferred && typeof inputToFocus.inputToFocus.select === 'function') {
             inputToFocus.inputToFocus.select();
         }
     } else if (orElseFocus) {
