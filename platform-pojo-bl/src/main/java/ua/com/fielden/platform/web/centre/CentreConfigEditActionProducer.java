@@ -34,7 +34,7 @@ public class CentreConfigEditActionProducer extends AbstractCentreConfigCommitAc
             throw failure(ERR_CANNOT_BE_EDITED);
         } else {
             setTitleAndDesc(entity, selectionCrit.saveAsName().get(), selectionCrit);
-            return getCustomObject(selectionCrit, appliedCriteriaEntity, empty()); // not yet transitioned to another config -- do not update configUuid on client-side
+            return getCustomObject(selectionCrit, appliedCriteriaEntity, empty()); // not yet transitioned to another config -- do not update configUuid / saveAsName on client-side
         }
     }
     
