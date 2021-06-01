@@ -471,7 +471,7 @@ public class CriteriaResource extends AbstractWebResource {
                 appliedCriteriaEntity.centreDirtyCalculator().apply(saveAsName).apply(() -> updatedFreshCentre),
                 of(saveAsName),
                 of(configUuid),
-                of(appliedCriteriaEntity.centreRunAutomatically(saveAsName)),
+                of(appliedCriteriaEntity.centreRunAutomatically(saveAsName)), // in case if configuration is runAutomatically perform client-side auto-running (first time loading, changing browser's URI e.g by tapping Back / Forward buttons)
                 of(ofNullable(saveAsDesc)),
                 empty()
             ))
@@ -503,7 +503,7 @@ public class CriteriaResource extends AbstractWebResource {
                         isDefaultOrLink(saveAsName) || isInherited(saveAsName, () -> loadableConfigurations(user, miType, device, companionFinder, sharingModel).apply(of(saveAsName)).stream()), // if not [default, link, inherited] then it is own save-as; after discarding it is always not changed -- checking of isFreshCentreChanged is not needed
                         of(saveAsName),
                         empty(),
-                        of(appliedCriteriaEntity.centreRunAutomatically(saveAsName)),
+                        of(false), // even though configuration can be runAutomatically, do not perform auto-running on Discard action
                         saveAsDesc,
                         of(ofNullable(staleCriteriaMessage))
                 )//

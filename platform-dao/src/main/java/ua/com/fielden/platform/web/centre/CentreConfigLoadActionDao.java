@@ -2,11 +2,13 @@ package ua.com.fielden.platform.web.centre;
 
 import static java.util.Optional.of;
 import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.web.centre.CentreConfigUtils.AUTO_RUN;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.findLoadableConfig;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.getCustomObject;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.inherited;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.inheritedFromBase;
 
+import java.util.Map;
 import java.util.Optional;
 
 import com.google.inject.Inject;
@@ -66,7 +68,9 @@ public class CentreConfigLoadActionDao extends CommonEntityDao<CentreConfigLoadA
             });
         // configuration being loaded need to become preferred
         selectionCrit.makePreferredConfig(actualSaveAsName);
-        entity.setCustomObject(getCustomObject(selectionCrit, selectionCrit.createCriteriaValidationPrototype(actualSaveAsName), actualSaveAsName, of(selectionCrit.centreConfigUuid(actualSaveAsName))));
+        final Map<String, Object> customObject = getCustomObject(selectionCrit, selectionCrit.createCriteriaValidationPrototype(actualSaveAsName), actualSaveAsName, of(selectionCrit.centreConfigUuid(actualSaveAsName)));
+        customObject.put(AUTO_RUN, selectionCrit.centreRunAutomatically(actualSaveAsName));
+        entity.setCustomObject(customObject);
         return super.save(entity);
     }
     

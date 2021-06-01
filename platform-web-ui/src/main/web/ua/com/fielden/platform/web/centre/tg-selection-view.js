@@ -104,7 +104,8 @@ Polymer({
         _createContextHolder: Function,
         uuid: String,
         _confirm: Function,
-        _buttonDisabled: Boolean
+        _buttonDisabled: Boolean,
+        initiateAutoRun: Function
     },
 
     created: function () {
@@ -130,7 +131,7 @@ Polymer({
             self.topLevelActions = [
                 self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigNewAction'),
                 self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigDuplicateAction'),
-                self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigLoadAction'),
+                self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigLoadAction', null, self.initiateAutoRun),
                 self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigEditAction'),
                 self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigDeleteAction', () => self._confirm('Should this configuration be deleted?', [{ name: 'NO' }, { name: 'YES', confirm: true, autofocus: true }])),
                 self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigSettingsAction')

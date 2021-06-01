@@ -23,6 +23,10 @@ import ua.com.fielden.platform.error.Result;
  */
 public class CentreConfigUtils {
     private static final String CONFIGURATION_HAS_BEEN_DELETED = "Configuration has been deleted.";
+    /**
+     * The key for customObject's value containing configuration autoRun.
+     */
+    public static final String AUTO_RUN = "autoRun";
 
     /**
      * Applies modifHolder from <code>selectionCrit</code> against fresh centre.

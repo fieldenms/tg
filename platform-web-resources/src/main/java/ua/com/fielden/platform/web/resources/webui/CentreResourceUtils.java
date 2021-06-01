@@ -21,6 +21,7 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.APPLIED_CRITERIA_ENTITY_NAME;
 import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.WAS_RUN_NAME;
+import static ua.com.fielden.platform.web.centre.CentreConfigUtils.AUTO_RUN;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrLink;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isInherited;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.FETCH_CONFIG_AND_INSTRUMENT;
@@ -123,10 +124,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * The key for customObject's value containing configuration uuid.
      */
     private static final String CONFIG_UUID = "configUuid";
-    /**
-     * The key for customObject's value containing configuration autoRun.
-     */
-    private static final String AUTO_RUN = "autoRun";
     /**
      * The key for customObject's value indicating whether centre configuration is dirty meaning it is changed or of [default, link, inherited] kind.
      */
@@ -595,7 +592,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 validationPrototype.centreDirtyCalculator().apply(customObjectSaveAsName).apply(() -> freshCentre),
                 of(customObjectSaveAsName),
                 configUuid,
-                of(validationPrototype.centreRunAutomatically(customObjectSaveAsName)),
+                of(false), // even though configuration can be runAutomatically, do not perform auto-running on any action (except Load, see CentreConfigLoadActionDao)
                 of(validationPrototype.centreTitleAndDesc(customObjectSaveAsName).map(titleDesc -> titleDesc._2)),
                 empty()
             );

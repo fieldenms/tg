@@ -396,7 +396,9 @@ const TgSelectionCriteriaBehaviorImpl = {
         if (typeof customObject.configUuid !== 'undefined') {
             const newConfigUuid = customObject.configUuid;
             const configUuid = this.configUuid;
+            this.autoRunFreezed = true;
             this.fire('tg-config-uuid-before-change', { newConfigUuid: newConfigUuid, configUuid: configUuid });
+            delete this.autoRunFreezed;
             this.configUuid = customObject.configUuid;
         }
         if (typeof customObject.wasRun !== 'undefined') {
