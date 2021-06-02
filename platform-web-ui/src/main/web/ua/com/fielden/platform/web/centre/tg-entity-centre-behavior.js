@@ -204,6 +204,14 @@ const TgEntityCentreBehaviorImpl = {
         },
 
         /**
+         * Indicates whether this entity centre is embedded into some entity master.
+         */
+        embedded: {
+            type: Boolean,
+            value: false
+        },
+
+        /**
          * Returns the context for insertion point
          */
         insertionPointContextRetriever: {
@@ -303,6 +311,11 @@ const TgEntityCentreBehaviorImpl = {
         _buttonDisabled: {
             type: Boolean,
             computed: '_computeDisabled(_criteriaLoaded, _actionInProgress)'
+        },
+
+        _shareButtonDisabled: {
+            type: Boolean,
+            computed: '_computeShareButtonDisabled(_buttonDisabled, embedded)'
         },
 
         _viewerDisabled: {
@@ -467,6 +480,10 @@ const TgEntityCentreBehaviorImpl = {
 
     _computeDisabled: function (_criteriaLoaded, _actionInProgress) {
         return _actionInProgress === true || _criteriaLoaded === false;
+    },
+
+    _computeShareButtonDisabled: function (_buttonDisabled, embedded) {
+        return _buttonDisabled || embedded;
     },
 
     _computeViewerDisabled: function (_buttonDisabled, _wasRun) {
