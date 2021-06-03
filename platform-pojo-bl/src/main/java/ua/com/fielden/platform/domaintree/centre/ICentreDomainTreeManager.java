@@ -248,6 +248,21 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
     IAddToResultTickManager getSecondTick();
 
     /**
+     * Returns the index of preferred resultant view of the entity centre.
+     *
+     * @return
+     */
+    Integer getPreferredView();
+
+    /**
+     * Set the index of preferred resultant view for this entity centre.
+     *
+     * @param prefViewIndex
+     * @return
+     */
+    ICentreDomainTreeManager setPreferredView(Integer preferredView);
+
+    /**
      * Gets a <i>runAutomatically</i> flag. <br>
      * <br>
      *
@@ -761,76 +776,76 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * @return -- a result tick representation
          */
         IAddToResultTickManager setGrowFactor(final Class<?> root, final String property, final int growFactor);
-        
+
         /**
          * Returns column widths and grow factors to facilitate exact copy through {@link #setWidthsAndGrowFactors(T2)} method.
-         * 
+         *
          * @return
          */
         T2<EnhancementPropertiesMap<Integer>, EnhancementPropertiesMap<Integer>> getWidthsAndGrowFactors();
-        
+
         /**
          * Sets column widths and grow factors to facilitate full overriding of that information; need to get information using {@link #getWidthsAndGrowFactors()} method.
-         * 
+         *
          * @param widthsAndGrowFactors
          */
         void setWidthsAndGrowFactors(final T2<EnhancementPropertiesMap<Integer>, EnhancementPropertiesMap<Integer>> widthsAndGrowFactors);
-        
+
         /**
          * Gets result-set page capacity.
-         * 
+         *
          * @return
          */
         int getPageCapacity();
-        
+
         /**
          * Sets result-set page capacity.
-         * 
+         *
          * @param pageCapacity
          * @return
          */
         IAddToResultTickManager setPageCapacity(final int pageCapacity);
-        
+
         /**
          * Gets maximum page capacity for result-set.
-         * 
+         *
          * @return
          */
         int getMaxPageCapacity();
-        
+
         /**
          * Sets maximum page capacity for result-set.
-         * 
+         *
          * @param maxPageCapacity
          * @return
          */
         IAddToResultTickManager setMaxPageCapacity(final int maxPageCapacity);
-        
+
         /**
          * Gets result-set visible rows count.
-         * 
+         *
          * @return
          */
         int getVisibleRowsCount();
-        
+
         /**
          * Sets result-set visible rows count.
-         * 
+         *
          * @param visibleRowsCount
          * @return
          */
         IAddToResultTickManager setVisibleRowsCount(final int visibleRowsCount);
-        
+
         /**
          * Gets result-set number of header lines.
-         * 
+         *
          * @return
          */
         int getNumberOfHeaderLines();
-        
+
         /**
          * Sets result-set number of header lines.
-         * 
+         *
          * @param numberOfHeaderLines
          * @return
          */
