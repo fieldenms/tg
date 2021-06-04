@@ -9,8 +9,6 @@ public interface ITokensBuilder {
 
     boolean isClosing();
 
-    boolean canBeClosed();
-
     void finaliseChild();
 
     Pair<TokenCategory, Object> getResult();

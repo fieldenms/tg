@@ -37,11 +37,6 @@ public class QrySourcesBuilder extends AbstractTokensBuilder {
         return false;
     }
 
-    @Override
-    public boolean canBeClosed() {
-        return getChild() == null;
-    }
-
     public Sources1 getModel() {
         if (getChild() != null) {
             finaliseChild();

@@ -30,11 +30,6 @@ public class StandAloneConditionBuilder extends AbstractTokensBuilder {
         return false;
     }
 
-    @Override
-    public boolean canBeClosed() {
-        return getChild() == null;
-    }
-
     public Conditions1 getModel() {
         if (getChild() != null) {
             throw new RuntimeException("Unable to produce result - unfinished model state!");

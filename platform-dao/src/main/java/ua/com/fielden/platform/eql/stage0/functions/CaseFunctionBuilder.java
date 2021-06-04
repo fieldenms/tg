@@ -45,11 +45,6 @@ public class CaseFunctionBuilder extends AbstractTokensBuilder {
         return getLastCat() == END_FUNCTION;
     }
 
-    @Override
-    public boolean canBeClosed() {
-        return getChild() == null;
-    }
-
     public CaseWhen1 getModel() {
         final Object lastValue = getLastValue();
         

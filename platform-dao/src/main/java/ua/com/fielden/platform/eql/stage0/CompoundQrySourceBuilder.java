@@ -37,11 +37,6 @@ public class CompoundQrySourceBuilder extends AbstractTokensBuilder {
     }
 
     @Override
-    public boolean canBeClosed() {
-        return getChild().canBeClosed();
-    }
-
-    @Override
     public Pair<TokenCategory, Object> getResult() {
         if (getChild() != null) {
             final ITokensBuilder last = getChild();

@@ -30,11 +30,6 @@ public class StandAloneExpressionBuilder extends AbstractTokensBuilder {
     }
 
     @Override
-    public boolean canBeClosed() {
-        return getChild() == null;
-    }
-
-    @Override
     public Pair<TokenCategory, Object> getResult() {
         if (getChild() != null) {
             throw new RuntimeException("Unable to produce result - unfinished model state!");

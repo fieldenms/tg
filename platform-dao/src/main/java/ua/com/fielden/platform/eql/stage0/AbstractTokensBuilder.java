@@ -264,11 +264,6 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
     }
 
     @Override
-    public boolean canBeClosed() {
-        return isClosing();
-    }
-
-    @Override
     public void finaliseChild() {
         if (child != null) {
             final ITokensBuilder last = child;

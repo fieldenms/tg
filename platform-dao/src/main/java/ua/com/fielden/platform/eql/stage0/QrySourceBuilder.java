@@ -64,12 +64,6 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
         return false;
     }
 
-    @Override
-    public boolean canBeClosed() {
-        return isEntityTypeAsSource() || isEntityTypeAsSourceWithoutAlias() ||
-               isSubqueriesAsSource() || isSubqueriesAsSourceWithoutAlias() || isNothingAsSourceWithoutAlias();
-    }
-
     private Pair<TokenCategory, Object> buildResultForQrySourceBasedOnEntityType() {
         final Class<AbstractEntity<?>> resultType = (Class<AbstractEntity<?>>) firstValue();
         if (isPersistedEntityType(resultType)) {
