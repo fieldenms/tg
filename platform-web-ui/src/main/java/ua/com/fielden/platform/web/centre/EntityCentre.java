@@ -55,6 +55,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
@@ -371,6 +372,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
         final ICentreDomainTreeManagerAndEnhancer cdtmae = createEmptyCentre(entityType, entityFactory, domainTreeEnhancerCache, createCalculatedAndCustomProperties(entityType, resultSetProps, summaryExpressions), miType);
 
+        cdtmae.setPreferredView(calculatePreferredViewIndex(dslDefaultConfig));
+
         final Optional<List<String>> selectionCriteria = dslDefaultConfig.getSelectionCriteria();
         if (selectionCriteria.isPresent()) {
             for (final String property : selectionCriteria.get()) {
@@ -427,6 +430,20 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         cdtmae.getSecondTick().setNumberOfHeaderLines(dslDefaultConfig.getNumberOfHeaderLines());
 
         return postCentreCreated == null ? cdtmae : postCentreCreated.apply(cdtmae);
+    }
+
+    private static <T extends AbstractEntity<?>> Integer calculatePreferredViewIndex(final EntityCentreConfig<T> dslDefaultConfig) {
+        final List<InsertionPointConfig> altViewes = dslDefaultConfig.getInsertionPointConfigs().orElse(new ArrayList<>())
+                .stream()
+                .filter(ip -> ip.getInsertionPointAction().whereToInsertView.map(whereToInsert -> whereToInsert == InsertionPoints.ALTERNATIVE_VIEW).orElse(Boolean.FALSE))
+                .collect(toList());
+        final AtomicInteger preferredViewIndex = new AtomicInteger(0);
+        for (int idx = 0; idx < altViewes.size(); idx ++) {
+            if (altViewes.get(idx).isPreferred()) {
+                preferredViewIndex.set(1 + idx); // should be shifted by 1 to take into account EGI and selection criteria view indices
+            }
+        }
+        return preferredViewIndex.get() == 0 ? null : preferredViewIndex.get();
     }
 
     /**
@@ -1159,13 +1176,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             shortcuts.append(switchActionShortcuts);
         }
 
-        ////////////////Generating custom code for ready method////////////////////////
-        final List<String> customCodes = new ArrayList<>();
-        final long preferredSize = insertionPointActionsElements.stream().filter(ip -> ip.whereToInsert() == InsertionPoints.ALTERNATIVE_VIEW && ip.isPreferred()).count();
-        if (preferredSize > 0) {
-            customCodes.add(String.format("self.preferredView = %s;", preferredSize + 1));// should be shifted by 1 to take into account EGI and selection criteria view indices
-        }
-        customCodes.add(customCode.map(code -> code.toString()).orElse(""));
         ///////////////////////////////////////
         final String frontActionString = frontActionsObjects.toString();
         final String shareActionsString = shareActionsObjects.toString();
@@ -1233,7 +1243,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace(TOP_INSERTION_POINT_DOM, topInsertionPointsDom.toString()).
                 replace(BOTTOM_INSERTION_POINT_DOM, bottomInsertionPointsDom.toString()).
                 replace(ALTERNATIVE_VIEW_INSERTION_POINT_DOM, join(alternativeViewsDom, "\n")).
-                replace(READY_CUSTOM_CODE, join(customCodes, "\n")).
+                replace(READY_CUSTOM_CODE, customCode.map(code -> code.toString()).orElse("")).
                 replace(ATTACHED_CUSTOM_CODE, customCodeOnAttach.map(code -> code.toString()).orElse(""));
         logger.debug("Finishing...");
         final IRenderable representation = new IRenderable() {
