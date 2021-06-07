@@ -132,13 +132,13 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      */
     static final String META_VALUES = "metaValues";
     /**
-     * The key for customObject's value containing centre configuration.
-     */
-    private static final String CENTRE_CONFIG = "centreConfig";
-    /**
      * The key for customObject's value containing message for stale criteria or empty if not stale.
      */
     static final String STALE_CRITERIA_MESSAGE = "staleCriteriaMessage";
+    /**
+     * The key for customObject's value containing preferred view index.
+     */
+    static final String PREFERRED_VIEW = "preferredView";
 
     /** Private default constructor to prevent instantiation. */
     private CentreResourceUtils() {
@@ -186,6 +186,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @param configUuid -- represents uuid of configuration to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
      * @param saveAsDesc -- represents a configuration title's tooltip to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
      * @param staleCriteriaMessage
+     * @param preferredView -- represents a configuration preferred view index to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
      *
      * @return
      */
@@ -195,7 +196,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final Optional<Optional<String>> saveAsName,
         final Optional<Optional<String>> configUuid,
         final Optional<Optional<String>> saveAsDesc,
-        final Optional<Optional<String>> staleCriteriaMessage
+        final Optional<Optional<String>> staleCriteriaMessage,
+        final Optional<Integer> preferredView
     ) {
         final Map<String, Object> customObject = createCriteriaMetaValuesCustomObject(criteriaMetaValues, centreDirty);
         saveAsName.ifPresent(name -> {
@@ -209,6 +211,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         });
         staleCriteriaMessage.ifPresent(message -> {
             customObject.put(STALE_CRITERIA_MESSAGE, message.orElse(null));
+        });
+        preferredView.ifPresent(prefView -> {
+            customObject.put(PREFERRED_VIEW, prefView);
         });
         return customObject;
     }
@@ -582,7 +587,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             )
         );
         // creates custom object representing centre information for concrete criteriaEntity and saveAsName
-        validationPrototype.setCentreCustomObjectGetter(appliedCriteriaEntity -> customObjectSaveAsName -> configUuid -> {
+        validationPrototype.setCentreCustomObjectGetter(appliedCriteriaEntity -> customObjectSaveAsName -> configUuid -> preferredView -> {
             final ICentreDomainTreeManagerAndEnhancer freshCentre = appliedCriteriaEntity.getCentreDomainTreeMangerAndEnhancer();
             // In both cases (criteria entity valid or not) create customObject with criteriaEntity to be returned and bound into tg-entity-centre after save.
             final Map<String, Object> customObject = createCriteriaMetaValuesCustomObjectWithSaveAsInfo(
@@ -591,7 +596,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 of(customObjectSaveAsName),
                 configUuid,
                 of(validationPrototype.centreTitleAndDesc(customObjectSaveAsName).map(titleDesc -> titleDesc._2)),
-                empty()
+                empty(),
+                preferredView
             );
             removeWasRunIndication(customObject); // make VIEW button disabled by default; this behaviour can be overridden by removing 'wasRun' customObject's entry
             customObject.put(APPLIED_CRITERIA_ENTITY_NAME, appliedCriteriaEntity);
@@ -695,7 +701,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             return validationPrototype.centreCustomObject(
                 createCriteriaEntity(validationPrototype.centreContextHolder().getModifHolder(), companionFinder, critGenerator, miType, of(newName), user, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel),
                 of(newName),
-                empty() // no need to update already existing client-side configUuid
+                empty(), // no need to update already existing client-side configUuid
+                empty() // no need to update already loaded preferredView
             );
         });
         // performs copying of current configuration with the specified title / desc; makes it preferred; returns custom object containing centre information
@@ -717,7 +724,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             return validationPrototype.centreCustomObject(
                 createCriteriaEntity(validationPrototype.centreContextHolder().getModifHolder(), companionFinder, critGenerator, miType, newSaveAsName, user, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel),
                 newSaveAsName,
-                of(of(newConfigUuid))
+                of(of(newConfigUuid)),
+                empty() // do not update preferredView on client when copying centre configuration
             );
         });
         // returns ordered alphabetically list of 'loadable' configurations for current user

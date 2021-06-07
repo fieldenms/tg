@@ -1,12 +1,12 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import static java.util.Collections.emptyList;
 import static java.lang.String.format;
+import static java.util.Collections.emptyList;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
-import static java.util.stream.Collectors.toList;
 import static java.util.UUID.randomUUID;
+import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.data.generator.IGenerator.FORCE_REGENERATION_KEY;
 import static ua.com.fielden.platform.data.generator.IGenerator.shouldForceRegeneration;
 import static ua.com.fielden.platform.error.Result.failure;
@@ -261,7 +261,7 @@ public class CriteriaResource extends AbstractWebResource {
             return createCriteriaRetrievalEnvelope(updatedFreshCentre, miType, actualSaveAsName, user, restUtil, companionFinder, critGenerator, device(), customDesc, resolvedConfigUuid, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
         }, restUtil);
     }
-    
+
     /**
      * Validates {@code configUuid} on the subject of configuration existence and general ability to share it with current {@code user}.
      */
@@ -471,7 +471,8 @@ public class CriteriaResource extends AbstractWebResource {
                 of(saveAsName),
                 of(configUuid),
                 of(ofNullable(saveAsDesc)),
-                empty()
+                empty(),
+                of(updatedFreshCentre.getPreferredView())
             ))
         );
     }
@@ -501,7 +502,8 @@ public class CriteriaResource extends AbstractWebResource {
                         of(saveAsName),
                         empty(),
                         saveAsDesc,
-                        of(ofNullable(staleCriteriaMessage))
+                        of(ofNullable(staleCriteriaMessage)),
+                        of(updatedFreshCentre.getPreferredView())
                 )//
         );
     }
@@ -726,7 +728,7 @@ public class CriteriaResource extends AbstractWebResource {
 
     /**
      * Calculates indices of active secondary actions for {@code entities}.
-     * 
+     *
      * @param entities
      * @return
      */
@@ -742,7 +744,7 @@ public class CriteriaResource extends AbstractWebResource {
 
     /**
      * Calculates indices of active primary action for {@code entities}.
-     * 
+     *
      * @param entities
      * @return
      */
@@ -754,7 +756,7 @@ public class CriteriaResource extends AbstractWebResource {
 
     /**
      * Calculates rendering hints for {@code entities}.
-     * 
+     *
      * @param entities
      * @return
      */

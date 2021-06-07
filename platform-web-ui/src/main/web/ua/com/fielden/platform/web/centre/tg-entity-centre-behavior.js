@@ -987,6 +987,7 @@ const TgEntityCentreBehaviorImpl = {
                     this._previousView = this._selectedView;
                     this._selectedView = index;
                     if (this._selectedView !== 0 && this.preferredView !== this._selectedView) {
+                        this.preferredView = this._selectedView;
                         this._preferredViewUpdaterAction._run();
                     }
                 }

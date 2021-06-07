@@ -110,6 +110,14 @@ const TgSelectionCriteriaBehaviorImpl = {
             type: Number
         },
 
+        /**
+         * Preferred view retrieved with selection criteria.
+         */
+        preferredView: {
+            type: Number,
+            notify: true
+        },
+
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
         //////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -399,6 +407,9 @@ const TgSelectionCriteriaBehaviorImpl = {
         }
         if (typeof customObject.wasRun !== 'undefined') {
             this._wasRun = customObject.wasRun;
+        }
+        if (typeof customObject.preferredView !== 'undefined') {
+            this.preferredView = customObject.preferredView;
         }
     },
 

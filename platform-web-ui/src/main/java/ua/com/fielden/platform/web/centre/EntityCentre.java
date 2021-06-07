@@ -437,13 +437,13 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 .stream()
                 .filter(ip -> ip.getInsertionPointAction().whereToInsertView.map(whereToInsert -> whereToInsert == InsertionPoints.ALTERNATIVE_VIEW).orElse(Boolean.FALSE))
                 .collect(toList());
-        final AtomicInteger preferredViewIndex = new AtomicInteger(0);
-        for (int idx = 0; idx < altViewes.size(); idx ++) {
+        final AtomicInteger preferredViewIndex = new AtomicInteger(1);
+        for (int idx = 0; idx < altViewes.size(); idx++) {
             if (altViewes.get(idx).isPreferred()) {
-                preferredViewIndex.set(1 + idx); // should be shifted by 1 to take into account EGI and selection criteria view indices
+                preferredViewIndex.set(2 + idx); // should be shifted by 2 to take into account EGI and selection criteria view indices
             }
         }
-        return preferredViewIndex.get() == 0 ? null : preferredViewIndex.get();
+        return preferredViewIndex.get();
     }
 
     /**
