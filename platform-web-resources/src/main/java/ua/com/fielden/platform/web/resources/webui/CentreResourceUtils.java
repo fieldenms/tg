@@ -20,7 +20,6 @@ import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.APPLIED_CRITERIA_ENTITY_NAME;
-import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.WAS_RUN_NAME;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.AUTO_RUN;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrLink;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isInherited;
@@ -596,7 +595,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 of(validationPrototype.centreTitleAndDesc(customObjectSaveAsName).map(titleDesc -> titleDesc._2)),
                 empty()
             );
-            removeWasRunIndication(customObject); // make VIEW button disabled by default; this behaviour can be overridden by removing 'wasRun' customObject's entry
             customObject.put(APPLIED_CRITERIA_ENTITY_NAME, appliedCriteriaEntity);
             return customObject;
         });
@@ -791,14 +789,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                         EntityResourceUtils.getOriginalManagedType(validationPrototype.getType(), cdtmae)//
                 ), new LinkedHashSet<>()//
         );
-    }
-
-    /**
-     * Removes customObject's 'wasRun' indication even if the centre has actually been running and had some results loaded earlier.
-     */
-    public static Map<String, Object> removeWasRunIndication(final Map<String, Object> customObject) {
-        customObject.put(WAS_RUN_NAME, null);
-        return customObject;
     }
 
     /**

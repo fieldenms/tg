@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.web.centre;
 
 import static java.util.Optional.empty;
-import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.WAS_RUN_NAME;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.getCustomObject;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrLink;
 
@@ -47,9 +46,7 @@ public class CentreConfigSaveActionProducer extends AbstractCentreConfigCommitAc
         } else { // owned configuration should be saved without opening 'Save As...' dialog
             entity.setSkipUi(true);
             selectionCrit.saveFreshCentre();
-            final Map<String, Object> customObj = getCustomObject(selectionCrit, appliedCriteriaEntity, empty()); // config left the same (no transition occurred) -- do not update configUuid / saveAsName on client-side
-            customObj.remove(WAS_RUN_NAME); // avoid making VIEW button disabled if it is enabled
-            return customObj;
+            return getCustomObject(selectionCrit, appliedCriteriaEntity, empty()); // config left the same (no transition occurred) -- do not update configUuid / saveAsName on client-side
         }
     }
     

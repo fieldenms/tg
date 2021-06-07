@@ -55,7 +55,6 @@ import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.cr
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.isAutoRunning;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.isRunning;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.isSorting;
-import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.removeWasRunIndication;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.updateInheritedFromShared;
 import static ua.com.fielden.platform.web.resources.webui.EntityValidationResource.VALIDATION_COUNTER;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
@@ -465,7 +464,7 @@ public class CriteriaResource extends AbstractWebResource {
         final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = createCriteriaValidationPrototype(miType, saveAsName, updatedFreshCentre, companionFinder, critGenerator, -1L, user, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
         return restUtil.rawListJsonRepresentation(
             appliedCriteriaEntity,
-            removeWasRunIndication(createCriteriaMetaValuesCustomObjectWithSaveAsInfo(
+            createCriteriaMetaValuesCustomObjectWithSaveAsInfo(
                 createCriteriaMetaValues(updatedFreshCentre, getEntityType(miType)),
                 appliedCriteriaEntity.centreDirtyCalculator().apply(saveAsName).apply(() -> updatedFreshCentre),
                 of(saveAsName),
@@ -473,7 +472,7 @@ public class CriteriaResource extends AbstractWebResource {
                 of(appliedCriteriaEntity.centreRunAutomatically(saveAsName)), // in case if configuration is runAutomatically perform client-side auto-running (first time loading, changing browser's URI e.g by tapping Back / Forward buttons)
                 of(ofNullable(saveAsDesc)),
                 empty()
-            ))
+            )
         );
     }
 

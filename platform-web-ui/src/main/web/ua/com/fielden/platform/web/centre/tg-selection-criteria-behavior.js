@@ -401,12 +401,12 @@ const TgSelectionCriteriaBehaviorImpl = {
             delete this.autoRunFreezed;
             this.configUuid = customObject.configUuid;
         }
-        if (typeof customObject.wasRun !== 'undefined') {
-            this._wasRun = customObject.wasRun;
-        }
     },
 
-    _configUuidChanged: function (newConfigUuid) {
+    _configUuidChanged: function (newConfigUuid, oldConfigUuid) {
+        if (typeof oldConfigUuid === 'string' && this._wasRun === 'yes') {
+            this._wasRun = null; // reset _wasRun if configuration has been changed
+        }
         this.fire('tg-config-uuid-changed', newConfigUuid);
     },
 
