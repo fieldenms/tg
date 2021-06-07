@@ -324,18 +324,6 @@ public class CentreUpdater {
     }
     
     /**
-     * Updates (retrieves) current version of centre runAutomatically for default configuration.
-     *
-     * @param user
-     * @param miType
-     * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
-     * @return
-     */
-    public static boolean isDefaultConfigRunAutomatically(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final IEntityCentreConfig eccCompanion, final IWebUiConfig webUiConfig) {
-        return updateCentreRunAutomatically(user, miType, empty(), device, eccCompanion, webUiConfig, null);
-    }
-    
-    /**
      * Updates (retrieves) current version of centre runAutomatically.
      *
      * @param user

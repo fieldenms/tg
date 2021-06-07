@@ -125,6 +125,16 @@ public interface IWebUiConfig extends IMenuRetriever {
     Map<Class<? extends MiWithConfigurationSupport<?>>, T2<EntityCentre<?>, EntityMaster<? extends AbstractEntity<?>>>> getEmbeddedCentres();
 
     /**
+     * Determines whether the centre, represented by {@code miType}, is embedded.
+     * 
+     * @param miType
+     * @return
+     */
+    default boolean isEmbeddedCentre(final Class<? extends MiWithConfigurationSupport<?>> miType) {
+        return getEmbeddedCentres().containsKey(miType);
+    }
+
+    /**
      * Clears all centre, master and menu configurations that were initialised before.
      */
     void clearConfiguration();

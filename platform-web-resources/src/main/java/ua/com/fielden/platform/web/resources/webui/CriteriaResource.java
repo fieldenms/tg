@@ -26,7 +26,6 @@ import static ua.com.fielden.platform.web.centre.CentreUpdater.PREVIOUSLY_RUN_CE
 import static ua.com.fielden.platform.web.centre.CentreUpdater.SAVED_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.commitCentre;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.commitCentreWithoutConflicts;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.isDefaultConfigRunAutomatically;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.loadableConfigurations;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.makePreferred;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.obtainTitleFrom;
@@ -241,7 +240,7 @@ public class CriteriaResource extends AbstractWebResource {
                     actualSaveAsName = firstTimeLoadingFrom(validateUuidAndGetUpstreamConfig(configUuid.get()).orElseThrow(Result::asRuntime));
                 }
                 // configuration being loaded need to become preferred
-                if (!LINK_CONFIG_TITLE.equals(actualSaveAsName.get()) && !isDefaultConfigRunAutomatically(user, miType, device(), eccCompanion, webUiConfig)) {
+                if (!LINK_CONFIG_TITLE.equals(actualSaveAsName.get()) && !webUiConfig.isEmbeddedCentre(miType)) { // standalone centres only, not embedded
                     makePreferred(user, miType, actualSaveAsName, device(), companionFinder);
                 }
                 resolvedConfigUuid = configUuid;
@@ -251,7 +250,7 @@ public class CriteriaResource extends AbstractWebResource {
                     resolvedConfigUuid = updateCentreConfigUuid(user, miType, actualSaveAsName, device(), eccCompanion);
                 } else {
                     actualSaveAsName = empty(); // in case where first time loading has been occurred earlier we still prefer configuration specified by absence of uuid: default
-                    if (!isDefaultConfigRunAutomatically(user, miType, device(), eccCompanion, webUiConfig)) {
+                    if (!webUiConfig.isEmbeddedCentre(miType)) { // standalone centres only, not embedded
                         makePreferred(user, miType, actualSaveAsName, device(), companionFinder); // most likely transition from save-as configuration has been occurred and need to update preferred config; in other case we can go to other centre and back from already loaded default config and this call will make default config preferred again
                     }
                     resolvedConfigUuid = empty();
