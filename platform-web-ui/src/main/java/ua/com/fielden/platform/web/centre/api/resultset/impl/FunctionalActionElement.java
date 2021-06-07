@@ -93,7 +93,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
     }
 
     /**
-     * Creates an attributes that will be used for widget component generation (generic attributes).
+     * Creates attributes that are used for the widget component generation (generic attributes).
      *
      * @return
      */
@@ -113,8 +113,9 @@ public class FunctionalActionElement implements IRenderable, IImportable {
             attrs.put("slot", "custom-front-action");
         } else if (FunctionalActionKind.SHARE == functionalActionKind) {
             attrs.put("slot", "custom-share-action");
-            attrs.put("disabled", "[[_buttonDisabled]]");
-            attrs.put(" style", "[[_computeButtonStyle(_buttonDisabled)]]"); // prepended with ' ' due to restriction in DOM API that requires only value pairs with ':' separator
+            attrs.put("hidden", "[[embedded]]"); // let's completely hide the share action for embedded centres
+            attrs.put("disabled", "[[_shareButtonDisabled]]");
+            attrs.put(" style", "[[_computeButtonStyle(_shareButtonDisabled)]]"); // included a space before "style" due to restriction in DOM API that requires only value pairs with ':' separator
         }
 
         attrs.put("ui-role", conf().role.toString());
