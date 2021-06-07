@@ -101,6 +101,39 @@ const createColumnAction = function (entityCentre) {
     return actionModel;
 };
 
+const createPreferredViewUpdaterAction = function (entityCentre) {
+    const actionModel = document.createElement('tg-ui-action');
+    actionModel.uiRole = 'ICON';
+    actionModel.componentUri = '/master_ui/ua.com.fielden.platform.web.centre.CentrePreferredViewUpdater';
+    actionModel.elementName = 'tg-CentrePreferredViewUpdater-master';
+    actionModel.showDialog = entityCentre._showCentreConfigDialog;
+    actionModel.toaster = entityCentre.toaster;
+    actionModel.createContextHolder = entityCentre._createContextHolder;
+    actionModel.preAction = function (action) {
+        action.modifyFunctionalEntity = (function (bindingEntity, master) {
+            action.modifyValue4Property('preferredView', bindingEntity, entityCentre.preferredView);
+        });
+        return true;
+    };
+    actionModel.postActionSuccess = function (functionalEntity) {
+        // update disablement of save button after changing column widths
+        entityCentre.$.selection_criteria._centreDirty = functionalEntity.get('centreDirty');
+        if (functionalEntity.preferredView !== entityCentre.preferredView) {
+            entityCentre.async(actionModel._run, 100);
+        }
+    };
+    actionModel.postActionError = function (functionalEntity) { };
+    actionModel.attrs = {
+        entityType: 'ua.com.fielden.platform.web.centre.CentrePreferredViewUpdater',
+        currentState: 'EDIT',
+        centreUuid: entityCentre.uuid
+    };
+    actionModel.requireSelectionCriteria = 'true';
+    actionModel.requireSelectedEntities = 'NONE';
+    actionModel.requireMasterEntity = 'false';
+    return actionModel;
+};
+
 const MSG_SAVE_OR_CANCEL = "Please save or cancel changes.";
 const NOT_ENOUGH_RESULT_VIEWS = "At least one result view should be available";
 
@@ -740,7 +773,7 @@ const TgEntityCentreBehaviorImpl = {
          * A function to activate the view with the result set (EGI and insertion points).
          */
         self._activateResultSetView = (function () {
-            this._activateView(this._previousView === undefined ? this.preferredView : this._previousView);
+            this._activateView(this.preferredView);
         }).bind(self);
         /**
          * Updates the progress bar state.
@@ -786,6 +819,7 @@ const TgEntityCentreBehaviorImpl = {
         });
 
         self._columnAction = createColumnAction(self);
+        self._preferredViewUpdaterAction = createPreferredViewUpdaterAction(self);
 
         //Toaster object Can be used in other components on binder to show toasts.
         self.toaster = self.$.selection_criteria.toaster;
@@ -952,6 +986,9 @@ const TgEntityCentreBehaviorImpl = {
                     this.resultViews[this._selectedView].leave();
                     this._previousView = this._selectedView;
                     this._selectedView = index;
+                    if (this._selectedView !== 0 && this.preferredView !== this._selectedView) {
+                        this._preferredViewUpdaterAction._run();
+                    }
                 }
             }   
         }, 100);

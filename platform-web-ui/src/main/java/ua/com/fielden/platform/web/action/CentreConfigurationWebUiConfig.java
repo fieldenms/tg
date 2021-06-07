@@ -36,6 +36,8 @@ import ua.com.fielden.platform.web.centre.CentreConfigSaveActionProducer;
 import ua.com.fielden.platform.web.centre.CentreConfigShareAction;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterProducer;
+import ua.com.fielden.platform.web.centre.CentrePreferredViewUpdater;
+import ua.com.fielden.platform.web.centre.CentrePreferredViewUpdaterProducer;
 import ua.com.fielden.platform.web.centre.OverrideCentreConfig;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.layout.api.impl.FlexLayoutConfig;
@@ -53,6 +55,7 @@ import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 public class CentreConfigurationWebUiConfig {
     public final EntityMaster<CentreConfigUpdater> centreConfigUpdater;
     public final EntityMaster<CentreColumnWidthConfigUpdater> centreColumnWidthConfigUpdater;
+    public final EntityMaster<CentrePreferredViewUpdater> centrePreferredViewUpdater;
     public final EntityMaster<CentreConfigShareAction> centreConfigShareActionMaster;
     public final EntityMaster<CentreConfigNewAction> centreConfigNewActionMaster;
     public final EntityMaster<CentreConfigDuplicateAction> centreConfigDuplicateActionMaster;
@@ -67,6 +70,7 @@ public class CentreConfigurationWebUiConfig {
                 "['padding:20px', 'height: 100%', 'box-sizing: border-box', ['flex', ['flex']], [['flex', 'padding-right:20px'], ['flex', 'padding-right:20px'], ['flex']]]",
                 "['padding:20px', 'height: 100%', 'box-sizing: border-box', ['flex', ['flex']], [], [], []]");
         centreColumnWidthConfigUpdater = createCentreColumnWidthConfigUpdater(injector);
+        centrePreferredViewUpdater = createcentrePreferredViewUpdater(injector);
         centreConfigShareActionMaster = createCentreConfigShareActionMaster(injector);
         centreConfigNewActionMaster = createCentreConfigNewActionMaster(injector);
         centreConfigDuplicateActionMaster = createCentreConfigDuplicateActionMaster(injector);
@@ -114,6 +118,16 @@ public class CentreConfigurationWebUiConfig {
     private static EntityMaster<CentreColumnWidthConfigUpdater> createCentreColumnWidthConfigUpdater(final Injector injector) {
         return new EntityMaster<>(CentreColumnWidthConfigUpdater.class, CentreColumnWidthConfigUpdaterProducer.class, null, injector);
     }
+
+    /**
+     * Creates no-ui entity master for {@link CentrePreferredViewUpdater}.
+     *
+     * @return
+     */
+    private static EntityMaster<CentrePreferredViewUpdater> createcentrePreferredViewUpdater(final Injector injector) {
+        return new EntityMaster<>(CentrePreferredViewUpdater.class, CentrePreferredViewUpdaterProducer.class, null, injector);
+    }
+
 
     public enum CentreConfigActions {
         CUSTOMISE_COLUMNS_ACTION {

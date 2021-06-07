@@ -29,6 +29,10 @@ public class CentrePreferredViewUpdater extends AbstractFunctionalEntityWithCent
     @Title("Criteria Entity Holder")
     private CentreContextHolder criteriaEntityHolder;
 
+    @IsProperty
+    @Title(value = "Centre Dirty", desc = "Indicates whether successful saving of this entity actually changed centre configuration or it is New (aka default, link or inherited).")
+    private boolean centreDirty;
+
     public CentrePreferredViewUpdater() {
         setKey(NO_KEY);
     }
@@ -51,5 +55,15 @@ public class CentrePreferredViewUpdater extends AbstractFunctionalEntityWithCent
 
     public CentreContextHolder getCriteriaEntityHolder() {
         return criteriaEntityHolder;
+    }
+
+    @Observable
+    public CentrePreferredViewUpdater setCentreDirty(final boolean centreDirty) {
+        this.centreDirty = centreDirty;
+        return this;
+    }
+
+    public boolean isCentreDirty() {
+        return centreDirty;
     }
 }

@@ -110,7 +110,7 @@ import ua.com.fielden.snappy.MnemonicEnum;
  */
 public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtils<T> {
     private static final Logger logger = Logger.getLogger(CentreResourceUtils.class);
-    
+
     /**
      * The key for customObject's value containing save-as name.
      */
@@ -131,6 +131,10 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * The key for customObject's value containing meta values e.g. mnemonics.
      */
     static final String META_VALUES = "metaValues";
+    /**
+     * The key for customObject's value containing centre configuration.
+     */
+    private static final String CENTRE_CONFIG = "centreConfig";
     /**
      * The key for customObject's value containing message for stale criteria or empty if not stale.
      */
@@ -333,7 +337,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
 
     /**
      * Creates custom resultant object containing running configuration (e.g. pageCapacity, visibleRowsCount, visibleColumnsWithOrder etc.) to be sent to the client-side application.
-     * 
+     *
      * @param updatedPreviouslyRunCriteriaEntity -- criteria entity created from PREVIOUSLY_RUN surrogate centre, which was potentially updated from FRESH (in case of "running" action)
      * @return
      */
@@ -552,7 +556,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
 
         // returns an updated version of PREVIOUSLY_RUN centre
         validationPrototype.setPreviouslyRunCentreSupplier(() -> updateCentre(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder));
-        
+
         // returns whether centre (defined by 'specificSaveAsName, freshCentreSupplier' arguments) is changed from previously saved (or the very original) configuration version or it is New (aka default, link or inherited)
         validationPrototype.setCentreDirtyCalculator(specificSaveAsName -> freshCentreSupplier ->
             isDefaultOrLink(specificSaveAsName) // this is very cheap operation
@@ -562,7 +566,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             )
             || isInherited(specificSaveAsName, validationPrototype)
         );
-        
+
         // returns whether centre is changed from previously saved (or the very original) configuration version or it is New (aka default, link or inherited)
         validationPrototype.setCentreDirtyGetter(() -> validationPrototype.centreDirtyCalculator().apply(saveAsName).apply(() -> updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder)));
         // creates criteria validation prototype for concrete saveAsName
@@ -707,7 +711,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             };
             createAndOverrideUuid.apply(newDesc).accept(FRESH_CENTRE_NAME);
             createAndOverrideUuid.apply(null).accept(SAVED_CENTRE_NAME);
-            
+
             // when switching to new configuration we need to make it preferred
             validationPrototype.makePreferredConfig(newSaveAsName);
             return validationPrototype.centreCustomObject(
@@ -1222,7 +1226,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * <p>
      * IMPORTANT: In this method saveAsName of inherited configuration may be changed to the one from upstream configuration.<br>
      *   In this case this new saveAsName must be taken from returning argument and used for further calculations and for returning to the client application.
-     * 
+     *
      * @param checkChanges -- optional function to check whether there are local changes; if they are -- not update FRESH from upstream; if no such check is needed i.e. empty function is passed (e.g. when discarding) -- force FRESH centre updating
      */
     public static Optional<EntityCentreConfig> updateInheritedFromShared(
@@ -1249,7 +1253,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * <p>
      * IMPORTANT: In this method saveAsName of inherited configuration may be changed to the one from upstream configuration.<br>
      *   In this case this new saveAsName must be taken from returning argument and used for further calculations and for returning to the client application.
-     * 
+     *
      * @param checkChanges -- optional function to check whether there are local changes; if they are -- not update FRESH from upstream; if no such check is needed i.e. empty function is passed (e.g. when discarding) -- force FRESH centre updating
      */
     public static EntityCentreConfig updateInheritedFromShared(final EntityCentreConfig upstreamConfig, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final Optional<String> saveAsName, final User user, final IEntityCentreConfig eccCompanion, final Optional<Supplier<Boolean>> checkChanges) {

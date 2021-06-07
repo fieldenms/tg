@@ -68,6 +68,7 @@ import ua.com.fielden.platform.web.centre.CentreConfigNewAction;
 import ua.com.fielden.platform.web.centre.CentreConfigSaveAction;
 import ua.com.fielden.platform.web.centre.CentreConfigShareAction;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
+import ua.com.fielden.platform.web.centre.CentrePreferredViewUpdater;
 import ua.com.fielden.platform.web.centre.CustomisableColumn;
 import ua.com.fielden.platform.web.centre.LoadableCentreConfig;
 import ua.com.fielden.platform.web.centre.OverrideCentreConfig;
@@ -87,6 +88,7 @@ public class PlatformDomainTypes {
         types.add(CentreConfigUpdater.class);
         types.add(CustomisableColumn.class);
         types.add(CentreColumnWidthConfigUpdater.class);
+        types.add(CentrePreferredViewUpdater.class);
 
         types.add(CentreConfigShareAction.class);
         types.add(CentreConfigNewAction.class);

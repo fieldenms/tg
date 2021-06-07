@@ -1070,7 +1070,8 @@ export const TgEntityBinderBehavior = {
      * Defines whether the property should be converted to binding entity representation regardless of existence of corresponding editor.
      */
     _isNecessaryForConversion: function (propertyName) {
-        return ['columnParameters', // adjust column width action
+        return ['preferredView', // adjust preferred view action
+            'columnParameters', // adjust column width action
             'entityType', 'importUri', 'elementName', 'entityId', // entity edit / new standard actions
             'pageCapacity', // export actions ('mime', 'fileName', 'data' props are not needed because post action success uses fully-fledged version of entity)
             'chosenIds', 'addedIds', 'removedIds', 'sortingVals', // collectional modification actions

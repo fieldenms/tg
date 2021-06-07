@@ -28,6 +28,7 @@ public class CentrePreferredViewUpdaterDao extends CommonEntityDao<CentrePreferr
         criteriaEntityBeingUpdated.adjustCentre(centreManager ->
             centreManager.setPreferredView(action.getPreferredView())
         );
+        action.setCentreDirty(criteriaEntityBeingUpdated.isCentreDirty());
         return super.save(action);
     }
 }
