@@ -10,12 +10,20 @@ import java.util.Collection;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
 
+/**
+ * This class is responsible for pre-processing of values passed as parameters to EQL queries (this covers both {@code .val()} and {@code .param()}).
+ *
+ * @author TG Team
+ *
+ */
 public class ValuePreprocessor {
+
     public Object apply(final Object value) {
         if (value == null) {
             return null;
@@ -38,7 +46,8 @@ public class ValuePreprocessor {
             value instanceof Class ||
             value instanceof Colour ||
             value instanceof Enum ||
-            value instanceof Hyperlink) {
+            value instanceof Hyperlink ||
+            value instanceof DynamicEntityKey) {
             result = value.toString();
         } else if (value instanceof AbstractEntity) {
             final AbstractEntity<?> entity = (AbstractEntity<?>) value;
