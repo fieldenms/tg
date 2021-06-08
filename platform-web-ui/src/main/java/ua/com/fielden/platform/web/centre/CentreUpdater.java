@@ -339,17 +339,19 @@ public class CentreUpdater {
         final Function<User, Function<Optional<String>, Boolean>> updateCentreRunAutomatically0 = customUser -> customSaveAsName -> {
             final String deviceSpecificName = deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, customSaveAsName), device);
             final EntityCentreConfig config = findConfig(miType, customUser, deviceSpecificName + DIFFERENCES_SUFFIX, eccCompanion);
-            return config != null && config.isRunAutomatically();
+            return config != null ? config.isRunAutomatically() : webUiConfig.getCentres().get(miType).isRunAutomatically();
         };
         if (!saveAsName.isPresent()) {
             return updateCentreRunAutomatically0.apply(user).apply(saveAsName); // default
         }
-        final Optional<LoadableCentreConfig> loadableConfigOpt = findLoadableConfig(saveAsName, selectionCrit);
-        if (loadableConfigOpt.isPresent() && loadableConfigOpt.get().isInherited()) {
-            if (loadableConfigOpt.get().isBase()) { // inherited from base
-                return updateCentreRunAutomatically0.apply(user.getBasedOnUser()).apply(saveAsName);
-            } else { // inherited from shared
-                return updateCentreRunAutomatically0.apply(loadableConfigOpt.get().getSharedBy()).apply(of(loadableConfigOpt.get().getSaveAsName()));
+        if (!user.isBase() && selectionCrit != null) {
+            final Optional<LoadableCentreConfig> loadableConfigOpt = findLoadableConfig(saveAsName, selectionCrit);
+            if (loadableConfigOpt.isPresent() && loadableConfigOpt.get().isInherited()) {
+                if (loadableConfigOpt.get().isBase()) { // inherited from base
+                    return updateCentreRunAutomatically0.apply(user.getBasedOnUser()).apply(saveAsName);
+                } else { // inherited from shared
+                    return updateCentreRunAutomatically0.apply(loadableConfigOpt.get().getSharedBy()).apply(of(loadableConfigOpt.get().getSaveAsName()));
+                }
             }
         }
         return updateCentreRunAutomatically0.apply(user).apply(saveAsName); // own save-as
@@ -953,6 +955,13 @@ public class CentreUpdater {
             if (user.isBase() || of(LINK_CONFIG_TITLE).equals(saveAsName) || empty().equals(saveAsName)) { // for non-base user 'link' and 'default' configurations need to be derived from default user-specific configuration instead of base configuration
                 // diff centre does not exist in persistent storage yet -- initialise EMPTY diff
                 resultantDiff = saveNewEntityCentreManager(createEmptyDifferences(), miType, user, deviceSpecificDiffName, null, eccCompanion, mmiCompanion);
+                if (FRESH_CENTRE_NAME.equals(name)) { // configs have runAutomatically only in FRESH centre
+                    findConfigOpt(miType, user, deviceSpecificDiffName, eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("runAutomatically"))
+                        .ifPresent(freshConfig -> {
+                            final boolean upstreamRunAutomatically = of(LINK_CONFIG_TITLE).equals(saveAsName) /* link: always runAutomatically */ || webUiConfig.getCentres().get(miType).isRunAutomatically() /* default/base: runAutomatically as in Centre DSL */;
+                            eccCompanion.saveWithConflicts(freshConfig.setRunAutomatically(upstreamRunAutomatically));
+                        });
+                }
             } else { // non-base user
                 // diff centre does not exist in persistent storage yet -- load diff from base user's configuration
                 final User baseUser = userCompanion.findByEntityAndFetch(fetch(User.class).with(LAST_UPDATED_BY), user.getBasedOnUser());
@@ -960,13 +969,19 @@ public class CentreUpdater {
                 // find description of the centre configuration to be copied from
                 final String upstreamDesc = baseCentreDiffOpt.isPresent() ? updateCentreDesc(baseUser, miType, saveAsName, device, eccCompanion) : null;
                 final Optional<String> upstreamConfigUuid = baseCentreDiffOpt.isPresent() ? updateCentreConfigUuid(baseUser, miType, saveAsName, device, eccCompanion) : empty();
+                final boolean upstreamRunAutomatically = baseCentreDiffOpt.isPresent() ? updateCentreRunAutomatically(baseUser, miType, saveAsName, device, eccCompanion, webUiConfig, null) : webUiConfig.getCentres().get(miType).isRunAutomatically();
                 // creates differences centre from the differences between base user's 'default centre' (which can be user specific, see IValueAssigner for properties dependent on User) and 'baseCentre'
                 final Map<String, Object> differences = baseCentreDiffOpt.orElseGet(CentreUpdater::createEmptyDifferences);
                 // promotes diff to persistent storage
                 resultantDiff = saveNewEntityCentreManager(differences, miType, user, deviceSpecificDiffName, upstreamDesc, eccCompanion, mmiCompanion);
-                if (FRESH_CENTRE_NAME.equals(name) && upstreamConfigUuid.isPresent()) { // inherited configs have uuid only in FRESH centre
-                    findConfigOpt(miType, user, deviceSpecificDiffName, eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("configUuid"))
-                        .ifPresent(freshConfig -> eccCompanion.saveWithConflicts(freshConfig.setConfigUuid(upstreamConfigUuid.get())));
+                if (FRESH_CENTRE_NAME.equals(name)) { // inherited configs have uuid only in FRESH centre
+                    if (upstreamConfigUuid.isPresent()) {
+                        findConfigOpt(miType, user, deviceSpecificDiffName, eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("configUuid").with("runAutomatically"))
+                            .ifPresent(freshConfig -> eccCompanion.saveWithConflicts(freshConfig.setConfigUuid(upstreamConfigUuid.get()).setRunAutomatically(upstreamRunAutomatically)));
+                    } else {
+                        findConfigOpt(miType, user, deviceSpecificDiffName, eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("runAutomatically"))
+                            .ifPresent(freshConfig -> eccCompanion.saveWithConflicts(freshConfig.setRunAutomatically(upstreamRunAutomatically)));
+                    }
                 }
             }
         }
