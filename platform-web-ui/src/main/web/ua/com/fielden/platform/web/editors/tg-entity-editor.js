@@ -35,7 +35,8 @@ const additionalTemplate = html`
         label[action-available]:hover {
             cursor: pointer;
         }
-        label:hover #actionAvailability[action-available] {
+        :host(:hover) #actionAvailability[action-available],
+        #decorator[focused]  #actionAvailability[action-available] {
             display: unset;
         }
         #input.upper-case {
@@ -80,7 +81,7 @@ const customLabelTemplate = html`
            action-available$="[[actionAvailable]]" 
            disabled$="[[_disabled]]" 
            slot="label" 
-           on-tap="_labelTap" 
+           on-tap="_labelTap"
            tooltip-text$="[[_getTooltip(_editingValue, entity, focused, actionAvailable)]]">
         <span>[[propTitle]]</span>
         <iron-icon id="actionAvailability" icon="editor:mode-edit" action-available$="[[actionAvailable]]"></iron-icon>
@@ -97,7 +98,7 @@ const customInputTemplate = html`
             on-keydown="_onKeydown" 
             on-mouseup="_onMouseUp" 
             on-mousedown="_onMouseDown" 
-            on-focus="_onFocus" 
+            on-focus="_onFocus"
             disabled$="[[_disabled]]" 
             tooltip-text$="[[_getTooltip(_editingValue, entity, focused, actionAvailable)]]"
             autocomplete="off"/>
