@@ -34,6 +34,7 @@ import static ua.com.fielden.platform.web.centre.CentreUpdater.retrievePreferred
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentreConfigUuid;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentreDesc;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentreRunAutomatically;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.FETCH_CONFIG;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.FETCH_CONFIG_AND_INSTRUMENT;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfigOpt;
@@ -575,8 +576,12 @@ public class CriteriaResource extends AbstractWebResource {
                     final int previousNumberOfHeaderLines = previousFreshCentre.getSecondTick().getNumberOfHeaderLines();
 
                     // clear all surrogate centres
+                    final boolean defaultCentreRunAutomatically = updateCentreRunAutomatically(user, miType, saveAsName, device(), eccCompanion, webUiConfig, null);
                     removeCentres(user, miType, device(), saveAsName, eccCompanion, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME);
                     final ICentreDomainTreeManagerAndEnhancer emptyFreshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+                    findConfigOpt(miType, user, NAME_OF.apply(FRESH_CENTRE_NAME).apply(saveAsName).apply(device()), eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("runAutomatically")).ifPresent(config -> {
+                        eccCompanion.saveWithConflicts(config.setRunAutomatically(defaultCentreRunAutomatically));
+                    });
 
                     // restore previous non-distracting centre changes; at first apply widths and grow factors
                     emptyFreshCentre.getSecondTick().setWidthsAndGrowFactors(previousWidthsAndGrowFactors);

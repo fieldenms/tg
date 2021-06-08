@@ -673,8 +673,12 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         });
         // clears default centre and fully prepares it for usage
         validationPrototype.setDefaultCentreClearer(() -> {
+            final boolean defaultCentreRunAutomatically = validationPrototype.centreRunAutomatically(empty());
             removeCentres(user, miType, device, empty(), eccCompanion, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME);
             updateCentre(user, miType, FRESH_CENTRE_NAME, empty(), device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+            findConfigOpt(miType, user, NAME_OF.apply(FRESH_CENTRE_NAME).apply(empty()).apply(device), eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("runAutomatically")).ifPresent(config -> {
+                eccCompanion.saveWithConflicts(config.setRunAutomatically(defaultCentreRunAutomatically));
+            });
             updateCentre(user, miType, SAVED_CENTRE_NAME, empty(), device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder); // do not leave only FRESH centre out of two (FRESH + SAVED) => update SAVED centre explicitly
         });
         // applies new criteria from client application against FRESH centre and returns respective criteria entity
