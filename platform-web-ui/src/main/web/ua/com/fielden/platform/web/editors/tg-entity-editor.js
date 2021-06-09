@@ -977,8 +977,8 @@ export class TgEntityEditor extends TgEditor {
 
     _generateTooltip (value, actionAvailable) {
         let tooltip = this._formatTooltipText(value);
-        tooltip += this.propDesc && (tooltip ? '<br><br>' : '') + this.propDesc;
-        tooltip += actionAvailable && ((tooltip ? '<br><br>' : '') + this._getActionTooltip(this.entityMaster));
+        tooltip += this.propDesc ? (tooltip ? '<br><br>' : '') + this.propDesc : '';
+        tooltip += actionAvailable ? ((tooltip ? '<br><br>' : '') + this._getActionTooltip(this.entityMaster)) : '';
         return tooltip;
     }
 
