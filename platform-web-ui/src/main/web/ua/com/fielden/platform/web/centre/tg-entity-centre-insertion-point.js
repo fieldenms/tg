@@ -92,6 +92,17 @@ const template = html`
         #loadableContent {
             z-index:0;
         }
+
+        .lock-layer {
+            opacity: 0.5;
+            display: none;
+            background-color: white;
+            @apply --layout-fit;
+        }
+
+        .lock-layer[lock] {
+            display: initial;
+        }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning tg-entity-centre-styles paper-material-styles"></style>
     <div id="pm" class="layout vertical flex" detached$="[[detachedView]]">
@@ -107,6 +118,7 @@ const template = html`
             <div id="loadableContent" class="relative flex">
                 <tg-element-loader id="elementLoader"></tg-element-loader>
             </div>
+            <div class="lock-layer" lock$="[[lock]]"></div>
         </div>
     </div>
     <tg-toast id="toaster"></tg-toast>
@@ -229,6 +241,14 @@ Polymer({
             observer: "_updateElementWithContextRetriever"
         },
 
+        /**
+         * Need for locking insertion point during data loading.
+         */
+         lock: {
+            type: Boolean,
+            value: false
+        },
+
         _element: {
             type: Object,
             value: null
@@ -335,6 +355,7 @@ Polymer({
         if (this._element) {
             this._element.centreState = newValue;
         }
+        this.lock = newValue === "VIEW";
     },
 
     _updateElementWithColumnPropertiesMapper: function (newValue, oldValue) {

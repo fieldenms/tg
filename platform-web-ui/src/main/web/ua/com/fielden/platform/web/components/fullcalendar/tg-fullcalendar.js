@@ -61,15 +61,6 @@ const template = html`
             margin-left: 8px;
             @apply --layout-vertical;
         }
-        .lock-layer {
-            opacity: 0.5;
-            display: none;
-            background-color: white;
-            @apply --layout-fit;
-        }
-        .lock-layer[lock] {
-            display: initial;
-        }
     </style>
     <div class="toolbar">
         <slot name="standart-action"></slot>
@@ -85,8 +76,7 @@ const template = html`
                 </div>
             </div>
         </template>
-    </div>
-    <div class="lock-layer" lock$="[[lock]]"></div>`;
+    </div>`;
     
 class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], PolymerElement) {
 
@@ -107,20 +97,6 @@ class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], PolymerElem
             colorProperty: String,
             colorTitleProperty: String,
             colorDescProperty: String,
-
-            centreState: {
-                type: Object,
-                observer: "_centreStateChanged"
-            },
-
-            /**
-             * Need for locking tg-fullcalendar component during data loading.
-             */
-             lock: {
-                type: Boolean,
-                value: false
-            },
-
             _calendar: Object
         };
     }
@@ -177,14 +153,6 @@ class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], PolymerElem
             _calendar.gotoDate(new Date());
             _calendar.getEvents().forEach(event => event.remove());
             _calendar.render();
-        }
-    }
-
-    _centreStateChanged (centreState) {
-        if (centreState === "VIEW") {
-            this.lock = true;
-        } else {
-            this.lock = false;
         }
     }
 
