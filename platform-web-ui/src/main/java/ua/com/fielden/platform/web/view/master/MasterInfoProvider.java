@@ -26,6 +26,7 @@ import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.app.exceptions.WebUiBuilderException;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
+import ua.com.fielden.platform.web.view.master.exceptions.MissingEntityTypeException;
 
 public class MasterInfoProvider {
 
@@ -35,8 +36,26 @@ public class MasterInfoProvider {
         this.webUiConfig = webUiConfig;
     }
 
+    public MasterInfo getMasterInfo(final String className) {
+        return getMasterInfo(getEntityType(className));
+    }
+
     public MasterInfo getMasterInfo(final Class<? extends AbstractEntity<?>> type) {
         return buildConfiguredMasterActionInfo(type, "");
+    }
+
+    /**
+     * Returns the entity type as class. If entityType can not be converted to a class then {@link MissingEntityTypeException} exception will be thrown.
+     *
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private Class<? extends AbstractEntity<?>> getEntityType(final String entityType) {
+        try {
+            return (Class<? extends AbstractEntity<?>>) Class.forName(entityType);
+        } catch (final ClassNotFoundException e) {
+            throw new MissingEntityTypeException(String.format("The entity type class is missing for type: %s", entityType), e);
+        }
     }
 
     private MasterInfo buildConfiguredMasterActionInfo(final Class<? extends AbstractEntity<?>> type, final String relativePropertyName) {
@@ -56,6 +75,7 @@ public class MasterInfoProvider {
                 info.setEntityType(entityActionConfig.functionalEntity.get().getName());
                 info.setRelativePropertyName(relativePropertyName);
                 info.setEntityTypeTitle(getEntityTitleAndDesc(type).getKey());
+                info.setRootEntityType(type);
                 entityActionConfig.prefDimForView.ifPresent(prefDim -> {
                     info.setWidth(prefDim.width);
                     info.setHeight(prefDim.height);
@@ -73,19 +93,17 @@ public class MasterInfoProvider {
         return webUiConfig.configApp().getMaster(type).map(master -> {
             final String entityTitle = getEntityTitleAndDesc(type).getKey();
             final MasterInfo info = new MasterInfo();
-            info.setKey(format("tg-%s-master", type.getSimpleName()));
-            info.setDesc(format("/master_ui/%s", type.getName()));
             info.setKey("tg-EntityEditAction-master");
             info.setDesc("/master_ui/ua.com.fielden.platform.entity.EntityEditAction");
-            info.setShortDesc(format("Edit %s", entityTitle));
+            info.setShortDesc(entityTitle);
             info.setLongDesc(format("Edit %s", entityTitle));
             info.setRequireSelectionCriteria("false");
             info.setRequireSelectedEntities("ONE");
             info.setRequireMasterEntity("false");
-            info.setEntityType(type.getName());
             info.setEntityType(EntityEditAction.class.getName());
             info.setRelativePropertyName(relativePropertyName);
             info.setEntityTypeTitle(entityTitle);
+            info.setRootEntityType(type);
             return info;
         }).orElseGet(tryOtherMasters(type, relativePropertyName));
     }

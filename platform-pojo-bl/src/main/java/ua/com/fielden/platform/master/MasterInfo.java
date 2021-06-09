@@ -72,6 +72,19 @@ public class MasterInfo extends AbstractEntity<String> {
     @IsProperty
     @Title(value = "Entity Type Title", desc = "Entity type title to show during navigation")
     private String entityTypeTitle;
+    
+    @IsProperty
+    private Class<?> rootEntityType;
+
+    @Observable
+    public MasterInfo setRootEntityType(final Class<?> rootEntityType) {
+        this.rootEntityType = rootEntityType;
+        return this;
+    }
+
+    public Class<?> getRootEntityType() {
+        return rootEntityType;
+    }
 
     @Observable
     public MasterInfo setEntityTypeTitle(final String entityTypeTitle) {

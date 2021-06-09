@@ -1111,12 +1111,21 @@ Polymer({
             column.customAction
             || this.isHyperlinkProp(entity, column) === true
             || this.getAttachmentIfPossible(entity, column)
-            || this.isEntityProperty(entity, column)
+            || this.hasDefaultAction(entity, column)
         );
     },
 
-    isEntityProperty: function (entity, column) {
-        return entity && entity.type && entity.type() && this._reflector.tg_determinePropertyType(entity.type(), column.collectionalProperty || column.property) instanceof this._reflector._getEntityTypePrototype();
+    /**
+     * Indicates the presence of default action for 'entity' in the specified 'column'.
+     */
+    hasDefaultAction: function (entity, column) {
+        if (entity && entity.type && entity.type()) {
+            const propertyType = this._reflector.tg_determinePropertyType(entity.type(), column.collectionalProperty || column.property);
+            if (propertyType instanceof this._reflector._getEntityTypePrototype()) { // only entity-typed columns can have default actions ...
+                return propertyType.entityMaster(); // ... and only those, that have corresponding entity masters
+            }
+        }
+        return false;
     },
 
     isVisible: function (entity) {
@@ -1341,7 +1350,7 @@ Polymer({
                 const attachment = this.getAttachmentIfPossible(entity, column);
                 if (attachment && this.downloadAttachment) {
                     this.downloadAttachment(attachment);
-                } else if (this.isEntityProperty(entity, column)) {
+                } else if (this.hasDefaultAction(entity, column)) {
                     column.runDefaultAction(this._currentEntity(entity), this._defaultPropertyAction);
                 }
             } 
@@ -2107,12 +2116,8 @@ Polymer({
                 shortDesc: 'Download',
                 longDesc: 'Click to download attachment.'
             });
-        } else if (!this.isHyperlinkProp(entity, column) && this.isEntityProperty(entity, column)) {
-            const entityTitle = getFirstEntityType(entity, column.collectionalProperty || column.property).entityTitle();
-            return this._generateActionTooltip({
-                shortDesc: `Edit ${entityTitle}`,
-                longDesc: `Edit ${entityTitle}`
-            });
+        } else if (!this.isHyperlinkProp(entity, column) && this.hasDefaultAction(entity, column)) {
+            return this._generateActionTooltip(this.hasDefaultAction(entity, column));
         }
         return "";
     },

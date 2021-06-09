@@ -6,6 +6,8 @@ import ua.com.fielden.platform.menu.Menu;
 import ua.com.fielden.platform.menu.MenuProducer;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
+import ua.com.fielden.platform.web.interfaces.DeviceProfile;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.menu.impl.MainMenuBuilder;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
@@ -21,7 +23,9 @@ public class MenuWebUiConfig {
         return new EntityMaster<Menu>(Menu.class, MenuProducer.class, null, injector) {
             @Override
             public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
-                return desktopMenuBuilder.getActionConfig(actionNumber, actionKind);
+                final IDeviceProvider deviceProvider = injector.getInstance(IDeviceProvider.class);
+                final MainMenuBuilder menuBuilder = deviceProvider.getDeviceProfile() == DeviceProfile.DESKTOP ? desktopMenuBuilder  : mobileMenuBuilder;
+                return menuBuilder.getActionConfig(actionNumber, actionKind);
             }
         };
     }
