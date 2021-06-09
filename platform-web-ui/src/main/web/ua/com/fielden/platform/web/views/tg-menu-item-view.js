@@ -136,16 +136,16 @@ Polymer({
         const elementLoader = this.shadowRoot.querySelector("#elementToLoad")
         const centre = elementLoader.loadedElement;
         if (centre) {
-            if (queryPart // perform reloading in case where new ?crit=val params appear ...
+            const loadCentreFreezed = centre.$ && centre.$.selection_criteria && centre.$.selection_criteria.loadCentreFreezed;
+            if (!loadCentreFreezed && (queryPart // perform reloading in case where new ?crit=val params appear ...
              || unknownSubpath !== centre.configUuid // ... or new configUuid is different from already loaded ...
              || !centre._criteriaLoaded // ... or where criteria was not loaded (e.g. errors during previous loading attempts)
-            ) {
-                const autoRunFreezed = centre.$ && centre.$.selection_criteria && centre.$.selection_criteria.autoRunFreezed;
+            )) {
                 this.async(() => { // load new centre config only after current loading completed; this can be achieved by putting next loading in the end of queue; this is useful for link-configurations
                     centre._selectedView = 0;
                     centre.queryPart = queryPart;
                     centre.configUuid = unknownSubpath;
-                    this._loadCentre.bind(this)(centre, false, autoRunFreezed);
+                    this._loadCentre.bind(this)(centre, false);
                 });
             }
         } else {
@@ -158,7 +158,7 @@ Polymer({
     /**
      * Loads criteria entity for the centre and initiates running for autoRun / link centres.
      */
-    _loadCentre: function (centre, isFirstTime, autoRunFreezed) {
+    _loadCentre: function (centre, isFirstTime) {
         const self = this;
         const oldPostRetrieved = centre.postRetrieved;
         centre.postRetrieved = function (entity, bindingEntity, customObject) {
@@ -166,7 +166,7 @@ Polymer({
                 oldPostRetrieved(entity, bindingEntity, customObject);
             }
             centre._setQueryParams();
-            if (centre.autoRun && !autoRunFreezed || centre.queryPart) {
+            if (centre.autoRun || centre.queryPart) {
                 if (centre._selectedView === 0) {
                     centre.async(() => {
                         centre._selectedView = 1;
@@ -190,7 +190,7 @@ Polymer({
         const self = this;
         if (e.target === this.shadowRoot.querySelector("#elementToLoad")) {
             if (this._isCentre(this.menuItem)) {
-                self._loadCentre.bind(this)(detail, true, false);
+                self._loadCentre.bind(this)(detail, true);
             } else if (this.menuItem.view.viewType === 'master') {
                 detail.postRetrieved = function (entity, bindingEntity, customObject) {
                     self.fire("menu-item-view-loaded", self.menuItem);
