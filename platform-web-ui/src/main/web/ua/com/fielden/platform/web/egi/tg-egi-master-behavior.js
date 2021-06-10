@@ -192,7 +192,7 @@ const TgEgiMasterBehaviorImpl = {
     _masterContainerChanged: function (newContainer, oldContainer) {
         if (oldContainer) {
             oldContainer.removeEventListener('keydown', this._onCaptureKeyDown);
-            oldContainer.removeEventListener('keydown', this._onAlternateSwitching,true);
+            oldContainer.removeEventListener('keydown', this._onAlternateSwitching, true);
         }
         if (newContainer) {
             newContainer.addEventListener('keydown', this._onCaptureKeyDown);
@@ -233,7 +233,7 @@ const TgEgiMasterBehaviorImpl = {
                     this._onTabDown(event);
                 }
             } else if (IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'enter')) {
-                this._saveFocusedEditorAndEditNextRow();
+                this.async(() =>  this._saveFocusedEditorAndEditNextRow(), 1);
                 tearDownEvent(event);
             }
         }
