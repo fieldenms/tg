@@ -138,13 +138,13 @@ const template = html`
 
     <tg-confirmation-dialog id="confirmationDialog"></tg-confirmation-dialog>
 
-    <iron-pages id="views" selected="[[_selectedView]]" on-iron-select="_pageSelectionChanged">
+    <iron-pages id="views" selected="[[_selectedView]]">
         <div class="fit layout vertical">
             <div class="paper-material selection-material layout vertical" elevation="1">
                 <tg-selection-view id="selectionView" _show-dialog="[[_showDialog]]" save-as-name="{{saveAsName}}" _create-context-holder="[[_createContextHolder]]" uuid="[[uuid]]" _confirm="[[_confirm]]" _create-action-object="[[_createActionObject]]" _button-disabled="[[_buttonDisabled]]">
                     <slot name="custom-front-action" slot="custom-front-action"></slot>
                     <slot name="custom-share-action" slot="custom-share-action"></slot>
-                    <slot name="custom-selection-criteria" slot="custom-selection-criteria"></slot>
+                    <slot id="customCriteria" name="custom-selection-criteria" slot="custom-selection-criteria"></slot>
                     <tg-ui-action slot="left-selection-criteria-button" id="saveAction" shortcut="ctrl+s" ui-role='BUTTON' short-desc='Save' long-desc='Save configuration, Ctrl&nbsp+&nbsps'
                                     component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigSaveAction' element-name='tg-CentreConfigSaveAction-master' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]'
                                     attrs='[[bottomActions.0.attrs]]' pre-action='[[bottomActions.0.preAction]]' post-action-success='[[bottomActions.0.postActionSuccess]]' post-action-error='[[bottomActions.0.postActionError]]'
@@ -229,7 +229,10 @@ Polymer({
         },
         _processDiscarderResponse: Function,
         _processDiscarderError: Function,
-        _buttonDisabled: Boolean,
+        _buttonDisabled: {
+            type: Boolean,
+            observer: "_buttonDisabledChanged"
+        },
         _centreDirtyOrEdited: Boolean,
         _viewerDisabled: Boolean,
         discard: Function,
@@ -281,6 +284,24 @@ Polymer({
             this.$.customEgiSlot.assignedNodes({ flatten: true })[0], 
             ...this.$.alternativeViewSlot.assignedNodes({ flatten: true })];
         this._confirm = this.confirm.bind(this);
+
+        this.$.customCriteria.assignedNodes({ flatten: true })[0].addEventListener("_criteria-loaded-changed", (e) => {
+            if(e.detail.value) {
+                this.$.views.addEventListener("iron-select", this._pageSelectionChanged.bind(this))
+                new Promise((resolve, reject) => {
+                    this._afterCriteriaLoadedPromise = resolve;
+                }).then((res) => {
+                    this.async(() => this._pageSelectionChanged({target: this.$.views}), 1);    
+                });
+            }
+        });
+    },
+
+    _buttonDisabledChanged: function (newValue) {
+        if (!newValue && this._afterCriteriaLoadedPromise) {
+            this._afterCriteriaLoadedPromise(newValue);
+            this._afterCriteriaLoadedPromise = null;
+        }
     },
 
     attached: function () {

@@ -827,7 +827,7 @@ const TgEntityCentreBehaviorImpl = {
             this.centreSelection = e.detail;
         }.bind(self));
 
-        //Add event listener that indicates whne the layout has finished
+        //Add event listener that indicates when the layout has finished
         self.addEventListener("layout-finished", e => {
             const target = e.composedPath()[0];
             if (target === self.$.selection_criteria.$.masterDom.firstElementChild) {
