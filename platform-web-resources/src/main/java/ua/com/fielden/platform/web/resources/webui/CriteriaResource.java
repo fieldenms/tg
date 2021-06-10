@@ -311,7 +311,7 @@ public class CriteriaResource extends AbstractWebResource {
             // current user gets uuid as part of sharing process from other base/non-base user;
             // need to determine non-conflicting name for current user from preliminarySaveAsName
             actualSaveAsName = of(determineNonConflictingName(preliminarySaveAsName, -1));
-            final Function<String, Function<String, Consumer<Optional<String>>>> createInheritedFromShared = surrogateName -> newDescription -> uuid -> saveNewEntityCentreManager(
+            final Function<String, Function<Boolean, Function<String, Consumer<Optional<String>>>>> createInheritedFromShared = surrogateName -> runAutomatically -> newDescription -> uuid -> saveNewEntityCentreManager(
                 true,
                 upstreamConfig.getConfigBody(),
                 miType,
@@ -320,11 +320,11 @@ public class CriteriaResource extends AbstractWebResource {
                 newDescription,
                 eccCompanion,
                 mmiCompanion,
-                ecc -> uuid.map(u -> ecc.setConfigUuid(u)).orElse(ecc)
+                ecc -> uuid.map(u -> ecc.setConfigUuid(u)).orElse(ecc).setRunAutomatically(runAutomatically)
             );
             final EntityCentreConfig freshConfigForCreator = findConfigOptByUuid(configUuid, upstreamConfigCreator, miType, device(), FRESH_CENTRE_NAME, eccCompanion).get(); // need to retrieve FRESH config to get 'desc' -- that's because SAVED centres haven't stored descriptions, only FRESH do; this config must be present, otherwise savedConfigForOtherUser would not exist
-            createInheritedFromShared.apply(FRESH_CENTRE_NAME).apply(freshConfigForCreator.getDesc()).accept(of(configUuid)); // update (FRESH only) with upstream description and configUuid during creation
-            createInheritedFromShared.apply(SAVED_CENTRE_NAME).apply(null).accept(empty());
+            createInheritedFromShared.apply(FRESH_CENTRE_NAME).apply(freshConfigForCreator.isRunAutomatically()).apply(freshConfigForCreator.getDesc()).accept(of(configUuid)); // update (FRESH only) with upstream description and configUuid during creation
+            createInheritedFromShared.apply(SAVED_CENTRE_NAME).apply(false).apply(null).accept(empty());
         }
         return actualSaveAsName;
     }

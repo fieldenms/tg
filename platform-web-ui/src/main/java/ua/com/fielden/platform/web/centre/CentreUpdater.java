@@ -339,7 +339,7 @@ public class CentreUpdater {
         final Function<User, Function<Optional<String>, Boolean>> updateCentreRunAutomatically0 = customUser -> customSaveAsName -> {
             final String deviceSpecificName = deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, customSaveAsName), device);
             final EntityCentreConfig config = findConfig(miType, customUser, deviceSpecificName + DIFFERENCES_SUFFIX, eccCompanion);
-            return config != null ? config.isRunAutomatically() : webUiConfig.getCentres().get(miType).isRunAutomatically();
+            return config != null ? config.isRunAutomatically() : webUiConfig != null ? webUiConfig.getCentres().get(miType).isRunAutomatically() : false;
         };
         if (!saveAsName.isPresent()) {
             return updateCentreRunAutomatically0.apply(user).apply(saveAsName); // default

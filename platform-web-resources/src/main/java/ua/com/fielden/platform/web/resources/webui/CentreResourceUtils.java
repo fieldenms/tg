@@ -1278,13 +1278,14 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     public static EntityCentreConfig updateInheritedFromShared(final EntityCentreConfig upstreamConfig, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final Optional<String> saveAsName, final User user, final IEntityCentreConfig eccCompanion, final Optional<Supplier<Boolean>> checkChanges) {
         final String upstreamTitle = obtainTitleFrom(upstreamConfig.getTitle(), SAVED_CENTRE_NAME, device);
         final Optional<String> changedTitle = !equalsEx(upstreamTitle, saveAsName.get()) ? of(upstreamTitle) : empty();
-        final Function<String, Consumer<Supplier<String>>> overrideConfigBodyFor = name -> calcDesc ->
-            findConfigOpt(miType, user, NAME_OF.apply(name).apply(saveAsName).apply(device), eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("configBody")) // contains 'title' / 'desc' inside fetch model
+        final Function<String, Function<Supplier<Optional<Boolean>>, Consumer<Supplier<String>>>> overrideConfigBodyFor = name -> calcRunAutomaticallyOpt -> calcDesc ->
+            findConfigOpt(miType, user, NAME_OF.apply(name).apply(saveAsName).apply(device), eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("configBody").with("runAutomatically")) // contains 'title' / 'desc' inside fetch model
             .ifPresent(config -> {
                 final String desc = calcDesc.get();
                 if (desc != null) {
                     config.setDesc(desc);
                 }
+                calcRunAutomaticallyOpt.get().ifPresent(runAutomatically -> config.setRunAutomatically(runAutomatically));
                 changedTitle.ifPresent(ct -> config.setTitle(NAME_OF.apply(name).apply(of(ct)).apply(device))); // update title of configuration from upstream if it has changed
                 eccCompanion.saveWithConflicts(config.setConfigBody(upstreamConfig.getConfigBody()));
             });
@@ -1293,10 +1294,14 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         );
         final boolean notUpdateFresh = checkChanges.map(check -> check.get()).orElse(FALSE);
         // update SAVED surrogate configuration; always
-        overrideConfigBodyFor.apply(SAVED_CENTRE_NAME).accept(() -> null);
+        overrideConfigBodyFor.apply(SAVED_CENTRE_NAME)
+            .apply(() -> empty())
+            .accept(() -> null);
         if (!notUpdateFresh) {
             // update FRESH surrogate configuration; if there are no local changes or if local changes are irrelevant (DISCARD)
-            overrideConfigBodyFor.apply(FRESH_CENTRE_NAME).accept(() -> updateCentreDesc(upstreamConfig.getOwner(), miType, of(upstreamTitle), device, eccCompanion));
+            overrideConfigBodyFor.apply(FRESH_CENTRE_NAME)
+                .apply(() -> of(updateCentreRunAutomatically(upstreamConfig.getOwner(), miType, of(upstreamTitle), device, eccCompanion, null, null)))
+                .accept(() -> updateCentreDesc(upstreamConfig.getOwner(), miType, of(upstreamTitle), device, eccCompanion));
         } else {
             // update FRESH surrogate configuration; only if upstream title has been changed
             changedTitle.ifPresent(ct -> overrideConfigTitleFor.apply(FRESH_CENTRE_NAME).accept(ct));
