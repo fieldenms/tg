@@ -246,8 +246,13 @@ public class CriteriaResource extends AbstractWebResource {
                 resolvedConfigUuid = configUuid;
             } else {
                 if (!wasLoadedPreviously) { // client-driven first time loading of centre's selection criteria
-                    actualSaveAsName = retrievePreferredConfigName(user, miType, device(), companionFinder); // preferred configuration should be loaded
-                    resolvedConfigUuid = updateCentreConfigUuid(user, miType, actualSaveAsName, device(), eccCompanion);
+                    final Optional<String> preliminarySaveAsName = retrievePreferredConfigName(user, miType, device(), companionFinder); // preferred configuration should be loaded
+                    resolvedConfigUuid = updateCentreConfigUuid(user, miType, preliminarySaveAsName, device(), eccCompanion);
+                    if (resolvedConfigUuid.isPresent()) { // preferred config can be inherited from base / shared (link configs can not be preferred, no need to check it here)
+                        actualSaveAsName = updateFromUpstream(resolvedConfigUuid.get(), preliminarySaveAsName); // it needs updating from upstream -- only for the configs that has configUuid aka non-default
+                    } else {
+                        actualSaveAsName = preliminarySaveAsName;
+                    }
                 } else {
                     actualSaveAsName = empty(); // in case where first time loading has been occurred earlier we still prefer configuration specified by absence of uuid: default
                     if (!webUiConfig.isEmbeddedCentre(miType)) { // standalone centres only, not embedded
@@ -365,6 +370,8 @@ public class CriteriaResource extends AbstractWebResource {
                     }
                     updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
                     updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder); // do not leave only FRESH centre out of two (FRESH + SAVED) => update SAVED centre explicitly
+                    
+                    makePreferred(user, miType, saveAsName, device(), companionFinder); // inherited from base always gets preferred on loading; must leave it preferred after deletion
                 } else {
                     if (sharingModel.isSharedWith(configUuid, user).isSuccessful()) {
                         // inherited from shared
