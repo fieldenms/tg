@@ -10,13 +10,13 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 
 /** 
- * DAO implementation for companion object {@link ICentreConfigConfigureAction}.
+ * DAO implementation for companion object {@link CentreConfigConfigureActionCo}.
  * 
  * @author TG Team
  *
  */
 @EntityType(CentreConfigConfigureAction.class)
-public class CentreConfigConfigureActionDao extends CommonEntityDao<CentreConfigConfigureAction> implements ICentreConfigConfigureAction {
+public class CentreConfigConfigureActionDao extends CommonEntityDao<CentreConfigConfigureAction> implements CentreConfigConfigureActionCo {
     private final ICriteriaEntityRestorer criteriaEntityRestorer;
     
     @Inject

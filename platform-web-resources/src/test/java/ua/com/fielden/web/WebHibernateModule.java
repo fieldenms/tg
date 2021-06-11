@@ -78,18 +78,18 @@ import ua.com.fielden.platform.web.centre.CentreConfigShareActionDao;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDao;
 import ua.com.fielden.platform.web.centre.CustomisableColumnDao;
 import ua.com.fielden.platform.web.centre.ICentreColumnWidthConfigUpdater;
-import ua.com.fielden.platform.web.centre.ICentreConfigConfigureAction;
-import ua.com.fielden.platform.web.centre.ICentreConfigDeleteAction;
-import ua.com.fielden.platform.web.centre.ICentreConfigDuplicateAction;
-import ua.com.fielden.platform.web.centre.ICentreConfigEditAction;
-import ua.com.fielden.platform.web.centre.ICentreConfigLoadAction;
-import ua.com.fielden.platform.web.centre.ICentreConfigNewAction;
-import ua.com.fielden.platform.web.centre.ICentreConfigSaveAction;
-import ua.com.fielden.platform.web.centre.ICentreConfigShareAction;
+import ua.com.fielden.platform.web.centre.CentreConfigConfigureActionCo;
+import ua.com.fielden.platform.web.centre.CentreConfigDeleteActionCo;
+import ua.com.fielden.platform.web.centre.CentreConfigDuplicateActionCo;
+import ua.com.fielden.platform.web.centre.CentreConfigEditActionCo;
+import ua.com.fielden.platform.web.centre.CentreConfigLoadActionCo;
+import ua.com.fielden.platform.web.centre.CentreConfigNewActionCo;
+import ua.com.fielden.platform.web.centre.CentreConfigSaveActionCo;
+import ua.com.fielden.platform.web.centre.CentreConfigShareActionCo;
 import ua.com.fielden.platform.web.centre.ICentreConfigUpdater;
 import ua.com.fielden.platform.web.centre.ICustomisableColumn;
-import ua.com.fielden.platform.web.centre.ILoadableCentreConfig;
-import ua.com.fielden.platform.web.centre.IOverrideCentreConfig;
+import ua.com.fielden.platform.web.centre.LoadableCentreConfigCo;
+import ua.com.fielden.platform.web.centre.OverrideCentreConfigCo;
 import ua.com.fielden.platform.web.centre.LoadableCentreConfigDao;
 import ua.com.fielden.platform.web.centre.OverrideCentreConfigDao;
 import ua.com.fielden.platform.web.utils.CriteriaEntityRestorer;
@@ -127,12 +127,12 @@ public class WebHibernateModule extends CommonFactoryModule {
         bind(ISecurityTokenInfo.class).to(SecurityTokenInfoDao.class);
         bind(ICustomisableColumn.class).to(CustomisableColumnDao.class);
         
-        bind(ICentreConfigShareAction.class).to(CentreConfigShareActionDao.class);
-        bind(ICentreConfigNewAction.class).to(CentreConfigNewActionDao.class);
-        bind(ICentreConfigDuplicateAction.class).to(CentreConfigDuplicateActionDao.class);
-        bind(ICentreConfigDeleteAction.class).to(CentreConfigDeleteActionDao.class);
-        bind(ILoadableCentreConfig.class).to(LoadableCentreConfigDao.class);
-        bind(IOverrideCentreConfig.class).to(OverrideCentreConfigDao.class);
+        bind(CentreConfigShareActionCo.class).to(CentreConfigShareActionDao.class);
+        bind(CentreConfigNewActionCo.class).to(CentreConfigNewActionDao.class);
+        bind(CentreConfigDuplicateActionCo.class).to(CentreConfigDuplicateActionDao.class);
+        bind(CentreConfigDeleteActionCo.class).to(CentreConfigDeleteActionDao.class);
+        bind(LoadableCentreConfigCo.class).to(LoadableCentreConfigDao.class);
+        bind(OverrideCentreConfigCo.class).to(OverrideCentreConfigDao.class);
         
         bind(IUserAndRoleAssociation.class).to(UserAndRoleAssociationDao.class);
         bind(ISecurityRoleAssociation.class).to(SecurityRoleAssociationDao.class);
@@ -166,9 +166,9 @@ public class WebHibernateModule extends CommonFactoryModule {
         bind(ICentreConfigUpdater.class).to(CentreConfigUpdaterDao.class);
         bind(ICentreColumnWidthConfigUpdater.class).to(CentreColumnWidthConfigUpdaterDao.class);
         
-        bind(ICentreConfigLoadAction.class).to(CentreConfigLoadActionDao.class);
-        bind(ICentreConfigEditAction.class).to(CentreConfigEditActionDao.class);
-        bind(ICentreConfigSaveAction.class).to(CentreConfigSaveActionDao.class);
-        bind(ICentreConfigConfigureAction.class).to(CentreConfigConfigureActionDao.class);
+        bind(CentreConfigLoadActionCo.class).to(CentreConfigLoadActionDao.class);
+        bind(CentreConfigEditActionCo.class).to(CentreConfigEditActionDao.class);
+        bind(CentreConfigSaveActionCo.class).to(CentreConfigSaveActionDao.class);
+        bind(CentreConfigConfigureActionCo.class).to(CentreConfigConfigureActionDao.class);
     }
 }

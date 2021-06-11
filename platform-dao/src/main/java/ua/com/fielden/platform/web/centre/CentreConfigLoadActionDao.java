@@ -22,13 +22,13 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 
 /** 
- * DAO implementation for companion object {@link ICentreConfigLoadAction}.
+ * DAO implementation for companion object {@link CentreConfigLoadActionCo}.
  * 
  * @author TG Team
  *
  */
 @EntityType(CentreConfigLoadAction.class)
-public class CentreConfigLoadActionDao extends CommonEntityDao<CentreConfigLoadAction> implements ICentreConfigLoadAction {
+public class CentreConfigLoadActionDao extends CommonEntityDao<CentreConfigLoadAction> implements CentreConfigLoadActionCo {
     private final ICriteriaEntityRestorer criteriaEntityRestorer;
     private static final String ERR_EXACTLY_ONE_CONFIGURATION_MUST_BE_SELECTED = "Please select configuration to load.";
     

@@ -19,7 +19,7 @@ import ua.com.fielden.platform.ui.config.EntityCentreConfig;
  */
 @KeyType(String.class)
 @KeyTitle(value = "Save As Name", desc = "Save As Name of loadable centre configuration.")
-@CompanionObject(ILoadableCentreConfig.class)
+@CompanionObject(LoadableCentreConfigCo.class)
 @DescTitle(value = "Description", desc = "Description of loadable centre configuration.")
 public class LoadableCentreConfig extends AbstractEntity<String> {
 

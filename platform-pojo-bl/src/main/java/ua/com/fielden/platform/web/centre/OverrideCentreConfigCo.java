@@ -8,6 +8,6 @@ import ua.com.fielden.platform.dao.IEntityDao;
  * @author Developers
  *
  */
-public interface IOverrideCentreConfig extends IEntityDao<OverrideCentreConfig> {
+public interface OverrideCentreConfigCo extends IEntityDao<OverrideCentreConfig> {
 
 }

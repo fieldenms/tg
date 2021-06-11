@@ -8,6 +8,6 @@ import ua.com.fielden.platform.dao.IEntityDao;
  * @author TG Team
  *
  */
-public interface ICentreConfigDeleteAction extends IEntityDao<CentreConfigDeleteAction> {
+public interface CentreConfigDeleteActionCo extends IEntityDao<CentreConfigDeleteAction> {
     
 }

@@ -24,10 +24,10 @@ import ua.com.fielden.platform.web.centre.CentreConfigLoadActionDao;
 import ua.com.fielden.platform.web.centre.CentreConfigSaveActionDao;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDao;
 import ua.com.fielden.platform.web.centre.ICentreColumnWidthConfigUpdater;
-import ua.com.fielden.platform.web.centre.ICentreConfigConfigureAction;
-import ua.com.fielden.platform.web.centre.ICentreConfigEditAction;
-import ua.com.fielden.platform.web.centre.ICentreConfigLoadAction;
-import ua.com.fielden.platform.web.centre.ICentreConfigSaveAction;
+import ua.com.fielden.platform.web.centre.CentreConfigConfigureActionCo;
+import ua.com.fielden.platform.web.centre.CentreConfigEditActionCo;
+import ua.com.fielden.platform.web.centre.CentreConfigLoadActionCo;
+import ua.com.fielden.platform.web.centre.CentreConfigSaveActionCo;
 import ua.com.fielden.platform.web.centre.ICentreConfigUpdater;
 import ua.com.fielden.platform.web.centre.api.actions.multi.SingleActionSelector;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
@@ -77,10 +77,10 @@ public interface IBasicWebApplicationServerModule {
         bindType(ICentreConfigUpdater.class).to(CentreConfigUpdaterDao.class);
         bindType(ICentreColumnWidthConfigUpdater.class).to(CentreColumnWidthConfigUpdaterDao.class);
 
-        bindType(ICentreConfigLoadAction.class).to(CentreConfigLoadActionDao.class);
-        bindType(ICentreConfigEditAction.class).to(CentreConfigEditActionDao.class);
-        bindType(ICentreConfigSaveAction.class).to(CentreConfigSaveActionDao.class);
-        bindType(ICentreConfigConfigureAction.class).to(CentreConfigConfigureActionDao.class);
+        bindType(CentreConfigLoadActionCo.class).to(CentreConfigLoadActionDao.class);
+        bindType(CentreConfigEditActionCo.class).to(CentreConfigEditActionDao.class);
+        bindType(CentreConfigSaveActionCo.class).to(CentreConfigSaveActionDao.class);
+        bindType(CentreConfigConfigureActionCo.class).to(CentreConfigConfigureActionDao.class);
         
         bindType(SingleActionSelector.class).toInstance(INSTANCE); // singleton
     }

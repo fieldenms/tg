@@ -607,7 +607,7 @@ public class CentreUpdater {
             final List<LoadableCentreConfig> loadableConfigurations = new ArrayList<>();
             
             final IEntityCentreConfig eccCompanion = companionFinder.find(EntityCentreConfig.class);
-            final ILoadableCentreConfig lccCompanion = companionFinder.find(LoadableCentreConfig.class);
+            final LoadableCentreConfigCo lccCompanion = companionFinder.find(LoadableCentreConfig.class);
             
             final String surrogateNamePrefix = deviceSpecific(FRESH_CENTRE_NAME, device);
             final EntityResultQueryModel<EntityCentreConfig> queryForCurrentUser = findConfigsFunction(user, miType, device, eccCompanion).apply(saveAsNameOpt);
@@ -789,7 +789,7 @@ public class CentreUpdater {
      * @param lccCompanion
      * @return
      */
-    private static LoadableCentreConfig createLoadableCentreConfig(final EntityCentreConfig ecc, final boolean inherited, final String surrogateNamePrefix, final ILoadableCentreConfig lccCompanion) {
+    private static LoadableCentreConfig createLoadableCentreConfig(final EntityCentreConfig ecc, final boolean inherited, final String surrogateNamePrefix, final LoadableCentreConfigCo lccCompanion) {
         final LoadableCentreConfig lcc = lccCompanion.new_();
         lcc.setInherited(inherited).setConfig(ecc).setKey(obtainTitleFrom(ecc.getTitle(), surrogateNamePrefix)).setDesc(ecc.getDesc());
         return lcc;

@@ -22,7 +22,7 @@ import ua.com.fielden.platform.entity.annotation.Observable;
  *
  */
 @KeyType(NoKey.class)
-@CompanionObject(ICentreConfigShareAction.class)
+@CompanionObject(CentreConfigShareActionCo.class)
 public class CentreConfigShareAction extends AbstractFunctionalEntityWithCentreContext<NoKey> {
     
     public CentreConfigShareAction() {

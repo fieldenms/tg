@@ -126,13 +126,13 @@ import ua.com.fielden.platform.web.centre.CentreConfigDuplicateActionDao;
 import ua.com.fielden.platform.web.centre.CentreConfigNewActionDao;
 import ua.com.fielden.platform.web.centre.CentreConfigShareActionDao;
 import ua.com.fielden.platform.web.centre.CustomisableColumnDao;
-import ua.com.fielden.platform.web.centre.ICentreConfigDeleteAction;
-import ua.com.fielden.platform.web.centre.ICentreConfigDuplicateAction;
-import ua.com.fielden.platform.web.centre.ICentreConfigNewAction;
-import ua.com.fielden.platform.web.centre.ICentreConfigShareAction;
+import ua.com.fielden.platform.web.centre.CentreConfigDeleteActionCo;
+import ua.com.fielden.platform.web.centre.CentreConfigDuplicateActionCo;
+import ua.com.fielden.platform.web.centre.CentreConfigNewActionCo;
+import ua.com.fielden.platform.web.centre.CentreConfigShareActionCo;
 import ua.com.fielden.platform.web.centre.ICustomisableColumn;
-import ua.com.fielden.platform.web.centre.ILoadableCentreConfig;
-import ua.com.fielden.platform.web.centre.IOverrideCentreConfig;
+import ua.com.fielden.platform.web.centre.LoadableCentreConfigCo;
+import ua.com.fielden.platform.web.centre.OverrideCentreConfigCo;
 import ua.com.fielden.platform.web.centre.LoadableCentreConfigDao;
 import ua.com.fielden.platform.web.centre.OverrideCentreConfigDao;
 import ua.com.fielden.platform.web_api.GraphQLService;
@@ -275,12 +275,12 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(ISecurityMatrixSaveAction.class).to(SecurityMatrixSaveActionDao.class);
 
         bind(ICustomisableColumn.class).to(CustomisableColumnDao.class);
-        bind(ICentreConfigShareAction.class).to(CentreConfigShareActionDao.class);
-        bind(ICentreConfigNewAction.class).to(CentreConfigNewActionDao.class);
-        bind(ICentreConfigDuplicateAction.class).to(CentreConfigDuplicateActionDao.class);
-        bind(ICentreConfigDeleteAction.class).to(CentreConfigDeleteActionDao.class);
-        bind(ILoadableCentreConfig.class).to(LoadableCentreConfigDao.class);
-        bind(IOverrideCentreConfig.class).to(OverrideCentreConfigDao.class);
+        bind(CentreConfigShareActionCo.class).to(CentreConfigShareActionDao.class);
+        bind(CentreConfigNewActionCo.class).to(CentreConfigNewActionDao.class);
+        bind(CentreConfigDuplicateActionCo.class).to(CentreConfigDuplicateActionDao.class);
+        bind(CentreConfigDeleteActionCo.class).to(CentreConfigDeleteActionDao.class);
+        bind(LoadableCentreConfigCo.class).to(LoadableCentreConfigDao.class);
+        bind(OverrideCentreConfigCo.class).to(OverrideCentreConfigDao.class);
 
         bind(IUserAndRoleAssociation.class).to(UserAndRoleAssociationDao.class);
         bind(ISecurityRoleAssociation.class).to(SecurityRoleAssociationDao.class);

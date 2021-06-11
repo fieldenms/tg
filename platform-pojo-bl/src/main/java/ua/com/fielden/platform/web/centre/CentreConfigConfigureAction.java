@@ -12,7 +12,7 @@ import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
  * @author TG Team
  *
  */
-@CompanionObject(ICentreConfigConfigureAction.class)
+@CompanionObject(CentreConfigConfigureActionCo.class)
 public class CentreConfigConfigureAction extends AbstractCentreConfigAction {
     
     @IsProperty
