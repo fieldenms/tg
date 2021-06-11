@@ -50,20 +50,6 @@ public abstract class AbstractCentreConfigCommitAction extends AbstractCentreCon
     @Readonly // TODO remove when dashboardable functionality will be available
     private Duration dashboardRefreshFrequency;
     
-    @IsProperty
-    @Title(value = "Run automatically?", desc = "Defines whether this configuration should be auto run upon loading")
-    private boolean runAutomatically = false;
-
-    @Observable
-    public AbstractCentreConfigCommitAction setRunAutomatically(final boolean runAutomatically) {
-        this.runAutomatically = runAutomatically;
-        return this;
-    }
-
-    public boolean isRunAutomatically() {
-        return runAutomatically;
-    }
-    
     @Observable
     public AbstractCentreConfigCommitAction setDashboardRefreshFrequency(final Duration dashboardRefreshFrequency) {
         this.dashboardRefreshFrequency = dashboardRefreshFrequency;

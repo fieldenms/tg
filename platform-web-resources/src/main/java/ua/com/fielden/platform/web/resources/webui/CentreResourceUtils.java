@@ -705,8 +705,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             return updateCentreConfigUuid(user, miType, saveAsNameForConfigUuid, device, eccCompanion);
         });
         // changes title / desc for current saveAsName'd configuration; returns custom object containing centre information
-        validationPrototype.setCentreEditor(newName -> newDesc -> dashboardable -> dashboardRefreshFrequency -> runAutomatically -> {
-            editCentreTitleAndDesc(user, miType, saveAsName, device, newName, newDesc, dashboardable, dashboardRefreshFrequency, runAutomatically, eccCompanion);
+        validationPrototype.setCentreEditor(newName -> newDesc -> dashboardable -> dashboardRefreshFrequency -> {
+            editCentreTitleAndDesc(user, miType, saveAsName, device, newName, newDesc, dashboardable, dashboardRefreshFrequency, eccCompanion);
             // currently loaded configuration should remain preferred -- no action is required
             return validationPrototype.centreCustomObject(
                 createCriteriaEntity(validationPrototype.centreContextHolder().getModifHolder(), companionFinder, critGenerator, miType, of(newName), user, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel),
@@ -725,7 +725,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             );
         });
         // performs copying of current configuration with the specified title / desc; makes it preferred; returns custom object containing centre information
-        validationPrototype.setCentreSaver(newName -> newDesc -> dashboardable -> dashboardRefreshFrequency -> runAutomatically -> {
+        validationPrototype.setCentreSaver(newName -> newDesc -> dashboardable -> dashboardRefreshFrequency -> {
             final Optional<String> newSaveAsName = of(newName);
             final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
             // save 'freshCentre' with a new name into FRESH / SAVED -- button SAVE will be disabled
@@ -737,7 +737,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                         if (FRESH_CENTRE_NAME.equals(surrogateName)) {
                             config.setDashboardable(dashboardable);
                             config.setDashboardRefreshFrequency(dashboardRefreshFrequency);
-                            config.setRunAutomatically(runAutomatically);
                         }
                         eccCompanion.saveWithConflicts(config.setConfigUuid(newConfigUuid));
                     }); // update with newConfigUuid

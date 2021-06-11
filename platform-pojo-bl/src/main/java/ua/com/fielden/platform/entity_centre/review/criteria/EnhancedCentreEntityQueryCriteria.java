@@ -37,8 +37,8 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private Supplier<ICentreDomainTreeManagerAndEnhancer> previouslyRunCentreSupplier;
     /** IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE. */
     private Function<Map<String, Object>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>> freshCentreApplier;
-    private Function<String, Function<String, Function<Boolean, Function<Duration, Function<Boolean, Map<String, Object>>>>>> centreEditor;
-    private Function<String, Function<String, Function<Boolean, Function<Duration, Function<Boolean, Map<String, Object>>>>>> centreSaver;
+    private Function<String, Function<String, Function<Boolean, Function<Duration, Map<String, Object>>>>> centreEditor;
+    private Function<String, Function<String, Function<Boolean, Function<Duration, Map<String, Object>>>>> centreSaver;
     private Function<Boolean, Map<String, Object>> centreConfigurator;
     private Runnable centreDeleter;
     /** IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE. */
@@ -154,12 +154,12 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
         return freshCentreApplier.apply(modifHolder);
     }
 
-    public void setCentreEditor(final Function<String, Function<String, Function<Boolean, Function<Duration, Function<Boolean, Map<String, Object>>>>>> centreEditor) {
+    public void setCentreEditor(final Function<String, Function<String, Function<Boolean, Function<Duration, Map<String, Object>>>>> centreEditor) {
         this.centreEditor = centreEditor;
     }
 
-    public Map<String, Object> editCentre(final String title, final String desc, final boolean dashboardable, final Duration dashboardRefreshFrequency, final boolean runAutomatically) {
-        return centreEditor.apply(title).apply(desc).apply(dashboardable).apply(dashboardRefreshFrequency).apply(runAutomatically);
+    public Map<String, Object> editCentre(final String title, final String desc, final boolean dashboardable, final Duration dashboardRefreshFrequency) {
+        return centreEditor.apply(title).apply(desc).apply(dashboardable).apply(dashboardRefreshFrequency);
     }
 
     public void setCentreConfigurator(final Function<Boolean, Map<String, Object>> centreConfigurator) {
@@ -170,12 +170,12 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
         return centreConfigurator.apply(runAutomatically);
     }
 
-    public void setCentreSaver(final Function<String, Function<String, Function<Boolean, Function<Duration, Function<Boolean, Map<String, Object>>>>>> centreSaver) {
+    public void setCentreSaver(final Function<String, Function<String, Function<Boolean, Function<Duration, Map<String, Object>>>>> centreSaver) {
         this.centreSaver = centreSaver;
     }
 
-    public Map<String, Object> saveCentre(final String title, final String desc, final boolean dashboardable, final Duration dashboardRefreshFrequency, final boolean runAutomatically) {
-        return centreSaver.apply(title).apply(desc).apply(dashboardable).apply(dashboardRefreshFrequency).apply(runAutomatically);
+    public Map<String, Object> saveCentre(final String title, final String desc, final boolean dashboardable, final Duration dashboardRefreshFrequency) {
+        return centreSaver.apply(title).apply(desc).apply(dashboardable).apply(dashboardRefreshFrequency);
     }
 
     public void setDefaultCentreClearer(final Runnable defaultCentreClearer) {

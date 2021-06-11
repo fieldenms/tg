@@ -410,7 +410,6 @@ public class CentreUpdater {
             final String newDesc,
             final boolean newDashboardable,
             final Duration newDashboardRefreshFrequency,
-            final boolean newRunAutomatically,
             final IEntityCentreConfig eccCompanion) {
         final Function<Optional<String>, Function<String, String>> nameOf = (saveAs) -> (surrogateName) -> deviceSpecific(saveAsSpecific(surrogateName, saveAs), device) + DIFFERENCES_SUFFIX;
         final Function<String, String> currentNameOf = nameOf.apply(saveAsName);
@@ -432,11 +431,10 @@ public class CentreUpdater {
         if (previouslyRunConfig != null) { // previouslyRun centre may not exist
             previouslyRunConfig.setTitle(previouslyRunNewTitle);
         }
-        // newDesc / newDashboardable / newDashboardRefreshFrequency / newRunAutomatically
+        // newDesc / newDashboardable / newDashboardRefreshFrequency
         freshConfig.setDesc(newDesc);
         freshConfig.setDashboardable(newDashboardable);
         freshConfig.setDashboardRefreshFrequency(newDashboardRefreshFrequency);
-        freshConfig.setRunAutomatically(newRunAutomatically);
         
         // clear all centres with the same name in the case where title has been changed -- new title potentially can be in conflict with another configuration and that another configuration should be deleted
         if (!equalsEx(saveAsName, of(newTitle))) {

@@ -26,7 +26,7 @@ public class CentreConfigSaveActionDao extends AbstractCentreConfigCommitActionD
     protected Map<String, Object> performSave(final CentreConfigSaveAction entity) {
         return criteriaEntityRestorer
             .restoreCriteriaEntity(entity.getCentreContextHolder())
-            .saveCentre(entity.getTitle(), entity.getDesc(), entity.isDashboardable(), entity.getDashboardRefreshFrequency(), entity.isRunAutomatically());
+            .saveCentre(entity.getTitle(), entity.getDesc(), entity.isDashboardable(), entity.getDashboardRefreshFrequency());
     }
     
 }

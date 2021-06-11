@@ -12,7 +12,7 @@ import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.html;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layout;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.mkActionLayoutForMaster;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.mkVarGridForMasterFitWidth;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.mkGridForMasterFitWidth;
 import static ua.com.fielden.platform.web.view.master.api.actions.MasterActions.REFRESH;
 import static ua.com.fielden.platform.web.view.master.api.actions.MasterActions.SAVE;
 
@@ -184,7 +184,7 @@ public class CentreConfigurationWebUiConfig {
      */
     private static IMaster<CentreConfigConfigureAction> createCentreConfigConfigureActionMasterConfiguration(final Injector injector) {
         final String actionLayout = mkActionLayoutForMaster();
-        final String layout = mkVarGridForMasterFitWidth(1);
+        final String layout = mkGridForMasterFitWidth(1, 1);
 
         return new SimpleMasterBuilder<CentreConfigConfigureAction>()
             .forEntity(CentreConfigConfigureAction.class)
@@ -212,13 +212,12 @@ public class CentreConfigurationWebUiConfig {
      */
     private static <T extends AbstractCentreConfigCommitAction> IMaster<T> createCentreConfigCommitActionMaster(final Injector injector, final Class<T> entityType, final String customSaveDesc, final String customCancelDesc) {
         final String actionLayout = mkActionLayoutForMaster();
-        final String layout = mkVarGridForMasterFitWidth(1, 1, 2, 1);
+        final String layout = mkGridForMasterFitWidth(4, 1);
 
         return new SimpleMasterBuilder<T>()
             .forEntity(entityType)
             .addProp("title").asSinglelineText().also()
             .addProp("desc").asMultilineText().also()
-            .addProp("runAutomatically").asCheckbox().also()
             .addProp("dashboardable").asCheckbox().also()
             .addProp("dashboardRefreshFrequency").asAutocompleter().also()
             .addAction(REFRESH).shortDesc("CANCEL").longDesc(customCancelDesc)

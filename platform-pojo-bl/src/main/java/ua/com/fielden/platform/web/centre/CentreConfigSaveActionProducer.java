@@ -41,7 +41,6 @@ public class CentreConfigSaveActionProducer extends AbstractCentreConfigCommitAc
             } else {
                 setTitleAndDesc(entity, saveAsName.get(), selectionCrit, COPY_ACTION_SUFFIX);
             }
-            entity.setRunAutomatically(selectionCrit.centreRunAutomatically(saveAsName));
             return getCustomObject(selectionCrit, appliedCriteriaEntity, empty()); // not yet transitioned to another config -- do not update configUuid / saveAsName on client-side
         } else { // owned configuration should be saved without opening 'Save As...' dialog
             entity.setSkipUi(true);
