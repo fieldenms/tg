@@ -15,6 +15,7 @@ import '/resources/components/tg-toast.js';
 import '/resources/egi/tg-responsive-toolbar.js';
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
+import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 
 import '/resources/polymer/@polymer/paper-styles/color.js';
 import '/resources/polymer/@polymer/paper-styles/shadow.js';
@@ -106,7 +107,7 @@ const template = html`
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning tg-entity-centre-styles paper-material-styles"></style>
     <div id="pm" class="layout vertical flex" detached$="[[detachedView]]">
-        <div id="insertionPointContent" tabindex='0' class="layout vertical flex relative">
+        <div id="insertionPointContent" class="layout vertical flex relative">
             <div class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc, separateView)]]">
                 <span class="title-text truncate" style="margin-left:16px;" tooltip-text$="[[longDesc]]">[[shortDesc]]</span>
                 <paper-icon-button class="title-bar-button expand-colapse-button" style="margin-left:10px;margin-right:2px;" icon="icons:open-in-new" on-tap="_expandColapseTap"></paper-icon-button>
@@ -133,7 +134,8 @@ Polymer({
         IronResizableBehavior,
         IronA11yKeysBehavior,
         TgTooltipBehavior,
-        TgShortcutProcessingBehavior
+        TgShortcutProcessingBehavior,
+        TgElementSelectorBehavior
     ],
 
     properties: {
@@ -282,13 +284,25 @@ Polymer({
                     this.egiBindingAdded = true;
                 }
             }
-            this.keyEventTarget = this.$.insertionPointContent;
+            this.keyEventTarget = this._getKeyEventTarget();this.$.insertionPointContent;
         }, 1);
     },
 
     refreshEntitiesLocaly: function (entities, properties) {
         if (this._element && typeof this._element.refreshEntitiesLocaly === 'function') {
             this._element.refreshEntitiesLocaly(entities, properties);
+        }
+    },
+
+    _getKeyEventTarget: function () {
+        if (!this.separateView) {
+            return this.$.insertionPointContent;
+        } else {
+            let parent = this;
+            while (parent && (parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG' && parent.tagName !== 'TG-MENU-ITEM-VIEW')) {
+                parent = parent.parentElement || parent.getRootNode().host;
+            }
+            return parent || this;
         }
     },
 
