@@ -161,6 +161,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         .addMaster(centreConfigurationWebUiConfig.centreConfigDuplicateActionMaster)
         .addMaster(centreConfigurationWebUiConfig.centreConfigLoadActionMaster)
         .addMaster(centreConfigurationWebUiConfig.centreConfigEditActionMaster)
+        .addMaster(centreConfigurationWebUiConfig.centreConfigConfigureActionMaster)
         .addMaster(centreConfigurationWebUiConfig.centreConfigDeleteActionMaster)
         .addMaster(centreConfigurationWebUiConfig.centreConfigSaveActionMaster)
         .addMaster(centreConfigurationWebUiConfig.overrideCentreConfigMaster);

@@ -39,6 +39,7 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private Function<Map<String, Object>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>> freshCentreApplier;
     private Function<String, Function<String, Function<Boolean, Function<Duration, Function<Boolean, Map<String, Object>>>>>> centreEditor;
     private Function<String, Function<String, Function<Boolean, Function<Duration, Function<Boolean, Map<String, Object>>>>>> centreSaver;
+    private Function<Boolean, Map<String, Object>> centreConfigurator;
     private Runnable centreDeleter;
     /** IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE. */
     private Runnable freshCentreSaver;
@@ -159,6 +160,14 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
 
     public Map<String, Object> editCentre(final String title, final String desc, final boolean dashboardable, final Duration dashboardRefreshFrequency, final boolean runAutomatically) {
         return centreEditor.apply(title).apply(desc).apply(dashboardable).apply(dashboardRefreshFrequency).apply(runAutomatically);
+    }
+
+    public void setCentreConfigurator(final Function<Boolean, Map<String, Object>> centreConfigurator) {
+        this.centreConfigurator = centreConfigurator;
+    }
+
+    public Map<String, Object> configureCentre(final boolean runAutomatically) {
+        return centreConfigurator.apply(runAutomatically);
     }
 
     public void setCentreSaver(final Function<String, Function<String, Function<Boolean, Function<Duration, Function<Boolean, Map<String, Object>>>>>> centreSaver) {

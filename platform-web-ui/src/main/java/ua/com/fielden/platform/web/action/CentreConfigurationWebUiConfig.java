@@ -21,6 +21,8 @@ import com.google.inject.Injector;
 import ua.com.fielden.platform.web.centre.AbstractCentreConfigCommitAction;
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater;
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdaterProducer;
+import ua.com.fielden.platform.web.centre.CentreConfigConfigureAction;
+import ua.com.fielden.platform.web.centre.CentreConfigConfigureActionProducer;
 import ua.com.fielden.platform.web.centre.CentreConfigDeleteAction;
 import ua.com.fielden.platform.web.centre.CentreConfigDeleteActionProducer;
 import ua.com.fielden.platform.web.centre.CentreConfigDuplicateAction;
@@ -61,6 +63,7 @@ public class CentreConfigurationWebUiConfig {
     public final EntityMaster<CentreConfigDeleteAction> centreConfigDeleteActionMaster;
     public final EntityMaster<CentreConfigSaveAction> centreConfigSaveActionMaster;
     public final EntityMaster<OverrideCentreConfig> overrideCentreConfigMaster;
+    public final EntityMaster<CentreConfigConfigureAction> centreConfigConfigureActionMaster;
 
     public CentreConfigurationWebUiConfig(final Injector injector) {
         centreConfigUpdater = createCentreConfigUpdater(injector,
@@ -75,6 +78,7 @@ public class CentreConfigurationWebUiConfig {
         centreConfigDeleteActionMaster = createCentreConfigDeleteActionMaster(injector);
         centreConfigSaveActionMaster = createCentreConfigSaveActionMaster(injector);
         overrideCentreConfigMaster = createOverrideCentreConfigMaster(injector);
+        centreConfigConfigureActionMaster = createCentreConfigConfigureActionMaster(injector);
     }
 
 
@@ -156,6 +160,45 @@ public class CentreConfigurationWebUiConfig {
             createCentreConfigCommitActionMaster(injector, CentreConfigEditAction.class, "Save title and description changes.", "Cancel changes."),
             injector
         );
+    }
+
+    /**
+     * Creates entity master for {@link CentreConfigConfigureAction}.
+     *
+     * @return
+     */
+    private static EntityMaster<CentreConfigConfigureAction> createCentreConfigConfigureActionMaster(final Injector injector) {
+        return new EntityMaster<>(
+            CentreConfigConfigureAction.class,
+            CentreConfigConfigureActionProducer.class,
+            createCentreConfigConfigureActionMasterConfiguration(injector),
+            injector
+        );
+    }
+
+    /**
+     * Creates {@link IMaster} configuration for {@link CentreConfigConfigureAction} entity.
+     *
+     * @param injector
+     * @return
+     */
+    private static IMaster<CentreConfigConfigureAction> createCentreConfigConfigureActionMasterConfiguration(final Injector injector) {
+        final String actionLayout = mkActionLayoutForMaster();
+        final String layout = mkVarGridForMasterFitWidth(1);
+
+        return new SimpleMasterBuilder<CentreConfigConfigureAction>()
+            .forEntity(CentreConfigConfigureAction.class)
+            .addProp("runAutomatically").asCheckbox().also()
+            .addAction(REFRESH).shortDesc("CANCEL").longDesc("Cancel changes.")
+            .addAction(SAVE).shortDesc("SAVE").longDesc("Save changes.")
+            .setActionBarLayoutFor(DESKTOP, empty(), actionLayout)
+            .setActionBarLayoutFor(TABLET, empty(), actionLayout)
+            .setActionBarLayoutFor(MOBILE, empty(), actionLayout)
+            .setLayoutFor(DESKTOP, empty(), layout)
+            .setLayoutFor(TABLET, empty(), layout)
+            .setLayoutFor(MOBILE, empty(), layout)
+            .withDimensions(mkDim(238, 176))
+            .done();
     }
 
     /**

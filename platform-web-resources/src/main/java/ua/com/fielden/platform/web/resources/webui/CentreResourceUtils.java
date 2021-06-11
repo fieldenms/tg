@@ -714,6 +714,16 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 empty() // no need to update already existing client-side configUuid
             );
         });
+        // changes runAutomatically for current saveAsName'd configuration; returns custom object containing centre information
+        validationPrototype.setCentreConfigurator(runAutomatically -> {
+            configureCentre(user, miType, saveAsName, device, runAutomatically, eccCompanion);
+            // currently loaded configuration should remain preferred -- no action is required
+            return validationPrototype.centreCustomObject(
+                createCriteriaEntity(validationPrototype.centreContextHolder().getModifHolder(), companionFinder, critGenerator, miType, saveAsName, user, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel),
+                saveAsName,
+                empty() // no need to update already existing client-side configUuid
+            );
+        });
         // performs copying of current configuration with the specified title / desc; makes it preferred; returns custom object containing centre information
         validationPrototype.setCentreSaver(newName -> newDesc -> dashboardable -> dashboardRefreshFrequency -> runAutomatically -> {
             final Optional<String> newSaveAsName = of(newName);

@@ -452,6 +452,31 @@ public class CentreUpdater {
     }
     
     /**
+     * Changes configuration's runAutomatically and saves these changes to persistent storage.
+     * 
+     * @param user
+     * @param miType
+     * @param saveAsName -- user-defined title of 'saveAs' centre configuration or empty {@link Optional} for unnamed centre
+     * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
+     * @param newRunAutomatically -- new runAutomatically for configuration
+     */
+    public static void configureCentre(
+            final User user,
+            final Class<? extends MiWithConfigurationSupport<?>> miType,
+            final Optional<String> saveAsName,
+            final DeviceProfile device,
+            final boolean newRunAutomatically,
+            final IEntityCentreConfig eccCompanion) {
+        final Function<Optional<String>, Function<String, String>> nameOf = (saveAs) -> (surrogateName) -> deviceSpecific(saveAsSpecific(surrogateName, saveAs), device) + DIFFERENCES_SUFFIX;
+        final EntityCentreConfig freshConfig = findConfig(miType, user, nameOf.apply(saveAsName).apply(FRESH_CENTRE_NAME), eccCompanion);
+        if (freshConfig == null) {
+            throw failuref("Fresh configuration [%s] does not exist.", saveAsName);
+        }
+        freshConfig.setRunAutomatically(newRunAutomatically);
+        eccCompanion.saveWithConflicts(freshConfig); // configureCentre is used inside other transaction scopes (e.g. CentreConfigConfigureActionDao.save) -- saveWithConflicts must be used
+    }
+    
+    /**
      * Removes centres from persistent storage (diffs) by their <code>names</code>.
      * <p>
      * Please be careful when removing centres for the purpose of later update: preferred state and custom description need to be maintained properly.

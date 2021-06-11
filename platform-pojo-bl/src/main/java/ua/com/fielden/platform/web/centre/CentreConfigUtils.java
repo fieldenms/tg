@@ -103,6 +103,18 @@ public class CentreConfigUtils {
     }
     
     /**
+     * Returns {@code true} in case where {@code saveAsName}d configuration represents link configuration or inherited from base user configuration or inherited from shared configuration,
+     * otherwise {@code false}.
+     * 
+     * @param saveAsName
+     * @param selectionCrit
+     * @return
+     */
+    public static boolean isLinkOrInherited(final Optional<String> saveAsName, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) {
+        return isLink(saveAsName) || isInherited(saveAsName, selectionCrit);
+    }
+    
+    /**
      * Returns {@code true} in case where {@code saveAsName}d configuration represents default / link configuration or inherited from base user configuration or inherited from shared configuration,
      * otherwise {@code false}.
      * 

@@ -18,11 +18,13 @@ import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.app.SerialisationTypeEncoder;
 import ua.com.fielden.platform.web.app.ThreadLocalDeviceProvider;
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdaterDao;
+import ua.com.fielden.platform.web.centre.CentreConfigConfigureActionDao;
 import ua.com.fielden.platform.web.centre.CentreConfigEditActionDao;
 import ua.com.fielden.platform.web.centre.CentreConfigLoadActionDao;
 import ua.com.fielden.platform.web.centre.CentreConfigSaveActionDao;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDao;
 import ua.com.fielden.platform.web.centre.ICentreColumnWidthConfigUpdater;
+import ua.com.fielden.platform.web.centre.ICentreConfigConfigureAction;
 import ua.com.fielden.platform.web.centre.ICentreConfigEditAction;
 import ua.com.fielden.platform.web.centre.ICentreConfigLoadAction;
 import ua.com.fielden.platform.web.centre.ICentreConfigSaveAction;
@@ -78,6 +80,7 @@ public interface IBasicWebApplicationServerModule {
         bindType(ICentreConfigLoadAction.class).to(CentreConfigLoadActionDao.class);
         bindType(ICentreConfigEditAction.class).to(CentreConfigEditActionDao.class);
         bindType(ICentreConfigSaveAction.class).to(CentreConfigSaveActionDao.class);
+        bindType(ICentreConfigConfigureAction.class).to(CentreConfigConfigureActionDao.class);
         
         bindType(SingleActionSelector.class).toInstance(INSTANCE); // singleton
     }
