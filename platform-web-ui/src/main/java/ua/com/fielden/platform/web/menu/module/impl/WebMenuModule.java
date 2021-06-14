@@ -3,7 +3,6 @@ package ua.com.fielden.platform.web.menu.module.impl;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 import ua.com.fielden.platform.menu.Action;
