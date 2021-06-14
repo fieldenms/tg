@@ -34,6 +34,8 @@ import ua.com.fielden.platform.web.interfaces.DeviceProfile;
  * @param <DAO>
  */
 public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, DAO> {
+    private Supplier<ICentreDomainTreeManagerAndEnhancer> freshCentreSupplier;
+    private Supplier<ICentreDomainTreeManagerAndEnhancer> savedCentreSupplier;
     private Supplier<ICentreDomainTreeManagerAndEnhancer> previouslyRunCentreSupplier;
     /** IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE. */
     private Function<Map<String, Object>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>> freshCentreApplier;
@@ -55,6 +57,7 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private Function<Optional<String>, Boolean> centreDashboardableGetter;
     private Function<Optional<String>, Duration> centreDashboardRefreshFrequencyGetter;
     private Function<Optional<String>, Boolean> centreRunAutomaticallyGetter;
+    private Supplier<Boolean> defaultRunAutomaticallySupplier;
     private Function<Optional<String>, Optional<String>> centreConfigUuidGetter;
     private Supplier<Boolean> centreDirtyGetter;
     private Function<Optional<String>, Function<Supplier<ICentreDomainTreeManagerAndEnhancer>, Boolean>> centreDirtyCalculator;
@@ -125,6 +128,22 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
 
     public void adjustCentre(final Consumer<ICentreDomainTreeManagerAndEnhancer> consumer) {
         centreAdjuster.accept(consumer);
+    }
+
+    public void setSavedCentreSupplier(final Supplier<ICentreDomainTreeManagerAndEnhancer> savedCentreSupplier) {
+        this.savedCentreSupplier = savedCentreSupplier;
+    }
+
+    public ICentreDomainTreeManagerAndEnhancer savedCentre() {
+        return savedCentreSupplier.get();
+    }
+
+    public void setFreshCentreSupplier(final Supplier<ICentreDomainTreeManagerAndEnhancer> freshCentreSupplier) {
+        this.freshCentreSupplier = freshCentreSupplier;
+    }
+
+    public ICentreDomainTreeManagerAndEnhancer freshCentre() {
+        return freshCentreSupplier.get();
     }
 
     public void setPreviouslyRunCentreSupplier(final Supplier<ICentreDomainTreeManagerAndEnhancer> previouslyRunCentreSupplier) {
@@ -279,6 +298,14 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
 
     public boolean centreDashboardable(final Optional<String> saveAsName) {
         return centreDashboardableGetter.apply(saveAsName);
+    }
+
+    public void setDefaultRunAutomaticallySupplier(final Supplier<Boolean> defaultRunAutomaticallySupplier) {
+        this.defaultRunAutomaticallySupplier = defaultRunAutomaticallySupplier;
+    }
+
+    public boolean defaultRunAutomatically() {
+        return defaultRunAutomaticallySupplier.get();
     }
 
     public void setCentreRunAutomaticallyGetter(final Function<Optional<String>, Boolean> centreRunAutomaticallyGetter) {

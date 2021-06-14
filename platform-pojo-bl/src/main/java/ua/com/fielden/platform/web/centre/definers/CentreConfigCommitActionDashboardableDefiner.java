@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.ui.config.definers;
+package ua.com.fielden.platform.web.centre.definers;
 
 import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
 import ua.com.fielden.platform.entity.meta.MetaProperty;

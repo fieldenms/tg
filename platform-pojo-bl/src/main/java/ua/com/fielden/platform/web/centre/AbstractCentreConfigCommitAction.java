@@ -10,7 +10,8 @@ import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
-import ua.com.fielden.platform.ui.config.definers.CentreConfigCommitActionDashboardableDefiner;
+import ua.com.fielden.platform.web.centre.definers.CentreConfigCommitActionDashboardableDefiner;
+import ua.com.fielden.platform.web.centre.validators.CentreConfigCommitActionTitleValidator;
 
 /** 
  * Abstract functional entity for committing centre configuration.

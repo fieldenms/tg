@@ -1,0 +1,64 @@
+package ua.com.fielden.platform.web.centre.validators;
+
+import static java.lang.String.format;
+import static ua.com.fielden.platform.error.Result.successful;
+import static ua.com.fielden.platform.error.Result.warning;
+import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefault;
+
+import java.lang.annotation.Annotation;
+import java.util.LinkedHashSet;
+import java.util.Optional;
+import java.util.Set;
+
+import com.google.inject.Inject;
+
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
+import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
+import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.web.centre.CentreConfigLoadAction;
+import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
+
+/**
+ * Validator for {@code chosenIds} in {@link CentreConfigLoadAction}.
+ * 
+ * @author TG Team
+ *
+ */
+public class CentreConfigLoadActionChosenIdsValidator implements IBeforeChangeEventHandler<LinkedHashSet<String>> {
+    private final ICriteriaEntityRestorer criteriaEntityRestorer;
+    
+    @Inject
+    public CentreConfigLoadActionChosenIdsValidator(final ICriteriaEntityRestorer criteriaEntityRestorer) {
+        this.criteriaEntityRestorer = criteriaEntityRestorer;
+    }
+    
+    @Override
+    public Result handle(final MetaProperty<LinkedHashSet<String>> property, final LinkedHashSet<String> chosenIds, final Set<Annotation> mutatorAnnotations) {
+        final CentreConfigLoadAction action = property.getEntity();
+        final EnhancedCentreEntityQueryCriteria<?, ?> criteriaEntity = criteriaEntityRestorer.restoreCriteriaEntity(action.getCentreContextHolder());
+        final Optional<String> saveAsName = criteriaEntity.saveAsName();
+        final Result success = successful(chosenIds);
+        if (isDefault(saveAsName) && !chosenIds.isEmpty()) {
+            final ICentreDomainTreeManagerAndEnhancer freshCentre = criteriaEntity.freshCentre();
+            final ICentreDomainTreeManagerAndEnhancer savedCentre = criteriaEntity.savedCentre();
+            final boolean selectionCritChanged = !equalsEx(freshCentre.getFirstTick(), savedCentre.getFirstTick());
+            final boolean runAutomaticallyChanged = !equalsEx(criteriaEntity.centreRunAutomatically(saveAsName), criteriaEntity.defaultRunAutomatically());
+            final boolean resultSetChanged = !equalsEx(freshCentre.getSecondTick(), savedCentre.getSecondTick());
+            if (selectionCritChanged || runAutomaticallyChanged || resultSetChanged) {
+                final String selCritPart = selectionCritChanged || runAutomaticallyChanged ? "selection criteria" : ""; // if runAutomatically changed then also show changes in selection criteria
+                final String selCritPartAnd = "".equals(selCritPart) ? "" : selCritPart + " and ";
+                final String fullMessage = resultSetChanged ? selCritPartAnd + "result-set" : selCritPart;
+                action.getProperty("centreConfigurations").setDomainValidationResult(
+                    warning(format("There are some changes in %s. They will be lost after switching to other configuration.", fullMessage))
+                );
+                return success;
+            }
+        }
+        action.getProperty("centreConfigurations").setDomainValidationResult(success);
+        return success;
+    }
+    
+}

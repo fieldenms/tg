@@ -81,6 +81,17 @@ public class CentreConfigUtils {
     }
     
     /**
+     * Returns {@code true} in case where {@code saveAsName}d configuration represents default configuration,
+     * otherwise {@code false}.
+     * 
+     * @param saveAsName
+     * @return
+     */
+    public static boolean isDefault(final Optional<String> saveAsName) {
+        return !saveAsName.isPresent();
+    }
+    
+    /**
      * Returns {@code true} in case where {@code saveAsName}d configuration represents link configuration,
      * otherwise {@code false}.
      * 
@@ -88,7 +99,7 @@ public class CentreConfigUtils {
      * @return
      */
     public static boolean isLink(final Optional<String> saveAsName) {
-        return saveAsName.isPresent() && LINK_CONFIG_TITLE.equals(saveAsName.get());
+        return !isDefault(saveAsName) && LINK_CONFIG_TITLE.equals(saveAsName.get());
     }
     
     /**
@@ -99,7 +110,7 @@ public class CentreConfigUtils {
      * @return
      */
     public static boolean isDefaultOrLink(final Optional<String> saveAsName) {
-        return !saveAsName.isPresent() || LINK_CONFIG_TITLE.equals(saveAsName.get());
+        return isDefault(saveAsName) || LINK_CONFIG_TITLE.equals(saveAsName.get());
     }
     
     /**

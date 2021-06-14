@@ -555,7 +555,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
 
         // Functions for companion implementations:
 
-        // returns an updated version of PREVIOUSLY_RUN centre
+        // returns an updated version of centre
+        validationPrototype.setFreshCentreSupplier(() -> updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder));
+        validationPrototype.setSavedCentreSupplier(() -> updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder));
         validationPrototype.setPreviouslyRunCentreSupplier(() -> updateCentre(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder));
         
         // returns whether centre (defined by 'specificSaveAsName, freshCentreSupplier' arguments) is changed from previously saved (or the very original) configuration version or it is New (aka default, link or inherited)
@@ -688,6 +690,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         validationPrototype.setCentreTitleAndDescGetter(saveAsNameForTitleAndDesc -> {
             return saveAsNameForTitleAndDesc.map(name -> t2(name, updateCentreDesc(user, miType, of(name), device, eccCompanion)));
         });
+        // returns runAutomatically from Centre DSL config
+        validationPrototype.setDefaultRunAutomaticallySupplier(() -> webUiConfig.getCentres().get(miType).isRunAutomatically());
         // returns runAutomatically for named (inherited or owned, also link) configuration and unnamed (default) configuration
         validationPrototype.setCentreRunAutomaticallyGetter(saveAsNameForRunAutomatically -> {
             return updateCentreRunAutomatically(user, miType, saveAsNameForRunAutomatically, device, eccCompanion, webUiConfig, validationPrototype);
