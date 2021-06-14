@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.menu;
 
+import static java.util.Collections.unmodifiableList;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -44,21 +46,36 @@ public class Module extends AbstractEntity<String> implements IMenuManager {
     @IsProperty(ModuleMenuItem.class)
     @Title("Module menu")
     private List<ModuleMenuItem> menu = new ArrayList<ModuleMenuItem>();
-    
+
     @IsProperty
     @Title("Module view")
     private View view;
-    
+
+    @IsProperty(Action.class)
+    @Title("Actions")
+    private List<Action> actions = new ArrayList<>();
+
+    @Observable
+    public Module setActions(final List<Action> actions) {
+        this.actions.clear();
+        this.actions.addAll(actions);
+        return this;
+    }
+
+    public List<Action> getActions() {
+        return unmodifiableList(actions);
+    }
+
     @Observable
     public Module setView(final View view) {
         this.view = view;
         return this;
     }
-    
+
     public View getView() {
         return view;
     }
-    
+
     @Observable
     public Module setMenu(final List<ModuleMenuItem> menu) {
         this.menu.clear();
