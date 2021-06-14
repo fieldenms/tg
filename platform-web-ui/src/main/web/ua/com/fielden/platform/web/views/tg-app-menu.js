@@ -118,7 +118,7 @@ const template = html`
                             </div>
                             <div class="tile-toolbar layout horizontal wrap" action-disabled$="[[_isDisabled(item)]]">
                                 <template is="dom-repeat" items="[[item.actions]]" as="action">
-                                    <tg-ui-action slot$="[[action.moduleName]]" 
+                                    <tg-ui-action
                                         show-dialog="[[action._showDialog]]"
                                         toaster="[[action.toaster]]"
                                         short-desc="[[action.desc]]" 

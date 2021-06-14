@@ -3,6 +3,8 @@ package ua.com.fielden.platform.web.menu.module.impl;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 
 import ua.com.fielden.platform.menu.Action;
 import ua.com.fielden.platform.menu.Module;
@@ -71,7 +73,13 @@ public class WebMenuModule {
         return actions;
     }
 
-    public Module getModule(final int startActionIndex) {
+    /**
+     * Builds a web menu module, including its tile actions.
+     *
+     * @param tileActionIndexSupplier – a supplier of sequential indexes for tile actions.
+     * @return
+     */
+    public Module buildModule(final Supplier<Integer> tileActionIndexSupplier) {
         final Module module = new Module().
                 setBgColor(bgColor).
                 setCaptionBgColor(captionBgColor).
@@ -79,7 +87,7 @@ public class WebMenuModule {
                 setDetailIcon(detailIcon).
                 setKey(title).
                 setDesc(description).
-                setActions(generateMenuActions(startActionIndex));
+                setActions(buildTileActions(tileActionIndexSupplier));
         //TODO module menu can not be null. Right now platform supports modules with view. This case should be covered with separate issue.
         if (this.menu != null) {
             module.setMenu(menu.getMenu());
@@ -89,11 +97,16 @@ public class WebMenuModule {
         return module;
     }
 
-    public List<Action> generateMenuActions(final int startActionIndex) {
-        int numberOfActions = startActionIndex;
+    /**
+     * Builds tile actions for this web menu module.
+     *
+     * @param tileActionIndexSupplier – a supplier of unique sequential indexes for tile actions.
+     * @return
+     */
+    private List<Action> buildTileActions(final Supplier<Integer> tileActionIndexSupplier) {
         final List<Action> actions = new ArrayList<>();
         for (final EntityActionConfig config : getActions()) {
-            final FunctionalActionElement actionElement = new FunctionalActionElement(config, numberOfActions++, FunctionalActionKind.TOP_LEVEL);
+            final FunctionalActionElement actionElement = new FunctionalActionElement(config, tileActionIndexSupplier.get(), FunctionalActionKind.TOP_LEVEL);
             final Map<String, Object> attributes = actionElement.createAttributes();
             final Action action = new Action();
             action.setKey(attributes.get("element-name").toString());
@@ -122,4 +135,5 @@ public class WebMenuModule {
         }
         return actions;
     }
+
 }

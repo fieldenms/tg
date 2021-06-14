@@ -1,9 +1,10 @@
 package ua.com.fielden.platform.web.menu.impl;
 
+import static java.util.stream.Collectors.toList;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.menu.Module;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
@@ -21,13 +22,16 @@ public class WebMainMenu {
         return module;
     }
 
-    public List<Module> getModules() {
-        final AtomicInteger actionNumber = new AtomicInteger(0);
-        return modules.stream().map(module -> {
-            final Module moduleEntity = module.getModule(actionNumber.get());
-            actionNumber.addAndGet(module.getActions().size());
-            return moduleEntity;
-        }).collect(Collectors.toList());
+    /**
+     * Iterates over all web menu module definitions and builds them, returning a list of modules.
+     *
+     * @return
+     */
+    public List<Module> buildModules() {
+        // all tile actions must have a unique index across all modules
+        // hence the use of the same atomic integer instance to supply sequential indexes for all tile actions
+        final AtomicInteger seqIndex = new AtomicInteger(0);
+        return modules.stream().map(module -> module.buildModule(() -> seqIndex.getAndIncrement())).collect(toList());
     }
 
     public EntityActionConfig getActionConfig(final int actionNumber, final FunctionalActionKind actionKind) {
