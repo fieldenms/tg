@@ -233,7 +233,7 @@ const TgEgiMasterBehaviorImpl = {
                     this._onTabDown(event);
                 }
             } else if (IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'enter')) {
-                this.async(() =>  this._saveFocusedEditorAndEditNextRow(), 1);
+                this._saveFocusedEditorAndEditNextRow();
                 tearDownEvent(event);
             }
         }
