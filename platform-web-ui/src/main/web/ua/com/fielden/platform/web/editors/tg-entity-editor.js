@@ -156,7 +156,7 @@ export class TgEntityEditor extends TgEditor {
             */
            entityMaster: {
                type: Object,
-               computed: '_computeEntityMaster(multi, autocompletionType, propertyName)'
+               computed: '_computeEntityMaster(multi, autocompletionType, propertyName, noLabelFloat)'
            },
 
            /**
@@ -1033,12 +1033,12 @@ export class TgEntityEditor extends TgEditor {
     /**
      * Computes entity master object for entity-typed property represented by this autocompleter (only for non-multi).
      */
-    _computeEntityMaster (multi, autocompletionType, propertyName) {
+    _computeEntityMaster (multi, autocompletionType, propertyName, noLabelFloat) {
         if (!allDefined(arguments)) {
             return null;
         }
         const type = this.reflector().findTypeByName(autocompletionType);
-        return (!multi || null) && type && type.prop(propertyName).type().entityMaster();
+        return (!multi || null) && (!noLabelFloat || null) && type && type.prop(propertyName).type().entityMaster();
     }
 
     /**

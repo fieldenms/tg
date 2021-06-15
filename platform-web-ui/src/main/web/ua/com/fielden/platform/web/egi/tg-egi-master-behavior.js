@@ -47,7 +47,7 @@ const TgEgiMasterBehaviorImpl = {
         this._egiRefreshed = this._egiRefreshed.bind(this);
         this._documentFocusingListner = this._documentFocusingListner.bind(this);
 
-        this.editors.forEach(editor => editor.decorator().noLabelFloat = true);
+        this.editors.forEach(editor => editor.noLabelFloat = true);
         this.addEventListener('data-loaded-and-focused', this._selectLastFocusedEditor.bind(this));
 
         this.postSaved = function (potentiallySavedOrNewEntity) {
