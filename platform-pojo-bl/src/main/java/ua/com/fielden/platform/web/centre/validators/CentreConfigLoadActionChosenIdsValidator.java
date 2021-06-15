@@ -23,6 +23,10 @@ import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 
 /**
  * Validator for {@code chosenIds} in {@link CentreConfigLoadAction}.
+ * <p>
+ * Calculates and assigns possible warning to 'centreConfigurations' in case if current configuration is default and has some changes.
+ * Such configuration with changes can not be accessed again (one exception: manually clear uuid after transition) and the changes would be lost after transition.
+ * Ways to return to default config include New, Duplicate and Delete actions -- they clears / overrides default configuration's changes.
  * 
  * @author TG Team
  *

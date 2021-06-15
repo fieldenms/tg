@@ -141,12 +141,37 @@ Polymer({
              || unknownSubpath !== centre.configUuid // ... or new configUuid is different from already loaded ...
              || !centre._criteriaLoaded // ... or where criteria was not loaded (e.g. errors during previous loading attempts)
             )) {
-                this.async(() => { // load new centre config only after current loading completed; this can be achieved by putting next loading in the end of queue; this is useful for link-configurations
+                const initiateCentreLoading = () => this.async(() => { // load new centre config only after current loading completed; this can be achieved by putting next loading in the end of queue; this is useful for link-configurations
                     centre._selectedView = 0;
                     centre.queryPart = queryPart;
                     centre.configUuid = unknownSubpath;
                     this._loadCentre.bind(this)(centre, false);
                 });
+                if (centre._criteriaLoaded && centre.configUuid === '') { // for fully loaded default configuration we intercept loading with special invisible CentreConfigLoadAction
+                    if (!centre.loadActionFromUri) { // create it if not yet created
+                        const originalLoadAction = centre.$.dom.$.selectionView.$.loadAction; // copy from standard CentreConfigLoadAction
+                        centre.loadActionFromUri = document.createElement('tg-ui-action');
+                        centre.loadActionFromUri.componentUri = originalLoadAction.componentUri;
+                        centre.loadActionFromUri.elementName = originalLoadAction.elementName;
+                        centre.loadActionFromUri.showDialog = originalLoadAction.showDialog;
+                        centre.loadActionFromUri.createContextHolder = originalLoadAction.createContextHolder;
+                        centre.loadActionFromUri.attrs = originalLoadAction.attrs;
+                        centre.loadActionFromUri.requireSelectionCriteria = originalLoadAction.requireSelectionCriteria;
+                        centre.loadActionFromUri.requireSelectedEntities = originalLoadAction.requireSelectedEntities;
+                        centre.loadActionFromUri.requireMasterEntity = originalLoadAction.requireMasterEntity;
+                        centre.loadActionFromUri.chosenProperty = 'load-from-uri'; // this will be used to distinguish from standard action
+                        centre.loadActionFromUri._masterReferenceForTestingChanged = function (master) {
+                            master.addEventListener('continuaton-completed-without-success', event => { // listen for CANCEL AcknowledgeWarnings action completion
+                                history.back(); // move back from already recorded history transition (made explicitly by user by pasting URI into address bar)
+                            });
+                        };
+                        centre.appendChild(centre.loadActionFromUri); // must be attached to DOM tree to trigger observers and other stuff
+                    }
+                    centre.loadActionFromUri.postActionSuccess = initiateCentreLoading; // completely override postActionSuccess to provide different behavior
+                    centre.loadActionFromUri._run();
+                } else {
+                    initiateCentreLoading();
+                }
             }
         } else {
             if (elementLoader.attrs) {

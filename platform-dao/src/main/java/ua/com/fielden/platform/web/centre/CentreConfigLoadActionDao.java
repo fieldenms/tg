@@ -41,6 +41,9 @@ public class CentreConfigLoadActionDao extends CommonEntityDao<CentreConfigLoadA
     @Override
     @SessionRequired
     public CentreConfigLoadAction save(final CentreConfigLoadAction entity) {
+        if (entity.isSkipUi()) {
+            return super.save(entity);
+        }
         entity.isValid().ifFailure(Result::throwRuntime);
         if (entity.getChosenIds().isEmpty()) {
             throw failure(ERR_EXACTLY_ONE_CONFIGURATION_MUST_BE_SELECTED);

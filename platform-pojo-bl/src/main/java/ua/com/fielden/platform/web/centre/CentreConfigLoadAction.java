@@ -47,6 +47,20 @@ public class CentreConfigLoadAction extends AbstractFunctionalEntityForCollectio
     @BeforeChange(@Handler(CentreConfigLoadActionChosenIdsValidator.class))
     private LinkedHashSet<String> chosenIds = new LinkedHashSet<>();
     
+    @IsProperty
+    @Title(value = "Skip UI", desc = "Controls the requirement to show or to skip displaying of the associated entity master.")
+    private boolean skipUi = false;
+    
+    @Observable
+    public CentreConfigLoadAction setSkipUi(final boolean skipUi) {
+        this.skipUi = skipUi;
+        return this;
+    }
+    
+    public boolean isSkipUi() {
+        return skipUi;
+    }
+    
     @Override
     @Observable
     public CentreConfigLoadAction setChosenIds(final LinkedHashSet<String> chosenIds) {
