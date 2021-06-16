@@ -691,7 +691,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             return saveAsNameForTitleAndDesc.map(name -> t2(name, updateCentreDesc(user, miType, of(name), device, eccCompanion)));
         });
         // returns runAutomatically from Centre DSL config
-        validationPrototype.setDefaultRunAutomaticallySupplier(() -> webUiConfig.getCentres().get(miType).isRunAutomatically());
+        validationPrototype.setDefaultRunAutomaticallySupplier(() -> defaultRunAutomatically(miType, webUiConfig));
         // returns runAutomatically for named (inherited or owned, also link) configuration and unnamed (default) configuration
         validationPrototype.setCentreRunAutomaticallyGetter(saveAsNameForRunAutomatically -> {
             return updateCentreRunAutomatically(user, miType, saveAsNameForRunAutomatically, device, eccCompanion, webUiConfig, validationPrototype);

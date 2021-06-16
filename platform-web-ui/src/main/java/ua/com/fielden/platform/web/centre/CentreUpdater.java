@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import static java.util.Arrays.stream;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static java.util.Optional.ofNullable;
 import static java.util.regex.Pattern.quote;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toSet;
@@ -339,7 +340,7 @@ public class CentreUpdater {
         final Function<User, Function<Optional<String>, Boolean>> updateCentreRunAutomatically0 = customUser -> customSaveAsName -> {
             final String deviceSpecificName = deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, customSaveAsName), device);
             final EntityCentreConfig config = findConfig(miType, customUser, deviceSpecificName + DIFFERENCES_SUFFIX, eccCompanion);
-            return config != null ? config.isRunAutomatically() : webUiConfig != null ? webUiConfig.getCentres().get(miType).isRunAutomatically() : false;
+            return config != null ? config.isRunAutomatically() : webUiConfig != null ? defaultRunAutomatically(miType, webUiConfig) : false;
         };
         if (!saveAsName.isPresent()) {
             return updateCentreRunAutomatically0.apply(user).apply(saveAsName); // default
@@ -932,6 +933,21 @@ public class CentreUpdater {
     }
     
     /**
+     * Returns {@code runAutomatically} parameter for the Centre DSL configuration defined by {@code miType}.
+     * <p>
+     * Centres defined as {@code runAutomatically} not only runs automatically on loading; criteria for such centres will be cleared before auto-running (see {@link CriteriaResource#put} for more details).
+     * 
+     * @param miType
+     * @param webUiConfig
+     * @return
+     */
+    public static boolean defaultRunAutomatically(final Class<? extends MiWithConfigurationSupport<?>> miType, final IWebUiConfig webUiConfig) {
+        return ofNullable(webUiConfig.getCentres().get(miType)) // additional safety in case if for some reason there is no EntityCentre instance for miType
+            .map(EntityCentre::isRunAutomatically)
+            .orElse(false);
+    }
+    
+    /**
      * Initialises 'differences centre' from the persistent storage, if it exists.
      * <p>
      * If no 'differences centre' exists -- the following steps are performed:
@@ -981,7 +997,7 @@ public class CentreUpdater {
                 if (FRESH_CENTRE_NAME.equals(name)) { // configs have runAutomatically only in FRESH centre
                     findConfigOpt(miType, user, deviceSpecificDiffName, eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("runAutomatically"))
                         .ifPresent(freshConfig -> {
-                            final boolean upstreamRunAutomatically = of(LINK_CONFIG_TITLE).equals(saveAsName) /* link: always runAutomatically */ || webUiConfig.getCentres().get(miType).isRunAutomatically() /* default/base: runAutomatically as in Centre DSL */;
+                            final boolean upstreamRunAutomatically = of(LINK_CONFIG_TITLE).equals(saveAsName) /* link: always runAutomatically */ || defaultRunAutomatically(miType, webUiConfig) /* default/base: runAutomatically as in Centre DSL */;
                             eccCompanion.saveWithConflicts(freshConfig.setRunAutomatically(upstreamRunAutomatically));
                         });
                 }
@@ -992,7 +1008,7 @@ public class CentreUpdater {
                 // find description of the centre configuration to be copied from
                 final String upstreamDesc = baseCentreDiffOpt.isPresent() ? updateCentreDesc(baseUser, miType, saveAsName, device, eccCompanion) : null;
                 final Optional<String> upstreamConfigUuid = baseCentreDiffOpt.isPresent() ? updateCentreConfigUuid(baseUser, miType, saveAsName, device, eccCompanion) : empty();
-                final boolean upstreamRunAutomatically = baseCentreDiffOpt.isPresent() ? updateCentreRunAutomatically(baseUser, miType, saveAsName, device, eccCompanion, webUiConfig, null) : webUiConfig.getCentres().get(miType).isRunAutomatically();
+                final boolean upstreamRunAutomatically = baseCentreDiffOpt.isPresent() ? updateCentreRunAutomatically(baseUser, miType, saveAsName, device, eccCompanion, webUiConfig, null) : defaultRunAutomatically(miType, webUiConfig);
                 // creates differences centre from the differences between base user's 'default centre' (which can be user specific, see IValueAssigner for properties dependent on User) and 'baseCentre'
                 final Map<String, Object> differences = baseCentreDiffOpt.orElseGet(CentreUpdater::createEmptyDifferences);
                 // promotes diff to persistent storage

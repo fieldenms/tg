@@ -27,6 +27,7 @@ import static ua.com.fielden.platform.web.centre.CentreUpdater.PREVIOUSLY_RUN_CE
 import static ua.com.fielden.platform.web.centre.CentreUpdater.SAVED_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.commitCentre;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.commitCentreWithoutConflicts;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.defaultRunAutomatically;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.loadableConfigurations;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.makePreferred;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.obtainTitleFrom;
@@ -569,7 +570,7 @@ public class CriteriaResource extends AbstractWebResource {
             final EnhancedCentreEntityQueryCriteria<?, ?> freshCentreAppliedCriteriaEntity;
 
             if (isRunning) {
-                if (isAutoRunning(customObject) && isDefault(saveAsName) && webUiConfig.getCentres().get(miType).isRunAutomatically()) { // do not clear criteria in case where user explicitly changed runAutomatically from false (Centre DSL value) to true in Configure dialog
+                if (isAutoRunning(customObject) && isDefault(saveAsName) && defaultRunAutomatically(miType, webUiConfig)) { // do not clear criteria in case where user explicitly changed runAutomatically from false (Centre DSL value) to true in Configure dialog
                     // clear current 'default' surrogate centres -- this is to make them empty before auto-running; saved configurations will not be touched
                     final ICentreDomainTreeManagerAndEnhancer previousFreshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
                     final Class<?> root = centre.getEntityType();
