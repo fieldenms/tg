@@ -18,6 +18,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.web.action.CentreConfigShareActionProducer.CONFIG_DOES_NOT_EXIST;
 import static ua.com.fielden.platform.web.centre.CentreConfigUpdaterUtils.applyNewOrderVisibilityAndSorting;
+import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefault;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrLink;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isInherited;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
@@ -34,7 +35,6 @@ import static ua.com.fielden.platform.web.centre.CentreUpdater.retrievePreferred
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentreConfigUuid;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentreDesc;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentreRunAutomatically;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.FETCH_CONFIG;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.FETCH_CONFIG_AND_INSTRUMENT;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfigOpt;
@@ -569,8 +569,8 @@ public class CriteriaResource extends AbstractWebResource {
             final EnhancedCentreEntityQueryCriteria<?, ?> freshCentreAppliedCriteriaEntity;
 
             if (isRunning) {
-                if (isAutoRunning(customObject) && !saveAsName.isPresent()) {
-                    // clear current 'default' surrogate centres -- this is to make them empty before auto-running; saved configurations will not be touched -- they should not appear when first time loading occur; this is because in autoRun centres named configurations never become preferred
+                if (isAutoRunning(customObject) && isDefault(saveAsName) && webUiConfig.getCentres().get(miType).isRunAutomatically()) { // do not clear criteria in case where user explicitly changed runAutomatically from false (Centre DSL value) to true in Configure dialog
+                    // clear current 'default' surrogate centres -- this is to make them empty before auto-running; saved configurations will not be touched
                     final ICentreDomainTreeManagerAndEnhancer previousFreshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
                     final Class<?> root = centre.getEntityType();
 
@@ -583,11 +583,10 @@ public class CriteriaResource extends AbstractWebResource {
                     final int previousNumberOfHeaderLines = previousFreshCentre.getSecondTick().getNumberOfHeaderLines();
 
                     // clear all surrogate centres
-                    final boolean defaultCentreRunAutomatically = updateCentreRunAutomatically(user, miType, saveAsName, device(), eccCompanion, webUiConfig, null);
                     removeCentres(user, miType, device(), saveAsName, eccCompanion, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME);
                     final ICentreDomainTreeManagerAndEnhancer emptyFreshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
                     findConfigOpt(miType, user, NAME_OF.apply(FRESH_CENTRE_NAME).apply(saveAsName).apply(device()), eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("runAutomatically")).ifPresent(config -> {
-                        eccCompanion.saveWithConflicts(config.setRunAutomatically(defaultCentreRunAutomatically));
+                        eccCompanion.saveWithConflicts(config.setRunAutomatically(true)); // auto-running of default configuration is in progress -- restore runAutomatically as true
                     });
 
                     // restore previous non-distracting centre changes; at first apply widths and grow factors
