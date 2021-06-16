@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.web.centre;
 
+import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.AUTO_RUN;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.findLoadableConfig;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.getCustomObject;
@@ -19,6 +21,7 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 
 /** 
@@ -53,10 +56,10 @@ public class CentreConfigLoadActionDao extends CommonEntityDao<CentreConfigLoadA
         
         // need to check whether configuration being loaded is inherited
         final String saveAsNameToLoad = entity.getChosenIds().iterator().next();
-        final Optional<String> actualSaveAsName = entity.getCentreConfigurations().stream()
+        final T2<Optional<String>, Boolean> actualSaveAsNameAndSharedIndicator = entity.getCentreConfigurations().stream()
             .filter(centreConfig -> saveAsNameToLoad.equals(centreConfig.getKey()))
             .findAny()
-            .flatMap(centreConfig -> {
+            .map(centreConfig -> {
                 final Optional<LoadableCentreConfig> loadableConfig = findLoadableConfig(of(saveAsNameToLoad), selectionCrit); // this will also throw early failure in case where configuration was deleted
                 if (inherited(loadableConfig).isPresent()) {
                     if (inheritedFromBase(loadableConfig).isPresent()) {
@@ -64,13 +67,18 @@ public class CentreConfigLoadActionDao extends CommonEntityDao<CentreConfigLoadA
                         selectionCrit.updateInheritedFromBaseCentre(saveAsNameToLoad);
                     } else {
                         // if configuration being loaded is inherited from shared we need to update it from upstream changes
-                        return selectionCrit.updateInheritedFromSharedCentre(saveAsNameToLoad, centreConfig.getConfig().getConfigUuid());
+                        return t2(selectionCrit.updateInheritedFromSharedCentre(saveAsNameToLoad, centreConfig.getConfig().getConfigUuid()), true);
                     }
                 }
-                return of(saveAsNameToLoad);
-            });
-        // configuration being loaded need to become preferred
-        selectionCrit.makePreferredConfig(actualSaveAsName);
+                return t2(of(saveAsNameToLoad), false);
+            })
+            .orElse(t2(empty(), false));
+        final Optional<String> actualSaveAsName = actualSaveAsNameAndSharedIndicator._1;
+        final boolean isInheritedFromShared = actualSaveAsNameAndSharedIndicator._2;
+        // configuration being loaded need to become preferred (except inherited from shared; link / default configs are not present in Load dialog -- no need to check this)
+        if (!isInheritedFromShared) {
+            selectionCrit.makePreferredConfig(actualSaveAsName); // 'own save-as / inherited from base' kinds -- can be preferred
+        }
         final Map<String, Object> customObject = getCustomObject(selectionCrit, selectionCrit.createCriteriaValidationPrototype(actualSaveAsName), actualSaveAsName, of(selectionCrit.centreConfigUuid(actualSaveAsName)));
         customObject.put(AUTO_RUN, selectionCrit.centreRunAutomatically(actualSaveAsName));
         entity.setCustomObject(customObject);

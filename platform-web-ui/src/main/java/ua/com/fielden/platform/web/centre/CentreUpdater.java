@@ -751,7 +751,10 @@ public class CentreUpdater {
      * @param device
      * @return
      */
-    public static Optional<String> retrievePreferredConfigName(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final ICompanionObjectFinder companionFinder) {
+    public static Optional<String> retrievePreferredConfigName(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final ICompanionObjectFinder companionFinder, final IWebUiConfig webUiConfig) {
+        if (webUiConfig.isEmbeddedCentre(miType)) {
+            return empty();
+        }
         final String surrogateNamePrefix = deviceSpecific(FRESH_CENTRE_NAME, device);
         try (final Stream<EntityCentreConfig> stream = streamPreferredConfigs(user, miType, device, companionFinder) ) {
             return stream.findAny().map(ecc -> obtainTitleFrom(ecc.getTitle(), surrogateNamePrefix));
@@ -759,8 +762,9 @@ public class CentreUpdater {
     }
     
     /**
-     * Makes <code>saveAsName</code> configuration preferred for the current user (defined by <code>gdtm.getUserProvider().getUser()</code>), the specified <code>device</code> and concrete 
-     * <code>miType</code>'ed menu item.
+     * Makes {@code saveAsName}d configuration preferred for {@code user}, {@code device} and concrete {@code miType}'ed menu item.
+     * <p>
+     * Does nothing for embedded centres. This means that default configurations will always be preferred for them.
      * 
      * @param user
      * @param miType
@@ -768,16 +772,18 @@ public class CentreUpdater {
      * @param device
      * @return
      */
-    public static void makePreferred(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName, final DeviceProfile device, final ICompanionObjectFinder companionFinder) {
-        final IEntityCentreConfig eccCompanion = companionFinder.find(EntityCentreConfig.class);
-        try (final Stream<EntityCentreConfig> stream = streamPreferredConfigs(user, miType, device, companionFinder) ) { // stream has its own transaction scope -- saveWithConflicts must be used
-            stream.forEach(ecc -> eccCompanion.saveWithConflicts(ecc.setPreferred(false)));
-        }
-        if (saveAsName.isPresent()) {
-            eccCompanion.saveWithConflicts( // used inside other transaction scopes (e.g. CentreConfigLoadActionDao->makePreferredConfig->makePreferred) -- saveWithConflicts must be used
-                findConfig(miType, user, deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, saveAsName), device) + DIFFERENCES_SUFFIX, eccCompanion)
-                .setPreferred(true)
-            );
+    public static void makePreferred(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName, final DeviceProfile device, final ICompanionObjectFinder companionFinder, final IWebUiConfig webUiConfig) {
+        if (!webUiConfig.isEmbeddedCentre(miType)) { // standalone centres only, not embedded
+            final IEntityCentreConfig eccCompanion = companionFinder.find(EntityCentreConfig.class);
+            try (final Stream<EntityCentreConfig> stream = streamPreferredConfigs(user, miType, device, companionFinder) ) { // stream has its own transaction scope -- saveWithConflicts must be used
+                stream.forEach(ecc -> eccCompanion.saveWithConflicts(ecc.setPreferred(false)));
+            }
+            if (saveAsName.isPresent()) {
+                eccCompanion.saveWithConflicts( // used inside other transaction scopes (e.g. CentreConfigLoadActionDao->makePreferredConfig->makePreferred) -- saveWithConflicts must be used
+                    findConfig(miType, user, deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, saveAsName), device) + DIFFERENCES_SUFFIX, eccCompanion)
+                    .setPreferred(true)
+                );
+            }
         }
     }
     

@@ -76,7 +76,7 @@ public class CentreConfigUtils {
      */
     public static Map<String, Object> prepareDefaultCentre(final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) {
         selectionCrit.clearDefaultCentre(); // clear it first
-        selectionCrit.makePreferredConfig(empty()); // then make it preferred
+        selectionCrit.makePreferredConfig(empty()); // then make it preferred; 'default' kind -- can be preferred; only 'link / inherited from shared' can not be preferred
         return getCustomObject(selectionCrit, selectionCrit.createCriteriaValidationPrototype(empty()), empty(), of(empty()) /* update with empty uuid indicating default config */); // return corresponding custom object
     }
     

@@ -226,39 +226,40 @@ public class CriteriaResource extends AbstractWebResource {
                 // default configurations are excluded in the lookup;
                 // only FRESH kind are looked for;
                 final Optional<EntityCentreConfig> freshConfigOpt = findConfigOptByUuid(configUuid.get(), user, miType, device(), FRESH_CENTRE_NAME, eccCompanion);
+                final T2<Optional<String>, Boolean> actualSaveAsNameAndSharedIndicator;
                 if (freshConfigOpt.isPresent()) {
                     // for current user we already have FRESH configuration with uuid loaded;
                     final Optional<String> preliminarySaveAsName = of(obtainTitleFrom(freshConfigOpt.get().getTitle(), FRESH_CENTRE_NAME, device()));
                     // updating is required from upstream configuration;
                     if (!LINK_CONFIG_TITLE.equals(preliminarySaveAsName.get())) { // (but not for link configuration);
-                        actualSaveAsName = updateFromUpstream(configUuid.get(), preliminarySaveAsName);
+                        actualSaveAsNameAndSharedIndicator = updateFromUpstream(configUuid.get(), preliminarySaveAsName);
                     } else {
-                        actualSaveAsName = preliminarySaveAsName;
+                        actualSaveAsNameAndSharedIndicator = t2(preliminarySaveAsName, false);
                     }
                 } else {
                     // if there is no FRESH configuration then there are no [link, own save-as] configuration with the specified uuid;
                     // however there can exist [base, shared] config for other user with the specified uuid;
-                    actualSaveAsName = firstTimeLoadingFrom(validateUuidAndGetUpstreamConfig(configUuid.get()).orElseThrow(Result::asRuntime));
+                    actualSaveAsNameAndSharedIndicator = firstTimeLoadingFrom(validateUuidAndGetUpstreamConfig(configUuid.get()).orElseThrow(Result::asRuntime));
                 }
+                actualSaveAsName = actualSaveAsNameAndSharedIndicator._1;
+                final boolean isInheritedFromShared = actualSaveAsNameAndSharedIndicator._2;
                 // configuration being loaded need to become preferred
-                if (!LINK_CONFIG_TITLE.equals(actualSaveAsName.get()) && !webUiConfig.isEmbeddedCentre(miType)) { // standalone centres only, not embedded
-                    makePreferred(user, miType, actualSaveAsName, device(), companionFinder);
+                if (!LINK_CONFIG_TITLE.equals(actualSaveAsName.get()) && !isInheritedFromShared) {
+                    makePreferred(user, miType, actualSaveAsName, device(), companionFinder, webUiConfig);
                 }
                 resolvedConfigUuid = configUuid;
             } else {
                 if (!wasLoadedPreviously) { // client-driven first time loading of centre's selection criteria
-                    final Optional<String> preliminarySaveAsName = retrievePreferredConfigName(user, miType, device(), companionFinder); // preferred configuration should be loaded
+                    final Optional<String> preliminarySaveAsName = retrievePreferredConfigName(user, miType, device(), companionFinder, webUiConfig); // preferred configuration should be loaded
                     resolvedConfigUuid = updateCentreConfigUuid(user, miType, preliminarySaveAsName, device(), eccCompanion);
                     if (resolvedConfigUuid.isPresent()) { // preferred config can be inherited from base / shared (link configs can not be preferred, no need to check it here)
-                        actualSaveAsName = updateFromUpstream(resolvedConfigUuid.get(), preliminarySaveAsName); // it needs updating from upstream -- only for the configs that has configUuid aka non-default
+                        actualSaveAsName = updateFromUpstream(resolvedConfigUuid.get(), preliminarySaveAsName)._1; // it needs updating from upstream -- only for the configs that has configUuid aka non-default
                     } else {
                         actualSaveAsName = preliminarySaveAsName;
                     }
                 } else {
                     actualSaveAsName = empty(); // in case where first time loading has been occurred earlier we still prefer configuration specified by absence of uuid: default
-                    if (!webUiConfig.isEmbeddedCentre(miType)) { // standalone centres only, not embedded
-                        makePreferred(user, miType, actualSaveAsName, device(), companionFinder); // most likely transition from save-as configuration has been occurred and need to update preferred config; in other case we can go to other centre and back from already loaded default config and this call will make default config preferred again
-                    }
+                    makePreferred(user, miType, actualSaveAsName, device(), companionFinder, webUiConfig); // most likely transition from save-as configuration has been occurred and need to update preferred config; in other case we can go to other centre and back from already loaded default config and this call will make default config preferred again
                     resolvedConfigUuid = empty();
                 }
             }
@@ -294,7 +295,7 @@ public class CriteriaResource extends AbstractWebResource {
     /**
      * Implements first time loading of configuration into 'inherited from base / shared'.
      */
-    private Optional<String> firstTimeLoadingFrom(final EntityCentreConfig upstreamConfig) {
+    private T2<Optional<String>, Boolean> firstTimeLoadingFrom(final EntityCentreConfig upstreamConfig) {
         final String configUuid = upstreamConfig.getConfigUuid();
         final User upstreamConfigCreator = upstreamConfig.getOwner();
         final String preliminarySaveAsName = obtainTitleFrom(upstreamConfig.getTitle(), SAVED_CENTRE_NAME, device());
@@ -306,6 +307,7 @@ public class CriteriaResource extends AbstractWebResource {
             // at least FRESH config should be prepared -- making it preferred requires existence
             actualSaveAsName = of(preliminarySaveAsName);
             updateCentre(user, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
+            return t2(actualSaveAsName, false);
         } else {
             // if current user does not have access to shared configuration then sharing process should be prevented
             sharingModel.isSharedWith(configUuid, user).ifFailure(Result::throwRuntime);
@@ -326,8 +328,8 @@ public class CriteriaResource extends AbstractWebResource {
             final EntityCentreConfig freshConfigForCreator = findConfigOptByUuid(configUuid, upstreamConfigCreator, miType, device(), FRESH_CENTRE_NAME, eccCompanion).get(); // need to retrieve FRESH config to get 'desc' -- that's because SAVED centres haven't stored descriptions, only FRESH do; this config must be present, otherwise savedConfigForOtherUser would not exist
             createInheritedFromShared.apply(FRESH_CENTRE_NAME).apply(freshConfigForCreator.isRunAutomatically()).apply(freshConfigForCreator.getDesc()).accept(of(configUuid)); // update (FRESH only) with upstream description and configUuid during creation
             createInheritedFromShared.apply(SAVED_CENTRE_NAME).apply(false).apply(null).accept(empty());
+            return t2(actualSaveAsName, true);
         }
-        return actualSaveAsName;
     }
 
     /**
@@ -353,7 +355,7 @@ public class CriteriaResource extends AbstractWebResource {
     /**
      * Updates already loaded by {@code user} configuration with concrete {@code configUuid} from its upstream configuration (if it is inherited).
      */
-    private Optional<String> updateFromUpstream(final String configUuid, final Optional<String> saveAsName) {
+    private T2<Optional<String>, Boolean> updateFromUpstream(final String configUuid, final Optional<String> saveAsName) {
         // look for config creator
         final Optional<EntityCentreConfig> savedConfigOpt = findConfigOptByUuid(configUuid, miType, device(), SAVED_CENTRE_NAME, eccCompanion);
         if (savedConfigOpt.isPresent()) {
@@ -372,17 +374,17 @@ public class CriteriaResource extends AbstractWebResource {
                     updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
                     updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder); // do not leave only FRESH centre out of two (FRESH + SAVED) => update SAVED centre explicitly
                     
-                    makePreferred(user, miType, saveAsName, device(), companionFinder); // inherited from base always gets preferred on loading; must leave it preferred after deletion
+                    makePreferred(user, miType, saveAsName, device(), companionFinder, webUiConfig); // inherited from base always gets preferred on loading; must leave it preferred after deletion
                 } else {
                     if (sharingModel.isSharedWith(configUuid, user).isSuccessful()) {
                         // inherited from shared
                         updateInheritedFromShared(savedConfig, miType, device(), saveAsName, user, eccCompanion, of(() -> isCentreChanged(saveAsName)));
-                        return of(obtainTitleFrom(savedConfig.getTitle(), SAVED_CENTRE_NAME, device()));
+                        return t2(of(obtainTitleFrom(savedConfig.getTitle(), SAVED_CENTRE_NAME, device())), true);
                     } // already loaded inherited from shared config was made unshared; the inherited from shared configuration now acts like own save-as configuration
                 }
             } // if the current user is creator then no 'updating from upstream' is needed -- it is own save-as
         } // else, there are no creator for this config; it means that it was shared / based but original config deleted; the inherited from shared / base configuration acts like own save-as configuration
-        return saveAsName;
+        return t2(saveAsName, false);
     }
 
     /**

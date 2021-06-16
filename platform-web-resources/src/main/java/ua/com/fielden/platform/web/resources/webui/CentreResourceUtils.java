@@ -644,12 +644,12 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 eccCompanion.saveWithoutConflicts(config.setRunAutomatically(validationPrototype.centreRunAutomatically(saveAsName))); // copy runAutomatically from current configuration (saveAsName) into default configuration (empty())
             });
             // when switching to default configuration we need to make it preferred
-            validationPrototype.makePreferredConfig(empty());
+            validationPrototype.makePreferredConfig(empty()); // 'default' kind -- can be preferred; only 'link / inherited from shared' can not be preferred
         });
         // updates inherited centre with title 'saveAsNameToLoad' from upstream base user's configuration -- just before LOAD action
         validationPrototype.setInheritedFromBaseCentreUpdater(saveAsNameToLoad -> {
             // determine current preferred configuration
-            final Optional<String> preferredConfigName = retrievePreferredConfigName(user, miType, device, companionFinder);
+            final Optional<String> preferredConfigName = retrievePreferredConfigName(user, miType, device, companionFinder, webUiConfig);
             // determine whether inherited configuration is changed
             final boolean centreChanged = isFreshCentreChanged(
                 updateCentre(user, miType, FRESH_CENTRE_NAME, of(saveAsNameToLoad), device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder),
@@ -664,7 +664,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             updateCentre(user, miType, SAVED_CENTRE_NAME, of(saveAsNameToLoad), device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder); // do not leave only FRESH centre out of two (FRESH + SAVED) => update SAVED centre explicitly
 
             if (equalsEx(preferredConfigName, of(saveAsNameToLoad))) { // if inherited configuration being updated was preferred
-                makePreferred(user, miType, of(saveAsNameToLoad), device, companionFinder); // then must leave it preferred after deletion
+                makePreferred(user, miType, of(saveAsNameToLoad), device, companionFinder, webUiConfig); // then must leave it preferred after deletion
             }
         });
         // updates inherited centre with title 'saveAsNameToLoad' from upstream shared configuration -- just before LOAD action
@@ -749,7 +749,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             createAndOverrideUuid.apply(null).accept(SAVED_CENTRE_NAME);
             
             // when switching to new configuration we need to make it preferred
-            validationPrototype.makePreferredConfig(newSaveAsName);
+            makePreferred(user, miType, newSaveAsName, device, companionFinder, webUiConfig); // it is of 'own save-as' kind -- can be preferred; only 'link / inherited from shared' can not be preferred
             return validationPrototype.centreCustomObject(
                 createCriteriaEntity(validationPrototype.centreContextHolder().getModifHolder(), companionFinder, critGenerator, miType, newSaveAsName, user, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel),
                 newSaveAsName,
@@ -762,8 +762,10 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         validationPrototype.setSaveAsNameSupplier(() -> saveAsName);
         // makes 'saveAsNameToBecomePreferred' configuration preferred in case where it differs from currently loaded configuration; does nothing otherwise
         validationPrototype.setPreferredConfigMaker(saveAsNameToBecomePreferred -> {
-            if (!equalsEx(saveAsNameToBecomePreferred, saveAsName) && !webUiConfig.isEmbeddedCentre(miType)) { // please note that currently loaded configuration must be preferred at this stage (except embedded centres, for which only default configuration can be preferred, but still named configurations may exist)
-                makePreferred(user, miType, saveAsNameToBecomePreferred, device, companionFinder);
+            if (!equalsEx(saveAsNameToBecomePreferred, saveAsName)) {
+                // please note currently loaded configuration can be preferred (default, own save-as, base) or not (link, shared);
+                // for embedded centres only default configuration can be preferred, but still named configurations may exist
+                makePreferred(user, miType, saveAsNameToBecomePreferred, device, companionFinder, webUiConfig);
             }
         });
 

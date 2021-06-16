@@ -135,9 +135,7 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
                     newFreshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
                     updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder); // do not leave only FRESH centre out of two (FRESH + SAVED) => update SAVED centre explicitly
                     // must leave current configuration preferred after deletion (only for named configs -- always true for inherited ones)
-                    if (!webUiConfig.isEmbeddedCentre(miType)) { // standalone centres only, not embedded
-                        makePreferred(user, miType, saveAsName, device(), companionFinder);
-                    }
+                    makePreferred(user, miType, saveAsName, device(), companionFinder, webUiConfig);
                     actualSaveAsName = saveAsName;
                 } else { // inherited from shared
                     final Optional<EntityCentreConfig> upstreamConfig = updateInheritedFromShared(loadableConfig.get().getConfig().getConfigUuid(), miType, device(), saveAsName, user, eccCompanion, empty());
