@@ -741,6 +741,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                         if (FRESH_CENTRE_NAME.equals(surrogateName)) {
                             config.setDashboardable(dashboardable);
                             config.setDashboardRefreshFrequency(dashboardRefreshFrequency);
+                            config.setRunAutomatically(validationPrototype.centreRunAutomatically(saveAsName)); // copy runAutomatically from currently loaded centre configuration being copied
                         }
                         eccCompanion.saveWithConflicts(config.setConfigUuid(newConfigUuid));
                     }); // update with newConfigUuid
