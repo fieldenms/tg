@@ -60,22 +60,20 @@ public class CentreToolbar implements IToolbarConfig {
     }
 
     public static DomElement selectEgi() {
-        return new DomElement("paper-icon-button")
+        return new DomElement("tg-centre-view-switch")
                 .attr("slot", "standart-action")
-                .attr("shortcut", "ctrl+1")
                 .attr("icon", "image:grid-on")
                 .attr("view-index", 1)
-                .attr("on-tap", "_activateAlternativeView")
+                .attr("viewes", "[[switchViewes]]")
                 .attr("tooltip-text$", "Show grid result view");
     }
 
     public static DomElement selectView(final int viewIndex, final Optional<String> icon, final Optional<String> viewDescription) {
-        return new DomElement("paper-icon-button")
+        return new DomElement("tg-centre-view-switch")
                 .attr("slot", "standart-action")
-                .attr("shortcut", "ctrl+" + viewIndex)
                 .attr("icon", icon.orElse("av:equalizer"))
-                .attr("on-tap", "_activateAlternativeView")
                 .attr("view-index", viewIndex)
+                .attr("viewes", "[[switchViewes]]")
                 .attr("tooltip-text$", "Show " + viewDescription.orElse("alternative result view"));
     }
 

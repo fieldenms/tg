@@ -1,10 +1,11 @@
 package ua.com.fielden.platform.web.centre;
 
+import static java.lang.Boolean.FALSE;
 import static java.lang.String.format;
 import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
-import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import static org.apache.commons.lang.StringUtils.join;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isCritOnlySingle;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.validateRootType;
@@ -257,6 +258,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         this.injector = injector;
 
         validateMenuItemTypeRootType(miType);
+        validateViewConfiguration(miType, dslDefaultConfig);
+
         this.miType = miType;
         this.entityType = EntityResourceUtils.getEntityType(miType);
         this.companionFinder = this.injector.getInstance(ICompanionObjectFinder.class);
@@ -281,6 +284,22 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         }
         final Class<?> root = etAnnotation.value();
         validateRootType(root);
+    }
+
+    /**
+     * Validates entity centre's viewes and their availability.
+     *
+     * @param dslDefaultConfig
+     */
+    private static <T extends AbstractEntity<?>> void validateViewConfiguration(final Class<? extends MiWithConfigurationSupport<?>> miType, final EntityCentreConfig<T> dslDefaultConfig) {
+        final long altViewCount= dslDefaultConfig.getInsertionPointConfigs().orElse(new ArrayList<>())
+                                    .stream()
+                                    .filter(ip -> ip.getInsertionPointAction().whereToInsertView.map(whereToInsert -> whereToInsert == InsertionPoints.ALTERNATIVE_VIEW).orElse(FALSE)).count();
+        final long insPointCount = dslDefaultConfig.getInsertionPointConfigs().orElse(new ArrayList<>()).size() - altViewCount;
+
+        if (dslDefaultConfig.isEgiHidden() && insPointCount == 0 && altViewCount == 0) {
+            throw new WebUiBuilderException(format("At least one result view should be available for %s entity centre.", miType.getSimpleName()));
+        }
     }
 
     /**
@@ -1133,25 +1152,14 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             } else if (el.whereToInsert() == InsertionPoints.BOTTOM) {
                 bottomInsertionPointsDom.add(insertionPoint);
             } else if (el.whereToInsert() == InsertionPoints.ALTERNATIVE_VIEW) {
-                final DomElement switchButtons = switchViewButtons(insertionPointActionsElements, Optional.of(el));
-                final StringBuffer newShortcuts = new StringBuffer(getChildrenShortcuts(switchButtons));
-                if (newShortcuts.length() != 0) {
-                    if (insertionPoint.getAttr("cutom-shortcuts") != null) {
-                        newShortcuts.append(" " + insertionPoint.getAttr("cutom-shortcuts").value.toString());
-                    }
-                    insertionPoint.attr("shortcuts", newShortcuts.toString());
-                }
-                alternativeViewsDom.add(insertionPoint.toString().replace(SWITCH_VIEW_ACTION_DOM, switchButtons.toString()));
+                final Optional<DomElement> switchButtons = switchViewButtons(insertionPointActionsElements, Optional.of(el));
+                alternativeViewsDom.add(insertionPoint.toString().replace(SWITCH_VIEW_ACTION_DOM, switchButtons.map(domElem -> domElem.toString()).orElse("")));
             } else {
                 throw new IllegalArgumentException("Unexpected insertion point type.");
             }
         }
 
-        if (dslDefaultConfig.isEgiHidden() && insertionPointActionsElements.stream().filter(el -> el.whereToInsert() == InsertionPoints.ALTERNATIVE_VIEW).count() == 0) {
-            throw new WebUiBuilderException(format("At least one result view should be available for %s entity centre.", miType.getSimpleName()));
-        }
-
-        final DomElement egiSwitchViewButtons = switchViewButtons(insertionPointActionsElements, Optional.empty());
+        final Optional<DomElement> egiSwitchViewButtons = switchViewButtons(insertionPointActionsElements, Optional.empty());
 
         //Generating shortcuts for EGI
         final StringBuilder shortcuts = new StringBuilder();
@@ -1169,11 +1177,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                     shortcuts.append(config.shortcut.get() + " ");
                 }
             }
-        }
-
-        final String switchActionShortcuts = getChildrenShortcuts(egiSwitchViewButtons);
-        if  (isNotEmpty(switchActionShortcuts)) {
-            shortcuts.append(switchActionShortcuts);
         }
 
         ///////////////////////////////////////
@@ -1213,7 +1216,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 ///////////////////////
                 replace(TOOLBAR_DOM, dslDefaultConfig.getToolbarConfig().render().toString()
                         .replace(EGI_FUNCTIONAL_ACTION_DOM, functionalActionsDom.toString())
-                        .replace(SWITCH_VIEW_ACTION_DOM, egiSwitchViewButtons.toString()).toString()).
+                        .replace(SWITCH_VIEW_ACTION_DOM, egiSwitchViewButtons.map(domEl -> domEl.toString()).orElse(""))).
                 replace(TOOLBAR_JS, join(toolbarCode, "\n")).
                 replace(TOOLBAR_STYLES, join(toolbarStyles, "\n")).
                 replace(FULL_MI_TYPE, miType.getName()).
@@ -1256,27 +1259,24 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return representation;
     }
 
-    private static String getChildrenShortcuts(final DomElement parent) {
-        return join(parent.children().stream()
-                .filter(child -> child.getAttr("shortcut") != null)
-                .map(child -> child.getAttr("shortcut").value.toString()).collect(Collectors.toList()), " ");
-    }
-
-    private DomElement switchViewButtons(final List<InsertionPointBuilder> insertionPointActionsElements, final Optional<InsertionPointBuilder> insertionPoint) {
-        final DomElement viewSwichGroup = new DomContainer();
-        if (!insertionPoint.isPresent() || insertionPoint.get().whereToInsert() == InsertionPoints.ALTERNATIVE_VIEW) {
-            if (!dslDefaultConfig.isEgiHidden() && insertionPoint.isPresent()) {
-                viewSwichGroup.add(selectEgi());
-            }
-            int viewIndex = 2;
-            for (final InsertionPointBuilder el : insertionPointActionsElements) {
-                if (el.whereToInsert() == InsertionPoints.ALTERNATIVE_VIEW && (!insertionPoint.isPresent() || el != insertionPoint.get())) {
-                    viewSwichGroup.add(selectView(viewIndex, el.icon(), el.viewTitle()));
+    private Optional<DomElement> switchViewButtons(final List<InsertionPointBuilder> insertionPointActionsElements, final Optional<InsertionPointBuilder> insertionPoint) {
+        final long altViewCount = insertionPointActionsElements.stream().filter(insPoint -> insPoint.whereToInsert() == InsertionPoints.ALTERNATIVE_VIEW).count();
+        final long otherViewCount = insertionPointActionsElements.size() - altViewCount;
+        final long allViewCount = altViewCount + (!dslDefaultConfig.isEgiHidden() || otherViewCount > 0 ? 1 : 0);
+        if (allViewCount > 1) {
+            if (!insertionPoint.isPresent()) {
+                return of(selectEgi());
+            } else {
+                int viewIndex = 2;
+                for (final InsertionPointBuilder el : insertionPointActionsElements) {
+                    if (el.whereToInsert() == InsertionPoints.ALTERNATIVE_VIEW && el == insertionPoint.get()) {
+                        return of(selectView(viewIndex, el.icon(), el.viewTitle()));
+                    }
                     viewIndex++;
                 }
             }
         }
-        return viewSwichGroup;
+        return empty();
     }
 
     private DomElement createActionGroupDom(final int groupIndex) {
