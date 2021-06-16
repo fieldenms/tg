@@ -55,21 +55,6 @@ public class Menu extends AbstractEntity<String> implements IMenuManager {
     @Title("User name")
     private String userName;
 
-    @IsProperty(Action.class)
-    @Title("Actions")
-    private List<Action> actions = new ArrayList<>();
-
-    @Observable
-    public Menu setActions(final List<Action> actions) {
-        this.actions.clear();
-        this.actions.addAll(actions);
-        return this;
-    }
-
-    public List<Action> getActions() {
-        return unmodifiableList(actions);
-    }
-
     @Observable
     public Menu setUserName(final String userName) {
         this.userName = userName;
