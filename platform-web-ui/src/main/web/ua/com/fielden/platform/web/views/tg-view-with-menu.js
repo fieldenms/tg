@@ -718,6 +718,11 @@ Polymer({
         const hrefReplacedUuid = hrefNoParamsNoSlashNoUuid + (newConfigUuid === '' ? '' : '/' + newConfigUuid);
         if (hrefReplacedUuid !== window.location.href) { // when configuration is loaded through some action then potentially new URI will be formed matching new loaded configuration;
             window.history.replaceState(window.history.state, '', hrefReplacedUuid); // in that case need to replace current history entry with new URI;
+            window.dispatchEvent(new CustomEvent('location-changed', {
+                detail: {
+                    avoidStateAdjusting: true
+                }
+            })); // in tg-app-template 'location-changed' listener no state changes should occur (everything was done here); however 'location-changed' event must be dispatched for 'app-location' to process it; it ensures ability to manually edit URI to the value before rewriting so that this editing triggers page change
         } // if the URI hasn't been changed then URI is already matching to new loaded configuration and history transition has been recorded earlier (e.g. when manually changing URI in address bar)
     },
     
