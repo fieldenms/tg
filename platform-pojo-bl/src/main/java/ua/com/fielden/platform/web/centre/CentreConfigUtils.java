@@ -24,7 +24,9 @@ import ua.com.fielden.platform.error.Result;
 public class CentreConfigUtils {
     private static final String CONFIGURATION_HAS_BEEN_DELETED = "Configuration has been deleted.";
     /**
-     * The key for customObject's value containing configuration autoRun.
+     * The key for customObject's value containing indicator that configuration should be autoRun.
+     * <p>
+     * Please note that configuration can be {@code runAutomatically} but should not be autoRun in some cases. This happens on almost all actions except Load.
      */
     public static final String AUTO_RUN = "autoRun";
 

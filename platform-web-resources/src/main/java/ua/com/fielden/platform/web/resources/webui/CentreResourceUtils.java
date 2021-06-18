@@ -1312,7 +1312,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         if (!notUpdateFresh) {
             // update FRESH surrogate configuration; if there are no local changes or if local changes are irrelevant (DISCARD)
             overrideConfigBodyFor.apply(FRESH_CENTRE_NAME)
-                .apply(() -> of(updateCentreRunAutomatically(upstreamConfig.getOwner(), miType, of(upstreamTitle), device, eccCompanion, null, null)))
+                // upstreamConfig exists; its FRESH counterpart too -- no need to provide webUiConfig (first 'null') for getting default runAutomatically values;
+                // also no need to provide selectionCrit (second 'null') for checking whether upstreamConfig is inherited - it can never be inherited transitively
+                .apply(() -> of(updateCentreRunAutomatically(upstreamConfig.getOwner(), miType, of(upstreamTitle), device, eccCompanion, null, null))) 
                 .accept(() -> updateCentreDesc(upstreamConfig.getOwner(), miType, of(upstreamTitle), device, eccCompanion));
         } else {
             // update FRESH surrogate configuration; only if upstream title has been changed

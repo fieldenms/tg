@@ -7,6 +7,13 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.utils.IDates;
 
+/**
+ * Definer that assigns {@link EntityCentreConfig#getDashboardableDate()} for configuration being made dashboardable
+ * and removes that date for configuration being made non-dashboardable.
+ * 
+ * @author TG Team
+ *
+ */
 public class EntityCentreConfigDashboardableDefiner implements IAfterChangeEventHandler<Boolean> {
     private final IDates dates;
     

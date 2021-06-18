@@ -20,7 +20,7 @@ public class CentreConfigConfigureAction extends AbstractCentreConfigAction {
     private CentreContextHolder centreContextHolder;
     
     @IsProperty
-    @Title(value = "Run automatically?", desc = "Defines whether this configuration should be auto run upon loading")
+    @Title(value = "Run automatically?", desc = "Defines whether this configuration should be auto run upon loading.")
     private boolean runAutomatically = false;
     
     @Observable

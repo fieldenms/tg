@@ -2,7 +2,15 @@ package ua.com.fielden.platform.web.centre.definers;
 
 import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.web.centre.AbstractCentreConfigCommitAction;
 
+/**
+ * Definer that assigns {@link AbstractCentreConfigCommitAction#getDashboardRefreshFrequency()} meta-data for configuration being made dashboardable
+ * or non-dashboardable.
+ * 
+ * @author TG Team
+ *
+ */
 public class CentreConfigCommitActionDashboardableDefiner implements IAfterChangeEventHandler<Boolean> {
     
     @Override

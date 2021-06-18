@@ -55,7 +55,7 @@ public abstract class AbstractCentreConfigCommitActionDao<T extends AbstractCent
     
     @Override
     protected IFetchProvider<T> createFetchProvider() {
-        return super.createFetchProvider().with("dashboardRefreshFrequency");
+        return super.createFetchProvider().with("dashboardRefreshFrequency"); // this property is needed for autocompletion only; other props are simple and not required for functional entity's fetch provider
     }
     
     @Override

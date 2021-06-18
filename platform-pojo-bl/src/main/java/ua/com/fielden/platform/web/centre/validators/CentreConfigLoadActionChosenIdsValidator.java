@@ -32,6 +32,7 @@ import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
  *
  */
 public class CentreConfigLoadActionChosenIdsValidator implements IBeforeChangeEventHandler<LinkedHashSet<String>> {
+    private static final String WRN_DEFAULT_CONFIG_CHANGES_WILL_BE_LOST = "There are some changes in %s. They will be lost after switching to other configuration.";
     private final ICriteriaEntityRestorer criteriaEntityRestorer;
     
     @Inject
@@ -45,7 +46,7 @@ public class CentreConfigLoadActionChosenIdsValidator implements IBeforeChangeEv
         final EnhancedCentreEntityQueryCriteria<?, ?> criteriaEntity = criteriaEntityRestorer.restoreCriteriaEntity(action.getCentreContextHolder());
         final Optional<String> saveAsName = criteriaEntity.saveAsName();
         final Result success = successful(chosenIds);
-        if (isDefault(saveAsName) && !chosenIds.isEmpty()) {
+        if (isDefault(saveAsName) && !chosenIds.isEmpty()) { // provide warning only if some collectional editor config title has been chosen and current configuration is default
             final ICentreDomainTreeManagerAndEnhancer freshCentre = criteriaEntity.freshCentre();
             final ICentreDomainTreeManagerAndEnhancer savedCentre = criteriaEntity.savedCentre();
             final boolean selectionCritChanged = !equalsEx(freshCentre.getFirstTick(), savedCentre.getFirstTick());
@@ -54,9 +55,9 @@ public class CentreConfigLoadActionChosenIdsValidator implements IBeforeChangeEv
             if (selectionCritChanged || runAutomaticallyChanged || resultSetChanged) {
                 final String selCritPart = selectionCritChanged || runAutomaticallyChanged ? "selection criteria" : ""; // if runAutomatically changed then also show changes in selection criteria
                 final String selCritPartAnd = "".equals(selCritPart) ? "" : selCritPart + " and ";
-                final String fullMessage = resultSetChanged ? selCritPartAnd + "result-set" : selCritPart;
+                final String bothParts = resultSetChanged ? selCritPartAnd + "result-set" : selCritPart;
                 action.getProperty("centreConfigurations").setDomainValidationResult(
-                    warning(format("There are some changes in %s. They will be lost after switching to other configuration.", fullMessage))
+                    warning(format(WRN_DEFAULT_CONFIG_CHANGES_WILL_BE_LOST, bothParts))
                 );
                 return success;
             }

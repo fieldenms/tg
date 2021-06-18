@@ -65,17 +65,17 @@ public class EntityCentreConfig extends AbstractConfiguration<DynamicEntityKey> 
 
     @IsProperty
     @CompositeKeyMember(3)
-    @Title(value = "Corresponding menu item", desc = "A property to specify a main menu item to which this configuration belongs")
+    @Title(value = "Corresponding menu item", desc = "A property to specify a main menu item to which this configuration belongs.")
     @MapTo("ID_MAIN_MENU")
     private MainMenuItem menuItem;
 
     @IsProperty
-    @Title(value = "Is principal?", desc = "Indicates whether this configuration is the principal one and thus corresponds to a main menu item")
+    @Title(value = "Is principal?", desc = "Indicates whether this configuration is the principal one and thus corresponds to a main menu item.")
     @MapTo("IS_PRINCIPAL")
     private boolean principal = false;
 
     @IsProperty
-    @Title(value = "Is preferred?", desc = "Indicates whether this configuration is preferred over the others on the same menu item")
+    @Title(value = "Is preferred?", desc = "Indicates whether this configuration is preferred over the others on the same menu item.")
     @MapTo
     private boolean preferred = false;
 
@@ -86,23 +86,23 @@ public class EntityCentreConfig extends AbstractConfiguration<DynamicEntityKey> 
 
     @IsProperty
     @MapTo
-    @Title(value = "Dashboardable?", desc = "Indicates whether this configuration is dashboardable i.e. it is present in owner's dashboard or dashboards of users with which it was shared / based-on")
+    @Title(value = "Dashboardable?", desc = "Indicates whether this configuration is dashboardable i.e. it is present in owner's dashboard or dashboards of users with which it was shared / based-on.")
     @AfterChange(EntityCentreConfigDashboardableDefiner.class)
     private boolean dashboardable = false;
 
     @IsProperty
     @MapTo
-    @Title(value = "Dashboardable Date", desc = "Date when this configuration was made dashboardable")
+    @Title(value = "Dashboardable Date", desc = "Date when this configuration was made dashboardable.")
     private Date dashboardableDate;
 
     @IsProperty
     @MapTo
-    @Title(value = "Dashboard Refresh Frequency", desc = "Defines how frequently this configuration should be refreshed as part of the dashboard refresh lifecycle")
+    @Title(value = "Dashboard Refresh Frequency", desc = "Defines how frequently this configuration should be refreshed as part of the dashboard refresh lifecycle.")
     private Duration dashboardRefreshFrequency;
 
     @IsProperty
     @MapTo
-    @Title(value = "Run Automatically?", desc = "Defines whether this configuration should be auto run upon loading")
+    @Title(value = "Run Automatically?", desc = "Defines whether this configuration should be auto run upon loading.")
     private boolean runAutomatically = false;
 
     @Observable

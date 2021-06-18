@@ -44,7 +44,7 @@ public class LoadableCentreConfig extends AbstractEntity<String> {
     private User sharedBy;
 
     @IsProperty
-    @Title("Save As Name")
+    @Title(value = "Save As Name", desc = "For inherited from shared configurations, contains configuration title; the title can be different from title of the inherited configuration, as the creator could have changed it and current user haven't updated it yet.")
     private String saveAsName;
 
     @Observable
