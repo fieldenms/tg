@@ -40,6 +40,7 @@ public class InsertionPointBuilder implements IRenderable, IExecutable {
                 .attr("id", "ip" + insertionPointActionElement.numberOfAction)
                 .attr("short-desc", insertionPointActionElement.conf().shortDesc.orElse(""))
                 .attr("long-desc", insertionPointActionElement.conf().longDesc.orElse(""))
+                .attr("icon", insertionPointActionElement.conf().icon.orElse(""))
                 .attr("selection-criteria-entity", "[[selectionCriteriaEntity]]")
                 .attr("is-centre-running", "[[_triggerRun]]")
                 .attr("retrieved-entities", "{{retrievedEntities}}")
@@ -100,14 +101,14 @@ public class InsertionPointBuilder implements IRenderable, IExecutable {
      * @return
      */
     public InsertionPoints whereToInsert() {
-        return insertionPointActionElement.entityActionConfig.whereToInsertView.get();
+        return insertionPointActionElement.conf().whereToInsertView.get();
     }
 
     public Optional<String> icon() {
-        return insertionPointActionElement.entityActionConfig.icon;
+        return insertionPointActionElement.conf().icon;
     }
 
     public Optional<String> viewTitle() {
-        return insertionPointActionElement.entityActionConfig.shortDesc;
+        return insertionPointActionElement.conf().shortDesc;
     }
 }

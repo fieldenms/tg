@@ -3,7 +3,6 @@ package ua.com.fielden.platform.web.centre.api.resultset.toolbar.impl;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -62,19 +61,15 @@ public class CentreToolbar implements IToolbarConfig {
     public static DomElement selectEgi() {
         return new DomElement("tg-centre-view-switch")
                 .attr("slot", "standart-action")
-                .attr("icon", "image:grid-on")
                 .attr("view-index", 1)
-                .attr("viewes", "[[switchViewes]]")
-                .attr("tooltip-text$", "Show grid result view");
+                .attr("views", "[[resultViews]]");
     }
 
-    public static DomElement selectView(final int viewIndex, final Optional<String> icon, final Optional<String> viewDescription) {
+    public static DomElement selectView(final int viewIndex) {
         return new DomElement("tg-centre-view-switch")
                 .attr("slot", "standart-action")
-                .attr("icon", icon.orElse("av:equalizer"))
                 .attr("view-index", viewIndex)
-                .attr("viewes", "[[switchViewes]]")
-                .attr("tooltip-text$", "Show " + viewDescription.orElse("alternative result view"));
+                .attr("views", "[[resultViews]]");
     }
 
     public static List<String> configShortcut() {

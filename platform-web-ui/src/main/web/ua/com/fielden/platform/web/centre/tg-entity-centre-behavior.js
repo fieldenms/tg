@@ -134,6 +134,10 @@ const createPreferredViewUpdaterAction = function (entityCentre) {
     return actionModel;
 };
 
+const createViewsFromInsPoints = function (altViews) {
+    return altViews.map((insPoint, index) => {return{index: 2 + index, title: insPoint.shortDesc, icon: insPoint.icon}});
+};
+
 const MSG_SAVE_OR_CANCEL = "Please save or cancel changes.";
 const NOT_ENOUGH_RESULT_VIEWS = "At least one result view should be available";
 
@@ -255,7 +259,7 @@ const TgEntityCentreBehaviorImpl = {
         /**
          * container of all viewes (selection criteria, egi, alternative views) to switch between them. 
          */
-        resultViews: {
+        allViews: {
             type: Array,
             value: () => []
         },
@@ -566,15 +570,18 @@ const TgEntityCentreBehaviorImpl = {
         self._selectedView = 0;
         self._showProgress = false;
         //Configures the egi's margin.
-        const insertionPoints = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point:not([separate-view])');
-        this.$.egi.showMarginAround = insertionPoints.length > 0;
+        const egiInsertionPoints = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point:not([separate-view])');
+        this.$.egi.showMarginAround = egiInsertionPoints.length > 0;
         //Configure all views to be able to switch between them
-        this.resultViews = [this.$.selection_criteria, this.$.egi, ...this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point[separate-view]')];
-        if (this.resultViews.length === 2 && this.$.egi.isHidden()) {
+        const altViews = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point[separate-view]');
+        this.allViews = [this.$.selection_criteria, this.$.egi, ...altViews];
+        //Create result views to create centre view switch button
+        this.resultViews = [{index: 1, icon: "image:grid-on", title: "Grid"}, ...createViewsFromInsPoints([...altViews])];
+        if (this.allViews.length === 2 && this.$.egi.isHidden() && egiInsertionPoints.length === 0) {
             throw new Error(NOT_ENOUGH_RESULT_VIEWS);
         } else {
             this.preferredView = this.preferredView === undefined ? 
-                    (this.$.egi.isHidden() ? 2/*first alternative result view*/ : 1 /*Egi view*/) : this.preferredView;
+                    (this.$.egi.isHidden() && egiInsertionPoints.length === 0? 2/*first alternative result view*/ : 1 /*Egi view*/) : this.preferredView;
         }
 
         self._postRun = (function (criteriaEntity, newBindingEntity, result) {
@@ -816,6 +823,15 @@ const TgEntityCentreBehaviorImpl = {
         /**
          * Adds event listener that will update egi when some entity was changed
          */
+         self.addEventListener("tg-centre-view-change", function (e) {
+             if (e.target === this) {
+                this._activateView(e.detail);
+             }
+        }.bind(self));
+
+        /**
+         * Adds event listener that will update egi when some entity was changed
+         */
         self.addEventListener("tg-entity-changed", function (e) {
             self.refreshEntitiesLocaly(e.detail.entities, e.detail.properties);
         }.bind(self));
@@ -1001,14 +1017,14 @@ const TgEntityCentreBehaviorImpl = {
 
     _activateView: function (index) {
         this.async(() => {
-            if (index < 0 || index >= this.resultViews.length) {
+            if (index < 0 || index >= this.allViews.length) {
                 this._showToastWithMessage(`There is no view with ${index}`);
             } else {
-                const canNotLeave = this.resultViews[this._selectedView].canLeave();
+                const canNotLeave = this.allViews[this._selectedView].canLeave();
                 if (canNotLeave) {
                     this._showToastWithMessage(canNotLeave.msg);
                 } else {
-                    this.resultViews[this._selectedView].leave();
+                    this.allViews[this._selectedView].leave();
                     this._previousView = this._selectedView;
                     this._selectedView = index;
                     if (this._selectedView !== 0 && this.preferredView !== this._selectedView) {
@@ -1024,15 +1040,6 @@ const TgEntityCentreBehaviorImpl = {
      */
     _activateSelectionCriteriaView: function () {
         this._activateView(0);
-    },
-
-    /**
-     * 
-     * @param {EventObject} e - event created by tapping on button that switches to the view specified in view-index attribute 
-     */
-    _activateAlternativeView: function (e) {
-        const viewIndex = +e.target.getAttribute("view-index");
-        this._activateView(viewIndex);
     },
 
     /**

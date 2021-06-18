@@ -1260,20 +1260,14 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     }
 
     private Optional<DomElement> switchViewButtons(final List<InsertionPointBuilder> insertionPointActionsElements, final Optional<InsertionPointBuilder> insertionPoint) {
-        final long altViewCount = insertionPointActionsElements.stream().filter(insPoint -> insPoint.whereToInsert() == InsertionPoints.ALTERNATIVE_VIEW).count();
-        final long otherViewCount = insertionPointActionsElements.size() - altViewCount;
-        final long allViewCount = altViewCount + (!dslDefaultConfig.isEgiHidden() || otherViewCount > 0 ? 1 : 0);
+        final List<InsertionPointBuilder> altViews = insertionPointActionsElements.stream().filter(insPoint -> insPoint.whereToInsert() == InsertionPoints.ALTERNATIVE_VIEW).collect(Collectors.toList());
+        final long otherViewCount = insertionPointActionsElements.size() - altViews.size();
+        final long allViewCount = altViews.size() + (!dslDefaultConfig.isEgiHidden() || otherViewCount > 0 ? 1 : 0);
         if (allViewCount > 1) {
             if (!insertionPoint.isPresent()) {
                 return of(selectEgi());
             } else {
-                int viewIndex = 2;
-                for (final InsertionPointBuilder el : insertionPointActionsElements) {
-                    if (el.whereToInsert() == InsertionPoints.ALTERNATIVE_VIEW && el == insertionPoint.get()) {
-                        return of(selectView(viewIndex, el.icon(), el.viewTitle()));
-                    }
-                    viewIndex++;
-                }
+                return of(selectView(altViews.indexOf(insertionPoint.get()) + 2));
             }
         }
         return empty();

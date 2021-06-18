@@ -170,6 +170,10 @@ Polymer({
             value: false
         },
         /**
+         * The icon for insertion point
+         */
+        icon: String,
+        /**
          * The title for insertion point
          */
         shortDesc: String,

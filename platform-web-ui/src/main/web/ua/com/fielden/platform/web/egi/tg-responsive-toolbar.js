@@ -17,10 +17,6 @@ const template = html`
         .grid-toolbar-content {
             min-width:fit-content;
             @apply --layout-horizontal;
-            @apply --layout-center;
-        }
-        .pagintaion-text:first-child {
-            padding-left:8px;
         }
         .grid-toolbar-content ::slotted(*) {
             margin-top: 8px;

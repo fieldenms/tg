@@ -6,29 +6,57 @@ import '/resources/polymer/@polymer/iron-icons/hardware-icons.js';
 import '/resources/polymer/@polymer/iron-icons/image-icons.js';
 import '/resources/polymer/@polymer/iron-icons/av-icons.js';
 
+import '/resources/polymer/@polymer/paper-button/paper-button.js';
+import '/resources/polymer/@polymer/paper-item/paper-item.js';
+
 import { allDefined } from '/resources/reflection/tg-polymer-utils.js';
 
 import {PolymerElement, html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
 const template = html`
     <style>
+        :host {
+            @apply --layout-horizontal;
+            @apply --layout-center;
+            --paper-button-ink-color: rgba(33, 33, 33, .6);
+            --paper-button: {
+                text-transform: none;
+            }
+            --paper-button-flat-keyboard-focus: {
+                font-weight: normal;
+            }
+        }
         .view-item {
+            padding: 8px;
             @apply --layout-horizontal;
             @apply --layout-center;
         }
+        .view-item:focus, .main[dropdown-opened] {
+            background-color: rgba(33, 33, 33, .15);
+        }
+        .item-title {
+            margin: 4px;
+        }
+        .dropdown-content {
+            background-color: white;
+            box-shadow: 0px 2px 6px #ccc;
+            @apply --layout-vertical;
+        }
     </style>
-    <div class="view-item" on-tap="_showViews">
+    <paper-button class="view-item main" dropdown-opened$="[[dropDownOpened]]" on-tap="_showViews" tooltip-text="Choose the view">
         <iron-icon icon="[[_currentView.icon]]"></iron-icon>
-        <span>[[_currentView.title]]</span>
+        <span class="item-title">[[_currentView.title]]</span>
         <iron-icon icon="icons:arrow-drop-down"></iron-icon>
-    </div>
-    <iron-dropdown id="dropdown" always-on-top>
-        <template is="dom-repeat" items="[[_hiddenViewes]]" as="view">
-            <div class="view-item" view-index$="[[view.index]]" on-tap="_changeView">
-                <iron-icon icon="[[view.icon]]"></iron-icon>
-                <span>[[view.title]]</span>
-            </div>
-        </template>
+    </paper-button>
+    <iron-dropdown id="dropdown" horizontal-align="right" vertical-offset="40" always-on-top on-iron-overlay-opened="_dropdownOpened" on-iron-overlay-closed="_dropdownClosed">
+        <div class="dropdown-content" slot="dropdown-content">
+            <template is="dom-repeat" items="[[_hiddenViews]]" as="view">
+                <div class="view-item" tabindex="0" view-index$="[[view.index]]" on-tap="_changeView">
+                    <iron-icon icon="[[view.icon]]"></iron-icon>
+                    <span class="item-title">[[view.title]]</span>
+                </div>
+            </template>
+        </div>
     </iron-dropdown>`;
 
 
@@ -41,15 +69,15 @@ export class TgCentreViewSwitch extends PolymerElement {
     static get properties() {
         return {
             viewIndex: Number, 
-            viewes: Array,
+            views: Array,
             _currentView: Object,
-            _hiddenViewes: Array
+            _hiddenViews: Array
         };
     }
 
     static get observers() {
         return [
-            "_updateViewes(viewes, viewIndex)"
+            "_updateViews(views, viewIndex)"
         ];
     }
 
@@ -57,12 +85,12 @@ export class TgCentreViewSwitch extends PolymerElement {
         super.ready();
     }
 
-    _updateViewes(viewes, viewIndex) {
-        if (allDefined(arguments) && viewIndex !== null && viewIndex >= 0 && viewes.length > viewIndex) {
-            this._hiddenViewes = this.viewes.filter(view => {
+    _updateViews(views, viewIndex) {
+        if (allDefined(arguments) && viewIndex !== null && viewIndex >= 0) {
+            this._hiddenViews = this.views.filter(view => {
                 return view.index !== viewIndex;
             });
-            this._currentView = this.viewes.find(view => view.index === viewIndex);
+            this._currentView = this.views.find(view => view.index === viewIndex);
         }
     }
 
@@ -70,9 +98,17 @@ export class TgCentreViewSwitch extends PolymerElement {
         this.$.dropdown.open();
     }
 
+    _dropdownOpened (e) {
+        this.dropDownOpened = true;
+    }
+
+    _dropdownClosed (e) {
+        this.dropDownOpened = false;
+    }
+
     _changeView(e) {
         this.$.dropdown.close();
-        this.fire("tg-centre-view-change", +e.target.getAttribute("view-index"));
+        this.dispatchEvent(new CustomEvent('tg-centre-view-change',  { bubbles: true, composed: true, detail: +e.currentTarget.getAttribute("view-index") }));
     }
 }
 
