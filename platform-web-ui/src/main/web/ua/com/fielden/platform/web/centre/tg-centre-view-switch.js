@@ -8,10 +8,12 @@ import '/resources/polymer/@polymer/iron-icons/av-icons.js';
 
 import '/resources/polymer/@polymer/paper-button/paper-button.js';
 import '/resources/polymer/@polymer/paper-item/paper-item.js';
+import '/resources/polymer/@polymer/paper-listbox/paper-listbox.js';
 
-import { allDefined } from '/resources/reflection/tg-polymer-utils.js';
+import { allDefined, tearDownEvent, deepestActiveElement } from '/resources/reflection/tg-polymer-utils.js';
 
 import {PolymerElement, html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
+import { IronA11yKeysBehavior } from '/resources/polymer/@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
 
 const template = html`
     <style>
@@ -21,6 +23,7 @@ const template = html`
             --paper-button-ink-color: rgba(33, 33, 33, .6);
             --paper-button: {
                 text-transform: none;
+                margin: 0;
             }
             --paper-button-flat-keyboard-focus: {
                 font-weight: normal;
@@ -42,21 +45,27 @@ const template = html`
             box-shadow: 0px 2px 6px #ccc;
             @apply --layout-vertical;
         }
+        paper-item {
+            min-height: 0;
+            line-height: unset;
+            font-size: unset;
+            --paper-item-selected-weight: normal;
+        }
     </style>
-    <paper-button class="view-item main" dropdown-opened$="[[dropDownOpened]]" on-tap="_showViews" tooltip-text="Choose the view">
+    <paper-button id="trigger" class="view-item main" dropdown-opened$="[[dropDownOpened]]" on-tap="_showViews" tooltip-text="Choose the view">
         <iron-icon icon="[[_currentView.icon]]"></iron-icon>
         <span class="item-title">[[_currentView.title]]</span>
         <iron-icon icon="icons:arrow-drop-down"></iron-icon>
     </paper-button>
     <iron-dropdown id="dropdown" horizontal-align="right" vertical-offset="40" always-on-top on-iron-overlay-opened="_dropdownOpened" on-iron-overlay-closed="_dropdownClosed">
-        <div class="dropdown-content" slot="dropdown-content">
+        <paper-listbox id="availableViews" class="dropdown-content" slot="dropdown-content" on-iron-select="_changeView">
             <template is="dom-repeat" items="[[_hiddenViews]]" as="view">
-                <div class="view-item" tabindex="0" view-index$="[[view.index]]" on-tap="_changeView">
+                <paper-item class="view-item" view-index$="[[view.index]]">
                     <iron-icon icon="[[view.icon]]"></iron-icon>
                     <span class="item-title">[[view.title]]</span>
-                </div>
+                </paper-item>
             </template>
-        </div>
+        </paper-listbox>
     </iron-dropdown>`;
 
 
@@ -83,6 +92,20 @@ export class TgCentreViewSwitch extends PolymerElement {
 
     ready() {
         super.ready();
+        this.$.trigger.addEventListener("keydown", (e) => {
+            if (IronA11yKeysBehavior.keyboardEventMatchesKeys(e, 'down')) {
+                tearDownEvent(e);
+                this._showViews(e);
+            }
+        });
+        const oldEsc = this.$.availableViews._onEscKey.bind(this.$.availableViews);
+        this.$.availableViews._onEscKey = (e) => {
+            const activeElement = deepestActiveElement();
+            if (activeElement && activeElement.parentElement === this.$.availableViews) {
+                this.$.trigger.focus();
+            }
+            oldEsc(e);
+        }
     }
 
     _updateViews(views, viewIndex) {
@@ -95,6 +118,7 @@ export class TgCentreViewSwitch extends PolymerElement {
     }
 
     _showViews(e) {
+        this.$.availableViews.selected = -1;
         this.$.dropdown.open();
     }
 
@@ -108,7 +132,7 @@ export class TgCentreViewSwitch extends PolymerElement {
 
     _changeView(e) {
         this.$.dropdown.close();
-        this.dispatchEvent(new CustomEvent('tg-centre-view-change',  { bubbles: true, composed: true, detail: +e.currentTarget.getAttribute("view-index") }));
+        this.dispatchEvent(new CustomEvent('tg-centre-view-change',  { bubbles: true, composed: true, detail: +e.detail.item.getAttribute("view-index") }));
     }
 }
 
