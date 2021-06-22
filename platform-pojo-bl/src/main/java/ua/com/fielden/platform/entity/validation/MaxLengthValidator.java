@@ -25,16 +25,16 @@ import ua.com.fielden.platform.error.Result;
  * The limit parameter for max length can be specified specified as part of a property definition.
  * 
  * <pre>
- *  @IsProperty
- *  @BeforeChange(@Handler(value = MaxLengthValidator.class, integer = @IntParam(name = "limit", value = 5)))
+ *  &#64;IsProperty
+ *  &#64;BeforeChange(&#64;Handler(value = MaxLengthValidator.class, integer = &#64;IntParam(name = "limit", value = 5)))
  *  private String name;
  * </pre>
  * <p>
  * However, a better approach is to align the limit with the length in the property definition, which happens automagically if {@code length} for {@code @IsProperty}
  * is specified and {@code limit} is omitted completely for {@code @Handler(MaxLengthValidator.class)}.
  * <pre>
- *  @IsProperty(length = 5)
- *  @BeforeChange(@Handler(MaxLengthValidator.class))
+ *  &#64;IsProperty(length = 5)
+ *  &#64;BeforeChange(&#64;Handler(MaxLengthValidator.class))
  *  private String name;
  * </pre>
  * <p>
