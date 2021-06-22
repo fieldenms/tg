@@ -17,7 +17,7 @@ import ua.com.fielden.platform.web.minijs.JsCode;
 public class CentreToolbar implements IToolbarConfig {
 
     protected DomElement createToolbarElement() {
-        return new DomContainer().add(topLevelPlacement, configButton(), switchViewPlacement, pagination("standart-action"), refreshButton());
+        return new DomContainer().add(topLevelPlacement, switchViewPlacement, configButton(), pagination("standart-action"), refreshButton());
     }
 
     @Override

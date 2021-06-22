@@ -1,5 +1,7 @@
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 
+import { isInHierarchy } from '/resources/reflection/tg-polymer-utils.js';
+
 import {PolymerElement, html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 import {mixinBehaviors} from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
 import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
@@ -187,7 +189,7 @@ export class TgResponsiveToolbar extends mixinBehaviors([IronResizableBehavior],
     _resizeEventListener (e) {
         const thisComponentWidth = this.offsetWidth;
         const widthOfToolbar = this.$.leftToolbarContainer.offsetWidth + this.$.rightToolbarContainer.offsetWidth;
-        if (e.composedPath()[0] !== this.$.dropdown) {
+        if (e.composedPath()[0] !== this.$.dropdown && !isInHierarchy(this.$.dropdown, e.composedPath()[0])) {
             if (this.$.dropdown.opened) {
                 this.$.dropdown.close();
             }

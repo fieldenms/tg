@@ -11,8 +11,10 @@ import '/resources/polymer/@polymer/paper-item/paper-item.js';
 import '/resources/polymer/@polymer/paper-listbox/paper-listbox.js';
 
 import { allDefined, tearDownEvent, deepestActiveElement } from '/resources/reflection/tg-polymer-utils.js';
+import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 
 import {PolymerElement, html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
+import { mixinBehaviors } from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
 import { IronA11yKeysBehavior } from '/resources/polymer/@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
 
 const template = html`
@@ -22,8 +24,8 @@ const template = html`
             @apply --layout-center;
             --paper-button-ink-color: rgba(33, 33, 33, .6);
             --paper-button: {
-                text-transform: none;
                 margin: 0;
+                text-transform: none;
             }
             --paper-button-flat-keyboard-focus: {
                 font-weight: normal;
@@ -51,25 +53,30 @@ const template = html`
             font-size: unset;
             --paper-item-selected-weight: normal;
         }
+        .truncate {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
     </style>
     <paper-button id="trigger" class="view-item main" dropdown-opened$="[[dropDownOpened]]" on-tap="_showViews" tooltip-text="Choose the view">
         <iron-icon icon="[[_currentView.icon]]"></iron-icon>
-        <span class="item-title">[[_currentView.title]]</span>
+        <span class="truncate item-title">[[_currentView.title]]</span>
         <iron-icon icon="icons:arrow-drop-down"></iron-icon>
     </paper-button>
-    <iron-dropdown id="dropdown" horizontal-align="right" vertical-offset="40" always-on-top on-iron-overlay-opened="_dropdownOpened" on-iron-overlay-closed="_dropdownClosed">
+    <iron-dropdown id="dropdown" horizontal-align="right" vertical-offset="40" restore-focus-on-close always-on-top on-iron-overlay-opened="_dropdownOpened" on-iron-overlay-closed="_dropdownClosed">
         <paper-listbox id="availableViews" class="dropdown-content" slot="dropdown-content" on-iron-select="_changeView">
             <template is="dom-repeat" items="[[_hiddenViews]]" as="view">
                 <paper-item class="view-item" view-index$="[[view.index]]">
                     <iron-icon icon="[[view.icon]]"></iron-icon>
-                    <span class="item-title">[[view.title]]</span>
+                    <span class="truncate item-title">[[view.title]]</span>
                 </paper-item>
             </template>
         </paper-listbox>
     </iron-dropdown>`;
 
 
-export class TgCentreViewSwitch extends PolymerElement {
+export class TgCentreViewSwitch extends mixinBehaviors([TgElementSelectorBehavior], PolymerElement){
 
     static get template() { 
         return template;
@@ -98,14 +105,6 @@ export class TgCentreViewSwitch extends PolymerElement {
                 this._showViews(e);
             }
         });
-        const oldEsc = this.$.availableViews._onEscKey.bind(this.$.availableViews);
-        this.$.availableViews._onEscKey = (e) => {
-            const activeElement = deepestActiveElement();
-            if (activeElement && activeElement.parentElement === this.$.availableViews) {
-                this.$.trigger.focus();
-            }
-            oldEsc(e);
-        }
     }
 
     _updateViews(views, viewIndex) {
