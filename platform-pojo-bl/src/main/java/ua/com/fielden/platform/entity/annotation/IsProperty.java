@@ -136,6 +136,10 @@ public @interface IsProperty {
 
     /**
      * Length indicates the maximum length of a value for a <code>String</code> property.
+     * This value can be used for validation, but in and of itself, this value is only and indicator of a maximum length.
+     * <p>
+     * Value {@code 0} indicates "undetermined" length, which may have context-dependent interpretation.
+     * For example, a database schema generator may use its own default length in such cases.
      *
      * @return
      */
