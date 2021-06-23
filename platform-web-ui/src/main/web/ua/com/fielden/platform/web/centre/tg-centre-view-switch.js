@@ -65,8 +65,8 @@ const template = html`
         <iron-icon icon="icons:arrow-drop-down"></iron-icon>
     </paper-button>
     <iron-dropdown id="dropdown" horizontal-align="right" vertical-offset="40" restore-focus-on-close always-on-top on-iron-overlay-opened="_dropdownOpened" on-iron-overlay-closed="_dropdownClosed">
-        <paper-listbox id="availableViews" class="dropdown-content" slot="dropdown-content" on-iron-select="_changeView">
-            <template is="dom-repeat" items="[[_hiddenViews]]" as="view">
+        <paper-listbox id="availableViews" class="dropdown-content" slot="dropdown-content" attr-for-selected="view-index" on-iron-select="_changeView">
+            <template is="dom-repeat" items="[[views]]" as="view">
                 <paper-item class="view-item" view-index$="[[view.index]]">
                     <iron-icon icon="[[view.icon]]"></iron-icon>
                     <span class="truncate item-title">[[view.title]]</span>
@@ -86,8 +86,7 @@ export class TgCentreViewSwitch extends mixinBehaviors([TgElementSelectorBehavio
         return {
             viewIndex: Number, 
             views: Array,
-            _currentView: Object,
-            _hiddenViews: Array
+            _currentView: Object
         };
     }
 
@@ -109,15 +108,12 @@ export class TgCentreViewSwitch extends mixinBehaviors([TgElementSelectorBehavio
 
     _updateViews(views, viewIndex) {
         if (allDefined(arguments) && viewIndex !== null && viewIndex >= 0) {
-            this._hiddenViews = this.views.filter(view => {
-                return view.index !== viewIndex;
-            });
             this._currentView = this.views.find(view => view.index === viewIndex);
         }
     }
 
     _showViews(e) {
-        this.$.availableViews.selected = -1;
+        this.$.availableViews.selected = this.viewIndex;
         this.$.dropdown.open();
     }
 
