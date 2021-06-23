@@ -52,11 +52,15 @@ const template = html`
             line-height: unset;
             font-size: unset;
             --paper-item-selected-weight: normal;
+            color: initial;
         }
         .truncate {
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+        }
+        iron-icon {
+            @apply --layout-flex-none;
         }
     </style>
     <paper-button id="trigger" class="view-item main" dropdown-opened$="[[dropDownOpened]]" on-tap="_showViews" tooltip-text="Choose the view">
@@ -64,7 +68,7 @@ const template = html`
         <span class="truncate item-title">[[_currentView.title]]</span>
         <iron-icon icon="icons:arrow-drop-down"></iron-icon>
     </paper-button>
-    <iron-dropdown id="dropdown" horizontal-align="right" vertical-offset="40" restore-focus-on-close always-on-top on-iron-overlay-opened="_dropdownOpened" on-iron-overlay-closed="_dropdownClosed">
+    <iron-dropdown id="dropdown" horizontal-align="left" vertical-offset="40" restore-focus-on-close always-on-top on-iron-overlay-opened="_dropdownOpened" on-iron-overlay-closed="_dropdownClosed">
         <paper-listbox id="availableViews" class="dropdown-content" slot="dropdown-content" attr-for-selected="view-index" on-iron-select="_changeView">
             <template is="dom-repeat" items="[[views]]" as="view">
                 <paper-item class="view-item" view-index$="[[view.index]]">
