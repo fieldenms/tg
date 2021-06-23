@@ -70,7 +70,7 @@ export class TgBooleanEditor extends TgEditor {
             }
         }
     }
-
+    
     constructor () {
         super();
         this._editorKind = "BOOLEAN";
@@ -88,13 +88,7 @@ export class TgBooleanEditor extends TgEditor {
             return editingValue === 'true';
         }).bind(this);
     }
-
-    ready() {
-        super.ready();
-        delete this.$.input.keyBindings["enter:keydown"];
-        this.$.input.removeOwnKeyBindings();
-    }
-
+    
     /**
      * This method returns a default value for '_editingValue', which is used 
      *  for representing the value when no entity was bound to this editor yet.
