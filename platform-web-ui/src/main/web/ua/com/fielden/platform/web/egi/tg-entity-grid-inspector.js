@@ -30,7 +30,7 @@ import { TgElementSelectorBehavior } from '/resources/components/tg-element-sele
 import { TgDragFromBehavior } from '/resources/components/tg-drag-from-behavior.js';
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
-import { getFirstEntityType, tearDownEvent, getRelativePos, isMobileApp} from '/resources/reflection/tg-polymer-utils.js';
+import { getKeyEventTarget, tearDownEvent, getRelativePos, isMobileApp} from '/resources/reflection/tg-polymer-utils.js';
 
 const template = html`
     <style>
@@ -1000,7 +1000,7 @@ Polymer({
             return result;
         }).bind(this);
         this.async(function () {
-            this.keyEventTarget = this._getKeyEventTarget();
+            this.keyEventTarget = getKeyEventTarget(this, this);
             if (this.master) {
                 this._initMasterEditors();
                 this.appendChild(this.master.saveButton);
@@ -2221,13 +2221,7 @@ Polymer({
         }.bind(this), 1);
     },
 
-    _getKeyEventTarget: function () {
-        let parent = this;
-        while (parent && (parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG' && parent.tagName !== 'TG-MENU-ITEM-VIEW')) {
-            parent = parent.parentElement || parent.getRootNode().host;
-        }
-        return parent || this;
-    },
+    
 
     _getHeaderColumns: function () {
         const topLeftCells = this.$.top_left_egi.querySelector(".table-header-row").querySelectorAll(".cell");

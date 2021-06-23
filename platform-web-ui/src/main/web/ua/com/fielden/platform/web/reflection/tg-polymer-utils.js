@@ -215,6 +215,25 @@ export class EntityStub {
 };
 
 /**
+ * Finds the closest parent to startFrom element which can be focused.
+ * 
+ * @param {HTMLElement} startFrom - the element to start search from.
+ * @param {HTMLElement} orElse - the element to which is returned if key event target wasn't found.
+ * @param {Function} doDuringSearch - custom function that allows to perform some tasks during search it receives currently inspected HTMLElement. 
+ * @returns The closest parent to startFrom element with tabindex equal to 0. 
+ */
+export const getKeyEventTarget = function (startFrom, orElse, doDuringSearch) {
+    let parent = startFrom;
+    while (parent && parent.getAttribute('tabindex') !== '0') {
+        if (typeof doDuringSearch === 'function') {
+            doDuringSearch(parent);
+        }
+        parent = parent.parentElement || parent.getRootNode().host;
+    }
+    return parent || orElse;
+}
+
+/**
  * Returns true if specified text contains html tags which are not allowed to be inserted as html text. 
  *  
  */

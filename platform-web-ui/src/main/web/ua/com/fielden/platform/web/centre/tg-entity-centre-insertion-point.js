@@ -26,7 +26,7 @@ import '/resources/polymer/@polymer/paper-styles/element-styles/paper-material-s
 import '/resources/polymer/@polymer/neon-animation/animations/fade-in-animation.js';
 import '/resources/polymer/@polymer/neon-animation/animations/fade-out-animation.js';
 import '/resources/centre/tg-entity-centre-styles.js';
-import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, getKeyEventTarget } from '/resources/reflection/tg-polymer-utils.js';
 import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
 
 const template = html`
@@ -107,7 +107,7 @@ const template = html`
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning tg-entity-centre-styles paper-material-styles"></style>
     <div id="pm" class="layout vertical flex" detached$="[[detachedView]]">
-        <div id="insertionPointContent" class="layout vertical flex relative">
+        <div id="insertionPointContent" tabindex$="[[_getTabIndex(separateView)]]" class="layout vertical flex relative">
             <div class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc, separateView)]]">
                 <span class="title-text truncate" style="margin-left:16px;" tooltip-text$="[[longDesc]]">[[shortDesc]]</span>
                 <paper-icon-button class="title-bar-button expand-colapse-button" style="margin-left:10px;margin-right:2px;" icon="icons:open-in-new" on-tap="_expandColapseTap"></paper-icon-button>
@@ -238,10 +238,6 @@ Polymer({
             notify: true
         },
 
-        keyEventTarget: {
-            type: Object
-        },
-
         contextRetriever: {
             type: Function,
             observer: "_updateElementWithContextRetriever"
@@ -279,34 +275,13 @@ Polymer({
 
     attached: function () {
         this.async(() => {
-            if (!this.egiBindingAdded) {
-                // cache parent result view, that contains this insertion point
-                this.resultView = this.findResultView();
-                if (this.resultView) {
-                    // add all EGI shortcuts to this result view to listen to EGI shotcuts when insertion point is focused
-                    this.addOwnKeyBinding(this.resultView._findParentCentre().$.egi.customShortcuts, '_egiShortcutPressed');
-                    this.egiBindingAdded = true;
-                }
-            }
-            this.keyEventTarget = this._getKeyEventTarget();this.$.insertionPointContent;
+            this.keyEventTarget = getKeyEventTarget(this.$.insertionPointContent, this);
         }, 1);
     },
 
     refreshEntitiesLocaly: function (entities, properties) {
         if (this._element && typeof this._element.refreshEntitiesLocaly === 'function') {
             this._element.refreshEntitiesLocaly(entities, properties);
-        }
-    },
-
-    _getKeyEventTarget: function () {
-        if (!this.separateView) {
-            return this.$.insertionPointContent;
-        } else {
-            let parent = this;
-            while (parent && (parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG' && parent.tagName !== 'TG-MENU-ITEM-VIEW')) {
-                parent = parent.parentElement || parent.getRootNode().host;
-            }
-            return parent || this;
         }
     },
 
@@ -518,6 +493,10 @@ Polymer({
         return detachedView || separateView;
     },
 
+    _getTabIndex: function (separateView) {
+        return separateView ? '-1' : '0';
+    },
+
     _shortcutPressed: function (e) {
         this.processShortcut(e, ['paper-icon-button', 'tg-action', 'tg-ui-action']);
     },
@@ -530,15 +509,4 @@ Polymer({
             this.resultView._findParentCentre().$.egi._shortcutPressed(e);
         }
     },
-
-    /**
-     * Finds parent result view for this insertion point. It should be done only in 'attached' insertion point state.
-     */
-    findResultView: function () {
-        let parent = this.parentElement.assignedSlot;
-        while (parent && !parent.classList.contains('centreResultView')) {
-            parent = parent.parentElement || parent.getRootNode().host;
-        }
-        return parent;
-    }
 });
