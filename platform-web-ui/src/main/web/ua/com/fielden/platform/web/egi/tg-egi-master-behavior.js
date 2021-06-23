@@ -93,7 +93,7 @@ const TgEgiMasterBehaviorImpl = {
             } else {
                 this._focusPreferredInput();
             }
-        }, 1);
+        }, 100);
     },
 
     /**
