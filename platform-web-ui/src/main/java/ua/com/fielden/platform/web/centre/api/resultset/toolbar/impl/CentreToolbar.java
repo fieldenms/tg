@@ -16,6 +16,20 @@ import ua.com.fielden.platform.web.minijs.JsCode;
 
 public class CentreToolbar implements IToolbarConfig {
 
+    private final int switchViewButtonWidth;
+
+    public CentreToolbar() {
+        this(60); //Default width of switch view button
+    }
+
+    public CentreToolbar(final int switchViewButtonWidth) {
+        this.switchViewButtonWidth = switchViewButtonWidth;
+    }
+
+    public static CentreToolbar withSwitchViewButtonWidth(final int switchViewButtonWidth) {
+        return new CentreToolbar(switchViewButtonWidth);
+    }
+
     protected DomElement createToolbarElement() {
         return new DomContainer().add(topLevelPlacement, switchViewPlacement, configButton(), pagination("standart-action"), refreshButton());
     }
@@ -58,17 +72,11 @@ public class CentreToolbar implements IToolbarConfig {
                 .attr("tooltip-text$", "[[computeConfigButtonTooltip(staleCriteriaMessage)]]");
     }
 
-    public static DomElement selectEgi() {
-        return new DomElement("tg-centre-view-switch")
-                .attr("slot", "standart-action")
-                .attr("view-index", 1)
-                .attr("views", "[[resultViews]]");
-    }
-
-    public static DomElement selectView(final int viewIndex) {
+    public static DomElement selectView(final int viewIndex, final int width) {
         return new DomElement("tg-centre-view-switch")
                 .attr("slot", "standart-action")
                 .attr("view-index", viewIndex)
+                .attr("button-width", width)
                 .attr("views", "[[resultViews]]");
     }
 
@@ -134,5 +142,10 @@ public class CentreToolbar implements IToolbarConfig {
                 .attr("on-tap", "currentPageTap")
                 .attr("disabled$", "[[canNotCurrent(pageNumber, pageCount, isRunning)]]")
                 .attr("tooltip-text", "Refresh, F5");
+    }
+
+    @Override
+    public int getSwitchViewButtonWidth() {
+        return switchViewButtonWidth;
     }
 }

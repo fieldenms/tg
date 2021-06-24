@@ -10,10 +10,10 @@ import '/resources/polymer/@polymer/paper-button/paper-button.js';
 import '/resources/polymer/@polymer/paper-item/paper-item.js';
 import '/resources/polymer/@polymer/paper-listbox/paper-listbox.js';
 
-import { allDefined, tearDownEvent, deepestActiveElement } from '/resources/reflection/tg-polymer-utils.js';
+import { allDefined, tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 
-import {PolymerElement, html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
+import { PolymerElement, html } from '/resources/polymer/@polymer/polymer/polymer-element.js';
 import { mixinBehaviors } from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
 import { IronA11yKeysBehavior } from '/resources/polymer/@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
 
@@ -65,7 +65,7 @@ const template = html`
     </style>
     <paper-button id="trigger" class="view-item main" dropdown-opened$="[[dropDownOpened]]" on-tap="_showViews" tooltip-text="Choose the view">
         <iron-icon icon="[[_currentView.icon]]"></iron-icon>
-        <span class="truncate item-title">[[_currentView.title]]</span>
+        <span class="truncate item-title" style$="[[_calcButtonStyle(buttonWidth)]]">[[_currentView.title]]</span>
         <iron-icon icon="icons:arrow-drop-down"></iron-icon>
     </paper-button>
     <iron-dropdown id="dropdown" horizontal-align="left" vertical-offset="40" restore-focus-on-close always-on-top on-iron-overlay-opened="_dropdownOpened" on-iron-overlay-closed="_dropdownClosed">
@@ -90,6 +90,7 @@ export class TgCentreViewSwitch extends mixinBehaviors([TgElementSelectorBehavio
         return {
             viewIndex: Number, 
             views: Array,
+            buttonWidth: Number,
             _currentView: Object
         };
     }
@@ -110,6 +111,13 @@ export class TgCentreViewSwitch extends mixinBehaviors([TgElementSelectorBehavio
         });
     }
 
+    _calcButtonStyle(buttonWidth) {
+        if (buttonWidth > 0) {
+            return `width: ${buttonWidth}px;`;
+        }
+        return "";
+    }
+
     _updateViews(views, viewIndex) {
         if (allDefined(arguments) && viewIndex !== null && viewIndex >= 0) {
             this._currentView = this.views.find(view => view.index === viewIndex);
@@ -121,11 +129,11 @@ export class TgCentreViewSwitch extends mixinBehaviors([TgElementSelectorBehavio
         this.$.dropdown.open();
     }
 
-    _dropdownOpened (e) {
+    _dropdownOpened(e) {
         this.dropDownOpened = true;
     }
 
-    _dropdownClosed (e) {
+    _dropdownClosed(e) {
         this.dropDownOpened = false;
     }
 

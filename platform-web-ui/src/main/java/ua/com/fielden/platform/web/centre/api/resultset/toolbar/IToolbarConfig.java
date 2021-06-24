@@ -36,4 +36,11 @@ public interface IToolbarConfig extends IRenderable, IImportable {
      */
     List<String> getAvailableShortcuts();
 
+    /**
+     * Returns the size of switch view button
+     *
+     * @return
+     */
+    int getSwitchViewButtonWidth();
+
 }

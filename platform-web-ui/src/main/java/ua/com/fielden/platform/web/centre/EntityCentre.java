@@ -37,7 +37,6 @@ import static ua.com.fielden.platform.web.centre.EgiConfigurations.TOOLBAR_VISIB
 import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
 import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp.derivePropName;
-import static ua.com.fielden.platform.web.centre.api.resultset.toolbar.impl.CentreToolbar.selectEgi;
 import static ua.com.fielden.platform.web.centre.api.resultset.toolbar.impl.CentreToolbar.selectView;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalPropertyName;
@@ -1265,9 +1264,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final long allViewCount = altViews.size() + (!dslDefaultConfig.isEgiHidden() || otherViewCount > 0 ? 1 : 0);
         if (allViewCount > 1) {
             if (!insertionPoint.isPresent()) {
-                return of(selectEgi());
+                return of(selectView(1, dslDefaultConfig.getToolbarConfig().getSwitchViewButtonWidth()));
             } else {
-                return of(selectView(altViews.indexOf(insertionPoint.get()) + 2));
+                return of(selectView(altViews.indexOf(insertionPoint.get()) + 2, insertionPoint.get().toolbar().map(toolbar -> toolbar.getSwitchViewButtonWidth()).orElse(0)));
             }
         }
         return empty();

@@ -270,6 +270,14 @@ const TgEntityCentreBehaviorImpl = {
         preferredView: Number,
 
         /**
+         * The preferred view loaded from server
+         */
+        loadedPreferredView: {
+            type: Number,
+            observer: "_loadedPreferredViewChanged"
+        },
+
+        /**
          * The previous view index.
          */
         _previousView: Number,
@@ -581,7 +589,7 @@ const TgEntityCentreBehaviorImpl = {
             throw new Error(NOT_ENOUGH_RESULT_VIEWS);
         } else {
             this.preferredView = this.preferredView === undefined ? 
-                    (this.$.egi.isHidden() && egiInsertionPoints.length === 0? 2/*first alternative result view*/ : 1 /*Egi view*/) : this.preferredView;
+                    (this.$.egi.isHidden() && egiInsertionPoints.length === 0 ? 2/*first alternative result view*/ : 1 /*Egi view*/) : this.preferredView;
         }
 
         self._postRun = (function (criteriaEntity, newBindingEntity, result) {
@@ -1265,6 +1273,15 @@ const TgEntityCentreBehaviorImpl = {
      */
     _computeButtonStyle: function (_buttonDisabled) {
         return _buttonDisabled ? 'cursor:initial' : '';
+    },
+
+    _loadedPreferredViewChanged: function (newLoadedPreferredView) {
+        if (newLoadedPreferredView >= 0 && newLoadedPreferredView < this.allViews.length) {
+            this.preferredView = newLoadedPreferredView;
+        } else {
+            this.preferredView = this.allViews.length - 1;
+            this.async(this._preferredViewUpdaterAction._run, 100);
+        }
     }
 };
 
