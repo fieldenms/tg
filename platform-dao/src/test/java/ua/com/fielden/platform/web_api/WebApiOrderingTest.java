@@ -23,6 +23,7 @@ import ua.com.fielden.platform.sample.domain.TgWebApiEntity;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntity;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityChild;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
+import ua.com.fielden.platform.utils.IDates;
 
 /**
  * Test for GraphQL Web API implementation for data ordering.
@@ -327,10 +328,11 @@ public class WebApiOrderingTest extends AbstractDaoTestCase {
         final DateTime date2Instant = new DateTime(2020, 2, 15, 0, 0);
         final DateTime date3Instant = new DateTime(2020, 2, 20, 0, 0);
         final DateTime date4Instant = new DateTime(2020, 2, 25, 0, 0);
-        final Map<String, Object> date1 = createDateRepr(date1Instant.toDate());
-        final Map<String, Object> date2 = createDateRepr(date2Instant.toDate());
-        final Map<String, Object> date3 = createDateRepr(date3Instant.toDate());
-        final Map<String, Object> date4 = createDateRepr(date4Instant.toDate());
+        final IDates dates = getInstance(IDates.class);
+        final Map<String, Object> date1 = createDateRepr(date1Instant.toDate(), dates);
+        final Map<String, Object> date2 = createDateRepr(date2Instant.toDate(), dates);
+        final Map<String, Object> date3 = createDateRepr(date3Instant.toDate(), dates);
+        final Map<String, Object> date4 = createDateRepr(date4Instant.toDate(), dates);
         final TgCompoundEntity master1 = save(new_(TgCompoundEntity.class, "M1", "Master 1"));
         final TgCompoundEntity master2 = save(new_(TgCompoundEntity.class, "M2", "Master 2"));
         save(new_composite(TgCompoundEntityChild.class, master2, date4Instant.toDate()).setDesc("master2 date4"));

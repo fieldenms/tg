@@ -16,7 +16,6 @@ import java.math.BigInteger;
 import java.util.Date;
 import java.util.Map;
 
-import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.DateTimeFormatterBuilder;
 
@@ -33,6 +32,7 @@ import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.either.Either;
+import ua.com.fielden.platform.utils.IDates;
 
 /**
  * TG-specific GraphQL Web API scalar type implementations.
@@ -42,6 +42,11 @@ import ua.com.fielden.platform.types.either.Either;
  */
 public class TgScalars {
     private static final String UNEXPECTED_TYPE_ERROR = "Expected [%] but was [%].";
+    public final GraphQLScalarType GraphQLDate;
+    
+    public TgScalars(final IDates dates) {
+        GraphQLDate = createGraphQLDate(dates);
+    }
     
     /**
      * Creates builder for scalar type and assigns name and description derived from the specified {@code title}.
@@ -67,7 +72,7 @@ public class TgScalars {
     /////////////////////////////////////////////////////////////// SCALAR TYPES WITHOUT ARGUMENTS ///////////////////////////////////////////////////////////////
     
     /**
-     * Private interface for ouput scalar {@link Coercing} to increase level of abstraction for implementing scalars.
+     * Private interface for output scalar {@link Coercing} to increase level of abstraction for implementing scalars.
      * 
      * @author TG Team
      *
@@ -267,9 +272,9 @@ public class TgScalars {
      * @param date
      * @return
      */
-    public static Map<String, Object> createDateRepr(final Date date) {
+    public static Map<String, Object> createDateRepr(final Date date, final IDates dates) {
         return linkedMapOf(
-            t2("value", dateTimePrinter.print(new DateTime(date))),
+            t2("value", dateTimePrinter.print(dates.zoned(date))),
             t2("millis", date.getTime())
         );
     }
@@ -277,77 +282,78 @@ public class TgScalars {
     /**
      * GraphQL scalar implementation for {@link Date} type.
      */
-    public static final GraphQLScalarType GraphQLDate = newScalarType("Date").coercing(new TgCoercing<Date, Map<String, Object>>() {
-        private final DateTimeFormatter basicDateParser = basicDate();
-        private final DateTimeFormatter dateTimeParser = new DateTimeFormatterBuilder()
-            .append(dateElementParser())
-            .appendOptional(new DateTimeFormatterBuilder()
-                .appendLiteral(' ')
-                .appendOptional(timeElementParser().getParser())
-                .toParser())
-            .toFormatter();
-        
-        @Override
-        public String title() {
-            return "Date";
-        }
-        
-        //////////////////////////////////////////////// SERIALISE RESULTS ////////////////////////////////////////////////
-        
-        @Override
-        public Either<String, Map<String, Object>> convertDataFetcherResult(final Object dataFetcherResult) {
-            if (dataFetcherResult instanceof Date) {
-                return right(createDateRepr((Date) dataFetcherResult));
-            } else {
-                return error(title(), dataFetcherResult);
+    private static GraphQLScalarType createGraphQLDate(final IDates dates) {
+        return newScalarType("Date").coercing(new TgCoercing<Date, Map<String, Object>>() {
+            private final DateTimeFormatter basicDateParser = basicDate();
+            private final DateTimeFormatter dateTimeParser = new DateTimeFormatterBuilder()
+                .append(dateElementParser())
+                .appendOptional(new DateTimeFormatterBuilder()
+                    .appendLiteral(' ')
+                    .appendOptional(timeElementParser().getParser())
+                    .toParser())
+                .toFormatter();
+            
+            @Override
+            public String title() {
+                return "Date";
             }
-        }
-        
-        //////////////////////////////////////////////// PARSE ARGUMENT ... ////////////////////////////////////////////////
-        
-        private Either<String, Date> parseFrom(final String input, final DateTimeFormatter formatter) {
-            try {
-                return right(formatter.parseDateTime(input).toDate()); // server time-zone is used here
-            } catch (final IllegalArgumentException e) {
-                return left(format(UNEXPECTED_TYPE_ERROR, "number-like or string-based " + title(), input));
+            
+            //////////////////////////////////////////////// SERIALISE RESULTS ////////////////////////////////////////////////
+            
+            @Override
+            public Either<String, Map<String, Object>> convertDataFetcherResult(final Object dataFetcherResult) {
+                if (dataFetcherResult instanceof Date) {
+                    return right(createDateRepr((Date) dataFetcherResult, dates));
+                } else {
+                    return error(title(), dataFetcherResult);
+                }
             }
-        }
-        
-        private Either<String, Date> basicDateFrom(final String input) {
-            return parseFrom(input, basicDateParser);
-        }
-        
-        private Either<String, Date> dateTimeFrom(final String input) {
-            return parseFrom(input, dateTimeParser);
-        }
-        
-        //////////////////////////////////////////////// ... VARIABLES ////////////////////////////////////////////////
-        
-        @Override
-        public Either<String, Date> convertVariableInput(final Object variableInput) {
-            if (variableInput instanceof Number) {
-                return basicDateFrom(variableInput.toString());
-            } else if (variableInput instanceof String) {
-                return dateTimeFrom((String) variableInput);
-            } else {
-                return error("number-like or string-based " + title(), variableInput);
+            
+            //////////////////////////////////////////////// PARSE ARGUMENT ... ////////////////////////////////////////////////
+            
+            private Either<String, Date> parseFrom(final String input, final DateTimeFormatter formatter) {
+                try {
+                    return right(formatter.withZone(dates.timeZone()).parseDateTime(input).toDate()); // request time-zone is used here (or default for independent time-zone mode)
+                } catch (final IllegalArgumentException e) {
+                    return left(format(UNEXPECTED_TYPE_ERROR, "number-like or string-based " + title(), input));
+                }
             }
-        }
-        
-        //////////////////////////////////////////////// ... LITERALS ////////////////////////////////////////////////
-        
-        @Override
-        public Either<String, Date> convertLiteralInput(final Object literalInput) {
-            if (literalInput instanceof IntValue) {
-                final BigInteger value = ((IntValue) literalInput).getValue();
-                return basicDateFrom(value.toString());
-            } else if (literalInput instanceof StringValue) {
-                return dateTimeFrom(((StringValue) literalInput).getValue());
-            } else {
-                return error("number-like or string-based " + title(), literalInput);
+            
+            private Either<String, Date> basicDateFrom(final String input) {
+                return parseFrom(input, basicDateParser);
             }
-        }
-        
-    }).build();
-    
+            
+            private Either<String, Date> dateTimeFrom(final String input) {
+                return parseFrom(input, dateTimeParser);
+            }
+            
+            //////////////////////////////////////////////// ... VARIABLES ////////////////////////////////////////////////
+            
+            @Override
+            public Either<String, Date> convertVariableInput(final Object variableInput) {
+                if (variableInput instanceof Number) {
+                    return basicDateFrom(variableInput.toString());
+                } else if (variableInput instanceof String) {
+                    return dateTimeFrom((String) variableInput);
+                } else {
+                    return error("number-like or string-based " + title(), variableInput);
+                }
+            }
+            
+            //////////////////////////////////////////////// ... LITERALS ////////////////////////////////////////////////
+            
+            @Override
+            public Either<String, Date> convertLiteralInput(final Object literalInput) {
+                if (literalInput instanceof IntValue) {
+                    final BigInteger value = ((IntValue) literalInput).getValue();
+                    return basicDateFrom(value.toString());
+                } else if (literalInput instanceof StringValue) {
+                    return dateTimeFrom(((StringValue) literalInput).getValue());
+                } else {
+                    return error("number-like or string-based " + title(), literalInput);
+                }
+            }
+            
+        }).build();
+    }
 }
