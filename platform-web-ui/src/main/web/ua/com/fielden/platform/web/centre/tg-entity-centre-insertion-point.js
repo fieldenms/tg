@@ -173,6 +173,12 @@ Polymer({
          * The icon for insertion point
          */
         icon: String,
+
+        /**
+         * The icon style for insertion point
+         */
+        iconStyle: String,
+        
         /**
          * The title for insertion point
          */

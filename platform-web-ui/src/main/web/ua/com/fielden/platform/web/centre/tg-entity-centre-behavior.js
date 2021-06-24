@@ -135,7 +135,7 @@ const createPreferredViewUpdaterAction = function (entityCentre) {
 };
 
 const createViewsFromInsPoints = function (altViews) {
-    return altViews.map((insPoint, index) => {return{index: 2 + index, title: insPoint.shortDesc, icon: insPoint.icon}});
+    return altViews.map((insPoint, index) => {return{index: 2 + index, title: insPoint.shortDesc, icon: insPoint.icon, iconStyle: insPoint.iconStyle}});
 };
 
 const MSG_SAVE_OR_CANCEL = "Please save or cancel changes.";

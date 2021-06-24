@@ -41,6 +41,7 @@ public class InsertionPointBuilder implements IRenderable, IExecutable {
                 .attr("short-desc", insertionPointActionElement.conf().shortDesc.orElse(""))
                 .attr("long-desc", insertionPointActionElement.conf().longDesc.orElse(""))
                 .attr("icon", insertionPointActionElement.conf().icon.orElse(""))
+                .attr("icon-style", insertionPointActionElement.conf().iconStyle.orElse(""))
                 .attr("selection-criteria-entity", "[[selectionCriteriaEntity]]")
                 .attr("is-centre-running", "[[_triggerRun]]")
                 .attr("retrieved-entities", "{{retrievedEntities}}")

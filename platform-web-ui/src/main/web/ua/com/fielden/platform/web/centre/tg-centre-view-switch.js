@@ -64,7 +64,7 @@ const template = html`
         }
     </style>
     <paper-button id="trigger" class="view-item main" dropdown-opened$="[[dropDownOpened]]" on-tap="_showViews" tooltip-text="Choose the view">
-        <iron-icon icon="[[_currentView.icon]]"></iron-icon>
+        <iron-icon icon="[[_currentView.icon]]" style$="[[_currentView.iconStyle]]"></iron-icon>
         <span class="truncate item-title" style$="[[_calcButtonStyle(buttonWidth)]]">[[_currentView.title]]</span>
         <iron-icon icon="icons:arrow-drop-down"></iron-icon>
     </paper-button>
@@ -72,7 +72,7 @@ const template = html`
         <paper-listbox id="availableViews" class="dropdown-content" slot="dropdown-content" attr-for-selected="view-index" on-iron-select="_changeView">
             <template is="dom-repeat" items="[[views]]" as="view">
                 <paper-item class="view-item" view-index$="[[view.index]]">
-                    <iron-icon icon="[[view.icon]]"></iron-icon>
+                    <iron-icon icon="[[view.icon]]" style$="[[view.iconStyle]]"></iron-icon>
                     <span class="truncate item-title">[[view.title]]</span>
                 </paper-item>
             </template>
