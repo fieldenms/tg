@@ -171,6 +171,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private static final String EGI_LAYOUT = "@gridLayout";
     private static final String EGI_LAYOUT_CONFIG = "//gridLayoutConfig";
     private static final String EGI_SHORTCUTS = "@customShortcuts";
+    private static final String EGI_VIEW_ICON = "@egiViewIcon";
+    private static final String EGI_VIEW_ICON_STYLE = "@egiViewIStyle";
     private static final String EGI_TOOLBAR_VISIBLE = "@toolbarVisible";
     private static final String EGI_HIDDEN = "@hidden";
     private static final String EGI_DRAGGABLE = "@canDragFrom";
@@ -1198,6 +1200,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace(MI_TYPE, flattenedNameOf(miType)).
                 //egi related properties
                 replace(EGI_SHORTCUTS, shortcuts).
+                replace(EGI_VIEW_ICON, dslDefaultConfig.getGridViewIcon()).
+                replace(EGI_VIEW_ICON_STYLE, dslDefaultConfig.getGridViewIconStyle()).
                 replace(EGI_HIDDEN, HIDDEN.eval(dslDefaultConfig.isEgiHidden())).
                 replace(EGI_DRAGGABLE, DRAGGABLE.eval(dslDefaultConfig.isDraggable())).
                 replace(EGI_TOOLBAR_VISIBLE, TOOLBAR_VISIBLE.eval(!dslDefaultConfig.shouldHideToolbar())).

@@ -715,6 +715,16 @@ Polymer({
         columns: {
             type: Array
         },
+
+        /**
+         * The icon for insertion point
+         */
+        icon: String,
+        /**
+         * The icon style for insertion point
+         */
+        iconStyle: String,
+        
         master: Object,
         allColumns: Array,
         fixedColumns: Array,
@@ -2220,8 +2230,6 @@ Polymer({
             this._resizeEventListener();
         }.bind(this), 1);
     },
-
-    
 
     _getHeaderColumns: function () {
         const topLeftCells = this.$.top_left_egi.querySelector(".table-header-row").querySelectorAll(".cell");

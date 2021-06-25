@@ -584,7 +584,7 @@ const TgEntityCentreBehaviorImpl = {
         const altViews = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point[separate-view]');
         this.allViews = [this.$.selection_criteria, this.$.egi, ...altViews];
         //Create result views to create centre view switch button
-        this.resultViews = [{index: 1, icon: "image:grid-on", title: "Grid"}, ...createViewsFromInsPoints([...altViews])];
+        this.resultViews = [{index: 1, icon: this.$.egi.icon, iconStyle: this.$.egi.iconStyle, title: "Grid"}, ...createViewsFromInsPoints([...altViews])];
         if (this.allViews.length === 2 && this.$.egi.isHidden() && egiInsertionPoints.length === 0) {
             throw new Error(NOT_ENOUGH_RESULT_VIEWS);
         } else {

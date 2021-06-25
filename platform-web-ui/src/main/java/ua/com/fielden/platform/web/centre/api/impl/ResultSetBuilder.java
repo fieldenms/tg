@@ -57,7 +57,8 @@ import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHa
 import ua.com.fielden.platform.web.centre.api.resultset.IDynamicColumnBuilder;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetAutocompleterConfig;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aHideEgi;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aEgiAppearance;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aEgiIconStyle;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1bCheckbox;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cToolbar;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1dScroll;
@@ -107,7 +108,7 @@ import ua.com.fielden.platform.web.view.master.api.widgets.spinner.impl.SpinnerW
  *
  * @param <T>
  */
-class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilderAlsoDynamicProps<T>, IResultSetBuilderWidgetSelector<T>, IResultSetBuilder3Ordering<T>, IResultSetBuilder1aHideEgi<T>, IResultSetBuilder4OrderingDirection<T>, IResultSetBuilder7SecondaryAction<T>, IExpandedCardLayoutConfig<T>, ISummaryCardLayout<T>{
+class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilderAlsoDynamicProps<T>, IResultSetBuilderWidgetSelector<T>, IResultSetBuilder3Ordering<T>, IResultSetBuilder1aEgiAppearance<T>, IResultSetBuilder1aEgiIconStyle<T>, IResultSetBuilder4OrderingDirection<T>, IResultSetBuilder7SecondaryAction<T>, IExpandedCardLayoutConfig<T>, ISummaryCardLayout<T>{
 
     private static final String ERR_EDITABLE_SUB_PROP_DISALLOWED = "Dot-notated property [%s] cannot be added as editable. Only first-level properties are supported.";
 
@@ -523,6 +524,18 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     @Override
     public IResultSetBuilder1bCheckbox<T> hideEgi() {
         this.builder.egiHidden = true;
+        return this;
+    }
+
+    @Override
+    public IResultSetBuilder1aEgiIconStyle<T> withGridViewIcon(final String icon) {
+        this.builder.gridViewIcon = icon;
+        return this;
+    }
+
+    @Override
+    public IResultSetBuilder1bCheckbox<T> style(final String iconStyle) {
+        this.builder.gridViewIconStyle = iconStyle;
         return this;
     }
 
