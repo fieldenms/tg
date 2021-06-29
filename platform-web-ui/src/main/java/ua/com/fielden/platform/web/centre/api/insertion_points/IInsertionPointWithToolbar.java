@@ -13,7 +13,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 public interface IInsertionPointWithToolbar<T extends AbstractEntity<?>> extends IInsertionPoints<T> {
 
     /**
-     * Specify tool bar configuration for this insertion point.
+     * Specify toolbar configuration for this insertion point.
      *
      * @param toolbar
      * @return

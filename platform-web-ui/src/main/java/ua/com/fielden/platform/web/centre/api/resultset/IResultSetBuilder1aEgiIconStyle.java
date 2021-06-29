@@ -3,7 +3,7 @@ package ua.com.fielden.platform.web.centre.api.resultset;
 import ua.com.fielden.platform.entity.AbstractEntity;
 
 /**
- * A contract that allows one to specify styles for egi view icon.
+ * A contract that allows one to specify styles for grid view icon.
  *
  * @author TG Team
  *

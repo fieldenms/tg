@@ -537,7 +537,6 @@ Polymer({
             if (this._selectedView === 0) {
                 if (this._previousView === undefined) {
                     this.$.views.scrollTop = 0; // scrolls centre content to the top when first time loading the view
-                    this._previousView = 0;
                 } else {
                     // do not scroll anywhere, scrolling position will be preserved (for e.g. when moving from another module back)
                     this.restoreActiveElement(); // restore active element (only if such element was persisted previously, for e.g. when using f5 and some editor is focused or when explicitly clicking on Run button)

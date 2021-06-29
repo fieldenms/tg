@@ -32,7 +32,7 @@ const template = html`
             }
         }
         .view-item {
-            padding: 8px;
+            padding: 8px 12px 8px 12px;
             @apply --layout-horizontal;
             @apply --layout-center;
         }
@@ -40,7 +40,7 @@ const template = html`
             background-color: rgba(33, 33, 33, .15);
         }
         .item-title {
-            margin: 4px;
+            margin: 0 8px 0 8px;
         }
         .dropdown-content {
             background-color: white;
@@ -48,7 +48,8 @@ const template = html`
             @apply --layout-vertical;
         }
         paper-item {
-            min-height: 0;
+            height: 24px;
+            min-height: unset;
             line-height: unset;
             font-size: unset;
             --paper-item-selected-weight: normal;

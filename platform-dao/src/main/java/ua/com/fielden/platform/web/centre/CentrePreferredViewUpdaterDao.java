@@ -14,7 +14,7 @@ public class CentrePreferredViewUpdaterDao extends CommonEntityDao<CentrePreferr
     private final ICriteriaEntityRestorer criteriaEntityRestorer;
 
     @Inject
-    protected CentrePreferredViewUpdaterDao(final IFilter filter, final ICriteriaEntityRestorer criteriaEntityRestorer) {
+    public CentrePreferredViewUpdaterDao(final IFilter filter, final ICriteriaEntityRestorer criteriaEntityRestorer) {
         super(filter);
         this.criteriaEntityRestorer = criteriaEntityRestorer;
     }

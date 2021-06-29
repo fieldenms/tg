@@ -58,6 +58,7 @@ public class CentreConfigUtils {
      * @param appliedCriteriaEntity
      * @param saveAsNameToCompare
      * @param configUuid -- empty not to update current config uuid on the client; {@code of(empty())} or {@code of("a1b2c3")} to update config uuid on the client for default and named configs respectively
+     * @param preferredView -- preferred view to apply
      * @return
      */
     public static Map<String, Object> getCustomObject(final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity, final Optional<String> saveAsNameToCompare, final Optional<Optional<String>> configUuid, final Optional<Integer> preferredView) {
