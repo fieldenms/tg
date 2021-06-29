@@ -47,7 +47,7 @@ const TgEgiMasterBehaviorImpl = {
         this._egiRefreshed = this._egiRefreshed.bind(this);
         this._documentFocusingListner = this._documentFocusingListner.bind(this);
 
-        this.editors.forEach(editor => editor.decorator().noLabelFloat = true);
+        this.editors.forEach(editor => editor.noLabelFloat = true);
         this.addEventListener('data-loaded-and-focused', this._selectLastFocusedEditor.bind(this));
 
         this.postSaved = function (potentiallySavedOrNewEntity) {
@@ -93,7 +93,7 @@ const TgEgiMasterBehaviorImpl = {
             } else {
                 this._focusPreferredInput();
             }
-        }, 1);
+        }, 100);
     },
 
     /**
@@ -192,7 +192,7 @@ const TgEgiMasterBehaviorImpl = {
     _masterContainerChanged: function (newContainer, oldContainer) {
         if (oldContainer) {
             oldContainer.removeEventListener('keydown', this._onCaptureKeyDown);
-            oldContainer.removeEventListener('keydown', this._onAlternateSwitching,true);
+            oldContainer.removeEventListener('keydown', this._onAlternateSwitching, true);
         }
         if (newContainer) {
             newContainer.addEventListener('keydown', this._onCaptureKeyDown);

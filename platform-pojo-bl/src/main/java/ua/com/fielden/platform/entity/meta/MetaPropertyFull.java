@@ -42,7 +42,7 @@ import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
- * Implements the concept of a meta-property.
+ * Implements the concept of a meta-property for full, not proxied, properties of instrumented entity instances.
  * <p>
  * Currently it provides validation support and validation change listeners, which can be specified whenever it is necessary to handle validation state changes.
  * <p>
@@ -62,7 +62,8 @@ import ua.com.fielden.platform.utils.EntityUtils;
  * <b>Date: 2010-03-18</b><br>
  * Implemented support for restoring to original value with validation error cancellation.<br>
  * <b>Date: 2011-09-26</b><br>
- * Significant modification due to introduction of BCE and ACE event lifecycle. <b>Date: 2014-10-21</b><br>
+ * Significant modification due to introduction of BCE and ACE event lifecycle.
+ * <b>Date: 2014-10-21</b><br>
  * Modified handling of requiredness to fully replace NotNull. Corrected type parameterization.
  *
  * @author TG Team

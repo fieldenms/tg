@@ -102,7 +102,7 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
         </style>
         <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
         ${additionalTemplate}
-        <paper-input-container id="decorator" always-float-label has-layer$="[[_hasLayer]]" invalid="[[_invalid]]" is-invalid$="[[_invalid]]" disabled$="[[_disabled]]" focused$="[[focused]]">
+        <paper-input-container id="decorator" always-float-label no-label-float="[[noLabelFloat]]" has-layer$="[[_hasLayer]]" invalid="[[_invalid]]" is-invalid$="[[_invalid]]" disabled$="[[_disabled]]" focused$="[[focused]]">
             <!-- flex auto  for textarea! -->
             ${customLabelTemplate || defaultLabelTemplate}
             <div clss="editor-prefix" slot="prefix">
@@ -165,6 +165,14 @@ export class TgEditor extends PolymerElement {
                 type: Boolean,
                 value: false,
                 notify: true
+            },
+
+            /**
+             * Determines whther label is floatable or not.
+             */
+            noLabelFloat: {
+                type: Boolean,
+                value: false,
             },
     
             /**

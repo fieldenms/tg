@@ -11,7 +11,6 @@ import java.util.Set;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
-import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.proxy.StrictProxyException;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
@@ -23,6 +22,13 @@ import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
+ * A base class for a concept of meta-data about an entity property. Hence, meta-property.
+ * Meta-property instances are created for all properties of instrumented entity instances to capture all the information about entity properties to track their mutation and validation.
+ * <p>
+ * Instances of this class – {@code MetaPropery} – are created for proxied properties (cannot be mutated), providing only the most essential meta-data.
+ * This is why many methods in this class throw {@link StrictProxyException} upon their invocation.
+ * <p>
+ * Instances of {@link MetaPropertyFull}, which is a descendant of {@code MetaPropery}, are created for full, not proxied, properties.
  *
  * @author TG Team
  *
