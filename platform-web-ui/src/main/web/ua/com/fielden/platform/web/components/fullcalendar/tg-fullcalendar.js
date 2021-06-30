@@ -5,6 +5,9 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 
 import { allDefined } from '/resources/reflection/tg-polymer-utils.js';
 
+import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
+import '/resources/polymer/@polymer/paper-button/paper-button.js';
+
 import {html, PolymerElement} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 import { mixinBehaviors } from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
 import {IronResizableBehavior} from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
@@ -17,25 +20,35 @@ const template = html`
             position: relative;
             @apply --layout-vertical;
         }
+        .toolbar {
+            margin: 8px;
+            @apply --layout-horizontal;
+            @apply --layout-center
+            @apply --layout-justified;
+            @apply --layout-wrap;
+        }
+        .left-toolbar {
+            whitespace: nowrap
+            @apply --layout-horizontal;
+        }
+        .centre-toolbar {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-weight: bold;
+            font-size: 1.5rem;
+            @apply --layout-horizontal;
+        }
+        .right-toolbar {
+            @apply --layout-horizontal;
+        }
         #calendarContainer {
             z-index: 0;
-            margin: 40px; 
+            margin: 8px; 
+            min-height: 0;
+            overflow: auto;
             @apply --layout-vertical;
             @apply --layout-flex;
-        }
-        .toolbar {
-            padding: 16px 32px 0 32px;
-            height: 20px; /* this is the reduced height to compensate the height of invisible labels for boolean editors beneath */
-            @apply --layout-horizontal;
-            @apply --layout-end-justified;
-            @apply --layout-center;
-        }
-        .toolbar ::slotted(.orange) {
-            color: var(--paper-orange-500);
-            border-color: var(--paper-orange-500);
-        }
-        .toolbar ::slotted(paper-icon-button.revers) {
-            transform: scale(-1, 1);
         }
         .legend {
             margin: 0 40px;
@@ -63,7 +76,17 @@ const template = html`
         }
     </style>
     <div class="toolbar">
-        <slot name="standart-action"></slot>
+        <div class="left-toolbar">
+            <paper-icon-button icon="chevron-left" on-tap="_prev"></paper-icon-button>
+            <paper-icon-button icon="chevron-right" on-tap="_next"></paper-icon-button>
+            <paper-button raised on-tap="_today"><span>today</span></paper-button>
+        </div>
+        <span class="centre-toolbar">[[calendarTitle]]</span>
+        <div class="right-toolbar">
+            <paper-button raised toggles on-tap="_monthView" active$="[[_isActive(currentView, 'dayGridMonth')]]"><span>month</span></paper-button>
+            <paper-button raised toggles on-tap="_weekView" active$="[[_isActive(currentView, 'timeGridWeek')]]"><span>week</span></paper-button>
+            <paper-button raised toggles on-tap="_dayView" active$="[[_isActive(currentView, 'timeGridDay')]]"><span>day</span></paper-button>
+        </div>
     </div>
     <div id="calendarContainer"></div>
     <div class="legend">
@@ -97,6 +120,10 @@ class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], PolymerElem
             colorProperty: String,
             colorTitleProperty: String,
             colorDescProperty: String,
+            currentView: {
+                type: String,
+                observer: '_currentViewChanged'
+            }, 
             _calendar: Object
         };
     }
@@ -114,10 +141,9 @@ class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], PolymerElem
 
         this._calendar = new FullCalendar.Calendar(this.$.calendarContainer, {
             initialView: 'dayGridMonth',
-            headerToolbar: {
-              left: 'prev,next today',
-              center: 'title',
-              right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            headerToolbar: false,
+            datesSet: (dataInfo) => {
+                this.calendarTitle = dataInfo.view.title;
             },
             eventTimeFormat: {
                 hour: '2-digit',
@@ -127,6 +153,47 @@ class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], PolymerElem
             height: 'auto',
           });
           this._calendar.render();
+          this.currentView = 'dayGridMonth';
+    }
+
+    _prev() {
+        if (this._calendar) {
+            this._calendar.prev();
+        }
+    }
+
+    _next() {
+        if (this._calendar) {
+            this._calendar.next();
+        }
+    }
+
+    _today() {
+        if (this._calendar) {
+            this._calendar.today();
+        }
+    }
+
+    _monthView() {
+        this.currentView = "dayGridMonth";
+    }
+
+    _weekView() {
+        this.currentView = "timeGridWeek";
+    }
+
+    _dayView() {
+        this.currentView = "timeGridDay";
+    }
+
+    _isActive(currentView, viewName) {
+        return currentView === viewName;
+    }
+
+    _currentViewChanged(newView) {
+        if (this._calendar) {
+            this._calendar.changeView(newView);
+        }
     }
 
     _updateEventSource(entities, eventKeyProperty, eventDescProperty, eventFromProperty, eventToProperty, _calendar) {
