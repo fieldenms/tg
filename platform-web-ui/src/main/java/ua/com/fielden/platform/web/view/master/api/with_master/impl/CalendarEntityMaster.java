@@ -1,11 +1,12 @@
 package ua.com.fielden.platform.web.view.master.api.with_master.impl;
 
-import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
 import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
+import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.PRIMARY_RESULT_SET;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
 import static ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder.createImports;
 
+import java.util.LinkedHashSet;
 import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
@@ -16,6 +17,7 @@ import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
+import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
@@ -30,6 +32,7 @@ import ua.com.fielden.platform.web.view.master.api.IMaster;
 public class CalendarEntityMaster<T extends AbstractEntity<?>> implements IMaster<T> {
 
     private final IRenderable renderable;
+    private final  EntityActionConfig editAction;
 
     public CalendarEntityMaster(
             final Class<T> entityType,
@@ -39,7 +42,14 @@ public class CalendarEntityMaster<T extends AbstractEntity<?>> implements IMaste
             final String eventToProp,
             final String colorProp,
             final String colorTitleProp,
-            final String colorDescProp) {
+            final String colorDescProp,
+            final EntityActionConfig editAction) {
+
+        this.editAction = editAction;
+
+        final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
+        importPaths.add("components/fullcalendar/tg-fullcalendar");
+
         final DomElement calendar = new DomElement("tg-fullcalendar")
                 .attr("id", "calendar")
                 .attr("custom-event-target", "[[customEventTarget]]")
@@ -52,18 +62,22 @@ public class CalendarEntityMaster<T extends AbstractEntity<?>> implements IMaste
                 .attr("event-to-property", eventToProp)
                 .attr("color-property", colorProp)
                 .attr("color-title-property", colorTitleProp)
-                .attr("color-desc-property", colorDescProp)
-                .attr("uuid", "[[centreUuid]]");
+                .attr("color-desc-property", colorDescProp);
+
+        final FunctionalActionElement el = FunctionalActionElement.newEntityActionForMaster(editAction, 0);
+        importPaths.add(el.importPath());
+        calendar.add(el.render().attr("hidden", true).clazz("primary-action").attr("slot", "calendar-action"));
+        final String editActionObjectString = el.createActionObject();
 
         final StringBuilder prefDimBuilder = new StringBuilder();
         prefDimBuilder.append("{'width': function() {return '100%'}, 'height': function() {return '100%'}, 'widthUnit': '', 'heightUnit': ''}");
 
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
-                .replace(IMPORTS, createImports(linkedSetOf("components/fullcalendar/tg-fullcalendar")) +
+                .replace(IMPORTS, createImports(importPaths) +
                         "\nimport { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';\n")
                 .replace(ENTITY_TYPE, flattenedNameOf(entityType))
                 .replace("<!--@tg-entity-master-content-->", calendar.toString())
-                .replace("//generatedPrimaryActions", "")
+                .replace("//generatedPrimaryActions", editActionObjectString)
                 .replace("//@ready-callback", readyCallback())
                 .replace("@prefDim", prefDimBuilder.toString())
                 .replace("@noUiValue", "false")
@@ -78,7 +92,8 @@ public class CalendarEntityMaster<T extends AbstractEntity<?>> implements IMaste
     }
 
     private String readyCallback() {
-        return "self.classList.remove('canLeave');\n"
+        return "self.uuid = self.centreUuid;\n"
+                + "self.classList.remove('canLeave');\n"
                 + "self._focusFirstInput = function () {};\n";
     }
 
@@ -90,7 +105,10 @@ public class CalendarEntityMaster<T extends AbstractEntity<?>> implements IMaste
 
     @Override
     public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
-        throw new UnsupportedOperationException("Getting of action configuration is not supported.");
+        if (PRIMARY_RESULT_SET == actionKind && actionNumber == 0) {
+            return editAction;
+        }
+        throw new UnsupportedOperationException("Getting of other kind and number action configuration is not supported, except PRIMARY_RESULT_SET and 0 action number");
     }
 
     @Override

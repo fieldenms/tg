@@ -75,6 +75,7 @@ const template = html`
             @apply --layout-vertical;
         }
     </style>
+    <slot id="editAction" name="calendar-action"></slot>
     <div class="toolbar">
         <div class="left-toolbar">
             <paper-icon-button icon="chevron-left" on-tap="_prev"></paper-icon-button>
@@ -124,7 +125,8 @@ class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], PolymerElem
                 type: String,
                 observer: '_currentViewChanged'
             }, 
-            _calendar: Object
+            _calendar: Object,
+            _editAction: Object
         };
     }
 
@@ -145,6 +147,12 @@ class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], PolymerElem
             datesSet: (dataInfo) => {
                 this.calendarTitle = dataInfo.view.title;
             },
+            eventClick: (eventInfo) => {
+                if (this._editAction && eventInfo.event.extendedProps.entity) {
+                    this._editAction.currentEntity = () => eventInfo.event.extendedProps.entity;
+                    this._editAction._run();
+                }
+            },
             eventTimeFormat: {
                 hour: '2-digit',
                 minute: '2-digit',
@@ -154,6 +162,8 @@ class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], PolymerElem
           });
           this._calendar.render();
           this.currentView = 'dayGridMonth';
+          //Initialising edit action
+          this._editAction = this.$.editAction.assignedNodes()[0]
     }
 
     _prev() {
@@ -206,6 +216,9 @@ class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], PolymerElem
                 }
                 const eventColor = this.colorProperty ? entity.get(this.colorProperty) : undefined;
                 _calendar.addEvent({
+                    extendedProps: {
+                        entity: entity
+                    },
                     title: entity.get(eventKeyProperty) + (eventDescProperty ? " - "+ entity.get(eventDescProperty) : ""),
                     start: entity.get(eventFromProperty),
                     end: entity.get(eventToProperty),
