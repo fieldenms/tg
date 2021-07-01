@@ -3,6 +3,9 @@ import '/resources/components/fullcalendar/fullcalendar-style.js';
 
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 
+import { TgReflector } from '/app/tg-reflector.js';
+import { TgAppConfig } from '/app/tg-app-config.js';
+
 import { allDefined } from '/resources/reflection/tg-polymer-utils.js';
 
 import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
@@ -74,6 +77,12 @@ const template = html`
             margin-left: 8px;
             @apply --layout-vertical;
         }
+        .fc-event {
+            cursor: pointer;
+        }
+        .fc-event-time, .fc-event-title {
+            text-overflow: ellipsis;
+        }
     </style>
     <slot id="editAction" name="calendar-action"></slot>
     <div class="toolbar">
@@ -124,9 +133,11 @@ class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], PolymerElem
             currentView: {
                 type: String,
                 observer: '_currentViewChanged'
-            }, 
+            },
             _calendar: Object,
-            _editAction: Object
+            _editAction: Object,
+            _reflector: Object,
+            _appConfig: Object
         };
     }
 
@@ -134,6 +145,12 @@ class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], PolymerElem
         return [
           '_updateEventSource(entities, eventKeyProperty, eventDescProperty, eventFromProperty, eventToProperty, _calendar)'
         ];
+    }
+
+    constructor() {
+        super();
+        this._reflector = new TgReflector();
+        this._appConfig = new TgAppConfig();
     }
 
     ready () {
@@ -151,6 +168,36 @@ class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], PolymerElem
                 if (this._editAction && eventInfo.event.extendedProps.entity) {
                     this._editAction.currentEntity = () => eventInfo.event.extendedProps.entity;
                     this._editAction._run();
+                }
+            },
+            eventDidMount: (eventInfo) => {
+                if (eventInfo.event.extendedProps.entity && eventInfo.el) {
+                    const titleValues = [];
+                    const entity = eventInfo.event.extendedProps.entity;
+                    titleValues.push({
+                        title: this._reflector.getEntityTypeProp(entity, "key").title(),
+                        value: "<b>" + entity.get("key") + "</b><br><i>" + entity.get("desc") + "</i>"
+                    });
+                    titleValues.push({
+                        title: this._reflector.getEntityTypeProp(entity, "waType").title(),
+                        value: "<b>" + entity.get("waType.key") + "</b><br><i>" + entity.get("waType.desc") + "</i>"
+                    });
+                    entity.get(this.eventFromProperty) && titleValues.push({
+                        title: this._reflector.getEntityTypeProp(entity, this.eventFromProperty).title(),
+                        value: "<b>" + this._reflector.tg_toString(entity.get(this.eventFromProperty), entity.type(), this.eventFromProperty, { display: true, locale: this._appConfig.locale }) + "</b>"
+                    });
+                    entity.get(this.eventToProperty) && titleValues.push({
+                        title: this._reflector.getEntityTypeProp(entity, this.eventToProperty).title(),
+                        value: "<b>" + this._reflector.tg_toString(entity.get(this.eventToProperty), entity.type(), this.eventToProperty, { display: true, locale: this._appConfig.locale }) + "</b>"
+                    });
+                    titleValues.push({
+                        title: "With action",
+                        value: "<b>Work Activity</b><br><i>Edit Work Activity</i>"
+                    });
+                    const tooltip = "<table>" +
+                        titleValues.map(entry => "<tr><td valign='top'>" + entry.title + ": </td><td valign='top'>" + entry.value + "</td></tr>").join("\n") +
+                    "</table>";
+                    eventInfo.el.setAttribute("tooltip-text", tooltip);
                 }
             },
             eventTimeFormat: {
