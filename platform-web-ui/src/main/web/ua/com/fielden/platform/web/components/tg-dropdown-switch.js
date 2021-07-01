@@ -81,7 +81,7 @@ const template = html`
     </iron-dropdown>`;
 
 
-export class TgCentreViewSwitch extends mixinBehaviors([TgElementSelectorBehavior], PolymerElement){
+export class TgDropdownSwitch extends mixinBehaviors([TgElementSelectorBehavior], PolymerElement){
 
     static get template() { 
         return template;
@@ -92,6 +92,11 @@ export class TgCentreViewSwitch extends mixinBehaviors([TgElementSelectorBehavio
             viewIndex: Number, 
             views: Array,
             buttonWidth: Number,
+            changeCurrentViewOnSelect: {
+                type: Boolean,
+                value: false,
+                reflectToAttribute: true
+            },
             _currentView: Object
         };
     }
@@ -126,7 +131,9 @@ export class TgCentreViewSwitch extends mixinBehaviors([TgElementSelectorBehavio
     }
 
     _showViews(e) {
-        this.$.availableViews.selected = this.viewIndex;
+        if (!this.changeCurrentViewOnSelect) {
+            this.$.availableViews.selected = this.viewIndex;
+        }
         this.$.dropdown.open();
     }
 
@@ -139,10 +146,14 @@ export class TgCentreViewSwitch extends mixinBehaviors([TgElementSelectorBehavio
     }
 
     _changeView(e) {
+        const selectedViewIndex = +e.detail.item.getAttribute("view-index");
         this.$.dropdown.close();
-        this.dispatchEvent(new CustomEvent('tg-centre-view-change',  { bubbles: true, composed: true, detail: +e.detail.item.getAttribute("view-index") }));
+        if (this.changeCurrentViewOnSelect) {
+            this.viewIndex = selectedViewIndex;
+        }
+        this.dispatchEvent(new CustomEvent('tg-centre-view-change',  { bubbles: true, composed: true, detail: selectedViewIndex }));
     }
 }
 
-customElements.define('tg-centre-view-switch', TgCentreViewSwitch);
+customElements.define('tg-dropdown-switch', TgDropdownSwitch);
 

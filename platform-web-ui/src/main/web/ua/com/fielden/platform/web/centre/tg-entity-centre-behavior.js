@@ -135,7 +135,7 @@ const createPreferredViewUpdaterAction = function (entityCentre) {
 };
 
 const createViewsFromInsPoints = function (altViews) {
-    return altViews.map((insPoint, index) => {return{index: 2 + index, title: insPoint.shortDesc, icon: insPoint.icon, iconStyle: insPoint.iconStyle}});
+    return altViews.map((insPoint, index) => {return {index: 2 + index, title: insPoint.shortDesc, icon: insPoint.icon, iconStyle: insPoint.iconStyle}});
 };
 
 const MSG_SAVE_OR_CANCEL = "Please save or cancel changes.";
@@ -832,9 +832,8 @@ const TgEntityCentreBehaviorImpl = {
          * Adds event listener that will update egi when some entity was changed
          */
          self.addEventListener("tg-centre-view-change", function (e) {
-             if (e.target === this) {
-                this._activateView(e.detail);
-             }
+            this._activateView(e.detail);
+            tearDownEvent(e);
         }.bind(self));
 
         /**

@@ -17,7 +17,7 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js
 
 import '/resources/actions/tg-ui-action.js';
 import '/resources/egi/tg-entity-grid-inspector.js';
-import '/resources/centre/tg-centre-view-switch.js';
+import '/resources/components/tg-dropdown-switch.js';
 import '/resources/master/actions/tg-action.js';
 import {TgEgiMasterBehavior} from '/resources/egi/tg-egi-master-behavior.js';
 import '/resources/centre/tg-selection-criteria.js';

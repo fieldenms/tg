@@ -73,7 +73,7 @@ public class CentreToolbar implements IToolbarConfig {
     }
 
     public static DomElement selectView(final int viewIndex, final int width) {
-        return new DomElement("tg-centre-view-switch")
+        return new DomElement("tg-dropdown-switch")
                 .attr("slot", "standart-action")
                 .attr("view-index", viewIndex)
                 .attr("button-width", width)

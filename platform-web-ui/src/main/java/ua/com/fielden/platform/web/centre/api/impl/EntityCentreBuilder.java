@@ -70,8 +70,8 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     private final Map<String, Class<? extends IValueMatcherWithContext<T, ?>>> valueMatcherForProps = new HashMap<>();
 
     protected boolean egiHidden = false;
-    protected String gridViewIcon = "image:grid-on";
-    protected String gridViewIconStyle = "width:22px;height:22px;";
+    protected String gridViewIcon = "tg-icons:grid";
+    protected String gridViewIconStyle = "";
     protected boolean draggable = false;
     protected boolean hideCheckboxes = false;
     protected IToolbarConfig toolbarConfig = new CentreToolbar();

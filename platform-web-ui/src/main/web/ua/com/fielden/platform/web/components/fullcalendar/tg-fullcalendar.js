@@ -1,22 +1,23 @@
 import {FullCalendar} from '/resources/components/fullcalendar/fullcalendar-component.js';
 import '/resources/components/fullcalendar/fullcalendar-style.js';
-
-import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
-
+import '/resources/components/tg-dropdown-switch.js';
+import '/resources/layout/tg-flex-layout.js';
+import '/resources/images/tg-icons.js';
+import { tearDownEvent, allDefined } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import { TgAppConfig } from '/app/tg-app-config.js';
 
-import { allDefined } from '/resources/reflection/tg-polymer-utils.js';
-
+import '/resources/polymer/@polymer/iron-dropdown/iron-dropdown.js';
+import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
+import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 import '/resources/polymer/@polymer/paper-button/paper-button.js';
-
 import {html, PolymerElement} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 import { mixinBehaviors } from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
 import {IronResizableBehavior} from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 
 const template = html`
-    <style include='fullcalendar-style'>
+    <style include='fullcalendar-style iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning'>
         :host {
             width: 100%;
             height: 100%;
@@ -25,13 +26,8 @@ const template = html`
         }
         .toolbar {
             margin: 8px;
-            @apply --layout-horizontal;
-            @apply --layout-center
-            @apply --layout-justified;
-            @apply --layout-wrap;
         }
         .left-toolbar {
-            whitespace: nowrap
             @apply --layout-horizontal;
         }
         .centre-toolbar {
@@ -41,6 +37,7 @@ const template = html`
             font-weight: bold;
             font-size: 1.5rem;
             @apply --layout-horizontal;
+            @apply --layout-center-justified;
         }
         .right-toolbar {
             @apply --layout-horizontal;
@@ -53,18 +50,15 @@ const template = html`
             @apply --layout-vertical;
             @apply --layout-flex;
         }
-        .legend {
-            margin: 0 40px;
-            @apply --layout-horizontal;
-            @apply --layout-center-justified;
-            @apply --layout-wrap;
+        .legend-content {
+            background-color: white;
+            box-shadow: 0px 2px 6px #ccc;
+            @apply --layout-vertical;
         }
         .legend-item {
             font-size: smaller;
-            margin-right: 16px;
-            margin-bottom: 16px;
+            margin: 8px;
             @apply --layout-horizontal;
-            @apply --layout-center-center;
         }
         .legend-item-point {
             width: 0;
@@ -85,31 +79,30 @@ const template = html`
         }
     </style>
     <slot id="editAction" name="calendar-action"></slot>
-    <div class="toolbar">
+    <tg-flex-layout class="toolbar" when-desktop="[[_desktopToolbarLayout]]" when-mobile="[[_mobileToolbarLayout]]">
         <div class="left-toolbar">
+            <paper-icon-button icon="event" on-tap="_today"></paper-icon-button>
             <paper-icon-button icon="chevron-left" on-tap="_prev"></paper-icon-button>
             <paper-icon-button icon="chevron-right" on-tap="_next"></paper-icon-button>
-            <paper-button raised on-tap="_today"><span>today</span></paper-button>
+            <paper-icon-button id="calendarTrigger" icon="tg-icons:legend" on-tap="_showLegend"></paper-icon-button>
         </div>
-        <span class="centre-toolbar">[[calendarTitle]]</span>
-        <div class="right-toolbar">
-            <paper-button raised toggles on-tap="_monthView" active$="[[_isActive(currentView, 'dayGridMonth')]]"><span>month</span></paper-button>
-            <paper-button raised toggles on-tap="_weekView" active$="[[_isActive(currentView, 'timeGridWeek')]]"><span>week</span></paper-button>
-            <paper-button raised toggles on-tap="_dayView" active$="[[_isActive(currentView, 'timeGridDay')]]"><span>day</span></paper-button>
-        </div>
-    </div>
+        <span class="centre-toolbar" pos="center">[[calendarTitle]]</span>
+        <tg-dropdown-switch view-index="0" views="[[viewTypes]]" button-width="40" change-current-view-on-select on-tg-centre-view-change="_changeView"></tg-dropdown-switch>
+    </tg-flex-layout>
     <div id="calendarContainer"></div>
-    <div class="legend">
-        <template is="dom-repeat" items="[[_calcLegendItems(entities, colorProperty, colorTitleProperty, colorDescProperty)]]">
-            <div class="legend-item">
-                <div class="legend-item-point" style$="[[_calcLegendItemStyle(item)]]"></div>
-                <div class="legend-title-container">
-                    <b>[[item.key]]</b>
-                    <i>[[item.desc]]</i>
+    <iron-dropdown id="dropdown" horizontal-align="left" restore-focus-on-close always-on-top>
+        <div class="legend-content" slot="dropdown-content">
+            <template is="dom-repeat" items="[[_calcLegendItems(entities, colorProperty, colorTitleProperty, colorDescProperty)]]">
+                <div class="legend-item">
+                    <div class="legend-item-point" style$="[[_calcLegendItemStyle(item)]]"></div>
+                    <div class="legend-title-container">
+                        <b>[[item.key]]</b>
+                        <i>[[item.desc]]</i>
+                    </div>
                 </div>
-            </div>
-        </template>
-    </div>`;
+            </template>
+        </div>
+    </iron-dropdown>`;
     
 class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], PolymerElement) {
 
@@ -157,6 +150,15 @@ class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], PolymerElem
         super.ready();
 
         this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
+
+        this.viewTypes = [
+            { index: 0, title: "month", valueToSet: "dayGridMonth", icon: "tg-icons:month" },
+            { index: 1, title: "week", valueToSet: "timeGridWeek", icon: "tg-icons:week" },
+            { index: 2, title: "day", valueToSet: "timeGridDay", icon: "tg-icons:day" }
+        ];
+
+        this._desktopToolbarLayout = ['horizontal', 'justified', 'center', [], [], []];
+        this._mobileToolbarLayout = [['justified', 'center', [], []], ['select:pos=center']];
 
         this._calendar = new FullCalendar.Calendar(this.$.calendarContainer, {
             initialView: 'dayGridMonth',
@@ -211,6 +213,8 @@ class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], PolymerElem
           this.currentView = 'dayGridMonth';
           //Initialising edit action
           this._editAction = this.$.editAction.assignedNodes()[0]
+          //initialise legend dropdown
+          this.$.dropdown.positionTarget= this.$.calendarTrigger;
     }
 
     _prev() {
@@ -231,26 +235,15 @@ class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], PolymerElem
         }
     }
 
-    _monthView() {
-        this.currentView = "dayGridMonth";
-    }
-
-    _weekView() {
-        this.currentView = "timeGridWeek";
-    }
-
-    _dayView() {
-        this.currentView = "timeGridDay";
-    }
-
-    _isActive(currentView, viewName) {
-        return currentView === viewName;
-    }
-
-    _currentViewChanged(newView) {
+    _changeView(e) {
         if (this._calendar) {
-            this._calendar.changeView(newView);
+            this._calendar.changeView(this.viewTypes[e.detail].valueToSet);
         }
+        tearDownEvent(e);
+    }
+
+    _showLegend() {
+        this.$.dropdown.open();
     }
 
     _updateEventSource(entities, eventKeyProperty, eventDescProperty, eventFromProperty, eventToProperty, _calendar) {
