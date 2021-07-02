@@ -194,7 +194,9 @@ Polymer({
             type: Object,
             observer: '_updateElementWithSelectionCriteriaEntity',
         },
-
+        /**
+         * Indicates how data for insertion point was change: by run, refresh or navigation.
+         */
         dataChangeReason: {
             type: String,
             observer: '_updateElementWithDataChangeReason'
