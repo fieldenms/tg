@@ -194,12 +194,10 @@ Polymer({
             type: Object,
             observer: '_updateElementWithSelectionCriteriaEntity',
         },
-        /**
-         * Indicates whether centre was ran or not. Is binded in the entity centre.
-         */
-        isCentreRunning: {
-            type: Boolean,
-            observer: '_updateElementWithRunIndicator',
+
+        dataChangeReason: {
+            type: String,
+            observer: '_updateElementWithDataChangeReason'
         },
         /**
          * The entities retrieved when running centre that has this insertion point
@@ -328,9 +326,9 @@ Polymer({
         }
     },
 
-    _updateElementWithRunIndicator: function (newValue, oldValue) {
+    _updateElementWithDataChangeReason: function (newValue, oldValue) {
         if (this._element) {
-            this._element.isCentreRunning = newValue;
+            this._element.dataChangeReason = newValue;
         }
     },
 
@@ -397,7 +395,7 @@ Polymer({
                     self.activated = true;
                     self._element = element;
                     self._element.selectionCriteriaEntity = self.selectionCriteriaEntity;
-                    self._element.isCentreRunning = self.isCentreRunning;
+                    self._element.dataChangeReason = self.dataChangeReason;
                     self._element.contextRetriever = self.contextRetriever;
                     self._element.addEventListener('retrieved-entities-changed', function (ev) {
                         self.retrievedEntities = this.retrievedEntities;

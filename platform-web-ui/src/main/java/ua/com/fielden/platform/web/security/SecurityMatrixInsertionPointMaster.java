@@ -74,7 +74,6 @@ public class SecurityMatrixInsertionPointMaster implements IMaster<SecurityMatri
                 .attr("centre-selection", "[[centreSelection]]")
                 .attr("custom-event-target", "[[customEventTarget]]")
                 .attr("retrieved-entities", "{{retrievedEntities}}")
-                .attr("is-centre-running", "[[isCentreRunning]]")
                 .attr("uuid", "[[centreUuid]]")
                 .attr("lock", "[[lock]]")
                 .add(tokenFilter, roleFilter, reloadAction);

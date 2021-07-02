@@ -56,6 +56,7 @@ public class CalendarEntityMaster<T extends AbstractEntity<?>> implements IMaste
                 .attr("context-retriever", "[[contextRetriever]]")
                 .attr("entities", "[[retrievedEntities]]")
                 .attr("centre-state", "[[centreState]]")
+                .attr("data-change-reason", "[[dataChangeReason]]")
                 .attr("event-key-property", eventKeyProp)
                 .attr("event-desc-property", StringUtils.isEmpty(eventDescProp) ? "" : eventDescProp)
                 .attr("event-from-property", eventFromProp)

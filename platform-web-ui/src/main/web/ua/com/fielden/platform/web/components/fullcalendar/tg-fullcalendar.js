@@ -4,6 +4,7 @@ import '/resources/components/tg-dropdown-switch.js';
 import '/resources/layout/tg-flex-layout.js';
 import '/resources/images/tg-icons.js';
 import { tearDownEvent, allDefined } from '/resources/reflection/tg-polymer-utils.js';
+import { RunActions } from '/resources/centre/tg-selection-criteria-behavior.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import { TgAppConfig } from '/app/tg-app-config.js';
 
@@ -127,6 +128,7 @@ class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], PolymerElem
                 type: String,
                 observer: '_currentViewChanged'
             },
+            dataChangeReason: String,
             _calendar: Object,
             _editAction: Object,
             _reflector: Object,
@@ -264,7 +266,7 @@ class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], PolymerElem
                     end: entity.get(eventToProperty),
                     backgroundColor: eventColor ? '#' + eventColor["hashlessUppercasedColourValue"]  : "#3788d8",
                 });
-                if (startTime && startTime < Infinity) {
+                if (this.dataChangeReason !== RunActions.refresh && startTime && startTime < Infinity) {
                     _calendar.gotoDate(startTime);
                 }
             });

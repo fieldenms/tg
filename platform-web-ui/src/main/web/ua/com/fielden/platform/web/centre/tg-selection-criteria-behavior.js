@@ -4,7 +4,7 @@ import { TgElementSelectorBehavior } from '/resources/components/tg-element-sele
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 
 //Actions those can be applied to entity centre.
-const RunActions = {
+export const RunActions = {
     run: "run",
     navigate: "navigate",
     refresh: "refresh"
@@ -211,6 +211,15 @@ const TgSelectionCriteriaBehaviorImpl = {
         isRunning: {
             type: Boolean,
             notify: true
+        },
+
+        /**
+         * Indicates the reason why data for this selection criteria's centre changed. This should have a type of RunActions.
+         */
+        dataChangeReason: {
+            type: String,
+            notify: true,
+            value: null,
         },
 
         /**
@@ -646,6 +655,7 @@ const TgSelectionCriteriaBehaviorImpl = {
 
             // cancel previous validation before starting saving process -- it includes validation process internally!
             self._validator().abortValidationIfAny();
+            self.dataChangeReason = action;
             resolve(
                 self._runModifiedProperties(
                     self._createContextHolderForRunning(function () {

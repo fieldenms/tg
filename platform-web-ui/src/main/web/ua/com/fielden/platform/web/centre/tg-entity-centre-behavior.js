@@ -450,6 +450,15 @@ const TgEntityCentreBehaviorImpl = {
         },
 
         /**
+         * Indicates the reason why data for this selection criteria's centre changed. This should have a type of RunActions.
+         */
+         dataChangeReason: {
+            type: String,
+            notify: true,
+            value: null,
+        },
+
+        /**
          * Shows the dialog relative to this centre's EGI ('tg-ui-action's).
          */
         _showDialog: {
