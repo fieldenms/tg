@@ -1062,7 +1062,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 /*      */.addMenuItem("Users").description("User centre").centre(userWebUiConfig.centre).done()
                 /*      */.addMenuItem("User Roles").description("User role centre").centre(userRoleWebUiConfig.centre).done()
                 /*      */.addMenuItem("Security Matrix").description("Security matrix").master(securityConfig.master).done()
-                /*      */.addMenuItem("Duration").description("Duration").master(durationConfig.master).done()
+                /*      */.addMenuItem("Duration").description("Duration").centre(durationConfig.centre).done()
                 /*  */.done()
                 /*  */.done()
                 .addModule("Online reports")
