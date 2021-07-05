@@ -411,21 +411,20 @@ GisComponent.prototype.createPopupContent = function (feature) {
         return string.charAt(0).toUpperCase() + string.slice(1);
     }
     
-    const titleFor = function (key) {
-        if (key === 'angle') {
-            return 'Angle (°)';
-        } else if (key === 'speed') {
-            return 'Speed (km / h)';
-        } else if (key === 'altitude') {
-            return 'Altitude (m)';
-        } else if (key === 'gpstime') {
-            return 'GPS Time';
-        } else {
-            return capitalizeFirstLetter(key);
-        }
-    };
-    
     if (feature.properties && feature.properties.GlobalID) { // this is ArcGIS feature
+        const titleFor = function (key) {
+            if (key === 'angle') {
+                return 'Angle (°)';
+            } else if (key === 'speed') {
+                return 'Speed (km / h)';
+            } else if (key === 'altitude') {
+                return 'Altitude (m)';
+            } else if (key === 'gpstime') {
+                return 'GPS Time';
+            } else {
+                return capitalizeFirstLetter(key);
+            }
+        };
         Object.keys(feature.properties).forEach(key => {
             if (key !== 'layerId' && key !== 'popupContentInitialised' && key !== '_featureType' && (
                     key === 'desc' || key === 'buildingLevel' || key === 'description' || key === 'criticality' || key === 'angle' || key === 'asset' || key === 'gpstime' || key === 'speed' || key === 'altitude'
@@ -443,8 +442,10 @@ GisComponent.prototype.createPopupContent = function (feature) {
         
         for (let index = 0; index < columnPropertiesMapped.length; index++) {
             const entry = columnPropertiesMapped[index];
-            const value = entry.value === 'true' ? '&#x2714' : (entry.value === 'false' ? '&#x2718' : entry.value);
-            popupText = popupText + '<tr' + (entry.dotNotation === '' ? ' class="this-row"' : '') + '><td>' + entry.column.columnTitle + ':</td><td>' + value + '</td></tr>';
+            if (entry.value) { // entry.value is already converted to string; if entry.value === '' it will be considered empty and such property will not be shown in a popup
+                const value = entry.value === 'true' ? '&#x2714' : (entry.value === 'false' ? '&#x2718' : entry.value);
+                popupText = popupText + '<tr' + (entry.dotNotation === '' ? ' class="this-row"' : '') + '><td>' + entry.column.columnTitle + ':</td><td>' + value + '</td></tr>';
+            }
         }
     }
     template.innerHTML = popupText + '</table>';
@@ -480,14 +481,6 @@ GisComponent.prototype.findEntityBy = function (feature) {
     } else { // simple feature-entity, does not have ArcGIS nature
         return feature;
     }
-}
-
-GisComponent.prototype.titleFor = function (feature, dotNotation) {
-    const rootType = feature.constructor.prototype.type.call(feature);
-    if (dotNotation === '') { // empty property name means 'entity itself'
-        return rootType.prop('key').title();
-    }
-    return rootType.prop(dotNotation).title();
 }
 
 GisComponent.prototype.valueToString = function (value) {
