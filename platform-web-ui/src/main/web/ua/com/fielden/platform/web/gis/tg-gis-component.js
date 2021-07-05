@@ -441,7 +441,7 @@ GisComponent.prototype.createPopupContent = function (feature) {
     if (entity) {
         const columnPropertiesMapped = self.columnPropertiesMapper(entity);
         
-        for (let index = 0; index < columnPropertiesMapped.length && index < 10; index++) {
+        for (let index = 0; index < columnPropertiesMapped.length; index++) {
             const entry = columnPropertiesMapped[index];
             const value = entry.value === true ? '&#x2714' : (entry.value === false ? '&#x2718' : entry.value);
             const type = entity.constructor.prototype.type.call(entity);
@@ -484,19 +484,11 @@ GisComponent.prototype.findEntityBy = function (feature) {
 }
 
 GisComponent.prototype.titleFor = function (feature, dotNotation) {
-    const root = feature.constructor.prototype.type.call(feature);
+    const rootType = feature.constructor.prototype.type.call(feature);
     if (dotNotation === '') { // empty property name means 'entity itself'
-        return root.prop('key').title();
+        return rootType.prop('key').title();
     }
-    const lastDotIndex = dotNotation.lastIndexOf(".");
-    if (lastDotIndex > -1) {
-        const first = dotNotation.slice(0, lastDotIndex);
-        const rest = dotNotation.slice(lastDotIndex + 1);
-        const firstVal = feature.get(first);
-        return firstVal === null ? 'UNDEFINED' : (firstVal.constructor.prototype.type.call(firstVal)).prop(rest).title();
-    } else {
-        return root.prop(dotNotation).title();
-    }
+    return rootType.prop(dotNotation).title();
 }
 
 GisComponent.prototype.valueToString = function (value) {
