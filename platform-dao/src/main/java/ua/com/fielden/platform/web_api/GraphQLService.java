@@ -121,7 +121,7 @@ public class GraphQLService implements IWebApi {
             final Set<Class<? extends AbstractEntity<?>>> allTypes = new LinkedHashSet<>(domainTypes);
             allTypes.addAll(domainTypesOf(applicationDomainProvider, EntityUtils::isUnionEntityType));
             // dictionary must have all the types that are referenced by all types that should support querying
-            final Map<Class<? extends AbstractEntity<?>>, GraphQLType> dictionary = createDictionary(allTypes, new TgScalars(dates));
+            final Map<Class<? extends AbstractEntity<?>>, GraphQLType> dictionary = createDictionary(allTypes);
 
             logger.info("\tBuilding query type...");
             final GraphQLObjectType queryType = createQueryType(domainTypes, coFinder, dates, codeRegistryBuilder, authorisation, securityTokenProvider);
@@ -177,12 +177,11 @@ public class GraphQLService implements IWebApi {
      * The set of resultant types can be smaller than those derived upon. See {@link #createGraphQLTypeFor(Class)} for more details.
      * 
      * @param entityTypes
-     * @param tgScalars -- a set of TG-specific GraphQL Web API scalar type implementations
      * @return
      */
-    private static Map<Class<? extends AbstractEntity<?>>, GraphQLType> createDictionary(final Set<Class<? extends AbstractEntity<?>>> entityTypes, final TgScalars tgScalars) {
+    private static Map<Class<? extends AbstractEntity<?>>, GraphQLType> createDictionary(final Set<Class<? extends AbstractEntity<?>>> entityTypes) {
         return entityTypes.stream()
-            .map(entityType -> createGraphQLTypeFor(entityType, tgScalars))
+            .map(GraphQLService::createGraphQLTypeFor)
             .flatMap(optType -> optType.map(Stream::of).orElseGet(Stream::empty))
             .sorted((pair1, pair2) -> pair1.getKey().getSimpleName().compareTo(pair2.getKey().getSimpleName()))
             .collect(toLinkedHashMap(Pair::getKey, Pair::getValue));
@@ -226,16 +225,15 @@ public class GraphQLService implements IWebApi {
      * The {@code entityType} will not have corresponding {@link GraphQLObjectType} only if there are no suitable fields for querying.
      * 
      * @param entityType
-     * @param tgScalars -- a set of TG-specific GraphQL Web API scalar type implementations
      * @return
      */
-    private static Optional<Pair<Class<? extends AbstractEntity<?>>, GraphQLObjectType>> createGraphQLTypeFor(final Class<? extends AbstractEntity<?>> entityType, final TgScalars tgScalars) {
+    private static Optional<Pair<Class<? extends AbstractEntity<?>>, GraphQLObjectType>> createGraphQLTypeFor(final Class<? extends AbstractEntity<?>> entityType) {
         if (isExcluded(entityType, "")) { // generic type exclusion logic for root types (exclude abstract entity types, exclude types without KeyType annotation etc. -- see AbstractDomainTreeRepresentation.isExcluded)
             return empty();
         }
         final List<GraphQLFieldDefinition> graphQLFieldDefinitions = (isUnionEntityType(entityType) ? unionProperties((Class<? extends AbstractUnionEntity>) entityType) : constructKeysAndProperties(entityType, true)).stream()
             .filter(field -> !isExcluded(entityType, reflectionProperty(field.getName())))
-            .map(field -> createGraphQLFieldDefinition(entityType, field.getName(), tgScalars))
+            .map(field -> createGraphQLFieldDefinition(entityType, field.getName()))
             .flatMap(optField -> optField.map(Stream::of).orElseGet(Stream::empty))
             .collect(toList());
         if (!graphQLFieldDefinitions.isEmpty()) { // ignore types that have no GraphQL field equivalents; we can not use such types for any purpose including querying

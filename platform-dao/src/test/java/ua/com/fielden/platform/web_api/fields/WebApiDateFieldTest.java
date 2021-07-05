@@ -17,7 +17,6 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.sample.domain.TgWebApiEntity;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
-import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web_api.IWebApi;
 
 /**
@@ -28,14 +27,13 @@ import ua.com.fielden.platform.web_api.IWebApi;
  */
 public class WebApiDateFieldTest extends AbstractDaoTestCase {
     private final IWebApi webApi = getInstance(IWebApi.class);
-    private final IDates dates = getInstance(IDates.class);
     
     private final DateTime date1Instant = new DateTime(2020, 2, 10, 0, 0);
     private final DateTime date2Instant = new DateTime(2020, 2, 15, 0, 0);
     private final DateTime date3Instant = new DateTime(2020, 2, 20, 0, 0);
-    private final Map<String, Object> date1 = createDateRepr(date1Instant.toDate(), dates);
-    private final Map<String, Object> date2 = createDateRepr(date2Instant.toDate(), dates);
-    private final Map<String, Object> date3 = createDateRepr(date3Instant.toDate(), dates);
+    private final Map<String, Object> date1 = createDateRepr(date1Instant.toDate());
+    private final Map<String, Object> date2 = createDateRepr(date2Instant.toDate());
+    private final Map<String, Object> date3 = createDateRepr(date3Instant.toDate());
     
     private void createDateEntities() {
         save(new_(TgWebApiEntity.class, "VEH1").setDateProp(date1Instant.toDate()));

@@ -35,6 +35,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 import static ua.com.fielden.platform.web_api.TgScalars.GraphQLColour;
+import static ua.com.fielden.platform.web_api.TgScalars.GraphQLDate;
 import static ua.com.fielden.platform.web_api.TgScalars.GraphQLHyperlink;
 import static ua.com.fielden.platform.web_api.TgScalars.GraphQLMoney;
 
@@ -198,11 +199,10 @@ public class FieldSchema {
      * 
      * @param entityType
      * @param property
-     * @param tgScalars -- a set of TG-specific GraphQL Web API scalar type implementations
      * @return
      */
-    public static Optional<GraphQLFieldDefinition> createGraphQLFieldDefinition(final Class<? extends AbstractEntity<?>> entityType, final String property, final TgScalars tgScalars) {
-        return determineFieldType(entityType, property, tgScalars).map(typeAndArguments -> {
+    public static Optional<GraphQLFieldDefinition> createGraphQLFieldDefinition(final Class<? extends AbstractEntity<?>> entityType, final String property) {
+        return determineFieldType(entityType, property).map(typeAndArguments -> {
             return newFieldDefinition()
                 .name(property)
                 .description(
@@ -487,11 +487,10 @@ public class FieldSchema {
      * 
      * @param entityType
      * @param property
-     * @param tgScalars -- a set of TG-specific GraphQL Web API scalar type implementations
      * @return
      */
-    private static Optional<T2<GraphQLOutputType, List<GraphQLArgument>>> determineFieldType(final Class<? extends AbstractEntity<?>> entityType, final String property, final TgScalars tgScalars) {
-        final Optional<T2<GraphQLOutputType, List<GraphQLArgument>>> nonCollectionalFieldType = determineFieldTypeNonCollectional(determinePropertyType(entityType, property), tgScalars);
+    private static Optional<T2<GraphQLOutputType, List<GraphQLArgument>>> determineFieldType(final Class<? extends AbstractEntity<?>> entityType, final String property) {
+        final Optional<T2<GraphQLOutputType, List<GraphQLArgument>>> nonCollectionalFieldType = determineFieldTypeNonCollectional(determinePropertyType(entityType, property));
         return isCollectional(determineClass(entityType, property, true, false))
             ? nonCollectionalFieldType.map(typeAndArguments -> t2(new GraphQLList(typeAndArguments._1), new ArrayList<>()))
             : nonCollectionalFieldType;
@@ -504,10 +503,9 @@ public class FieldSchema {
      * Note that abstract types derived from {@link AbstractEntity} are not supported; {@link PropertyDescriptor} and {@link AbstractUnionEntity} descendants too.
      * 
      * @param propertyType
-     * @param tgScalars -- a set of TG-specific GraphQL Web API scalar type implementations
      * @return
      */
-    private static Optional<T2<GraphQLOutputType, List<GraphQLArgument>>> determineFieldTypeNonCollectional(final Class<?> propertyType, final TgScalars tgScalars) {
+    private static Optional<T2<GraphQLOutputType, List<GraphQLArgument>>> determineFieldTypeNonCollectional(final Class<?> propertyType) {
         if (isString(propertyType)) {
             return of(t2(GraphQLString, asList(LIKE_ARGUMENT, ORDER_ARGUMENT)));
         } else if (isBoolean(propertyType)) {
@@ -530,7 +528,7 @@ public class FieldSchema {
         } else if (Money.class.isAssignableFrom(propertyType)) {
             return of(t2(GraphQLMoney, createRangeArgumentsFor(GraphQLMoney)));
         } else if (isDate(propertyType)) {
-            return of(t2(tgScalars.GraphQLDate, createRangeArgumentsFor(tgScalars.GraphQLDate)));
+            return of(t2(GraphQLDate, createRangeArgumentsFor(GraphQLDate)));
         } else if (Hyperlink.class.isAssignableFrom(propertyType)) {
             return of(t2(GraphQLHyperlink, asList(ORDER_ARGUMENT)));
         } else if (Colour.class.isAssignableFrom(propertyType)) {
