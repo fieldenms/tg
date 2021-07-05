@@ -9,12 +9,16 @@ import { MarkerCluster, leafletMarkerClusterStylesName, tgMarkerClusterStylesNam
 import { Select } from '/resources/gis/tg-select.js';
 import { Controls, leafletDrawStylesName, leafletControlloadingStylesName, leafletEasybuttonStylesName } from '/resources/gis/tg-controls.js';
 import { _millisDateRepresentation } from '/resources/reflection/tg-date-utils.js';
+import { TgReflector } from '/app/tg-reflector.js';
+import { TgAppConfig } from '/app/tg-app-config.js';
 
 export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap, ...otherStyles) {
     // IMPORTANT: use the following reference in cases when you need some properties of the 
     // GisComponent inside the functions or nested classes
     const self = this;
     tgMap._gisComponent = self;
+    this._reflector = new TgReflector();
+    this._appConfig = new TgAppConfig();
 
     this.appendStyles(tgMap, 
         leafletStylesName,
@@ -401,6 +405,15 @@ GisComponent.prototype.createCoordinatesFromMessage = function (message) {
     return (message.altitude) ? [message.x, message.y, message.altitude] : [message.x, message.y]
 }
 
+/**
+ * List of additional properties (dot-notations) to be displayed inside feature popup at the end of the list.
+ * These props should be specified in case if they are not present in EGI Centre DSL configuration but is needed in a popup.
+ * They must be fetched by specifying '.setFetchProvider(...)' in Centre DSL configuration.
+ */
+GisComponent.prototype.additionalPopupProps = function (feature) {
+    return [];
+}
+
 GisComponent.prototype.createPopupContent = function (feature) {
     const self = this;
     
@@ -439,14 +452,22 @@ GisComponent.prototype.createPopupContent = function (feature) {
     const entity = self.findEntityBy(feature);
     if (entity) {
         const columnPropertiesMapped = self.columnPropertiesMapper(entity);
+        const extendPopupText = entry => {
+            if (entry.value) { // entry.value is already converted to string; if entry.value === '' it will be considered empty and such property will not be shown in a popup
+                const value = entry.value === 'true' ? '&#x2714' : (entry.value === 'false' ? '&#x2718' : entry.value);
+                popupText = popupText + '<tr' + (entry.dotNotation === '' ? ' class="this-row"' : '') + '><td>' + entry.title + ':</td><td>' + value + '</td></tr>';
+            }
+        };
         
         for (let index = 0; index < columnPropertiesMapped.length; index++) {
             const entry = columnPropertiesMapped[index];
-            if (entry.value) { // entry.value is already converted to string; if entry.value === '' it will be considered empty and such property will not be shown in a popup
-                const value = entry.value === 'true' ? '&#x2714' : (entry.value === 'false' ? '&#x2718' : entry.value);
-                popupText = popupText + '<tr' + (entry.dotNotation === '' ? ' class="this-row"' : '') + '><td>' + entry.column.columnTitle + ':</td><td>' + value + '</td></tr>';
-            }
+            extendPopupText({ value: entry.value, dotNotation: entry.dotNotation, title: entry.column.columnTitle });
         }
+        
+        this.additionalPopupProps().forEach(property => {
+            const entryValue = this._reflector.tg_toString(entity.get(property), entity.constructor.prototype.type.call(entity), property, { display: true, locale: this._appConfig.locale });
+            extendPopupText({ value: entryValue, dotNotation: property, title: self.titleFor(entity, property) });
+        });
     }
     template.innerHTML = popupText + '</table>';
     const element = template.content.firstChild;
@@ -466,6 +487,14 @@ GisComponent.prototype.createPopupContent = function (feature) {
     }
     
     return element;
+}
+
+GisComponent.prototype.titleFor = function (feature, dotNotation) {
+    const rootType = feature.constructor.prototype.type.call(feature);
+    if (dotNotation === '') { // empty property name means 'entity itself'
+        return rootType.prop('key').title();
+    }
+    return rootType.prop(dotNotation).title();
 }
 
 GisComponent.prototype.findEntityBy = function (feature) {
