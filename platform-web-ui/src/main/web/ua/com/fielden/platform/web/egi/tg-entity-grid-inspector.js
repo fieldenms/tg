@@ -1129,8 +1129,8 @@ Polymer({
      * Indicates the presence of default action for 'entity' in the specified 'column'.
      */
     hasDefaultAction: function (entity, column) {
-        if (entity && entity.type && entity.type()) {
-            const propertyType = this._reflector.tg_determinePropertyType(entity.type(), column.collectionalProperty || column.property);
+        if (entity && entity.type && entity.constructor.prototype.type.call(entity)) {
+            const propertyType = this._reflector.tg_determinePropertyType(entity.constructor.prototype.type.call(entity), column.collectionalProperty || column.property);
             if (propertyType instanceof this._reflector._getEntityTypePrototype()) { // only entity-typed columns can have default actions ...
                 return propertyType.entityMaster(); // ... and only those, that have corresponding entity masters
             }
@@ -2135,7 +2135,8 @@ Polymer({
     _generateEntityTooltip: function (entity, column) {
         const valueToFormat = this.getValueFromEntity(entity, column);
         if (Array.isArray(valueToFormat)) {
-            return this._reflector.tg_toString(valueToFormat, this.getRealEntity(entity, column).type(), this.getRealProperty(column), { collection: true, asTooltip: true });
+            const realEntity = this.getRealEntity(entity, column);
+            return this._reflector.tg_toString(valueToFormat, realEntity.constructor.prototype.type.call(realEntity), this.getRealProperty(column), { collection: true, asTooltip: true });
         } else {
             let desc;
             try {

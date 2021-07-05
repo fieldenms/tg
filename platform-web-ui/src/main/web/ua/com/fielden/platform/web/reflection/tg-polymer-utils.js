@@ -19,7 +19,7 @@ export function generateUUID () {
 export function getFirstEntityTypeAndProperty (entity, propertyName) {
     if (entity && propertyName) {
         const reflector = new TgReflector();
-        const entityType = entity.type();
+        const entityType = entity.constructor.prototype.type.call(entity);
         let currentProperty = propertyName;
         let currentType = entityType.prop(propertyName).type();
         while (!(currentType instanceof reflector._getEntityTypePrototype())) {
@@ -29,7 +29,7 @@ export function getFirstEntityTypeAndProperty (entity, propertyName) {
         }
         return [currentType, currentProperty]; 
     } else if (entity) {
-        return [entity.type(), propertyName];
+        return [entity.constructor.prototype.type.call(entity), propertyName];
     }
 };
 

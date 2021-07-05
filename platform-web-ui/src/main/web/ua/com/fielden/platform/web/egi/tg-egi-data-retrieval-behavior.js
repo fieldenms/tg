@@ -26,11 +26,11 @@ export const TgEgiDataRetrievalBehavior = {
         if (entity.type && entity.constructor.prototype.type.call(entity).notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {
             return entity;
         } else if (valueFromEntity && valueFromEntity.type &&
-            valueFromEntity.type().notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {
+            valueFromEntity.constructor.prototype.type.call(valueFromEntity).notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {
             return valueFromEntity;
         } else if (this._reflector.entityPropOwner(this.getRealEntity(entity, column), this.getRealProperty(column))) {
             const owner = this._reflector.entityPropOwner(this.getRealEntity(entity, column), this.getRealProperty(column));
-            if (owner.type().notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {
+            if (owner.constructor.prototype.type.call(owner).notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {
                 return owner;
             }
             return null;
@@ -69,7 +69,7 @@ export const TgEgiDataRetrievalBehavior = {
         if (entity === null || property === null || type === null) {
             return '';
         } else {
-            return this._reflector.tg_toString(entity.get(property), entity.type(), property, { display: true, locale: this._appConfig.locale });
+            return this._reflector.tg_toString(entity.get(property), entity.constructor.prototype.type.call(entity), property, { display: true, locale: this._appConfig.locale });
         }
     }
 
