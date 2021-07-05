@@ -1003,7 +1003,8 @@ Polymer({
                 const column = this.columns[index];
                 const entry = {
                     dotNotation: column.property,
-                    value: this.getBindedValue(entity, column)
+                    value: this.getBindedValue(entity, column),
+                    column: column
                 };
                 result.push(entry);
             }

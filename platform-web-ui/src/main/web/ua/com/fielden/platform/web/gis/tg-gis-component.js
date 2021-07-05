@@ -443,9 +443,8 @@ GisComponent.prototype.createPopupContent = function (feature) {
         
         for (let index = 0; index < columnPropertiesMapped.length; index++) {
             const entry = columnPropertiesMapped[index];
-            const value = entry.value === true ? '&#x2714' : (entry.value === false ? '&#x2718' : entry.value);
-            const type = entity.constructor.prototype.type.call(entity);
-            popupText = popupText + '<tr' + (entry.dotNotation === '' ? ' class="this-row"' : '') + '><td>' + self.titleFor(entity, entry.dotNotation) + ':</td><td>' + value + '</td></tr>';
+            const value = entry.value === 'true' ? '&#x2714' : (entry.value === 'false' ? '&#x2718' : entry.value);
+            popupText = popupText + '<tr' + (entry.dotNotation === '' ? ' class="this-row"' : '') + '><td>' + entry.column.columnTitle + ':</td><td>' + value + '</td></tr>';
         }
     }
     template.innerHTML = popupText + '</table>';
