@@ -455,7 +455,7 @@ GisComponent.prototype.createPopupContent = function (feature) {
         const extendPopupText = entry => {
             if (entry.value) { // entry.value is already converted to string; if entry.value === '' it will be considered empty and such property will not be shown in a popup
                 const value = entry.value === 'true' ? '&#x2714' : (entry.value === 'false' ? '&#x2718' : entry.value);
-                popupText = popupText + '<tr' + (entry.dotNotation === '' ? ' class="this-row"' : '') + '><td>' + entry.title + ':</td><td>' + value + '</td></tr>';
+                popupText = popupText + '<tr class="popup-row" title="' + entry.title + '"><td>' + entry.title + ':</td><td><div>' + value + '</div></td></tr>';
             }
         };
         
@@ -471,6 +471,21 @@ GisComponent.prototype.createPopupContent = function (feature) {
     }
     template.innerHTML = popupText + '</table>';
     const element = template.content.firstChild;
+    
+    if (entity && entity.get('key') && feature.properties) {
+        const rows = element.children[0].querySelectorAll('.popup-row');
+        const columnPropertiesMapped = self.columnPropertiesMapper(entity);
+        rows.forEach(row => {
+            const foundEntry = columnPropertiesMapped.find(entry => entry.column.columnTitle === row.title);
+            if (foundEntry && foundEntry.column && foundEntry.column.parentNode /* EGI */ && foundEntry.column.parentNode.hasAction(entity, foundEntry.column)) {
+                const valueElement = row.children[1].children[0];
+                valueElement.className = 'popup-button';
+                valueElement.addEventListener('click', function () {
+                    foundEntry.column.parentNode._tapColumn(entity, foundEntry.column);
+                });
+            }
+        });
+    }
     
     if (entity && entity.get('key') && feature.properties && feature.properties.GlobalID) {
         const featureType = this.featureType(entity);
