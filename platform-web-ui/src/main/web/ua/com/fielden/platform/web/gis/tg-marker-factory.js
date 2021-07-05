@@ -12,7 +12,6 @@ export const MarkerFactory = function () {
     self.CircleMarker = L.Marker.extend({
         options: {
             icon: self._iconFactory.getCircleIcon(false),
-            title: "BlaBla",
             riseOnHover: true,
             riseOffset: 1000,
             zIndexOffset: 750 // high value to make the circles always on top
@@ -31,7 +30,6 @@ export const MarkerFactory = function () {
     self.ArrowMarker = L.Marker.extend({
         options: {
             icon: self._iconFactory.getArrowIcon(false),
-            title: "BlaBla",
             riseOffset: 1000,
             riseOnHover: true
         },
