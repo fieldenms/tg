@@ -19,7 +19,7 @@ export const Select = function (_map, _getLayerById, _markerFactory, tgMap, find
             const layerId = 
                 selectionEntity.entity.properties && selectionEntity.entity.properties.layerId 
                     ? selectionEntity.entity.properties.layerId
-                    : getLayerByGlobalId(selectionEntity.entity.get('arcGisId'))._leaflet_id;
+                    : (typeof entity.arcGisId !== 'undefined' ? getLayerByGlobalId(selectionEntity.entity.get('arcGisId'))._leaflet_id : null);
             if (selectionEntity.select) {
                 self._silentlySelectById(layerId);
             } else {

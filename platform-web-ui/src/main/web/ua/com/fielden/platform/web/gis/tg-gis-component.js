@@ -517,7 +517,7 @@ GisComponent.prototype.findEntityBy = function (feature) {
         const globalId = feature.properties.GlobalID;
         for (let i = 0; i < this._entities.length; i++) {
             const entity = this._entities[i];
-            if (entity.get('arcGisId') === globalId) {
+            if (typeof entity.arcGisId !== 'undefined' && entity.get('arcGisId') === globalId) {
                 return entity;
             }
         }
