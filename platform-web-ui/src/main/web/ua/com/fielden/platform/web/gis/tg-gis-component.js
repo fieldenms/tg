@@ -60,7 +60,7 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
     };
 
     // creating and configuring all layers
-    self._baseLayers = new BaseLayers();
+    self._baseLayers = self.createBaseLayers();
 
     self._map = L.map(mapDiv, {
         layers: [self._baseLayers.getBaseLayer(self.defaultBaseLayer())], // only add one!
@@ -208,6 +208,10 @@ GisComponent.prototype.appendStyles = function (tgMap, ...styleModuleNames) {
 
 GisComponent.prototype.createOverlays = function () {
     return {};
+};
+
+GisComponent.prototype.createBaseLayers = function () {
+    return new BaseLayers();
 };
 
 GisComponent.prototype.defaultBaseLayer = function () {
