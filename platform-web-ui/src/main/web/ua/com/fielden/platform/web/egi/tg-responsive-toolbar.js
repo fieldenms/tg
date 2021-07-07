@@ -20,18 +20,12 @@ const template = html`
             min-width:fit-content;
             @apply --layout-horizontal;
         }
-        .grid-toolbar-content ::slotted(*) {
-            margin-top: 8px;
-        }
         .grid-toolbar-content ::slotted(.first-group) {
             @apply --layout-horizontal;
         }
         .grid-toolbar-content ::slotted(.group) {
             margin-left: 30px;
             @apply --layout-horizontal;
-        }
-        #expandToolbarButton {
-            margin-top: 8px;
         }
         #expandToolbarButton.invisible {
             display: none;
