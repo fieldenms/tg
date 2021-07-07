@@ -197,7 +197,7 @@ public class CentreConfigurationWebUiConfig {
             .setLayoutFor(DESKTOP, empty(), layout)
             .setLayoutFor(TABLET, empty(), layout)
             .setLayoutFor(MOBILE, empty(), layout)
-            .withDimensions(mkDim(238, 176))
+            .withDimensions(mkDim(238, 177))
             .done();
     }
 
@@ -228,7 +228,7 @@ public class CentreConfigurationWebUiConfig {
             .setLayoutFor(DESKTOP, empty(), layout)
             .setLayoutFor(TABLET, empty(), layout)
             .setLayoutFor(MOBILE, empty(), layout)
-            .withDimensions(mkDim(400, 382))
+            .withDimensions(mkDim(400, 383))
             .done();
     }
     /**
