@@ -57,6 +57,7 @@ const template = html`
             max-height: 100%;
         }
         tg-responsive-toolbar {
+            margin-top: 8px;
             flex-grow: 0;
             flex-shrink: 0;
             z-index: 1;

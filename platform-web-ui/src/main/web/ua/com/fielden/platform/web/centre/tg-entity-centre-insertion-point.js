@@ -70,6 +70,10 @@ const template = html`
             background-color: var(--paper-light-blue-600);
         }
 
+        tg-responsive-toolbar {
+            margin: 8px 0;
+        }
+
         paper-icon-button.expand-colapse-button {
             min-width: 40px;
             min-height: 40px;
@@ -112,9 +116,9 @@ const template = html`
                 <span class="title-text truncate" style="margin-left:16px;" tooltip-text$="[[longDesc]]">[[shortDesc]]</span>
                 <paper-icon-button class="title-bar-button expand-colapse-button" style="margin-left:10px;margin-right:2px;" icon="icons:open-in-new" on-tap="_expandColapseTap"></paper-icon-button>
             </div>
-            <tg-responsive-toolbar id="viewToolbar" hidden$="[[!_isToolbarVisible(detachedView, separateView)]]">
-                <slot slot="entity-specific-action" name="entity-specific-action"></slot>
-                <slot slot="standart-action" name="standart-action"></slot>
+            <tg-responsive-toolbar id="viewToolbar" hidden$="[[!_isToolbarVisible(detachedView, separateView, isAttached)]]">
+                <slot id="entitySpecificActions" slot="entity-specific-action" name="entity-specific-action"></slot>
+                <slot id="standartActions" slot="standart-action" name="standart-action"></slot>
             </tg-responsive-toolbar>
             <div id="loadableContent" class="relative flex">
                 <tg-element-loader id="elementLoader"></tg-element-loader>
@@ -495,8 +499,8 @@ Polymer({
         return !separateView && !!shortDesc;
     },
 
-    _isToolbarVisible: function (detachedView, separateView) {
-        return detachedView || separateView;
+    _isToolbarVisible: function (detachedView, separateView, isAttached) {
+        return (detachedView || separateView) && (isAttached && (this.$.entitySpecificActions.assignedNodes().length > 0 || this.$.standartActions.assignedNodes().length > 0));
     },
 
     _getTabIndex: function (separateView) {
