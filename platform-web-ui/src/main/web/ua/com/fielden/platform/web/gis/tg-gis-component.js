@@ -1,7 +1,8 @@
 import '/resources/polymer/@polymer/polymer/lib/elements/custom-style.js';
+import '/resources/polymer/@polymer/iron-icon/iron-icon.js';
 import { L, leafletStylesName } from '/resources/gis/leaflet/leaflet-lib.js';
 import { esri } from '/resources/gis/leaflet/esri/esri-leaflet-lib.js';
-import { _featureType } from '/resources/gis/tg-gis-utils.js';
+import { _featureType, createStyleModule } from '/resources/gis/tg-gis-utils.js';
 import { BaseLayers } from '/resources/gis/tg-base-layers.js';
 import { EntityStyling } from '/resources/gis/tg-entity-styling.js';
 import { MarkerFactory, tgIconFactoryStylesName } from '/resources/gis/tg-marker-factory.js';
@@ -11,6 +12,15 @@ import { Controls, leafletDrawStylesName, leafletControlloadingStylesName, leafl
 import { _millisDateRepresentation } from '/resources/reflection/tg-date-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import { TgAppConfig } from '/app/tg-app-config.js';
+
+const tgGisComponentStyles = `
+    .bool-true-icon {
+        --iron-icon-height: 16px;
+        --iron-icon-width: 16px;
+    }
+`;
+const tgGisComponentStylesName = 'tg-gis-component-styles';
+createStyleModule(tgGisComponentStylesName, tgGisComponentStyles);
 
 export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap, ...otherStyles) {
     // IMPORTANT: use the following reference in cases when you need some properties of the 
@@ -23,6 +33,7 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
     this.appendStyles(tgMap, 
         leafletStylesName,
 
+        tgGisComponentStylesName,
         tgIconFactoryStylesName,
 
         leafletMarkerClusterStylesName,
@@ -458,7 +469,7 @@ GisComponent.prototype.createPopupContent = function (feature) {
         const columnPropertiesMapped = self.columnPropertiesMapper(entity);
         const extendPopupText = entry => {
             if (entry.value) { // entry.value is already converted to string; if entry.value === '' it will be considered empty and such property will not be shown in a popup
-                const value = entry.value === 'true' ? '&#x2714' : (entry.value === 'false' ? '&#x2718' : entry.value);
+                const value = entry.value === 'true' ? '<iron-icon class="bool-true-icon" icon="icons:check"></iron-icon>' : (entry.value === 'false' ? '' : entry.value);
                 popupText = popupText + '<tr class="popup-row" title="' + entry.title + '"><td>' + entry.title + ':</td><td><div>' + value + '</div></td></tr>';
             }
         };
