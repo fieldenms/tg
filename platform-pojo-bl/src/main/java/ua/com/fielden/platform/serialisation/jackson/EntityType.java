@@ -80,6 +80,20 @@ public class EntityType extends AbstractEntity<String> {
     @Title(value = "Entity Master", desc = "Entity Master Data")
     private MasterInfo _entityMaster;
 
+    @IsProperty
+    @Title(value = "New Entity Master", desc = "Entity master data for new entity action")
+    private MasterInfo _newEntityMaster;
+
+    @Observable
+    public EntityType set_newEntityMaster(final MasterInfo _newEntityMaster) {
+        this._newEntityMaster = _newEntityMaster;
+        return this;
+    }
+
+    public MasterInfo get_newEntityMaster() {
+        return _newEntityMaster;
+    }
+
     @Observable
     public EntityType set_entityMaster(final MasterInfo _entityMaster) {
         this._entityMaster = _entityMaster;

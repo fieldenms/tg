@@ -14,13 +14,16 @@ import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersis
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.EntityEditAction;
+import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.master.MasterInfo;
 import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.app.exceptions.WebUiBuilderException;
@@ -42,6 +45,14 @@ public class MasterInfoProvider {
 
     public MasterInfo getMasterInfo(final Class<? extends AbstractEntity<?>> type) {
         return buildConfiguredMasterActionInfo(type, "");
+    }
+
+    public MasterInfo getNewEntityMasterInfo(final String className) {
+        return getNewEntityMasterInfo(getEntityType(className));
+    }
+
+    public MasterInfo getNewEntityMasterInfo(final Class<? extends AbstractEntity<?>> type) {
+        return buildConfiguredNewEntityMasterActionInfo(type, "");
     }
 
     /**
@@ -105,7 +116,52 @@ public class MasterInfoProvider {
             info.setEntityTypeTitle(entityTitle);
             info.setRootEntityType(type);
             return info;
-        }).orElseGet(tryOtherMasters(type, relativePropertyName));
+        }).orElseGet(tryOtherMasters(type, relativePropertyName, this::buildConfiguredMasterActionInfo));
+    }
+
+    private MasterInfo buildConfiguredNewEntityMasterActionInfo(final Class<? extends AbstractEntity<?>> type, final String relativePropertyName) {
+        try {
+            return webUiConfig.configApp().getOpenMasterAction(type).get().map(entityActionConfig -> {
+                final FunctionalActionElement funcElem = new FunctionalActionElement(entityActionConfig, 0, FunctionalActionKind.TOP_LEVEL);
+                final String title = TitlesDescsGetter.getEntityTitleAndDesc(type).getKey();
+                final DomElement actionElement = funcElem.render();
+                final MasterInfo info = new MasterInfo();
+                info.setKey(actionElement.getAttr("element-name").value.toString());
+                info.setDesc(actionElement.getAttr("component-uri").value.toString());
+                info.setShortDesc(title);
+                info.setLongDesc("Add new " + title);
+                info.setShouldRefreshParentCentreAfterSave(false);
+                info.setRequireMasterEntity("true");
+                info.setEntityType(entityActionConfig.functionalEntity.get().getName());
+                info.setEntityTypeTitle(title);
+                info.setRootEntityType(type);
+                entityActionConfig.prefDimForView.ifPresent(prefDim -> {
+                    info.setWidth(prefDim.width);
+                    info.setHeight(prefDim.height);
+                    info.setWidthUnit(prefDim.widthUnit.value);
+                    info.setHeightUnit(prefDim.heightUnit.value);
+                });
+                return info;
+            }).orElse(buildDefaultNewEntityMasterConfiguration(type, relativePropertyName));
+        } catch (final WebUiBuilderException e) {
+            return buildDefaultNewEntityMasterConfiguration(type, relativePropertyName);
+        }
+    }
+
+    private MasterInfo buildDefaultNewEntityMasterConfiguration(final Class<? extends AbstractEntity<?>> type, final String relativePropertyName) {
+        return webUiConfig.configApp().getMaster(type).map(master -> {
+            final String entityTitle = getEntityTitleAndDesc(type).getKey();
+            final MasterInfo info = new MasterInfo();
+            info.setKey("tg-EntityNewAction-master");
+            info.setDesc("/master_ui/ua.com.fielden.platform.entity.EntityNewAction");
+            info.setShortDesc(entityTitle);
+            info.setLongDesc(format("Add new %s", entityTitle));
+            info.setRequireMasterEntity("true");
+            info.setEntityType(EntityNewAction.class.getName());
+            info.setEntityTypeTitle(entityTitle);
+            info.setRootEntityType(type);
+            return info;
+        }).orElseGet(tryOtherMasters(type, relativePropertyName, this::buildConfiguredNewEntityMasterActionInfo));
     }
 
     /**
@@ -117,7 +173,7 @@ public class MasterInfoProvider {
      * @param relativePropertyName
      * @return
      */
-    private Supplier<? extends MasterInfo> tryOtherMasters(final Class<? extends AbstractEntity<?>> type, final String relativePropertyName) {
+    private Supplier<? extends MasterInfo> tryOtherMasters(final Class<? extends AbstractEntity<?>> type, final String relativePropertyName, final BiFunction<Class<? extends AbstractEntity<?>>, String, MasterInfo> keepSearch) {
          return () -> getBaseTypeForSyntheticEntity(type)
                      .map(baseType -> buildConfiguredMasterActionInfo(baseType, relativePropertyName))
                      .orElseGet(() -> getSingleMemberOfEntityType(type).map(keyTypeName -> buildConfiguredMasterActionInfo(keyTypeName._1, keyTypeName._2)).orElse(null));
