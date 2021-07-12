@@ -3158,7 +3158,7 @@ L.LatLngUtil = {
 
 			if (isMetric) {
 				units = ['ha', 'm'];
-				type = typeof isMetric;
+				const type = typeof isMetric;
 				if (type === 'string') {
 					units = [isMetric];
 				} else if (type !== 'boolean') {
