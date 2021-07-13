@@ -497,7 +497,7 @@ Polymer({
                     }
                     this.isActionInProgress = true;
                     try {
-                        this._setEntityMasterInfo(currentEntityType);
+                        this._setEntityMasterInfo(currentEntityType, this.currentEntity());
                         this._previousEntityType = currentEntityTypeGetter();
                         postMasterInfoRetrieve();
                     } catch (e) {
@@ -734,8 +734,8 @@ Polymer({
         return isActionInProgress || disabled;
     },
 
-    _setEntityMasterInfo: function (entityType) {
-        const masterInfo = entityType.entityMaster();
+    _setEntityMasterInfo: function (entityType, currentEntity) {
+        const masterInfo = currentEntity.get("id") ? entityType.entityMaster(): entityType.newEntityMaster();
         if (!masterInfo) {
             const masterErrorMessage = `Could not find master for entity type: ${entityType.notEnhancedFullClassName()}.`
             this.toaster && this.toaster.openToastForError("Entity Master Error", masterErrorMessage, true);

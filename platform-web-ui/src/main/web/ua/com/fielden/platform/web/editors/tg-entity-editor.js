@@ -84,7 +84,7 @@ const customLabelTemplate = html`
            on-tap="_labelTap"
            tooltip-text$="[[_getTooltip(_editingValue, entity, focused, actionAvailable)]]">
         <span>[[propTitle]]</span>
-        <iron-icon id="actionAvailability" icon="editor:mode-edit" action-available$="[[actionAvailable]]"></iron-icon>
+        <iron-icon id="actionAvailability" icon="[[_actionIcon(actionAvailable, entity)]]" action-available$="[[actionAvailable]]"></iron-icon>
     </label>`;
 const customInputTemplate = html`
     <iron-input bind-value="{{_editingValue}}" class="custom-input-wrapper">
@@ -129,6 +129,19 @@ function replaceAll(find, replace, str) {
     return str.replace(new RegExp(escapeRegExp(find), 'g', 'i'), replace);
 }
 
+function createNewEntity(reflector, editingValue, rootEntityType) {
+    const entity = reflector.newEntity(rootEntityType);
+    if (entity.type().isCompositeEntity()) {
+        const values = editingValue.split(entity.type().compositeKeySeparator());
+        entity.type().compositeKeyNames().forEach((keyProp, idx) => {
+            entity[keyProp] = values[idx];
+        });
+    } else {
+        entity["key"] = editingValue;
+    }
+    return entity;
+}
+
 export class TgEntityEditor extends TgEditor {
 
     static get template() { 
@@ -160,6 +173,14 @@ export class TgEntityEditor extends TgEditor {
            },
 
            /**
+            * Entity master instance for creating new entity.
+            */
+            newEntityMaster: {
+                type: Object,
+                computed: '_computeNewEntityMaster(multi, autocompletionType, propertyName, noLabelFloat)'
+            },
+
+           /**
             * Action to open master on title click.
             */
            openMasterAction: {
@@ -172,7 +193,7 @@ export class TgEntityEditor extends TgEditor {
             */
            actionAvailable: {
                type: Boolean,
-               computed: '_computeActionAvailability(entityMaster, entity, currentState)'
+               computed: '_computeActionAvailability(entityMaster, newEntityMaster, entity, currentState)'
            },
 
            /**
@@ -492,8 +513,12 @@ export class TgEntityEditor extends TgEditor {
     _openEntityMaster () {
         if (this.openMasterAction && this.actionAvailable) {
             const entityValue = this.reflector().tg_getFullValue(this.entity, this.propertyName);
-            if (this.reflector().isEntity(entityValue)) {
+            if (!this.reflector().isError(this.reflector().tg_getFullEntity(this.entity).prop(this.propertyName).validationResult()) &&
+                     this.reflector().isEntity(entityValue)) {
                 this.openMasterAction._runDynamicAction(() => entityValue, null);
+            } else {
+                const entity = createNewEntity(this.reflector(), this._editingValue, this.newEntityMaster.rootEntityType);
+                this.openMasterAction._runDynamicAction(() => entity, null);
             }
         }
     }
@@ -978,7 +1003,7 @@ export class TgEntityEditor extends TgEditor {
     _generateTooltip (value, actionAvailable) {
         let tooltip = this._formatTooltipText(value);
         tooltip += this.propDesc ? (tooltip ? '<br><br>' : '') + this.propDesc : '';
-        tooltip += actionAvailable ? ((tooltip ? '<br><br>' : '') + this._getActionTooltip(this.entityMaster)) : '';
+        tooltip += actionAvailable ? ((tooltip ? '<br><br>' : '') + this._getActionTooltip(value)) : '';
         return tooltip;
     }
 
@@ -1000,7 +1025,8 @@ export class TgEntityEditor extends TgEditor {
     /**
      * Calculates title action tooltip.
      */
-    _getActionTooltip  (entityMaster) {
+    _getActionTooltip  (value) {
+        const entityMaster = this.reflector().isEntity(value) ? this.entityMaster : this.newEntityMaster;
         const shortDesc = entityMaster.shortDesc ? "<b>" + entityMaster.shortDesc + "</b>" : "";
         let longDesc;
         if (shortDesc) {
@@ -1034,22 +1060,50 @@ export class TgEntityEditor extends TgEditor {
      * Computes entity master object for entity-typed property represented by this autocompleter (only for non-multi).
      */
     _computeEntityMaster (multi, autocompletionType, propertyName, noLabelFloat) {
+        return this._getEntityMaster(multi, autocompletionType, propertyName, noLabelFloat, true);
+    }
+
+    /**
+     * Computes new entity master object for entity-typed property represented by this autocompleter (only for non-multi).
+     */
+    _computeNewEntityMaster(multi, autocompletionType, propertyName, noLabelFloat) {
+        return this._getEntityMaster(multi, autocompletionType, propertyName, noLabelFloat, false);
+    }
+
+    _getEntityMaster(multi, autocompletionType, propertyName, noLabelFloat, edit) {
         if (!allDefined(arguments)) {
             return null;
         }
         const type = this.reflector().findTypeByName(autocompletionType);
-        return (!multi || null) && (!noLabelFloat || null) && type && type.prop(propertyName).type().entityMaster();
+        if (!multi && !noLabelFloat && type) {
+            if (edit) {
+                return type.prop(propertyName).type().entityMaster();
+            }
+            return type.prop(propertyName).type().newEntityMaster();
+        }
+        return null;
     }
 
     /**
      * Computes whether title action is available for tapping and visible.
      */
-    _computeActionAvailability (entityMaster, entity, currentState) {
-        if (!entityMaster || !entity || !currentState) {
+    _computeActionAvailability (entityMaster, newEntityMaster, entity, currentState) {
+        if (!entityMaster || !newEntityMaster || !entity || !currentState) {
             return false;
         }
-        const fullEntity = this.reflector().tg_getFullEntity(entity);
-        return currentState === 'EDIT' && !this.reflector().isError(fullEntity.prop(this.propertyName).validationResult()); // currentState is not 'EDIT' e.g. where refresh / saving process is in progress
+        return currentState === 'EDIT'; // currentState is not 'EDIT' e.g. where refresh / saving process is in progress
+    }
+
+    _actionIcon (actionAvailable, entity) {
+        if (actionAvailable) {
+            const fullEntity = this.reflector().tg_getFullEntity(entity);
+            if (!this.reflector().isError(fullEntity.prop(this.propertyName).validationResult()) && 
+                    this.reflector().isEntity(this.reflector().tg_getFullValue(entity, this.propertyName))) {
+                return "editor:mode-edit"
+            }
+            return "add-circle-outline";
+        }
+        return "";
     }
 
     _valueStyle (item, index) {
