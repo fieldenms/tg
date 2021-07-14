@@ -1388,7 +1388,23 @@ L.Draw.Rectangle = L.Draw.SimpleShape.extend({
 		// TG change: 	return;
 		// TG change: }
 
-		L.Draw.SimpleShape.prototype._onMouseUp.call(this);
+		// TG change: change behaviour of finishing of rectangle drawing: if it is finished above Cancel button then do not _fireCreatedEvent
+		// TG change: L.Draw.SimpleShape.prototype._onMouseUp.call(this);
+		const x = e.clientX;
+		const y = e.clientY;
+		let elementFromPoint = document.elementFromPoint(x, y);
+		while (elementFromPoint.shadowRoot) {
+			elementFromPoint = elementFromPoint.shadowRoot.elementFromPoint(x, y);
+		} // -- finds top-most element under mouse pointer (desktop) or finger (touch devices)
+		
+		if (this._shape && !(elementFromPoint && elementFromPoint.title && elementFromPoint.title === 'Cancel drawing')) { // if that element is Cancel button then avoid creation of new rectangle;
+			this._fireCreatedEvent();
+		}
+		// but still, continue disabling drawing mode
+		this.disable();
+		if (this.options.repeatMode) {
+			this.enable();
+		}
 	},
 
 	_drawShape: function (latlng) {
