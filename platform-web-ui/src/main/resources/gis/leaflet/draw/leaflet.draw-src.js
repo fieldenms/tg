@@ -146,12 +146,12 @@ L.drawLocal = {
 			},
 			rectangle: {
 				tooltip: {
-					start: 'Click and drag to draw rectangle.'
+					start: 'Click (tap) and drag to draw rectangle.'
 				}
 			},
 			simpleshape: {
 				tooltip: {
-					end: 'Release mouse to finish drawing.'
+					end: 'Release mouse (finger) to finish drawing.'
 				}
 			}
 		}
