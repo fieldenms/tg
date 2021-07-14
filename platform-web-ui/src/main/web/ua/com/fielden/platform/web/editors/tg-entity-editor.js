@@ -134,12 +134,21 @@ function createNewEntity(reflector, editingValue, rootEntityType) {
     if (entity.type().isCompositeEntity()) {
         const values = editingValue.split(entity.type().compositeKeySeparator());
         entity.type().compositeKeyNames().forEach((keyProp, idx) => {
-            entity[keyProp] = values[idx];
+            entity[keyProp] = typeof values[idx] === 'undefined' ? '': values[idx];
         });
     } else {
         entity["key"] = editingValue;
     }
     return entity;
+}
+
+function setKeyFields(entity, embeddedMaster) {
+    const keys = entity.type().isCompositeEntity() ? entity.type().compositeKeyNames(): ["key"];
+    keys.forEach(keyProp => {
+        if (!embeddedMaster.$["editor_4_" + keyProp]._disabled) {
+            embeddedMaster.setEditorValue4PropertyFromConcreteValue(keyProp, entity.get(keyProp));
+        }
+    })
 }
 
 export class TgEntityEditor extends TgEditor {
@@ -512,12 +521,23 @@ export class TgEntityEditor extends TgEditor {
      */
     _openEntityMaster () {
         if (this.openMasterAction && this.actionAvailable) {
+            delete this.openMasterAction.modifyFunctionalEntity; 
             const entityValue = this.reflector().tg_getFullValue(this.entity, this.propertyName);
             if (!this.reflector().isError(this.reflector().tg_getFullEntity(this.entity).prop(this.propertyName).validationResult()) &&
                      this.reflector().isEntity(entityValue)) {
                 this.openMasterAction._runDynamicAction(() => entityValue, null);
             } else {
                 const entity = createNewEntity(this.reflector(), this._editingValue, this.newEntityMaster.rootEntityType);
+                this.openMasterAction.modifyFunctionalEntity = (bindingEntity, master, action) => {
+                    const dataLoadedCallback = (e) => {
+                        const embeddedMaster = e.detail;
+                        if (embeddedMaster) {
+                            setKeyFields(entity, embeddedMaster);
+                        }
+                        master.removeEventListener("data-loaded-and-focused", dataLoadedCallback);
+                    }
+                    master.addEventListener("data-loaded-and-focused", dataLoadedCallback);
+                };
                 this.openMasterAction._runDynamicAction(() => entity, null);
             }
         }

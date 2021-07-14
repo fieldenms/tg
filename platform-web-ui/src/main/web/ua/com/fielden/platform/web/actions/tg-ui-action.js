@@ -350,13 +350,6 @@ Polymer({
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         /**
-         * The type of entity for which dynamic action was invoked previous time.
-         */
-        _previousEntityType: {
-            type: Object,
-            value: null
-        },
-        /**
          * The saved short desc in case the action is dynamic 
          * If short desc wasn't specified then short desc should be specified every time new master is retrieved
          * And this property becomes an indicator of that fact. 
@@ -491,22 +484,17 @@ Polymer({
             if (this.dynamicAction && this.currentEntity()) {
                 const currentEntityTypeGetter = () => getFirstEntityType(this.currentEntity(), this.chosenProperty); // returned currentEntityType is never empty due to this.currentEntity() never empty here
                 const currentEntityType = currentEntityTypeGetter();
-                if (this._previousEntityType !== currentEntityType) {
-                    if (!this.elementName) {//Element name for dynamic action is not specified at first run
-                        this._originalShortDesc = this.shortDesc;//It means that shortDesc wasn't changed yet.
-                    }
-                    this.isActionInProgress = true;
-                    try {
-                        this._setEntityMasterInfo(currentEntityType, this.currentEntity());
-                        this._previousEntityType = currentEntityTypeGetter();
-                        postMasterInfoRetrieve();
-                    } catch (e) {
-                        this.isActionInProgress = false;
-                        this.restoreActionState();
-                        console.log("The action was rejected with error: " + e);
-                    }
-                } else {
-                    postMasterInfoRetrieve();    
+                if (!this.elementName) {//Element name for dynamic action is not specified at first run
+                    this._originalShortDesc = this.shortDesc;//It means that shortDesc wasn't changed yet.
+                }
+                this.isActionInProgress = true;
+                try {
+                    this._setEntityMasterInfo(currentEntityType, this.currentEntity());
+                    postMasterInfoRetrieve();
+                } catch (e) {
+                    this.isActionInProgress = false;
+                    this.restoreActionState();
+                    console.log("The action was rejected with error: " + e);
                 }
             } else {
                 postMasterInfoRetrieve();

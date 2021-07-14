@@ -738,7 +738,7 @@ const TgEntityMasterBehaviorImpl = {
                 this.focusView();
                 if (!this._hasEmbededView()) {
                     this.async(function () {
-                        this.fire('data-loaded-and-focused', this._currBindingEntity);
+                        this.fire('data-loaded-and-focused', this);
                     }, 100);
                 }
             }
