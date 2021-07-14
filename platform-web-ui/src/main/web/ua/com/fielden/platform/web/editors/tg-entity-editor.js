@@ -521,7 +521,8 @@ export class TgEntityEditor extends TgEditor {
      */
     _openEntityMaster () {
         if (this.openMasterAction && this.actionAvailable) {
-            delete this.openMasterAction.modifyFunctionalEntity; 
+            delete this.openMasterAction.modifyFunctionalEntity;
+            delete this.openMasterAction.postActionSuccess; 
             const entityValue = this.reflector().tg_getFullValue(this.entity, this.propertyName);
             if (!this.reflector().isError(this.reflector().tg_getFullEntity(this.entity).prop(this.propertyName).validationResult()) &&
                      this.reflector().isEntity(entityValue)) {
@@ -538,6 +539,18 @@ export class TgEntityEditor extends TgEditor {
                     }
                     master.addEventListener("data-loaded-and-focused", dataLoadedCallback);
                 };
+                this.openMasterAction.postActionSuccess = (savedEntity, action, master) => {
+                    let value = null;
+                    if (savedEntity.type() === entity.type()) {
+                        value = savedEntity;
+                    } else if (this.reflector().isEntity(savedEntity.get("key")) && savedEntity.get("key").type() === entity.type()) {
+                        value = savedEntity.get("key");
+                    }
+                    if (!this._disabled && value !== null && value.get("id") !== null) {
+                        this.assignConcreteValue(value, this.reflector().tg_convert.bind(this.reflector()));
+                        this.commit();
+                    }
+                }
                 this.openMasterAction._runDynamicAction(() => entity, null);
             }
         }
