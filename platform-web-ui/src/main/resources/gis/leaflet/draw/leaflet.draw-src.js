@@ -3764,6 +3764,10 @@ L.Toolbar = L.Class.extend({
 			.on(link, 'touchstart', L.DomEvent.stopPropagation)
 			.on(link, 'click', L.DomEvent.preventDefault)
 			.on(link, buttonEvent, options.callback, options.context);
+		
+		if (options.title && options.title === 'Cancel drawing') {
+			L.DomEvent.on(link, 'touchend', options.callback, options.context); // TG change: allow tapping of Cancel button on touch devices
+		}
 
 		return link;
 	},
