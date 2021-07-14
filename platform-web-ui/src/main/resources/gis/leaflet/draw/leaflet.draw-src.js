@@ -1373,20 +1373,20 @@ L.Draw.Rectangle = L.Draw.SimpleShape.extend({
 			return;
 		}
 
-		this._isCurrentlyTwoClickDrawing = false;
+		// TG change: this._isCurrentlyTwoClickDrawing = false;
 		L.Draw.SimpleShape.prototype.disable.call(this);
 	},
 
 	_onMouseUp: function (e) {
-		if (!this._shape && !this._isCurrentlyTwoClickDrawing) {
-			this._isCurrentlyTwoClickDrawing = true;
+		if (!this._shape /* TG change: && !this._isCurrentlyTwoClickDrawing */) {
+			// TG change: this._isCurrentlyTwoClickDrawing = true;
 			return;
 		}
 
-		// Make sure closing click is on map
-		if (this._isCurrentlyTwoClickDrawing && !_hasAncestor(e.target, 'leaflet-pane')) {
-			return;
-		}
+		// TG change: // Make sure closing click is on map
+		// TG change: if (this._isCurrentlyTwoClickDrawing && !_hasAncestor(e.target, 'leaflet-pane')) {
+		// TG change: 	return;
+		// TG change: }
 
 		L.Draw.SimpleShape.prototype._onMouseUp.call(this);
 	},
