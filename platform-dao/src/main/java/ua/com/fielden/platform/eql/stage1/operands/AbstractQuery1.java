@@ -25,7 +25,7 @@ import ua.com.fielden.platform.eql.stage1.conditions.Conditions1;
 import ua.com.fielden.platform.eql.stage1.etc.GroupBys1;
 import ua.com.fielden.platform.eql.stage1.etc.OrderBys1;
 import ua.com.fielden.platform.eql.stage1.etc.Yields1;
-import ua.com.fielden.platform.eql.stage1.sources.Sources1;
+import ua.com.fielden.platform.eql.stage1.sources.ISources1;
 import ua.com.fielden.platform.eql.stage2.etc.GroupBy2;
 import ua.com.fielden.platform.eql.stage2.etc.GroupBys2;
 import ua.com.fielden.platform.eql.stage2.etc.OrderBy2;
@@ -35,11 +35,12 @@ import ua.com.fielden.platform.eql.stage2.etc.Yields2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
+import ua.com.fielden.platform.eql.stage2.sources.ISources2;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 
 public abstract class AbstractQuery1 {
 
-    public final Sources1 sources;
+    public final ISources1<? extends ISources2<?>> sources;
     public final Conditions1 conditions;
     public final Yields1 yields;
     public final GroupBys1 groups;

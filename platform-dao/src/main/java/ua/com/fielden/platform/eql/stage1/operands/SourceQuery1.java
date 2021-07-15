@@ -13,8 +13,8 @@ import java.util.Map.Entry;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.stage1.ITransformableToS2;
-import ua.com.fielden.platform.eql.stage1.TransformationContext;
 import ua.com.fielden.platform.eql.stage1.QueryBlocks1;
+import ua.com.fielden.platform.eql.stage1.TransformationContext;
 import ua.com.fielden.platform.eql.stage1.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.QueryBlocks2;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
@@ -25,8 +25,9 @@ import ua.com.fielden.platform.eql.stage2.etc.Yields2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.SourceQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
-import ua.com.fielden.platform.eql.stage2.sources.Sources2;
+import ua.com.fielden.platform.eql.stage2.sources.ISources2;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
+import ua.com.fielden.platform.eql.stage3.sources.ISources3;
 
 public class SourceQuery1 extends AbstractQuery1 implements ITransformableToS2<SourceQuery2> {
 
@@ -43,14 +44,14 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableToS2<S
     @Override
     public SourceQuery2 transform(final TransformationContext context) {
         final TransformationContext localContext = isCorrelated ? context.produceForCorrelatedSourceQuery() : context.produceForUncorrelatedSourceQuery();
-        final TransformationResult<Sources2> sourcesTr = sources.transform(localContext);
+        final TransformationResult<? extends ISources2<?>> sourcesTr = sources.transform(localContext);
         final TransformationContext enhancedContext = sourcesTr.updatedContext;
-        final Sources2 sources2 = sourcesTr.item;
+        final ISources2<? extends ISources3> sources2 = sourcesTr.item;
         final Conditions2 conditions2 = conditions.transform(enhancedContext);
         final Yields2 yields2 = yields.transform(enhancedContext);
         final GroupBys2 groups2 = enhance(groups.transform(enhancedContext));
-        final OrderBys2 orderings2 = enhance(orderings.transform(enhancedContext), yields2, sources2.main);
-        final Yields2 enhancedYields2 = expand(enhanceYields(yields2, sources2.main));
+        final OrderBys2 orderings2 = enhance(orderings.transform(enhancedContext), yields2, sources2.mainSource());
+        final Yields2 enhancedYields2 = expand(enhanceYields(yields2, sources2.mainSource()));
         final QueryBlocks2 entQueryBlocks = new QueryBlocks2(sources2, conditions2, enhancedYields2, groups2, orderings2);
         return new SourceQuery2(entQueryBlocks, resultType);
     }

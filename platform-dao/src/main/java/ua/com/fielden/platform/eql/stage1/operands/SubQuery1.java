@@ -19,7 +19,8 @@ import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.SubQuery2;
 import ua.com.fielden.platform.eql.stage2.operands.Value2;
-import ua.com.fielden.platform.eql.stage2.sources.Sources2;
+import ua.com.fielden.platform.eql.stage2.sources.ISources2;
+import ua.com.fielden.platform.eql.stage3.sources.ISources3;
 
 public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuery2> {
 
@@ -30,13 +31,13 @@ public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuer
     @Override
     public SubQuery2 transform(final TransformationContext context) {
         final TransformationContext localContext = context.produceForCorrelatedSubquery();
-        final TransformationResult<Sources2> sourcesTr = sources.transform(localContext);
+        final TransformationResult<? extends ISources2<?>> sourcesTr = sources.transform(localContext);
         final TransformationContext enhancedContext = sourcesTr.updatedContext;
-        final Sources2 sources2 = sourcesTr.item;
+        final ISources2<? extends ISources3> sources2 = sourcesTr.item;
         final Conditions2 conditions2 = conditions.transform(enhancedContext);
         final Yields2 yields2 = yields.transform(enhancedContext);
         final GroupBys2 groups2 = enhance(groups.transform(enhancedContext));
-        final OrderBys2 orderings2 = enhance(orderings.transform(enhancedContext), yields2, sources2.main);
+        final OrderBys2 orderings2 = enhance(orderings.transform(enhancedContext), yields2, sources2.mainSource());
         final Yields2 enhancedYields2 = enhanceYields(yields2, sources2);
         final QueryBlocks2 entQueryBlocks = new QueryBlocks2(sources2, conditions2, enhancedYields2, groups2, orderings2);
         final Object hibType = resultType == null ? enhancedYields2.getYields().iterator().next().operand.hibType() : LongType.INSTANCE;
@@ -47,10 +48,10 @@ public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuer
         return resultType == null ? yields.getYields().iterator().next().javaType() : resultType;
     }
     
-    private static Yields2 enhanceYields(final Yields2 yields, final Sources2 sources2) {
+    private static Yields2 enhanceYields(final Yields2 yields, final ISources2<? extends ISources3> sources2) {
         if (yields.getYields().isEmpty()) {
-            final ISingleOperand2<?> yieldedOperand = sources2.main.entityInfo().getProps().containsKey(ID)
-                    ? new Prop2(sources2.main, listOf(sources2.main.entityInfo().getProps().get(ID)))
+            final ISingleOperand2<?> yieldedOperand = sources2.mainSource().entityInfo().getProps().containsKey(ID)
+                    ? new Prop2(sources2.mainSource(), listOf(sources2.mainSource().entityInfo().getProps().get(ID)))
                     : new Value2(0);
             return new Yields2(listOf(new Yield2(yieldedOperand, "", false)));
         }

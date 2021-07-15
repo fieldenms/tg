@@ -10,8 +10,9 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.eql.meta.EqlStage2TestCase;
 import ua.com.fielden.platform.eql.stage2.operands.ResultQuery2;
+import ua.com.fielden.platform.eql.stage2.sources.ISources2;
 import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnPersistentType;
-import ua.com.fielden.platform.eql.stage2.sources.Sources2;
+import ua.com.fielden.platform.eql.stage3.sources.ISources3;
 
 public class IgnoringConditionsWithNullArgumentsTest extends EqlStage2TestCase {
 
@@ -22,7 +23,7 @@ public class IgnoringConditionsWithNullArgumentsTest extends EqlStage2TestCase {
 
         final Source2BasedOnPersistentType model = source(model1, MODEL);
 
-        final Sources2 sources = sources(model);
+        final ISources2<? extends ISources3> sources = sources(model);
         final ResultQuery2 expQry = qryCountAll(sources);
         
         assertEquals(expQry, actQry);
@@ -38,7 +39,7 @@ public class IgnoringConditionsWithNullArgumentsTest extends EqlStage2TestCase {
 
         final Source2BasedOnPersistentType model = source(model1, MODEL);
 
-        final Sources2 sources = sources(model);
+        final ISources2<? extends ISources3> sources = sources(model);
         final ResultQuery2 expQry = qryCountAll(sources);
         
         assertEquals(expQry, actQry);

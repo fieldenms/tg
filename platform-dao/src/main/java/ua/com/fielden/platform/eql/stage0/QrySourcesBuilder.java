@@ -1,19 +1,16 @@
 package ua.com.fielden.platform.eql.stage0;
 
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 
+import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
-import ua.com.fielden.platform.eql.stage1.sources.CompoundSource1;
-import ua.com.fielden.platform.eql.stage1.sources.ISource1;
-import ua.com.fielden.platform.eql.stage1.sources.Sources1;
-import ua.com.fielden.platform.eql.stage2.sources.ISource2;
+import ua.com.fielden.platform.eql.stage1.sources.ISources1;
+import ua.com.fielden.platform.eql.stage2.sources.ISources2;
 import ua.com.fielden.platform.utils.Pair;
 
 public class QrySourcesBuilder extends AbstractTokensBuilder {
-
+    
     protected QrySourcesBuilder(final EntQueryGenerator queryBuilder) {
         super(/* parent = */ null, queryBuilder);
         setChild(new QrySourceBuilder(this, queryBuilder));
@@ -23,13 +20,23 @@ public class QrySourcesBuilder extends AbstractTokensBuilder {
     public void add(final TokenCategory cat, final Object value) {
         switch (cat) {
         case JOIN_TYPE: //eats token
-            finaliseChild();
-            setChild(new CompoundQrySourceBuilder(this, getQueryBuilder(), cat, value));
+            //finaliseChild();
+            setChild(new CompoundQrySourceBuilder(this, getQueryBuilder(), obtainChild(), (JoinType) value));
             break;
         default:
             super.add(cat, value);
             break;
         }
+    }
+    
+    public ISources1<? extends ISources2<?>> obtainChild() {
+        if (getChild() != null) {
+            final ITokensBuilder last = getChild();
+            setChild(null);
+            final Pair<TokenCategory, Object> result = last.getResult();
+            return (ISources1<? extends ISources2<?>>) result.getValue();
+        }
+        return null;
     }
 
     @Override
@@ -37,19 +44,12 @@ public class QrySourcesBuilder extends AbstractTokensBuilder {
         return false;
     }
 
-    public Sources1 getModel() {
+    public ISources1<? extends ISources2<?>> getModel() {
         if (getChild() != null) {
             finaliseChild();
         }
         final Iterator<Pair<TokenCategory, Object>> iterator = getTokens().iterator();
-        final ISource1<? extends ISource2<?>> mainSource = (ISource1<? extends ISource2<?>>) iterator.next().getValue();
-        final List<CompoundSource1> otherSources = new ArrayList<>();
-        for (; iterator.hasNext();) {
-            final CompoundSource1 subsequentSource = (CompoundSource1) iterator.next().getValue();
-            otherSources.add(subsequentSource);
-        }
-        return mainSource != null ? new Sources1(mainSource, otherSources) : null;
-
+        return (ISources1<? extends ISources2<?>>) iterator.next().getValue();
     }
 
     @Override

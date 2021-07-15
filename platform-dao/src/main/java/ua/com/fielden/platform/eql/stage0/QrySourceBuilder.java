@@ -21,10 +21,10 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.stage1.operands.SourceQuery1;
+import ua.com.fielden.platform.eql.stage1.sources.SingleNodeSources1;
 import ua.com.fielden.platform.eql.stage1.sources.Source1BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage1.sources.Source1BasedOnSubqueries;
 import ua.com.fielden.platform.eql.stage1.sources.Source1BasedOnVoid;
-import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -67,7 +67,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
     private Pair<TokenCategory, Object> buildResultForQrySourceBasedOnEntityType() {
         final Class<AbstractEntity<?>> resultType = (Class<AbstractEntity<?>>) firstValue();
         if (isPersistedEntityType(resultType)) {
-            return pair(QRY_SOURCE, new Source1BasedOnPersistentType(resultType, (String) secondValue(), getQueryBuilder().nextSourceId()));    
+            return pair(QRY_SOURCE, new SingleNodeSources1(new Source1BasedOnPersistentType(resultType, (String) secondValue(), getQueryBuilder().nextSourceId())));    
         } else if (isSyntheticEntityType(resultType) || isSyntheticBasedOnPersistentEntityType(resultType) || isUnionEntityType(resultType)) {
             return pair(QRY_SOURCE, buildQrySourceBasedOnSyntheticEntityType(resultType, (String) secondValue()));
         } else {
@@ -75,7 +75,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
         }
     }
     
-    private <T extends AbstractEntity<?>> Source1BasedOnSubqueries buildQrySourceBasedOnSyntheticEntityType(final Class<T> resultType, final String alias) {
+    private <T extends AbstractEntity<?>> SingleNodeSources1 buildQrySourceBasedOnSyntheticEntityType(final Class<T> resultType, final String alias) {
         final EntityTypeInfo<T> parentInfo = getQueryBuilder().domainMetadata.getEntityTypeInfo(resultType);
         final List<EntityResultQueryModel<T>> models = new ArrayList<>();
         models.addAll(parentInfo.entityModels);
@@ -84,7 +84,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
         for (final QueryModel<T> qryModel : models) {
             queries.add(getQueryBuilder().generateAsSyntheticEntityQuery(qryModel, resultType));
         }
-        return new Source1BasedOnSubqueries(alias, queries, getQueryBuilder().nextSourceId(), true);
+        return new SingleNodeSources1(new Source1BasedOnSubqueries(alias, queries, getQueryBuilder().nextSourceId(), true));
     }
     
     private Pair<TokenCategory, Object> buildResultForQrySourceBasedOnSubqueries() {
@@ -95,7 +95,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
             queries.add(getQueryBuilder().generateAsSourceQuery(qryModel));
         }
 
-        return pair(QRY_SOURCE, new Source1BasedOnSubqueries(alias, queries, getQueryBuilder().nextSourceId(), false));
+        return pair(QRY_SOURCE, new SingleNodeSources1(new Source1BasedOnSubqueries(alias, queries, getQueryBuilder().nextSourceId(), false)));
     }
 
     @Override
@@ -105,7 +105,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
         } else if (isSubqueriesAsSource() || isSubqueriesAsSourceWithoutAlias()) {
             return buildResultForQrySourceBasedOnSubqueries();
         } else if (isNothingAsSourceWithoutAlias()) {
-            return pair(QRY_SOURCE, new Source1BasedOnVoid());
+            return pair(QRY_SOURCE, new SingleNodeSources1(new Source1BasedOnVoid()));
         } else {
             throw new RuntimeException("Unable to get result - unrecognised state.");
         }

@@ -34,7 +34,8 @@ import ua.com.fielden.platform.eql.stage1.operands.SourceQuery1;
 import ua.com.fielden.platform.eql.stage1.operands.SubQuery1;
 import ua.com.fielden.platform.eql.stage1.operands.TypelessSubQuery1;
 import ua.com.fielden.platform.eql.stage1.sources.ISource1;
-import ua.com.fielden.platform.eql.stage1.sources.Sources1;
+import ua.com.fielden.platform.eql.stage1.sources.ISources1;
+import ua.com.fielden.platform.eql.stage2.sources.ISources2;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -130,8 +131,8 @@ public class EntQueryGenerator {
             }
         }
 
-        final Sources1 fromModel = from.getModel();
-        final Conditions1 whereModel = addFilteringCondition(where.getModel(), qryModel.isFilterable(), filter, username, fromModel.main);
+        final ISources1<? extends ISources2<?>> fromModel = from.getModel();
+        final Conditions1 whereModel = addFilteringCondition(where.getModel(), qryModel.isFilterable(), filter, username, fromModel.mainSource());
 
         return new QueryBlocks1(fromModel, whereModel, select.getModel(), groupBy.getModel(), produceOrderBys(orderModel), qryModel.isYieldAll());
     }

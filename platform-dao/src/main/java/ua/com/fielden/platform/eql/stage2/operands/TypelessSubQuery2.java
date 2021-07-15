@@ -20,7 +20,7 @@ public class TypelessSubQuery2 extends AbstractQuery2 implements ITransformableT
 
     @Override
     public TransformationResult<TypelessSubQuery3> transform(final TransformationContext context) {
-        final TransformationResult<ISources3> sourcesTr = sources.transform(context);
+        final TransformationResult<? extends ISources3> sourcesTr = sources.transform(context);
         final TransformationResult<Conditions3> conditionsTr = conditions.transform(sourcesTr.updatedContext);
         final TransformationResult<Yields3> yieldsTr = yields.transform(conditionsTr.updatedContext);
         final TransformationResult<GroupBys3> groupsTr = groups.transform(yieldsTr.updatedContext);
