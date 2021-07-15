@@ -1131,8 +1131,9 @@ Polymer({
      * Indicates the presence of default action for 'entity' in the specified 'column'.
      */
     hasDefaultAction: function (entity, column) {
-        if (entity && entity.type && entity.constructor.prototype.type.call(entity)) {
-            const propertyType = this._reflector.tg_determinePropertyType(entity.constructor.prototype.type.call(entity), column.collectionalProperty || column.property);
+        if (entity && (entity.constructor.prototype.type || entity.type)) {
+            const type = entity.constructor.prototype.type ? entity.constructor.prototype.type.call(entity) : entity.type();
+            const propertyType = this._reflector.tg_determinePropertyType(type, column.collectionalProperty || column.property);
             if (propertyType instanceof this._reflector._getEntityTypePrototype()) { // only entity-typed columns can have default actions ...
                 return propertyType.entityMaster(); // ... and only those, that have corresponding entity masters
             }
