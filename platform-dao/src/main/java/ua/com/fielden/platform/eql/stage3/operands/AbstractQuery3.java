@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage3.operands;
 
+import static ua.com.fielden.platform.entity.query.DbVersion.ORACLE;
+
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
@@ -31,7 +33,7 @@ public abstract class AbstractQuery3 {
     public String sql(final DbVersion dbVersion) {
         final StringBuffer sb = new StringBuffer();
         sb.append(yields.sql(dbVersion));
-        sb.append(sources.sql(dbVersion, true));
+        sb.append(sources != null ? sources.sql(dbVersion, true) : (dbVersion == ORACLE ? " FROM DUAL " : ""));
         sb.append(conditions.sql(dbVersion, true));
         sb.append(groups.sql(dbVersion));
         sb.append(orderings.sql(dbVersion));
@@ -49,7 +51,7 @@ public abstract class AbstractQuery3 {
         int result = 1;
         result = prime * result + conditions.hashCode();
         result = prime * result + yields.hashCode();
-        result = prime * result + sources.hashCode();
+        result = prime * result + ((sources == null) ? 0 : sources.hashCode());
         result = prime * result + groups.hashCode();
         result = prime * result + orderings.hashCode();
         result = prime * result + ((resultType == null) ? 0 : resultType.hashCode());

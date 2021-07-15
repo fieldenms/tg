@@ -11,6 +11,7 @@ import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.etc.GroupBys2;
 import ua.com.fielden.platform.eql.stage2.etc.OrderBys2;
 import ua.com.fielden.platform.eql.stage2.etc.Yields2;
+import ua.com.fielden.platform.eql.stage2.operands.SubQuery2;
 import ua.com.fielden.platform.eql.stage2.operands.TypelessSubQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.ISources2;
 import ua.com.fielden.platform.eql.stage3.sources.ISources3;
@@ -24,6 +25,11 @@ public class TypelessSubQuery1 extends AbstractQuery1 implements ITransformableT
     @Override
     public TypelessSubQuery2 transform(final TransformationContext context) {
         final TransformationContext localContext = context.produceForCorrelatedSubquery();
+        
+        if (sources == null) {
+            return new TypelessSubQuery2(transformSourceless(localContext));
+        }
+        
         final TransformationResult<? extends ISources2<?>> sourcesTr = sources.transform(localContext);
         final TransformationContext enhancedContext = sourcesTr.updatedContext;
         final ISources2<? extends ISources3> sources2 = sourcesTr.item;

@@ -23,6 +23,7 @@ import ua.com.fielden.platform.eql.stage2.etc.OrderBys2;
 import ua.com.fielden.platform.eql.stage2.etc.Yield2;
 import ua.com.fielden.platform.eql.stage2.etc.Yields2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
+import ua.com.fielden.platform.eql.stage2.operands.ResultQuery2;
 import ua.com.fielden.platform.eql.stage2.operands.SourceQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage2.sources.ISources2;
@@ -44,6 +45,11 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableToS2<S
     @Override
     public SourceQuery2 transform(final TransformationContext context) {
         final TransformationContext localContext = isCorrelated ? context.produceForCorrelatedSourceQuery() : context.produceForUncorrelatedSourceQuery();
+
+        if (sources == null) {
+            return new SourceQuery2(transformSourceless(localContext), resultType);
+        }
+
         final TransformationResult<? extends ISources2<?>> sourcesTr = sources.transform(localContext);
         final TransformationContext enhancedContext = sourcesTr.updatedContext;
         final ISources2<? extends ISources3> sources2 = sourcesTr.item;

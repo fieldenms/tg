@@ -132,7 +132,7 @@ public class EntQueryGenerator {
         }
 
         final ISources1<? extends ISources2<?>> fromModel = from.getModel();
-        final Conditions1 whereModel = addFilteringCondition(where.getModel(), qryModel.isFilterable(), filter, username, fromModel.mainSource());
+        final Conditions1 whereModel = addFilteringCondition(where.getModel(), qryModel.isFilterable(), filter, username, fromModel != null ? fromModel.mainSource() : null);
 
         return new QueryBlocks1(fromModel, whereModel, select.getModel(), groupBy.getModel(), produceOrderBys(orderModel), qryModel.isYieldAll());
     }

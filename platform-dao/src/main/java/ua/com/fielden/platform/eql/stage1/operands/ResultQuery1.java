@@ -43,6 +43,9 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToS2<R
 
     @Override
     public ResultQuery2 transform(final TransformationContext context) {
+        if (sources == null) {
+            return new ResultQuery2(transformSourceless(context), resultType);
+        }
         final TransformationResult<? extends ISources2<?>> sourcesTr = sources.transform(context);
         final TransformationContext enhancedContext = sourcesTr.updatedContext;
         final ISources2<? extends ISources3> sources2 = sourcesTr.item;

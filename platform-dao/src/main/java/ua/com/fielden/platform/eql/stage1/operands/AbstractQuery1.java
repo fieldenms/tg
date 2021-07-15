@@ -21,11 +21,13 @@ import ua.com.fielden.platform.eql.meta.ComponentTypePropInfo;
 import ua.com.fielden.platform.eql.meta.UnionTypePropInfo;
 import ua.com.fielden.platform.eql.stage1.PropResolution;
 import ua.com.fielden.platform.eql.stage1.QueryBlocks1;
+import ua.com.fielden.platform.eql.stage1.TransformationContext;
 import ua.com.fielden.platform.eql.stage1.conditions.Conditions1;
 import ua.com.fielden.platform.eql.stage1.etc.GroupBys1;
 import ua.com.fielden.platform.eql.stage1.etc.OrderBys1;
 import ua.com.fielden.platform.eql.stage1.etc.Yields1;
 import ua.com.fielden.platform.eql.stage1.sources.ISources1;
+import ua.com.fielden.platform.eql.stage2.QueryBlocks2;
 import ua.com.fielden.platform.eql.stage2.etc.GroupBy2;
 import ua.com.fielden.platform.eql.stage2.etc.GroupBys2;
 import ua.com.fielden.platform.eql.stage2.etc.OrderBy2;
@@ -58,6 +60,10 @@ public abstract class AbstractQuery1 {
         this.yieldAll = queryBlocks.yieldAll;
     }
 
+    public QueryBlocks2 transformSourceless(final TransformationContext context) {
+        return new QueryBlocks2(null, conditions.transform(context), yields.transform(context), groups.transform(context), orderings.transform(context));
+    }
+    
     protected static GroupBys2 enhance(final GroupBys2 groupBys) {
         final List<GroupBy2> enhanced = groupBys.getGroups().stream().map(group -> enhance(group)).flatMap(List::stream).collect(Collectors.toList());
         return new GroupBys2(enhanced);
@@ -158,7 +164,7 @@ public abstract class AbstractQuery1 {
         result = prime * result + groups.hashCode();
         result = prime * result + orderings.hashCode();
         result = prime * result + ((resultType == null) ? 0 : resultType.hashCode());
-        result = prime * result + sources.hashCode();
+        result = prime * result + ((sources == null) ? 0 : sources.hashCode());
         result = prime * result + yields.hashCode();
         result = prime * result + (yieldAll ? 1231 : 1237);
         return result;

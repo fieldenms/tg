@@ -31,6 +31,12 @@ public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuer
     @Override
     public SubQuery2 transform(final TransformationContext context) {
         final TransformationContext localContext = context.produceForCorrelatedSubquery();
+        
+        if (sources == null) {
+            final QueryBlocks2 qb = transformSourceless(localContext);
+            return new SubQuery2(qb, enhance(null, qb.yields),  qb.yields.getYields().iterator().next().operand.hibType());
+        }
+
         final TransformationResult<? extends ISources2<?>> sourcesTr = sources.transform(localContext);
         final TransformationContext enhancedContext = sourcesTr.updatedContext;
         final ISources2<? extends ISources3> sources2 = sourcesTr.item;

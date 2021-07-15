@@ -28,6 +28,11 @@ public interface ISources2<S3 extends ISources3> extends ITransformableToS3<S3> 
     
     ISource2<? extends ISource3> mainSource();
     
+    
+    static TransformationResult<ISources3> transformNone(final TransformationContext context) {
+        return new TransformationResult<ISources3>(null, context);
+    }
+    
     static TransformationResult<ISources3> transform(final ISource2<?> explicitSource, final TransformationContext context) {
         final TransformationResult<? extends ISource3> explicitSourceTr = explicitSource.transform(context);    
         return attachChildren(explicitSourceTr.item, context.getSourceChildren(explicitSource.id()), explicitSourceTr.updatedContext);
