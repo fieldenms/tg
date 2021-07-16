@@ -26,6 +26,7 @@ import ua.com.fielden.platform.web.factories.webui.CriteriaResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CustomViewResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EgiExampleResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EntityAutocompletionResourceFactory;
+import ua.com.fielden.platform.web.factories.webui.EntityByKeyResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EntityResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EntityValidationResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.FileResourceFactory;
@@ -152,6 +153,9 @@ public abstract class AbstractWebUiResources extends Application {
         // Registering autocompletion resources:
         attachAutocompletionResources(guardedRouter, webApp);
 
+        // Register entity by key resource:
+        attachEntityIdByKeyResource(guardedRouter, webApp);
+
         if (injector.getInstance(Key.get(boolean.class, Names.named("web.api")))) { // in case where Web API has been turned-on in application.properties ...
             // ... register GraphiQL resources
             guardedRouter.attach("/graphiql", new GraphiQLResourceFactory(injector));
@@ -208,6 +212,17 @@ public abstract class AbstractWebUiResources extends Application {
     private void attachAutocompletionResources(final Router router, final IWebUiConfig webUiConfig) {
         logger.info("\t\tAutocompletion resources attaching...");
         router.attach("/autocompletion/{type}/{property}", new EntityAutocompletionResourceFactory(webUiConfig, injector));
+    }
+
+    /**
+     * Attaches resource that returns entity id by it's key representation
+     *
+     * @param router
+     * @param webUiConfig
+     */
+    private void attachEntityIdByKeyResource(final Router router, final IWebUiConfig webUiConfig) {
+        logger.info("\t\tSearch entity id by key resource attaching...");
+        router.attach("/entityid/{entityType}", new EntityByKeyResourceFactory(webUiConfig, injector));
     }
 
     /**
