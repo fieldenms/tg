@@ -57,8 +57,8 @@ public abstract class EntityModule extends AbstractModule implements IModuleWith
         bind(IDomainTreeEnhancerCache.class).toInstance(DomainTreeEnhancerCache.CACHE);
         
         // request static IDates injection into TgScalars;
-        // different implementations will be injected based on IDates binding in concrete module descendant of this module;
-        // injection occurs on injector-creation time
+        // static injection occurs at the time when an injector is created
+        // this guarantees that different implementations of IDates will be injected based on IDates binding in IoC modules that define the binding configuration;
         requestStaticInjection(TgScalars.class);
     }
 
