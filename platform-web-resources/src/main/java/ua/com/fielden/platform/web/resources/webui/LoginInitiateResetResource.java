@@ -20,7 +20,6 @@ import org.restlet.data.Status;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Post;
-import org.restlet.resource.ServerResource;
 
 import com.google.common.util.concurrent.AtomicDouble;
 
@@ -30,9 +29,11 @@ import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserSecret;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.annotations.AppUri;
 import ua.com.fielden.platform.web.app.IWebResourceLoader;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 
 /**
  * A web resource to initiate user login recovery procedure.
@@ -40,7 +41,7 @@ import ua.com.fielden.platform.web.app.IWebResourceLoader;
  * @author TG Team
  *
  */
-public class LoginInitiateResetResource extends ServerResource {
+public class LoginInitiateResetResource extends AbstractWebResource {
     
     public static final String BINDING_PATH = "/forgotten";
 
@@ -61,10 +62,12 @@ public class LoginInitiateResetResource extends ServerResource {
             final IUniversalConstants constants,
             final ICompanionObjectFinder coFinder,
             final IUserProvider userProvider,
+            final IDeviceProvider deviceProvider,
+            final IDates dates,
             final Context context, //
             final Request request, //
             final Response response) {
-        init(context, request, response);
+        super(context, request, response, deviceProvider, dates);
         this.webResourceLoader = webResourceLoader;
         this.appUri = appUri;
         this.coFinder = coFinder;

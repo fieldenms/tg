@@ -13,7 +13,7 @@
             const graphQLFetcher = graphQLParams =>
                 fetch('/graphiql', { // this is our Web API entry point for GraphiQL POST request
                     method: 'post',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'Time-Zone': Intl.DateTimeFormat().resolvedOptions().timeZone },
                     body: JSON.stringify(graphQLParams),
                 })
                 .then(response => response.json())
