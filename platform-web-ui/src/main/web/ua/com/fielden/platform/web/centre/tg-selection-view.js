@@ -31,6 +31,7 @@ const template = html`
             };
         }
         tg-responsive-toolbar {
+            margin-top: 8px;
             padding: 0 12px;
             height: auto;
             position: relative;
