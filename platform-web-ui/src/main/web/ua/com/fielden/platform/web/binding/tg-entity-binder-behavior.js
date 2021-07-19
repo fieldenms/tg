@@ -1,5 +1,6 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import {processResponseError, toastMsgForError} from '/resources/reflection/tg-ajax-utils.js';
+import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 
 export const TgEntityBinderBehavior = {
 
@@ -428,6 +429,10 @@ export const TgEntityBinderBehavior = {
                 const xhr = new XMLHttpRequest();
                 xhr.open("GET", url, true);
                 xhr.responseType = 'blob';
+                const tzHeader = _timeZoneHeader();
+                for (const headerName in tzHeader) {
+                    xhr.setRequestHeader(headerName, tzHeader[headerName]);
+                }
                 xhr.onload = function (e) {
                     if (xhr.status === 200) {
                         console.log('File received', xhr.getResponseHeader('Content-Disposition'));
