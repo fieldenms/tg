@@ -176,6 +176,7 @@ public class VulcanizingUtility {
                 "/resources/gis/images/circle-orange.png",
                 "/resources/gis/images/circle-purple.png",
                 "/resources/gis/images/circle-red.png",
+                "/resources/gis/images/circle-black.png",
                 "/resources/gis/images/triangle.png",
                 "/resources/gis/leaflet/images/layers-2x.png",
                 "/resources/gis/leaflet/images/layers.png",
