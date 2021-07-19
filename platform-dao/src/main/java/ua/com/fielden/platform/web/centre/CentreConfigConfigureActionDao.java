@@ -27,16 +27,16 @@ public class CentreConfigConfigureActionDao extends CommonEntityDao<CentreConfig
     
     @Override
     @SessionRequired
-    public CentreConfigConfigureAction save(final CentreConfigConfigureAction entity) {
+    public CentreConfigConfigureAction save(final CentreConfigConfigureAction action) {
         // validate action entity before performing actual action
-        entity.isValid().ifFailure(Result::throwRuntime);
+        action.isValid().ifFailure(Result::throwRuntime);
         
         // perform actual action
-        entity.setCustomObject(criteriaEntityRestorer
-            .restoreCriteriaEntity(entity.getCentreContextHolder())
-            .configureCentre(entity.isRunAutomatically())
+        action.setCustomObject(criteriaEntityRestorer
+            .restoreCriteriaEntity(action.getCentreContextHolder())
+            .configureCentre(action.isRunAutomatically())
         );
-        return entity;
+        return action;
     }
     
 }

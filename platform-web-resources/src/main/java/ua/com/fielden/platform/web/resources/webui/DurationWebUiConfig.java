@@ -6,7 +6,6 @@ import static ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig.
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.DESKTOP;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.MOBILE;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.TABLET;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.MARGIN;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.mkActionLayoutForMaster;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.mkGridForCentre;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.mkGridForMasterFitWidth;
@@ -60,7 +59,7 @@ public class DurationWebUiConfig {
      * @return created entity centre
      */
     private EntityCentre<Duration> createCentre(final Injector injector) {
-        final String layout = mkGridForCentre(1, 2);
+        final String layout = mkGridForCentre(2, 1);
 
         final EntityActionConfig standardNewAction = NEW_ACTION.mkAction(Duration.class);
         final EntityActionConfig standardDeleteAction = DELETE_ACTION.mkAction(Duration.class);
@@ -97,18 +96,18 @@ public class DurationWebUiConfig {
      * @return created entity master
      */
     private EntityMaster<Duration> createMaster(final Injector injector) {
-        final String layout = mkGridForMasterFitWidth(1, 2);
+        final String layout = mkGridForMasterFitWidth(2, 1);
 
         final IMaster<Duration> masterConfig = new SimpleMasterBuilder<Duration>().forEntity(Duration.class)
                 .addProp("count").asSpinner().also()
                 .addProp("durationUnit").asAutocompleter().also()
-                .addAction(REFRESH).shortDesc("Cancel").longDesc("Cancel action")
-                .addAction(SAVE)
+                .addAction(REFRESH).shortDesc("Cancel").longDesc("Cancel changes")
+                .addAction(SAVE).shortDesc("Save").longDesc("Save changes.")
                 .setActionBarLayoutFor(DESKTOP, empty(), mkActionLayoutForMaster())
                 .setLayoutFor(DESKTOP, empty(), layout)
                 .setLayoutFor(TABLET, empty(), layout)
                 .setLayoutFor(MOBILE, empty(), layout)
-                .withDimensions(mkDim(480 + 2 * MARGIN, 260))
+                .withDimensions(mkDim(320, 240))
                 .done();
 
         return new EntityMaster<>(Duration.class, masterConfig, injector);
