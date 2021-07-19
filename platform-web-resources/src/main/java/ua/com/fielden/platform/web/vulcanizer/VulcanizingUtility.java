@@ -170,7 +170,26 @@ public class VulcanizingUtility {
                 "/resources/graphiql/images/lint-mark-warning.png",
                 "/resources/graphiql/images/lint-marker-multiple.png",
                 "/resources/graphiql/images/lint-message-error.png",
-                "/resources/graphiql/images/lint-message-warning.png"
+                "/resources/graphiql/images/lint-message-warning.png",
+                "/resources/gis/images/arrow-blue.png",
+                "/resources/gis/images/arrow-green.png",
+                "/resources/gis/images/circle-orange.png",
+                "/resources/gis/images/circle-purple.png",
+                "/resources/gis/images/circle-red.png",
+                "/resources/gis/images/triangle.png",
+                "/resources/gis/leaflet/images/layers-2x.png",
+                "/resources/gis/leaflet/images/layers.png",
+                "/resources/gis/leaflet/images/marker-icon-2x.png",
+                "/resources/gis/leaflet/images/marker-icon.png",
+                "/resources/gis/leaflet/images/marker-shadow.png",
+                "/resources/gis/leaflet/draw/images/spritesheet-2x.png",
+                "/resources/gis/leaflet/draw/images/spritesheet-2x.png",
+                "/resources/gis/leaflet/draw/images/spritesheet.svg",
+                "/resources/gis/leaflet/easybutton/fontawesome/fonts/fontawesome-webfont.eot",
+                "/resources/gis/leaflet/easybutton/fontawesome/fonts/fontawesome-webfont.svg",
+                "/resources/gis/leaflet/easybutton/fontawesome/fonts/fontawesome-webfont.ttf",
+                "/resources/gis/leaflet/easybutton/fontawesome/fonts/fontawesome-webfont.woff",
+                "/resources/gis/leaflet/easybutton/fontawesome/fonts/fontawesome-webfont.woff2"
             );
             try {
                 final ObjectMapper objectMapper = new ObjectMapper();
