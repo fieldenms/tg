@@ -21,11 +21,9 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarnings;
 import ua.com.fielden.platform.entity.functional.master.PropertyWarning;
-import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
-import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.persistence.HibernateUtil;
@@ -166,17 +164,8 @@ public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCa
     }
 
     @Override
-    public DomainMetaPropertyConfig getDomainMetaPropertyConfig() {
-        return hibernateModule.getDomainMetaPropertyConfig();
-    }
-
-    @Override
-    public DomainValidationConfig getDomainValidationConfig() {
-        return hibernateModule.getDomainValidationConfig();
-    }
-
-    @Override
     public List<String> getDdl() {
         return null;
     }
+
 }
